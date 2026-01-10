@@ -35,7 +35,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-white flex flex-col p-4 md:p-6 text-slate-900">
       
-      {/* HEADER - Botão de Cadastro Harmonizado */}
       {/* HEADER - Versão com Z-Index para garantir o clique */}
       <header className="w-full max-w-6xl mx-auto flex justify-end items-center h-12 relative z-50">
         <Link 
@@ -46,8 +45,13 @@ export default function Home() {
         </Link>
       </header>
 
-      {/* ÁREA CENTRAL - Se ajusta se houver resultados ou não */}
-      <div className={`flex flex-col items-center transition-all duration-1000 ease-in-out ${mostrarResultados ? 'mt-4' : 'flex-grow justify-center -mt-12'}`}>
+      {/* ÁREA CENTRAL - Ajustada para ficar mais alta no Mobile */}
+        <div className={`flex flex-col items-center transition-all duration-1000 ease-in-out w-full
+          ${mostrarResultados 
+            ? 'mt-4' 
+            : 'mt-16 md:mt-0 md:flex-grow md:justify-center md:-mt-12'
+          }`}
+        >
         
         {/* LOGO - Tamanho ajustado */}
         <div className={`transition-all duration-700 w-full flex justify-center px-8 ${mostrarResultados ? 'mb-4 scale-75' : 'mb-8 scale-100'}`}>
