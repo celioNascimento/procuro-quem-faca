@@ -12,8 +12,7 @@ export default function Cadastro() {
   const [tocados, setTocados] = useState({})
   const [formData, setFormData] = useState({ nome: '', categoria: '', bio: '', whatsapp: '' })
 
-  const marcarComoTocado = (campo: string) => { setTocados({ ...tocados, [campo]: true })
-}
+  const marcarComoTocado = (campo) => setTocados({ ...tocados, [campo]: true })
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -29,14 +28,15 @@ export default function Cadastro() {
       setMensagem('Erro ao cadastrar: ' + error.message)
       setLoading(false)
     } else {
-      setMensagem('✅ Cadastro realizado! Redirecionando...')
+      setMensagem('✅ Sucesso! Redirecionando...')
       setTimeout(() => router.push('/'), 3000)
     }
   }
 
-  const inputStyle = (campo: string) => `
-  w-full p-4 rounded-2xl border-2 shadow-sm outline-none transition-all text-slate-900 bg-white
-  ${tocados[campo] && !formData[campo] ? 'border-red-500 bg-red-50' : 'border-transparent focus:ring-2 focus:ring-blue-500'}`
+  const inputStyle = (campo) => `
+    w-full p-4 rounded-2xl border-2 shadow-sm outline-none transition-all text-slate-900 bg-white
+    ${tocados[campo] && !formData[campo] ? 'border-red-500 bg-red-50' : 'border-transparent focus:ring-2 focus:ring-blue-500'}
+  `
 
   return (
     <main className="min-h-screen bg-white p-6 flex flex-col items-center">
@@ -68,7 +68,7 @@ export default function Cadastro() {
 
           <div className="flex flex-col">
             <label className="text-xs font-bold text-slate-400 uppercase ml-2 mb-1">Descrição</label>
-            <textarea className={`${inputStyle('bio')} h-32 resize-none`} placeholder="Conte o que você faz..."
+            <textarea className={`${inputStyle('bio')} h-32 resize-none text-slate-900`} placeholder="Conte o que você faz..."
               value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} onBlur={() => marcarComoTocado('bio')} />
           </div>
 
@@ -78,7 +78,7 @@ export default function Cadastro() {
               onChange={(e) => setFormData({...formData, whatsapp: e.target.value})} onBlur={() => marcarComoTocado('whatsapp')} />
           </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg mt-4 disabled:bg-slate-300">
+          <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg mt-4 disabled:bg-slate-300 font-bold">
             {loading ? 'Processando...' : 'Finalizar Cadastro'}
           </button>
 
