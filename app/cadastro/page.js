@@ -2,93 +2,119 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { CATEGORIAS_OFICIAIS } from '@/lib/categorias'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function Cadastro() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [mensagem, setMensagem] = useState('')
-  const [tocados, setTocados] = useState({})
-  const [formData, setFormData] = useState({ nome: '', categoria: '', bio: '', whatsapp: '' })
-
-  const marcarComoTocado = (campo) => setTocados({ ...tocados, [campo]: true })
+  const [formData, setFormData] = useState({
+    nome: '',
+    whatsapp: '',
+    categoria: '',
+    bio: '',
+    foto_url: '' // Novo campo
+  })
+  const [status, setStatus] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!formData.nome || !formData.categoria || !formData.bio || !formData.whatsapp) {
-      setMensagem('Erro: Preencha todos os campos.')
-      return
-    }
+    setStatus('Salvando...')
 
-    setLoading(true)
     const { error } = await supabase.from('prestadores').insert([formData])
 
     if (error) {
-      setMensagem('Erro ao cadastrar: ' + error.message)
-      setLoading(false)
+      setStatus('Erro ao cadastrar. Tente novamente.')
     } else {
-      setMensagem('✅ Sucesso! Redirecionando...')
-      setTimeout(() => router.push('/'), 3000)
+      setStatus('Cadastro realizado com sucesso!')
+      setFormData({ nome: '', whatsapp: '', categoria: '', bio: '', foto_url: '' })
     }
   }
 
-  const inputStyle = (campo) => `
-    w-full p-4 rounded-2xl border-2 shadow-sm outline-none transition-all text-slate-900 bg-white
-    ${tocados[campo] && !formData[campo] ? 'border-red-500 bg-red-50' : 'border-transparent focus:ring-2 focus:ring-blue-500'}
-  `
-
   return (
-    <main className="min-h-screen bg-white p-6 flex flex-col items-center">
-      <div className="w-full max-w-md mb-8">
-        <Link href="/" className="text-blue-600 font-bold flex items-center gap-2 hover:underline">
-          ← Voltar para Busca
-        </Link>
-      </div>
+  <main className="min-h-screen bg-white p-4 md:p-6 flex flex-col items-center">
+    <div className="w-full max-w-md">
+      <Link href="/" className="text-blue-600 font-bold text-xs mb-8 inline-block hover:underline">
+        ← Voltar para Busca
+      </Link>
+      
+      <h1 className="text-2xl md:text-3xl font-black text-slate-800 mb-2">Anuncie seu serviço</h1>
+      <p className="text-slate-500 mb-8 font-medium text-sm">Preencha os dados para aparecer na busca.</p>
 
-      <div className="w-full max-w-md bg-slate-50 p-8 rounded-3xl border border-slate-100 shadow-xl">
-        <h1 className="text-2xl font-black text-slate-800 mb-2 italic uppercase">Anuncie seu serviço</h1>
-        <p className="text-slate-500 text-sm mb-8">Junte-se aos melhores profissionais.</p>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* INPUTS COM TEXTO ESCURO */}
+        <div className="flex flex-col gap-1">
+          <label className="text-slate-500 font-bold text-[10px] uppercase ml-4">Nome Completo</label>
+          <input 
+            placeholder="Ex: João da Silva"
+            value={formData.nome}
+            onChange={(e) => setFormData({...formData, nome: e.target.value})}
+            className="w-full p-3.5 rounded-2xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder:text-slate-400"
+            required
+          />
+        </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div className="flex flex-col">
-            <label className="text-xs font-bold text-slate-400 uppercase ml-2 mb-1">Nome Completo</label>
-            <input className={inputStyle('nome')} placeholder="Ex: João da Silva" value={formData.nome}
-              onChange={(e) => setFormData({...formData, nome: e.target.value})} onBlur={() => marcarComoTocado('nome')} />
-          </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-slate-500 font-bold text-[10px] uppercase ml-4">Categoria</label>
+          <select 
+            value={formData.categoria}
+            onChange={(e) => setFormData({...formData, categoria: e.target.value})}
+            className="w-full p-3.5 rounded-2xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+            required
+          >
+            <option value="">Selecione...</option>
+            {CATEGORIAS_OFICIAIS.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
 
-          <div className="flex flex-col">
-            <label className="text-xs font-bold text-slate-400 uppercase ml-2 mb-1">Categoria</label>
-            <select className={inputStyle('categoria')} value={formData.categoria}
-              onChange={(e) => setFormData({...formData, categoria: e.target.value})} onBlur={() => marcarComoTocado('categoria')}>
-              <option value="">Selecione uma opção...</option>
-              {CATEGORIAS_OFICIAIS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-            </select>
-          </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-slate-500 font-bold text-[10px] uppercase ml-4">WhatsApp</label>
+          <input 
+            placeholder="Somente números"
+            value={formData.whatsapp}
+            onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
+            className="w-full p-3.5 rounded-2xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder:text-slate-400"
+            required
+          />
+        </div>
 
-          <div className="flex flex-col">
-            <label className="text-xs font-bold text-slate-400 uppercase ml-2 mb-1">Descrição</label>
-            <textarea className={`${inputStyle('bio')} h-32 resize-none text-slate-900`} placeholder="Conte o que você faz..."
-              value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} onBlur={() => marcarComoTocado('bio')} />
-          </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-slate-500 font-bold text-[10px] uppercase ml-4">Link da Foto (URL)</label>
+          <input 
+            type="url"
+            placeholder="https://..."
+            value={formData.foto_url}
+            onChange={(e) => setFormData({...formData, foto_url: e.target.value})}
+            className="w-full p-3.5 rounded-2xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
 
-          <div className="flex flex-col">
-            <label className="text-xs font-bold text-slate-400 uppercase ml-2 mb-1">WhatsApp</label>
-            <input className={inputStyle('whatsapp')} placeholder="Ex: 11999999999" value={formData.whatsapp}
-              onChange={(e) => setFormData({...formData, whatsapp: e.target.value})} onBlur={() => marcarComoTocado('whatsapp')} />
-          </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-slate-500 font-bold text-[10px] uppercase ml-4">Sua Bio</label>
+          <textarea 
+            placeholder="Fale brevemente sobre sua experiência..."
+            value={formData.bio}
+            onChange={(e) => setFormData({...formData, bio: e.target.value})}
+            className="w-full p-3.5 h-28 rounded-2xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder:text-slate-400 resize-none"
+            required
+          />
+        </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg mt-4 disabled:bg-slate-300 font-bold">
-            {loading ? 'Processando...' : 'Finalizar Cadastro'}
-          </button>
+        {/* BOTÃO MAIS PROPORCIONAL */}
+        <button 
+          type="submit"
+          className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-base shadow-md hover:bg-blue-700 active:scale-95 transition-all mt-2"
+        >
+          {status || 'Cadastrar Agora'}
+        </button>
 
-          {mensagem && (
-            <div className={`p-4 rounded-xl text-center font-bold text-sm ${mensagem.includes('Erro') ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600 animate-bounce'}`}>
-              {mensagem}
-            </div>
-          )}
-        </form>
-      </div>
-    </main>
-  )
+        {status && (
+          <p className="text-center text-blue-600 font-bold text-sm mt-2 animate-pulse">
+            {status}
+          </p>
+        )}
+      </form>
+    </div>
+  </main>
+)
+
 }
