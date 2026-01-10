@@ -11,30 +11,31 @@ export default function Home() {
 
   // FUNÇÃO DE BUSCA INTELIGENTE
   async function buscar() {
-    if (!busca.trim()) return;
-    
-    setCarregando(true)
-    
-    // 1. Criamos a query base
-    let query = supabase.from('prestadores').select('*')
+  setCarregando(true)
+  try {
+    // Busca simples sem filtros complexos primeiro
+    const { data, error } = await supabase
+      .from('prestadores')
+      .select('*')
 
-    // 2. Quebramos a frase em palavras (ex: "Joao eletricista")
-    const palavras = busca.trim().split(/\s+/)
-
-    // 3. Para cada palavra, filtramos se ela existe no NOME ou na CATEGORIA
-    palavras.forEach(palavra => {
-      query = query.or(`nome.ilike.%${palavra}%,categoria.ilike.%${palavra}%`)
-    })
-
-    const { data, error } = await query
+    if (error) throw error
     
     if (data) {
-      setPrestadores(data)
+      // Se houver texto na busca, filtramos aqui no Javascript mesmo (mais fácil de debugar)
+      const filtrados = data.filter(p => 
+        p.nome.toLowerCase().includes(busca.toLowerCase()) || 
+        p.categoria.toLowerCase().includes(busca.toLowerCase())
+      )
+      setPrestadores(filtrados)
       setMostrarResultados(true)
     }
-    if (error) console.error('Erro:', error)
+  } catch (err) {
+    console.error("Erro total na busca:", err)
+    alert("Erro ao conectar com o banco. Verifique as chaves.")
+  } finally {
     setCarregando(false)
   }
+}
 
   // Função para os botões de categoria rápida
   async function buscarPorCategoria(cat) {
