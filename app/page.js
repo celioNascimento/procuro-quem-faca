@@ -9,21 +9,24 @@ export default function Home() {
   const [mostrarResultados, setMostrarResultados] = useState(false)
   const [carregando, setCarregando] = useState(false)
 
-// No seu src/app/page.js, mude a linha da query para testar se traz TUDO:
-async function buscar() {
-  setCarregando(true)
-  
-  // Teste: buscar todos sem filtro só para ver se os cards aparecem no celular
-  const { data, error } = await supabase.from('prestadores').select('*')
-  
-  if (data) {
-    console.log("Dados recebidos:", data)
-    setPrestadores(data)
-    setMostrarResultados(true)
+  async function buscar() {
+    if (!busca.trim()) return;
+    setCarregando(true)
+    
+    let query = supabase.from('prestadores').select('*')
+    const palavras = busca.trim().split(/\s+/)
+
+    palavras.forEach(palavra => {
+      query = query.or(`nome.ilike.%${palavra}%,categoria.ilike.%${palavra}%`)
+    })
+
+    const { data, error } = await query
+    if (data) {
+      setPrestadores(data)
+      setMostrarResultados(true)
+    }
+    setCarregando(false)
   }
-  if (error) console.error("Erro Supabase:", error.message)
-  setCarregando(false)
-}
 
   return (
     <main className="min-h-screen bg-white flex flex-col items-center p-4 md:p-6 text-slate-900">
