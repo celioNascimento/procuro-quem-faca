@@ -12,7 +12,8 @@ export default function Cadastro() {
   const [tocados, setTocados] = useState({})
   const [formData, setFormData] = useState({ nome: '', categoria: '', bio: '', whatsapp: '' })
 
-  const marcarComoTocado = (campo) => setTocados({ ...tocados, [campo]: true })
+  const marcarComoTocado = (campo: string) => { setTocados({ ...tocados, [campo]: true })
+}
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -33,10 +34,9 @@ export default function Cadastro() {
     }
   }
 
-  const inputStyle = (campo) => `
-    w-full p-4 rounded-2xl border-2 shadow-sm outline-none transition-all text-slate-900 bg-white
-    ${tocados[campo] && !formData[campo] ? 'border-red-500 bg-red-50' : 'border-transparent focus:ring-2 focus:ring-blue-500'}
-  `
+  const inputStyle = (campo: string) => `
+  w-full p-4 rounded-2xl border-2 shadow-sm outline-none transition-all text-slate-900 bg-white
+  ${tocados[campo] && !formData[campo] ? 'border-red-500 bg-red-50' : 'border-transparent focus:ring-2 focus:ring-blue-500'}`
 
   return (
     <main className="min-h-screen bg-white p-6 flex flex-col items-center">
