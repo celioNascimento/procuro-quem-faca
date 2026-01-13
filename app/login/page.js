@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+// ADICIONADO O useEffect NA IMPORTAÇÃO ABAIXO
+import { useState, useEffect } from 'react' 
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -12,6 +13,17 @@ export default function Login() {
   const [touched, setTouched] = useState({})
   const router = useRouter()
 
+  // VERIFICA SE JÁ ESTÁ LOGADO AO ENTRAR NA PÁGINA
+  useEffect(() => {
+    const verificarSessao = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.push('/cadastro')
+      }
+    }
+    verificarSessao()
+  }, [router])
+
   const handleBlur = (field) => setTouched(prev => ({ ...prev, [field]: true }))
   const emailInvalido = touched.email && (!email.includes('@') || email.length < 5)
   const senhaInvalida = touched.password && password.length < 6
@@ -20,57 +32,103 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setMensagem('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      const { error: signUpError } = await supabase.auth.signUp({ email, password })
-      if (signUpError) setMensagem('Verifique seus dados.');
-      else setMensagem('Conta criada! Tente logar agora.');
+
+    // 1. Tenta o Login
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ 
+      email, 
+      password 
+    })
+
+    if (signInError) {
+      // 2. Se as credenciais forem inválidas (usuário não existe), tenta cadastrar
+      if (signInError.message.includes("Invalid login credentials")) {
+        setMensagem('Criando sua conta...')
+        
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ 
+          email, 
+          password 
+        })
+
+        if (signUpError) {
+          setMensagem('Erro: ' + signUpError.message)
+        } else if (signUpData?.user && signUpData?.session) {
+          // Logado automaticamente após cadastro
+          router.push('/cadastro')
+        } else {
+          setMensagem('Conta criada! Verifique seu e-mail ou tente entrar novamente.')
+        }
+      } else {
+        setMensagem('Erro: ' + signInError.message)
+      }
     } else {
+      // Login com sucesso
       router.push('/cadastro')
     }
     setLoading(false)
   }
 
+  const inputClass = (erro) => `
+    w-full p-4 rounded-2xl border transition-all outline-none focus:ring-2 focus:ring-blue-500 
+    text-slate-800 bg-slate-50 placeholder-slate-400 font-medium
+    ${erro ? 'border-red-500 bg-red-50' : 'border-slate-100 focus:border-blue-200'}
+  `
+
   return (
     <main className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-                <div className="flex justify-center mb-10 transition-all">
-          <Link href="/" className="hover:opacity-80 transition-opacity">
-            <img 
-              src="/logo.png" 
-              alt="Logo" 
-              className="h-16 md:h-20 w-auto object-contain" // h-16 no mobile e h-20 no desktop
-            />
-          </Link>
-        </div>
-
-        <Link href="/" className="text-blue-600 font-black text-[10px] uppercase tracking-widest mb-6 inline-block">
-          ← Voltar ao Início
+      <div className="w-full max-w-sm text-center">
+        
+        <Link href="/">
+          <img src="/logo.png" alt="Logo" className="h-16 w-auto object-contain mx-auto mb-8" />
         </Link>
 
-        <h1 className="text-3xl font-black text-slate-800 mb-2">Entrar</h1>
-        <p className="text-slate-500 mb-8 text-sm font-medium">Acesse sua conta para gerenciar seu anúncio.</p>
+        <h1 className="text-2xl font-black text-slate-800 mb-2">Acesse sua conta</h1>
+        <p className="text-slate-500 mb-8 text-sm font-medium">Use seu e-mail para entrar ou criar seu perfil.</p>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <input 
-            type="email" placeholder="E-mail" value={email}
-            onBlur={() => handleBlur('email')}
-            onChange={(e) => setEmail(e.target.value.toLowerCase().trim())}
-            className={`w-full p-4 rounded-2xl border ${emailInvalido ? 'border-red-500 bg-red-50' : 'border-slate-100'} outline-none focus:ring-2 focus:ring-blue-500`}
-            required
-          />
-          <input 
-            type="password" placeholder="Senha" value={password}
-            onBlur={() => handleBlur('password')}
-            onChange={(e) => setPassword(e.target.value)}
-            className={`w-full p-4 rounded-2xl border ${senhaInvalida ? 'border-red-500 bg-red-50' : 'border-slate-100'} outline-none focus:ring-2 focus:ring-blue-500`}
-            required
-          />
-          {mensagem && <div className="p-4 rounded-2xl bg-blue-50 text-blue-600 text-xs font-bold text-center">{mensagem}</div>}
-          <button type="submit" disabled={loading} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg hover:bg-blue-700 transition-all">
-            {loading ? 'PROCESSANDO...' : 'ENTRAR OU CRIAR CONTA'}
+        <form onSubmit={handleLogin} className="flex flex-col gap-4 text-left">
+          <div className="flex flex-col gap-1">
+            <label className="text-slate-400 font-bold text-[9px] uppercase ml-4 tracking-widest">Seu E-mail</label>
+            <input 
+              type="email" 
+              placeholder="exemplo@email.com" 
+              value={email}
+              onBlur={() => handleBlur('email')}
+              onChange={(e) => setEmail(e.target.value.toLowerCase().trim())}
+              className={inputClass(emailInvalido)}
+              required
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-slate-400 font-bold text-[9px] uppercase ml-4 tracking-widest">Sua Senha</label>
+            <input 
+              type="password" 
+              placeholder="••••••" 
+              value={password}
+              onBlur={() => handleBlur('password')}
+              onChange={(e) => setPassword(e.target.value)}
+              className={inputClass(senhaInvalida)}
+              required
+            />
+          </div>
+
+          {mensagem && (
+            <div className={`p-4 rounded-xl text-xs font-bold text-center ${mensagem.includes('Erro') ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-600'}`}>
+              {mensagem}
+            </div>
+          )}
+
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-100 hover:bg-blue-700 active:scale-95 transition-all mt-2 uppercase tracking-widest text-xs"
+          >
+            {loading ? 'CARREGANDO...' : 'ENTRAR / CADASTRAR'}
           </button>
         </form>
+
+        <Link href="/" className="inline-block mt-10 text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-blue-600 transition-colors">
+          ← Voltar para a busca
+        </Link>
       </div>
     </main>
   )

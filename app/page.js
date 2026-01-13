@@ -111,7 +111,7 @@ export default function Home() {
               onClick={() => {setMostrarResultados(false); setBusca('');}} 
               className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline"
             >
-              ✕ Limpar
+              ✕ Limpar Busca
             </button>
           </div>
 

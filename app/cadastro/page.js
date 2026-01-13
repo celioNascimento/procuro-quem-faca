@@ -31,27 +31,33 @@ export default function Cadastro() {
     verificarUsuarioEPrefil()
   }, [])
 
-  async function verificarUsuarioEPrefil() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    const { data: perfil } = await supabase
-      .from('prestadores')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-
-    if (perfil) {
-      setFormData(perfil)
-      setModoEdicao(true)
-      setAceitouTermos(true)
-      setAceitouPrivacidade(true)
-    }
-    setLoading(false)
+async function verificarUsuarioEPrefil() {
+  // Pega a sessão atual de forma imediata
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  if (!session) {
+    // Se não houver sessão, redireciona
+    router.push('/login')
+    return
   }
+
+  const user = session.user
+
+  // Busca o perfil do prestador
+  const { data: perfil } = await supabase
+    .from('prestadores')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  if (perfil) {
+    setFormData(perfil)
+    setModoEdicao(true)
+    setAceitouTermos(true)
+    setAceitouPrivacidade(true)
+  }
+  setLoading(false)
+}
 
   // Máscara Reativa de WhatsApp: (00) 00000-0000
   const aplicarMascaraWhatsapp = (valor) => {
@@ -164,9 +170,9 @@ export default function Cadastro() {
           </Link>
         </div>
 
-        <div className="flex justify-between items-center mb-8 text-[10px] font-black uppercase tracking-widest">
+        <div className="flex justify-between items-center mb-8 text-[15px] font-black uppercase tracking-widest">
           <Link href="/" className="text-blue-600">← Voltar</Link>
-          <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }} className="text-slate-400 hover:text-red-500 transition-colors">Sair</button>
+          <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }} className="text-slate-500 hover:text-red-500 transition-colors">Sair</button>
         </div>
         
         <h1 className="text-2xl font-black text-slate-800 mb-2">{modoEdicao ? 'Meu Perfil' : 'Anunciar Serviço'}</h1>
