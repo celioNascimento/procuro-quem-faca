@@ -14,10 +14,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Portal de Prestadores",
-  description: "Encontre os melhores profissionais",
-};
+export const metadata = {
+  title: 'SeuPortal | Encontre Profissionais Próximos',
+  description: 'Conectamos você aos melhores técnicos de ar-condicionado, eletricistas, encanadores e prestadores de serviço da região.',
+  icons: {
+    icon: '/logo.png', // Isso já ajuda a usar sua logo como favicon rapidamente
+  },
+  openGraph: {
+    title: 'SeuPortal | Profissionais de Confiança',
+    description: 'Precisa de um técnico ou prestador de serviço? Encontre aqui em segundos.',
+    url: 'https://seudominio.com',
+    siteName: 'SeuPortal',
+    images: [
+      {
+        url: '/logo.png', // A logo que aparecerá no card do WhatsApp
+        width: 800,
+        height: 600,
+      },
+    ],
+    locale: 'pt_BR',
+    type: 'website',
+  },
+}
 
 export default function RootLayout({
   children,
