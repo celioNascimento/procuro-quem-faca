@@ -31,35 +31,41 @@ export default function Cadastro() {
     verificarUsuarioEPrefil()
   }, [])
 
-async function verificarUsuarioEPrefil() {
-  // Pega a sessão atual de forma imediata
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) {
-    // Se não houver sessão, redireciona
-    router.push('/login')
-    return
+  async function verificarUsuarioEPrefil() {
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+      router.push('/login')
+      return
+    }
+
+    const user = session.user
+
+    const { data: perfil } = await supabase
+      .from('prestadores')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    if (perfil) {
+      setFormData(perfil)
+      setModoEdicao(true)
+      setAceitouTermos(true)
+      setAceitouPrivacidade(true)
+    }
+    setLoading(false)
   }
 
-  const user = session.user
+  // LÓGICA DE VALIDAÇÃO DO FORMULÁRIO
+  const formularioValido = 
+    formData.nome.trim().length >= 3 && 
+    formData.whatsapp.length >= 14 && 
+    formData.categoria !== '' && 
+    formData.cidade.trim() !== '' && 
+    formData.bio.trim().length >= 10 &&
+    aceitouTermos && 
+    aceitouPrivacidade;
 
-  // Busca o perfil do prestador
-  const { data: perfil } = await supabase
-    .from('prestadores')
-    .select('*')
-    .eq('user_id', user.id)
-    .single()
-
-  if (perfil) {
-    setFormData(perfil)
-    setModoEdicao(true)
-    setAceitouTermos(true)
-    setAceitouPrivacidade(true)
-  }
-  setLoading(false)
-}
-
-  // Máscara Reativa de WhatsApp: (00) 00000-0000
   const aplicarMascaraWhatsapp = (valor) => {
     const d = valor.replace(/\D/g, '').slice(0, 11);
     if (d.length === 0) return "";
@@ -82,7 +88,6 @@ async function verificarUsuarioEPrefil() {
     const arquivo = e.target.files[0]
     if (!arquivo) return
 
-    // Restrição de 1MB
     if (arquivo.size > 1024 * 1024) {
       alert("A imagem é muito grande! Máximo 1MB.");
       e.target.value = "";
@@ -98,7 +103,7 @@ async function verificarUsuarioEPrefil() {
       .upload(fileName, arquivo)
 
     if (uploadError) {
-      setStatus('Erro no upload.')
+      setStatus('Erro no envio.')
       return
     }
 
@@ -113,7 +118,7 @@ async function verificarUsuarioEPrefil() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!aceitouTermos || !aceitouPrivacidade) return alert("Aceite os termos para continuar.")
+    if (!formularioValido) return
     
     setStatus('Salvando...')
     const { data: { user } } = await supabase.auth.getUser()
@@ -132,24 +137,28 @@ async function verificarUsuarioEPrefil() {
   }
 
   async function excluirPerfil() {
-    if (!window.confirm("Tem certeza? Seu anúncio e foto serão apagados permanentemente.")) return
+    const confirmacao = confirm("Tem certeza? Seu anúncio e foto serão apagados permanentemente e você será deslogado.")
     
-    setStatus('Excluindo...')
-    
-    // Deleta a foto física no Storage se ela existir
-    if (formData.foto_url) {
-      const nomeArquivo = formData.foto_url.split('/').pop()
-      await supabase.storage.from('fotos-perfil').remove([nomeArquivo])
-    }
+    if (confirmacao) {
+      setStatus('Excluindo...')
+      const { data: { user } } = await supabase.auth.getUser()
 
-    const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('prestadores').delete().eq('user_id', user.id)
+      if (user) {
+        if (formData.foto_url) {
+          const nomeArquivo = formData.foto_url.split('/').pop()
+          await supabase.storage.from('fotos-perfil').remove([nomeArquivo])
+        }
 
-    if (error) {
-      setStatus('Erro ao excluir.')
-    } else {
-      alert('Anúncio removido.')
-      router.push('/')
+        const { error } = await supabase.from('prestadores').delete().eq('user_id', user.id)
+
+        if (error) {
+          setStatus('Erro ao excluir.')
+        } else {
+          await supabase.auth.signOut()
+          alert('Anúncio removido e conta encerrada.')
+          router.push('/')
+        }
+      }
     }
   }
 
@@ -159,27 +168,27 @@ async function verificarUsuarioEPrefil() {
     <main className="min-h-screen bg-white p-4 md:p-6 flex flex-col items-center">
       <div className="w-full max-w-md">
         
-        {/* LOGO AMPLIADA */}
         <div className="flex justify-center mb-10 transition-all">
           <Link href="/" className="hover:opacity-80 transition-opacity">
-            <img 
-              src="/logo.png" 
-              alt="Logo" 
-              className="h-16 md:h-20 w-auto object-contain" // h-16 no mobile e h-20 no desktop
-            />
+            <img src="/logo.png" alt="Logo" className="h-16 md:h-20 w-auto object-contain" />
           </Link>
         </div>
 
         <div className="flex justify-between items-center mb-8 text-[15px] font-black uppercase tracking-widest">
           <Link href="/" className="text-blue-600">← Voltar</Link>
-          <button onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }} className="text-slate-500 hover:text-red-500 transition-colors">Sair</button>
+          <button 
+            type="button"
+            onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }} 
+            className="text-slate-500 hover:text-red-500 transition-colors"
+          >
+            Sair
+          </button>
         </div>
         
         <h1 className="text-2xl font-black text-slate-800 mb-2">{modoEdicao ? 'Meu Perfil' : 'Anunciar Serviço'}</h1>
         <p className="text-slate-500 mb-8 text-sm font-medium">Preencha seus dados profissionais abaixo.</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          
           <div className="flex flex-col gap-1">
             <label className="text-slate-400 font-bold text-[9px] uppercase ml-4">Nome Completo</label>
             <input 
@@ -255,14 +264,18 @@ async function verificarUsuarioEPrefil() {
             </div>
             <div className="flex items-start gap-3">
               <input type="checkbox" id="privacidade" checked={aceitouPrivacidade} onChange={(e) => setAceitouPrivacidade(e.target.checked)} className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600" />
-              <label htmlFor="privacidade" className="text-[11px] text-slate-500 leading-tight">Aceito a <Link href="/privacidade" className="text-blue-600 underline font-bold">Privacidade</Link>.</label>
+              <label htmlFor="privacidade" className="text-[11px] text-slate-500 leading-tight">Aceito a <Link href="/privacidade" className="text-blue-600 underline font-bold">Política de Privacidade</Link>.</label>
             </div>
           </div>
 
           <button 
             type="submit" 
-            disabled={!aceitouTermos || !aceitouPrivacidade} 
-            className={`w-full py-4 rounded-2xl font-black transition-all mt-2 ${(aceitouTermos && aceitouPrivacidade) ? 'bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
+            disabled={!formularioValido || (status === 'Salvando...')} 
+            className={`w-full py-4 rounded-2xl font-black transition-all mt-2 
+              ${formularioValido 
+                ? 'bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95' 
+                : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+              }`}
           >
             {status || (modoEdicao ? 'SALVAR ALTERAÇÕES' : 'PUBLICAR ANÚNCIO')}
           </button>

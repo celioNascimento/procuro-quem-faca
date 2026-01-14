@@ -11,9 +11,9 @@ export default function Home() {
   const [mostrarResultados, setMostrarResultados] = useState(false)
 
   const SUGESTOES = [
-    'Técnico de ar-condicionado',
+    'Técnico ar-condicionado',
     'Eletricista',
-    'Encanador',
+    'Encanador',  
     'Pintor',
     'Diarista',
     'Mecânico'
@@ -34,6 +34,16 @@ export default function Home() {
     setLoading(false)
   }
 
+  async function registrarClique(id, whatsapp) {
+    try {
+      // Chama a função RPC no Supabase para somar +1 clique
+      await supabase.rpc('incrementar_cliques', { row_id: id })
+    } catch (err) {
+      console.error('Erro ao contabilizar clique:', err)
+    }
+    window.open(`https://wa.me/55${whatsapp.replace(/\D/g, '')}`, '_blank')
+  }
+
   const clicarCategoria = (cat) => {
     setBusca(cat)
     buscarPrestadores(cat)
@@ -45,7 +55,6 @@ export default function Home() {
       {/* SEÇÃO INICIAL: LOGO + BUSCA */}
       <section className="w-full max-w-xl px-6 pt-16 md:pt-24 pb-10 flex flex-col items-center text-center">
         
-        {/* LOGO CENTRALIZADA */}
         <div className="mb-10 md:mb-14">
           <Link href="/">
             <img 
@@ -56,7 +65,6 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* BARRA DE BUSCA REDIMENSIONADA PARA MOBILE */}
         <div className="w-full relative mb-8 group">
           <input
             type="text"
@@ -64,7 +72,7 @@ export default function Home() {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && buscarPrestadores()}
-            className="w-full p-4 md:p-7 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 bg-slate-50 shadow-xl shadow-blue-100/30 outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 text-sm md:text-lg transition-all"
+            className="w-full p-4 md:p-7 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 bg-slate-50 shadow-xl shadow-blue-100/30 outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 text-sm md:text-lg transition-all placeholder:text-slate-400"
           />
           <button 
             onClick={() => buscarPrestadores()}
@@ -74,7 +82,6 @@ export default function Home() {
           </button>
         </div>
 
-        {/* CATEGORIAS RÁPIDAS */}
         {!mostrarResultados && (
           <div className="flex flex-wrap justify-center gap-2 mb-10">
             {SUGESTOES.map((cat) => (
@@ -89,18 +96,17 @@ export default function Home() {
           </div>
         )}
 
-        {/* BOTÃO ANUNCIAR */}
         {!mostrarResultados && (
           <Link 
             href="/login" 
             className="bg-blue-50 text-blue-600 px-8 py-4 md:px-10 md:py-5 rounded-[1.5rem] md:rounded-[2rem] text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95 border border-blue-100"
           >
-            Quero anunciar meu serviço
+            Anunciar / Entrar
           </Link>
         )}
       </section>
 
-      {/* RESULTADOS DA BUSCA (HORIZONTALMENTE AMPLIADOS) */}
+      {/* RESULTADOS DA BUSCA */}
       {mostrarResultados && (
         <section className="w-full max-w-4xl px-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex justify-between items-center mb-6 border-b border-slate-50 pb-4">
@@ -117,7 +123,7 @@ export default function Home() {
 
           <div className="flex flex-col gap-3">
             {prestadores.map((p) => (
-              <div key={p.id} className="bg-white border border-slate-100 p-3 md:p-4 rounded-[20px] shadow-sm hover:shadow-md transition-all flex items-center gap-4">
+              <div key={p.id} className="bg-white border border-slate-100 p-3 md:p-4 rounded-[20px] shadow-sm hover:shadow-md transition-all flex items-center gap-4 relative">
                 
                 {/* Imagem Compacta */}
                 <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-slate-100 overflow-hidden border border-slate-50 flex-shrink-0 shadow-sm">
@@ -131,23 +137,36 @@ export default function Home() {
 
                 {/* Conteúdo Otimizado */}
                 <div className="flex-grow min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
-                  <div className="truncate md:max-w-[35%]">
+                  <div className="truncate md:max-w-[40%]">
                     <h3 className="font-black text-slate-800 text-sm md:text-base leading-tight truncate">{p.nome}</h3>
-                    <span className="text-blue-600 text-[8px] md:text-[9px] font-black uppercase tracking-widest">{p.categoria}</span>
-                    <span className="text-slate-400 text-[8px] md:text-[9px] font-bold uppercase block">📍 {p.cidade}</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-blue-600 text-[8px] md:text-[9px] font-black uppercase tracking-widest">{p.categoria}</span>
+                      {p.cliques_whatsapp > 0 && (
+                        <span className="text-orange-500 text-[8px] md:text-[9px] font-bold uppercase italic flex items-center gap-0.5">
+                          🔥 {p.cliques_whatsapp} contatos
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-slate-400 text-[8px] md:text-[9px] font-bold uppercase block mt-0.5">📍 {p.cidade}</span>
                   </div>
                   
                   <p className="text-slate-500 text-[11px] md:text-xs line-clamp-1 md:line-clamp-2 font-medium leading-snug flex-grow max-w-md hidden sm:block">
                     {p.bio}
                   </p>
                   
-                  <div className="flex-shrink-0">
-                    <a 
-                      href={`https://wa.me/55${p.whatsapp?.replace(/\D/g, '')}`} 
-                      target="_blank"
-                      className="bg-[#25D366] text-white px-4 py-1.5 md:px-5 md:py-2 rounded-lg text-[9px] md:text-[10px] font-black hover:bg-[#20bd5a] transition-all flex items-center gap-2 uppercase shadow-sm shadow-green-100"
+                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    <button 
+                      onClick={() => registrarClique(p.id, p.whatsapp)}
+                      className="bg-[#25D366] text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl text-[9px] md:text-[10px] font-black hover:bg-[#20bd5a] transition-all flex items-center gap-2 uppercase shadow-sm shadow-green-100"
                     >
                       WhatsApp
+                    </button>
+                    <a 
+                      href={`https://wa.me/5584096851\?text=Denúncia: Prestador ${p.nome} (ID: ${p.id})`}
+                      target="_blank"
+                      className="text-[7px] md:text-[8px] font-bold text-slate-300 uppercase tracking-tighter hover:text-red-400 transition-colors mr-1"
+                    >
+                      Reportar Anúncio
                     </a>
                   </div>
                 </div>

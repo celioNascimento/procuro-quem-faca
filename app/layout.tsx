@@ -15,19 +15,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
+  // ADICIONE ESTA LINHA COM O SEU NOVO DOMÍNIO
+  metadataBase: new URL('https://www.procuroquemfaca.com.br'), 
+
   title: 'SeuPortal | Encontre Profissionais Próximos',
   description: 'Conectamos você aos melhores técnicos de ar-condicionado, eletricistas, encanadores e prestadores de serviço da região.',
   icons: {
-    icon: '/logo.png', // Isso já ajuda a usar sua logo como favicon rapidamente
+    icon: '/logo.png',
   },
   openGraph: {
     title: 'SeuPortal | Profissionais de Confiança',
     description: 'Precisa de um técnico ou prestador de serviço? Encontre aqui em segundos.',
-    url: 'https://seudominio.com',
+    url: 'https://www.seudominio.com.br', // Ajuste aqui também
     siteName: 'SeuPortal',
     images: [
       {
-        url: '/logo.png', // A logo que aparecerá no card do WhatsApp
+        url: '/logo.png',
         width: 800,
         height: 600,
       },
