@@ -20,9 +20,6 @@ export const metadata = {
 
   title: 'SeuPortal | Encontre Profissionais Próximos',
   description: 'Conectamos você aos melhores técnicos de ar-condicionado, eletricistas, encanadores e prestadores de serviço da região.',
-  icons: {
-    icon: '/logo.png',
-  },
   openGraph: {
     title: 'SeuPortal | Profissionais de Confiança',
     description: 'Precisa de um técnico ou prestador de serviço? Encontre aqui em segundos.',
