@@ -11,12 +11,8 @@ export default function Cadastro() {
   const [status, setStatus] = useState('')
   const [modoEdicao, setModoEdicao] = useState(false)
   
-  // Estados de Aceite
   const [aceitouTermos, setAceitouTermos] = useState(false)
   const [aceitouPrivacidade, setAceitouPrivacidade] = useState(false)
-  
-  // Monitoramento de validação
-  const [touched, setTouched] = useState({})
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -24,7 +20,8 @@ export default function Cadastro() {
     categoria: '',
     cidade: '',
     bio: '',
-    foto_url: ''
+    foto_perfil: '', 
+    cliques_whatsapp: 0
   })
 
   useEffect(() => {
@@ -33,22 +30,27 @@ export default function Cadastro() {
 
   async function verificarUsuarioEPrefil() {
     const { data: { session } } = await supabase.auth.getSession()
-    
     if (!session) {
       router.push('/login')
       return
     }
 
-    const user = session.user
-
     const { data: perfil } = await supabase
       .from('prestadores')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', session.user.id)
       .single()
 
     if (perfil) {
-      setFormData(perfil)
+      setFormData({
+        nome: perfil.nome || '',
+        whatsapp: perfil.whatsapp || '',
+        categoria: perfil.categoria || '',
+        cidade: perfil.cidade || '',
+        bio: perfil.bio || '',
+        foto_perfil: perfil.foto_perfil || '', 
+        cliques_whatsapp: perfil.cliques_whatsapp || 0
+      })
       setModoEdicao(true)
       setAceitouTermos(true)
       setAceitouPrivacidade(true)
@@ -56,13 +58,18 @@ export default function Cadastro() {
     setLoading(false)
   }
 
-  // LÓGICA DE VALIDAÇÃO DO FORMULÁRIO
+  // Logout resolvendo instância (signOut limpa cookies e estado do Supabase)
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh() // Força o refresh para limpar qualquer cache de sessão
+  }
+
   const formularioValido = 
-    formData.nome.trim().length >= 3 && 
-    formData.whatsapp.length >= 14 && 
+    formData.nome.trim() !== '' && 
+    formData.whatsapp.trim().length >= 10 && 
     formData.categoria !== '' && 
-    formData.cidade.trim() !== '' && 
-    formData.bio.trim().length >= 10 &&
+    formData.cidade.trim() !== '' &&
     aceitouTermos && 
     aceitouPrivacidade;
 
@@ -75,44 +82,26 @@ export default function Cadastro() {
     return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   }
 
-  const handleBlur = (field) => setTouched(prev => ({ ...prev, [field]: true }))
-  
-  const isInvalid = (field) => touched[field] && !formData[field]?.trim()
-
-  const inputClass = (field) => `
-    w-full p-4 rounded-2xl border transition-all outline-none focus:ring-2 focus:ring-blue-500 text-slate-800
-    ${isInvalid(field) ? 'border-red-500 bg-red-50' : 'border-slate-100 bg-slate-50'}
-  `
-
   async function fazerUploadFoto(e) {
     const arquivo = e.target.files[0]
     if (!arquivo) return
-
     if (arquivo.size > 1024 * 1024) {
-      alert("A imagem é muito grande! Máximo 1MB.");
-      e.target.value = "";
+      alert("A imagem deve ter no máximo 1MB.");
       return
     }
 
-    setStatus('Enviando foto...')
-    const fileExt = arquivo.name.split('.').pop()
-    const fileName = `${Math.random()}.${fileExt}`
-
-    const { error: uploadError } = await supabase.storage
-      .from('fotos-perfil')
-      .upload(fileName, arquivo)
+    setStatus('Subindo foto...')
+    const fileName = `${Date.now()}.${arquivo.name.split('.').pop()}`
+    const { error: uploadError } = await supabase.storage.from('fotos-perfil').upload(fileName, arquivo)
 
     if (uploadError) {
-      setStatus('Erro no envio.')
+      setStatus('Erro no upload.')
       return
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('fotos-perfil')
-      .getPublicUrl(fileName)
-
-    setFormData({ ...formData, foto_url: publicUrl })
-    setStatus('Foto enviada!')
+    const { data: { publicUrl } } = supabase.storage.from('fotos-perfil').getPublicUrl(fileName)
+    setFormData({ ...formData, foto_perfil: publicUrl })
+    setStatus('Foto pronta!')
     setTimeout(() => setStatus(''), 2000)
   }
 
@@ -123,166 +112,147 @@ export default function Cadastro() {
     setStatus('Salvando...')
     const { data: { user } } = await supabase.auth.getUser()
 
+    const dadosParaSalvar = {
+      nome: formData.nome,
+      whatsapp: formData.whatsapp,
+      categoria: formData.categoria,
+      cidade: formData.cidade,
+      bio: formData.bio,
+      foto_perfil: formData.foto_perfil, 
+      user_id: user.id
+    }
+
     const { error } = modoEdicao 
-      ? await supabase.from('prestadores').update({ ...formData, user_id: user.id }).eq('user_id', user.id)
-      : await supabase.from('prestadores').insert([{ ...formData, user_id: user.id }])
+      ? await supabase.from('prestadores').update(dadosParaSalvar).eq('user_id', user.id)
+      : await supabase.from('prestadores').insert([{ ...dadosParaSalvar, cliques_whatsapp: 0 }])
 
     if (error) {
-      setStatus('Erro ao salvar.')
+      setStatus(`Erro: ${error.message}`)
     } else {
-      setStatus('Perfil salvo com sucesso!')
+      setStatus('Salvo com sucesso!')
       setModoEdicao(true)
       setTimeout(() => setStatus(''), 3000)
     }
   }
 
-  async function excluirPerfil() {
-    const confirmacao = confirm("Tem certeza? Seu anúncio e foto serão apagados permanentemente e você será deslogado.")
-    
-    if (confirmacao) {
-      setStatus('Excluindo...')
-      const { data: { user } } = await supabase.auth.getUser()
+  // Função para excluir perfil E a foto do storage
+  async function excluirPerfilCompleto() {
+    const confirmacao = confirm("ATENÇÃO: Isso excluirá seu anúncio e sua foto permanentemente. Deseja continuar?")
+    if (!confirmacao) return
 
-      if (user) {
-        if (formData.foto_url) {
-          const nomeArquivo = formData.foto_url.split('/').pop()
-          await supabase.storage.from('fotos-perfil').remove([nomeArquivo])
-        }
+    setStatus('Excluindo...')
+    const { data: { user } } = await supabase.auth.getUser()
 
-        const { error } = await supabase.from('prestadores').delete().eq('user_id', user.id)
-
-        if (error) {
-          setStatus('Erro ao excluir.')
-        } else {
-          await supabase.auth.signOut()
-          alert('Anúncio removido e conta encerrada.')
-          router.push('/')
-        }
+    // 1. Remover foto do Storage se existir
+    if (formData.foto_perfil) {
+      try {
+        const urlParts = formData.foto_perfil.split('/')
+        const nomeArquivo = urlParts[urlParts.length - 1]
+        await supabase.storage.from('fotos-perfil').remove([nomeArquivo])
+      } catch (err) {
+        console.error("Erro ao remover foto do storage:", err)
       }
+    }
+
+    // 2. Remover registro da tabela
+    const { error: dbError } = await supabase
+      .from('prestadores')
+      .delete()
+      .eq('user_id', user.id)
+
+    if (dbError) {
+      setStatus('Erro ao excluir dados.')
+    } else {
+      alert("Perfil excluído com sucesso.")
+      handleLogout() // Desloga e redireciona
     }
   }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-blue-600 uppercase tracking-widest text-xs">Carregando...</div>
+  const inputStyle = "w-full p-4 rounded-2xl border border-slate-200 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 placeholder:text-slate-400"
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-blue-600 uppercase text-xs">Carregando...</div>
 
   return (
-    <main className="min-h-screen bg-white p-4 md:p-6 flex flex-col items-center">
+    <main className="min-h-screen bg-white p-4 flex flex-col items-center">
       <div className="w-full max-w-md">
         
-        <div className="flex justify-center mb-10 transition-all">
-          <Link href="/" className="hover:opacity-80 transition-opacity">
-            <img src="/logo.png" alt="Logo" className="h-16 md:h-20 w-auto object-contain" />
+        {/* Header de Navegação */}
+        <div className="flex justify-between items-center mb-8 w-full">
+          <Link href="/" className="text-blue-600 font-black text-xs uppercase tracking-widest hover:underline">
+            ← Início
           </Link>
-        </div>
-
-        <div className="flex justify-between items-center mb-8 text-[15px] font-black uppercase tracking-widest">
-          <Link href="/" className="text-blue-600">← Voltar</Link>
-          <button 
-            type="button"
-            onClick={async () => { await supabase.auth.signOut(); router.push('/login'); }} 
-            className="text-slate-500 hover:text-red-500 transition-colors"
-          >
+          <button onClick={handleLogout} className="text-slate-400 font-black text-xs uppercase tracking-widest hover:text-red-500">
             Sair
           </button>
         </div>
+
+        <div className="flex justify-center mb-8">
+          <img src="/logo.png" alt="Logo" className="h-14 w-auto" />
+        </div>
         
-        <h1 className="text-2xl font-black text-slate-800 mb-2">{modoEdicao ? 'Meu Perfil' : 'Anunciar Serviço'}</h1>
-        <p className="text-slate-500 mb-8 text-sm font-medium">Preencha seus dados profissionais abaixo.</p>
+        {modoEdicao && (
+          <div className="bg-orange-50 border border-orange-100 rounded-3xl p-5 mb-8 flex items-center justify-between shadow-sm">
+            <div>
+              <p className="text-orange-600 font-black text-[10px] uppercase tracking-widest mb-1">Performance 🔥</p>
+              <h3 className="text-slate-800 font-black text-base">Cliques no WhatsApp</h3>
+            </div>
+            <div className="text-xl font-black text-orange-600 bg-white px-4 py-2 rounded-2xl border border-orange-100 shadow-sm">
+              {formData.cliques_whatsapp}
+            </div>
+          </div>
+        )}
+
+        <h1 className="text-2xl font-black text-slate-800 mb-6">{modoEdicao ? 'Meu Perfil' : 'Criar Anúncio'}</h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <label className="text-slate-400 font-bold text-[9px] uppercase ml-4">Nome Completo</label>
-            <input 
-              value={formData.nome} 
-              onBlur={() => handleBlur('nome')}
-              onChange={(e) => setFormData({...formData, nome: e.target.value})}
-              className={inputClass('nome')} required 
-            />
+            <label className="text-slate-500 font-bold text-[10px] uppercase ml-4">Foto Profissional</label>
+            <div className={`flex items-center gap-4 p-3 rounded-2xl border ${formData.foto_perfil ? 'border-green-100 bg-green-50/30' : 'border-slate-100 bg-slate-50'}`}>
+              {formData.foto_perfil && <img src={formData.foto_perfil} className="w-14 h-14 rounded-xl object-cover border-2 border-white shadow-sm" alt="Preview" />}
+              <input type="file" accept="image/*" onChange={fazerUploadFoto} className="text-[10px] w-full text-slate-600 cursor-pointer" />
+            </div>
           </div>
 
+          <input value={formData.nome} placeholder="Nome Completo" onChange={(e) => setFormData({...formData, nome: e.target.value})} className={inputStyle} />
+          
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-slate-400 font-bold text-[9px] uppercase ml-4">Categoria</label>
-              <select 
-                value={formData.categoria} 
-                onBlur={() => handleBlur('categoria')}
-                onChange={(e) => setFormData({...formData, categoria: e.target.value})}
-                className={inputClass('categoria')} required
-              >
-                <option value="">Escolha...</option>
-                {CATEGORIAS_OFICIAIS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-slate-400 font-bold text-[9px] uppercase ml-4">Cidade</label>
-              <input 
-                value={formData.cidade} 
-                onBlur={() => handleBlur('cidade')}
-                onChange={(e) => setFormData({...formData, cidade: e.target.value})}
-                className={inputClass('cidade')} required 
-              />
-            </div>
+            <select value={formData.categoria} onChange={(e) => setFormData({...formData, categoria: e.target.value})} className={inputStyle}>
+              <option value="">Categoria...</option>
+              {CATEGORIAS_OFICIAIS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+            <input value={formData.cidade} placeholder="Cidade" onChange={(e) => setFormData({...formData, cidade: e.target.value})} className={inputStyle} />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-slate-400 font-bold text-[9px] uppercase ml-4">WhatsApp (com DDD)</label>
-            <input 
-              value={formData.whatsapp} 
-              onBlur={() => handleBlur('whatsapp')}
-              onChange={(e) => setFormData({...formData, whatsapp: aplicarMascaraWhatsapp(e.target.value)})} 
-              placeholder="(00) 00000-0000"
-              className={inputClass('whatsapp')} required 
-            />
-          </div>
+          <input value={formData.whatsapp} placeholder="WhatsApp" onChange={(e) => setFormData({...formData, whatsapp: aplicarMascaraWhatsapp(e.target.value)})} className={inputStyle} />
 
-          <div className="flex flex-col gap-1">
-            <label className="text-slate-400 font-bold text-[9px] uppercase ml-4">Foto de Perfil (Máx 1MB)</label>
-            <div className={`flex items-center gap-4 p-2 rounded-2xl border ${formData.foto_url ? 'border-green-100 bg-green-50/30' : 'border-slate-100 bg-slate-50'}`}>
-              {formData.foto_url && (
-                <img src={formData.foto_url} className="w-12 h-12 rounded-xl object-cover border-2 border-white shadow-sm" alt="Preview" />
-              )}
-              <input 
-                type="file" accept="image/*" onChange={fazerUploadFoto} 
-                className="text-[10px] text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-blue-600 file:text-white cursor-pointer w-full" 
-              />
-            </div>
-          </div>
+          <textarea value={formData.bio} placeholder="Resumo dos seus serviços..." onChange={(e) => setFormData({...formData, bio: e.target.value})} className={`${inputStyle} h-28 resize-none`} />
 
-          <div className="flex flex-col gap-1">
-            <label className="text-slate-400 font-bold text-[9px] uppercase ml-4">Sua Bio (O que você faz?)</label>
-            <textarea 
-              value={formData.bio} 
-              onBlur={() => handleBlur('bio')}
-              onChange={(e) => setFormData({...formData, bio: e.target.value})}
-              className={`${inputClass('bio')} h-32 resize-none`} required 
-            />
-          </div>
-
-          <div className="flex flex-col gap-3 px-2 py-2">
-            <div className="flex items-start gap-3">
-              <input type="checkbox" id="termos" checked={aceitouTermos} onChange={(e) => setAceitouTermos(e.target.checked)} className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600" />
-              <label htmlFor="termos" className="text-[11px] text-slate-500 leading-tight">Li e concordo com os <Link href="/termos" className="text-blue-600 underline font-bold">Termos</Link>.</label>
-            </div>
-            <div className="flex items-start gap-3">
-              <input type="checkbox" id="privacidade" checked={aceitouPrivacidade} onChange={(e) => setAceitouPrivacidade(e.target.checked)} className="mt-1 w-4 h-4 rounded border-slate-300 text-blue-600" />
-              <label htmlFor="privacidade" className="text-[11px] text-slate-500 leading-tight">Aceito a <Link href="/privacidade" className="text-blue-600 underline font-bold">Política de Privacidade</Link>.</label>
-            </div>
+          <div className="flex flex-col gap-3 py-2">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" checked={aceitouTermos} onChange={(e) => setAceitouTermos(e.target.checked)} className="w-5 h-5 rounded border-slate-300 text-blue-600" />
+              <span className="text-xs font-bold text-slate-500 uppercase">Aceito os Termos</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" checked={aceitouPrivacidade} onChange={(e) => setAceitouPrivacidade(e.target.checked)} className="w-5 h-5 rounded border-slate-300 text-blue-600" />
+              <span className="text-xs font-bold text-slate-500 uppercase">Aceito a Privacidade</span>
+            </label>
           </div>
 
           <button 
             type="submit" 
-            disabled={!formularioValido || (status === 'Salvando...')} 
-            className={`w-full py-4 rounded-2xl font-black transition-all mt-2 
-              ${formularioValido 
-                ? 'bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95' 
-                : 'bg-slate-100 text-slate-300 cursor-not-allowed'
-              }`}
+            disabled={!formularioValido || (status === 'Subindo foto...' || status === 'Salvando...')} 
+            className={`w-full py-4 rounded-2xl font-black transition-all ${formularioValido ? 'bg-blue-600 text-white shadow-lg active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
           >
-            {status || (modoEdicao ? 'SALVAR ALTERAÇÕES' : 'PUBLICAR ANÚNCIO')}
+            {status || (modoEdicao ? 'ATUALIZAR PERFIL' : 'PUBLICAR AGORA')}
           </button>
 
           {modoEdicao && (
-            <button type="button" onClick={excluirPerfil} className="mt-6 text-red-400 text-[10px] font-black uppercase tracking-widest hover:text-red-600 transition-colors">
-              Excluir anúncio permanentemente
+            <button 
+              type="button" 
+              onClick={excluirPerfilCompleto}
+              className="mt-6 text-red-400 text-[10px] font-black uppercase tracking-widest hover:text-red-600 transition-colors text-center"
+            >
+              Excluir anúncio e foto permanentemente
             </button>
           )}
         </form>
