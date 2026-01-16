@@ -23,9 +23,10 @@ export default function Home() {
     setLoading(true)
     setMostrarResultados(true)
 
+    // Ajuste na query para garantir que estamos trazendo a coluna correta
     let query = supabase
       .from('prestadores')
-      .select('*, cliques(count)') 
+      .select('id, nome, categoria, cidade, bio, whatsapp, foto_perfil') 
 
     if (termo) {
       query = query.or(`nome.ilike.%${termo}%,categoria.ilike.%${termo}%,cidade.ilike.%${termo}%,bio.ilike.%${termo}%`)
@@ -33,34 +34,15 @@ export default function Home() {
 
     const { data, error } = await query
     
-    if (!error) {
-      const formatados = data.map(p => ({
-        ...p,
-        total_cliques: p.cliques?.[0]?.count || 0
-      }))
-      
-      setPrestadores(formatados.sort((a, b) => b.total_cliques - a.total_cliques))
+    if (!error && data) {
+      setPrestadores(data)
     }
     setLoading(false)
   }
 
-  async function registrarClique(id, whatsapp) {
-    setPrestadores(prev => prev.map(p => 
-      p.id === id ? { ...p, total_cliques: p.total_cliques + 1 } : p
-    ))
-
-    try {
-      const { error } = await supabase
-        .from('cliques')
-        .insert([{ prestador_id: id }])
-
-      if (error) throw error
-    } catch (err) {
-      console.error('Erro ao registrar clique no banco:', err.message)
-    }
-
-    const linkWa = `https://wa.me/55${whatsapp.replace(/\D/g, '')}`
-    window.open(linkWa, '_blank')
+  function abrirWhatsApp(whatsapp) {
+    const linkWa = `https://wa.me/55${whatsapp.replace(/\D/g, '')}`;
+    window.open(linkWa, '_blank');
   }
 
   const clicarCategoria = (cat) => {
@@ -71,6 +53,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-white flex flex-col items-center">
       
+      {/* SEÇÃO INICIAL: BUSCA */}
       <section className="w-full max-w-xl px-6 pt-16 md:pt-24 pb-10 flex flex-col items-center text-center">
         <div className="mb-10 md:mb-14">
           <Link href="/">
@@ -85,11 +68,11 @@ export default function Home() {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && buscarPrestadores()}
-            className="w-full p-4 md:p-7 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 bg-slate-50 shadow-xl shadow-blue-100/30 outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 text-sm md:text-lg transition-all placeholder:text-slate-400"
+            className="w-full p-4 md:p-7 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 bg-slate-50 shadow-xl shadow-blue-100/30 outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 text-sm md:text-lg transition-all"
           />
           <button 
             onClick={() => buscarPrestadores()}
-            className="absolute right-2 top-2 md:right-3 md:top-3 bg-blue-600 text-white px-5 py-2 md:px-8 md:py-4 rounded-[1.1rem] md:rounded-[1.8rem] font-black text-[10px] md:text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md shadow-blue-600/20"
+            className="absolute right-2 top-2 md:right-3 md:top-3 bg-blue-600 text-white px-5 py-2 md:px-8 md:py-4 rounded-[1.1rem] md:rounded-[1.8rem] font-black text-[10px] md:text-xs"
           >
             BUSCAR
           </button>
@@ -98,7 +81,7 @@ export default function Home() {
         {!mostrarResultados && (
           <div className="flex flex-wrap justify-center gap-2 mb-10">
             {SUGESTOES.map((cat) => (
-              <button key={cat} onClick={() => clicarCategoria(cat)} className="bg-white text-slate-500 px-4 py-2 md:px-5 md:py-2.5 rounded-full text-[9px] md:text-[10px] font-black border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm uppercase tracking-wider">
+              <button key={cat} onClick={() => clicarCategoria(cat)} className="bg-white text-slate-500 px-4 py-2 md:px-5 md:py-2.5 rounded-full text-[9px] md:text-[10px] font-black border border-slate-200 uppercase">
                 {cat}
               </button>
             ))}
@@ -112,13 +95,14 @@ export default function Home() {
         )}
       </section>
 
+      {/* RESULTADOS DA BUSCA */}
       {mostrarResultados && (
         <section className="w-full max-w-4xl px-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex justify-between items-center mb-6 border-b border-slate-50 pb-4">
             <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
               {loading ? 'Consultando...' : `${prestadores.length} encontrados`}
             </h2>
-            <button onClick={() => {setMostrarResultados(false); setBusca('');}} className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline">
+            <button onClick={() => {setMostrarResultados(false); setBusca('');}} className="text-blue-600 text-[10px] font-black uppercase hover:underline">
               ✕ Limpar Busca
             </button>
           </div>
@@ -127,59 +111,44 @@ export default function Home() {
             {prestadores.map((p) => (
               <div key={p.id} className="bg-white border border-slate-100 p-3 md:p-4 rounded-[20px] shadow-sm hover:shadow-md transition-all flex items-start gap-4 relative">
                 
-                {/* Imagem de Perfil */}
                 <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-slate-100 overflow-hidden border border-slate-50 flex-shrink-0 shadow-sm">
+                  {/* CORREÇÃO: Usando p.foto_perfil com underline */}
                   <img 
-                    src={p['foto-perfil'] || `https://ui-avatars.com/api/?name=${p.nome}&background=DBEAFE&color=2563EB`} 
+                    src={p.foto_perfil || `https://ui-avatars.com/api/?name=${p.nome}&background=DBEAFE&color=2563EB`} 
                     className="w-full h-full object-cover"
                     alt={p.nome}
                     onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${p.nome}&background=DBEAFE&color=2563EB` }}
                   />
                 </div>
 
-                {/* Área de Informações */}
                 <div className="flex-grow min-w-0 flex flex-col gap-2">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                     <div className="truncate">
                       <h3 className="font-black text-slate-800 text-sm md:text-base leading-tight truncate">{p.nome}</h3>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <div className="mt-0.5">
                         <span className="text-blue-600 text-[8px] md:text-[9px] font-black uppercase tracking-widest">{p.categoria}</span>
-                        {p.total_cliques > 0 && (
-                          <span className="text-orange-500 text-[8px] md:text-[9px] font-black uppercase italic flex items-center gap-0.5">
-                            🔥 {p.total_cliques} contatos
-                          </span>
-                        )}
                       </div>
                       <span className="text-slate-400 text-[8px] md:text-[9px] font-bold uppercase block mt-0.5">📍 {p.cidade}</span>
                     </div>
 
-                    {/* Botão WhatsApp em Desktop */}
                     <div className="hidden md:flex flex-col items-end gap-1.5 flex-shrink-0">
                       <button 
-                        onClick={() => registrarClique(p.id, p.whatsapp)}
-                        className="bg-[#25D366] text-white px-5 py-2.5 rounded-xl text-[10px] font-black hover:bg-[#20bd5a] transition-all flex items-center gap-2 uppercase shadow-sm shadow-green-100"
+                        onClick={() => abrirWhatsApp(p.whatsapp)}
+                        className="bg-[#25D366] text-white px-5 py-2.5 rounded-xl text-[10px] font-black hover:bg-[#20bd5a] uppercase"
                       >
                         WhatsApp
                       </button>
-                      <a href={`https://wa.me/5584096851?text=Denúncia: Prestador ${p.nome} (ID: ${p.id})`} target="_blank" className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter hover:text-red-400 transition-colors mr-1">
-                        Reportar Anúncio
-                      </a>
                     </div>
                   </div>
 
-                  {/* BIO POSICIONADA ABAIXO DA CIDADE */}
                   <p className="text-slate-500 text-[11px] md:text-xs font-medium leading-relaxed pr-2">
                     {p.bio}
                   </p>
 
-                  {/* Botão WhatsApp em Mobile */}
-                  <div className="flex md:hidden items-center justify-between mt-1 pt-2 border-t border-slate-50">
-                    <a href={`https://wa.me/5584096851?text=Denúncia: Prestador ${p.nome} (ID: ${p.id})`} target="_blank" className="text-[7px] font-bold text-slate-300 uppercase">
-                      Reportar
-                    </a>
+                  <div className="flex md:hidden items-center justify-end mt-1 pt-2 border-t border-slate-50">
                     <button 
-                      onClick={() => registrarClique(p.id, p.whatsapp)}
-                      className="bg-[#25D366] text-white px-4 py-2 rounded-lg text-[9px] font-black hover:bg-[#20bd5a] transition-all uppercase"
+                      onClick={() => abrirWhatsApp(p.whatsapp)}
+                      className="bg-[#25D366] text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase"
                     >
                       WhatsApp
                     </button>
@@ -188,12 +157,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-
-          {prestadores.length === 0 && !loading && (
-            <div className="text-center py-20 text-slate-400 font-bold uppercase text-[10px] tracking-widest">
-              Nenhum profissional encontrado.
-            </div>
-          )}
         </section>
       )}
     </main> 
