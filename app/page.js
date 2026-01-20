@@ -49,9 +49,10 @@ export default function Home() {
     setBusca(cat)
     buscarPrestadores(cat)
   }
-
+  console.log("Conectado ao banco:", process.env.NEXT_PUBLIC_SUPABASE_URL);
   return (
     <main className="min-h-screen bg-white flex flex-col items-center">
+       
       
       {/* SEÇÃO INICIAL: BUSCA */}
       <section className="w-full max-w-xl px-6 pt-16 md:pt-24 pb-10 flex flex-col items-center text-center">
@@ -159,6 +160,7 @@ export default function Home() {
           </div>
         </section>
       )}
+     
     </main> 
   )
 }
