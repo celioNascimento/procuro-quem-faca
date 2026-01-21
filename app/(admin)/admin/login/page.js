@@ -41,7 +41,7 @@ export default function LoginPage() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Acesso Restrito</h1>
-            <p className="text-blue-500 font-bold text-[10px] uppercase tracking-[0.2em]">Profissionais V2.0</p>
+            <p className="text-blue-500 font-bold text-[10px] uppercase tracking-[0.2em]">Profissionais</p>
           </div>
         </div>
 

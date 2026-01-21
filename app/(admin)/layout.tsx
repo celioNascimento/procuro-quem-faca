@@ -57,7 +57,7 @@ useEffect(() => {
             </div>
             <div className="flex flex-col leading-none text-white font-black text-sm uppercase tracking-tighter">
               ProcuroQuemFaça
-              <span className="text-blue-400 font-bold text-[8px] uppercase tracking-widest">Londrina v2.0</span>
+              <span className="text-blue-400 font-bold text-[8px] uppercase tracking-widest">Londrina</span>
             </div>
           </Link>
 

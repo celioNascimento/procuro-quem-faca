@@ -40,7 +40,7 @@ export default function AdminDashboard() {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-5xl font-black text-slate-900 tracking-tighter uppercase leading-none">Painel de Controle</h1>
-          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em] mt-3">Operação V2.0 Londrina</p>
+          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em] mt-3">Operação Londrina</p>
         </div>
         <div className="bg-white px-6 py-4 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
           <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
