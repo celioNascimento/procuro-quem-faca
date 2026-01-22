@@ -4,22 +4,25 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ cidades: 0, habilidades: 0, logs: 0 })
+  // Adicionei 'anuncios' e 'prestadores' para o dashboard ficar mais completo
+  const [stats, setStats] = useState({ cidades: 0, habilidades: 0, anuncios: 0, prestadores: 0 })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function carregarStats() {
-      // Busca contagens em paralelo
-      const [cidades, habilidades, logs] = await Promise.all([
-        supabase.from('geografia_cidades').select('*', { count: 'exact', head: true }),
+      // Ajustado para os nomes reais das tabelas que usamos hoje
+      const [cidades, habilidades, anuncios, prestadores] = await Promise.all([
+        supabase.from('cidades').select('*', { count: 'exact', head: true }),
         supabase.from('habilidades').select('*', { count: 'exact', head: true }),
-        supabase.from('logs_atividades').select('*', { count: 'exact', head: true })
+        supabase.from('anuncios').select('*', { count: 'exact', head: true }),
+        supabase.from('prestadores').select('*', { count: 'exact', head: true })
       ])
 
       setStats({
         cidades: cidades.count || 0,
         habilidades: habilidades.count || 0,
-        logs: logs.count || 0
+        anuncios: anuncios.count || 0,
+        prestadores: prestadores.count || 0
       })
       setLoading(false)
     }
@@ -29,7 +32,7 @@ export default function AdminDashboard() {
   const atalhos = [
     { nome: 'Gestão de Geografia', desc: 'Estados e Cidades', href: '/admin/geografia', icon: '📍', cor: 'bg-blue-500' },
     { nome: 'Habilidades & Tags', desc: 'Profissões do sistema', href: '/admin/habilidades', icon: '🛠️', cor: 'bg-purple-500' },
-    { nome: 'Anúncios VIP', desc: 'Gerenciar publicidade', href: '/admin/anuncios', icon: '💰', cor: 'bg-green-500' },
+    { nome: 'Anúncios VIP', desc: 'Gerenciar publicidade', href: '/admin/anuncios', icon: '💰', cor: 'bg-green-500' }, // Ajustado para /anuncio
     { nome: 'Moderação', desc: 'Aprovar Prestadores', href: '/admin/moderacao', icon: '⚖️', cor: 'bg-orange-500' },
   ]
 
@@ -49,10 +52,11 @@ export default function AdminDashboard() {
       </header>
 
       {/* CARDS DE ESTATÍSTICAS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard label="Cidades" valor={stats.cidades} cor="text-blue-600" />
         <StatCard label="Habilidades" valor={stats.habilidades} cor="text-purple-600" />
-        <StatCard label="Atividades" valor={stats.logs} cor="text-slate-400" />
+        <StatCard label="Anúncios" valor={stats.anuncios} cor="text-green-600" />
+        <StatCard label="Prestadores" valor={stats.prestadores} cor="text-orange-600" />
       </div>
 
       {/* GRADE DE ATALHOS */}
@@ -76,7 +80,7 @@ export default function AdminDashboard() {
 
 function StatCard({ label, valor, cor }) {
   return (
-    <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col items-center lg:items-start">
+    <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col items-center lg:items-start transition-all hover:scale-[1.02]">
       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{label}</p>
       <p className={`text-6xl font-black ${cor} tracking-tighter`}>{valor}</p>
     </div>

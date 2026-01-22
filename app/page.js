@@ -1,17 +1,27 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react' // Adicionado useEffect
+import { supabase } from '@/lib/supabase'   // Adicionado Supabase
 import Link from 'next/link'
 
 export default function Home() {
   const [busca, setBusca] = useState('')
+  const [sugestoes, setSugestoes] = useState([]) // Agora começa vazio e carrega do banco
 
-  const SUGESTOES = [
-    'Eletricista',
-    'Encanador',  
-    'Pintor',
-    'Diarista',
-    'Mecânico'
-  ]
+  // Efeito para carregar as habilidades cadastradas no Admin
+  useEffect(() => {
+    async function carregarHabilidades() {
+      const { data } = await supabase
+        .from('habilidades')
+        .select('nome')
+        .order('nome', { ascending: true })
+        .limit(6) // Mostra apenas as 6 primeiras para manter o layout limpo
+      
+      if (data) {
+        setSugestoes(data.map(h => h.nome))
+      }
+    }
+    carregarHabilidades()
+  }, [])
 
   const dispararBusca = (e) => {
     if (e) e.preventDefault()
@@ -29,7 +39,7 @@ export default function Home() {
       
       <section className="w-full max-w-[90%] md:max-w-xl px-4 pt-12 md:pt-28 pb-10 flex flex-col items-center text-center">
         
-        {/* LOGO - Ajustada para não dominar demais a tela */}
+        {/* LOGO */}
         <div className="mb-10 md:mb-14">
           <Link href="/">
             <img 
@@ -40,7 +50,7 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* BARRA DE BUSCA - Altura "Ligeiramente Menor" (h-14 no mobile, h-18 no PC) */}
+        {/* BARRA DE BUSCA */}
         <form onSubmit={dispararBusca} className="w-full relative mb-8">
           <input
             type="text"
@@ -57,17 +67,22 @@ export default function Home() {
           </button>
         </form>
 
-        {/* SUGESTÕES - Ajustadas para acompanhar o novo tamanho */}
+        {/* SUGESTÕES DINÂMICAS */}
         <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-12">
-          {SUGESTOES.map((cat) => (
-            <button 
-              key={cat} 
-              onClick={() => window.location.href = `/prestadores?q=${encodeURIComponent(cat)}`} 
-              className="bg-white text-slate-400 px-4 py-2 md:px-5 md:py-2.5 rounded-full text-[9px] md:text-[10px] font-black border border-slate-100 uppercase hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm active:bg-blue-50"
-            >
-              {cat}
-            </button>
-          ))}
+          {sugestoes.length > 0 ? (
+            sugestoes.map((cat) => (
+              <button 
+                key={cat} 
+                onClick={() => window.location.href = `/prestadores?q=${encodeURIComponent(cat)}`} 
+                className="bg-white text-slate-400 px-4 py-2 md:px-5 md:py-2.5 rounded-full text-[9px] md:text-[10px] font-black border border-slate-100 uppercase hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm active:bg-blue-50"
+              >
+                {cat}
+              </button>
+            ))
+          ) : (
+            // Mensagem discreta caso não haja nada cadastrado ainda
+            <span className="text-[9px] font-black text-slate-200 uppercase tracking-widest">Carregando categorias...</span>
+          )}
         </div>
 
         {/* BOTÃO ANUNCIAR */}
@@ -85,7 +100,7 @@ export default function Home() {
           Londrina e Região
         </p>
       </footer>
-     
+      
     </main> 
   )
 }

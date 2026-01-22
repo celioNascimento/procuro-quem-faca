@@ -9,13 +9,14 @@ export default function AnunciosPage() {
   const [modoEdicao, setModoEdicao] = useState(false)
   const [subindoImagem, setSubindoImagem] = useState(false)
 
-  // Estado para o formulário (sem o campo link_destino)
+  // Estado para o formulário ajustado com link_destino
   const [form, setForm] = useState({
     titulo: '',
     tipo: 'proprio',
     codigo_google: '',
     posicao: 'topo',
-    imagem_url: ''
+    imagem_url: '',
+    link_destino: '' // Adicionado campo de destino
   })
 
   useEffect(() => {
@@ -33,28 +34,23 @@ export default function AnunciosPage() {
     setLoading(false)
   }
 
-  // FUNÇÃO DE UPLOAD PARA O BUCKET 'banner'
   async function handleUpload(e) {
     const file = e.target.files[0]
     if (!file) return
 
     try {
       setSubindoImagem(true)
-      
       const fileExt = file.name.split('.').pop()
       const fileName = `${Math.random()}.${fileExt}`
       const filePath = `${fileName}`
 
-      // Upload para o bucket 'banner'
       const { error: uploadError } = await supabase.storage
         .from('banner')
         .upload(filePath, file)
 
       if (uploadError) throw uploadError
 
-      // Gera a URL pública
       const { data } = supabase.storage.from('banner').getPublicUrl(filePath)
-      
       setForm({ ...form, imagem_url: data.publicUrl })
       
     } catch (error) {
@@ -70,10 +66,16 @@ export default function AnunciosPage() {
     if (!form.titulo) return alert('Dê um título interno ao anúncio.')
     if (form.tipo === 'proprio' && !form.imagem_url) return alert('Por favor, faça o upload da imagem antes de salvar.')
 
-    const { error } = await supabase.from('anuncios').insert([form])
+    // Ajuste do nome do tipo para bater com o banco ('google_ads')
+    const dadosParaSalvar = {
+      ...form,
+      tipo: form.tipo === 'google' ? 'google_ads' : 'proprio'
+    }
+
+    const { error } = await supabase.from('anuncios').insert([dadosParaSalvar])
     
     if (!error) {
-      setForm({ titulo: '', tipo: 'proprio', codigo_google: '', posicao: 'topo', imagem_url: '' })
+      setForm({ titulo: '', tipo: 'proprio', codigo_google: '', posicao: 'topo', imagem_url: '', link_destino: '' })
       setModoEdicao(false)
       fetchAnuncios()
     } else {
@@ -98,8 +100,7 @@ export default function AnunciosPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto pb-20">
-      {/* CABEÇALHO */}
+    <div className="max-w-6xl mx-auto pb-20 p-4">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-black text-slate-900 uppercase italic">Gestão de Anúncios</h1>
@@ -114,7 +115,6 @@ export default function AnunciosPage() {
         </button>
       </div>
 
-      {/* FORMULÁRIO */}
       {modoEdicao && (
         <div className="bg-white border-2 border-slate-100 rounded-3xl p-8 mb-10 shadow-xl animate-in fade-in slide-in-from-top-4 duration-300">
           <form onSubmit={salvarAnuncio} className="space-y-6">
@@ -161,24 +161,35 @@ export default function AnunciosPage() {
               </div>
 
               {form.tipo === 'proprio' ? (
-                <div className="col-span-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest text-left">Upload do Banner (Imagem)</label>
-                  <div className="flex items-center gap-6 p-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl">
+                <>
+                  <div className="col-span-2 md:col-span-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest text-left">Link de Destino</label>
                     <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleUpload}
-                      className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-blue-600 file:text-white cursor-pointer"
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-slate-900 font-bold"
+                      placeholder="https://seu-link.com"
+                      value={form.link_destino}
+                      onChange={e => setForm({...form, link_destino: e.target.value})}
                     />
-                    {subindoImagem && <span className="text-[10px] font-black text-blue-600 animate-pulse">ENVIANDO...</span>}
-                    {form.imagem_url && (
-                      <div className="flex flex-col items-center gap-1">
-                        <img src={form.imagem_url} alt="Preview" className="h-16 w-16 rounded-xl object-cover shadow-md border-2 border-white" />
-                        <span className="text-[8px] font-black text-green-600 uppercase">OK</span>
-                      </div>
-                    )}
                   </div>
-                </div>
+                  <div className="col-span-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest text-left">Upload do Banner (Imagem)</label>
+                    <div className="flex items-center gap-6 p-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl">
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleUpload}
+                        className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-blue-600 file:text-white cursor-pointer"
+                      />
+                      {subindoImagem && <span className="text-[10px] font-black text-blue-600 animate-pulse">ENVIANDO...</span>}
+                      {form.imagem_url && (
+                        <div className="flex flex-col items-center gap-1">
+                          <img src={form.imagem_url} alt="Preview" className="h-16 w-16 rounded-xl object-cover shadow-md border-2 border-white" />
+                          <span className="text-[8px] font-black text-green-600 uppercase">OK</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
               ) : (
                 <div className="col-span-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest text-left">Código do Script Google</label>
@@ -212,7 +223,7 @@ export default function AnunciosPage() {
             <div key={anuncio.id} className="bg-white border border-slate-100 p-4 rounded-2xl flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center gap-5">
                 <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner text-slate-400">
-                  {anuncio.tipo === 'google' ? <span className="text-xl">🌐</span> : (
+                  {anuncio.tipo === 'google_ads' ? <span className="text-xl">🌐</span> : (
                     anuncio.imagem_url ? <img src={anuncio.imagem_url} className="w-full h-full object-cover" /> : <span className="text-xl">🏠</span>
                   )}
                 </div>
@@ -220,7 +231,7 @@ export default function AnunciosPage() {
                   <h3 className="font-black text-slate-900 uppercase text-[11px] tracking-tight leading-none">{anuncio.titulo}</h3>
                   <div className="flex gap-2 mt-2">
                     <span className="text-[7px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase tracking-tighter">{anuncio.posicao}</span>
-                    <span className={`text-[7px] font-black px-2 py-0.5 rounded uppercase tracking-tighter ${anuncio.tipo === 'google' ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500'}`}>
+                    <span className={`text-[7px] font-black px-2 py-0.5 rounded uppercase tracking-tighter ${anuncio.tipo === 'google_ads' ? 'bg-orange-50 text-orange-500' : 'bg-blue-50 text-blue-500'}`}>
                       {anuncio.tipo}
                     </span>
                   </div>
