@@ -7,190 +7,187 @@ export default function SuperGestaoGeografia() {
   const [regioes, setRegioes] = useState([])
   const [cidades, setCidades] = useState([])
   const [loading, setLoading] = useState(true)
-  
-  // Estado para controle de edição inline
   const [editandoCidade, setEditandoCidade] = useState(null)
 
-  // Estados dos formulários de cadastro
+  // Estados dos formulários
   const [nomeEstado, setNomeEstado] = useState('')
   const [siglaEstado, setSiglaEstado] = useState('')
-  
   const [nomeRegiao, setNomeRegiao] = useState('')
-  const [estadoRegiao, setEstadoRegiao] = useState('PR')
-  
+  const [estadoRegiao, setEstadoRegiao] = useState('PR') // Estado "Pai" da operação
   const [nomeCidade, setNomeCidade] = useState('')
   const [regiaoSelecionada, setRegiaoSelecionada] = useState('')
 
-  useEffect(() => {
-    carregarDados()
-  }, [])
+  useEffect(() => { carregarDados() }, [])
 
   async function carregarDados() {
     setLoading(true)
-    const { data: est } = await supabase.from('estados').select('*').order('sigla')
-    const { data: reg } = await supabase.from('regioes').select('*').order('nome')
-    const { data: cid } = await supabase.from('cidades').select('*, regioes(nome)').order('nome')
+    // Buscas paralelas para performance de elite
+    const [est, reg, cid] = await Promise.all([
+      supabase.from('estados').select('*').order('sigla'),
+      supabase.from('regioes').select('*').order('nome'),
+      supabase.from('cidades').select('*, regioes(nome)').order('nome')
+    ])
     
-    setEstados(est || [])
-    setRegioes(reg || [])
-    setCidades(cid || [])
+    setEstados(est.data || [])
+    setRegioes(reg.data || [])
+    setCidades(cid.data || [])
     setLoading(false)
   }
 
-  // Ações de Inserção
   async function addEstado(e) {
     e.preventDefault()
     if(!siglaEstado || !nomeEstado) return
-    const { error } = await supabase.from('estados').insert([{ sigla: siglaEstado.toUpperCase(), nome: nomeEstado }])
+    const { error } = await supabase.from('estados').insert([{ 
+      sigla: siglaEstado.toUpperCase(), 
+      nome: nomeEstado 
+    }])
     if(!error) { setNomeEstado(''); setSiglaEstado(''); carregarDados() }
   }
 
   async function addRegiao(e) {
     e.preventDefault()
     if(!nomeRegiao) return
-    const { error } = await supabase.from('regioes').insert([{ nome: nomeRegiao, estado_sigla: estadoRegiao }])
+    const { error } = await supabase.from('regioes').insert([{ 
+      nome: nomeRegiao, 
+      estado_sigla: estadoRegiao 
+    }])
     if(!error) { setNomeRegiao(''); carregarDados() }
   }
 
   async function addCidade(e) {
     e.preventDefault()
     if(!nomeCidade) return
+    // CORREÇÃO: Inserindo estado_sigla obrigatoriamente conforme sua tabela cidades
     const { error } = await supabase.from('cidades').insert([{ 
       nome: nomeCidade, 
       estado_sigla: estadoRegiao, 
-      regiao_id: regiaoSelecionada || null 
+      regiao_id: regiaoSelecionada || null,
+      ativa: true
     }])
-    if(!error) { setNomeCidade(''); carregarDados() }
+    if(!error) { setNomeCidade(''); setRegiaoSelecionada(''); carregarDados() }
+    else { alert("Erro ao inserir: " + error.message) }
   }
 
-  // Função de Edição Rápida
   async function atualizarRegiaoCidade(cidadeId, novaRegiaoId) {
-    const { error } = await supabase
-      .from('cidades')
-      .update({ regiao_id: novaRegiaoId || null })
-      .eq('id', cidadeId)
-
-    if (!error) {
-      setEditandoCidade(null)
-      carregarDados()
-    }
+    const { error } = await supabase.from('cidades').update({ 
+      regiao_id: novaRegiaoId || null 
+    }).eq('id', cidadeId)
+    if (!error) { setEditandoCidade(null); carregarDados() }
   }
+
+  const inputClass = "w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all text-sm";
+  const labelClass = "text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-1 block";
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 bg-slate-50 min-h-screen">
-      <header className="border-b border-slate-200 pb-6">
-        <h1 className="text-3xl md:text-4xl font-black text-slate-900 uppercase tracking-tighter">Geografia Mestra</h1>
-        <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em]">Gestão de Territórios V2.0</p>
-      </header>
-
-      {/* Grid de Formulários - 3 Colunas no Desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
-        {/* 1. ESTADOS */}
-        <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-          <h2 className="text-sm font-black text-blue-600 uppercase tracking-widest">1. Estados</h2>
-          <form onSubmit={addEstado} className="space-y-3">
-            <input 
-              value={siglaEstado} onChange={e => setSiglaEstado(e.target.value)}
-              placeholder="Sigla (EX: PR)" className="w-full p-3 bg-slate-100 rounded-xl font-bold text-slate-900 uppercase outline-none focus:ring-2 focus:ring-blue-500"
-              maxLength={2}
-            />
-            <input 
-              value={nomeEstado} onChange={e => setNomeEstado(e.target.value)}
-              placeholder="Nome (Ex: Paraná)" className="w-full p-3 bg-slate-100 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button className="w-full bg-slate-900 text-white p-4 rounded-xl font-black text-[10px] uppercase hover:bg-slate-800 transition-all">Salvar Estado</button>
-          </form>
-        </section>
-
-        {/* 2. REGIÕES */}
-        <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-          <h2 className="text-sm font-black text-blue-600 uppercase tracking-widest">2. Regiões</h2>
-          <form onSubmit={addRegiao} className="space-y-3">
-            <select 
-              value={estadoRegiao} onChange={e => setEstadoRegiao(e.target.value)}
-              className="w-full p-3 bg-slate-100 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {estados.map(e => <option key={e.sigla} value={e.sigla}>{e.nome}</option>)}
-            </select>
-            <input 
-              value={nomeRegiao} onChange={e => setNomeRegiao(e.target.value)}
-              placeholder="Ex: Grande Londrina" className="w-full p-3 bg-slate-100 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button className="w-full bg-blue-600 text-white p-4 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">Criar Região</button>
-          </form>
-        </section>
-
-        {/* 3. CIDADES */}
-        <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-          <h2 className="text-sm font-black text-blue-600 uppercase tracking-widest">3. Cidades</h2>
-          <form onSubmit={addCidade} className="space-y-3">
-            <select 
-              value={regiaoSelecionada} onChange={e => setRegiaoSelecionada(e.target.value)}
-              className="w-full p-3 bg-slate-100 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Sem Região Especial</option>
-              {regioes.filter(r => r.estado_sigla === estadoRegiao).map(r => (
-                <option key={r.id} value={r.id}>{r.nome}</option>
-              ))}
-            </select>
-            <input 
-              value={nomeCidade} onChange={e => setNomeCidade(e.target.value)}
-              placeholder="Ex: Cambé" className="w-full p-3 bg-slate-100 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button className="w-full bg-green-600 text-white p-4 rounded-xl font-black text-[10px] uppercase shadow-lg shadow-green-100 hover:bg-green-700 transition-all">Finalizar Cidade</button>
-          </form>
-        </section>
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased pb-20">
+      
+      {/* GLOSSY HEADER */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm shadow-slate-200/50">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-indigo-200 shadow-lg">
+                <span className="text-white font-black text-xs italic">G</span>
+              </div>
+              <h1 className="text-xl font-black tracking-tight text-slate-900 uppercase italic">GeoMestra<span className="text-indigo-600 not-italic">.OS</span></h1>
+            </div>
+            <p className="text-slate-500 font-medium text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> Sincronização em Tempo Real
+            </p>
+          </div>
+          <div className="bg-slate-100 px-4 py-2 rounded-xl border border-slate-200">
+            <p className="text-[9px] font-black text-slate-400 uppercase leading-none mb-1">Municípios Ativos</p>
+            <p className="text-sm font-black text-slate-700 leading-none">{cidades.length}</p>
+          </div>
+        </div>
       </div>
 
-      {/* TABELA DE LISTAGEM */}
-      <section className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+      <main className="max-w-7xl mx-auto p-6 space-y-8 mt-4">
+        
+        {/* FORM GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* ESTADO */}
+          <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm">
+            <h2 className={labelClass + " text-indigo-600 mb-6"}>01. Registrar Estado</h2>
+            <form onSubmit={addEstado} className="space-y-5">
+              <input value={siglaEstado} onChange={e => setSiglaEstado(e.target.value)} placeholder="Sigla (EX: PR)" className={inputClass} maxLength={2} />
+              <input value={nomeEstado} onChange={e => setNomeEstado(e.target.value)} placeholder="Nome do Estado" className={inputClass} />
+              <button className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em]">Adicionar UF</button>
+            </form>
+          </div>
+
+          {/* REGIÃO */}
+          <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm border-t-4 border-t-blue-500">
+            <h2 className={labelClass + " text-blue-600 mb-6"}>02. Criar Região</h2>
+            <form onSubmit={addRegiao} className="space-y-5">
+              <select value={estadoRegiao} onChange={e => setEstadoRegiao(e.target.value)} className={inputClass}>
+                {estados.map(e => <option key={e.sigla} value={e.sigla}>{e.nome}</option>)}
+              </select>
+              <input value={nomeRegiao} onChange={e => setNomeRegiao(e.target.value)} placeholder="Ex: Região Metropolitana" className={inputClass} />
+              <button className="w-full bg-blue-600 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em]">Salvar Região</button>
+            </form>
+          </div>
+
+          {/* CIDADE */}
+          <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm border-t-4 border-t-green-500">
+            <h2 className={labelClass + " text-green-600 mb-6"}>03. Novo Município</h2>
+            <form onSubmit={addCidade} className="space-y-5">
+              {/* Filtro Dinâmico: Só mostra regiões do estado selecionado no select 02 */}
+              <select value={regiaoSelecionada} onChange={e => setRegiaoSelecionada(e.target.value)} className={inputClass}>
+                <option value="">Sem Região Específica</option>
+                {regioes.filter(r => r.estado_sigla === estadoRegiao).map(r => (
+                  <option key={r.id} value={r.id}>{r.nome}</option>
+                ))}
+              </select>
+              <input value={nomeCidade} onChange={e => setNomeCidade(e.target.value)} placeholder="Nome da Cidade" className={inputClass} />
+              <button className="w-full bg-green-600 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em]">Deploy Cidade</button>
+            </form>
+          </div>
+        </div>
+
+        {/* TABELA DE DADOS RELACIONAIS */}
+        <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
           <table className="w-full text-left">
-            <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>
-                <th className="p-4 text-[10px] font-black text-slate-400 uppercase">Cidade</th>
-                <th className="p-4 text-[10px] font-black text-slate-400 uppercase">Região / Organização</th>
-                <th className="p-4 text-[10px] font-black text-slate-400 uppercase text-right">UF</th>
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Município</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Cluster Regional</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">UF</th>
               </tr>
             </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan="3" className="p-10 text-center font-bold text-slate-400 animate-pulse">CARREGANDO DADOS...</td></tr>
-              ) : cidades.map(c => (
-                <tr key={c.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
-                  <td className="p-4 font-bold text-slate-800 uppercase text-sm">{c.nome}</td>
-                  <td className="p-4">
+            <tbody className="divide-y divide-slate-50">
+              {cidades.map(c => (
+                <tr key={c.id} className="hover:bg-slate-50/80 transition-all group">
+                  <td className="px-8 py-5 font-black text-slate-800 uppercase text-xs italic">{c.nome}</td>
+                  <td className="px-8 py-5 text-center">
                     {editandoCidade === c.id ? (
                       <select 
-                        autoFocus
+                        autoFocus 
                         onBlur={() => setEditandoCidade(null)}
                         onChange={(e) => atualizarRegiaoCidade(c.id, e.target.value)}
-                        className="p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs font-bold text-blue-700 outline-none"
+                        className="p-2 bg-indigo-50 border border-indigo-200 rounded-lg text-[10px] font-black text-indigo-700 outline-none"
                       >
-                        <option value="">Sem Região</option>
+                        <option value="">Nenhum</option>
                         {regioes.filter(r => r.estado_sigla === c.estado_sigla).map(r => (
                           <option key={r.id} value={r.id}>{r.nome}</option>
                         ))}
                       </select>
                     ) : (
-                      <div onClick={() => setEditandoCidade(c.id)} className="cursor-pointer group flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${c.regioes?.nome ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
-                          {c.regioes?.nome || "Vincular Região"}
-                        </span>
-                        <span className="opacity-0 group-hover:opacity-100 text-[10px] text-blue-400 font-bold">✎ editar</span>
-                      </div>
+                      <button onClick={() => setEditandoCidade(c.id)} className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${c.regioes?.nome ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                        {c.regioes?.nome || "Vincular"}
+                      </button>
                     )}
                   </td>
-                  <td className="p-4 text-right">
-                    <span className="bg-slate-100 px-2 py-1 rounded-md font-black text-slate-600 text-[10px] uppercase">{c.estado_sigla}</span>
+                  <td className="px-8 py-5 text-right">
+                    <span className="bg-slate-900 text-white px-3 py-1.5 rounded-lg font-black text-[9px] italic">{c.estado_sigla}</span>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </section>
+      </main>
     </div>
   )
 }

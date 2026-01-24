@@ -4,107 +4,137 @@ import '../globals.css'
 import React, { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [userEmail, setUserEmail] = useState('')
+  const [userEmail, setUserEmail] = useState<string | null>(null)
   const [userName, setUserName] = useState('Administrador')
+  const [loading, setLoading] = useState(true) // NOVO: Controle de barreira
   const pathname = usePathname()
+  const router = useRouter()
 
   useEffect(() => {
     const checkUser = async () => {
+      setLoading(true)
       const { data: { user } } = await supabase.auth.getUser()
+      
       if (user) {
         setUserEmail(user.email || '') 
-        const nomeSugerido = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Administrador'
+        const nomeSugerido = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Admin'
         setUserName(nomeSugerido)
+      } else if (pathname !== '/admin/login') {
+        // Se não tem user e não está na login, redireciona
+        router.push('/admin/login')
       }
+      setLoading(false)
     }
+    
     checkUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         setUserEmail(session.user.email || '')
-        const nomeSugerido = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Administrador'
-        setUserName(nomeSugerido)
+        setUserName(session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Admin')
       } else {
-        setUserEmail('')
-        setUserName('Administrador')
+        setUserEmail(null)
+        if (pathname !== '/admin/login') router.push('/admin/login')
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [pathname, router])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    setUserEmail('')
-    setUserName('Administrador')
-    window.location.href = '/admin/login' 
+    router.push('/admin/login')
   }
 
-  // Lógica de visibilidade: Logado e NÃO está na página de login
-  const isLogged = userEmail !== ''
   const isLoginPage = pathname === '/admin/login'
-  const mostrarSidebar = isLogged && !isLoginPage
+  const mostrarSidebar = userEmail && !isLoginPage
+
+  // BARREIRA DE SEGURANÇA VISUAL
+  if (loading && !isLoginPage) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-sans">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Validando Acesso...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Se não estiver logado e tentar burlar a URL, não renderiza nada enquanto o router.push não completa
+  if (!userEmail && !isLoginPage) return null
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900">
       
       {/* SIDEBAR */}
       {mostrarSidebar && (
-        <aside className="w-64 bg-slate-900 min-h-screen flex flex-col p-6 sticky top-0 shadow-2xl z-50">
-          <Link href="/admin" className="flex items-center gap-3 mb-12 group">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-black text-white italic shadow-lg shadow-blue-900/20">
-              <span className="m-auto">A</span>
-            </div>
-            <div className="flex flex-col leading-none text-white font-black text-sm uppercase tracking-tighter">
-              ProcuroQuemFaça
-              <span className="text-blue-400 font-bold text-[8px] uppercase tracking-widest">Londrina</span>
-            </div>
-          </Link>
+        <aside className="w-72 bg-[#0F172A] min-h-screen flex flex-col sticky top-0 shadow-2xl z-50 overflow-hidden shrink-0">
+          <div className="p-8">
+            <Link href="/admin" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center font-black text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                P
+              </div>
+              <div className="flex flex-col">
+                <span className="text-white font-black text-sm uppercase tracking-tighter leading-tight">ProcuroQuemFaça</span>
+                <span className="text-[9px] text-blue-400 font-bold uppercase tracking-[0.2em]">Console Admin</span>
+              </div>
+            </Link>
+          </div>
 
-          <nav className="flex-1 space-y-2">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 ml-2">Menu Principal</p>
-            <SidebarLink href="/admin" icon="📊" label="Dashboard" />
-            <SidebarLink href="/admin/geografia" icon="📍" label="Geografia" />
-            <SidebarLink href="/admin/habilidades" icon="🛠️" label="Habilidades" />
-            {/* Ajustado de /anuncios para /anuncio conforme sua pasta */}
-            <SidebarLink href="/admin/anuncios" icon="💰" label="Anúncios" />
+          <nav className="flex-1 px-4 space-y-1">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 ml-4">Gestão Geral</p>
+            <SidebarLink href="/admin" label="Dashboard" icon={<path d="M3 3h7v9H3V3zm11 0h7v5h-7V3zm0 9h7v9h-7v-9zm-11 11h7v-7H3v7z"/>} />
+            <SidebarLink href="/admin/moderacao" label="Moderação" icon={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>} />
+            <SidebarLink href="/admin/anuncios" label="Anúncios" icon={<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>} />
+            
+            <div className="pt-6">
+               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 ml-4">Configurações</p>
+               <SidebarLink href="/admin/geografia" label="Geografia" icon={<><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>} />
+               <SidebarLink href="/admin/habilidades" label="Habilidades" icon={<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>} />
+            </div>
           </nav>
 
-          <div className="pt-6 border-t border-slate-800">
-            <button 
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all font-bold text-xs uppercase"
-            >
-              <span>🚪</span> Sair do Sistema
+          <div className="p-4 border-t border-slate-800/50">
+            <button onClick={handleLogout} className="w-full flex items-center gap-3 p-4 rounded-2xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all font-bold text-[10px] uppercase tracking-widest group">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sair da conta
             </button>
           </div>
         </aside>
       )}
 
       {/* ÁREA PRINCIPAL */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-40">
-            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-              {mostrarSidebar ? "Painel Administrativo" : "Sistema de Gestão"}
-            </h2>
+      <div className={`flex-1 flex flex-col min-w-0 ${!mostrarSidebar ? 'items-center justify-center' : ''}`}>
+        
+        {mostrarSidebar && (
+          <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-10 flex items-center justify-between sticky top-0 z-40">
+              <div>
+                 <h2 className="text-sm font-bold text-slate-800">Painel de Controle</h2>
+                 <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Londrina - PR</p>
+              </div>
 
-            {mostrarSidebar && (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
                  <div className="text-right hidden sm:block">
-                   <p className="text-[10px] font-black text-slate-900 uppercase leading-none mb-1">{userName}</p>
-                   <p className="text-[9px] font-bold text-blue-600 lowercase">{userEmail}</p>
+                   <p className="text-xs font-black text-slate-900 leading-none mb-1 capitalize">{userName}</p>
+                   <p className="text-[10px] font-bold text-blue-600/70">{userEmail}</p>
                  </div>
-                 <div className="w-10 h-10 bg-slate-900 rounded-full border-2 border-white shadow-md flex items-center justify-center font-black text-white text-[12px] uppercase">
-                   {userName.charAt(0)}
+                 <div className="relative group">
+                    <div className="w-11 h-11 bg-gradient-to-tr from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center font-black text-slate-700 text-sm border border-white shadow-sm group-hover:shadow-md transition-all">
+                      {userName.charAt(0)}
+                    </div>
+                    <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                  </div>
               </div>
-            )}
-        </header>
+          </header>
+        )}
 
-        <main className="p-8">
+        <main className={`w-full ${mostrarSidebar ? 'p-6 md:p-10 max-w-7xl mx-auto' : 'flex justify-center items-center h-full'}`}>
           {children}
         </main>
       </div>
@@ -112,18 +142,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   )
 }
 
-function SidebarLink({ href, icon, label }: { href: string; icon: string; label: string }) {
+function SidebarLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
   const pathname = usePathname()
   const isActive = pathname === href
 
   return (
     <Link 
       href={href} 
-      className={`flex items-center gap-3 p-3 rounded-xl transition-all font-bold text-xs uppercase tracking-tight ${
-        isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+      className={`flex items-center gap-4 p-4 rounded-2xl transition-all font-bold text-[11px] uppercase tracking-wider group ${
+        isActive 
+        ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' 
+        : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
       }`}
     >
-      <span className="text-lg">{icon}</span>
+      <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {icon}
+      </svg>
       {label}
     </Link>
   )

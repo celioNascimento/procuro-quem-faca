@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// CORREÇÃO: Adicionada a barra "/" após o @
-import Footer from "@/components/Footer"; 
+import FooterWrapper from "@/components/FooterWrapper"; // <--- Importaremos o componente que criaremos abaixo
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,28 +12,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Agora o SEO volta a funcionar aqui!
 export const metadata = {
-  // ADICIONE ESTA LINHA COM O SEU NOVO DOMÍNIO
-  metadataBase: new URL('https://www.procuroquemfaca.com.br'), 
-
-  title: 'SeuPortal | Encontre Profissionais Próximos',
-  description: 'Conectamos você aos melhores técnicos de ar-condicionado, eletricistas, encanadores e prestadores de serviço da região.',
-  openGraph: {
-    title: 'SeuPortal | Profissionais de Confiança',
-    description: 'Precisa de um técnico ou prestador de serviço? Encontre aqui em segundos.',
-    url: 'https://www.seudominio.com.br', // Ajuste aqui também
-    siteName: 'SeuPortal',
-    images: [
-      {
-        url: '/logo.png',
-        width: 800,
-        height: 600,
-      },
-    ],
-    locale: 'pt_BR',
-    type: 'website',
+  title: {
+    default: "Vitrine Pro | Encontre Profissionais na Sua Região",
+    template: "%s | Vitrine Pro"
   },
-}
+  description: "A plataforma mais rápida para encontrar eletricistas, encanadores e especialistas. Contato direto via WhatsApp.",
+  icons: {
+    icon: '/favicon.ico', // Certifique-se de que o arquivo existe em /public
+  },
+  openGraph: {
+    title: "Vitrine Pro | Encontre Profissionais",
+    description: "Serviços qualificados a um clique de distância.",
+    images: ['/logo.png'], // Usa sua logo como imagem de compartilhamento
+  },
+};
 
 export default function RootLayout({
   children,
@@ -48,7 +40,9 @@ export default function RootLayout({
         <div className="flex-grow flex flex-col">
           {children}
         </div>
-        <Footer />
+        
+        {/* Este componente cuidará de esconder o Footer no /admin sem quebrar o site */}
+        <FooterWrapper />
       </body>
     </html>
   );
