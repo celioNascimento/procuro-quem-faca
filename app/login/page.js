@@ -42,14 +42,22 @@ export default function Login() {
     setLoading(false)
   }
 
-  // 3. Lógica de Acesso (Login / Cadastro)
   async function handleLogin(e) {
     e.preventDefault()
     setLoading(true)
     setMensagem('')
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password })
+    // Tenta o Cadastro primeiro
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        // Isso ajuda a garantir o redirecionamento se o e-mail estiver desativado no painel
+        emailRedirectTo: `${window.location.origin}/cadastro`,
+      }
+    })
 
+    // Caso 1: Usuário já existe (Fluxo de Login)
     if (signUpError?.message?.toLowerCase().includes("already registered") || 
         signUpError?.message?.toLowerCase().includes("already exists")) {
       
@@ -58,17 +66,22 @@ export default function Login() {
       if (signInError) {
         setMensagem('Erro: Senha incorreta para este e-mail.')
       } else {
+        // Login com sucesso
         router.push('/cadastro')
+        return // Encerra a função
       }
     } 
+    // Caso 2: Erro real de cadastro
     else if (signUpError) {
       setMensagem('Erro: ' + signUpError.message)
     } 
+    // Caso 3: Cadastro novo com sucesso (Sessão criada na hora)
     else if (signUpData?.session) {
       router.push('/cadastro')
     } 
+    // Caso 4: Cadastro com confirmação de e-mail ligada
     else {
-      setMensagem('Conta criada! Tente entrar novamente.')
+      setMensagem('Sucesso! Verifique seu e-mail para confirmar a conta e acessar o cadastro.')
     }
 
     setLoading(false)
