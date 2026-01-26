@@ -7,31 +7,68 @@ export default function Home() {
   const [busca, setBusca] = useState('')
   const [sugestoes, setSugestoes] = useState([])
 
+  // 1. CARREGAMENTO INICIAL (Mantido conforme solicitado)
   useEffect(() => {
-    async function carregarHabilidades() {
-      const { data } = await supabase
-        .from('habilidades')
-        .select('nome')
-        .order('nome', { ascending: true })
-        .limit(6)
-      
-      if (data) {
-        setSugestoes(data.map(h => h.nome))
+    async function carregarSugestoes() {
+      try {
+        const [resHab, resCid, resReg, resEst] = await Promise.all([
+          supabase.from('habilidades').select('nome').limit(2),
+          supabase.from('cidades').select('nome').limit(2),
+          supabase.from('regioes').select('nome').limit(1),
+          supabase.from('estados').select('nome').limit(1)
+        ])
+
+        const nomesCombinados = [
+          ...(resHab.data?.map(i => i.nome) || []),
+          ...(resCid.data?.map(i => i.nome) || []),
+          ...(resReg.data?.map(i => i.nome) || []),
+          ...(resEst.data?.map(i => i.nome) || [])
+        ]
+
+        if (nomesCombinados.length > 0) {
+          setSugestoes(nomesCombinados)
+        }
+      } catch (error) {
+        console.error('Erro ao carregar sugestões:', error)
       }
     }
-    carregarHabilidades()
+    carregarSugestoes()
   }, [])
 
-  const dispararBusca = (e) => {
+  // 2. FUNÇÃO DA BARRA DE BUSCA AJUSTADA PARA ALCANÇAR TODAS AS TABELAS
+  const dispararBusca = async (e) => {
     if (e) e.preventDefault()
     const termo = busca.trim()
-    window.location.href = termo ? `/prestadores?q=${encodeURIComponent(termo)}` : '/prestadores'
+    
+    if (!termo) {
+      window.location.href = '/prestadores'
+      return
+    }
+
+    // Buscamos em todas as tabelas citadas para identificar a intenção da busca
+    const [resHab, resCid, resReg, resEst] = await Promise.all([
+      supabase.from('habilidades').select('id, nome').ilike('nome', termo).maybeSingle(),
+      supabase.from('cidades').select('id, nome').ilike('nome', termo).maybeSingle(),
+      supabase.from('regioes').select('id, nome').ilike('nome', termo).maybeSingle(),
+      supabase.from('estados').select('sigla, nome').ilike('nome', termo).maybeSingle()
+    ])
+
+    // Construção inteligente da URL
+    let url = `/prestadores?q=${encodeURIComponent(termo)}`
+
+    // Adiciona filtros específicos caso encontre match exato em alguma tabela
+    if (resHab.data) url += `&habilidade=${resHab.data.id}`
+    if (resCid.data) url += `&cidade=${resCid.data.id}`
+    if (resReg.data) url += `&regiao=${resReg.data.id}`
+    if (resEst.data) url += `&estado=${resEst.data.sigla}`
+
+    window.location.href = url
   }
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] flex flex-col items-center font-sans overflow-x-hidden relative">
       
-      {/* HEADER SUPERIOR (Diferencial de Grandes Apps) */}
+      {/* HEADER SUPERIOR */}
       <header className="w-full max-w-5xl px-6 py-6 flex justify-end absolute top-0">
         <Link 
           href="/login" 
@@ -43,25 +80,20 @@ export default function Home() {
 
       <section className="w-full max-w-[90%] md:max-w-2xl px-4 pt-24 md:pt-40 pb-10 flex flex-col items-center text-center">
         
-        {/* LOGO AMPLIADA E ELEGANTE */}
         <div className="mb-12 md:mb-16 transition-all hover:scale-[1.02]">
           <Link href="/">
-            <img 
-              src="/logo.png" 
-              alt="Logo" 
-              className="h-20 md:h-32 w-auto object-contain" 
-            />
+            <img src="/logo.png" alt="Logo" className="h-20 md:h-32 w-auto object-contain" />
           </Link>
         </div>
 
-        {/* BARRA DE BUSCA ULTRA-MODERNA */}
+        {/* BARRA DE BUSCA COM LÓGICA MULTI-TABELA */}
         <form onSubmit={dispararBusca} className="w-full relative group mb-10">
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-[2rem] blur opacity-10 group-hover:opacity-25 transition duration-1000 group-focus-within:opacity-30"></div>
           
           <div className="relative">
             <input
               type="text"
-              placeholder="O que você precisa hoje?"
+              placeholder="Busque por serviço, cidade ou região..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               className="w-full h-16 md:h-20 pl-8 pr-32 md:pr-40 rounded-[1.8rem] md:rounded-[2.2rem] border border-slate-200 bg-white shadow-2xl shadow-blue-900/5 outline-none focus:border-blue-500 text-slate-700 text-base md:text-xl transition-all placeholder:text-slate-300"
@@ -75,23 +107,23 @@ export default function Home() {
           </div>
         </form>
 
-        {/* SUGESTÕES COM CHIPS MODERNOS */}
+        {/* SUGESTÕES (CHIPS) */}
         <div className="flex flex-col items-center gap-4 mb-16">
           <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Sugestões para você</span>
           <div className="flex flex-wrap justify-center gap-2 md:gap-3">
             {sugestoes.length > 0 ? (
-              sugestoes.map((cat) => (
+              sugestoes.map((item, index) => (
                 <button 
-                  key={cat} 
-                  onClick={() => window.location.href = `/prestadores?q=${encodeURIComponent(cat)}`} 
+                  key={index} 
+                  onClick={() => window.location.href = `/prestadores?q=${encodeURIComponent(item)}`} 
                   className="bg-white text-slate-500 px-5 py-2.5 rounded-2xl text-[10px] font-bold border border-slate-100 uppercase hover:text-blue-600 hover:border-blue-500 hover:shadow-md transition-all active:bg-blue-50"
                 >
-                  {cat}
+                  {item}
                 </button>
               ))
             ) : (
               <div className="flex gap-2">
-                {[1,2,3].map(i => (
+                {[1,2,3,4].map(i => (
                   <div key={i} className="w-20 h-8 bg-slate-100 animate-pulse rounded-2xl"></div>
                 ))}
               </div>
@@ -99,13 +131,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* FRASE DE IMPACTO EM VEZ DE BOTÃO GRANDE (Opcional) */}
         <p className="text-slate-400 text-xs md:text-sm max-w-xs leading-relaxed">
           Encontre os melhores profissionais de <span className="text-blue-600 font-bold">Londrina e região</span> em poucos segundos.
         </p>
       </section>
 
-      {/* FOOTER DISCRETO */}
       <footer className="mt-auto py-12 text-center w-full bg-white border-t border-slate-50">
         <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">
           {new Date().getFullYear()} • Guia de Serviços Online

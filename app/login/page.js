@@ -12,22 +12,53 @@ export default function Login() {
   const [touched, setTouched] = useState({})
   const router = useRouter()
 
-  // 1. Persistência: Redireciona se já estiver logado
   useEffect(() => {
-    const verificarSessao = async () => {
+    // 1. Ouvinte de estado para capturar eventos em tempo real
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Verificação rigorosa de fluxo de recuperação
+      const isRecoveryFlow = 
+        event === 'PASSWORD_RECOVERY' || 
+        window.location.hash.includes('type=recovery') || 
+        window.location.search.includes('type=recovery');
+
+      if (isRecoveryFlow) {
+        router.replace('/recuperar-senha')
+        return
+      }
+
+      if (session && event === 'SIGNED_IN') {
+        // Se houver sessão mas NÃO for recuperação, vai para o cadastro
+        router.push('/cadastro')
+      }
+    })
+
+    // 2. Verificação imediata ao montar o componente
+    const verificarIntencaoOriginal = async () => {
+      const hash = window.location.hash
+      const search = window.location.search
+      const isRecovery = hash.includes('type=recovery') || search.includes('type=recovery')
+
+      if (isRecovery) {
+        router.replace('/recuperar-senha')
+        return
+      }
+
       const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
+      // Só redireciona se houver sessão E não houver sinais de recuperação na URL
+      if (session && !isRecovery) {
         router.push('/cadastro')
       }
     }
-    verificarSessao()
+
+    verificarIntencaoOriginal()
+
+    return () => subscription.unsubscribe()
   }, [router])
 
   const handleBlur = (field) => setTouched(prev => ({ ...prev, [field]: true }))
   const emailInvalido = touched.email && (!email.includes('@') || email.length < 5)
   const senhaInvalida = touched.password && password.length < 6
 
-  // 2. Lógica de Recuperação de Senha
   async function handleEsqueciSenha() {
     if (!email || emailInvalido) {
       setMensagem('Erro: Digite um e-mail válido primeiro.')
@@ -35,10 +66,12 @@ export default function Login() {
     }
     setLoading(true)
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
+      // Aponta para o callback para garantir a troca do código pela sessão no PKCE
+      redirectTo: `${window.location.origin}/auth/callback?next=/recuperar-senha`,
     })
+    
     if (error) setMensagem('Erro: ' + error.message)
-    else setMensagem('Sucesso: Link de recuperação enviado para o seu e-mail!')
+    else setMensagem('Sucesso: Link enviado! Verifique seu e-mail.')
     setLoading(false)
   }
 
@@ -47,17 +80,8 @@ export default function Login() {
     setLoading(true)
     setMensagem('')
 
-    // Tenta o Cadastro primeiro
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        // Isso ajuda a garantir o redirecionamento se o e-mail estiver desativado no painel
-        emailRedirectTo: `${window.location.origin}/cadastro`,
-      }
-    })
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password })
 
-    // Caso 1: Usuário já existe (Fluxo de Login)
     if (signUpError?.message?.toLowerCase().includes("already registered") || 
         signUpError?.message?.toLowerCase().includes("already exists")) {
       
@@ -66,22 +90,17 @@ export default function Login() {
       if (signInError) {
         setMensagem('Erro: Senha incorreta para este e-mail.')
       } else {
-        // Login com sucesso
         router.push('/cadastro')
-        return // Encerra a função
       }
     } 
-    // Caso 2: Erro real de cadastro
     else if (signUpError) {
       setMensagem('Erro: ' + signUpError.message)
     } 
-    // Caso 3: Cadastro novo com sucesso (Sessão criada na hora)
     else if (signUpData?.session) {
       router.push('/cadastro')
     } 
-    // Caso 4: Cadastro com confirmação de e-mail ligada
     else {
-      setMensagem('Sucesso! Verifique seu e-mail para confirmar a conta e acessar o cadastro.')
+      setMensagem('Conta criada! Tente entrar novamente.')
     }
 
     setLoading(false)
@@ -96,7 +115,6 @@ export default function Login() {
   return (
     <main className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm text-center">
-        
         <Link href="/">
           <img src="/logo.png" alt="Logo" className="h-16 w-auto object-contain mx-auto mb-8" />
         </Link>

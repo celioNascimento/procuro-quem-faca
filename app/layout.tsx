@@ -14,18 +14,39 @@ const geistMono = Geist_Mono({
 
 // Agora o SEO volta a funcionar aqui!
 export const metadata = {
+  // Substitua pela URL real onde seu site está hospedado
+  metadataBase: new URL('https://procuroquemfaca.com.br'), 
+  
   title: {
-    default: "Vitrine Pro | Encontre Profissionais na Sua Região",
-    template: "%s | Vitrine Pro"
+    default: "Encontre Profissionais na Sua Região",
+    template: "%s | Procuro Quem Faça"
   },
   description: "A plataforma mais rápida para encontrar eletricistas, encanadores e especialistas. Contato direto via WhatsApp.",
   icons: {
-    icon: '/favicon.ico', // Certifique-se de que o arquivo existe em /public
+    icon: '/favicon.png',
   },
   openGraph: {
-    title: "Vitrine Pro | Encontre Profissionais",
-    description: "Serviços qualificados a um clique de distância.",
-    images: ['/logo.png'], // Usa sua logo como imagem de compartilhamento
+    title: "Procuro Quem Faça | Encontre Profissionais",
+    description: "Eletricistas, encanadores e especialistas a um clique de distância. Contato direto via WhatsApp.",
+    url: './', // Refere-se à página atual
+    siteName: 'Procuro Quem Faça',
+    locale: 'pt_BR',
+    type: 'website',
+    images: [
+      {
+        url: '/logo.png', // Agora com metadataBase, o Next.js converte para URL absoluta
+        width: 1200,
+        height: 630,
+        alt: 'Logo Procuro Quem Faça',
+      },
+    ],
+  },
+  // Twitter também ajuda no compartilhamento mobile
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Encontre Profissionais na Sua Região',
+    description: 'Serviços qualificados a um clique de distância.',
+    images: ['/logo.png'],
   },
 };
 
