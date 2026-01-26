@@ -7,26 +7,17 @@ export default function Home() {
   const [busca, setBusca] = useState('')
   const [sugestoes, setSugestoes] = useState([])
 
-  // 1. CARREGAMENTO INICIAL (Mantido conforme solicitado)
+  // 1. CARREGAMENTO INICIAL - APENAS HABILIDADES EM SUGESTÕES
   useEffect(() => {
     async function carregarSugestoes() {
       try {
-        const [resHab, resCid, resReg, resEst] = await Promise.all([
-          supabase.from('habilidades').select('nome').limit(2),
-          supabase.from('cidades').select('nome').limit(2),
-          supabase.from('regioes').select('nome').limit(1),
-          supabase.from('estados').select('nome').limit(1)
-        ])
+        const { data, error } = await supabase
+          .from('habilidades')
+          .select('nome')
+          .limit(6) // Aumentado para preencher melhor o espaço visual
 
-        const nomesCombinados = [
-          ...(resHab.data?.map(i => i.nome) || []),
-          ...(resCid.data?.map(i => i.nome) || []),
-          ...(resReg.data?.map(i => i.nome) || []),
-          ...(resEst.data?.map(i => i.nome) || [])
-        ]
-
-        if (nomesCombinados.length > 0) {
-          setSugestoes(nomesCombinados)
+        if (data) {
+          setSugestoes(data.map(i => i.nome))
         }
       } catch (error) {
         console.error('Erro ao carregar sugestões:', error)
@@ -107,7 +98,7 @@ export default function Home() {
           </div>
         </form>
 
-        {/* SUGESTÕES (CHIPS) */}
+        {/* SUGESTÕES (CHIPS) - AGORA APENAS HABILIDADES */}
         <div className="flex flex-col items-center gap-4 mb-16">
           <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Sugestões para você</span>
           <div className="flex flex-wrap justify-center gap-2 md:gap-3">
