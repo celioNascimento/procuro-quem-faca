@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { CATEGORIAS_OFICIAIS } from '@/lib/categorias'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import BackButton from '@/components/BackButton'
+import Header from '@/components/Header' // Importação do Header unificado
 
 const TAGS_DISPONIVEIS = ['24 Horas', 'Orçamento Grátis', 'Aceita Cartão', 'Garantia', 'Preço Justo']
 
@@ -21,10 +21,6 @@ function CadastroSkeleton() {
         </div>
         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 space-y-4">
           <div className="h-14 bg-slate-50 rounded-2xl w-full" />
-          <div className="grid grid-cols-2 gap-4">
-            <div className="h-14 bg-slate-50 rounded-2xl w-full" />
-            <div className="h-14 bg-slate-50 rounded-2xl w-full" />
-          </div>
         </div>
       </div>
     </div>
@@ -65,7 +61,6 @@ export default function Cadastro() {
     slug: ''
   })
 
-  // CÁLCULO DE PROGRESSO (CAMPOS OBRIGATÓRIOS)
   const calcularProgresso = () => {
     const campos = [
       formData.nome?.trim(),
@@ -182,31 +177,6 @@ export default function Cadastro() {
     }
   }
 
-  async function excluirConta() {
-    const confirmar = confirm("AVISO CRÍTICO: Isso apagará seu perfil, fotos e conta permanentemente. Deseja continuar?")
-    if (!confirmar) return
-    setStatus('Excluindo dados...')
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Usuário não autenticado")
-      if (formData.foto_perfil) {
-        const urlPartes = formData.foto_perfil.split('/')
-        const fileName = urlPartes[urlPartes.length - 1]
-        await supabase.storage.from('fotos-perfil').remove([fileName])
-      }
-      const { error: dbError } = await supabase.from('prestadores').delete().eq('user_id', user.id)
-      if (dbError) throw dbError
-      await registrarLog('CONTA_EXCLUIDA')
-      await supabase.auth.signOut()
-      router.push('/login')
-    } catch (error) {
-      await registrarLog('ERRO_EXCLUSAO_CONTA', { erro: error.message }, 'erro')
-      setStatus(`Erro: ${error.message || 'Falha ao excluir'}`)
-    }
-  }
-
-  const formularioValido = calcularProgresso() === 100;
-
   const toggleItem = (item, lista) => {
     const novaLista = formData[lista].includes(item)
       ? formData[lista].filter(i => i !== item)
@@ -292,20 +262,38 @@ export default function Cadastro() {
     return base + erro
   }
 
+  const formularioValido = calcularProgresso() === 100;
+
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-100 py-2">
-        <div className="max-w-4xl mx-auto px-6 grid grid-cols-3 items-center">
-          <div className="flex justify-start"><BackButton href="/" /></div>
-          <div className="flex justify-center"><img src="/logo.png" alt="Logo" className="h-16 md:h-20 w-auto object-contain" /></div>
+      {/* HEADER UNIFICADO COM BOTÃO DE SAIR ADICIONADO */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 py-2">
+        <div className="max-w-4xl mx-auto px-6 grid grid-cols-3 items-center h-16 md:h-20">
+          <div className="flex justify-start">
+            <Link href="/" className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 hover:text-blue-600 transition-all active:scale-95 shadow-sm">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
+            </Link>
+          </div>
+
+          <div className="flex justify-center h-full">
+            <Link href="/" className="flex items-center justify-center transition-transform hover:scale-105">
+              <img src="/logo.png" alt="Logo" className="h-14 md:h-16 w-auto object-contain block" />
+            </Link>
+          </div>
+
           <div className="flex justify-end">
-             <button onClick={() => supabase.auth.signOut().then(() => router.push('/login'))} className="bg-red-50 text-red-500 px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm">Sair</button>
+            <button 
+              onClick={() => supabase.auth.signOut().then(() => router.push('/login'))} 
+              className="bg-red-50 text-red-500 px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95"
+            >
+              Sair
+            </button>
           </div>
         </div>
         
-        {/* BARRA DE PROGRESSO DINÂMICA */}
+        {/* BARRA DE PROGRESSO INTEGRADA À NAV */}
         {!loading && (
-          <div className="w-full h-1 bg-slate-100 mt-2 relative overflow-hidden">
+          <div className="w-full h-1 bg-slate-50 relative overflow-hidden">
             <div 
               className="absolute left-0 top-0 h-full bg-blue-600 transition-all duration-700 ease-out"
               style={{ width: `${calcularProgresso()}%` }}
@@ -315,7 +303,7 @@ export default function Cadastro() {
       </nav>
 
       {loading ? <CadastroSkeleton /> : (
-        <div className="w-full max-w-xl mx-auto px-4 pt-32 animate-in fade-in duration-500">
+        <div className="w-full max-w-xl mx-auto px-4 pt-32 md:pt-40 animate-in fade-in duration-500">
           <header className="mb-10 pl-2">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase italic">{modoEdicao ? 'Meu Perfil' : 'Cadastro'}</h1>
             <div className="flex items-center gap-2 mt-1">
@@ -324,6 +312,7 @@ export default function Cadastro() {
           </header>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            {/* Foto de Perfil */}
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center">
               <div className="relative group">
                 <div className="w-32 h-32 rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex items-center justify-center transition-all group-hover:border-blue-400">
@@ -334,6 +323,7 @@ export default function Cadastro() {
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4 italic">{status || 'Toque para alterar a foto'}</p>
             </section>
 
+            {/* Dados Básicos */}
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-5">
               <input value={formData.nome} placeholder="Nome Completo" onChange={(e) => setFormData({...formData, nome: e.target.value})} className={inputStyle('nome')} />
               {slugErro && (
@@ -345,23 +335,15 @@ export default function Cadastro() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input value={formData.whatsapp} placeholder="WhatsApp" onChange={(e) => setFormData({...formData, whatsapp: aplicarMascaraWhatsapp(e.target.value)})} className={inputStyle('whatsapp')} />
                 <select value={formData.categoria} onChange={(e) => setFormData({...formData, categoria: e.target.value})} className={inputStyle('categoria')}>
-                  <option value="">Especialidade</option>
+                  <option value="">Especialidade Principal</option>
                   {CATEGORIAS_OFICIAIS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
               </div>
             </section>
 
-            <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-              <label className="text-slate-400 font-black text-[9px] uppercase ml-2 mb-4 block tracking-widest">Habilidades Extras</label>
-              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
-                {CATEGORIAS_OFICIAIS.map(cat => (
-                  <button key={cat} type="button" disabled={cat === formData.categoria} onClick={() => toggleItem(cat, 'habilidades')} className={`px-4 py-3 rounded-2xl text-[9px] font-black uppercase transition-all ${formData.habilidades.includes(cat) ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400 border'}`}>{cat}</button>
-                ))}
-              </div>
-            </section>
-
+            {/* Localização */}
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-5">
-              <label className="text-blue-600 font-black text-[9px] uppercase ml-2 block italic">Onde você atende?</label>
+              <label className="text-blue-600 font-black text-[9px] uppercase ml-2 block italic tracking-widest">Localização</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <select value={formData.estado_sigla} onChange={(e) => {setFormData({...formData, estado_sigla: e.target.value, regiao_id: '', cidade_id: ''}); carregarRegioes(e.target.value)}} className={inputStyle('estado_sigla')}>
                   {listaEstados.map(est => <option key={est.sigla} value={est.sigla}>{est.nome}</option>)}
@@ -376,31 +358,34 @@ export default function Cadastro() {
                   <option value="">Cidade Sede</option>
                   {listaCidades.map(cid => <option key={cid.id} value={cid.id}>{cid.nome}</option>)}
                 </select>
-                <input value={formData.bairro} placeholder="Bairro" onChange={(e) => setFormData({...formData, bairro: e.target.value})} className={inputStyle('bairro')} />
+                <input value={formData.bairro} placeholder="Bairro Principal" onChange={(e) => setFormData({...formData, bairro: e.target.value})} className={inputStyle('bairro')} />
               </div>
             </section>
 
+            {/* Extras e Bio */}
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
               <div className="flex flex-wrap gap-2">
                 {TAGS_DISPONIVEIS.map(tag => (
-                  <button key={tag} type="button" onClick={() => toggleItem(tag, 'tags')} className={`px-4 py-3 rounded-2xl text-[9px] font-black uppercase transition-all ${formData.tags.includes(tag) ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400 border'}`}>{tag}</button>
+                  <button key={tag} type="button" onClick={() => toggleItem(tag, 'tags')} className={`px-4 py-3 rounded-2xl text-[9px] font-black uppercase transition-all ${formData.tags.includes(tag) ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>{tag}</button>
                 ))}
               </div>
-              <textarea value={formData.bio} placeholder="Breve resumo do seu trabalho..." onChange={(e) => setFormData({...formData, bio: e.target.value})} className={`${inputStyle('bio')} h-32 resize-none`} />
+              <textarea value={formData.bio} placeholder="Resumo do seu trabalho (Bio)..." onChange={(e) => setFormData({...formData, bio: e.target.value})} className={`${inputStyle('bio')} h-32 resize-none`} />
             </section>
 
+            {/* Aceites */}
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
-              <label className="flex items-center gap-4 cursor-pointer">
-                <input type="checkbox" checked={aceitouTermos} onChange={(e) => setAceitouTermos(e.target.checked)} className="w-5 h-5 rounded border-slate-200 text-blue-600" />
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Aceito os Termos</span>
+              <label className="flex items-center gap-4 cursor-pointer group">
+                <input type="checkbox" checked={aceitouTermos} onChange={(e) => setAceitouTermos(e.target.checked)} className="w-5 h-5 rounded border-slate-200 text-blue-600 focus:ring-blue-500" />
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-blue-600 transition-colors">Aceito os Termos</span>
               </label>
-              <label className="flex items-center gap-4 cursor-pointer">
-                <input type="checkbox" checked={aceitouPrivacidade} onChange={(e) => setAceitouPrivacidade(e.target.checked)} className="w-5 h-5 rounded border-slate-200 text-blue-600" />
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Aceito a Privacidade</span>
+              <label className="flex items-center gap-4 cursor-pointer group">
+                <input type="checkbox" checked={aceitouPrivacidade} onChange={(e) => setAceitouPrivacidade(e.target.checked)} className="w-5 h-5 rounded border-slate-200 text-blue-600 focus:ring-blue-500" />
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-blue-600 transition-colors">Aceito a Privacidade</span>
               </label>
             </section>
 
-            <button type="submit" disabled={!formularioValido} className={`w-full py-6 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.3em] transition-all shadow-xl ${formularioValido ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200' : 'bg-slate-200 text-slate-400'}`}>
+            {/* Submit */}
+            <button type="submit" disabled={!formularioValido} className={`w-full py-6 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.3em] transition-all shadow-xl ${formularioValido ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200 active:scale-[0.98]' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
               {status || (modoEdicao ? 'Salvar Alterações' : 'Finalizar Cadastro')}
             </button>
           </form>

@@ -1,22 +1,21 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import FooterWrapper from "@/components/FooterWrapper"; // <--- Importaremos o componente que criaremos abaixo
+import FooterWrapper from "@/components/FooterWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: 'swap', // Garante que o texto apareça com fonte padrão enquanto a Geist carrega
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: 'swap',
 });
 
-// Agora o SEO volta a funcionar aqui!
 export const metadata = {
-  // Substitua pela URL real onde seu site está hospedado
   metadataBase: new URL('https://procuroquemfaca.com.br'), 
-  
   title: {
     default: "Encontre Profissionais na Sua Região",
     template: "%s | Procuro Quem Faça"
@@ -28,20 +27,19 @@ export const metadata = {
   openGraph: {
     title: "Procuro Quem Faça | Encontre Profissionais",
     description: "Eletricistas, encanadores e especialistas a um clique de distância. Contato direto via WhatsApp.",
-    url: './', // Refere-se à página atual
+    url: './',
     siteName: 'Procuro Quem Faça',
     locale: 'pt_BR',
     type: 'website',
     images: [
       {
-        url: '/logo.png', // Agora com metadataBase, o Next.js converte para URL absoluta
+        url: '/logo.png',
         width: 1200,
         height: 630,
         alt: 'Logo Procuro Quem Faça',
       },
     ],
   },
-  // Twitter também ajuda no compartilhamento mobile
   twitter: {
     card: 'summary_large_image',
     title: 'Encontre Profissionais na Sua Região',
@@ -56,13 +54,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-white`}>
+    <html lang="pt-br" className={`${geistSans.variable} ${geistMono.variable}`}>
+      {/* Adicionei 'font-sans' à body. Isso força o uso da variável 
+        --font-geist-sans em todo o site, eliminando o erro de preload 
+        e garantindo que a fonte seja aplicada.
+      */}
+      <body className={`font-sans antialiased min-h-screen flex flex-col bg-white text-slate-900`}>
         <div className="flex-grow flex flex-col">
           {children}
         </div>
-        
-        {/* Este componente cuidará de esconder o Footer no /admin sem quebrar o site */}
         <FooterWrapper />
       </body>
     </html>
