@@ -4,10 +4,12 @@ import { supabase } from '@/lib/supabase'
 import { CATEGORIAS_OFICIAIS } from '@/lib/categorias'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import Header from '@/components/Header' // Importação do Header unificado
+import BackButton from '@/components/BackButton'
+import Header from '@/components/Header'
 
 const TAGS_DISPONIVEIS = ['24 Horas', 'Orçamento Grátis', 'Aceita Cartão', 'Garantia', 'Preço Justo']
 
+// Componente de carregamento declarado no topo para evitar ReferenceError
 function CadastroSkeleton() {
   return (
     <div className="w-full max-w-xl mx-auto px-4 pt-28 md:pt-32 animate-pulse">
@@ -41,6 +43,7 @@ export default function Cadastro() {
   const [listaEstados, setListaEstados] = useState([])
   const [listaRegioes, setListaRegioes] = useState([])
   const [listaCidades, setListaCidades] = useState([])
+  const [cidadesRegiao, setCidadesRegiao] = useState([]) 
 
   const [aceitouTermos, setAceitouTermos] = useState(false) 
   const [aceitouPrivacidade, setAceitouPrivacidade] = useState(false)
@@ -110,12 +113,7 @@ export default function Cadastro() {
   }, [])
 
   const gerarSlug = (texto) => {
-    return texto
-      .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') 
-      .replace(/[^\w\s]/g, '') 
-      .replace(/\s+/g, '') 
-      .trim();
+    return texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s]/g, '').replace(/\s+/g, '').trim();
   }
 
   async function carregarEstados() {
@@ -132,16 +130,15 @@ export default function Cadastro() {
 
   async function carregarCidades(regiaoId, estadoSigla) {
     let query = supabase.from('cidades').select('*').eq('ativa', true).order('nome')
-    if (regiaoId) {
+    if (regiaoId && regiaoId !== '') {
       query = query.eq('regiao_id', regiaoId)
     } else if (estadoSigla || formData.estado_sigla) {
       query = query.eq('estado_sigla', estadoSigla || formData.estado_sigla)
-    } else {
-      setListaCidades([])
-      return
     }
     const { data } = await query
     setListaCidades(data || [])
+    if (regiaoId) setCidadesRegiao(data || [])
+    else setCidadesRegiao([])
   }
 
   async function verificarUsuarioEPrefil() {
@@ -162,7 +159,9 @@ export default function Cadastro() {
           ...perfil,
           tags: perfil.tags || [],
           habilidades: perfil.habilidades || [],
-          cidades_atendidas: perfil.cidades_atendidas || []
+          cidades_atendidas: perfil.cidades_atendidas || [],
+          regiao_id: perfil.regiao_id || '',
+          cidade_id: perfil.cidade_id || ''
         })
         setModoEdicao(true)
         setAceitouTermos(true)
@@ -170,19 +169,8 @@ export default function Cadastro() {
       } else {
         await carregarRegioes('PR')
       }
-    } catch (error) {
-      console.error("Erro ao verificar perfil:", error)
-    } finally {
-      setLoading(false)
-    }
+    } catch (error) { console.error(error) } finally { setLoading(false) }
   }
-
-  const toggleItem = (item, lista) => {
-    const novaLista = formData[lista].includes(item)
-      ? formData[lista].filter(i => i !== item)
-      : [...formData[lista], item];
-    setFormData({ ...formData, [lista]: novaLista });
-  };
 
   const aplicarMascaraWhatsapp = (valor) => {
     const d = valor.replace(/\D/g, '').slice(0, 11);
@@ -209,12 +197,7 @@ export default function Cadastro() {
       const { data: { publicUrl } } = supabase.storage.from('fotos-perfil').getPublicUrl(fileName)
       setFormData({ ...formData, foto_perfil: publicUrl })
       setStatus('Foto pronta!')
-    } catch (error) {
-      await registrarLog('ERRO_UPLOAD_FOTO', { erro: error.message }, 'erro')
-      setStatus('Erro no upload.')
-    } finally {
-      setTimeout(() => setStatus(''), 2000)
-    }
+    } catch (error) { setStatus('Erro no upload.') } finally { setTimeout(() => setStatus(''), 2000) }
   }
 
   async function handleSubmit(e) {
@@ -222,39 +205,41 @@ export default function Cadastro() {
     if (!formularioValido) return
     setStatus('Sincronizando...')
     try {
-      await registrarLog(modoEdicao ? 'TENTATIVA_SALVAR_PERFIL' : 'TENTATIVA_CRIAR_PERFIL')
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Sessão expirada.")
       const slugFinal = slugEditavel || (modoEdicao ? formData.slug : gerarSlug(formData.nome))
+      
       const dadosParaSalvar = {
         ...formData,
         slug: slugFinal,
         user_id: user.id,
+        regiao_id: formData.regiao_id === '' ? null : formData.regiao_id,
+        cidade_id: formData.cidade_id === '' ? null : formData.cidade_id,
         status: 'ativo',
         aprovado_em: new Date()
       }
+
       const { error } = modoEdicao 
         ? await supabase.from('prestadores').update(dadosParaSalvar).eq('user_id', user.id)
         : await supabase.from('prestadores').insert([dadosParaSalvar])
-      if (error) throw error
-      setStatus('✅ PUBLICADO COM SUCESSO!')
-      await registrarLog(modoEdicao ? 'PERFIL_ATUALIZADO_SUCESSO' : 'PERFIL_CRIADO_SUCESSO', { slug: slugFinal })
-      setModoEdicao(true)
-      setSlugEditavel('') 
-      setFormData(prev => ({ ...prev, slug: slugFinal }))
-    } catch (error) {
-      if (error.code === '23505') {
-        setStatus('⚠️ Nome indisponível')
-        setSlugErro(true)
-        if (!slugEditavel) setSlugEditavel(`${gerarSlug(formData.nome)}${Math.floor(10 + Math.random() * 90)}`)
-      } else {
-        await registrarLog('ERRO_SUBMIT_CADASTRO', { erro: error.message }, 'erro')
-        setStatus(`Erro: ${error.message}`)
+      
+      if (error) {
+        if (error.code === '23505') {
+          setSlugErro(true)
+          setStatus('⚠️ Endereço indisponível')
+          return
+        }
+        throw error
       }
-    } finally {
-      setTimeout(() => setStatus(''), 3000)
-    }
+      setStatus('✅ SALVO!')
+      setModoEdicao(true)
+      setSlugErro(false)
+    } catch (error) { setStatus('Erro ao salvar.') } finally { setTimeout(() => setStatus(''), 3000) }
   }
+
+  const toggleItem = (item, lista) => {
+    const novaLista = formData[lista].includes(item) ? formData[lista].filter(i => i !== item) : [...formData[lista], item];
+    setFormData({ ...formData, [lista]: novaLista });
+  };
 
   const inputStyle = (campo) => {
     const base = "w-full p-4 rounded-2xl border outline-none transition-all placeholder:text-slate-500 text-slate-800 font-bold "
@@ -266,38 +251,23 @@ export default function Cadastro() {
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
-      {/* HEADER UNIFICADO COM BOTÃO DE SAIR ADICIONADO */}
+      <Header href="/" />
+      
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 py-2">
         <div className="max-w-4xl mx-auto px-6 grid grid-cols-3 items-center h-16 md:h-20">
-          <div className="flex justify-start">
-            <Link href="/" className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 hover:text-blue-600 transition-all active:scale-95 shadow-sm">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-            </Link>
-          </div>
-
+          <div className="flex justify-start"><BackButton href="/" /></div>
           <div className="flex justify-center h-full">
             <Link href="/" className="flex items-center justify-center transition-transform hover:scale-105">
               <img src="/logo.png" alt="Logo" className="h-14 md:h-16 w-auto object-contain block" />
             </Link>
           </div>
-
           <div className="flex justify-end">
-            <button 
-              onClick={() => supabase.auth.signOut().then(() => router.push('/login'))} 
-              className="bg-red-50 text-red-500 px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95"
-            >
-              Sair
-            </button>
+            <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} className="bg-red-50 text-red-500 px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95">Sair</button>
           </div>
         </div>
-        
-        {/* BARRA DE PROGRESSO INTEGRADA À NAV */}
         {!loading && (
           <div className="w-full h-1 bg-slate-50 relative overflow-hidden">
-            <div 
-              className="absolute left-0 top-0 h-full bg-blue-600 transition-all duration-700 ease-out"
-              style={{ width: `${calcularProgresso()}%` }}
-            />
+            <div className="absolute left-0 top-0 h-full bg-blue-600 transition-all duration-700 ease-out" style={{ width: `${calcularProgresso()}%` }} />
           </div>
         )}
       </nav>
@@ -312,7 +282,6 @@ export default function Cadastro() {
           </header>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            {/* Foto de Perfil */}
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center">
               <div className="relative group">
                 <div className="w-32 h-32 rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex items-center justify-center transition-all group-hover:border-blue-400">
@@ -323,15 +292,35 @@ export default function Cadastro() {
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4 italic">{status || 'Toque para alterar a foto'}</p>
             </section>
 
-            {/* Dados Básicos */}
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-5">
               <input value={formData.nome} placeholder="Nome Completo" onChange={(e) => setFormData({...formData, nome: e.target.value})} className={inputStyle('nome')} />
+              
+              {/* BLOCO DE ERRO DE SLUG COM OPÇÕES */}
               {slugErro && (
-                <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
-                  <label className="text-amber-600 font-black text-[9px] uppercase mb-2 block">Nome indisponível, ajuste sua URL:</label>
-                  <input ref={slugInputRef} value={slugEditavel} onChange={(e) => setSlugEditavel(gerarSlug(e.target.value))} className="w-full bg-white border-none outline-none text-slate-800 font-black text-xs" />
+                <div className="bg-amber-50 p-6 rounded-[2rem] border border-amber-200 animate-in fade-in slide-in-from-top-4 duration-500">
+                  <div className="flex items-center gap-2 mb-3 text-amber-700">
+                    <span className="text-lg">⚠️</span>
+                    <p className="font-black text-[10px] uppercase tracking-widest">Endereço indisponível</p>
+                  </div>
+                  <p className="text-slate-600 text-[11px] font-medium leading-relaxed mb-4">
+                    Já existe um profissional com o nome <span className="font-bold">"{formData.nome}"</span>. Escolha como prosseguir:
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    <button type="button" onClick={() => { setSlugEditavel(`${gerarSlug(formData.nome)}-${Math.floor(10 + Math.random() * 90)}`); setSlugErro(false); }} className="bg-white border border-amber-200 p-4 rounded-2xl text-left hover:bg-amber-100 transition-all shadow-sm">
+                      <span className="block text-amber-800 font-black text-[9px] uppercase tracking-widest mb-1">Opção 1: Sugestão automática</span>
+                      <span className="text-slate-500 text-xs font-bold">.../{gerarSlug(formData.nome)}-XX</span>
+                    </button>
+                    <div className="bg-white border border-amber-200 p-4 rounded-2xl shadow-sm">
+                      <span className="block text-amber-800 font-black text-[9px] uppercase tracking-widest mb-1">Opção 2: Personalizar endereço</span>
+                      <div className="flex items-center gap-2 mt-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span className="text-slate-400 text-xs font-bold">/</span>
+                        <input ref={slugInputRef} value={slugEditavel} placeholder="Ex: joao-eletricista" onChange={(e) => setSlugEditavel(gerarSlug(e.target.value))} className="w-full bg-transparent border-none outline-none text-slate-800 font-bold text-xs" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input value={formData.whatsapp} placeholder="WhatsApp" onChange={(e) => setFormData({...formData, whatsapp: aplicarMascaraWhatsapp(e.target.value)})} className={inputStyle('whatsapp')} />
                 <select value={formData.categoria} onChange={(e) => setFormData({...formData, categoria: e.target.value})} className={inputStyle('categoria')}>
@@ -341,28 +330,38 @@ export default function Cadastro() {
               </div>
             </section>
 
-            {/* Localização */}
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-5">
               <label className="text-blue-600 font-black text-[9px] uppercase ml-2 block italic tracking-widest">Localização</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select value={formData.estado_sigla} onChange={(e) => {setFormData({...formData, estado_sigla: e.target.value, regiao_id: '', cidade_id: ''}); carregarRegioes(e.target.value)}} className={inputStyle('estado_sigla')}>
+                <select value={formData.estado_sigla} onChange={(e) => { const sigla = e.target.value; setFormData({...formData, estado_sigla: sigla, regiao_id: '', cidade_id: '', cidades_atendidas: []}); carregarRegioes(sigla); }} className={inputStyle('estado_sigla')}>
                   {listaEstados.map(est => <option key={est.sigla} value={est.sigla}>{est.nome}</option>)}
                 </select>
-                <select value={formData.regiao_id} onChange={(e) => {setFormData({...formData, regiao_id: e.target.value, cidade_id: ''}); carregarCidades(e.target.value)}} className={inputStyle('regiao_id')}>
+                <select value={formData.regiao_id} onChange={(e) => { const rId = e.target.value; setFormData({...formData, regiao_id: rId, cidade_id: '', cidades_atendidas: []}); carregarCidades(rId, formData.estado_sigla); }} className={inputStyle('regiao_id')}>
                   <option value="">Região (Opcional)</option>
                   {listaRegioes.map(reg => <option key={reg.id} value={reg.id}>{reg.nome}</option>)}
                 </select>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select value={formData.cidade_id} onChange={(e) => setFormData({...formData, cidade_id: e.target.value})} className={inputStyle('cidade_id')}>
+                <select value={formData.cidade_id} onChange={(e) => setFormData({...formData, cidade_id: e.target.value, cidades_atendidas: []})} className={inputStyle('cidade_id')}>
                   <option value="">Cidade Sede</option>
                   {listaCidades.map(cid => <option key={cid.id} value={cid.id}>{cid.nome}</option>)}
                 </select>
                 <input value={formData.bairro} placeholder="Bairro Principal" onChange={(e) => setFormData({...formData, bairro: e.target.value})} className={inputStyle('bairro')} />
               </div>
+
+              {/* BLOCO CIDADES ATENDIDAS (RM) */}
+              {formData.regiao_id && cidadesRegiao.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <label className="text-slate-400 font-black text-[9px] uppercase ml-2 mb-3 block tracking-widest italic">Cidades que você também atende nesta região:</label>
+                  <div className="flex flex-wrap gap-2">
+                    {cidadesRegiao.filter(cid => cid.id !== formData.cidade_id).map(cid => (
+                      <button key={cid.id} type="button" onClick={() => toggleItem(cid.nome, 'cidades_atendidas')} className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border ${formData.cidades_atendidas.includes(cid.nome) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-blue-200'}`}>{cid.nome}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
 
-            {/* Extras e Bio */}
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
               <div className="flex flex-wrap gap-2">
                 {TAGS_DISPONIVEIS.map(tag => (
@@ -372,22 +371,31 @@ export default function Cadastro() {
               <textarea value={formData.bio} placeholder="Resumo do seu trabalho (Bio)..." onChange={(e) => setFormData({...formData, bio: e.target.value})} className={`${inputStyle('bio')} h-32 resize-none`} />
             </section>
 
-            {/* Aceites */}
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
               <label className="flex items-center gap-4 cursor-pointer group">
                 <input type="checkbox" checked={aceitouTermos} onChange={(e) => setAceitouTermos(e.target.checked)} className="w-5 h-5 rounded border-slate-200 text-blue-600 focus:ring-blue-500" />
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-blue-600 transition-colors">Aceito os Termos</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aceito os Termos</span>
               </label>
               <label className="flex items-center gap-4 cursor-pointer group">
                 <input type="checkbox" checked={aceitouPrivacidade} onChange={(e) => setAceitouPrivacidade(e.target.checked)} className="w-5 h-5 rounded border-slate-200 text-blue-600 focus:ring-blue-500" />
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-blue-600 transition-colors">Aceito a Privacidade</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aceito a Privacidade</span>
               </label>
             </section>
 
-            {/* Submit */}
-            <button type="submit" disabled={!formularioValido} className={`w-full py-6 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.3em] transition-all shadow-xl ${formularioValido ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200 active:scale-[0.98]' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
-              {status || (modoEdicao ? 'Salvar Alterações' : 'Finalizar Cadastro')}
-            </button>
+            <div className="flex flex-col gap-4">
+              <button type="submit" disabled={!formularioValido} className={`w-full py-6 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.3em] transition-all shadow-xl ${formularioValido ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200 active:scale-[0.98]' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
+                {status || (modoEdicao ? 'Salvar Alterações' : 'Finalizar Cadastro')}
+              </button>
+
+              {modoEdicao && (
+                <Link 
+                  href="/confirmar-exclusao"
+                  className="w-full py-4 text-red-500 font-black text-[10px] uppercase tracking-widest hover:text-red-700 transition-colors text-center block mt-4"
+                >
+                  Excluir Perfil Permanentemente
+                </Link>
+              )}
+            </div>
           </form>
         </div>
       )}

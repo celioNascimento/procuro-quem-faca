@@ -4,9 +4,8 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import BackButton from '@/components/BackButton'
-import Header from '@/components/Header' // Importação do componente Header
+import Header from '@/components/Header'
 
-// Componente de Skeleton para simular o carregamento do Perfil
 function PerfilSkeleton() {
   return (
     <div className="max-w-xl mx-auto pt-32 pb-12 px-6 animate-pulse">
@@ -78,7 +77,6 @@ export default function PerfilPublico() {
 
   return (
     <main className="min-h-screen bg-white font-sans text-slate-800">
-      {/* HEADER UNIFICADO (Idêntico ao prestadores/page.js) */}
       <Header href="/prestadores" />
 
       {loading ? (
@@ -91,6 +89,18 @@ export default function PerfilPublico() {
       ) : (
         <div className="max-w-xl mx-auto pt-28 md:pt-36 pb-12 px-6 animate-in fade-in duration-500">
           <section className="text-center mb-10 relative">
+            
+            {/* BOTÃO DE DENÚNCIA (Canto Superior Esquerdo) */}
+            <Link 
+              href={`/denunciar/${prestador.id}`}
+              className="absolute top-0 left-0 z-10 w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-red-500 shadow-sm transition-all hover:scale-105 active:scale-95"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </Link>
+
+            {/* BOTÃO DE COMPARTILHAMENTO (Canto Superior Direito) */}
             <button 
               onClick={compartilharPerfil} 
               className="absolute top-0 right-0 z-10 w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-blue-600 shadow-sm transition-all hover:scale-105 active:scale-95"
@@ -115,25 +125,24 @@ export default function PerfilPublico() {
                 {prestador.categoria}
               </span>
               <p className="text-slate-400 text-[11px] font-medium uppercase tracking-[0.1em] mt-1">
-                 📍 {prestador.bairro}, {prestador.cidades?.nome}
+                  📍 {prestador.bairro}, {prestador.cidades?.nome}
               </p>
             </div>
           </section>
 
           <div className="space-y-6">
-            <section className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100/50 shadow-inner">
-              <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 mb-4 underline underline-offset-4 decoration-blue-200">Especialidades</h2>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-4 py-2 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl text-[10px] font-bold uppercase shadow-sm">
-                  {prestador.categoria}
-                </span>
-                {prestador.habilidades?.map(hab => (
-                  <span key={hab} className="px-4 py-2 bg-white border border-slate-100 text-slate-500 rounded-xl text-[10px] font-bold uppercase shadow-sm">
-                    {hab}
-                  </span>
-                ))}
-              </div>
-            </section>
+            {prestador.habilidades && prestador.habilidades.length > 0 && (
+              <section className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100/50 shadow-inner">
+                <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 mb-4 underline underline-offset-4 decoration-blue-200">Especialidades</h2>
+                <div className="flex flex-wrap gap-2">
+                  {prestador.habilidades.map(hab => (
+                    <span key={hab} className="px-4 py-2 bg-white border border-slate-100 text-slate-500 rounded-xl text-[10px] font-bold uppercase shadow-sm">
+                      {hab}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100/50 shadow-inner">
               <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 mb-4 underline underline-offset-4 decoration-blue-200">Sobre o Profissional</h2>

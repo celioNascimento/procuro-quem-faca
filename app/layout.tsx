@@ -1,11 +1,14 @@
+// Arquivo: app/layout.js
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import FooterWrapper from "@/components/FooterWrapper";
+import CookieConsent from "@/components/CookieConsent"; 
+import LogAcesso from "@/components/LogAcesso"; // <--- 1. Importar o monitor de tráfego
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  display: 'swap', // Garante que o texto apareça com fonte padrão enquanto a Geist carrega
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
@@ -55,15 +58,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-br" className={`${geistSans.variable} ${geistMono.variable}`}>
-      {/* Adicionei 'font-sans' à body. Isso força o uso da variável 
-        --font-geist-sans em todo o site, eliminando o erro de preload 
-        e garantindo que a fonte seja aplicada.
-      */}
       <body className={`font-sans antialiased min-h-screen flex flex-col bg-white text-slate-900`}>
+        
         <div className="flex-grow flex flex-col">
           {children}
         </div>
+        
         <FooterWrapper />
+        
+        {/* --- COMPONENTES GLOBAIS (MONITORAMENTO & UX) --- */}
+        
+        {/* 1. Gerencia o aviso legal de Cookies (só aparece se não aceitou) */}
+        <CookieConsent /> 
+        
+        {/* 2. Registra o log de visita no banco (invisível, roda em toda sessão) */}
+        <LogAcesso />
+        
       </body>
     </html>
   );
