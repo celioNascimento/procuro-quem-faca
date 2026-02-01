@@ -44,8 +44,8 @@ function FormularioCadastro() {
   
   const [slugErro, setSlugErro] = useState(false)
   const [slugEditavel, setSlugEditavel] = useState('')
+  const [salvoComSucesso, setSalvoComSucesso] = useState(false)
 
-  // ESTADOS DE AUTENTICAÇÃO
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [userLogado, setUserLogado] = useState(null)
@@ -61,10 +61,10 @@ function FormularioCadastro() {
   const [formData, setFormData] = useState({
     nome: '', whatsapp: '', categoria: '', estado_sigla: 'PR',
     regiao_id: '', cidade_id: '', bairro: '', bio: '',
-    foto_perfil: '', tags: [], habilidades: [], slug: ''
+    foto_perfil: '', tags: [], habilidades: [], slug: '',
+    cidades_atendidas: [] // Adicionado para suportar seleção múltipla
   })
 
-  // Inicialização (Apenas LEITURA de dados)
   useEffect(() => { 
     const inicializar = async () => {
       try {
@@ -121,7 +121,7 @@ function FormularioCadastro() {
       if (reivindicarId) { router.push('/admin/perfil'); return; }
       await carregarRegioes(perfil.estado_sigla || 'PR')
       await carregarCidades(perfil.regiao_id, perfil.estado_sigla)
-      setFormData({ ...perfil, tags: perfil.tags || [], habilidades: perfil.habilidades || [] })
+      setFormData({ ...perfil, tags: perfil.tags || [], habilidades: perfil.habilidades || [], cidades_atendidas: perfil.cidades_atendidas || [] })
       setModoEdicao(true); setAceitouTermos(true); setAceitouPrivacidade(true);
     } else if (reivindicarId) {
       await carregarPerfilReivindicado()
@@ -129,7 +129,6 @@ function FormularioCadastro() {
   }
 
   async function carregarPerfilReivindicado() {
-    // Apenas carrega os dados para visualização. Nenhuma alteração no banco aqui.
     const { data: pPublico } = await supabase.from('prestadores').select('*').eq('id', reivindicarId).single()
     if (pPublico) {
       await carregarRegioes(pPublico.estado_sigla || 'PR')
@@ -137,7 +136,8 @@ function FormularioCadastro() {
       setFormData({ 
         ...pPublico, 
         tags: pPublico.tags || [], 
-        habilidades: pPublico.habilidades || []
+        habilidades: pPublico.habilidades || [],
+        cidades_atendidas: pPublico.cidades_atendidas || []
       })
       setAceitouTermos(true); setAceitouPrivacidade(true);
     }
@@ -172,16 +172,30 @@ function FormularioCadastro() {
     } catch (error) { setStatus('Erro no upload.') } finally { setTimeout(() => setStatus(''), 2000) }
   }
 
-  // --- ONDE A MÁGICA ACONTECE: O SALVAMENTO ---
+  const calcularProgresso = () => {
+    const campos = [
+      formData.nome?.trim(),
+      formData.whatsapp?.length >= 10,
+      formData.categoria,
+      formData.cidade_id,
+      formData.foto_perfil,
+      aceitouTermos,
+      aceitouPrivacidade,
+      (!userLogado ? (email.includes('@') && senha.length >= 6) : true)
+    ]
+    const preenchidos = campos.filter(Boolean).length
+    return Math.round((preenchidos / campos.length) * 100)
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
+    const formularioValido = calcularProgresso() === 100
     if (!formularioValido) return
     setStatus('Processando...')
     
     try {
       let finalUserId = userLogado?.id
 
-      // 1. Cria usuário se necessário
       if (!userLogado) {
         if (!email || !senha) { setStatus('Preencha email e senha'); return; }
         const { data: authData, error: authError } = await supabase.auth.signUp({ email, password: senha })
@@ -192,23 +206,18 @@ function FormularioCadastro() {
 
       const slugFinal = slugEditavel || (modoEdicao ? formData.slug : gerarSlug(formData.nome))
       
-      // 2. Prepara o Payload de atualização/inserção
       const dadosParaSalvar = {
         ...formData,
         slug: slugFinal,
-        user_id: finalUserId, // Vincula o dono
+        user_id: finalUserId,
         regiao_id: formData.regiao_id === '' ? null : formData.regiao_id,
         cidade_id: formData.cidade_id === '' ? null : formData.cidade_id,
         status: 'ativo',
-        
-        // AQUI ESTÁ A LÓGICA DE TRANSIÇÃO DE PERFIL:
-        // Só muda para 'registro_direto' e 'verificado' neste momento exato do save
         origem_tipo: 'registro_direto', 
         verificado: reivindicarId ? true : formData.verificado,
         aprovado_em: new Date()
       }
 
-      // 3. Executa a gravação no banco
       const { error } = (modoEdicao || reivindicarId)
         ? await supabase.from('prestadores').update(dadosParaSalvar).eq('id', formData.id || reivindicarId)
         : await supabase.from('prestadores').insert([dadosParaSalvar])
@@ -228,7 +237,7 @@ function FormularioCadastro() {
             detalhes: { prestador_id: reivindicarId }
          })
       }
-      router.push('/admin/perfil?msg=sucesso')
+      setSalvoComSucesso(true)
 
     } catch (error) { 
       console.error(error)
@@ -247,22 +256,28 @@ function FormularioCadastro() {
     return base + erro
   }
 
-  const calcularProgresso = () => {
-    const campos = [
-      formData.nome?.trim(),
-      formData.whatsapp?.length >= 10,
-      formData.categoria,
-      formData.cidade_id,
-      formData.foto_perfil,
-      aceitouTermos,
-      aceitouPrivacidade,
-      (!userLogado ? (email.includes('@') && senha.length >= 6) : true)
-    ]
-    const preenchidos = campos.filter(Boolean).length
-    return Math.round((preenchidos / campos.length) * 100)
-  }
-
   if (loading) return <CadastroSkeleton />
+
+  if (salvoComSucesso) {
+    return (
+      <main className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6 font-sans">
+        <div className="w-full max-w-md bg-white rounded-[3rem] p-10 border border-slate-100 shadow-xl text-center animate-in zoom-in-95 duration-500">
+          <div className="w-20 h-20 bg-green-500 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-100">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter mb-2">Perfil Salvo!</h2>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed mb-8">
+            Suas informações foram atualizadas com sucesso e já estão ativas na vitrine.
+          </p>
+          <Link href="/" className="block w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100">
+            Voltar para a Home
+          </Link>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-20 font-sans">
@@ -301,22 +316,39 @@ function FormularioCadastro() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-          {/* CREDENCIAIS (SÓ SE NÃO LOGADO) */}
-          {!userLogado && (
-             <section className="bg-blue-600 p-8 rounded-[2.5rem] shadow-xl shadow-blue-200 text-white space-y-4 animate-in slide-in-from-top-4">
-                <div className="flex items-center gap-3 mb-2">
-                   <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">🔐</div>
-                   <h2 className="font-black uppercase text-[10px] tracking-widest opacity-90">Crie seu acesso</h2>
+          {!userLogado ? (
+             <section className="bg-slate-50/80 p-8 rounded-[2.5rem] border border-blue-100 shadow-sm shadow-blue-50/50 space-y-4 animate-in slide-in-from-top-4">
+                <div className="flex items-center justify-between mb-2">
+                   <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                         </svg>
+                      </div>
+                      <div>
+                         <h2 className="font-bold uppercase text-[10px] tracking-widest text-slate-900 leading-none">Segurança de Acesso</h2>
+                         <p className="text-[9px] text-slate-400 font-medium uppercase mt-1 tracking-tighter">Crie seus dados de login</p>
+                      </div>
+                   </div>
+                   <span className="bg-blue-100 text-blue-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase">Obrigatório</span>
                 </div>
                 <div className="space-y-3">
-                   <input type="email" placeholder="Seu E-mail" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-4 rounded-2xl bg-white/10 border border-white/20 placeholder:text-white/50 text-white font-bold outline-none focus:bg-white/20 transition-all" />
-                   <input type="password" placeholder="Senha (mínimo 6 caracteres)" value={senha} onChange={e => setSenha(e.target.value)} className="w-full p-4 rounded-2xl bg-white/10 border border-white/20 placeholder:text-white/50 text-white font-bold outline-none focus:bg-white/20 transition-all" />
+                   <input type="email" placeholder="Seu melhor e-mail" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-4 rounded-2xl bg-white border border-slate-100 placeholder:text-slate-300 text-slate-800 font-bold outline-none focus:border-blue-500 focus:shadow-md focus:shadow-blue-50 transition-all" />
+                   <input type="password" placeholder="Senha (mínimo 6 caracteres)" value={senha} onChange={e => setSenha(e.target.value)} className="w-full p-4 rounded-2xl bg-white border border-slate-100 placeholder:text-slate-300 text-slate-800 font-bold outline-none focus:border-blue-500 focus:shadow-md focus:shadow-blue-50 transition-all" />
                 </div>
-                <p className="text-[9px] font-medium text-blue-100/80 pl-2">Você usará estes dados para acessar seu painel depois.</p>
              </section>
+          ) : (
+             reivindicarId && (
+               <div className="bg-emerald-50 p-6 rounded-[2rem] border border-emerald-100 flex items-start gap-4 animate-in fade-in">
+                 <div className="text-xl">👤</div>
+                 <div>
+                   <p className="text-emerald-800 font-bold text-xs uppercase tracking-tight">Logado como: {userLogado.email}</p>
+                   <p className="text-[10px] text-emerald-600/80 mt-1">Este perfil será vinculado à sua conta atual.</p>
+                 </div>
+               </div>
+             )
           )}
 
-          {/* FOTO E CATEGORIA (AGRUPADOS) */}
           <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center">
             <div className="relative group">
               <div className="w-32 h-32 rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex items-center justify-center transition-all group-hover:border-blue-400">
@@ -326,17 +358,15 @@ function FormularioCadastro() {
             </div>
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4 italic mb-6">{status || 'Toque para alterar a foto'}</p>
 
-            {/* CATEGORIA MOVIDA PARA CÁ */}
             <div className="w-full border-t border-slate-50 pt-6 animate-in fade-in">
               <label className="text-blue-600 font-black text-[9px] uppercase ml-2 block italic tracking-widest mb-3">Sua Profissão Principal</label>
-              <select value={formData.categoria} onChange={(e) => setFormData({...formData, categoria: e.target.value})} className="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 focus:border-blue-500 focus:shadow-md outline-none transition-all font-bold text-slate-800">
+              <select value={formData.categoria || ''} onChange={(e) => setFormData({...formData, categoria: e.target.value})} className="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 focus:border-blue-500 focus:shadow-md outline-none transition-all font-bold text-slate-800">
                 <option value="">Selecione sua Categoria</option>
                 {CATEGORIAS_OFICIAIS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
             </div>
           </section>
 
-          {/* DADOS PESSOAIS E HABILIDADES */}
           <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-5">
             <input value={formData.nome} placeholder="Nome Completo" onChange={(e) => setFormData({...formData, nome: e.target.value})} className={inputStyle('nome')} />
             
@@ -349,13 +379,12 @@ function FormularioCadastro() {
 
             <input value={formData.whatsapp} placeholder="WhatsApp" onChange={(e) => setFormData({...formData, whatsapp: aplicarMascaraWhatsapp(e.target.value)})} className={inputStyle('whatsapp')} />
 
-            {/* HABILIDADES (FILTRANDO A CATEGORIA PRINCIPAL) */}
             {formData.categoria && (
               <div className="pt-4 mt-2 border-t border-slate-100 animate-in fade-in">
                 <label className="text-slate-400 font-black text-[9px] uppercase ml-2 block italic tracking-widest mb-3">Você também realiza estes serviços?</label>
                 <div className="flex flex-wrap gap-2">
                   {HABILIDADES_COMUNS
-                    .filter(hab => hab !== formData.categoria) // Não repete a categoria principal
+                    .filter(hab => hab !== formData.categoria)
                     .map(hab => (
                     <button key={hab} type="button" onClick={() => toggleItem(hab, 'habilidades')} className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border ${formData.habilidades.includes(hab) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-blue-200'}`}>{hab}</button>
                   ))}
@@ -364,39 +393,53 @@ function FormularioCadastro() {
             )}
           </section>
 
-          {/* LOCALIZAÇÃO */}
           <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-5">
             <label className="text-blue-600 font-black text-[9px] uppercase ml-2 block italic tracking-widest">Localização</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <select value={formData.estado_sigla} onChange={(e) => { const sigla = e.target.value; setFormData({...formData, estado_sigla: sigla, regiao_id: '', cidade_id: '', cidades_atendidas: []}); carregarRegioes(sigla); }} className={inputStyle('estado_sigla')}>
+              <select value={formData.estado_sigla || ''} onChange={(e) => { const sigla = e.target.value; setFormData({...formData, estado_sigla: sigla, regiao_id: '', cidade_id: '', cidades_atendidas: []}); carregarRegioes(sigla); }} className={inputStyle('estado_sigla')}>
                 {listaEstados.map(est => <option key={est.sigla} value={est.sigla}>{est.nome}</option>)}
               </select>
-              <select value={formData.regiao_id} onChange={(e) => { const rId = e.target.value; setFormData({...formData, regiao_id: rId, cidade_id: '', cidades_atendidas: []}); carregarCidades(rId, formData.estado_sigla); }} className={inputStyle('regiao_id')}>
+              <select 
+                value={formData.regiao_id || ''} 
+                onChange={(e) => { const rId = e.target.value; setFormData({...formData, regiao_id: rId, cidade_id: '', cidades_atendidas: []}); carregarCidades(rId, formData.estado_sigla); }} 
+                className={inputStyle('regiao_id')}
+              >
                 <option value="">Região (Opcional)</option>
                 {listaRegioes.map(reg => <option key={reg.id} value={reg.id}>{reg.nome}</option>)}
               </select>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <select value={formData.cidade_id} onChange={(e) => setFormData({...formData, cidade_id: e.target.value, cidades_atendidas: []})} className={inputStyle('cidade_id')}>
+              <select value={formData.cidade_id || ''} onChange={(e) => setFormData({...formData, cidade_id: e.target.value, cidades_atendidas: []})} className={inputStyle('cidade_id')}>
                 <option value="">Cidade Sede</option>
                 {listaCidades.map(cid => <option key={cid.id} value={cid.id}>{cid.nome}</option>)}
               </select>
               <input value={formData.bairro} placeholder="Bairro Principal" onChange={(e) => setFormData({...formData, bairro: e.target.value})} className={inputStyle('bairro')} />
             </div>
-            
-            {formData.regiao_id && cidadesRegiao.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <label className="text-slate-400 font-black text-[9px] uppercase ml-2 mb-3 block tracking-widest italic">Cidades vizinhas atendidas:</label>
-                  <div className="flex flex-wrap gap-2">
-                    {cidadesRegiao.filter(cid => cid.id !== formData.cidade_id).map(cid => (
-                      <button key={cid.id} type="button" onClick={() => toggleItem(cid.nome, 'cidades_atendidas')} className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border ${formData.cidades_atendidas.includes(cid.nome) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-blue-200'}`}>{cid.nome}</button>
-                    ))}
-                  </div>
+
+            {/* BLOCO DE SELEÇÃO DE CIDADES DA REGIÃO METROPOLITANA */}
+            {formData.regiao_id && cidadesRegiao.length > 1 && formData.cidade_id && (
+              <div className="mt-4 pt-4 border-t border-slate-100 animate-in fade-in">
+                <label className="text-slate-400 font-black text-[9px] uppercase ml-2 block italic tracking-widest mb-3">
+                  Atende outras cidades na região?
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {cidadesRegiao
+                    .filter(cid => cid.id !== formData.cidade_id)
+                    .map(cid => (
+                    <button 
+                      key={cid.id} 
+                      type="button" 
+                      onClick={() => toggleItem(cid.nome, 'cidades_atendidas')} 
+                      className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all border ${formData.cidades_atendidas?.includes(cid.nome) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-blue-200'}`}
+                    >
+                      {cid.nome}
+                    </button>
+                  ))}
                 </div>
+              </div>
             )}
           </section>
 
-          {/* BIO E TAGS */}
           <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
             <div className="flex flex-wrap gap-2">
               {TAGS_DISPONIVEIS.map(tag => (
@@ -406,7 +449,6 @@ function FormularioCadastro() {
             <textarea value={formData.bio} placeholder="Resumo do seu trabalho (Bio)..." onChange={(e) => setFormData({...formData, bio: e.target.value})} className={`${inputStyle('bio')} h-32 resize-none`} />
           </section>
 
-          {/* TERMOS */}
           <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
             <label className="flex items-center gap-4 cursor-pointer group">
               <input type="checkbox" checked={aceitouTermos} onChange={(e) => setAceitouTermos(e.target.checked)} className="w-5 h-5 rounded border-slate-200 text-blue-600 focus:ring-blue-500" />

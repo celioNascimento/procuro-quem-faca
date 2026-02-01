@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import FooterWrapper from "@/components/FooterWrapper";
 import CookieConsent from "@/components/CookieConsent"; 
-import LogAcesso from "@/components/LogAcesso"; // <--- 1. Importar o monitor de tráfego
+import LogAcesso from "@/components/LogAcesso"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,7 +57,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br" className={`${geistSans.variable} ${geistMono.variable}`}>
+    /* CORREÇÃO: suppressHydrationWarning é vital para layout.js em Next.js */
+    <html lang="pt-br" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className={`font-sans antialiased min-h-screen flex flex-col bg-white text-slate-900`}>
         
         <div className="flex-grow flex flex-col">
@@ -66,12 +67,7 @@ export default function RootLayout({
         
         <FooterWrapper />
         
-        {/* --- COMPONENTES GLOBAIS (MONITORAMENTO & UX) --- */}
-        
-        {/* 1. Gerencia o aviso legal de Cookies (só aparece se não aceitou) */}
         <CookieConsent /> 
-        
-        {/* 2. Registra o log de visita no banco (invisível, roda em toda sessão) */}
         <LogAcesso />
         
       </body>
