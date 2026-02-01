@@ -9,7 +9,8 @@ import { usePathname, useRouter } from 'next/navigation'
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [userName, setUserName] = useState('Administrador')
-  const [loading, setLoading] = useState(true) // NOVO: Controle de barreira
+  const [loading, setLoading] = useState(true)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
@@ -23,7 +24,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const nomeSugerido = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Admin'
         setUserName(nomeSugerido)
       } else if (pathname !== '/admin/login') {
-        // Se não tem user e não está na login, redireciona
         router.push('/admin/login')
       }
       setLoading(false)
@@ -44,6 +44,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return () => subscription.unsubscribe()
   }, [pathname, router])
 
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [pathname])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/admin/login')
@@ -52,10 +56,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isLoginPage = pathname === '/admin/login'
   const mostrarSidebar = userEmail && !isLoginPage
 
-  // BARREIRA DE SEGURANÇA VISUAL
   if (loading && !isLoginPage) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-sans">
+      <div className="h-screen bg-[#F8FAFC] flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Validando Acesso...</p>
@@ -64,37 +67,57 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     )
   }
 
-  // Se não estiver logado e tentar burlar a URL, não renderiza nada enquanto o router.push não completa
   if (!userEmail && !isLoginPage) return null
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900">
+    // h-screen e overflow-hidden no container pai para travar a janela
+    <div className="h-screen bg-[#F8FAFC] flex font-sans text-slate-900 overflow-hidden">
       
-      {/* SIDEBAR */}
+      {/* OVERLAY PARA MOBILE */}
+      {isMobileMenuOpen && mostrarSidebar && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* SIDEBAR ESTÁTICO */}
       {mostrarSidebar && (
-        <aside className="w-72 bg-[#0F172A] min-h-screen flex flex-col sticky top-0 shadow-2xl z-50 overflow-hidden shrink-0">
-          <div className="p-8">
+        <aside className={`
+          fixed lg:relative h-full w-72 bg-[#0F172A] flex flex-col shadow-2xl z-[60] transition-transform duration-300 ease-in-out shrink-0
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}>
+          <div className="p-8 flex items-center justify-between">
             <Link href="/admin" className="flex items-center gap-3 group">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center font-black text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
                 P
               </div>
-              <div className="flex flex-col">
-                <span className="text-white font-black text-sm uppercase tracking-tighter leading-tight">ProcuroQuemFaça</span>
+              <div className="flex flex-col text-white">
+                <span className="font-black text-sm uppercase tracking-tighter leading-tight">ProcuroQuemFaça</span>
                 <span className="text-[9px] text-blue-400 font-bold uppercase tracking-[0.2em]">Console Admin</span>
               </div>
             </Link>
+            <button className="lg:hidden text-slate-400 p-2" onClick={() => setIsMobileMenuOpen(false)}>
+              ✕
+            </button>
           </div>
 
-          <nav className="flex-1 px-4 space-y-1">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 ml-4">Gestão Geral</p>
+          <nav className="flex-1 px-4 space-y-1 overflow-y-auto scrollbar-hide">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 ml-4 mt-2">Gestão Geral</p>
             <SidebarLink href="/admin" label="Dashboard" icon={<path d="M3 3h7v9H3V3zm11 0h7v5h-7V3zm0 9h7v9h-7v-9zm-11 11h7v-7H3v7z"/>} />
             <SidebarLink href="/admin/moderacao" label="Moderação" icon={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>} />
+            <SidebarLink href="/admin/povoar" label="Povoar Base" icon={<path d="M12 4v16m8-8H4"/>} />
             <SidebarLink href="/admin/anuncios" label="Anúncios" icon={<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>} />
             
             <div className="pt-6">
-               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 ml-4">Configurações</p>
-               <SidebarLink href="/admin/geografia" label="Geografia" icon={<><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>} />
-               <SidebarLink href="/admin/habilidades" label="Habilidades" icon={<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>} />
+               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 ml-4">Inteligência</p>
+               <SidebarLink href="/admin/logs" label="Logs & Analytics" icon={<><path d="M18 20V10M12 20V4M6 20v-6"/></>} />
+            </div>
+
+            <div className="pt-6 pb-8">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 ml-4">Configurações</p>
+                <SidebarLink href="/admin/geografia" label="Geografia" icon={<><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>} />
+                <SidebarLink href="/admin/habilidades" label="Habilidades" icon={<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>} />
             </div>
           </nav>
 
@@ -109,23 +132,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
       )}
 
-      {/* ÁREA PRINCIPAL */}
-      <div className={`flex-1 flex flex-col min-w-0 ${!mostrarSidebar ? 'items-center justify-center' : ''}`}>
+      {/* ÁREA PRINCIPAL (Faz scroll aqui) */}
+      <div className={`flex-1 flex flex-col min-w-0 h-full ${!mostrarSidebar ? 'items-center justify-center' : ''}`}>
         
         {mostrarSidebar && (
-          <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-10 flex items-center justify-between sticky top-0 z-40">
-              <div>
-                 <h2 className="text-sm font-bold text-slate-800">Painel de Controle</h2>
-                 <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Londrina - PR</p>
+          <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 lg:px-10 flex items-center justify-between sticky top-0 z-40 shrink-0">
+              <div className="flex items-center gap-4">
+                 <button 
+                  className="lg:hidden p-2 bg-slate-100 rounded-xl"
+                  onClick={() => setIsMobileMenuOpen(true)}
+                 >
+                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 5H17M3 10H17M3 15H17" stroke="#0F172A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                   </svg>
+                 </button>
+                 
+                 <div className="hidden sm:block">
+                    <h2 className="text-sm font-bold text-slate-800 leading-tight tracking-tight uppercase italic">Admin Console</h2>
+                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Londrina - PR</p>
+                 </div>
               </div>
 
-              <div className="flex items-center gap-6">
-                 <div className="text-right hidden sm:block">
-                   <p className="text-xs font-black text-slate-900 leading-none mb-1 capitalize">{userName}</p>
-                   <p className="text-[10px] font-bold text-blue-600/70">{userEmail}</p>
+              <div className="flex items-center gap-4 lg:gap-6">
+                 <div className="text-right hidden md:block">
+                   <p className="text-xs font-black text-slate-900 leading-none mb-1 capitalize tracking-tight">{userName}</p>
+                   <p className="text-[10px] font-bold text-blue-600/70 lowercase">{userEmail}</p>
                  </div>
                  <div className="relative group">
-                    <div className="w-11 h-11 bg-gradient-to-tr from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center font-black text-slate-700 text-sm border border-white shadow-sm group-hover:shadow-md transition-all">
+                    <div className="w-10 h-10 lg:w-11 lg:h-11 bg-gradient-to-tr from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center font-black text-slate-700 text-sm border border-white shadow-sm">
                       {userName.charAt(0)}
                     </div>
                     <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
@@ -134,8 +168,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </header>
         )}
 
-        <main className={`w-full ${mostrarSidebar ? 'p-6 md:p-10 max-w-7xl mx-auto' : 'flex justify-center items-center h-full'}`}>
-          {children}
+        {/* Scroll principal aqui */}
+        <main className={`flex-1 overflow-y-auto scroll-smooth ${mostrarSidebar ? 'p-4 md:p-6 lg:p-10' : ''}`}>
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>
