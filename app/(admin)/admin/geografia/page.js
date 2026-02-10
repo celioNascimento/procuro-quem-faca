@@ -175,7 +175,7 @@ export default function SuperGestaoGeografia() {
                       </select>
                     ) : (
                       <button onClick={() => setEditandoCidade(c.id)} className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${c.regioes?.nome ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
-                        {c.regioes?.nome || "Vincular"}
+                        {c.regioes?.nome || c.regiao_id ? "Carregando..." : "Vincular"}
                       </button>
                     )}
                   </td>

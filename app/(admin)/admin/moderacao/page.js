@@ -1,323 +1,418 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { CATEGORIAS_OFICIAIS } from '@/lib/categorias'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import Header from '@/components/Header'
+import BackButton from '@/components/BackButton'
+import CadastroCard from '@/components/auth/CadastroCard'
+import ModalConfirmacao from '@/components/ui/ModalConfirmacao'
 
-export default function ModeracaoPrestadores() {
-  const [prestadores, setPrestadores] = useState([])
-  const [cidades, setCidades] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [editando, setEditando] = useState(null)
-  const [salvando, setSalvando] = useState(false)
-  const [denunciasSelecionadas, setDenunciasSelecionadas] = useState(null)
+function CadastroSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center pt-32 px-4 animate-pulse">
+      <div className="w-full max-w-xl">
+        <div className="mb-10 pl-2">
+          <div className="h-10 bg-slate-200 rounded-2xl w-48 mb-3" />
+          <div className="h-4 bg-slate-100 rounded-lg w-64" />
+        </div>
+        <div className="bg-white rounded-[3rem] h-96 border border-slate-100 shadow-sm" />
+      </div>
+    </div>
+  )
+}
+
+export function FormularioCadastro() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const reivindicarId = searchParams.get('reivindicar')
+
   const [mounted, setMounted] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [isRedirecting, setIsRedirecting] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [status, setStatus] = useState('')
+  const [tentouEnviar, setTentouEnviar] = useState(false)
+  const [modoEdicao, setModoEdicao] = useState(false)
+  const [userLogado, setUserLogado] = useState(null)
 
-  const [termoBusca, setTermoBusca] = useState('')
-  const [categoriaFiltro, setCategoriaFiltro] = useState('')
+  const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
+  const [aceitouTermos, setAceitouTermos] = useState(false)
+  const [aceitouPrivacidade, setAceitouPrivacidade] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-    carregarDados()
-
-    const canal = supabase.channel('mod_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'denuncias' }, () => carregarDados())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestadores' }, () => carregarDados())
-      .subscribe()
-    return () => { supabase.removeChannel(canal) }
-  }, [])
-
-  const formatarData = (dataISO) => {
-    if (!dataISO) return 'n/a'
-    return new Date(dataISO).toLocaleDateString('pt-BR')
-  }
-
-  async function carregarDados() {
-    setLoading(true)
-    try {
-      const { data: cData } = await supabase.from('cidades').select('id, nome, estado_sigla').order('nome')
-      setCidades(cData || [])
-
-      const { data, error } = await supabase
-        .from('prestadores')
-        .select(`
-          *,
-          cidades(nome, estado_sigla),
-          denuncias(*)
-        `)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-
-      const processados = (data || []).map(p => {
-        const denunciasAbertas = (p.denuncias || []).filter(d => d.status === 'aberta')
-        return {
-          ...p,
-          totalDenuncias: denunciasAbertas.length,
-          listaDenuncias: denunciasAbertas
-        }
-      })
-
-      const ordenados = processados.sort((a, b) => {
-        const aCritico = a.bloqueado || a.totalDenuncias > 0
-        const bCritico = b.bloqueado || b.totalDenuncias > 0
-        if (aCritico && !bCritico) return -1
-        if (!aCritico && bCritico) return 1
-        return 0
-      })
-
-      setPrestadores(ordenados)
-    } catch (e) { console.error(e) } finally { setLoading(false) }
-  }
-
-  async function alterarStatus(id, novoStatus) {
-    if (salvando) return;
-    if (novoStatus === 'ativo') {
-       const p = prestadores.find(item => String(item.id) === String(id))
-       const temDados = p && p.nome && p.categoria && p.cidade_id;
-       if (!temDados) return alert("❌ Cadastro incompleto.")
-    }
-
-    setSalvando(true)
-    try {
-      const updateData = { 
-        status: novoStatus, 
-        aprovado_em: novoStatus === 'ativo' ? new Date().toISOString() : null,
-        bloqueado: novoStatus === 'bloqueado' 
-      }
-      await supabase.from('prestadores').update(updateData).eq('id', Number(id))
-      await carregarDados()
-    } catch (error) { alert("Erro ao atualizar status.") } finally { setSalvando(false) }
-  }
-
-  async function resolverDenuncias(id) {
-    if (!confirm("Isso arquivará as denúncias e manterá o perfil ativo. Continuar?")) return;
-    setSalvando(true)
-    try {
-      await supabase.from('denuncias').update({ status: 'resolvida', resolvido_em: new Date() }).eq('prestador_id', Number(id))
-      await supabase.from('prestadores').update({ bloqueado: false, motivo_bloqueio: null }).eq('id', Number(id))
-      await carregarDados()
-      setDenunciasSelecionadas(null)
-    } catch (err) { alert("Erro ao limpar.") } finally { setSalvando(false) }
-  }
-
-  async function salvarEdicao(id) {
-    const b = document.getElementById(`b-${id}`).value
-    const cid = document.getElementById(`c-${id}`).value
-    const cat = document.getElementById(`cat-${id}`).value
-    setSalvando(true)
-    await supabase.from('prestadores').update({ bairro: b, cidade_id: cid, categoria: cat }).eq('id', id)
-    await carregarDados()
-    setEditando(null)
-    setSalvando(false)
-  }
-
-  if (!mounted) return null
-
-  const listaExibida = prestadores.filter(p => {
-    const termo = termoBusca.toLowerCase()
-    const matchTexto = !termo || p.nome?.toLowerCase().includes(termo) || p.cidades?.nome?.toLowerCase().includes(termo)
-    const matchCat = !categoriaFiltro || p.categoria === categoriaFiltro
-    return matchTexto && matchCat
+  const [formData, setFormData] = useState({
+    nome: '', whatsapp: '', grupo_id: '', categoria_id: '',
+    estado_sigla: 'PR', regiao_id: '', cidade_id: '', bairro: '',
+    bio: '', foto_perfil: '', slug: '', cidades_atendidas: [], habilidades: []
   })
 
+  const [listaGrupos, setListaGrupos] = useState([])
+  const [listaCategorias, setListaCategorias] = useState([])
+  const [listaEstados, setListaEstados] = useState([])
+  const [listaRegioes, setListaRegioes] = useState([])
+  const [listaCidades, setListaCidades] = useState([])
+  const [cidadesRegiao, setCidadesRegiao] = useState([])
+  const [todasHabilidades, setTodasHabilidades] = useState([])
+
+  const [slugDisponivel, setSlugDisponivel] = useState(true)
+  const [checandoSlug, setChecandoSlug] = useState(false)
+  const [editouSlugManualmente, setEditouSlugManualmente] = useState(false)
+
+  // Definição de estilos movida para cima para evitar ReferenceError
+  const inputStyle = () => `w-full p-4 rounded-2xl border border-slate-100 outline-none transition-all font-bold text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500`
+
+  useEffect(() => { setMounted(true) }, [])
+
+  const registrarLog = async (acao, detalhes = {}) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      await supabase.from('logs_atividades').insert({
+        acao,
+        usuario_id: session?.user?.id || null,
+        usuario_email: email || session?.user?.email,
+        entidade_tipo: 'prestador',
+        entidade_id: reivindicarId || formData?.id || null,
+        detalhes: { ...detalhes, url: typeof window !== 'undefined' ? window.location.href : '', timestamp: new Date().toISOString() }
+      })
+    } catch (err) { console.error('Falha crítica:', err) }
+  }
+
+  const aplicarMascaraWhatsapp = (v) => {
+    v = v.replace(/\D/g, "");
+    if (v.length > 11) v = v.slice(0, 11);
+    if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+    return v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  };
+
+  const calcularProgresso = () => {
+    const campos = [
+      formData.nome?.trim().length > 3,
+      formData.whatsapp?.replace(/\D/g, "").length >= 10,
+      formData.grupo_id,
+      formData.categoria_id,
+      formData.cidade_id,
+      formData.foto_perfil?.length > 10,
+      aceitouTermos,
+      aceitouPrivacidade,
+      slugDisponivel,
+      (userLogado ? true : (email.includes('@') && senha.length >= 6))
+    ]
+    return Math.round((campos.filter(Boolean).length / campos.length) * 100)
+  }
+
+  const formatarParaSlug = (txt) => txt ? txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s-]/g, '').replace(/\s+/g, '').trim() : "";
+
+  const verificarSlugBD = useCallback(async (slugTeste) => {
+    if (!slugTeste || slugTeste.length < 3) return;
+    setChecandoSlug(true);
+    const { data } = await supabase.from('prestadores').select('id').eq('slug', slugTeste).neq('id', formData.id || -1).maybeSingle();
+    setSlugDisponivel(!data);
+    setChecandoSlug(false);
+  }, [formData.id]);
+
+  useEffect(() => {
+    if (formData.slug) {
+      const timer = setTimeout(() => verificarSlugBD(formData.slug), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.slug, verificarSlugBD]);
+
+  const carregarGrupos = async () => {
+    const { data } = await supabase.from('categorias_grupos').select('*').order('nome')
+    if (data) setListaGrupos(data)
+  }
+
+  const carregarCategorias = async (grupoId) => {
+    if (!grupoId) return
+    const { data } = await supabase.from('categorias').select('*').eq('grupo_id', grupoId).order('nome')
+    setListaCategorias(data || [])
+  }
+
+  const carregarEstados = async () => {
+    const { data } = await supabase.from('estados').select('*').order('nome')
+    if (data) setListaEstados(data)
+  }
+
+  const carregarRegioes = useCallback(async (sigla) => {
+    if (!sigla) { setListaRegioes([]); return; }
+    const { data } = await supabase.from('regioes').select('*').eq('estado_sigla', sigla).order('nome')
+    setListaRegioes(data || [])
+  }, []);
+
+  const carregarCidades = useCallback(async (regiaoId, estadoSigla) => {
+    let query = supabase.from('cidades').select('*').eq('ativa', true).order('nome')
+    if (regiaoId) query = query.eq('regiao_id', regiaoId)
+    else if (estadoSigla) query = query.eq('estado_sigla', estadoSigla)
+    else { setListaCidades([]); return; }
+    const { data } = await query
+    setListaCidades(data || [])
+    if (regiaoId) setCidadesRegiao(data || [])
+    else setCidadesRegiao([])
+  }, []);
+
+  const carregarDependencias = useCallback(async (perfil) => {
+    if (perfil.estado_sigla) await carregarRegioes(perfil.estado_sigla)
+    if (perfil.grupo_id) await carregarCategorias(perfil.grupo_id)
+    await carregarCidades(perfil.regiao_id, perfil.estado_sigla)
+  }, [carregarRegioes, carregarCidades]);
+
+  useEffect(() => {
+    if (mounted && formData.estado_sigla) {
+      carregarRegioes(formData.estado_sigla);
+      if (!formData.cidade_id) carregarCidades(formData.regiao_id, formData.estado_sigla);
+    }
+  }, [mounted, formData.estado_sigla, carregarRegioes, carregarCidades, formData.regiao_id, formData.cidade_id]);
+
+  const toggleItem = (item, lista) => {
+    const novaLista = formData[lista]?.includes(item)
+      ? formData[lista].filter(i => i !== item)
+      : [...(formData[lista] || []), item];
+    setFormData({ ...formData, [lista]: novaLista });
+  };
+
+  useEffect(() => {
+    const inicializar = async () => {
+      try {
+        await Promise.all([carregarEstados(), carregarGrupos()])
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          setUserLogado(session.user); setEmail(session.user.email)
+          const { data: perfil } = await supabase.from('prestadores').select('*').eq('user_id', session.user.id).maybeSingle()
+          if (perfil) {
+            if (perfil.nome && perfil.categoria_id && !reivindicarId && !modoEdicao && typeof window !== 'undefined' && window.location.pathname === '/cadastro') {
+              setIsRedirecting(true); router.replace('/dashboard'); return
+            }
+            await carregarDependencias(perfil)
+            setFormData({ ...perfil, cidades_atendidas: perfil.cidades_atendidas || [], habilidades: perfil.habilidades || [], bio: perfil.bio || '', foto_perfil: perfil.foto_perfil || '', bairro: perfil.bairro || '' })
+            setModoEdicao(true)
+            if (perfil.slug) setEditouSlugManualmente(true)
+          }
+        }
+        if (reivindicarId) {
+          const { data: perfilReivindicar } = await supabase.from('prestadores').select('*').eq('id', reivindicarId).single()
+          if (perfilReivindicar) {
+            await carregarDependencias(perfilReivindicar)
+            setFormData({ ...perfilReivindicar, cidades_atendidas: perfilReivindicar.cidades_atendidas || [], habilidades: perfilReivindicar.habilidades || [], bio: perfilReivindicar.bio || '', foto_perfil: perfilReivindicar.foto_perfil || '', bairro: perfilReivindicar.bairro || '', slug: perfilReivindicar.slug || formatarParaSlug(perfilReivindicar.nome) })
+            setAceitouTermos(true); setAceitouPrivacidade(true);
+          }
+        }
+      } catch (error) { console.error('Erro inicialização:', error) } finally { setLoading(false) }
+    }
+    inicializar()
+  }, [reivindicarId, router, carregarDependencias]);
+
+  const fazerUploadFoto = async (e) => {
+    const arquivo = e.target.files[0]
+    if (!arquivo) return
+    setStatus('Subindo foto...')
+    try {
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}`
+      await supabase.storage.from('fotos-perfil').upload(fileName, arquivo)
+      const { data: { publicUrl } } = supabase.storage.from('fotos-perfil').getPublicUrl(fileName)
+      setFormData(prev => ({ ...prev, foto_perfil: publicUrl }))
+      setStatus('Foto ok!')
+    } catch (err) { setStatus('Erro upload') } finally { setTimeout(() => setStatus(''), 2000) }
+  }
+
+  const handleExcluirPerfil = async () => {
+    setStatus('Excluindo...')
+    try {
+      const targetId = reivindicarId || formData.id;
+      await supabase.from('prestadores').delete().eq('id', targetId)
+      router.push('/')
+    } catch (err) { setStatus('Erro excluir') }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setTentouEnviar(true);
+    if (!formData.foto_perfil) { setStatus('❌ Foto obrigatória.'); return; }
+    if (!slugDisponivel) { setStatus('❌ URL indisponível.'); return; }
+    if (loading || calcularProgresso() < 100) return;
+
+    setLoading(true); setStatus('Sincronizando...');
+    try {
+      let userId = userLogado?.id;
+      if (!userId) {
+        const { data: auth, error: authErr } = await supabase.auth.signUp({ email, password: senha, options: { data: { nome: formData.nome } } });
+        if (authErr) throw authErr;
+        userId = auth.user?.id;
+      }
+
+      // --- LIMPEZA CIRÚRGICA DE DUPLICADOS ---
+      const cidadeSedeNome = listaCidades.find(c => String(c.id) === String(formData.cidade_id))?.nome;
+      const cidadesAtendidasLimpo = [...new Set(formData.cidades_atendidas || [])]
+        .filter(nome => nome !== cidadeSedeNome && nome !== "");
+
+      await supabase.from('prestadores').update({ user_id: null }).eq('user_id', userId);
+
+      const payload = {
+        ...formData,
+        cidades_atendidas: cidadesAtendidasLimpo,
+        id: reivindicarId ? parseInt(reivindicarId) : formData.id,
+        user_id: userId,
+        status: 'ativo',
+        origem_tipo: reivindicarId ? 'reivindicado' : 'registro_direto'
+      };
+
+      const { error: dbError } = await supabase.from('prestadores').upsert(payload);
+      if (dbError) throw dbError;
+      await registrarLog('PERFIL_SALVO_SUCESSO', { prestador_id: payload.id });
+      window.location.href = '/dashboard';
+    } catch (err) { setStatus(`❌ Erro ao salvar.`); setLoading(false); }
+  }
+
+  const grupoAtual = listaGrupos.find(g => String(g.id) === String(formData.grupo_id));
+  const habilidadesExtrasDisponiveis = listaCategorias
+    .filter(cat => String(cat.id) !== String(formData.categoria_id))
+    .map(cat => cat.nome);
+
+  if (!mounted || loading || isRedirecting) return <CadastroSkeleton />
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 bg-[#F4F7F9] min-h-screen font-sans text-slate-700">
-      
-      {/* Loading Overlay */}
-      {salvando && (
-        <div className="fixed inset-0 bg-white/60 z-[100] flex items-center justify-center backdrop-blur-sm">
-          <div className="bg-white p-4 rounded-full shadow-xl animate-bounce">
-              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          </div>
+    <main className="min-h-screen bg-[#F8FAFC] pb-20 font-sans antialiased">
+      <Header href="/" />
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 h-16 md:h-20 flex items-center px-6">
+        <div className="max-w-4xl mx-auto w-full flex justify-between items-center">
+          <BackButton href="/" />
+          <Link href="/"><img src="/logo.png" alt="Logo" className="h-12 w-auto" /></Link>
+          <div className="w-10"></div>
         </div>
-      )}
-
-      <header className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 uppercase tracking-tight">
-          Moderação<span className="text-blue-600">.</span>
-        </h1>
-        <div className="flex flex-col gap-3 mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <select 
-              value={categoriaFiltro} 
-              onChange={e => setCategoriaFiltro(e.target.value)} 
-              className="p-4 rounded-2xl border border-slate-200 font-semibold text-[11px] bg-white text-slate-700 outline-none shadow-sm appearance-none"
-            >
-              <option value="">Todas as Categorias</option>
-              {CATEGORIAS_OFICIAIS.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <input 
-              type="text" 
-              value={termoBusca} 
-              onChange={e => setTermoBusca(e.target.value)} 
-              placeholder="Buscar por nome ou cidade..." 
-              className="p-4 rounded-2xl border border-slate-200 font-semibold text-[11px] bg-white text-slate-700 outline-none shadow-sm"
-            />
-          </div>
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-50">
+          <div className="h-full bg-blue-600 transition-all duration-700" style={{ width: `${calcularProgresso()}%` }} />
         </div>
-      </header>
+      </nav>
 
-      <div className="grid gap-4 sm:gap-6">
-        {loading && prestadores.length === 0 ? (
-          <div className="py-20 text-center animate-pulse font-bold text-slate-400 uppercase tracking-widest text-[10px]">Sincronizando dados...</div>
-        ) : listaExibida.map(p => {
-          const temDenunciaAberta = p.totalDenuncias > 0
-          let statusEstilo = {
-            bg: 'bg-slate-100',
-            text: 'text-slate-500',
-            label: p.status.toUpperCase()
-          }
+      <div className="w-full px-4 pt-32 md:pt-40">
+        <CadastroCard title={reivindicarId ? 'Assumir Perfil' : modoEdicao ? 'Meu Perfil' : 'Cadastro'} progresso={calcularProgresso()} isReivindicando={!!reivindicarId || modoEdicao} onExcluir={() => setIsModalOpen(true)}>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            {!userLogado && (
+              <section className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-blue-50 space-y-4">
+                <h2 className="font-bold uppercase text-[10px] tracking-widest text-slate-400 italic">Segurança</h2>
+                <input type="email" placeholder="E-mail" value={email} onChange={e => setEmail(e.target.value)} className={inputClass(false)} required />
+                <input type="password" placeholder="Senha (mín. 6)" value={senha} onChange={e => setSenha(e.target.value)} className={`${inputStyle()} ${tentouEnviar && senha.length < 6 ? 'border-red-500' : ''}`} required />
+              </section>
+            )}
 
-          if (p.status === 'bloqueado') {
-            statusEstilo = { bg: 'bg-red-600', text: 'text-white', label: 'BLOQUEADO' }
-          } else if (temDenunciaAberta) {
-            statusEstilo = { bg: 'bg-amber-400', text: 'text-slate-900', label: '⚠️ VERIFICAR' }
-          } else if (p.status === 'ativo') {
-            statusEstilo = { bg: 'bg-green-500', text: 'text-white', label: 'ATIVO' }
-          }
+            <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center gap-6">
+              <div className={`relative w-32 h-32 rounded-[2.5rem] bg-slate-50 border-2 border-dashed flex items-center justify-center overflow-hidden transition-colors ${tentouEnviar && !formData.foto_perfil ? 'border-red-500 bg-red-50' : 'hover:border-blue-400'}`}>
+                {formData.foto_perfil ? <img src={formData.foto_perfil} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-slate-300 font-black text-[10px]">FOTO OBRIGATÓRIA</span>}
+                <input type="file" accept="image/*" onChange={fazerUploadFoto} className="absolute inset-0 opacity-0 cursor-pointer" />
+              </div>
+              
+              <div className="w-full space-y-4">
+                <select value={formData.grupo_id || ''} onChange={e => { const val = e.target.value; setFormData({ ...formData, grupo_id: val, categoria_id: '', habilidades: [] }); carregarCategorias(val); }} className={inputStyle()} required>
+                  <option value="">Grupo de Atuação</option>
+                  {listaGrupos.map(g => <option key={g.id} value={g.id}>{g.nome}</option>)}
+                </select>
 
-          return (
-            <div key={p.id} className={`bg-white rounded-[2rem] p-4 sm:p-6 shadow-sm border-2 transition-all ${
-              p.status === 'bloqueado' ? 'border-red-100 bg-red-50/10' : 
-              temDenunciaAberta ? 'border-amber-200 bg-amber-50/10' : 'border-white'
-            }`}>
-              <div className="flex flex-col lg:flex-row items-center lg:items-center gap-5">
-                
-                <div className="flex lg:block items-center justify-between w-full lg:w-auto">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shadow-inner bg-slate-100 border border-slate-100">
-                    <img src={p.foto_perfil || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" alt={p.nome} />
-                  </div>
-                  <div className="lg:hidden flex flex-col items-end gap-2">
-                    <span className={`px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest ${statusEstilo.bg} ${statusEstilo.text}`}>
-                      {statusEstilo.label}
-                    </span>
-                    {temDenunciaAberta && (
-                      <div className="bg-red-600 text-white px-2 py-1 rounded-lg text-[9px] font-bold animate-pulse">
-                        🚨 {p.totalDenuncias} REPORT
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <select value={formData.categoria_id || ''} onChange={e => setFormData({ ...formData, categoria_id: e.target.value, habilidades: [] })} className={inputStyle()} required>
+                  <option value="">Profissão Principal</option>
+                  {listaCategorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                </select>
 
-                <div className="flex-1 w-full text-center lg:text-left">
-                  <div className="hidden lg:flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight leading-none">{p.nome || 'SEM NOME'}</h3>
-                    <span className={`px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest ${statusEstilo.bg} ${statusEstilo.text}`}>
-                      {statusEstilo.label}
-                    </span>
-                  </div>
-
-                  <div className="lg:hidden mb-4">
-                     <h3 className="text-lg font-bold text-slate-900 uppercase leading-none">{p.nome || 'SEM NOME'}</h3>
-                  </div>
-
-                  {editando === p.id ? (
-                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-4 rounded-2xl border border-blue-100">
-                      <select id={`cat-${p.id}`} defaultValue={p.categoria} className="sm:col-span-2 p-3 rounded-xl text-[11px] font-semibold text-slate-700 border bg-white">{CATEGORIAS_OFICIAIS.map(c => <option key={c} value={c}>{c}</option>)}</select>
-                      <input id={`b-${p.id}`} defaultValue={p.bairro} placeholder="Bairro" className="p-3 rounded-xl text-[11px] font-semibold text-slate-700 border bg-white" />
-                      <select id={`c-${p.id}`} defaultValue={p.cidade_id} className="p-3 rounded-xl text-[11px] font-semibold text-slate-700 border bg-white">
-                        <option value="">Cidade</option>
-                        {cidades.map(cid => <option key={cid.id} value={cid.id}>{cid.nome}</option>)}
-                      </select>
-                      <div className="sm:col-span-2 flex gap-2 pt-2">
-                        <button onClick={() => setEditando(null)} className="flex-1 bg-slate-200 text-slate-600 p-3 rounded-xl text-[11px] font-bold uppercase">Cancelar</button>
-                        <button onClick={() => salvarEdicao(p.id)} className="flex-1 bg-blue-600 text-white p-3 rounded-xl text-[11px] font-bold uppercase">Salvar</button>
-                      </div>
+                {formData.categoria_id && habilidadesExtrasDisponiveis.length > 0 && (
+                  <div className="pt-2">
+                    <label className="text-slate-400 font-black text-[9px] uppercase block italic mb-3 tracking-tighter">Habilidades extras:</label>
+                    <div className="flex flex-wrap gap-2">
+                      {habilidadesExtrasDisponiveis.map(h => (
+                        <button key={h} type="button" onClick={() => toggleItem(h, 'habilidades')} className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase transition-all border ${formData.habilidades?.includes(h) ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                          {h}
+                        </button>
+                      ))}
                     </div>
-                  ) : (
-                    <div className="flex flex-wrap justify-center lg:justify-start gap-2 sm:gap-4 text-[10px] font-semibold uppercase text-slate-400">
-                      <span className="text-blue-600 bg-blue-50 px-2 py-1 rounded-md">📂 {p.categoria}</span>
-                      <span className="text-slate-500 bg-slate-50 px-2 py-1 rounded-md">📍 {p.cidades?.nome}</span>
-                      <span className="text-slate-400 bg-slate-50 px-2 py-1 rounded-md">🏠 {p.bairro}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex w-full lg:w-auto gap-2 mt-4 lg:mt-0 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100 justify-between sm:justify-end">
-                  <div className="flex gap-2">
-                    <button onClick={() => setEditando(p.id === editando ? null : p.id)} className="p-4 bg-slate-100 rounded-2xl hover:bg-slate-200 transition-colors text-slate-600">🖋️</button>
-                    <button 
-                      onClick={() => alterarStatus(p.id, p.status === 'bloqueado' ? 'pendente' : 'bloqueado')} 
-                      className={`p-4 rounded-2xl transition-all ${p.status === 'bloqueado' ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-400 hover:text-red-600'}`}
-                    >
-                      {p.status === 'bloqueado' ? '🔓' : '🔒'}
-                    </button>
                   </div>
-                  
-                  <div className="flex gap-2 items-center">
-                    {temDenunciaAberta && (
-                      <button 
-                        onClick={() => setDenunciasSelecionadas({ lista: p.listaDenuncias, id: p.id })}
-                        className="hidden lg:block bg-red-600 text-white px-4 py-4 rounded-2xl font-bold text-[10px] uppercase shadow-lg shadow-red-100 hover:scale-105 transition-transform"
-                      >
-                        🚨 Ver Denúncias
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => alterarStatus(p.id, p.status === 'ativo' ? 'pendente' : 'ativo')} 
-                      className={`px-6 py-4 rounded-2xl font-bold text-[10px] uppercase shadow-xl transition-all active:scale-95 ${p.status === 'ativo' ? 'bg-slate-200 text-slate-500' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100'}`}
-                    >
-                      {p.status === 'ativo' ? 'Suspender' : 'Aprovar'}
-                    </button>
-                  </div>
-                </div>
-
-                {temDenunciaAberta && (
-                  <button 
-                    onClick={() => setDenunciasSelecionadas({ lista: p.listaDenuncias, id: p.id })}
-                    className="lg:hidden w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold text-[10px] uppercase tracking-wide border border-red-100"
-                  >
-                    Analisar Denúncias em Aberto
-                  </button>
                 )}
               </div>
-            </div>
-          )
-        })}
-      </div>
+            </section>
 
-      {denunciasSelecionadas && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setDenunciasSelecionadas(null)}>
-          <div className="bg-white w-full max-w-lg rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95" onClick={e => e.stopPropagation()}>
-            <div className="p-6 sm:p-8 border-b border-slate-50 flex justify-between items-center">
-              <div>
-                <h2 className="font-bold text-slate-900 uppercase tracking-tight">Central de Denúncias</h2>
-                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-widest mt-1">Análise de Segurança</p>
+            <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-5">
+              <input value={formData.nome || ''} placeholder="Nome Completo" onChange={e => { const novoNome = e.target.value; setFormData(prev => ({ ...prev, nome: novoNome, slug: editouSlugManualmente ? prev.slug : formatarParaSlug(novoNome) })); }} className={inputStyle()} required />
+              <div className="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100">
+                  <label className="text-blue-400 font-black text-[9px] uppercase tracking-widest italic mb-3 block">URL do Perfil</label>
+                  <div className="flex items-center bg-white rounded-xl border border-slate-100 px-4 py-3">
+                    <span className="text-slate-300 font-bold text-xs shrink-0">procuro.com.br/</span>
+                    <input value={formData.slug} onChange={(e) => { setEditouSlugManualmente(true); setFormData({...formData, slug: formatarParaSlug(e.target.value)}); }} placeholder="seunome" className="flex-1 bg-transparent outline-none font-black text-xs text-blue-600 ml-0.5" />
+                    {checandoSlug ? <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin ml-2" /> : slugDisponivel && formData.slug.length > 2 ? <span className="text-green-500 text-[10px] ml-2">✅</span> : formData.slug.length > 2 ? <span className="text-red-500 text-[10px] ml-2">❌</span> : null}
+                  </div>
               </div>
-              <button onClick={() => setDenunciasSelecionadas(null)} className="text-slate-300 hover:text-red-500 p-2 text-2xl">✕</button>
-            </div>
-            <div className="p-6 sm:p-8 max-h-[70vh] overflow-y-auto space-y-4 scrollbar-hide">
-              {denunciasSelecionadas.lista.map((d, i) => (
-                <div key={i} className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100 relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-red-500 opacity-20"></div>
-                  <p className="text-slate-700 text-[13px] font-medium leading-relaxed">"{d.motivo}"</p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase mt-3 flex justify-between">
-                    <span>📅 {formatarData(d.created_at)}</span>
-                    <span className="text-red-400">ID: #{d.id}</span>
-                  </p>
-                </div>
-              ))}
-              <div className="pt-4 space-y-3">
-                <button 
-                  onClick={() => resolverDenuncias(denunciasSelecionadas.id)}
-                  className="w-full py-5 bg-green-500 text-white rounded-2xl font-bold text-[11px] uppercase hover:bg-green-600 transition-all shadow-lg shadow-green-100 active:scale-95"
-                >
-                  ✅ Marcar como Verificado (Limpar)
-                </button>
-                <button 
-                  onClick={() => {
-                    alterarStatus(denunciasSelecionadas.id, 'bloqueado');
-                    setDenunciasSelecionadas(null);
+              <input value={formData.whatsapp || ''} placeholder="WhatsApp" onChange={e => setFormData({ ...formData, whatsapp: aplicarMascaraWhatsapp(e.target.value) })} className={inputStyle()} required />
+              <textarea value={formData.bio || ''} placeholder="Bio..." onChange={e => setFormData({ ...formData, bio: e.target.value })} className="w-full p-4 rounded-2xl border border-slate-100 h-32 resize-none font-bold text-slate-800" />
+            </section>
+
+            <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <select value={formData.estado_sigla || ''} onChange={e => { const sigla = e.target.value; setFormData({ ...formData, estado_sigla: sigla, regiao_id: '', cidade_id: '', bairro: '', cidades_atendidas: [] }); carregarRegioes(sigla); carregarCidades('', sigla); }} className={inputStyle()} required>
+                  {listaEstados.map(est => <option key={est.sigla} value={est.sigla}>{est.nome}</option>)}
+                </select>
+                <select value={formData.regiao_id || ''} onChange={e => { const regId = e.target.value; setFormData({ ...formData, regiao_id: regId, cidade_id: '', bairro: '', cidades_atendidas: [] }); carregarCidades(regId, formData.estado_sigla); }} className={inputStyle()}>
+                  <option value="">Região (Opcional)</option>
+                  {listaRegioes.map(reg => <option key={reg.id} value={reg.id}>{reg.nome}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <select 
+                  value={formData.cidade_id || ''} 
+                  onChange={e => {
+                    const cidId = e.target.value;
+                    const nomeSede = listaCidades.find(c => String(c.id) === String(cidId))?.nome;
+                    setFormData({
+                      ...formData,
+                      cidade_id: cidId,
+                      cidades_atendidas: formData.cidades_atendidas.filter(n => n !== nomeSede)
+                    });
                   }}
-                  className="w-full py-4 text-red-500 font-bold text-[11px] uppercase tracking-widest hover:bg-red-50 rounded-2xl transition-colors"
+                  className={inputStyle()} 
+                  required
                 >
-                  Bloquear Prestador Agora
-                </button>
+                  <option value="">Cidade Sede</option>
+                  {listaCidades.map(cid => <option key={cid.id} value={cid.id}>{cid.nome}</option>)}
+                </select>
+                <input value={formData.bairro || ''} placeholder="Bairro" onChange={e => setFormData({ ...formData, bairro: e.target.value })} className={inputStyle()} />
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+              {formData.regiao_id && cidadesRegiao.length > 1 && formData.cidade_id && (
+                <div className="mt-4 pt-6 border-t border-slate-50">
+                  <label className="text-slate-400 font-black text-[9px] uppercase block italic mb-4">Atendimento Extra:</label>
+                  <div className="flex flex-wrap gap-2">
+                    {cidadesRegiao.filter(cid => String(cid.id) !== String(formData.cidade_id)).map(cid => (
+                      <button key={cid.id} type="button" onClick={() => toggleItem(cid.nome, 'cidades_atendidas')} className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase transition-all border ${formData.cidades_atendidas?.includes(cid.nome) ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>{cid.nome}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
+              <label className="flex items-center gap-4 cursor-pointer">
+                <input type="checkbox" checked={aceitouTermos} onChange={(e) => setAceitouTermos(e.target.checked)} className="w-5 h-5 rounded border-slate-200 text-blue-600" />
+                <span className="text-[10px] font-black text-slate-500 uppercase italic">Aceito os termos</span>
+              </label>
+              <label className="flex items-center gap-4 cursor-pointer">
+                <input type="checkbox" checked={aceitouPrivacidade} onChange={(e) => setAceitouPrivacidade(e.target.checked)} className="w-5 h-5 rounded border-slate-200 text-blue-600" />
+                <span className="text-[10px] font-black text-slate-500 uppercase italic">Política de Privacidade</span>
+              </label>
+            </section>
+
+            <button type="submit" className={`w-full py-6 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.3em] transition-all shadow-xl ${calcularProgresso() === 100 ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100 active:scale-95' : 'bg-slate-200 text-slate-300 cursor-not-allowed'}`}>
+              {status || (modoEdicao ? 'Salvar Alterações' : (reivindicarId ? 'Assumir Perfil' : 'Finalizar Cadastro'))}
+            </button>
+          </form>
+        </CadastroCard>
+      </div>
+      <ModalConfirmacao isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleExcluirPerfil} title="Excluir Perfil?" message="Apagar permanentemente?" />
+    </main>
+  )
+}
+
+function inputClass(error) {
+  return `w-full p-4 rounded-2xl border ${error ? 'border-red-500' : 'border-slate-100'} outline-none transition-all font-bold text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500`
+}
+
+export default function CadastroPage() {
+  return (
+    <Suspense fallback={<CadastroSkeleton />}>
+      <FormularioCadastro />
+    </Suspense>
   )
 }

@@ -10,7 +10,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [notificacao, setNotificacao] = useState(null)
-  
+  const [mounted, setMounted] = useState(false) // Fix para Hydration
+
   // Lógica de Gestos e Física
   const pullDistance = useMotionValue(0)
   const opacity = useTransform(pullDistance, [0, 90], [0, 1])
@@ -18,16 +19,16 @@ export default function AdminDashboard() {
   const scale = useTransform(pullDistance, [0, 90], [0.7, 1.2])
 
   // Função de Vibração Haptic (App Feel)
-  const hapticFeedback = (intensity = 10) => {
+  const hapticFeedback = useCallback((intensity = 10) => {
     if (typeof window !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(intensity)
     }
-  }
+  }, [])
 
   const carregarDashboard = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true)
-      hapticFeedback(20) // Vibração de início
+      hapticFeedback(20)
     }
     
     try {
@@ -38,7 +39,7 @@ export default function AdminDashboard() {
         supabase.from('logs_atividades').select('*', { count: 'exact', head: true })
       ])
 
-      const { data: pData } = await supabase.from('prestadores').select('nome, created_at, tipo:status').order('created_at', { ascending: false }).limit(3)
+      const { data: pData } = await supabase.from('prestadores').select('nome, created_at, status').order('created_at', { ascending: false }).limit(3)
       const { data: lData } = await supabase.from('logs_atividades').select('acao, detalhes, created_at').in('acao', ['BUSCA_SEM_SUCESSO', 'DENUNCIA_PERFIL']).order('created_at', { ascending: false }).limit(3)
 
       const combinada = [
@@ -49,7 +50,7 @@ export default function AdminDashboard() {
       setStats({ cidades: cidades.count || 0, anuncios: anuncios.count || 0, prestadores: prestadores.count || 0, logs: logs.count || 0 })
       setTimeline(combinada)
       
-      if (isRefresh) hapticFeedback([30, 50, 30]) // Sucesso!
+      if (isRefresh) hapticFeedback([30, 50, 30])
     } catch (err) { 
       console.error(err) 
     } finally {
@@ -57,12 +58,12 @@ export default function AdminDashboard() {
       setRefreshing(false)
       pullDistance.set(0)
     }
-  }, [pullDistance])
+  }, [hapticFeedback, pullDistance])
 
   useEffect(() => {
+    setMounted(true)
     carregarDashboard()
     
-    // Realtime listener com Alerta Visual (Simulando Push)
     const canal = supabase.channel('dash_realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs_atividades' }, (payload) => {
         if (payload.new.acao === 'DENUNCIA_PERFIL') {
@@ -75,18 +76,21 @@ export default function AdminDashboard() {
       .subscribe()
       
     return () => { supabase.removeChannel(canal) }
-  }, [carregarDashboard])
+  }, [carregarDashboard, hapticFeedback])
 
   const handleDrag = (e, info) => {
     const y = Math.max(0, info.offset.y)
     pullDistance.set(y)
-    if (y > 85 && y < 90) hapticFeedback(5) // Clique tátil no limite
+    if (y > 85 && y < 90) hapticFeedback(5)
   }
+
+  // Impede o render no servidor para evitar mismatch de animações/vibrate
+  if (!mounted) return null
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20 font-sans text-slate-800 px-2 sm:px-0 relative overflow-hidden select-none">
       
-      {/* PUSH NOTIFICATION SIMULADO (TOAST) */}
+      {/* TOAST DE NOTIFICAÇÃO */}
       <AnimatePresence>
         {notificacao && (
           <motion.div 
@@ -120,7 +124,7 @@ export default function AdminDashboard() {
         onDrag={handleDrag}
         onDragEnd={() => pullDistance.get() > 85 ? carregarDashboard(true) : pullDistance.set(0)}
       >
-        {/* HEADER COMPACTO */}
+        {/* HEADER */}
         <header className="flex items-center justify-between px-2 mb-4 sm:mb-8">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase italic tracking-tighter leading-none">Console</h1>
@@ -134,7 +138,7 @@ export default function AdminDashboard() {
           </button>
         </header>
 
-        {/* STATS */}
+        {/* CARDS DE ESTATÍSTICAS */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatMini label="Cidades" valor={stats.cidades} cor="blue" />
           <StatMini label="Anúncios" valor={stats.anuncios} cor="emerald" />
@@ -143,6 +147,7 @@ export default function AdminDashboard() {
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          {/* GRÁFICO SEMANAL */}
           <section className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-between min-h-[320px] lg:h-[400px]">
             <div className="flex items-center justify-between mb-6 lg:mb-0 text-[9px] font-black text-slate-400 uppercase tracking-widest">
               <h2>Atividade Semanal</h2>
@@ -158,6 +163,7 @@ export default function AdminDashboard() {
             </div>
           </section>
 
+          {/* FEED EM TEMPO REAL */}
           <section className="bg-slate-900 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] text-white flex flex-col min-h-[350px] lg:h-[400px]">
             <h2 className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-6 italic">Live Stream</h2>
             <div className="space-y-3 flex-1 overflow-y-auto scrollbar-hide">
@@ -175,6 +181,7 @@ export default function AdminDashboard() {
           </section>
         </div>
 
+        {/* ATALHOS RÁPIDOS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-6 pb-10">
           <AtalhoMini href="/admin/moderacao" label="Moderação" icon="⚖️" color="orange" />
           <AtalhoMini href="/admin/anuncios" label="Anúncios" icon="💎" color="emerald" />

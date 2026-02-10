@@ -1,12 +1,12 @@
 'use client'
-import Link from 'next/link'
+// Removemos o import do Link para não usar o roteador interno
+// import Link from 'next/link' 
 
 export default function NotFound() {
   return (
     <main className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6 font-sans antialiased">
       <div className="w-full max-w-md text-center animate-in fade-in zoom-in-95 duration-500">
         <header className="mb-8">
-          {/* Logo com opacidade suave conforme padrão */}
           <img src="/logo.png" alt="Logo" className="h-10 w-auto mx-auto mb-6 opacity-80" />
           
           <span className="bg-blue-50 text-blue-600 px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-blue-100">
@@ -30,13 +30,16 @@ export default function NotFound() {
             </p>
           </div>
 
-          {/* Botão em Azul com Sombra Suave */}
-          <Link
-            href="/"
+          {/* MUDANÇA CRÍTICA AQUI:
+              Usamos um botão com window.location.href para forçar o navegador
+              a recarregar a página do zero, limpando qualquer cache de erro do Next.js.
+          */}
+          <button
+            onClick={() => window.location.href = '/'}
             className="block w-full py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-100 active:scale-95 bg-blue-600 text-white hover:bg-blue-700 italic text-center"
           >
             Restabelecer Conexão
-          </Link>
+          </button>
         </div>
         
         <p className="mt-8 text-[8px] font-black text-slate-300 uppercase tracking-widest italic leading-none">

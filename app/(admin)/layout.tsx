@@ -10,13 +10,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [userName, setUserName] = useState('Administrador')
   const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false) // Fix para Hydration
+  const [mounted, setMounted] = useState(false) // Trava mestra para Hydration
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
+  // 1. Garantia de Montagem no Cliente
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  // 2. Lógica de Autenticação
+  useEffect(() => {
+    if (!mounted) return
+
     const checkUser = async () => {
       setLoading(true)
       const { data: { user } } = await supabase.auth.getUser()
@@ -44,8 +51,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     })
 
     return () => subscription.unsubscribe()
-  }, [pathname, router])
+  }, [pathname, router, mounted])
 
+  // 3. Fechar menu mobile ao trocar de rota
   useEffect(() => {
     setIsMobileMenuOpen(false)
   }, [pathname])
@@ -58,9 +66,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isLoginPage = pathname === '/admin/login'
   const mostrarSidebar = userEmail && !isLoginPage
 
-  // Impede renderização antes do cliente estar pronto (Evita Hydration Error)
+  // PROTEÇÃO CRÍTICA: Se não estiver montado no cliente, retorna nulo 
+  // para que o servidor não gere um HTML que o cliente mudará instantaneamente.
   if (!mounted) return null
 
+  // Estado de Carregamento (Só renderiza após mounted)
   if (loading && !isLoginPage) {
     return (
       <div className="h-screen bg-[#F8FAFC] flex items-center justify-center font-sans">
@@ -77,6 +87,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="h-screen bg-[#F8FAFC] flex font-sans text-slate-900 overflow-hidden">
       
+      {/* Overlay Mobile */}
       {isMobileMenuOpen && mostrarSidebar && (
         <div 
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] lg:hidden"
@@ -84,6 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         />
       )}
 
+      {/* Sidebar */}
       {mostrarSidebar && (
         <aside className={`
           fixed lg:relative h-full w-72 bg-[#0F172A] flex flex-col shadow-2xl z-[60] transition-transform duration-300 ease-in-out shrink-0
@@ -99,9 +111,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <span className="text-[9px] text-blue-400 font-semibold uppercase tracking-wider">Console Admin</span>
               </div>
             </Link>
-            <button className="lg:hidden text-slate-400 p-2" onClick={() => setIsMobileMenuOpen(false)}>
-              ✕
-            </button>
           </div>
 
           <nav className="flex-1 px-4 space-y-1 overflow-y-auto scrollbar-hide">
@@ -134,6 +143,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
       )}
 
+      {/* Main Content Area */}
       <div className={`flex-1 flex flex-col min-w-0 h-full ${!mostrarSidebar ? 'items-center justify-center' : ''}`}>
         
         {mostrarSidebar && (
@@ -159,10 +169,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                    <p className="text-xs font-bold text-slate-900 leading-none mb-1 capitalize tracking-tight">{userName}</p>
                    <p className="text-[10px] font-semibold text-blue-600/70 lowercase">{userEmail}</p>
                  </div>
-                 <div className="relative group">
-                    <div className="w-10 h-10 lg:w-11 lg:h-11 bg-slate-100 rounded-2xl flex items-center justify-center font-bold text-slate-700 text-sm border border-white shadow-sm">
-                      {userName.charAt(0)}
-                    </div>
+                 <div className="w-10 h-10 lg:w-11 lg:h-11 bg-slate-100 rounded-2xl flex items-center justify-center font-bold text-slate-700 text-sm border border-white shadow-sm relative">
+                    {userName.charAt(0)}
                     <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                  </div>
               </div>

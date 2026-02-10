@@ -1,4 +1,3 @@
-// Arquivo: app/layout.js
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import FooterWrapper from "@/components/FooterWrapper";
@@ -51,15 +50,19 @@ export const metadata = {
   },
 };
 
+// CORREÇÃO CIRÚRGICA: Tipagem do children para satisfazer o TypeScript
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    /* CORREÇÃO: suppressHydrationWarning é vital para layout.js em Next.js */
-    <html lang="pt-br" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
-      <body className={`font-sans antialiased min-h-screen flex flex-col bg-white text-slate-900`}>
+    <html 
+      lang="pt-br" 
+      className={`${geistSans.variable} ${geistMono.variable}`} 
+      suppressHydrationWarning 
+    >
+      <body className="font-sans antialiased min-h-screen flex flex-col bg-white text-slate-900">
         
         <div className="flex-grow flex flex-col">
           {children}
