@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import AuthSkeleton from '@/components/auth/AuthSkeleton' // Certifique-se de importar o Skeleton
+import AuthSkeleton from '@/components/auth/AuthSkeleton'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -11,8 +11,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [mensagem, setMensagem] = useState('')
   const [touched, setTouched] = useState({})
-  
-  // 1. Estado para controlar a hidratação e evitar erro do Next.js
   const [mounted, setMounted] = useState(false)
   
   const router = useRouter()
@@ -27,27 +25,39 @@ export default function Login() {
     } catch (err) { console.error('Erro log:', err) }
   }
 
-  // 2. useEffect Seguro: Montagem e Monitoramento de Auth
+  const redirecionarUsuario = async (user) => {
+    try {
+      const { data: perfil } = await supabase
+        .from('prestadores')
+        .select('id, user_id, origem_tipo, categoria_id')
+        .or(`user_id.eq.${user.id},whatsapp.ilike.%${user.email}%`)
+        .maybeSingle();
+
+      if (!perfil || perfil.origem_tipo === 'curadoria_publica' || !perfil.categoria_id) {
+        const query = perfil?.origem_tipo === 'curadoria_publica' ? `?reivindicar=${perfil.id}` : '';
+        router.push(`/cadastro${query}`);
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      router.push('/cadastro');
+    }
+  };
+
   useEffect(() => {
     setMounted(true)
-
-    // Verifica recuperação de senha na URL
     const params = new URLSearchParams(window.location.search)
-    const hash = window.location.hash
-    if (hash.includes('type=recovery') || params.get('type') === 'recovery') {
+    if (window.location.hash.includes('type=recovery') || params.get('type') === 'recovery') {
       router.replace('/recuperar-senha')
       return
     }
 
-    // Escuta login automático ou mudança de sessão
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        // O router.refresh() é OBRIGATÓRIO para atualizar o cookie no Middleware e evitar loop
         router.refresh()
-        router.push('/cadastro') 
+        await redirecionarUsuario(session.user)
       }
     })
-
     return () => subscription.unsubscribe()
   }, [router])
 
@@ -62,11 +72,9 @@ export default function Login() {
     }
     setLoading(true)
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/recuperar-senha`, // URL simplificada para evitar erro de callback
+      redirectTo: `${window.location.origin}/recuperar-senha`,
     })
-    
-    if (error) setMensagem('Erro: ' + error.message)
-    else setMensagem('Sucesso: Link enviado! Verifique seu e-mail.')
+    setMensagem(error ? 'Erro: ' + error.message : 'Sucesso: Link enviado! Verifique seu e-mail.')
     setLoading(false)
   }
 
@@ -78,37 +86,26 @@ export default function Login() {
     await registrarLogAuth('TENTATIVA_ACESSO_UNIFICADO')
 
     try {
-      // Tenta Login
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
 
       if (!signInError && signInData?.session) {
         await registrarLogAuth('LOGIN_SUCESSO')
-        router.refresh() // Atualiza Middleware
-        router.push('/cadastro')
+        router.refresh()
+        await redirecionarUsuario(signInData.session.user)
         return 
       }
 
-      // Se falhar, verifica se é caso de cadastro novo (Fluxo Unificado)
       if (signInError && (signInError.message.includes("Invalid login credentials") || signInError.status === 400)) {
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password })
 
         if (signUpError) {
-          if (signUpError.message.includes("already registered") || signUpError.code === 'user_already_exists') {
-            setMensagem('Erro: Senha incorreta para este e-mail.')
-            await registrarLogAuth('ERRO_LOGIN_SENHA_INCORRETA')
-          } else {
-            setMensagem('Erro: ' + signUpError.message)
-            await registrarLogAuth('ERRO_CADASTRO_NOVO')
-          }
+          setMensagem(signUpError.code === 'user_already_exists' ? 'Erro: Senha incorreta para este e-mail.' : 'Erro: ' + signUpError.message)
         } else if (signUpData?.session) {
-          // Cadastro logou direto
           await registrarLogAuth('CADASTRO_SUCESSO_IMEDIATO')
           router.refresh()
-          router.push('/cadastro')
+          await redirecionarUsuario(signUpData.session.user)
         } else {
-          // Cadastro requer confirmação de e-mail
           setMensagem('Conta criada! Verifique seu e-mail para confirmar.')
-          await registrarLogAuth('CADASTRO_PENDENTE_CONFIRMACAO')
         }
       } else {
         setMensagem('Erro: ' + (signInError?.message || 'Erro desconhecido'))
@@ -121,42 +118,42 @@ export default function Login() {
     }
   }
 
-  // Estilos (Mantidos do seu código)
+  // Estilização de Input refinada: foco mais suave, border sutil e fonte otimizada
   const inputClass = (erro) => `
-    w-full p-4 rounded-2xl border transition-all outline-none focus:ring-2 focus:ring-blue-500 
-    text-slate-800 bg-slate-50 placeholder-slate-400 font-medium
-    ${erro ? 'border-red-500 bg-red-50' : 'border-slate-100 focus:border-blue-200'}
+    w-full p-4 rounded-2xl border transition-all duration-300 outline-none
+    text-slate-800 bg-slate-50 placeholder-slate-400 font-semibold text-sm
+    ${erro ? 'border-red-500 bg-red-50 ring-2 ring-red-100' : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50'}
   `
 
-  // 3. O "Return" de segurança para evitar que o HTML apareça antes da hora
   if (!mounted) return <AuthSkeleton />
 
   return (
-    <main className="min-h-screen bg-white flex flex-col items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-sm text-center">
+    <main className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 font-sans">
+      <div className="w-full max-w-[400px] bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-50 text-center">
         
-        {/* LOGO */}
-        <div className="mb-10 flex justify-center">
-          <Link href="/" className="block transition-transform hover:scale-105">
+        <div className="mb-8 flex justify-center">
+          <Link href="/" className="block transition-all duration-300 hover:scale-110 active:scale-95">
             <img 
               src="/logo.png" 
               alt="Logo" 
-              className="h-24 md:h-28 w-auto object-contain" 
+              className="h-20 w-auto object-contain drop-shadow-sm" 
             />
           </Link>
         </div>
 
-        <h1 className="text-2xl font-black text-slate-800 mb-2 tracking-tighter uppercase italic">Acesse sua conta</h1>
-        <p className="text-slate-500 mb-8 text-[10px] font-black uppercase tracking-widest leading-relaxed">
+        <h1 className="text-2xl font-black text-slate-800 mb-2 tracking-tight uppercase italic leading-none">
+          Acesse sua conta
+        </h1>
+        <p className="text-slate-400 mb-10 text-[10px] font-bold uppercase tracking-[0.2em] leading-relaxed max-w-[240px] mx-auto">
           Área do Profissional: Crie ou gerencie seu anúncio
         </p>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-4 text-left">
-          <div className="flex flex-col gap-1">
-            <label className="text-slate-400 font-bold text-[9px] uppercase ml-4 tracking-widest">E-mail</label>
+        <form onSubmit={handleLogin} className="flex flex-col gap-5 text-left">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-slate-500 font-black text-[9px] uppercase ml-4 tracking-[0.15em]">E-mail</label>
             <input 
               type="email" 
-              placeholder="seu@email.com" 
+              placeholder="exemplo@email.com" 
               value={email}
               onBlur={() => handleBlur('email')}
               onChange={(e) => setEmail(e.target.value.toLowerCase().trim())}
@@ -165,20 +162,20 @@ export default function Login() {
             />
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <div className="flex justify-between items-center ml-4 mr-2">
-              <label className="text-slate-400 font-bold text-[9px] uppercase tracking-widest">Senha</label>
+              <label className="text-slate-500 font-black text-[9px] uppercase tracking-[0.15em]">Senha</label>
               <button 
                 type="button"
                 onClick={handleEsqueciSenha}
-                className="text-[9px] font-black text-blue-600 uppercase hover:underline tracking-widest"
+                className="text-[9px] font-black text-blue-600 uppercase hover:text-blue-700 transition-colors tracking-widest"
               >
                 Esqueci a senha
               </button>
             </div>
             <input 
               type="password" 
-              placeholder="Mínimo 6 caracteres" 
+              placeholder="Sua senha secreta" 
               value={password}
               onBlur={() => handleBlur('password')}
               onChange={(e) => setPassword(e.target.value)}
@@ -188,7 +185,7 @@ export default function Login() {
           </div>
 
           {mensagem && (
-            <div className={`p-4 rounded-xl text-[10px] font-black text-center uppercase tracking-wider animate-in fade-in slide-in-from-top-2 ${mensagem.includes('Erro') ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-600'}`}>
+            <div className={`p-4 rounded-2xl text-[10px] font-black text-center uppercase tracking-widest animate-in zoom-in-95 duration-300 ${mensagem.includes('Erro') ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
               {mensagem}
             </div>
           )}
@@ -196,13 +193,13 @@ export default function Login() {
           <button 
             type="submit" 
             disabled={loading} 
-            className="w-full py-5 bg-blue-600 text-white rounded-[1.8rem] font-black shadow-lg shadow-blue-100 hover:bg-blue-700 active:scale-95 transition-all mt-2 uppercase tracking-[0.2em] text-[11px]"
+            className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black shadow-[0_10px_25px_-5px_rgba(37,99,235,0.4)] hover:bg-blue-700 hover:-translate-y-0.5 active:scale-[0.97] transition-all mt-4 uppercase tracking-[0.2em] text-[11px]"
           >
-            {loading ? 'Sincronizando...' : 'Entrar / Cadastrar'}
+            {loading ? 'Processando...' : 'Entrar / Cadastrar'}
           </button>
         </form>
 
-        <Link href="/" className="inline-block mt-10 text-slate-400 font-black text-[9px] uppercase tracking-[0.3em] hover:text-blue-600 transition-colors italic">
+        <Link href="/" className="inline-block mt-10 text-slate-400 font-black text-[9px] uppercase tracking-[0.3em] hover:text-blue-600 transition-all italic hover:translate-x-1">
           ← Voltar para a busca
         </Link>
       </div>

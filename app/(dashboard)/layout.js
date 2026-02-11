@@ -64,7 +64,7 @@ export default function DashboardLayout({ children }) {
         <div className="max-w-2xl mx-auto w-full px-6 flex justify-between items-center">
           
           {/* Logo Procuro que Faça - Agora direcionando para a Home */}
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img 
               src="/logo.png" 
               alt="Logo Procuro que Faça" 

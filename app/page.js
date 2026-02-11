@@ -12,18 +12,10 @@ export default function Home() {
   const router = useRouter()
   const [busca, setBusca] = useState('')
   const [sugestoes, setSugestoes] = useState([])
-  const [mounted, setMounted] = useState(false)
   const [erro, setErro] = useState(false)
 
-  // 1. Controle de montagem para evitar Hydration Mismatch
+  // Busca de sugestões (roda apenas no cliente via useEffect)
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // 2. Busca de sugestões
-  useEffect(() => {
-    if (!mounted) return
-
     const buscarSugestoes = async () => {
       try {
         let query = supabase.from('categorias').select('nome')
@@ -48,9 +40,10 @@ export default function Home() {
         console.warn('Erro na busca de sugestões:', error.message) 
       }
     }
+    
     const timer = setTimeout(buscarSugestoes, 300)
     return () => clearTimeout(timer)
-  }, [busca, mounted])
+  }, [busca])
 
   const registrarLog = async (acao, detalhes = {}, entidade = null) => {
     try {
@@ -79,15 +72,11 @@ export default function Home() {
     router.push(`/prestadores?${params.toString()}`);
   };
 
-  // --- SOLUÇÃO CIRÚRGICA PARA HYDRATION ERROR ---
-  // IMPORTANTE: O contêiner de placeholder deve usar a MESMA tag (main) 
-  // e as mesmas classes estruturais que o retorno principal.
-  if (!mounted) {
-    return <main className="min-h-screen bg-[#F8FAFC]" />;
-  }
-
   return (
-    <main className="min-h-screen bg-[#F8FAFC] flex flex-col items-center font-sans relative antialiased">
+    <main 
+      className="min-h-screen bg-[#F8FAFC] flex flex-col items-center font-sans relative antialiased"
+      suppressHydrationWarning={true}
+    >
       <div className="w-full flex flex-col items-center animate-in fade-in duration-500">
         
         <HeroSection onLog={registrarLog} />

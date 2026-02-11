@@ -57,10 +57,6 @@ function ReivindicarConteudo() {
           </li>
           <li className="flex items-center gap-4 text-[11px] font-black text-slate-600 uppercase italic">
             <div className="w-6 h-6 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 shrink-0 font-black">✓</div>
-            Selo de Verificado instantâneo
-          </li>
-          <li className="flex items-center gap-4 text-[11px] font-black text-slate-600 uppercase italic">
-            <div className="w-6 h-6 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 shrink-0 font-black">✓</div>
             Prioridade no ranking de buscas
           </li>
         </ul>

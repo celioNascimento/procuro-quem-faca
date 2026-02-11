@@ -12,7 +12,7 @@ import ModalConfirmacao from '@/components/ui/ModalConfirmacao'
 function CadastroSkeleton() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center pt-32 px-4 animate-pulse">
-      <div className="w-full max-w-7xl grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="h-64 bg-white rounded-[3rem] border border-slate-100 shadow-sm col-span-1" />
         <div className="h-[500px] bg-white rounded-[3rem] border border-slate-100 shadow-sm col-span-2" />
       </div>
@@ -133,18 +133,20 @@ function FormularioCadastro() {
         setLoading(true);
 
         const { data: { session } } = await supabase.auth.getSession()
-        
-        if (session?.user && !reivindicarId) {
+        const user = session?.user || null;
+        setUserLogado(user);
+        if (user) setEmail(user.email);
+
+        let perfilExistente = null;
+        if (user) {
+          const { data } = await supabase.from('prestadores').select('*').eq('user_id', user.id).maybeSingle();
+          perfilExistente = data;
+        }
+
+        if (user && !reivindicarId && perfilExistente && perfilExistente.origem_tipo !== 'curadoria_publica' && perfilExistente.categoria_id) {
             setIsRedirecting(true);
             router.replace('/dashboard');
             return;
-        }
-
-        if (session?.user) {
-          setUserLogado(session.user);
-          setEmail(session.user.email);
-        } else {
-          setUserLogado(null);
         }
 
         const [gruposRes, estadosRes, habilidadesRes] = await Promise.all([
@@ -167,6 +169,9 @@ function FormularioCadastro() {
                 setAceitouPrivacidade(true);
                 setModoEdicao(false); 
             }
+        } else if (perfilExistente) {
+            perfilParaCarregar = perfilExistente;
+            setModoEdicao(true);
         }
 
         if (perfilParaCarregar) {
@@ -182,15 +187,12 @@ function FormularioCadastro() {
                 foto_perfil: perfilParaCarregar.foto_perfil || '',
                 bairro: perfilParaCarregar.bairro || '',
                 slug: perfilParaCarregar.slug || formatarParaSlug(perfilParaCarregar.nome),
-                grupo_id: perfilParaCarregar.grupo_id || '',
-                categoria_id: perfilParaCarregar.categoria_id || '',
                 estado_sigla: perfilParaCarregar.estado_sigla || 'PR',
-                regiao_id: perfilParaCarregar.regiao_id || '',
-                cidade_id: perfilParaCarregar.cidade_id || ''
+                id: perfilParaCarregar.id
             });
 
             if (perfilParaCarregar.slug) setEditouSlugManualmente(true);
-        } else if (!reivindicarId && !modoEdicao) {
+        } else {
             await carregarRegioes('PR');
             await carregarCidades('', 'PR');
         }
@@ -363,7 +365,7 @@ function FormularioCadastro() {
       <Header href="/" />
       
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 h-16 md:h-20 flex items-center px-6">
-        <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
+        <div className="max-w-5xl mx-auto w-full flex justify-between items-center">
           <BackButton href="/" />
           <Link href="/"><img src="/logo.png" alt="Logo" className="h-10 md:h-12 w-auto" /></Link>
           <div className="w-10"></div>
@@ -373,7 +375,7 @@ function FormularioCadastro() {
         </div>
       </nav>
 
-      <div className="w-full px-4 pt-32 md:pt-40 max-w-7xl mx-auto">
+      <div className="w-full px-4 pt-32 md:pt-40 max-w-5xl mx-auto">
         <CadastroCard 
             title={reivindicarId ? 'Assumir Perfil' : modoEdicao ? 'Meu Perfil' : 'Cadastro'} 
             progresso={calcularProgresso()} 
@@ -515,7 +517,6 @@ function FormularioCadastro() {
                     <input value={formData.bairro || ''} placeholder="Bairro" onChange={e => setFormData({ ...formData, bairro: e.target.value })} className={inputStyle()} />
                 </div>
 
-                {/* CORREÇÃO CIRÚRGICA: cidadesRegiao só aparece se regiao_id estiver selecionado */}
                 {(formData.regiao_id && cidadesRegiao.length > 1 && formData.cidade_id) && (
                   <div className="pt-6 border-t border-slate-50">
                     <label className="text-slate-400 font-black text-[9px] uppercase block italic mb-4">Cidades vizinhas que você também atende:</label>

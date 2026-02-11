@@ -27,6 +27,7 @@ function ListaConteudo() {
       await supabase.from('logs_atividades').insert([{
         acao,
         entidade_tipo: 'busca',
+        entidade_id: null,
         detalhes: { ...detalhes, t: new Date().toISOString() }
       }])
     } catch (err) {
@@ -50,16 +51,15 @@ function ListaConteudo() {
     async function fetchDados() {
       setLoading(true);
       try {
-        // 1. Query principal: Trazemos ordenado por Verificado e Data
-        // REMOVEMOS o .order('user_id') daqui para não bagunçar a ordem cronológica
+        // 1. Query principal
         let query = supabase
           .from('prestadores')
           .select('*, cidades!inner(id, nome, estado_sigla, regiao_id), categorias(nome)')
           .eq('status', 'ativo')
           .order('verificado', { ascending: false })
-          .order('created_at', { ascending: true }); // Antiguidade
+          .order('created_at', { ascending: true });
 
-        // 2. Filtro por ID da Categoria (Se o termo for UUID)
+        // 2. Filtro por ID da Categoria
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(queryBusca);
         if (queryBusca && isUUID) {
             query = query.eq('categoria_id', queryBusca);
@@ -72,7 +72,7 @@ function ListaConteudo() {
 
         const { data: pData } = await query;
 
-        // 4. Normalização Relacional
+        // 4. Normalização
         const prestadoresNormalizados = (pData || []).map(p => ({
           ...p,
           categoria: p.categorias?.nome || p.categoria || 'Profissional'
@@ -82,12 +82,10 @@ function ListaConteudo() {
         const termoUnificado = normalizarTermo(isUUID ? '' : queryBusca, filtroHab);
         let resultados = filtrarPrestadores(prestadoresNormalizados, termoUnificado);
 
-        // 6. ORDENAÇÃO MANUAL (AQUI A MÁGICA ACONTECE)
-        // Isso garante que quem tem user_id vá para o topo, mantendo a ordem interna de data/verificado
+        // 6. ORDENAÇÃO MANUAL
         resultados.sort((a, b) => {
           const aReivindicado = a.user_id ? 1 : 0;
           const bReivindicado = b.user_id ? 1 : 0;
-          // Se um é reivindicado e o outro não, o reivindicado ganha
           return bReivindicado - aReivindicado;
         });
 
@@ -174,18 +172,10 @@ function ListaConteudo() {
   )
 }
 
-// CORREÇÃO CIRÚRGICA DE HIDRATAÇÃO APLICADA AQUI
+// CORREÇÃO: Removemos a verificação manual de `mounted`.
+// Deixamos o Suspense lidar com o carregamento assíncrono.
+// Isso garante que o HTML do servidor (Header + Fallback) seja igual ao do cliente inicial.
 export default function PaginaPrestadores() {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) {
-    return <div className="min-h-screen bg-[#FAFAFA]" />
-  }
-
   return (
     <div className="min-h-screen bg-[#FAFAFA] pb-24 antialiased">
       <Header href="/" />
