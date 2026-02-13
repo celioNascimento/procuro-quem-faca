@@ -130,94 +130,95 @@ export default function Login() {
       : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 shadow-sm'}
   `
 
-  if (!mounted) return <AuthSkeleton />
-
   return (
     <main className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6 font-sans antialiased">
-      <div className="w-full max-w-[420px] bg-white p-10 md:p-12 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-50 text-center relative overflow-hidden">
-        
-        {/* Glow sutil no topo */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
+      {!mounted ? (
+        <AuthSkeleton />
+      ) : (
+        <div className="w-full max-w-[420px] bg-white p-10 md:p-12 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-50 text-center relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+          
+          {/* Glow sutil no topo */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
 
-        <div className="mb-8 flex justify-center">
-          <Link href="/" className="block transition-transform duration-500 hover:scale-110 active:scale-95">
-            <img src="/logo.png" alt="Logo" className="h-14 w-auto object-contain" />
+          <div className="mb-8 flex justify-center">
+            <Link href="/" className="block transition-transform duration-500 hover:scale-110 active:scale-95">
+              <img src="/logo.png" alt="Logo" className="h-14 w-auto object-contain" />
+            </Link>
+          </div>
+
+          <h1 className="text-2xl font-black text-slate-800 mb-2 tracking-tight uppercase italic leading-none">
+            Acesse sua conta
+          </h1>
+          <p className="text-slate-400 mb-10 text-[10px] font-bold uppercase tracking-[0.3em] leading-relaxed max-w-[240px] mx-auto">
+            Área do Profissional
+          </p>
+
+          <GoogleButton text="Entrar com Google" onLog={registrarLogAuth} />
+
+          <div className="flex items-center gap-4 my-10">
+            <div className="h-[1px] flex-grow bg-slate-100" />
+            <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">ou e-mail</span>
+            <div className="h-[1px] flex-grow bg-slate-100" />
+          </div>
+
+          <form onSubmit={handleLogin} className="flex flex-col gap-6 text-left">
+            <div className="flex flex-col gap-2">
+              <label className="text-slate-500 font-black text-[9px] uppercase ml-4 tracking-[0.15em]">E-mail</label>
+              <input 
+                type="email" 
+                placeholder="exemplo@email.com" 
+                value={email}
+                onBlur={() => handleBlur('email')}
+                onChange={(e) => setEmail(e.target.value.toLowerCase().trim())}
+                className={inputClass(emailInvalido)}
+                required
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between items-center ml-4 mr-2">
+                <label className="text-slate-500 font-black text-[9px] uppercase tracking-[0.15em]">Senha</label>
+                <button 
+                  type="button"
+                  onClick={handleEsqueciSenha}
+                  className="text-[9px] font-black text-blue-600 uppercase hover:text-blue-700 transition-colors tracking-[0.1em]"
+                >
+                  Esqueci a senha
+                </button>
+              </div>
+              <input 
+                type="password" 
+                placeholder="Sua senha secreta" 
+                value={password}
+                onBlur={() => handleBlur('password')}
+                onChange={(e) => setPassword(e.target.value)}
+                className={inputClass(senhaInvalida)}
+                required
+              />
+            </div>
+
+            {mensagem && (
+              <div className={`p-4 rounded-2xl text-[10px] font-black text-center uppercase tracking-widest animate-in fade-in zoom-in-95 duration-300 ${mensagem.includes('Erro') ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
+                {mensagem}
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="w-full py-5 bg-blue-600 text-white rounded-[1.25rem] font-black shadow-[0_15px_30px_-5px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:-translate-y-0.5 active:scale-[0.98] transition-all mt-4 uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : 'Entrar / Cadastrar'}
+            </button>
+          </form>
+
+          <Link href="/" className="inline-block mt-12 text-slate-300 font-black text-[9px] uppercase tracking-[0.3em] hover:text-blue-600 transition-all italic hover:translate-x-1">
+            ← Voltar para a busca
           </Link>
         </div>
-
-        <h1 className="text-2xl font-black text-slate-800 mb-2 tracking-tight uppercase italic leading-none">
-          Acesse sua conta
-        </h1>
-        <p className="text-slate-400 mb-10 text-[10px] font-bold uppercase tracking-[0.3em] leading-relaxed max-w-[240px] mx-auto">
-          Área do Profissional
-        </p>
-
-        {/* Botão Google com estilo Premium */}
-        <GoogleButton text="Entrar com Google" onLog={registrarLogAuth} />
-
-        <div className="flex items-center gap-4 my-10">
-          <div className="h-[1px] flex-grow bg-slate-100" />
-          <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">ou e-mail</span>
-          <div className="h-[1px] flex-grow bg-slate-100" />
-        </div>
-
-        <form onSubmit={handleLogin} className="flex flex-col gap-6 text-left">
-          <div className="flex flex-col gap-2">
-            <label className="text-slate-500 font-black text-[9px] uppercase ml-4 tracking-[0.15em]">E-mail</label>
-            <input 
-              type="email" 
-              placeholder="exemplo@email.com" 
-              value={email}
-              onBlur={() => handleBlur('email')}
-              onChange={(e) => setEmail(e.target.value.toLowerCase().trim())}
-              className={inputClass(emailInvalido)}
-              required
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-center ml-4 mr-2">
-              <label className="text-slate-500 font-black text-[9px] uppercase tracking-[0.15em]">Senha</label>
-              <button 
-                type="button"
-                onClick={handleEsqueciSenha}
-                className="text-[9px] font-black text-blue-600 uppercase hover:text-blue-700 transition-colors tracking-[0.1em]"
-              >
-                Esqueci a senha
-              </button>
-            </div>
-            <input 
-              type="password" 
-              placeholder="Sua senha secreta" 
-              value={password}
-              onBlur={() => handleBlur('password')}
-              onChange={(e) => setPassword(e.target.value)}
-              className={inputClass(senhaInvalida)}
-              required
-            />
-          </div>
-
-          {mensagem && (
-            <div className={`p-4 rounded-2xl text-[10px] font-black text-center uppercase tracking-widest animate-in fade-in zoom-in-95 duration-300 ${mensagem.includes('Erro') ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
-              {mensagem}
-            </div>
-          )}
-
-          <button 
-            type="submit" 
-            disabled={loading} 
-            className="w-full py-5 bg-blue-600 text-white rounded-[1.25rem] font-black shadow-[0_15px_30px_-5px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:-translate-y-0.5 active:scale-[0.98] transition-all mt-4 uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-2"
-          >
-            {loading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : 'Entrar / Cadastrar'}
-          </button>
-        </form>
-
-        <Link href="/" className="inline-block mt-12 text-slate-300 font-black text-[9px] uppercase tracking-[0.3em] hover:text-blue-600 transition-all italic hover:translate-x-1">
-          ← Voltar para a busca
-        </Link>
-      </div>
+      )}
     </main>
   )
 }

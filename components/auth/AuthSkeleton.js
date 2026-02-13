@@ -2,42 +2,50 @@
 
 export default function AuthSkeleton() {
   return (
-    /* Ajuste Cirúrgico: Mantemos o wrapper flex-grow para ocupar o espaço do layout,
-       mas garantimos que a div fixa seja renderizada de forma idêntica no servidor e cliente.
-    */
-    <div className="flex-grow flex flex-col">
-      <div 
-        className="fixed inset-0 z-[9999] bg-[#F8FAFC] flex flex-col items-center justify-center p-6 pointer-events-auto"
-        aria-hidden="true"
-      >
-        {/* Logo Placeholder */}
-        <div className="w-32 h-14 bg-slate-200/60 rounded-2xl mb-8 animate-pulse" />
-        
-        {/* Card Placeholder */}
-        <div className="w-full max-w-[400px] bg-white rounded-[3rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/50 animate-pulse">
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-40 h-8 bg-slate-100 rounded-xl mb-3" />
-            <div className="w-48 h-3 bg-slate-50 rounded-lg" />
+    <div className="w-full max-w-[420px] bg-white p-10 md:p-12 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-50 text-center relative overflow-hidden animate-pulse">
+      
+      {/* Glow Placeholder sutil no topo */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-slate-100/50" />
+
+      {/* Logo Placeholder */}
+      <div className="flex justify-center mb-8">
+        <div className="w-32 h-14 bg-slate-100 rounded-2xl" />
+      </div>
+
+      {/* Título e Subtítulo */}
+      <div className="h-6 w-3/4 bg-slate-100 rounded-lg mx-auto mb-3" />
+      <div className="h-3 w-1/2 bg-slate-50 rounded-lg mx-auto mb-10" />
+
+      <div className="space-y-6">
+        {/* Google Button Placeholder */}
+        <div className="w-full h-14 bg-slate-50 rounded-[1.25rem]" />
+
+        {/* Divisor */}
+        <div className="flex items-center gap-4 my-10">
+          <div className="h-[1px] flex-grow bg-slate-100" />
+          <div className="w-10 h-2 bg-slate-100 rounded" />
+          <div className="h-[1px] flex-grow bg-slate-100" />
+        </div>
+
+        {/* Inputs Form */}
+        <div className="space-y-6 text-left">
+          <div className="space-y-2">
+            <div className="w-12 h-2 bg-slate-100 rounded ml-4" />
+            <div className="w-full h-14 bg-slate-50 rounded-[1.25rem]" />
           </div>
           
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="w-12 h-2 bg-slate-100 rounded ml-4" />
-              <div className="w-full h-14 bg-slate-50/80 rounded-2xl border border-slate-50" />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="w-12 h-2 bg-slate-100 rounded ml-4" />
-              <div className="w-full h-14 bg-slate-50/80 rounded-2xl border border-slate-50" />
-            </div>
-            
-            <div className="w-full h-14 bg-slate-200/50 rounded-2xl mt-4" />
+          <div className="space-y-2">
+            <div className="w-12 h-2 bg-slate-100 rounded ml-4" />
+            <div className="w-full h-14 bg-slate-50 rounded-[1.25rem]" />
           </div>
         </div>
 
-        {/* Back Link Placeholder */}
-        <div className="mt-10 w-32 h-3 bg-slate-100 rounded-full animate-pulse" />
+        {/* Button Placeholder */}
+        <div className="w-full h-14 bg-blue-50 rounded-[1.25rem] mt-4" />
       </div>
+
+      {/* Footer Link */}
+      <div className="mt-12 w-24 h-2 bg-slate-100 rounded-full mx-auto" />
     </div>
   )
 }
