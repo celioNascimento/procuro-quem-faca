@@ -38,6 +38,50 @@ export default function EditarPerfilTab() {
 
   const formatarParaSlug = (txt) => txt ? txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s-]/g, '').replace(/\s+/g, '').trim() : "";
 
+  // --- HANDLERS DE CARREGAMENTO (Sincronizados com Cadastro) ---
+  const carregarCategorias = useCallback(async (gid) => {
+    if (!gid) return setListaCategorias([]);
+    const { data } = await supabase.from('categorias').select('*').eq('grupo_id', gid).order('nome')
+    setListaCategorias(data || [])
+  }, [])
+
+  const carregarRegioes = useCallback(async (sigla) => {
+    if (!sigla) return setListaRegioes([]);
+    const { data } = await supabase.from('regioes').select('*').eq('estado_sigla', sigla).order('nome')
+    setListaRegioes(data || [])
+  }, [])
+
+  const carregarCidades = useCallback(async (rid, sigla) => {
+    let query = supabase.from('cidades').select('*').eq('ativa', true).order('nome')
+    if (rid) query = query.eq('regiao_id', rid)
+    else if (sigla) query = query.eq('estado_sigla', sigla)
+    else return setListaCidades([]);
+    
+    const { data } = await query
+    setListaCidades(data || [])
+    setCidadesRegiao(data || [])
+  }, [])
+
+  // --- HANDLERS DE MUDANÇA (Corrigem o travamento das opções) ---
+  const handleEstadoChange = async (e) => {
+    const sigla = e.target.value;
+    setFormData(prev => ({ ...prev, estado_sigla: sigla, regiao_id: '', cidade_id: '', bairro: '', cidades_atendidas: [] }));
+    await carregarRegioes(sigla);
+    await carregarCidades('', sigla);
+  };
+
+  const handleRegiaoChange = async (e) => {
+    const rid = e.target.value;
+    setFormData(prev => ({ ...prev, regiao_id: rid, cidade_id: '', cidades_atendidas: [] }));
+    await carregarCidades(rid, formData.estado_sigla);
+  };
+
+  const handleGrupoChange = async (e) => {
+    const gid = e.target.value;
+    setFormData(prev => ({ ...prev, grupo_id: gid, categoria_id: '', habilidades: [] }));
+    await carregarCategorias(gid);
+  };
+
   // --- LÓGICA DE UPLOAD ---
   const fazerUploadFoto = async (e) => {
     const arquivo = e.target.files[0]
@@ -58,26 +102,17 @@ export default function EditarPerfilTab() {
     }
   }
 
-  // --- LÓGICA DE EXCLUSÃO TOTAL (PRESTADOR + STORAGE + LOGOUT) ---
+  // --- LÓGICA DE EXCLUSÃO ---
   const handleExcluirContaTotal = async () => {
     setStatus('Excluindo tudo...')
     try {
-      // 1. Deletar Foto do Storage se existir
       if (formData.foto_perfil) {
         const urlParts = formData.foto_perfil.split('/')
         const fileName = urlParts[urlParts.length - 1]
         await supabase.storage.from('fotos-perfil').remove([fileName])
       }
-
-      // 2. Deletar Registro na tabela Prestadores
-      const { error: dbError } = await supabase
-        .from('prestadores')
-        .delete()
-        .eq('user_id', userLogado.id)
-
+      const { error: dbError } = await supabase.from('prestadores').delete().eq('user_id', userLogado.id)
       if (dbError) throw dbError
-
-      // 3. Logout e Redirecionamento
       await supabase.auth.signOut()
       router.push('/')
       router.refresh()
@@ -106,29 +141,6 @@ export default function EditarPerfilTab() {
     }
   }, [formData.slug, verificarSlugBD]);
 
-  const carregarCategorias = useCallback(async (gid) => {
-    if (!gid) return setListaCategorias([]);
-    const { data } = await supabase.from('categorias').select('*').eq('grupo_id', gid).order('nome')
-    setListaCategorias(data || [])
-  }, [])
-
-  const carregarRegioes = useCallback(async (sigla) => {
-    if (!sigla) return setListaRegioes([]);
-    const { data } = await supabase.from('regioes').select('*').eq('estado_sigla', sigla).order('nome')
-    setListaRegioes(data || [])
-  }, [])
-
-  const carregarCidades = useCallback(async (rid, sigla) => {
-    let query = supabase.from('cidades').select('*').eq('ativa', true).order('nome')
-    if (rid) query = query.eq('regiao_id', rid)
-    else if (sigla) query = query.eq('estado_sigla', sigla)
-    else return setListaCidades([]);
-    
-    const { data } = await query
-    setListaCidades(data || [])
-    setCidadesRegiao(data || [])
-  }, [])
-
   const toggleItem = (item, lista) => {
     const listaAtual = formData[lista] || [];
     const novaLista = listaAtual.includes(item)
@@ -137,6 +149,7 @@ export default function EditarPerfilTab() {
     setFormData(prev => ({ ...prev, [lista]: novaLista }));
   };
 
+  // --- INICIALIZAÇÃO CORRIGIDA ---
   useEffect(() => {
     async function inicializar() {
       try {
@@ -170,6 +183,10 @@ export default function EditarPerfilTab() {
             estado_sigla: perfil.estado_sigla || 'PR'
           })
           if (perfil.slug) setEditouSlugManualmente(true)
+        } else {
+          // Se for novo perfil, pré-carrega o PR
+          await carregarRegioes('PR');
+          await carregarCidades('', 'PR');
         }
       } catch (err) {
         console.error("Erro ao inicializar dashboard:", err)
@@ -203,14 +220,14 @@ export default function EditarPerfilTab() {
     setTimeout(() => setStatus(''), 3000)
   }
 
-  if (loading) return <div className="p-20 text-center animate-pulse font-black text-slate-300">SINCRONIZANDO...</div>
+  if (loading) return <div className="p-20 text-center animate-pulse font-black text-slate-300 italic uppercase">SINCRONIZANDO...</div>
 
   const habilidadesExtrasDisponiveis = listaCategorias
     .filter(cat => String(cat.id) !== String(formData.categoria_id))
     .map(cat => cat.nome);
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans">
+    <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans antialiased">
       <div className="max-w-5xl mx-auto px-4 pt-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <header className="border-b border-slate-100 pb-8 flex justify-between items-end">
           <div>
@@ -271,7 +288,7 @@ export default function EditarPerfilTab() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select value={formData.grupo_id || ''} onChange={e => { carregarCategorias(e.target.value); setFormData({...formData, grupo_id: e.target.value, categoria_id: '', habilidades: []})}} className={inputStyle()} required>
+                <select value={formData.grupo_id || ''} onChange={handleGrupoChange} className={inputStyle()} required>
                   <option value="">Grupo</option>
                   {listaGrupos.map(g => <option key={g.id} value={g.id}>{g.nome}</option>)}
                 </select>
@@ -299,17 +316,17 @@ export default function EditarPerfilTab() {
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
               <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 italic">Área de Atendimento</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select value={formData.estado_sigla || ''} onChange={e => { carregarRegioes(e.target.value); carregarCidades('', e.target.value); setFormData({...formData, estado_sigla: e.target.value, regiao_id: '', cidade_id: '', cidades_atendidas: []})}} className={inputStyle()}>
+                <select value={formData.estado_sigla || ''} onChange={handleEstadoChange} className={inputStyle()}>
                   {listaEstados.map(est => <option key={est.sigla} value={est.sigla}>{est.nome}</option>)}
                 </select>
-                <select value={formData.regiao_id || ''} onChange={e => { carregarCidades(e.target.value, formData.estado_sigla); setFormData({...formData, regiao_id: e.target.value, cidade_id: '', cidades_atendidas: []})}} className={inputStyle()}>
+                <select value={formData.regiao_id || ''} onChange={handleRegiaoChange} className={inputStyle()} disabled={!formData.estado_sigla}>
                   <option value="">Região (Opcional)</option>
                   {listaRegioes.map(reg => <option key={reg.id} value={reg.id}>{reg.nome}</option>)}
                 </select>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select value={formData.cidade_id || ''} onChange={e => setFormData({...formData, cidade_id: e.target.value})} className={inputStyle()} required>
-                  <option value="">Cidade</option>
+                <select value={formData.cidade_id || ''} onChange={e => setFormData({...formData, cidade_id: e.target.value})} className={inputStyle()} required disabled={!formData.estado_sigla}>
+                  <option value="">Cidade Sede</option>
                   {listaCidades.map(cid => <option key={cid.id} value={cid.id}>{cid.nome}</option>)}
                 </select>
                 <input value={formData.bairro || ''} onChange={e => setFormData({...formData, bairro: e.target.value})} placeholder="Bairro Principal" className={inputStyle()} />
