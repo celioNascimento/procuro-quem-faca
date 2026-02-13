@@ -193,6 +193,14 @@ function FormularioCadastro() {
 
             if (perfilParaCarregar.slug) setEditouSlugManualmente(true);
         } else {
+            // SIMPLICIDADE ABSURDA: Se é novo e veio do Google, pré-preenche o nome
+            const nomeSocial = user?.user_metadata?.full_name || '';
+            setFormData(prev => ({ 
+              ...prev, 
+              nome: nomeSocial,
+              slug: formatarParaSlug(nomeSocial)
+            }));
+            
             await carregarRegioes('PR');
             await carregarCidades('', 'PR');
         }
@@ -414,17 +422,17 @@ function FormularioCadastro() {
 
               {userLogado && (
                 <section className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex flex-col md:flex-row items-center justify-between gap-4">
-                   <div className="text-center md:text-left">
+                    <div className="text-center md:text-left">
                       <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 italic">Você está logado como:</p>
                       <p className="font-bold text-blue-900 text-sm">{userLogado.email}</p>
-                   </div>
-                   <button 
-                     type="button" 
-                     onClick={handleLogout}
-                     className="px-6 py-3 bg-white text-blue-600 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md transition-all border border-blue-100"
-                   >
-                     Entrar com outra conta
-                   </button>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={handleLogout}
+                      className="px-6 py-3 bg-white text-blue-600 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md transition-all border border-blue-100"
+                    >
+                      Entrar com outra conta
+                    </button>
                 </section>
               )}
 

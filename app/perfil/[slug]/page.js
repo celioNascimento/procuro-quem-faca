@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 
-// Skeleton mantido idêntico
 function PerfilSkeleton() {
   return (
     <main className="min-h-screen bg-white font-sans text-slate-800">
@@ -13,8 +12,9 @@ function PerfilSkeleton() {
       
       <div className="max-w-xl mx-auto pt-32 pb-12 px-6 animate-pulse">
         <div className="flex flex-col items-center mb-10">
-          <div className="w-36 h-36 rounded-[3rem] bg-slate-100 mb-6" />
-          <div className="h-8 bg-slate-100 rounded-lg w-3/4 mb-3" />
+          <div className="w-32 h-32 rounded-[2.5rem] bg-slate-100" />
+          {/* Ajuste de margem no Skeleton para alinhar com o real */}
+          <div className="h-8 bg-slate-100 rounded-lg w-3/4 mb-3 mt-6" />
           <div className="h-4 bg-slate-50 rounded-lg w-1/2" />
         </div>
         <div className="space-y-6">
@@ -31,10 +31,7 @@ export default function PerfilPublico() {
   const router = useRouter()
   const [prestador, setPrestador] = useState(null)
   const [loading, setLoading] = useState(true)
-
-  // 1. ADIÇÃO: Estado para controlar a montagem do componente no cliente
   const [isMounted, setIsMounted] = useState(false)
-
   const [urlRetorno, setUrlRetorno] = useState('/prestadores')
 
   const registrarLog = async (acao, detalhes = {}) => {
@@ -51,7 +48,6 @@ export default function PerfilPublico() {
   }
 
   useEffect(() => {
-    // 2. ADIÇÃO: Marca como montado assim que o useEffect roda no cliente
     setIsMounted(true)
 
     async function carregarPerfil() {
@@ -84,7 +80,7 @@ export default function PerfilPublico() {
     const shareData = {
       title: `Procuro Quem Faça - ${prestador?.nome}`,
       text: `Confira o trabalho de ${prestador?.nome} (${prestador?.categoria}) em ${prestador?.cidades?.nome}.`,
-      url: window.location.href,
+      url: typeof window !== 'undefined' ? window.location.href : '',
     };
     if (navigator.share) {
       navigator.share(shareData);
@@ -93,9 +89,6 @@ export default function PerfilPublico() {
     }
   };
 
-  // 3. ALTERAÇÃO: Renderização Condicional segura
-  // Se não estiver montado (Server Side) OU estiver carregando, retorna o Skeleton.
-  // Isso garante que o HTML do servidor bata com o HTML inicial do cliente.
   if (!isMounted || loading) {
     return <PerfilSkeleton />
   }
@@ -156,7 +149,11 @@ export default function PerfilPublico() {
             )}
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-900 uppercase tracking-tight leading-none mb-3 italic">{prestador.nome}</h1>
+          {/* AJUSTE PRECITO: mt-6 adicionado para respiro visual */}
+          <h1 className="text-2xl font-bold text-slate-900 uppercase tracking-tight leading-none mb-3 mt-6 italic">
+            {prestador.nome}
+          </h1>
+
           <div className="flex flex-col items-center gap-2">
             <span className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-lg shadow-blue-100">
               {prestador.categoria}
@@ -176,7 +173,7 @@ export default function PerfilPublico() {
                   <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">🤝</div>
                   <div className="text-left">
                       <h4 className="text-indigo-900 font-black uppercase text-[10px] italic group-hover:text-white transition-colors">Este é o seu perfil?</h4>
-                      <p className="text-indigo-700/70 text-[9px] font-bold uppercase leading-tight group-hover:text-white/80 transition-colors">Reivindique agora para editar informações e ganhar o selo de verificado.</p>
+                      <p className="text-indigo-700/70 text-[9px] font-bold uppercase leading-tight group-hover:text-white/80 transition-colors">Reivindique agora para editar suas informações.</p>
                   </div>
               </div>
           </Link>

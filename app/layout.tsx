@@ -50,7 +50,6 @@ export const metadata = {
   },
 };
 
-// CORREÇÃO CIRÚRGICA: Tipagem do children para satisfazer o TypeScript
 export default function RootLayout({
   children,
 }: {

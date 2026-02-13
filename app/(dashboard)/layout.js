@@ -52,11 +52,10 @@ export default function DashboardLayout({ children }) {
     }
   }
 
-  // Proteção contra Hydration Mismatch
   if (!mounted) {
-    return <div className="min-h-screen bg-white" /> 
+    // Mantém a estrutura do RootLayout + a cor de fundo desejada
+    return <div className="flex-grow flex flex-col bg-white min-h-screen" />; 
   }
-
   return (
     <div className="min-h-screen bg-white font-sans antialiased">
       {/* Header / Navbar */}

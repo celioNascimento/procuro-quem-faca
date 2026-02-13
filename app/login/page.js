@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import AuthSkeleton from '@/components/auth/AuthSkeleton'
+import GoogleButton from '@/components/auth/GoogleButton'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -47,13 +48,16 @@ export default function Login() {
   useEffect(() => {
     setMounted(true)
     const params = new URLSearchParams(window.location.search)
-    if (window.location.hash.includes('type=recovery') || params.get('type') === 'recovery') {
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'))
+    const isRecovery = params.get('type') === 'recovery' || hashParams.get('type') === 'recovery'
+
+    if (isRecovery) {
       router.replace('/recuperar-senha')
       return
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+      if (event === 'SIGNED_IN' && session && !isRecovery) {
         router.refresh()
         await redirecionarUsuario(session.user)
       }
@@ -118,38 +122,47 @@ export default function Login() {
     }
   }
 
-  // Estilização de Input refinada: foco mais suave, border sutil e fonte otimizada
   const inputClass = (erro) => `
-    w-full p-4 rounded-2xl border transition-all duration-300 outline-none
-    text-slate-800 bg-slate-50 placeholder-slate-400 font-semibold text-sm
-    ${erro ? 'border-red-500 bg-red-50 ring-2 ring-red-100' : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50'}
+    w-full p-4 rounded-[1.25rem] border transition-all duration-300 outline-none
+    text-slate-800 bg-slate-50/50 placeholder-slate-400 font-bold text-sm
+    ${erro 
+      ? 'border-red-500 bg-red-50 ring-4 ring-red-100' 
+      : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 shadow-sm'}
   `
 
   if (!mounted) return <AuthSkeleton />
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-[400px] bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-50 text-center">
+    <main className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6 font-sans antialiased">
+      <div className="w-full max-w-[420px] bg-white p-10 md:p-12 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-50 text-center relative overflow-hidden">
         
+        {/* Glow sutil no topo */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
+
         <div className="mb-8 flex justify-center">
-          <Link href="/" className="block transition-all duration-300 hover:scale-110 active:scale-95">
-            <img 
-              src="/logo.png" 
-              alt="Logo" 
-              className="h-20 w-auto object-contain drop-shadow-sm" 
-            />
+          <Link href="/" className="block transition-transform duration-500 hover:scale-110 active:scale-95">
+            <img src="/logo.png" alt="Logo" className="h-14 w-auto object-contain" />
           </Link>
         </div>
 
         <h1 className="text-2xl font-black text-slate-800 mb-2 tracking-tight uppercase italic leading-none">
           Acesse sua conta
         </h1>
-        <p className="text-slate-400 mb-10 text-[10px] font-bold uppercase tracking-[0.2em] leading-relaxed max-w-[240px] mx-auto">
-          Área do Profissional: Crie ou gerencie seu anúncio
+        <p className="text-slate-400 mb-10 text-[10px] font-bold uppercase tracking-[0.3em] leading-relaxed max-w-[240px] mx-auto">
+          Área do Profissional
         </p>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-5 text-left">
-          <div className="flex flex-col gap-1.5">
+        {/* Botão Google com estilo Premium */}
+        <GoogleButton text="Entrar com Google" onLog={registrarLogAuth} />
+
+        <div className="flex items-center gap-4 my-10">
+          <div className="h-[1px] flex-grow bg-slate-100" />
+          <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">ou e-mail</span>
+          <div className="h-[1px] flex-grow bg-slate-100" />
+        </div>
+
+        <form onSubmit={handleLogin} className="flex flex-col gap-6 text-left">
+          <div className="flex flex-col gap-2">
             <label className="text-slate-500 font-black text-[9px] uppercase ml-4 tracking-[0.15em]">E-mail</label>
             <input 
               type="email" 
@@ -162,13 +175,13 @@ export default function Login() {
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center ml-4 mr-2">
               <label className="text-slate-500 font-black text-[9px] uppercase tracking-[0.15em]">Senha</label>
               <button 
                 type="button"
                 onClick={handleEsqueciSenha}
-                className="text-[9px] font-black text-blue-600 uppercase hover:text-blue-700 transition-colors tracking-widest"
+                className="text-[9px] font-black text-blue-600 uppercase hover:text-blue-700 transition-colors tracking-[0.1em]"
               >
                 Esqueci a senha
               </button>
@@ -185,7 +198,7 @@ export default function Login() {
           </div>
 
           {mensagem && (
-            <div className={`p-4 rounded-2xl text-[10px] font-black text-center uppercase tracking-widest animate-in zoom-in-95 duration-300 ${mensagem.includes('Erro') ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
+            <div className={`p-4 rounded-2xl text-[10px] font-black text-center uppercase tracking-widest animate-in fade-in zoom-in-95 duration-300 ${mensagem.includes('Erro') ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
               {mensagem}
             </div>
           )}
@@ -193,13 +206,15 @@ export default function Login() {
           <button 
             type="submit" 
             disabled={loading} 
-            className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black shadow-[0_10px_25px_-5px_rgba(37,99,235,0.4)] hover:bg-blue-700 hover:-translate-y-0.5 active:scale-[0.97] transition-all mt-4 uppercase tracking-[0.2em] text-[11px]"
+            className="w-full py-5 bg-blue-600 text-white rounded-[1.25rem] font-black shadow-[0_15px_30px_-5px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:-translate-y-0.5 active:scale-[0.98] transition-all mt-4 uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-2"
           >
-            {loading ? 'Processando...' : 'Entrar / Cadastrar'}
+            {loading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : 'Entrar / Cadastrar'}
           </button>
         </form>
 
-        <Link href="/" className="inline-block mt-10 text-slate-400 font-black text-[9px] uppercase tracking-[0.3em] hover:text-blue-600 transition-all italic hover:translate-x-1">
+        <Link href="/" className="inline-block mt-12 text-slate-300 font-black text-[9px] uppercase tracking-[0.3em] hover:text-blue-600 transition-all italic hover:translate-x-1">
           ← Voltar para a busca
         </Link>
       </div>

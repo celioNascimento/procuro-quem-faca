@@ -13,6 +13,12 @@ export default function Home() {
   const [busca, setBusca] = useState('')
   const [sugestoes, setSugestoes] = useState([])
   const [erro, setErro] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Previne erro de hidratação garantindo renderização apenas no cliente
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Busca de sugestões (roda apenas no cliente via useEffect)
   useEffect(() => {
@@ -71,6 +77,11 @@ export default function Home() {
     params.set('q', termoFinal);
     router.push(`/prestadores?${params.toString()}`);
   };
+
+  // Retorno simplificado para o servidor evitar mismatch
+  if (!mounted) {
+    return <main className="min-h-screen bg-[#F8FAFC]" />
+  }
 
   return (
     <main 

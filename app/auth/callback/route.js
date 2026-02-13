@@ -2,23 +2,17 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-/**
- * Rota GET: /auth/callback
- * Objetivo: Trocar o código temporário do Supabase por uma sessão permanente.
- */
 export async function GET(request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/recuperar-senha'
+  
+  // MUDANÇA CRUCIAL: O destino padrão agora é a página de escolha de perfil
+  // Nunca use '/recuperar-senha' como fallback de um login bem-sucedido.
+  const next = searchParams.get('next') ?? '/auth/escolha'
   const isDev = process.env.NODE_ENV === 'development'
-
-  // 1. Preparamos a resposta de redirecionamento para o destino de sucesso
-  const response = NextResponse.redirect(`${origin}${next}`)
 
   if (code) {
     const cookieStore = await cookies()
-    
-    // 2. Inicializamos o cliente do Supabase configurado para SSR
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -28,37 +22,43 @@ export async function GET(request) {
           setAll: (cookiesToSet) => {
             try {
               cookiesToSet.forEach(({ name, value, options }) => {
-                const opt = { 
-                  ...options, 
-                  secure: !isDev, 
-                  path: '/' 
-                }
-                // Define no servidor (cookies do Next.js)
-                cookieStore.set(name, value, opt)
-                // Define na resposta que vai para o navegador
-                response.cookies.set(name, value, opt)
+                cookieStore.set(name, value, { ...options, secure: !isDev, path: '/' })
               })
             } catch (error) {
-              // Se falhar aqui, o Middleware do Next.js geralmente resolve a escrita
-              console.warn('Aviso ao definir cookies:', error.message)
+              console.warn('Aviso cookies:', error.message)
             }
           },
         },
       }
     )
 
-    // 3. Troca o código pela sessão (essencial para segurança PKCE)
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
     
-    if (!error) {
-      console.log('✅ Sessão validada com sucesso!')
-      return response
-    }
+    if (!error && session) {
+      const user = session.user;
 
-    console.error('❌ ERRO NO EXCHANGE:', error.message)
+      // Inteligência de Redirecionamento no Servidor
+      // 1. Já é um prestador ativo?
+      const { data: prestador } = await supabase
+        .from('prestadores')
+        .select('id, categoria_id, origem_tipo')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (prestador?.categoria_id && prestador.origem_tipo !== 'curadoria_publica') {
+        return NextResponse.redirect(`${origin}/dashboard`)
+      }
+
+      // 2. É um perfil de curadoria (reivindicação)?
+      if (prestador?.origem_tipo === 'curadoria_publica') {
+        return NextResponse.redirect(`${origin}/cadastro?reivindicar=${prestador.id}`)
+      }
+
+      // 3. Se não caiu em nenhum dos acima, vai para a página de escolha ou o 'next'
+      return NextResponse.redirect(`${origin}${next}`)
+    }
   }
 
-  // 4. Caso o código falhe ou não exista, enviamos para uma página de erro
-  // Importante: use uma URL absoluta para evitar problemas de roteamento
-  return NextResponse.redirect(`${origin}/auth/link-expirado`)
+  // Se o código falhar, volta para o login com erro
+  return NextResponse.redirect(`${origin}/login?error=auth_failed`)
 }
