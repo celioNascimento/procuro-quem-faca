@@ -1,5 +1,5 @@
 'use client'
-
+import Image from 'next/image'
 import { useState, useRef } from 'react'
 import FormularioAvaliacao from './FormularioAvaliacao'
 

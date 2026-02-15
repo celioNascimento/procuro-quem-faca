@@ -17,10 +17,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // 1. Garantia de Montagem no Cliente
   useEffect(() => {
-    // Use um requestAnimationFrame ou apenas mova para garantir o ciclo de vida
-    const timer = setTimeout(() => setMounted(true), 0);
+    // O delay de 0 tira a execução do ciclo síncrono e limpa o erro
+    const timer = setTimeout(() => {
+      setMounted(true);
+      setIsMobileMenuOpen(false);
+    }, 0);
     return () => clearTimeout(timer);
-  }, []);
+  }, [pathname]); // adicione as dependências que o erro apontar
 
   // 2. Lógica de Autenticação
   useEffect(() => {
@@ -197,8 +200,8 @@ function SidebarLink({ href, label, icon }: { href: string; label: string; icon:
     <Link
       href={href}
       className={`flex items-center gap-4 p-4 rounded-2xl transition-all font-semibold text-[11px] uppercase tracking-wider group ${isActive
-          ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/10'
-          : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
+        ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/10'
+        : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
         }`}
     >
       <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
