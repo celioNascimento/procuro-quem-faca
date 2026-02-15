@@ -5,19 +5,15 @@ import { useRouter } from 'next/navigation'
 
 export default function PaginaEscolha() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true) // Começa em loading para checar status
+  const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Use um requestAnimationFrame ou apenas mova para garantir o ciclo de vida
     const timer = setTimeout(() => setMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-
-    // Trava de segurança: Se o usuário já passou por aqui, 
-    // mas não completou o cadastro, manda ele de volta pro lugar certo.
     const checarStatusExistente = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
@@ -25,28 +21,19 @@ export default function PaginaEscolha() {
         return
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle()
+      const [{ data: profile }, { data: prestador }] = await Promise.all([
+        supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
+        supabase.from('prestadores').select('categoria_id').eq('user_id', user.id).maybeSingle()
+      ])
 
-      const { data: prestador } = await supabase
-        .from('prestadores')
-        .select('categoria_id')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      // Se ele já escolheu ser prestador mas não tem categoria, manda pro cadastro direto
       if (profile?.role === 'prestador' && !prestador?.categoria_id) {
         router.push('/cadastro')
-      } else if (profile?.role === 'cliente') {
-        router.push('/')
+      } else if (profile?.role === 'cliente' || (profile?.role === 'prestador' && prestador?.categoria_id)) {
+        router.push('/dashboard') // Redireciona para dashboard se já tiver perfil definido
       } else {
-        setLoading(false) // Deixa ele escolher se for realmente novo
+        setLoading(false)
       }
     }
-
     checarStatusExistente()
   }, [router])
 
@@ -62,15 +49,16 @@ export default function PaginaEscolha() {
         detalhes: { role, platform: 'web' }
       })
 
-      // Upsert no perfil
       await supabase.from('profiles').upsert({
         id: user.id,
         role,
         updated_at: new Date()
       })
 
-      // Se escolheu prestador, precisamos garantir que ele passe pelo aceite de termos no /cadastro
-      router.push(role === 'prestador' ? '/cadastro' : '/')
+      // SE FOR PRESTADOR: Vai para o cadastro de dados técnicos
+      // SE FOR CLIENTE: Vai direto para o Dashboard
+      router.push(role === 'prestador' ? '/cadastro' : '/dashboard')
+      
     } catch (err) {
       console.error('Erro ao definir papel:', err)
       setLoading(false)
@@ -81,7 +69,6 @@ export default function PaginaEscolha() {
 
   return (
     <main className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center px-6">
-      {/* O Loader agora cobre a checagem inicial também */}
       {loading && (
         <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-300">
           <div className="flex flex-col items-center gap-4">
@@ -98,9 +85,7 @@ export default function PaginaEscolha() {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
               Como você quer usar o <span className="text-blue-600 italic font-black">PQF</span>?
             </h1>
-            <p className="text-slate-400 text-sm font-medium">
-              Escolha seu perfil para uma experiência personalizada.
-            </p>
+            <p className="text-slate-400 text-sm font-medium">Escolha seu perfil para uma experiência personalizada.</p>
           </div>
         </div>
 
@@ -115,9 +100,6 @@ export default function PaginaEscolha() {
               <h2 className="text-base font-black uppercase italic text-slate-800 leading-none">Sou Cliente</h2>
               <p className="text-xs text-slate-400 font-bold uppercase mt-1 tracking-tighter">Busco profissionais qualificados</p>
             </div>
-            <div className="text-slate-300 group-hover:text-blue-500 transition-colors mr-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
-            </div>
           </button>
 
           <button
@@ -130,18 +112,6 @@ export default function PaginaEscolha() {
               <h2 className="text-base font-black uppercase italic text-white leading-none">Sou Profissional</h2>
               <p className="text-xs text-blue-100 font-bold uppercase mt-1 tracking-tighter">Quero oferecer meus serviços</p>
             </div>
-            <div className="text-blue-300 group-hover:text-white transition-colors mr-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
-            </div>
-          </button>
-        </div>
-
-        <div className="pt-4">
-          <button
-            onClick={() => router.push('/')}
-            className="w-full text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 hover:text-blue-600 transition-colors italic"
-          >
-            Pular esta etapa por enquanto
           </button>
         </div>
       </div>

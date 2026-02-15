@@ -24,72 +24,72 @@ export default function PrestadorCard({ prestador, registrarLog }) {
   };
 
   return (
-    <div className={`bg-white border p-6 rounded-[2rem] shadow-sm hover:shadow-md transition-all relative group ${isPublico ? 'border-slate-100' : 'border-blue-50'}`}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className={`bg-white border p-5 md:p-6 rounded-[2rem] shadow-sm hover:shadow-md transition-all relative group ${isPublico ? 'border-slate-100' : 'border-blue-50'}`}>
+      {/* Container Principal: Coluna no mobile, Linha no desktop */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
 
-        <div className="flex items-center gap-4 flex-1">
-          <div className="w-16 h-16 rounded-full bg-slate-50 overflow-hidden shrink-0 border border-slate-100 shadow-sm flex items-center justify-center">
+        {/* Lado Esquerdo: Foto e Textos */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-slate-50 overflow-hidden shrink-0 border border-slate-100 shadow-sm flex items-center justify-center">
             {prestador.foto_perfil ? (
               <img
                 src={prestador.foto_perfil}
                 className="w-full h-full object-cover"
                 alt={prestador.nome}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.innerHTML = `<span class="text-sm font-black text-slate-400 tracking-tighter">${getIniciais(prestador.nome)}</span>`;
-                }}
               />
             ) : (
               <span className="text-sm font-black text-slate-400 tracking-tighter">{getIniciais(prestador.nome)}</span>
             )}
           </div>
 
-          <div className="flex flex-col items-start text-left gap-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-slate-900 text-lg md:text-xl tracking-tight leading-none">{prestador.nome}</h3>
+          <div className="flex flex-col items-start text-left gap-0.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2 max-w-full">
+              <h3 className="font-bold text-slate-900 text-base md:text-lg tracking-tight leading-tight truncate">{prestador.nome}</h3>
               {isPublico && (
-                <span className="bg-slate-100 text-slate-500 text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tight">Info Pública</span>
+                <span className="hidden sm:inline-block bg-slate-100 text-slate-500 text-[7px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-tight shrink-0">Público</span>
               )}
             </div>
 
-            <div className="flex flex-col">
-              <span className="text-blue-600 text-[11px] font-semibold uppercase tracking-wider">{prestador.categoria}</span>
-              {prestador.habilidades && prestador.habilidades.length > 0 && (
-                <span className="text-[9px] text-slate-400 font-medium lowercase italic leading-tight mt-0.5">
-                  #{Array.isArray(prestador.habilidades) ? prestador.habilidades.join(', ') : prestador.habilidades}
-                </span>
-              )}
-            </div>
+            <span className="text-blue-600 text-[10px] md:text-[11px] font-black uppercase tracking-widest">{prestador.categoria}</span>
 
-            <div className="flex items-center gap-1.5 w-full mt-1">
-              <span className="text-slate-400 text-xs shrink-0">📍</span>
-              <p className="text-slate-400 text-[11px] font-medium tracking-tight truncate">
-                {prestador.bairro} <span className="mx-0.5 opacity-30">•</span> {prestador.cidades?.nome || 'Londrina - PR'}
+            <div className="flex items-center gap-1 w-full mt-0.5 text-slate-400">
+              <MapPin size={10} className="shrink-0 text-slate-300" />
+              <p className="text-[10px] md:text-[11px] font-medium tracking-tight truncate">
+                {prestador.bairro} <span className="opacity-30">•</span> {prestador.cidades?.nome || 'Londrina'}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col items-center md:items-end gap-3 shrink-0">
+        {/* Lado Direito: Ações */}
+        <div className="flex flex-col items-stretch md:items-end gap-2 shrink-0">
           {isPublico && (
             <Link
-              // CIRÚRGICO: Se logado, vai direto para o cadastro com o ID de reivindicação
               href={session ? `/cadastro?reivindicar=${prestador.id}` : `/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`}
-              className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide hover:text-indigo-600 transition-colors"
+              className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors text-center md:text-right px-2"
             >
-              Este é você? Solicite aqui
+              É você? Reivindique
             </Link>
           )}
 
           <Link
             href={`/perfil/${prestador.slug || prestador.id}`}
             onClick={() => registrarLog && registrarLog('CLIQUE_PERFIL', { nome: prestador.nome })}
-            className="w-full md:w-auto bg-blue-600 text-white px-8 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-wider hover:bg-blue-700 transition-all active:scale-95 text-center"
+            className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] hover:bg-blue-700 transition-all active:scale-95 text-center shadow-lg shadow-blue-100 md:w-auto"
           >
             Ver Perfil
           </Link>
         </div>
       </div>
     </div>
+  )
+}
+
+// Pequeno ajuste de ícone que faltava no escopo:
+function MapPin({ size, className }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+    </svg>
   )
 }

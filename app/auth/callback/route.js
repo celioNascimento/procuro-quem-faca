@@ -5,7 +5,6 @@ import { NextResponse } from 'next/server'
 export async function GET(request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/auth/escolha'
   const isDev = process.env.NODE_ENV === 'development'
 
   if (code) {
@@ -34,35 +33,30 @@ export async function GET(request) {
     if (!error && session) {
       const user = session.user;
 
-      // 1. Busca o Perfil (Role) e o Registro de Prestador
       const [{ data: profile }, { data: prestador }] = await Promise.all([
         supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
         supabase.from('prestadores').select('id, categoria_id, nome, origem_tipo').eq('user_id', user.id).maybeSingle()
       ])
 
-      // 2. LOGICA DE REDIRECIONAMENTO CRÍTICA
+      // --- LÓGICA DE REDIRECIONAMENTO CONSOLIDADA ---
       
-      // Caso A: Já é prestador e terminou o cadastro (tem nome e categoria)
-      if (profile?.role === 'prestador' && prestador?.categoria_id && prestador?.nome) {
+      // 1. Prestador Completo OU Cliente -> Dashboard
+      if (
+        (profile?.role === 'prestador' && prestador?.categoria_id && prestador?.nome) || 
+        (profile?.role === 'cliente')
+      ) {
         return NextResponse.redirect(`${origin}/dashboard`)
       }
 
-      // Caso B: Já escolheu ser prestador, mas o cadastro está incompleto
+      // 2. Prestador Incompleto -> Cadastro
       if (profile?.role === 'prestador') {
+        if (prestador?.origem_tipo === 'curadoria_publica') {
+          return NextResponse.redirect(`${origin}/cadastro?reivindicar=${prestador.id}`)
+        }
         return NextResponse.redirect(`${origin}/cadastro`)
       }
 
-      // Caso C: É um perfil de curadoria sendo reivindicado
-      if (prestador?.origem_tipo === 'curadoria_publica') {
-        return NextResponse.redirect(`${origin}/cadastro?reivindicar=${prestador.id}`)
-      }
-
-      // Caso D: Já é cliente
-      if (profile?.role === 'cliente') {
-        return NextResponse.redirect(`${origin}/`)
-      }
-
-      // Caso E: Usuário novo ou sem role definida
+      // 3. Usuário novo ou sem role -> Escolha
       return NextResponse.redirect(`${origin}/auth/escolha`)
     }
   }
