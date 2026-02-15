@@ -31,14 +31,22 @@ export default function EditarPerfilTab() {
     nome: '', whatsapp: '', bio: '', foto_perfil: '',
     grupo_id: '', categoria_id: '', estado_sigla: 'PR',
     regiao_id: '', cidade_id: '', bairro: '', slug: '',
-    habilidades: [], cidades_atendidas: []
+    habilidades: [], cidades_atendidas: [],
+    status: 'ativo' // Garante que o status seja enviado
   })
 
   const inputStyle = () => `w-full px-4 py-3.5 rounded-xl border border-slate-100 outline-none transition-all font-bold text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400`
 
+  const aplicarMascaraWhatsapp = (v) => {
+    if (!v) return "";
+    v = v.replace(/\D/g, "");
+    if (v.length > 11) v = v.slice(0, 11);
+    if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+    return v.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, "($1) $2 $3-$4");
+  };
+
   const formatarParaSlug = (txt) => txt ? txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s-]/g, '').replace(/\s+/g, '').trim() : "";
 
-  // --- HANDLERS DE CARREGAMENTO (Sincronizados com Cadastro) ---
   const carregarCategorias = useCallback(async (gid) => {
     if (!gid) return setListaCategorias([]);
     const { data } = await supabase.from('categorias').select('*').eq('grupo_id', gid).order('nome')
@@ -56,13 +64,12 @@ export default function EditarPerfilTab() {
     if (rid) query = query.eq('regiao_id', rid)
     else if (sigla) query = query.eq('estado_sigla', sigla)
     else return setListaCidades([]);
-    
+
     const { data } = await query
     setListaCidades(data || [])
     setCidadesRegiao(data || [])
   }, [])
 
-  // --- HANDLERS DE MUDANÇA (Corrigem o travamento das opções) ---
   const handleEstadoChange = async (e) => {
     const sigla = e.target.value;
     setFormData(prev => ({ ...prev, estado_sigla: sigla, regiao_id: '', cidade_id: '', bairro: '', cidades_atendidas: [] }));
@@ -82,7 +89,6 @@ export default function EditarPerfilTab() {
     await carregarCategorias(gid);
   };
 
-  // --- LÓGICA DE UPLOAD ---
   const fazerUploadFoto = async (e) => {
     const arquivo = e.target.files[0]
     if (!arquivo) return
@@ -95,14 +101,13 @@ export default function EditarPerfilTab() {
       const { data: { publicUrl } } = supabase.storage.from('fotos-perfil').getPublicUrl(fileName)
       setFormData(prev => ({ ...prev, foto_perfil: publicUrl }))
       setStatus('Foto ok!')
-    } catch (err) { 
+    } catch (err) {
       setStatus('Erro no upload');
-    } finally { 
-      setTimeout(() => setStatus(''), 2000) 
+    } finally {
+      setTimeout(() => setStatus(''), 2000)
     }
   }
 
-  // --- LÓGICA DE EXCLUSÃO ---
   const handleExcluirContaTotal = async () => {
     setStatus('Excluindo tudo...')
     try {
@@ -122,7 +127,6 @@ export default function EditarPerfilTab() {
     }
   }
 
-  // --- LÓGICA DE SLUG ---
   const verificarSlugBD = useCallback(async (slugTeste) => {
     if (!slugTeste || slugTeste.length < 3) return;
     setChecandoSlug(true);
@@ -149,7 +153,6 @@ export default function EditarPerfilTab() {
     setFormData(prev => ({ ...prev, [lista]: novaLista }));
   };
 
-  // --- INICIALIZAÇÃO CORRIGIDA ---
   useEffect(() => {
     async function inicializar() {
       try {
@@ -166,7 +169,7 @@ export default function EditarPerfilTab() {
         setListaEstados(estadosRes.data || [])
 
         const { data: perfil } = await supabase.from('prestadores').select('*').eq('user_id', session.user.id).maybeSingle()
-        
+
         if (perfil) {
           if (perfil.grupo_id) await carregarCategorias(perfil.grupo_id);
           if (perfil.estado_sigla) await carregarRegioes(perfil.estado_sigla);
@@ -175,16 +178,17 @@ export default function EditarPerfilTab() {
           setFormData({
             ...perfil,
             nome: perfil.nome || '',
+            whatsapp: perfil.whatsapp || '',
             habilidades: perfil.habilidades || [],
             cidades_atendidas: perfil.cidades_atendidas || [],
             bio: perfil.bio || '',
             bairro: perfil.bairro || '',
             slug: perfil.slug || formatarParaSlug(perfil.nome),
-            estado_sigla: perfil.estado_sigla || 'PR'
+            estado_sigla: perfil.estado_sigla || 'PR',
+            status: perfil.status || 'ativo'
           })
           if (perfil.slug) setEditouSlugManualmente(true)
         } else {
-          // Se for novo perfil, pré-carrega o PR
           await carregarRegioes('PR');
           await carregarCidades('', 'PR');
         }
@@ -195,30 +199,44 @@ export default function EditarPerfilTab() {
       }
     }
     inicializar()
-  }, [router, carregarCategorias, carregarRegioes, carregarCidades]); 
+  }, [router, carregarCategorias, carregarRegioes, carregarCidades]);
 
   const handleSalvar = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!slugDisponivel) { setStatus('❌ URL indisponível'); return; }
-    setTentouEnviar(true)
-    setStatus('Sincronizando...')
-    
-    const cidadeSedeNome = listaCidades.find(c => String(c.id) === String(formData.cidade_id))?.nome;
-    const cidadesLimpo = (formData.cidades_atendidas || []).filter(c => c !== cidadeSedeNome);
+    setTentouEnviar(true);
+    setStatus('Sincronizando...');
 
-    const { error } = await supabase.from('prestadores').upsert({ 
-      ...formData, 
-      cidades_atendidas: cidadesLimpo,
-      user_id: userLogado.id 
-    })
-    
-    if (error) setStatus('❌ Erro ao salvar')
-    else {
-      setStatus('✅ Perfil Atualizado!')
-      setTentouEnviar(false)
+    try {
+      const cidadeSedeNome = listaCidades.find(c => String(c.id) === String(formData.cidade_id))?.nome;
+      const cidadesLimpo = (formData.cidades_atendidas || []).filter(c => c !== cidadeSedeNome);
+
+      const payload = {
+        ...formData,
+        cidade_id: formData.cidade_id || null,
+        regiao_id: formData.regiao_id || null,
+        grupo_id: formData.grupo_id || null,
+        categoria_id: formData.categoria_id || null,
+        cidades_atendidas: cidadesLimpo,
+        user_id: userLogado.id,
+        status: formData.status || 'ativo' // Força o status para não resetar para pendente
+      };
+
+      if (!payload.id) delete payload.id;
+
+      const { error } = await supabase.from('prestadores').upsert(payload);
+
+      if (error) throw error;
+
+      setStatus('✅ Perfil Atualizado!');
+      setTentouEnviar(false);
+    } catch (err) {
+      console.error("Erro detalhado do Supabase:", err);
+      setStatus(`❌ Erro: ${err.message || 'Verifique os dados'}`);
     }
-    setTimeout(() => setStatus(''), 3000)
-  }
+
+    setTimeout(() => setStatus(''), 3000);
+  };
 
   if (loading) return <div className="p-20 text-center animate-pulse font-black text-slate-300 italic uppercase">SINCRONIZANDO...</div>
 
@@ -234,7 +252,7 @@ export default function EditarPerfilTab() {
             <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">Meu Perfil Profissional</h2>
             <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] mt-2">Painel de Controle — procuroquemfaca.com.br</p>
           </div>
-          <button 
+          <button
             onClick={() => setIsModalExcluirOpen(true)}
             className="text-[9px] font-black text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors italic border-b border-red-100 pb-1"
           >
@@ -255,11 +273,11 @@ export default function EditarPerfilTab() {
                 <div className="absolute bottom-2 bg-black/50 text-white text-[8px] px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20">Alterar</div>
               </div>
               <div className="text-center space-y-2">
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic text-center">Clique na imagem para atualizar</p>
-                 <div className="flex items-center justify-center gap-2">
-                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                   <span className="text-[9px] font-black text-slate-600 uppercase tracking-tighter">Perfil Online</span>
-                 </div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic text-center">Clique na imagem para atualizar</p>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-[9px] font-black text-slate-600 uppercase tracking-tighter">Perfil Online</span>
+                </div>
               </div>
             </section>
           </div>
@@ -267,23 +285,26 @@ export default function EditarPerfilTab() {
           <div className="col-span-12 md:col-span-8 space-y-6">
             {userLogado && (
               <section className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex flex-col md:flex-row items-center justify-between gap-4">
-                 <div className="text-center md:text-left">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 italic">Sessão Ativa:</p>
-                    <p className="font-bold text-blue-900 text-sm">{userLogado.email}</p>
-                 </div>
-                 <Link href="/login" className="px-6 py-3 bg-white text-blue-600 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md transition-all border border-blue-100">Trocar Conta</Link>
+                <div className="text-center md:text-left">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 italic">Sessão Ativa:</p>
+                  <p className="font-bold text-blue-900 text-sm">{userLogado.email}</p>
+                </div>
+                <Link href="/login" className="px-6 py-3 bg-white text-blue-600 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md transition-all border border-blue-100">Trocar Conta</Link>
               </section>
             )}
 
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
               <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 italic mb-4">Dados da Vitrine</h3>
-              <input value={formData.nome || ''} onChange={e => { const n = e.target.value; setFormData({...formData, nome: n, slug: editouSlugManualmente ? formData.slug : formatarParaSlug(n)}); }} placeholder="Nome Profissional" className={inputStyle()} required />
-              
+              <input value={formData.nome || ''} onChange={e => { const n = e.target.value; setFormData({ ...formData, nome: n, slug: editouSlugManualmente ? formData.slug : formatarParaSlug(n) }); }} placeholder="Nome Profissional" className={inputStyle()} required />
+
+              {/* CAMPO WHATSAPP REINTRODUZIDO AQUI */}
+              <input value={formData.whatsapp || ''} onChange={e => setFormData({ ...formData, whatsapp: aplicarMascaraWhatsapp(e.target.value) })} placeholder="WhatsApp para contato" className={inputStyle()} required />
+
               <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 relative overflow-hidden">
                 <label className="text-slate-400 font-black text-[9px] uppercase tracking-widest italic mb-2 block">Link exclusivo no procuroquemfaca.com.br/</label>
                 <div className="flex items-center gap-1 font-bold text-sm">
-                  <input value={formData.slug || ''} onChange={(e) => { setEditouSlugManualmente(true); setFormData({...formData, slug: formatarParaSlug(e.target.value)}) }} className="bg-transparent border-none outline-none text-blue-600 flex-1 min-w-0" placeholder="seu-link" />
-                  {checandoSlug ? <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /> : ( (formData.slug?.length > 2) && (slugDisponivel ? <span className="text-green-500 text-xs font-black uppercase">✅ Livre</span> : <span className="text-red-500 text-xs font-black uppercase">❌ Em uso</span>) )}
+                  <input value={formData.slug || ''} onChange={(e) => { setEditouSlugManualmente(true); setFormData({ ...formData, slug: formatarParaSlug(e.target.value) }) }} className="bg-transparent border-none outline-none text-blue-600 flex-1 min-w-0" placeholder="seu-link" />
+                  {checandoSlug ? <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /> : ((formData.slug?.length > 2) && (slugDisponivel ? <span className="text-green-500 text-xs font-black uppercase">✅ Livre</span> : <span className="text-red-500 text-xs font-black uppercase">❌ Em uso</span>))}
                 </div>
               </div>
 
@@ -292,7 +313,7 @@ export default function EditarPerfilTab() {
                   <option value="">Grupo</option>
                   {listaGrupos.map(g => <option key={g.id} value={g.id}>{g.nome}</option>)}
                 </select>
-                <select value={formData.categoria_id || ''} onChange={e => setFormData({...formData, categoria_id: e.target.value, habilidades: []})} className={inputStyle()} required>
+                <select value={formData.categoria_id || ''} onChange={e => setFormData({ ...formData, categoria_id: e.target.value, habilidades: [] })} className={inputStyle()} required>
                   <option value="">Profissão Principal</option>
                   {listaCategorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                 </select>
@@ -310,7 +331,7 @@ export default function EditarPerfilTab() {
                   </div>
                 </div>
               )}
-              <textarea value={formData.bio || ''} onChange={e => setFormData({...formData, bio: e.target.value})} placeholder="Conte sobre sua experiência..." className={`${inputStyle()} h-32 resize-none`} />
+              <textarea value={formData.bio || ''} onChange={e => setFormData({ ...formData, bio: e.target.value })} placeholder="Conte sobre sua experiência..." className={`${inputStyle()} h-32 resize-none`} />
             </section>
 
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
@@ -325,11 +346,11 @@ export default function EditarPerfilTab() {
                 </select>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <select value={formData.cidade_id || ''} onChange={e => setFormData({...formData, cidade_id: e.target.value})} className={inputStyle()} required disabled={!formData.estado_sigla}>
+                <select value={formData.cidade_id || ''} onChange={e => setFormData({ ...formData, cidade_id: e.target.value })} className={inputStyle()} required disabled={!formData.estado_sigla}>
                   <option value="">Cidade Sede</option>
                   {listaCidades.map(cid => <option key={cid.id} value={cid.id}>{cid.nome}</option>)}
                 </select>
-                <input value={formData.bairro || ''} onChange={e => setFormData({...formData, bairro: e.target.value})} placeholder="Bairro Principal" className={inputStyle()} />
+                <input value={formData.bairro || ''} onChange={e => setFormData({ ...formData, bairro: e.target.value })} placeholder="Bairro Principal" className={inputStyle()} />
               </div>
 
               {formData.regiao_id && cidadesRegiao.length > 1 && formData.cidade_id && (
@@ -353,11 +374,11 @@ export default function EditarPerfilTab() {
         </form>
       </div>
 
-      <ModalConfirmacao 
-        isOpen={isModalExcluirOpen} 
-        onClose={() => setIsModalExcluirOpen(false)} 
-        onConfirm={handleExcluirContaTotal} 
-        title="Encerrar sua conta?" 
+      <ModalConfirmacao
+        isOpen={isModalExcluirOpen}
+        onClose={() => setIsModalExcluirOpen(false)}
+        onConfirm={handleExcluirContaTotal}
+        title="Encerrar sua conta?"
         message="Isso apagará seu perfil, suas fotos e seu acesso permanentemente. Não há como desfazer."
       />
     </main>

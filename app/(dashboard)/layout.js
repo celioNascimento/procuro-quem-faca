@@ -10,14 +10,16 @@ export default function DashboardLayout({ children }) {
 
   // Garante a hidratação correta para evitar erros de SSR
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    // Use um requestAnimationFrame ou apenas mova para garantir o ciclo de vida
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleLogout = async () => {
     try {
       // 1. Tenta capturar a sessão para o log antes de encerrá-la
       const { data: { session } } = await supabase.auth.getSession()
-      
+
       if (session) {
         // Registro de log (Fire and forget para não travar o fluxo)
         supabase.from('logs_atividades').insert({
@@ -25,16 +27,16 @@ export default function DashboardLayout({ children }) {
           usuario_id: session.user.id,
           usuario_email: session.user.email,
           entidade_tipo: 'sessao',
-          detalhes: { 
+          detalhes: {
             origem: 'dashboard_centralizado',
             plataforma: typeof navigator !== 'undefined' ? navigator.platform : 'unknown'
           }
-        }).then(() => {})
+        }).then(() => { })
       }
 
       // 2. Encerra a sessão no Supabase (Cookies gerenciados pelo @supabase/ssr)
       await supabase.auth.signOut()
-      
+
       // 3. Limpeza de cache local
       if (typeof window !== 'undefined') {
         localStorage.clear()
@@ -44,7 +46,7 @@ export default function DashboardLayout({ children }) {
       // 4. Redirecionamento e atualização de rotas
       router.push('/')
       router.refresh()
-      
+
     } catch (error) {
       console.error('Erro crítico no logout:', error)
       // Fallback supremo: força o redirecionamento pelo navegador
@@ -54,25 +56,25 @@ export default function DashboardLayout({ children }) {
 
   if (!mounted) {
     // Mantém a estrutura do RootLayout + a cor de fundo desejada
-    return <div className="flex-grow flex flex-col bg-white min-h-screen" />; 
+    return <div className="flex-grow flex flex-col bg-white min-h-screen" />;
   }
   return (
     <div className="min-h-screen bg-white font-sans antialiased">
       {/* Header / Navbar */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100 h-16 flex items-center">
         <div className="max-w-2xl mx-auto w-full px-6 flex justify-between items-center">
-          
+
           {/* Logo Procuro que Faça - Agora direcionando para a Home */}
           <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <img 
-              src="/logo.png" 
-              alt="Logo Procuro que Faça" 
+            <img
+              src="/logo.png"
+              alt="Logo Procuro que Faça"
               className="h-9 w-auto object-contain"
             />
           </Link>
 
           <div className="flex gap-4 items-center">
-            <button 
+            <button
               onClick={handleLogout}
               className="group flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-red-50 transition-all active:scale-95"
               title="Encerrar Sessão"
@@ -82,9 +84,9 @@ export default function DashboardLayout({ children }) {
               </span>
               <div className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 group-hover:bg-red-100 group-hover:text-red-600 transition-all shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                  <polyline points="16 17 21 12 16 7"/>
-                  <line x1="21" y1="12" x2="9" y2="12"/>
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
               </div>
             </button>
@@ -101,14 +103,14 @@ export default function DashboardLayout({ children }) {
 
       {/* Dock Inferior Mobile */}
       <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-lg px-6 py-3 rounded-full border border-white/10 shadow-2xl z-50 flex items-center gap-10">
-          <Link href="/dashboard" className="text-white text-xl hover:scale-110 transition-transform">🏠</Link>
-          <div className="w-px h-4 bg-white/20" />
-          <button 
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
-            className="text-white text-xl hover:scale-110 transition-transform"
-          >
-            🚀
-          </button>
+        <Link href="/dashboard" className="text-white text-xl hover:scale-110 transition-transform">🏠</Link>
+        <div className="w-px h-4 bg-white/20" />
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="text-white text-xl hover:scale-110 transition-transform"
+        >
+          🚀
+        </button>
       </div>
     </div>
   )

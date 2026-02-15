@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, 
@@ -16,37 +16,45 @@ export default function AdminLogs() {
   const [dataInicio, setDataInicio] = useState('')
   const [tipoFiltro, setTipoFiltro] = useState('TODOS')
 
-  useEffect(() => {
-    carregarLogs()
-    const canal = supabase.channel('logs_realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs_atividades' }, (payload) => {
-        setLogs(prev => [payload.new, ...prev])
-      })
-      .subscribe()
-    return () => { supabase.removeChannel(canal) }
-  }, [])
-
-  async function carregarLogs() {
+  // 1. FUNÇÃO DE CARREGAMENTO (Declarada antes para evitar erro de hoisting)
+  const carregarLogs = useCallback(async () => {
     setLoading(true)
     setRefreshing(true)
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('logs_atividades')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(1000)
 
-      const { data, error } = await query
       if (error) throw error
       setLogs(data || [])
     } catch (error) {
-      console.error('Erro:', error)
+      console.error('Erro ao carregar logs:', error)
     } finally {
       setLoading(false)
       setTimeout(() => setRefreshing(false), 600)
     }
-  }
+  }, [])
 
+  // 2. EFEITO DE INICIALIZAÇÃO E REALTIME
+  useEffect(() => {
+    carregarLogs()
+    
+    const canal = supabase.channel('logs_realtime')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'logs_atividades' 
+      }, (payload) => {
+        setLogs(prev => [payload.new, ...prev])
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(canal) }
+  }, [carregarLogs])
+
+  // 3. FILTROS E LÓGICA DE DADOS
   const logsFiltrados = useMemo(() => {
     return logs.filter(log => {
       const matchesBusca = !busca || 
@@ -60,16 +68,15 @@ export default function AdminLogs() {
     })
   }, [logs, busca, tipoFiltro, dataInicio])
 
-  // FUNÇÃO DE EXPORTAÇÃO CSV
   const exportarCSV = () => {
     if (logsFiltrados.length === 0) return;
     
-    const headers = ["Data", "Hora", "Evento", "Usuário", "Detalhes"]
+    const headers = ["Data", "Hora", "Evento", "Usuario", "Detalhes"]
     const rows = logsFiltrados.map(log => [
       new Date(log.created_at).toLocaleDateString('pt-BR'),
       new Date(log.created_at).toLocaleTimeString('pt-BR'),
       log.acao,
-      log.usuario_email || 'Anônimo',
+      log.usuario_email || 'Anonimo',
       JSON.stringify(log.detalhes).replace(/"/g, "'")
     ])
 
@@ -100,7 +107,8 @@ export default function AdminLogs() {
   const renderDetalhes = (log) => {
     const d = log.detalhes || {}
     switch (log.acao) {
-      case 'BUSCA_SEM_SUCESSO': return <span className="text-red-500 font-bold tracking-tight">🔍 "{d.termo}"</span>
+      // CORREÇÃO: Usando &quot; para evitar erro de entidade JSX
+      case 'BUSCA_SEM_SUCESSO': return <span className="text-red-500 font-bold tracking-tight">🔍 &quot;{d.termo}&quot;</span>
       case 'CLIQUE_PERFIL': return <span className="text-indigo-500 font-bold tracking-tight">👤 {d.nome}</span>
       case 'DENUNCIA_PERFIL': return <span className="text-amber-600 font-bold tracking-tight">🚨 {d.motivo?.substring(0,30)}</span>
       default: return <span className="text-slate-400 italic font-medium text-[10px]">Evento de sistema</span>
@@ -112,7 +120,7 @@ export default function AdminLogs() {
       
       <header className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter italic">Auditoria<span className="text-indigo-600 not-italic">.OS</span></h1>
+          <h1 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter">Auditoria<span className="text-indigo-600 not-italic">.OS</span></h1>
           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-none mt-1">Inteligência de Tráfego e Logs</p>
         </div>
         <button 
@@ -173,7 +181,7 @@ export default function AdminLogs() {
         </div>
       </div>
 
-      {/* TIMELINE E BOTÃO DE EXPORTAR */}
+      {/* TIMELINE */}
       <div className="bg-white border border-slate-100 rounded-[2.5rem] shadow-sm overflow-hidden mb-20">
         <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-50/30">
           <div className="flex items-center gap-4">
@@ -203,7 +211,7 @@ export default function AdminLogs() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <p className="text-[10px] font-black uppercase text-slate-900 tracking-tight">{log.acao.replace(/_/g, ' ')}</p>
-                  <span className="text-[9px] font-bold text-slate-300 italic truncate max-w-[150px]">{log.usuario_email || 'Visitante Anônimo'}</span>
+                  <span className="text-[9px] font-bold text-slate-300 italic truncate max-w-[150px]">{log.usuario_email || 'Visitante Anonimo'}</span>
                 </div>
                 <div className="text-[11px] font-medium text-slate-600 leading-none">{renderDetalhes(log)}</div>
               </div>

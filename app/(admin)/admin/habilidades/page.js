@@ -8,14 +8,14 @@ export default function GestaoHabilidades() {
   const [categoria, setCategoria] = useState('Manutenção')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { carregarDados() }, [])
-
   async function carregarDados() {
     setLoading(true)
     const { data } = await supabase.from('habilidades').select('*').order('nome')
     setHabilidades(data || [])
     setLoading(false)
   }
+
+  useEffect(() => { carregarDados() }, [])
 
   async function adicionarHabilidade(e) {
     e.preventDefault()
@@ -43,7 +43,7 @@ export default function GestaoHabilidades() {
 
   return (
     <div className="min-h-screen bg-[#FDFDFE] text-slate-900 font-sans antialiased pb-20">
-      
+
       {/* HEADER MINIMALISTA */}
       <header className="max-w-6xl mx-auto px-8 pt-12 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -55,12 +55,12 @@ export default function GestaoHabilidades() {
           </p>
         </div>
         <div className="bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
-           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ativos: {habilidades.length}</span>
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ativos: {habilidades.length}</span>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
+
         {/* LADO ESQUERDO: FORMULÁRIO (4 Colunas) */}
         <div className="lg:col-span-4 sticky top-8">
           <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100">
@@ -68,20 +68,20 @@ export default function GestaoHabilidades() {
               <span className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></span>
               Novo Registro
             </h2>
-            
+
             <form onSubmit={adicionarHabilidade} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Profissão / Skill</label>
-                <input 
+                <input
                   value={nome} onChange={e => setNome(e.target.value)}
-                  placeholder="Ex: Eletricista" 
+                  placeholder="Ex: Eletricista"
                   className={inputStyle}
                 />
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Categoria de Grupo</label>
-                <select 
+                <select
                   value={categoria} onChange={e => setCategoria(e.target.value)}
                   className={inputStyle}
                 >
@@ -110,7 +110,7 @@ export default function GestaoHabilidades() {
                 <div className="w-2 h-2 rounded-full bg-slate-200"></div>
               </div>
             </div>
-            
+
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 animate-pulse">
                 <div className="w-12 h-12 bg-slate-100 rounded-full mb-4"></div>
@@ -119,8 +119,8 @@ export default function GestaoHabilidades() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {habilidades.map(h => (
-                  <div 
-                    key={h.id} 
+                  <div
+                    key={h.id}
                     className="relative overflow-hidden p-5 bg-white border border-slate-100 rounded-2xl flex flex-col items-start transition-all hover:border-indigo-200 hover:shadow-md hover:-translate-y-1 group"
                   >
                     {/* Badge de Categoria */}
@@ -139,7 +139,7 @@ export default function GestaoHabilidades() {
                     <span className="text-[13px] font-black text-slate-800 uppercase tracking-tight italic">
                       {h.nome}
                     </span>
-                    
+
                     {/* Linha decorativa de progresso fake (estética SaaS) */}
                     <div className="w-full h-1 bg-slate-50 mt-4 rounded-full overflow-hidden">
                       <div className="w-1/3 h-full bg-indigo-100 group-hover:bg-indigo-400 transition-all"></div>

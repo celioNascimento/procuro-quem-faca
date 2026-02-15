@@ -22,7 +22,7 @@ function CadastroSkeleton() {
   )
 }
 
-export function FormularioCadastro() {
+ function FormularioCadastro() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const reivindicarId = searchParams.get('reivindicar')

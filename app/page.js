@@ -17,8 +17,10 @@ export default function Home() {
 
   // Previne erro de hidratação garantindo renderização apenas no cliente
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    // Use um requestAnimationFrame ou apenas mova para garantir o ciclo de vida
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Busca de sugestões (roda apenas no cliente via useEffect)
   useEffect(() => {
@@ -42,11 +44,11 @@ export default function Home() {
             })
           setSugestoes(filtradas)
         }
-      } catch (error) { 
-        console.warn('Erro na busca de sugestões:', error.message) 
+      } catch (error) {
+        console.warn('Erro na busca de sugestões:', error.message)
       }
     }
-    
+
     const timer = setTimeout(buscarSugestoes, 300)
     return () => clearTimeout(timer)
   }, [busca])
@@ -54,8 +56,8 @@ export default function Home() {
   const registrarLog = async (acao, detalhes = {}, entidade = null) => {
     try {
       await supabase.from('logs_atividades').insert([{ acao, detalhes, entidade_tipo: entidade }])
-    } catch (err) { 
-      console.warn('Log bloqueado ou falhou') 
+    } catch (err) {
+      console.warn('Log bloqueado ou falhou')
     }
   }
 
@@ -84,21 +86,21 @@ export default function Home() {
   }
 
   return (
-    <main 
+    <main
       className="min-h-screen bg-[#F8FAFC] flex flex-col items-center font-sans relative antialiased"
       suppressHydrationWarning={true}
     >
       <div className="w-full flex flex-col items-center animate-in fade-in duration-500">
-        
+
         <HeroSection onLog={registrarLog} />
 
         <section className="w-full max-w-2xl px-4 pt-32 md:pt-44 pb-10 flex flex-col items-center text-center">
           <div className="mb-12 flex justify-center w-full">
             <Link href="/" className="block w-full max-w-[320px] md:max-w-[500px]">
-              <img 
-                src="/logo.png" 
-                alt="Logo Procuro que Faça" 
-                className="w-full h-auto object-contain hover:scale-[1.02] transition-transform" 
+              <img
+                src="/logo.png"
+                alt="Logo Procuro que Faça"
+                className="w-full h-auto object-contain hover:scale-[1.02] transition-transform"
               />
             </Link>
           </div>

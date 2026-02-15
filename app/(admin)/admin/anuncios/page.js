@@ -21,13 +21,13 @@ export default function AnunciosPage() {
     expira_em: ''
   })
 
-  useEffect(() => { fetchAnuncios() }, [])
-
   async function fetchAnuncios() {
     const { data } = await supabase.from('anuncios').select('*').order('created_at', { ascending: false })
     if (data) setAnuncios(data)
     setLoading(false)
   }
+
+  useEffect(() => { fetchAnuncios() }, [])
 
   function prepararEdicao(an) {
     setEditandoId(an.id)

@@ -17,8 +17,6 @@ export default function SuperGestaoGeografia() {
   const [nomeCidade, setNomeCidade] = useState('')
   const [regiaoSelecionada, setRegiaoSelecionada] = useState('')
 
-  useEffect(() => { carregarDados() }, [])
-
   async function carregarDados() {
     setLoading(true)
     // Buscas paralelas para performance de elite
@@ -27,50 +25,52 @@ export default function SuperGestaoGeografia() {
       supabase.from('regioes').select('*').order('nome'),
       supabase.from('cidades').select('*, regioes(nome)').order('nome')
     ])
-    
+
     setEstados(est.data || [])
     setRegioes(reg.data || [])
     setCidades(cid.data || [])
     setLoading(false)
   }
 
+  useEffect(() => { carregarDados() }, [])
+
   async function addEstado(e) {
     e.preventDefault()
-    if(!siglaEstado || !nomeEstado) return
-    const { error } = await supabase.from('estados').insert([{ 
-      sigla: siglaEstado.toUpperCase(), 
-      nome: nomeEstado 
+    if (!siglaEstado || !nomeEstado) return
+    const { error } = await supabase.from('estados').insert([{
+      sigla: siglaEstado.toUpperCase(),
+      nome: nomeEstado
     }])
-    if(!error) { setNomeEstado(''); setSiglaEstado(''); carregarDados() }
+    if (!error) { setNomeEstado(''); setSiglaEstado(''); carregarDados() }
   }
 
   async function addRegiao(e) {
     e.preventDefault()
-    if(!nomeRegiao) return
-    const { error } = await supabase.from('regioes').insert([{ 
-      nome: nomeRegiao, 
-      estado_sigla: estadoRegiao 
+    if (!nomeRegiao) return
+    const { error } = await supabase.from('regioes').insert([{
+      nome: nomeRegiao,
+      estado_sigla: estadoRegiao
     }])
-    if(!error) { setNomeRegiao(''); carregarDados() }
+    if (!error) { setNomeRegiao(''); carregarDados() }
   }
 
   async function addCidade(e) {
     e.preventDefault()
-    if(!nomeCidade) return
+    if (!nomeCidade) return
     // CORREÇÃO: Inserindo estado_sigla obrigatoriamente conforme sua tabela cidades
-    const { error } = await supabase.from('cidades').insert([{ 
-      nome: nomeCidade, 
-      estado_sigla: estadoRegiao, 
+    const { error } = await supabase.from('cidades').insert([{
+      nome: nomeCidade,
+      estado_sigla: estadoRegiao,
       regiao_id: regiaoSelecionada || null,
       ativa: true
     }])
-    if(!error) { setNomeCidade(''); setRegiaoSelecionada(''); carregarDados() }
+    if (!error) { setNomeCidade(''); setRegiaoSelecionada(''); carregarDados() }
     else { alert("Erro ao inserir: " + error.message) }
   }
 
   async function atualizarRegiaoCidade(cidadeId, novaRegiaoId) {
-    const { error } = await supabase.from('cidades').update({ 
-      regiao_id: novaRegiaoId || null 
+    const { error } = await supabase.from('cidades').update({
+      regiao_id: novaRegiaoId || null
     }).eq('id', cidadeId)
     if (!error) { setEditandoCidade(null); carregarDados() }
   }
@@ -80,7 +80,7 @@ export default function SuperGestaoGeografia() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased pb-20">
-      
+
       {/* GLOSSY HEADER */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm shadow-slate-200/50">
         <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -103,10 +103,10 @@ export default function SuperGestaoGeografia() {
       </div>
 
       <main className="max-w-7xl mx-auto p-6 space-y-8 mt-4">
-        
+
         {/* FORM GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
+
           {/* ESTADO */}
           <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm">
             <h2 className={labelClass + " text-indigo-600 mb-6"}>01. Registrar Estado</h2>
@@ -162,8 +162,8 @@ export default function SuperGestaoGeografia() {
                   <td className="px-8 py-5 font-black text-slate-800 uppercase text-xs italic">{c.nome}</td>
                   <td className="px-8 py-5 text-center">
                     {editandoCidade === c.id ? (
-                      <select 
-                        autoFocus 
+                      <select
+                        autoFocus
                         onBlur={() => setEditandoCidade(null)}
                         onChange={(e) => atualizarRegiaoCidade(c.id, e.target.value)}
                         className="p-2 bg-indigo-50 border border-indigo-200 rounded-lg text-[10px] font-black text-indigo-700 outline-none"

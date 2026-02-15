@@ -15,13 +15,15 @@ export default function ModalDenuncias({ denunciasSelecionadas, onClose, onResol
           {denunciasSelecionadas.lista.map((d, i) => (
             <div key={i} className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100 relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-1 h-full bg-red-500 opacity-20"></div>
-              <p className="text-slate-700 text-[13px] font-medium leading-relaxed">"{d.motivo}"</p>
+              {/* CORREÇÃO: Usando entidade HTML para aspas */}
+              <p className="text-slate-700 text-[13px] font-medium leading-relaxed">&quot;{d.motivo}&quot;</p>
               <p className="text-[10px] text-slate-400 font-bold uppercase mt-3 flex justify-between">
                 <span>📅 {formatarData(d.created_at)}</span>
                 <span className="text-red-400">ID: #{d.id}</span>
               </p>
             </div>
           ))}
+          {/* ... restante do código mantido ... */}
           <div className="pt-4 space-y-3">
             <button 
               onClick={() => onResolver(denunciasSelecionadas.id)}
