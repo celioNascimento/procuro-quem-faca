@@ -1,8 +1,8 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import UploadWizard from './UploadWizard'
-import { MessageSquare } from 'lucide-react' // Importado para o indicador de chat
+import { MessageSquare } from 'lucide-react'
 
 export default function PortfolioDashboardTab() {
   const [projetos, setProjetos] = useState([])
@@ -11,11 +11,29 @@ export default function PortfolioDashboardTab() {
   const [meuPrestadorId, setMeuPrestadorId] = useState(null)
   const [projetoParaEdicao, setProjetoParaEdicao] = useState(null)
 
-  useEffect(() => {
-    carregarDados()
-  }, [])
+  // --- LÓGICA DE PERSISTÊNCIA DE LEITURA (PRESTADOR) ---
+  const getUltimaLidaLocal = (projetoId, fotoId) => {
+    if (typeof window === 'undefined') return null
+    const salvo = localStorage.getItem(`lido_prestador_${projetoId}_${fotoId}`)
+    return salvo || null
+  }
 
-  async function carregarDados() {
+  const marcarComoLidoLocal = (projetoId, comentarios) => {
+    // Agrupa por foto e pega o ID da mensagem mais recente
+    const ultimasPorFoto = {}
+    comentarios.forEach(c => {
+      if (!ultimasPorFoto[c.foto_id] || new Date(c.criado_at) > new Date(ultimasPorFoto[c.foto_id].criado_at)) {
+        ultimasPorFoto[c.foto_id] = c
+      }
+    })
+
+    Object.keys(ultimasPorFoto).forEach(fotoId => {
+      localStorage.setItem(`lido_prestador_${projetoId}_${fotoId}`, ultimasPorFoto[fotoId].id)
+    })
+  }
+  // ----------------------------------------------------
+
+  const carregarDados = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
@@ -29,14 +47,13 @@ export default function PortfolioDashboardTab() {
       if (prestador) {
         setMeuPrestadorId(prestador.id)
         
-        // BUSCA AVANÇADA: Inclui fotos, avaliações e contagem de comentários não lidos
         const { data: meusProjetos } = await supabase
           .from('portfolio_projetos')
           .select(`
             *, 
             portfolio_fotos(*), 
             avaliacoes(id),
-            portfolio_comentarios(id, lido, autor_tipo)
+            portfolio_comentarios(id, foto_id, autor_tipo, criado_at)
           `)
           .eq('prestador_id', prestador.id)
           .order('created_at', { ascending: false })
@@ -48,9 +65,17 @@ export default function PortfolioDashboardTab() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    carregarDados()
+  }, [carregarDados])
 
   const abrirEdicao = (projeto) => {
+    // Antes de abrir, "limpamos" as notificações marcando as mensagens atuais como lidas localmente
+    if (projeto.portfolio_comentarios) {
+      marcarComoLidoLocal(projeto.id, projeto.portfolio_comentarios)
+    }
     setProjetoParaEdicao(projeto)
     setShowWizard(true)
   }
@@ -120,8 +145,28 @@ export default function PortfolioDashboardTab() {
             const jaAvaliado = proj.avaliacoes?.length > 0
             const aguardandoAvaliacao = proj.status === 'finalizado' && !jaAvaliado
 
-            // Lógica de Mensagens: Conta comentários do cliente que não foram lidos
-            const msgNaoLidas = proj.portfolio_comentarios?.filter(c => !c.lido && c.autor_tipo === 'cliente').length || 0
+            // --- NOVA LÓGICA DE NOTIFICAÇÃO (Persistente) ---
+            const threadsComNovidade = new Set();
+            const fotosProcessadas = new Set();
+            
+            // Ordena mensagens da mais recente para a mais antiga
+            const mensagensOrdenadas = [...(proj.portfolio_comentarios || [])].sort(
+              (a, b) => new Date(b.criado_at) - new Date(a.criado_at)
+            );
+
+            mensagensOrdenadas.forEach(msg => {
+              if (!fotosProcessadas.has(msg.foto_id)) {
+                const ultimaLidaId = getUltimaLidaLocal(proj.id, msg.foto_id);
+                
+                // Só notifica se: (Autor for cliente) E (A mensagem for diferente da última lida salva)
+                if (msg.autor_tipo === 'cliente' && msg.id !== ultimaLidaId) {
+                  threadsComNovidade.add(msg.foto_id);
+                }
+                fotosProcessadas.add(msg.foto_id);
+              }
+            });
+
+            const countNovidades = threadsComNovidade.size;
 
             return (
               <div 
@@ -129,25 +174,24 @@ export default function PortfolioDashboardTab() {
                 onClick={() => abrirEdicao(proj)}
                 className="group relative bg-white p-2 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-200 transition-all duration-500 cursor-pointer flex items-center"
               >
-                {/* INDICADOR DE MENSAGENS NOVAS */}
-                {msgNaoLidas > 0 && (
+                {countNovidades > 0 && (
                   <div className="absolute -top-2 -right-2 z-20 bg-red-500 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter shadow-lg shadow-red-100 flex items-center gap-1 animate-bounce">
                     <MessageSquare size={8} fill="currentColor" />
-                    {msgNaoLidas} {msgNaoLidas === 1 ? 'Nova Ideia' : 'Novas Ideias'}
+                    {countNovidades} {countNovidades === 1 ? 'Nova Ideia' : 'Novas Ideias'}
                   </div>
                 )}
 
                 <div className="w-28 h-28 rounded-[2.5rem] bg-slate-50 overflow-hidden shrink-0 relative">
-                  <img src={capa || '/placeholder-job.png'} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={capa || '/placeholder-job.png'} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="" />
                   <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors" />
                 </div>
 
                 <div className="pl-6 pr-8 flex-1">
                   <div className="flex items-center gap-2 mb-2">
                      <span className={`text-[7px] font-black uppercase px-2 py-1 rounded-lg ${
-                       aguardandoAvaliacao ? 'bg-blue-50 text-blue-600 animate-pulse' : 
-                       jaAvaliado ? 'bg-green-50 text-green-600' : 
-                       'bg-slate-50 text-slate-400'
+                        aguardandoAvaliacao ? 'bg-blue-50 text-blue-600 animate-pulse' : 
+                        jaAvaliado ? 'bg-green-50 text-green-600' : 
+                        'bg-slate-50 text-slate-400'
                      }`}>
                         {aguardandoAvaliacao ? 'Aguardando Avaliação' : jaAvaliado ? 'Concluído' : 'Em Progresso'}
                      </span>
@@ -162,23 +206,9 @@ export default function PortfolioDashboardTab() {
                     Interagir e Editar →
                   </p>
                 </div>
-
-                <div className="absolute right-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                   <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-500 transition-all">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
-                   </div>
-                </div>
               </div>
             )
           })}
-
-          {projetos.length === 0 && (
-            <div className="col-span-full py-32 text-center bg-white rounded-[4rem] border-2 border-dashed border-slate-100">
-               <span className="text-5xl block mb-6 opacity-30">📂</span>
-               <h3 className="text-slate-400 font-black uppercase italic tracking-widest text-sm">Seu portfólio está em branco</h3>
-               <p className="text-slate-300 text-[10px] font-bold uppercase mt-2">Adicione seu primeiro serviço para atrair mais clientes</p>
-            </div>
-          )}
         </div>
       )}
     </div>

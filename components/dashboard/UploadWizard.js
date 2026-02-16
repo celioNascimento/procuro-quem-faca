@@ -267,7 +267,13 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
           </div>
 
           <div className="p-6 bg-white border-t flex gap-3 pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
-            <input className="flex-1 bg-slate-100 rounded-3xl px-6 py-5 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-400" placeholder="Responder para o cliente..." value={novoComentario} onChange={e => setNovoComentario(e.target.value)} onKeyDown={e => e.key === 'Enter' && enviarResposta()}/>
+            <input 
+              className="flex-1 bg-slate-100 rounded-3xl px-6 py-5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-400" 
+              placeholder="Responder para o cliente..." 
+              value={novoComentario} 
+              onChange={e => setNovoComentario(e.target.value)} 
+              onKeyDown={e => e.key === 'Enter' && enviarResposta()}
+            />
             <button onClick={enviarResposta} disabled={enviandoComentario || !novoComentario.trim()} className="p-5 bg-blue-600 text-white rounded-3xl shadow-xl active:scale-95 transition-all">
               {enviandoComentario ? <Loader2 className="animate-spin" size={24} /> : <Send size={24} />}
             </button>
