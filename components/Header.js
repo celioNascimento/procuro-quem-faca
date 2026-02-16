@@ -47,46 +47,45 @@ export default function Header({ href }) {
     <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-slate-100/80 font-sans shadow-sm">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 md:h-20 flex items-center justify-between">
         
-        {/* LADO ESQUERDO: VOLTAR (Reduzido em telas pequenas para priorizar a logo) */}
-        <div className="w-20 md:w-32 flex justify-start">
+        {/* LADO ESQUERDO: VOLTAR (Reduzido para h-8/w-8 no mobile para não brigar com a logo) */}
+        <div className="w-16 md:w-32 flex justify-start">
           {href ? (
             <BackButton href={href} />
           ) : (
             <button 
               onClick={() => router.back()}
-              className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-600 hover:bg-slate-50 transition-all active:scale-95"
+              className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg md:rounded-xl border border-slate-100 bg-white text-slate-500 hover:text-blue-600 hover:border-blue-50 transition-all active:scale-95"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4 md:w-5 md:h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
             </button>
           )}
         </div>
 
-        {/* CENTRO: LOGO (Aumentada e otimizada) */}
+        {/* CENTRO: LOGO */}
         <div className="flex-1 flex justify-center px-2">
           <Link href="/" className="transition-opacity hover:opacity-80 flex items-center">
-            {/* h-12 no mobile e h-14 no desktop garante visibilidade */}
             <img 
               src="/logo.png" 
               alt="Logo" 
-              className="h-11 md:h-14 w-auto object-contain max-w-[140px] md:max-w-none" 
+              className="h-9 md:h-14 w-auto object-contain max-w-[130px] md:max-w-none" 
             />
           </Link>
         </div>
 
         {/* LADO DIREITO: LOGIN OU PERFIL */}
-        <div className="w-20 md:w-32 flex justify-end">
+        <div className="w-16 md:w-32 flex justify-end">
           {user ? (
             <Link 
               href="/painel/perfil"
               className="flex items-center gap-2 p-1 md:pr-3 rounded-full border border-slate-100 bg-slate-50 hover:bg-blue-50 transition-all group"
             >
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-white shrink-0">
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden border border-white shrink-0">
                 {user.user_metadata?.avatar_url ? (
                   <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-400 bg-white"><User size={14}/></div>
+                  <div className="w-full h-full flex items-center justify-center text-slate-400 bg-white"><User size={12}/></div>
                 )}
               </div>
               <span className="text-[10px] font-black uppercase tracking-tight text-slate-600 hidden md:block">Conta</span>
@@ -95,12 +94,12 @@ export default function Header({ href }) {
             <button 
               onClick={handleGoogleLogin}
               disabled={authLoading}
-              className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 rounded-xl md:rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-70"
+              className="flex items-center gap-2 p-2 md:px-4 md:py-2.5 rounded-lg md:rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-70"
             >
               {authLoading ? (
-                <Loader2 size={16} className="animate-spin text-blue-600" />
+                <Loader2 size={14} className="animate-spin text-blue-600" />
               ) : (
-                <LogIn size={16} className="text-blue-600 md:text-slate-400" />
+                <LogIn size={14} className="text-blue-600 md:text-slate-400" />
               )}
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 hidden sm:block">
                 {authLoading ? '...' : 'Entrar'}

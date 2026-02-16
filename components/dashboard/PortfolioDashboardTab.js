@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import UploadWizard from './UploadWizard'
+import { MessageSquare } from 'lucide-react' // Importado para o indicador de chat
 
 export default function PortfolioDashboardTab() {
   const [projetos, setProjetos] = useState([])
@@ -27,10 +28,16 @@ export default function PortfolioDashboardTab() {
       
       if (prestador) {
         setMeuPrestadorId(prestador.id)
-        // Buscamos os projetos e incluímos a contagem de avaliações para definir o status real
+        
+        // BUSCA AVANÇADA: Inclui fotos, avaliações e contagem de comentários não lidos
         const { data: meusProjetos } = await supabase
           .from('portfolio_projetos')
-          .select('*, portfolio_fotos(*), avaliacoes(id)')
+          .select(`
+            *, 
+            portfolio_fotos(*), 
+            avaliacoes(id),
+            portfolio_comentarios(id, lido, autor_tipo)
+          `)
           .eq('prestador_id', prestador.id)
           .order('created_at', { ascending: false })
         
@@ -110,9 +117,11 @@ export default function PortfolioDashboardTab() {
             const fotos = proj.portfolio_fotos || []
             const capa = fotos.sort((a,b) => b.ordem - a.ordem)[0]?.url_foto
             
-            // Lógica de Status Precisa
             const jaAvaliado = proj.avaliacoes?.length > 0
             const aguardandoAvaliacao = proj.status === 'finalizado' && !jaAvaliado
+
+            // Lógica de Mensagens: Conta comentários do cliente que não foram lidos
+            const msgNaoLidas = proj.portfolio_comentarios?.filter(c => !c.lido && c.autor_tipo === 'cliente').length || 0
 
             return (
               <div 
@@ -120,6 +129,14 @@ export default function PortfolioDashboardTab() {
                 onClick={() => abrirEdicao(proj)}
                 className="group relative bg-white p-2 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-200 transition-all duration-500 cursor-pointer flex items-center"
               >
+                {/* INDICADOR DE MENSAGENS NOVAS */}
+                {msgNaoLidas > 0 && (
+                  <div className="absolute -top-2 -right-2 z-20 bg-red-500 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter shadow-lg shadow-red-100 flex items-center gap-1 animate-bounce">
+                    <MessageSquare size={8} fill="currentColor" />
+                    {msgNaoLidas} {msgNaoLidas === 1 ? 'Nova Ideia' : 'Novas Ideias'}
+                  </div>
+                )}
+
                 <div className="w-28 h-28 rounded-[2.5rem] bg-slate-50 overflow-hidden shrink-0 relative">
                   <img src={capa || '/placeholder-job.png'} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors" />
@@ -127,7 +144,6 @@ export default function PortfolioDashboardTab() {
 
                 <div className="pl-6 pr-8 flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                     {/* TAG DE STATUS ALTERADA: Azul para Aguardando Avaliação, Verde para Finalizado/Avaliado e Slate para Progresso */}
                      <span className={`text-[7px] font-black uppercase px-2 py-1 rounded-lg ${
                        aguardandoAvaliacao ? 'bg-blue-50 text-blue-600 animate-pulse' : 
                        jaAvaliado ? 'bg-green-50 text-green-600' : 
@@ -143,7 +159,7 @@ export default function PortfolioDashboardTab() {
                   </h4>
                   
                   <p className="text-blue-400 text-[9px] font-bold uppercase mt-2 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
-                    Editar Detalhes →
+                    Interagir e Editar →
                   </p>
                 </div>
 
