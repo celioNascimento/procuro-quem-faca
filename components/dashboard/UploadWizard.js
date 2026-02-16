@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Smartphone, Briefcase, Camera, Send, Check, X, Maximize2, User } from 'lucide-react'
+import { Smartphone, Briefcase, Camera, Send, Check, X, Maximize2, User, Loader2, Star } from 'lucide-react'
 
 export default function UploadWizard({ prestadorId, projetoExistente = null, onComplete }) {
   const [loading, setLoading] = useState(false)
@@ -9,7 +9,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
   const [tokenAvaliacao, setTokenAvaliacao] = useState(projetoExistente?.avaliacao_token || null)
   const [titulo, setTitulo] = useState(projetoExistente?.titulo || '')
   const [clienteWhatsapp, setClienteWhatsapp] = useState(projetoExistente?.cliente_whatsapp || '')
-  const [clienteNome, setClienteNome] = useState(projetoExistente?.cliente_nome || '') // Novo Estado
+  const [clienteNome, setClienteNome] = useState(projetoExistente?.cliente_nome || '')
   const [prestadorWhatsapp, setPrestadorWhatsapp] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   
@@ -51,6 +51,49 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
     }
     getInfo()
   }, [prestadorId])
+
+  const registrarLogAtividade = async (acao, detalhes = {}) => {
+    try {
+      await supabase.from('logs_atividades').insert([{
+        entidade_id: String(prestadorId),
+        entidade_tipo: 'prestador',
+        acao: acao,
+        detalhes: {
+          projeto_id: projetoId,
+          titulo: titulo,
+          cliente: clienteNome,
+          ...detalhes
+        }
+      }])
+    } catch (e) { console.error("Erro ao registrar log:", e) }
+  }
+
+  const handleFinalizarEEnviarWA = async () => {
+    setLoading(true)
+    try {
+      // 1. Atualiza Status no Banco
+      await supabase.from('portfolio_projetos')
+        .update({ status: 'finalizado' })
+        .eq('id', projetoId)
+
+      // 2. Registra o Log de Conclusão (Monitoramento)
+      await registrarLogAtividade('PROJETO_CONCLUIDO_WIZARD')
+
+      // 3. Prepara o Link e Mensagem de Avaliação
+      const linkAvaliacao = `${window.location.origin}/avaliar/${projetoId}?token=${tokenAvaliacao}`
+      const msg = `Olá ${clienteNome.split(' ')[0]}! Finalizei o serviço de *${titulo}* ✅. Ficou excelente! Gostaria de pedir um segundo do seu tempo para avaliar meu trabalho aqui: ${linkAvaliacao}. Sua opinião me ajuda muito!`
+      
+      // 4. Abre o WhatsApp
+      window.open(`https://wa.me/${clienteWhatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank')
+
+      // 5. Fecha o Wizard
+      onComplete()
+    } catch (err) {
+      alert("Erro ao finalizar: " + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const recuperarProjeto = useCallback(async (whatsapp) => {
     const numLimpo = whatsapp.replace(/\D/g, '')
@@ -98,7 +141,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
       prestador_id: prestadorId, 
       titulo, 
       cliente_whatsapp: clienteWhatsapp.replace(/\D/g, ''),
-      cliente_nome: clienteNome, // Salvando o nome
+      cliente_nome: clienteNome,
       status: 'em_registro' 
     }).select('id, avaliacao_token').single()
     if (error) throw error
@@ -116,6 +159,10 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
       const { data: { publicUrl } } = supabase.storage.from('portfolios').getPublicUrl(path)
       await supabase.from('portfolio_fotos').upsert({ projeto_id: id, url_foto: publicUrl, ordem, legenda: getEtapaLabel(ordem) }, { onConflict: 'projeto_id, ordem' })
       setFotosUrls(prev => ({ ...prev, [ordem]: `${publicUrl}?t=${Date.now()}` }))
+      
+      // Log de Upload (Monitorar progresso do portfólio)
+      await registrarLogAtividade('FOTO_ADICIONADA', { ordem })
+
     } catch (err) { alert(err.message) } finally { setLoading(false) }
   }
 
@@ -124,7 +171,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl overflow-hidden max-w-xl mx-auto">
         <div className="p-8 space-y-6">
           
-          {/* IDENTIFICAÇÃO DO CLIENTE (Humanizada) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className={`p-4 rounded-3xl border transition-all duration-300 ${clienteWhatsapp.length >= 11 ? 'bg-blue-50/30 border-blue-200' : 'bg-slate-50 border-slate-100 shadow-inner'}`}>
               <label className="text-[9px] font-black uppercase text-slate-400 mb-2 flex items-center gap-2">
@@ -150,7 +196,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
             </div>
           </div>
 
-          {/* NOME DO TRABALHO */}
           <div className={`p-4 rounded-3xl border transition-all duration-300 ${tituloValido ? 'bg-blue-50/30 border-blue-100 shadow-md' : 'bg-slate-50 border-slate-100 opacity-50 pointer-events-none'}`}>
             <label className="text-[9px] font-black uppercase text-slate-400 mb-2 flex items-center gap-2">
               <Briefcase size={10} /> O que está sendo feito?
@@ -163,7 +208,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
             />
           </div>
 
-          {/* TIMELINE DE FOTOS */}
           <div className={`transition-all duration-500 ${tituloValido && dadosClienteValidos ? 'opacity-100' : 'opacity-10 pointer-events-none'}`}>
             <div className="flex items-center gap-4 mb-4 px-2">
               <p className="text-[9px] font-black uppercase text-slate-300 tracking-[0.2em] italic">Timeline do Trabalho</p>
@@ -179,7 +223,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                     <div onClick={() => hasPhoto && setZoomFoto(fotosUrls[n])} className={`w-full h-full rounded-3xl border transition-all duration-500 flex flex-col items-center justify-center overflow-hidden relative cursor-pointer ${hasPhoto ? 'border-blue-500 bg-white shadow-lg scale-[1.02]' : isDisabled ? 'border-slate-50 bg-slate-50/30 opacity-40' : 'border-slate-200 bg-slate-50 shadow-inner hover:bg-slate-100'}`}>
                       {hasPhoto ? (
                         <>
-                          <img src={fotosUrls[n]} className="w-full h-full object-cover" key={`img-${n}-${fotosUrls[n]}`} />
+                          <img src={fotosUrls[n]} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center">
                             <Maximize2 size={16} className="text-white opacity-0 group-hover:opacity-100" />
                           </div>
@@ -201,7 +245,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
             </div>
           </div>
 
-          {/* CONVITE HUMANIZADO */}
           {fotosUrls[1] && !conviteEnviado && (
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 text-white flex items-center justify-between gap-5 animate-in slide-in-from-top-4 shadow-xl">
               <div className="flex-1">
@@ -214,6 +257,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                   const msg = `Olá ${clienteNome.split(' ')[0]}! Iniciei seu serviço de *${titulo}*. Você pode acompanhar as fotos por aqui: ${link}`
                   window.open(`https://wa.me/${clienteWhatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank')
                   setConviteEnviado(true)
+                  registrarLogAtividade('LINK_ACOMPANHAMENTO_ENVIADO')
                 }}
                 className="bg-white text-blue-600 px-6 py-3 rounded-2xl font-black uppercase text-[9px] tracking-[0.2em] shadow-2xl active:scale-95 transition-all"
               >
@@ -223,30 +267,33 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
           )}
         </div>
 
-        {/* FOOTER */}
+        {/* FOOTER: CONCLUIR E SOLICITAR AVALIAÇÃO */}
         <div className={`p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100 transition-all ${fotosUrls[3] ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <button 
-            onClick={async () => {
-                setLoading(true)
-                await supabase.from('portfolio_projetos').update({ status: 'finalizado' }).eq('id', projetoId)
-                onComplete()
-            }} 
-            className="w-full py-5 bg-green-600 text-white rounded-[1.5rem] font-black uppercase text-[10px] tracking-[0.3em] shadow-lg active:scale-95 transition-all"
+            onClick={handleFinalizarEEnviarWA}
+            disabled={loading}
+            className="w-full py-5 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase text-[10px] tracking-[0.3em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3 hover:bg-blue-700"
           >
-            {loading ? 'Finalizando...' : 'Publicar Trabalho'}
+            {loading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <>
+                Concluir e Pedir Avaliação
+                <Star size={14} className="fill-white" />
+              </>
+            )}
           </button>
+          <p className="text-center text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-4 italic px-4">
+            O projeto será finalizado e o WhatsApp do cliente será aberto para avaliação.
+          </p>
         </div>
       </div>
 
-      {/* MODAL DE AMPLIAÇÃO */}
       {zoomFoto && (
         <div className="fixed inset-0 z-[100] bg-white/90 backdrop-blur-xl p-4 flex flex-col items-center justify-center animate-in fade-in duration-300" onClick={() => setZoomFoto(null)}>
-          <button className="absolute top-10 right-6 p-4 bg-white rounded-full text-slate-800 shadow-xl border border-slate-100 active:scale-90 transition-transform">
-            <X size={24} />
-          </button>
+          <button className="absolute top-10 right-6 p-4 bg-white rounded-full text-slate-800 shadow-xl border border-slate-100 active:scale-90 transition-transform"><X size={24} /></button>
           <div className="w-full max-w-lg">
             <img src={zoomFoto} className="w-full rounded-[2.5rem] shadow-2xl border-8 border-white" alt="Zoom" />
-            <p className="text-center mt-6 font-black uppercase italic text-slate-400 tracking-[0.3em] text-[10px]">Visualização do Trabalho</p>
           </div>
         </div>
       )}

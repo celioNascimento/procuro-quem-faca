@@ -27,9 +27,10 @@ export default function PortfolioDashboardTab() {
       
       if (prestador) {
         setMeuPrestadorId(prestador.id)
+        // Buscamos os projetos e incluímos a contagem de avaliações para definir o status real
         const { data: meusProjetos } = await supabase
           .from('portfolio_projetos')
-          .select('*, portfolio_fotos(*)')
+          .select('*, portfolio_fotos(*), avaliacoes(id)')
           .eq('prestador_id', prestador.id)
           .order('created_at', { ascending: false })
         
@@ -108,7 +109,10 @@ export default function PortfolioDashboardTab() {
           {projetos.map(proj => {
             const fotos = proj.portfolio_fotos || []
             const capa = fotos.sort((a,b) => b.ordem - a.ordem)[0]?.url_foto
-            const concluido = fotos.some(f => f.ordem === 3)
+            
+            // Lógica de Status Precisa
+            const jaAvaliado = proj.avaliacoes?.length > 0
+            const aguardandoAvaliacao = proj.status === 'finalizado' && !jaAvaliado
 
             return (
               <div 
@@ -123,8 +127,13 @@ export default function PortfolioDashboardTab() {
 
                 <div className="pl-6 pr-8 flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                     <span className={`text-[7px] font-black uppercase px-2 py-1 rounded-lg ${concluido ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
-                        {concluido ? 'Finalizado' : 'Em Progresso'}
+                     {/* TAG DE STATUS ALTERADA: Azul para Aguardando Avaliação, Verde para Finalizado/Avaliado e Slate para Progresso */}
+                     <span className={`text-[7px] font-black uppercase px-2 py-1 rounded-lg ${
+                       aguardandoAvaliacao ? 'bg-blue-50 text-blue-600 animate-pulse' : 
+                       jaAvaliado ? 'bg-green-50 text-green-600' : 
+                       'bg-slate-50 text-slate-400'
+                     }`}>
+                        {aguardandoAvaliacao ? 'Aguardando Avaliação' : jaAvaliado ? 'Concluído' : 'Em Progresso'}
                      </span>
                      <span className="text-slate-300 text-[8px] font-bold uppercase tracking-widest">• {fotos.length} Fotos</span>
                   </div>

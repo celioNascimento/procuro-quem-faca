@@ -1,11 +1,13 @@
 'use client'
 import { useEffect, useState, use } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Star, CheckCircle2, Clock, X, Maximize2, ShieldCheck, ChevronRight, User } from 'lucide-react'
+import HeaderCliente from '@/components/HeaderCliente' // Importação do Header com Logo
 
 export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
   const params = use(paramsPromise)
+  const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
 
@@ -19,14 +21,13 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
   const [comentario, setComentario] = useState('')
 
   useEffect(() => {
-    // Use um requestAnimationFrame ou apenas mova para garantir o ciclo de vida
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
+    setMounted(true)
   }, []);
 
   useEffect(() => {
     async function carregar() {
       if (!token || !mounted) return
+      
       const { data } = await supabase
         .from('portfolio_projetos')
         .select(`*, portfolio_fotos(*), prestadores(nome, foto_perfil, categoria:categorias(nome))`)
@@ -56,9 +57,7 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
       <div className="bg-white p-12 rounded-[3rem] shadow-xl border-2 border-slate-100 max-w-sm">
         <span className="text-4xl mb-6 block">🚫</span>
         <h1 className="font-black uppercase italic text-2xl text-slate-800 mb-2 leading-none tracking-tighter">Link Expirado</h1>
-        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">
-          Este acesso não é mais válido.
-        </p>
+        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">Este acesso não é mais válido.</p>
       </div>
     </div>
   )
@@ -67,9 +66,12 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-slate-900 pb-20 font-sans antialiased">
-      <div className="max-w-xl mx-auto px-6 pt-12 space-y-12">
+      {/* NOVO HEADER COM LOGO EM PUBLIC E SAUDAÇÃO */}
+      <HeaderCliente nomeCliente={projeto.cliente_nome?.split(' ')[0]} />
 
-        {/* HEADER: AUTORIDADE DO CLIENTE */}
+      <div className="max-w-xl mx-auto px-6 pt-12 space-y-12 animate-in fade-in duration-700">
+
+        {/* HEADER: AUTORIDADE DO PRESTADOR */}
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="relative">
             <img
@@ -91,9 +93,9 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
           </div>
         </div>
 
-        {/* CARD DO SERVIÇO: IMPACTO VISUAL */}
+        {/* CARD DO SERVIÇO */}
         <div className="bg-white rounded-[2.5rem] p-8 border-2 border-slate-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-5">
+          <div className="absolute top-0 right-0 p-4 opacity-5 text-slate-200">
             <ShieldCheck size={80} strokeWidth={3} />
           </div>
 
@@ -114,14 +116,14 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
                 <CheckCircle2 size={14} className="text-green-500" />
                 <div className="text-left">
                   <p className="text-[7px] font-black uppercase text-slate-400 leading-none">Status</p>
-                  <p className="text-[11px] font-black uppercase italic text-green-600 tracking-tighter italic">Verificado</p>
+                  <p className="text-[11px] font-black uppercase italic text-green-600 tracking-tighter">Verificado</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* GRADE DE EVIDÊNCIAS: GRID 3 COLUNAS */}
+        {/* GRADE DE EVIDÊNCIAS */}
         <div className="space-y-6">
           <div className="flex items-center gap-4 px-2">
             <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em]">Registro Fotográfico</p>
@@ -149,10 +151,10 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
           </div>
         </div>
 
-        {/* ÁREA DE AVALIAÇÃO: CONCLUSÃO OFICIAL */}
+        {/* ÁREA DE AVALIAÇÃO */}
         <div className="pt-6">
           {temConclusao ? (
-            <div className="bg-white p-10 rounded-[3.5rem] border-2 border-slate-100 shadow-2xl space-y-8 animate-in slide-in-from-bottom-6">
+            <div className="bg-white p-10 rounded-[3.5rem] border-2 border-slate-100 shadow-2xl space-y-8 animate-in slide-in-from-bottom-6 duration-500">
               <div className="text-center space-y-2">
                 <h3 className="text-2xl font-black italic uppercase text-slate-800 tracking-tighter">Assinar Conclusão</h3>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight">
@@ -191,8 +193,21 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
                   className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black uppercase text-[12px] tracking-[0.3em] shadow-xl shadow-blue-100 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale flex items-center justify-center gap-3"
                   onClick={async () => {
                     setSubmitting(true);
-                    // Aqui entrará a função real do Supabase
-                    setTimeout(() => { alert("Finalizado com Autoridade!"); setSubmitting(false); }, 1500);
+                    try {
+                      const { error } = await supabase.from('avaliacoes').insert({
+                        projeto_id: projeto.id,
+                        prestador_id: projeto.prestador_id,
+                        nota: nota,
+                        comentario: comentario,
+                        cliente_whatsapp: projeto.cliente_whatsapp
+                      })
+                      if (error) throw error
+                      router.push('/painel/perfil?success=true')
+                    } catch (err) {
+                      alert("Erro ao enviar avaliação")
+                    } finally {
+                      setSubmitting(false);
+                    }
                   }}
                 >
                   {submitting ? 'VALIDANDO...' : 'Finalizar e Publicar'}
@@ -209,13 +224,13 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
         </div>
 
         <p className="text-center text-[8px] font-black text-slate-300 uppercase tracking-[0.5em] pb-10">
-          Digital Protocol verified by SeuApp • 2026
+          Digital Protocol verified by ProcuroQuemFaça • 2026
         </p>
       </div>
 
-      {/* LIGHTBOX DE ALTA DEFINIÇÃO */}
+      {/* LIGHTBOX */}
       {fotoSelecionada && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white p-4 animate-in fade-in duration-300" onClick={() => setFotoSelecionada(null)}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white p-4 animate-in fade-in duration-300" onClick={() => setFotoSelecionada(null)}>
           <button className="absolute top-10 right-6 p-4 bg-slate-100 rounded-full text-slate-800 shadow-lg active:scale-90 transition-transform">
             <X size={24} strokeWidth={3} />
           </button>

@@ -32,7 +32,7 @@ export default function EditarPerfilTab() {
     grupo_id: '', categoria_id: '', estado_sigla: 'PR',
     regiao_id: '', cidade_id: '', bairro: '', slug: '',
     habilidades: [], cidades_atendidas: [],
-    status: 'ativo' // Garante que o status seja enviado
+    status: 'ativo'
   })
 
   const inputStyle = () => `w-full px-4 py-3.5 rounded-xl border border-slate-100 outline-none transition-all font-bold text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400`
@@ -219,14 +219,33 @@ export default function EditarPerfilTab() {
         categoria_id: formData.categoria_id || null,
         cidades_atendidas: cidadesLimpo,
         user_id: userLogado.id,
-        status: formData.status || 'ativo' // Força o status para não resetar para pendente
+        status: formData.status || 'ativo'
       };
 
       if (!payload.id) delete payload.id;
 
-      const { error } = await supabase.from('prestadores').upsert(payload);
+      // 1. Salva/Atualiza o prestador
+      const { data: prestadorSalvo, error } = await supabase
+        .from('prestadores')
+        .upsert(payload)
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // 2. REGISTRO DE LOG UNIFICADO
+      // Aqui usamos o ID do prestador como entidade_id para futuras métricas de BI
+      await supabase.from('logs_atividades').insert([{
+        usuario_id: userLogado.id,
+        usuario_email: userLogado.email,
+        acao: 'PERFIL_ATUALIZADO',
+        entidade_tipo: 'configuracao', // Categoria do evento
+        entidade_id: String(prestadorSalvo.id), // ID do prestador para análise
+        detalhes: {
+          plataforma: 'web',
+          campos_alterados: Object.keys(payload).filter(k => payload[k] !== formData[k])
+        }
+      }]);
 
       setStatus('✅ Perfil Atualizado!');
       setTentouEnviar(false);
@@ -247,33 +266,26 @@ export default function EditarPerfilTab() {
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans antialiased">
       <div className="max-w-5xl mx-auto px-4 pt-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <header className="border-b border-slate-100 pb-8 flex justify-between items-end">
-          <div>
-            <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">Meu Perfil Profissional</h2>
-            <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em] mt-2">Painel de Controle — procuroquemfaca.com.br</p>
-          </div>
-          <button
-            onClick={() => setIsModalExcluirOpen(true)}
-            className="text-[9px] font-black text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors italic border-b border-red-100 pb-1"
-          >
-            Encerrar Conta
-          </button>
+        <header className="border-b border-slate-100 pb-8">
+          <h2 className="text-2xl md:text-3xl font-black text-slate-900 uppercase italic tracking-tighter">Meu Perfil Profissional</h2>
+          <p className="text-slate-400 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] mt-2">Painel de Controle — procuroquemfaca.com.br</p>
         </header>
 
-        <form onSubmit={handleSalvar} className="grid grid-cols-12 gap-8">
-          <div className="col-span-12 md:col-span-4 space-y-6">
+        <form onSubmit={handleSalvar} className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <div className="col-span-1 md:col-span-4 space-y-6">
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center gap-6 sticky top-24">
-              <div className={`relative w-40 h-40 md:w-48 md:h-48 rounded-[3.5rem] bg-slate-50 border-2 border-dashed flex items-center justify-center overflow-hidden group transition-all hover:border-blue-400 hover:bg-blue-50`}>
+              {/* REMOVIDO BORDA PONTILHADA (DASHED) */}
+              <div className="relative w-40 h-40 md:w-48 md:h-48 rounded-[3.5rem] bg-slate-50 border-2 border-slate-50 flex items-center justify-center overflow-hidden group transition-all hover:border-blue-400 hover:bg-blue-50 shadow-inner">
                 {formData.foto_perfil ? (
                   <img src={formData.foto_perfil} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt="Foto" />
                 ) : (
-                  <span className="text-slate-300 font-black text-xs italic uppercase">Foto Profissional</span>
+                  <span className="text-slate-300 font-black text-[10px] italic uppercase">Foto Profissional</span>
                 )}
                 <input type="file" accept="image/*" onChange={fazerUploadFoto} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
                 <div className="absolute bottom-2 bg-black/50 text-white text-[8px] px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20">Alterar</div>
               </div>
               <div className="text-center space-y-2">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic text-center">Clique na imagem para atualizar</p>
+                <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest italic text-center px-4 leading-tight">Clique na imagem para atualizar sua foto</p>
                 <div className="flex items-center justify-center gap-2">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                   <span className="text-[9px] font-black text-slate-600 uppercase tracking-tighter">Perfil Online</span>
@@ -282,29 +294,28 @@ export default function EditarPerfilTab() {
             </section>
           </div>
 
-          <div className="col-span-12 md:col-span-8 space-y-6">
+          <div className="col-span-1 md:col-span-8 space-y-6">
             {userLogado && (
               <section className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="text-center md:text-left">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 italic">Sessão Ativa:</p>
-                  <p className="font-bold text-blue-900 text-sm">{userLogado.email}</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-blue-400 italic">Sessão Ativa:</p>
+                  <p className="font-bold text-blue-900 text-xs md:text-sm truncate max-w-[250px]">{userLogado.email}</p>
                 </div>
-                <Link href="/login" className="px-6 py-3 bg-white text-blue-600 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md transition-all border border-blue-100">Trocar Conta</Link>
+                <Link href="/login" className="w-full md:w-auto text-center px-6 py-3 bg-white text-blue-600 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md transition-all border border-blue-100">Trocar Conta</Link>
               </section>
             )}
 
-            <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
+            <section className="bg-white rounded-[2.5rem] p-6 md:p-8 border border-slate-100 shadow-sm space-y-4">
               <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 italic mb-4">Dados da Vitrine</h3>
               <input value={formData.nome || ''} onChange={e => { const n = e.target.value; setFormData({ ...formData, nome: n, slug: editouSlugManualmente ? formData.slug : formatarParaSlug(n) }); }} placeholder="Nome Profissional" className={inputStyle()} required />
 
-              {/* CAMPO WHATSAPP REINTRODUZIDO AQUI */}
               <input value={formData.whatsapp || ''} onChange={e => setFormData({ ...formData, whatsapp: aplicarMascaraWhatsapp(e.target.value) })} placeholder="WhatsApp para contato" className={inputStyle()} required />
 
               <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 relative overflow-hidden">
-                <label className="text-slate-400 font-black text-[9px] uppercase tracking-widest italic mb-2 block">Link exclusivo no procuroquemfaca.com.br/</label>
+                <label className="text-slate-400 font-black text-[9px] uppercase tracking-widest italic mb-2 block leading-tight">Link exclusivo no procuroquemfaca.com.br/</label>
                 <div className="flex items-center gap-1 font-bold text-sm">
                   <input value={formData.slug || ''} onChange={(e) => { setEditouSlugManualmente(true); setFormData({ ...formData, slug: formatarParaSlug(e.target.value) }) }} className="bg-transparent border-none outline-none text-blue-600 flex-1 min-w-0" placeholder="seu-link" />
-                  {checandoSlug ? <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /> : ((formData.slug?.length > 2) && (slugDisponivel ? <span className="text-green-500 text-xs font-black uppercase">✅ Livre</span> : <span className="text-red-500 text-xs font-black uppercase">❌ Em uso</span>))}
+                  {checandoSlug ? <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /> : ((formData.slug?.length > 2) && (slugDisponivel ? <span className="text-green-500 text-[10px] font-black uppercase shrink-0">✅ Livre</span> : <span className="text-red-500 text-[10px] font-black uppercase shrink-0">❌ Em uso</span>))}
                 </div>
               </div>
 
@@ -334,7 +345,7 @@ export default function EditarPerfilTab() {
               <textarea value={formData.bio || ''} onChange={e => setFormData({ ...formData, bio: e.target.value })} placeholder="Conte sobre sua experiência..." className={`${inputStyle()} h-32 resize-none`} />
             </section>
 
-            <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
+            <section className="bg-white rounded-[2.5rem] p-6 md:p-8 border border-slate-100 shadow-sm space-y-6">
               <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 italic">Área de Atendimento</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <select value={formData.estado_sigla || ''} onChange={handleEstadoChange} className={inputStyle()}>
@@ -358,7 +369,7 @@ export default function EditarPerfilTab() {
                   <label className="text-slate-400 font-black text-[9px] uppercase block italic mb-4">Também atendo em:</label>
                   <div className="flex flex-wrap gap-2">
                     {cidadesRegiao.filter(c => String(c.id) !== String(formData.cidade_id)).map(cid => (
-                      <button key={cid.id} type="button" onClick={() => toggleItem(cid.nome, 'cidades_atendidas')} className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase border transition-all ${formData.cidades_atendidas?.includes(cid.nome) ? 'bg-blue-600 text-white border-blue-600 shadow-lg scale-95' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-slate-300'}`}>
+                      <button key={cid.id} type="button" onClick={() => toggleItem(cid.nome, 'cidades_atendidas')} className={`px-4 py-3 rounded-2xl text-[9px] md:text-[10px] font-black uppercase border transition-all ${formData.cidades_atendidas?.includes(cid.nome) ? 'bg-blue-600 text-white border-blue-600 shadow-lg scale-95' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-slate-300'}`}>
                         {cid.nome}
                       </button>
                     ))}
@@ -367,9 +378,22 @@ export default function EditarPerfilTab() {
               )}
             </section>
 
-            <button type="submit" className="w-full py-6 bg-blue-600 text-white rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-[11px] shadow-2xl hover:bg-blue-700 active:scale-95 transition-all">
-              {status || 'Salvar Perfil Profissional'}
-            </button>
+            <div className="space-y-4 pt-4">
+              <button type="submit" className="w-full py-6 bg-blue-600 text-white rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-[11px] shadow-2xl hover:bg-blue-700 active:scale-95 transition-all">
+                {status || 'Salvar Perfil Profissional'}
+              </button>
+
+              {/* BOTAO EXCLUIR MOVIDO PARA BAIXO E EM MENOR EVIDÊNCIA */}
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsModalExcluirOpen(true)}
+                  className="text-[9px] font-black text-slate-300 uppercase tracking-widest hover:text-red-400 transition-colors italic py-4"
+                >
+                  Encerrar Conta Permanentemente
+                </button>
+              </div>
+            </div>
           </div>
         </form>
       </div>
