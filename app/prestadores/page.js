@@ -92,26 +92,29 @@ function ListaConteudo() {
       
       {/* FILTRO DINÂMICO DE CIDADES - Estilo Pílula Premium */}
       {cidadesDisponiveis.length > 0 && (
-        /* AJUSTE AQUI: Aumentamos o pb-4 e adicionamos mb-4 para dar respiro no celular */
-        <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 pt-3 pb-5 mb-2 bg-[#FDFDFD]/90 backdrop-blur-md border-b border-slate-100/60 transition-all">
+        /* CORREÇÃO AQUI: Aumentado py-5 para respiro vertical e mb-4 para afastar do banner */
+        <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 py-5 mb-4 bg-[#FDFDFD]/95 backdrop-blur-md border-b border-slate-100/80 shadow-sm transition-all">
           <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
-            <div className="flex items-center gap-2 bg-slate-100/50 px-3 py-2 rounded-2xl shrink-0">
-              <Filter size={14} className="text-slate-400" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Filtrar</span>
+            <div className="flex items-center gap-2 bg-slate-100/80 px-4 py-2.5 rounded-2xl shrink-0">
+              <Filter size={14} className="text-slate-500" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-600">Filtrar</span>
             </div>
-            {cidadesDisponiveis.map(nome => (
-              <button
-                key={nome}
-                onClick={() => toggleCidade(nome)}
-                className={`px-5 py-2 rounded-[1.2rem] text-[12px] font-semibold transition-all shrink-0 border ${
-                  filtroCidNome === nome 
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-md' 
-                  : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400'
-                }`}
-              >
-                {nome}
-              </button>
-            ))}
+            {/* Adicionado um container interno para garantir que o scroll não 'toque' no topo/base da barra */}
+            <div className="flex items-center gap-2.5">
+              {cidadesDisponiveis.map(nome => (
+                <button
+                  key={nome}
+                  onClick={() => toggleCidade(nome)}
+                  className={`px-5 py-2.5 rounded-[1.3rem] text-[12px] font-bold transition-all shrink-0 border ${
+                    filtroCidNome === nome 
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100' 
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400'
+                  }`}
+                >
+                  {nome}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -131,7 +134,7 @@ function ListaConteudo() {
         </div>
       )}
 
-      {/* LISTA DE PRESTADORES */}
+      {/* RESTANTE DO CÓDIGO MANTIDO... */}
       <div className="grid grid-cols-1 gap-6">
         <div className="flex items-center justify-between px-2 border-l-4 border-blue-600 ml-1 py-1">
            <div className="flex flex-col">
@@ -160,7 +163,6 @@ function ListaConteudo() {
         )}
       </div>
 
-      {/* EMPTY STATE - Elegante */}
       {!loading && prestadoresExibidos.length === 0 && (
         <div className="py-20 text-center flex flex-col items-center">
           <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mb-6 border border-slate-100 shadow-inner">
