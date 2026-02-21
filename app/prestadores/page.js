@@ -92,15 +92,18 @@ function ListaConteudo() {
       
       {/* FILTRO DINÂMICO DE CIDADES - Estilo Pílula Premium */}
       {cidadesDisponiveis.length > 0 && (
-        /* CORREÇÃO AQUI: Aumentado py-5 para respiro vertical e mb-4 para afastar do banner */
-        <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 py-5 mb-4 bg-[#FDFDFD]/95 backdrop-blur-md border-b border-slate-100/80 shadow-sm transition-all">
-          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
+        /* CORREÇÃO DE RESPIRO: 
+           Aumentamos o py da barra (py-6) e garantimos que o flex container 
+           tenha altura automática e itens centralizados.
+        */
+        <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 py-6 mb-4 bg-[#FDFDFD]/95 backdrop-blur-md border-b border-slate-100/80 shadow-sm transition-all">
+          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-1">
             <div className="flex items-center gap-2 bg-slate-100/80 px-4 py-2.5 rounded-2xl shrink-0">
               <Filter size={14} className="text-slate-500" />
               <span className="text-[11px] font-bold uppercase tracking-widest text-slate-600">Filtrar</span>
             </div>
-            {/* Adicionado um container interno para garantir que o scroll não 'toque' no topo/base da barra */}
-            <div className="flex items-center gap-2.5">
+            
+            <div className="flex items-center gap-3">
               {cidadesDisponiveis.map(nome => (
                 <button
                   key={nome}
@@ -134,7 +137,7 @@ function ListaConteudo() {
         </div>
       )}
 
-      {/* RESTANTE DO CÓDIGO MANTIDO... */}
+      {/* RESTANTE DO CÓDIGO ... */}
       <div className="grid grid-cols-1 gap-6">
         <div className="flex items-center justify-between px-2 border-l-4 border-blue-600 ml-1 py-1">
            <div className="flex flex-col">
