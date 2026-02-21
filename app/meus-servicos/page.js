@@ -2,185 +2,228 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
-  Clock,
-  CheckCircle2,
-  ChevronRight,
-  User,
-  Smartphone,
-  LayoutGrid,
-  ShieldCheck,
-  Search
+  Clock, CheckCircle2, ChevronRight, User, Smartphone,
+  LayoutGrid, ShieldCheck, Search, Phone, LogIn, ExternalLink
 } from 'lucide-react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function PainelDoCliente() {
+  const router = useRouter()
+  const [session, setSession] = useState(null)
+  const [profile, setProfile] = useState(null)
   const [servicos, setServicos] = useState([])
   const [loading, setLoading] = useState(true)
-  const [whatsappCliente, setWhatsappCliente] = useState('')
-  const [nomeCliente, setNomeCliente] = useState('')
 
-  async function buscarHistorico(whatsapp) {
+  const loginComGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/meus-servicos` }
+    })
+  }
+
+  // PRECISÃO TÉCNICA: Ajuste para garantir a persistência antes do redirecionamento
+  const handleAceiteTecnico = async (servico) => {
+    try {
+      const { error } = await supabase
+        .from('portfolio_projetos')
+        .update({ 
+          status: 'em_execucao',
+          aceito_at: new Date().toISOString() 
+        })
+        .eq('id', servico.id)
+
+      if (error) {
+        console.error('Erro ao atualizar status:', error)
+        return
+      }
+
+      // Redireciona apenas após a confirmação do banco
+      router.push(`/avaliar/${servico.id}?token=${servico.avaliacao_token}`)
+    } catch (err) {
+      console.error('Falha na comunicação:', err)
+    }
+  }
+
+  const buscarDados = async (user) => {
     setLoading(true)
-    const { data } = await supabase
-      .from('portfolio_projetos')
-      .select(`
-        *,
-        prestadores (nome, foto_perfil, categoria:categorias(nome))
-      `)
-      .eq('cliente_whatsapp', whatsapp.replace(/\D/g, ''))
-      .order('created_at', { ascending: false })
+    
+    const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    setProfile(prof)
 
-    if (data && data.length > 0) {
-      setServicos(data)
-      setNomeCliente(data[0].cliente_nome) // Recupera o nome do registro mais recente
+    const whatsapp = prof?.whatsapp || localStorage.getItem('cliente_whatsapp')
+    
+    if (whatsapp) {
+      // VERIFICAÇÃO CIRÚRGICA: Filtramos apenas por 'pendente' para o aceite inicial
+      const { data: projs } = await supabase
+        .from('portfolio_projetos')
+        .select(`
+          *,
+          prestadores (nome, foto_perfil, whatsapp, categoria:categorias(nome)),
+          portfolio_fotos (*)
+        `)
+        .eq('cliente_whatsapp', whatsapp.replace(/\D/g, ''))
+        .eq('status', 'pendente') 
+        .order('created_at', { ascending: false })
+
+      if (projs && projs.length > 0) {
+        setServicos(projs)
+      } else {
+        router.push('/painel/perfil')
+      }
+    } else {
+        router.push('/painel/perfil')
     }
     setLoading(false)
   }
 
   useEffect(() => {
-    const salvo = localStorage.getItem('cliente_whatsapp')
-    if (salvo) {
-      setWhatsappCliente(salvo)
-      buscarHistorico(salvo)
-    } else {
-      setLoading(false)
-    }
-  }, [])
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      if (session) buscarDados(session.user)
+      else setLoading(false)
+    })
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      if (session) buscarDados(session.user)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   if (loading) return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
       <div className="w-10 h-10 border-[4px] border-slate-100 border-t-blue-600 rounded-full animate-spin" />
-      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Acessando Arquivos</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Sincronizando Arquivos</p>
+    </div>
+  )
+
+  if (!session) return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="max-w-md w-full bg-white rounded-[3rem] p-10 shadow-2xl border border-slate-100 text-center space-y-8">
+        <div className="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto text-blue-600 shadow-inner">
+          <ShieldCheck size={40} />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-3xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">Acesse seus<br/>Contratos</h2>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Identidade Digital Necessária</p>
+        </div>
+        <button 
+          onClick={loginComGoogle}
+          className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest flex items-center justify-center gap-3 hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100"
+        >
+          <LogIn size={18} /> Entrar com Google
+        </button>
+      </div>
     </div>
   )
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-slate-900 pb-20 font-sans antialiased">
-      <div className="max-w-xl mx-auto px-6 pt-12 space-y-10">
+      <div className="max-w-xl mx-auto px-6 pt-12 space-y-8">
 
-        {/* HEADER DO CLIENTE */}
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">
-              Meus<br />Contratos
-            </h1>
-            <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] italic">
-              Histórico Digital Verificado
-            </p>
-          </div>
-          <div className="bg-slate-100 p-4 rounded-3xl">
-            <User size={24} className="text-slate-400" />
-          </div>
-        </div>
-
-        {/* CARD DE PERFIL RÁPIDO */}
-        <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 shadow-sm flex items-center justify-between">
+        <div className="flex justify-between items-center bg-white p-5 rounded-[2.5rem] border-2 border-slate-50 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
-              <Smartphone size={20} />
-            </div>
+            <img 
+              src={profile?.avatar_url || session.user.user_metadata.avatar_url} 
+              className="w-14 h-14 rounded-2xl object-cover border-2 border-blue-100 shadow-md"
+            />
             <div>
-              <p className="text-[11px] font-black uppercase italic text-slate-800 leading-none tracking-tighter">
-                {nomeCliente || 'Cliente'}
-              </p>
-              <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mt-1">
-                {whatsappCliente}
+              <h2 className="text-sm font-black italic uppercase text-slate-800 leading-none">
+                {profile?.full_name || session.user.user_metadata.full_name}
+              </h2>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                {profile?.whatsapp || 'WhatsApp não vinculado'}
               </p>
             </div>
           </div>
-          <div className="bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
-            <p className="text-[8px] font-black text-green-600 uppercase tracking-tighter italic">Conta Ativa</p>
+          <div className="bg-blue-50 p-3 rounded-2xl text-blue-600">
+            <User size={20} />
           </div>
         </div>
 
-        {/* LISTAGEM DE SERVIÇOS */}
+        <div className="space-y-1 px-2">
+          <h1 className="text-4xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">
+            Projetos<br />Em Aberto
+          </h1>
+          <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] italic">Aguardando seu aceite técnico</p>
+        </div>
+
         <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em]">Serviços Registrados</p>
-            <LayoutGrid size={14} className="text-slate-200" />
-          </div>
-
-          {servicos.length === 0 ? (
-            <div className="py-20 text-center space-y-4 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
-              <Search size={32} className="mx-auto text-slate-200" />
-              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-relaxed px-10">
-                Nenhum serviço vinculado a este número de WhatsApp foi encontrado.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {servicos.map((servico) => (
-                <Link
-                  key={servico.id}
-                  href={`/avaliar/${servico.id}?token=${servico.avaliacao_token}`}
-                  className="block group"
-                >
-                  <div className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 shadow-sm group-hover:shadow-2xl group-hover:border-blue-100 group-hover:scale-[1.02] transition-all duration-500 relative overflow-hidden">
-                    <div className="flex items-center gap-5">
-                      {/* FOTO DO PRESTADOR */}
-                      <div className="relative">
-                        <img
-                          src={servico.prestadores.foto_perfil}
-                          className="w-16 h-16 rounded-3xl object-cover border-2 border-white shadow-md relative z-10"
-                        />
-                        <div className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full z-20 shadow-sm">
-                          <ShieldCheck size={12} className="text-blue-600" fill="currentColor" />
-                        </div>
-                      </div>
-
-                      {/* INFO DO SERVIÇO */}
-                      <div className="flex-1 space-y-1">
-                        <div className="flex justify-between items-start">
-                          <span className="text-[8px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md tracking-tighter">
-                            {servico.prestadores.categoria?.nome}
-                          </span>
-                          {servico.status !== 'finalizado' ? (
-                            <span className="flex items-center gap-1 text-[8px] font-black text-amber-500 uppercase italic animate-pulse tracking-tighter">
-                              <Clock size={8} /> Em Curso
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-[8px] font-black text-green-500 uppercase tracking-tighter">
-                              <CheckCircle2 size={8} /> Concluído
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="text-lg font-black uppercase italic text-slate-800 leading-none tracking-tighter truncate w-40">
-                          {servico.titulo}
-                        </h3>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                          {servico.prestadores.nome}
-                        </p>
-                      </div>
-
-                      <ChevronRight className="text-slate-200 group-hover:text-blue-600 transition-colors" />
+          {servicos.map((servico) => {
+            const fotoInicio = servico.portfolio_fotos?.find(f => f.ordem === 1)
+            
+            return (
+              <div key={servico.id} className="bg-white rounded-[3rem] border-2 border-slate-50 shadow-xl overflow-hidden group transition-all hover:border-blue-100">
+                <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <img src={servico.prestadores.foto_perfil} className="w-10 h-10 rounded-xl object-cover" />
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Prestador</p>
+                      <h3 className="text-xs font-black uppercase italic text-slate-800">{servico.prestadores.nome}</h3>
                     </div>
                   </div>
-                </Link>
-              ))}
-            </div>
-          )}
+                  <a 
+                    href={`tel:${servico.prestadores.whatsapp}`} 
+                    className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 hover:bg-green-600 hover:text-white transition-all shadow-sm"
+                  >
+                    <Phone size={18} />
+                  </a>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  <div className="flex justify-between items-end">
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded-md tracking-tighter">
+                        {servico.prestadores.categoria?.nome}
+                      </span>
+                      <h4 className="text-xl font-black uppercase italic leading-none tracking-tight text-slate-800">
+                        {servico.titulo}
+                      </h4>
+                    </div>
+                    <div className="text-right">
+                       <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Iniciado em</p>
+                       <p className="text-[10px] font-bold text-slate-500 italic">{new Date(servico.created_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="relative aspect-video rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner group-hover:scale-[1.01] transition-transform">
+                    {fotoInicio ? (
+                      <img src={fotoInicio.url_foto} className="w-full h-full object-cover" alt="Início do serviço" />
+                    ) : (
+                      <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300 italic text-[10px] uppercase font-black">
+                        Aguardando Foto de Início
+                      </div>
+                    )}
+                    <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-[8px] font-black uppercase tracking-widest border border-white/10">
+                      Registro de Entrada
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => handleAceiteTecnico(servico)}
+                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-100"
+                  >
+                    Aceitar Início <ExternalLink size={14} />
+                  </button>
+                </div>
+              </div>
+            )
+          })}
         </div>
 
-        {/* FOOTER DE SEGURANÇA */}
-        <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <ShieldCheck size={100} strokeWidth={3} />
+        <div className="bg-blue-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-100">
+          <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12">
+            <ShieldCheck size={120} strokeWidth={3} />
           </div>
-          <div className="relative z-10 space-y-4">
+          <div className="relative z-10 space-y-4 text-center">
             <div className="space-y-1">
-              <p className="text-xl font-black italic uppercase leading-none tracking-tighter">Garantia Verificada</p>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Todos os serviços são auditados digitalmente.</p>
+              <p className="text-2xl font-black italic uppercase leading-none tracking-tighter">Protocolo de Confiança</p>
+              <p className="text-[9px] font-black text-blue-100 uppercase tracking-[0.2em]">Sua aprovação é essencial para a segurança do serviço.</p>
             </div>
-            <button className="w-full py-4 bg-white text-slate-900 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:scale-95 transition-all">
-              Ver Certificado Geral
-            </button>
           </div>
         </div>
 
-        <p className="text-center text-[8px] font-black text-slate-300 uppercase tracking-[0.5em] italic">
-          Identity Secured by SeuApp Protocol
-        </p>
       </div>
     </div>
   )

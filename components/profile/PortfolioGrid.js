@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
-import ProjetoModal from './ProjetoModal' // Importe o componente acima
+import ProjetoModal from './ProjetoModal'
+import { MessageCircle, Camera } from 'lucide-react'
 
 export default function PortfolioGrid({ projetos = [] }) {
   const [projetoSelecionado, setProjetoSelecionado] = useState(null)
@@ -8,7 +9,7 @@ export default function PortfolioGrid({ projetos = [] }) {
   if (projetos.length === 0) {
     return (
       <div className="bg-slate-50 border-2 border-dashed border-slate-100 rounded-[3rem] p-12 text-center">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 italic">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 italic text-center">
           Nenhum registro de atividade ainda
         </p>
       </div>
@@ -32,21 +33,30 @@ export default function PortfolioGrid({ projetos = [] }) {
               <img 
                 src={fotoCapa || '/placeholder-job.png'} 
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                alt={projeto.titulo}
               />
-              <div className="absolute top-4 left-4 right-4 flex justify-between">
-                <div className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-tighter backdrop-blur-md ${isConcluido ? 'bg-green-500/90 text-white' : 'bg-blue-600/90 text-white'}`}>
+              
+              <div className="absolute top-3 left-3 right-3 flex justify-between items-center">
+                <div className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-tighter backdrop-blur-md shadow-sm ${isConcluido ? 'bg-green-500/90 text-white' : 'bg-blue-600/90 text-white'}`}>
                   {isConcluido ? '✓ Concluído' : '🛠️ Em Execução'}
                 </div>
+
+                <div className="w-7 h-7 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-blue-600 shadow-sm border border-white/20 animate-pulse">
+                  <MessageCircle size={12} fill="currentColor" className="opacity-20" />
+                </div>
               </div>
+
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-6 flex flex-col justify-end">
-                <h4 className="text-white font-black italic uppercase text-[10px]">{projeto.titulo}</h4>
+                <h4 className="text-white font-black italic uppercase text-[10px] mb-1">{projeto.titulo}</h4>
+                <p className="text-blue-300 text-[8px] font-bold uppercase tracking-widest flex items-center gap-1">
+                  <MessageCircle size={10} /> Ver histórico do serviço
+                </p>
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* Modal Renderizado quando houver seleção */}
       {projetoSelecionado && (
         <ProjetoModal 
           projeto={projetoSelecionado} 

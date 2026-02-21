@@ -1,59 +1,56 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Smartphone, Briefcase, Camera, Send, Check, X, Maximize2, MessageSquare, Loader2, User, CheckCircle2, Phone } from 'lucide-react'
+import { 
+  Smartphone, Camera, X, Loader2, User, 
+  CheckCircle2, ChevronRight, ChevronLeft, MoreHorizontal, 
+  Activity, Share2, Search, Check, MessageSquare, Phone, Send, Link as LinkIcon, AlertCircle
+} from 'lucide-react'
 
 export default function UploadWizard({ prestadorId, projetoExistente = null, onComplete }) {
   const [loading, setLoading] = useState(false)
   const [projetoId, setProjetoId] = useState(projetoExistente?.id || null)
+  const [projetoStatus, setProjetoStatus] = useState(projetoExistente?.status || 'pendente')
   const [titulo, setTitulo] = useState(projetoExistente?.titulo || '')
-  
-  // Inicializa já formatado se existir
+  const [prestadorInfo, setPrestadorInfo] = useState({ nome: '', foto: null, whatsapp: '' })
   const [clienteWhatsapp, setClienteWhatsapp] = useState(projetoExistente?.cliente_whatsapp || '')
   const [clienteNome, setClienteNome] = useState(projetoExistente?.cliente_nome || '') 
-  const [clienteFoto, setClienteFoto] = useState(null) 
-  
+  const [linkGerado, setLinkGerado] = useState(!!projetoExistente) 
   const [fotosUrls, setFotosUrls] = useState({ 1: null, 2: null, 3: null })
   const [fotosData, setFotosData] = useState({ 1: null, 2: null, 3: null }) 
-  const [fotosComentarios, setFotosComentarios] = useState({}) 
-  const [zoomFoto, setZoomFoto] = useState(null)
+  const [zoomEtapa, setZoomEtapa] = useState(null)
+  const [comentariosZoom, setComentariosZoom] = useState([])
+  const [comentariosSlideAtual, setComentariosSlideAtual] = useState([]) 
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [legendaEdit, setLegendaEdit] = useState('')
+  const [salvandoLegenda, setSalvandoLegenda] = useState(false)
+  const [projetosEncontrados, setProjetosEncontrados] = useState([])
 
-  const [chatAberto, setChatAberto] = useState(null) 
-  const [historicoChat, setHistoricoChat] = useState([])
-  const [novoComentario, setNovoComentario] = useState('')
-  const [enviandoComentario, setEnviandoComentario] = useState(false)
+  const isProjetoConcluido = projetoStatus?.toLowerCase() === 'finalizado'
+  const isProjetoPendente = ['pendente', 'em_registro'].includes(projetoStatus?.toLowerCase())
+  
+  const cleanPhone = (phone) => phone?.replace(/\D/g, '') || ''
+  const phoneDigitado = cleanPhone(clienteWhatsapp)
+  const phonePrestador = cleanPhone(prestadorInfo.whatsapp) 
+  const isSelfNumber = phoneDigitado.length >= 10 && phoneDigitado === phonePrestador
+  const isPhoneValid = phoneDigitado.length >= 10 && !isSelfNumber
+  const isTitleValid = titulo.trim().length > 3
 
-  const whatsappValido = clienteWhatsapp.replace(/\D/g, '').length >= 11
-  const tituloValido = titulo.trim().length > 3
+  const hasLegendaSalva = (etapa) => !!(fotosData[etapa]?.legenda && fotosData[etapa].legenda.trim().length > 0)
+  const canCloseZoom = isProjetoConcluido || comentariosZoom.length > 0 || hasLegendaSalva(zoomEtapa)
 
-  // FUNÇÃO DE MÁSCARA DE TELEFONE
-  const formatarTelefone = (valor) => {
-    const apenasNumeros = valor.replace(/\D/g, '')
-    if (apenasNumeros.length <= 2) return apenasNumeros
-    if (apenasNumeros.length <= 7) return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2)}`
-    return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 7)}-${apenasNumeros.slice(7, 11)}`
-  }
+  const renderAvatar = (url) => url && url.trim() !== "" ? url : null;
 
-  const handlePhoneChange = (e) => {
-    const valorFormatado = formatarTelefone(e.target.value)
-    setClienteWhatsapp(valorFormatado)
-  }
+  const fotosCarrossel = [
+    { etapa: 1, url: fotosUrls[1], label: "Início" },
+    { etapa: 2, url: fotosUrls[2], label: "Execução" },
+    { etapa: 3, url: fotosUrls[3], label: "Conclusão" }
+  ].filter(f => f.url)
 
-  const getEtapaLabel = (n) => {
-    if (n === 1) return "Início"; if (n === 2) return "Execução"; return "Conclusão";
-  }
-
-  const buscarDadosCliente = useCallback(async (whatsapp) => {
-    const numLimpo = whatsapp.replace(/\D/g, '')
-    if (numLimpo.length < 11) return
-    try {
-      const { data } = await supabase.from('profiles').select('avatar_url, full_name').eq('whatsapp', numLimpo).maybeSingle()
-      if (data) {
-        setClienteFoto(data.avatar_url)
-        if (data.full_name) setClienteNome(data.full_name)
-      }
-    } catch (e) { console.error(e) }
-  }, [])
+  const carregarDadosBase = useCallback(async () => {
+    const { data: pData } = await supabase.from('prestadores').select('nome, foto_perfil, whatsapp').eq('id', prestadorId).single()
+    if (pData) setPrestadorInfo({ nome: pData.nome, foto: renderAvatar(pData.foto_perfil), whatsapp: pData.whatsapp })
+  }, [prestadorId])
 
   const carregarProgresso = useCallback(async (projId) => {
     const { data: fotos } = await supabase.from('portfolio_fotos').select('*').eq('projeto_id', projId)
@@ -61,229 +58,533 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
       const fMap = { 1: null, 2: null, 3: null }; const dMap = { 1: null, 2: null, 3: null }
       fotos.forEach(f => { fMap[f.ordem] = f.url_foto; dMap[f.ordem] = f })
       setFotosUrls(fMap); setFotosData(dMap)
-
-      const { data: todasMsgs } = await supabase.from('portfolio_comentarios')
-        .select('foto_id, autor_tipo, criado_at')
-        .eq('projeto_id', projId)
-        .order('criado_at', { ascending: false })
-
-      const cMap = {}
-      const fotosProcessadas = new Set()
-      todasMsgs?.forEach(m => {
-        if (!fotosProcessadas.has(m.foto_id)) {
-          if (m.autor_tipo === 'cliente') cMap[m.foto_id] = true
-          fotosProcessadas.add(m.foto_id)
-        }
-      })
-      setFotosComentarios(cMap)
     }
   }, [])
 
+  const handleUpload = async (e, ordem) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setLoading(true)
+    
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random()}.${fileExt}`
+      const filePath = `${prestadorId}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage.from('portfolios').upload(filePath, file)
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage.from('portfolios').getPublicUrl(filePath)
+
+      let currentProjId = projetoId
+      
+      if (!currentProjId) {
+         const { data: newProj, error: projError } = await supabase
+            .from('portfolio_projetos')
+            .insert({
+                prestador_id: prestadorId,
+                titulo: titulo,
+                cliente_whatsapp: clienteWhatsapp,
+                cliente_nome: clienteNome || 'Cliente',
+                status: 'em_registro',
+                avaliacao_token: crypto.randomUUID()
+            })
+            .select()
+            .single()
+         
+         if (projError) throw projError
+         currentProjId = newProj.id
+         setProjetoId(newProj.id)
+         setProjetoStatus('em_registro')
+      }
+
+      const { data, error } = await supabase
+        .from('portfolio_fotos')
+        .upsert({ 
+          projeto_id: currentProjId, 
+          url_foto: publicUrl, 
+          ordem: ordem, 
+          prestador_id: prestadorId 
+        }, { onConflict: 'projeto_id, ordem' })
+        .select()
+        .single()
+
+      if (!error) {
+        setFotosUrls(prev => ({ ...prev, [ordem]: publicUrl }))
+        setFotosData(prev => ({ ...prev, [ordem]: data }))
+        setLegendaEdit(data.legenda || '')
+        setZoomEtapa(ordem)
+      }
+    } catch (err) {
+      console.error("Erro no upload:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSalvarLegenda = async () => {
+    if (!zoomEtapa || !fotosData[zoomEtapa]) return
+    setSalvandoLegenda(true)
+    try {
+      const { error } = await supabase
+        .from('portfolio_fotos')
+        .update({ legenda: legendaEdit })
+        .eq('id', fotosData[zoomEtapa].id)
+        
+      if (!error) {
+        setFotosData(prev => ({
+          ...prev,
+          [zoomEtapa]: { ...prev[zoomEtapa], legenda: legendaEdit }
+        }))
+      }
+    } catch (err) {
+      console.error("Erro ao salvar legenda:", err)
+    } finally {
+      setSalvandoLegenda(false)
+    }
+  }
+
+  const gerarLinkAceite = async () => {
+      setLinkGerado(true)
+      if (projetoStatus === 'em_registro') {
+          await supabase.from('portfolio_projetos').update({ status: 'pendente' }).eq('id', projetoId)
+          setProjetoStatus('pendente')
+      }
+      const numTelefone = clienteWhatsapp.replace(/\D/g, '')
+      const linkProjeto = `${window.location.origin}/meus-servicos` 
+      const mensagem = `Olá${clienteNome ? ` ${clienteNome}` : ''}! O projeto *${titulo}* foi iniciado.\n\nVocê pode acompanhar todas as etapas, fotos e adicionar comentários através do link abaixo:\n\n👉 ${linkProjeto}\n\nAguardamos seu aceite para seguirmos com o serviço!`
+      const urlWhatsapp = `https://wa.me/55${numTelefone}?text=${encodeURIComponent(mensagem)}`
+      window.open(urlWhatsapp, '_blank')
+  }
+
   useEffect(() => {
+    const buscarProjetos = async () => {
+      const phoneLimpo = clienteWhatsapp.replace(/\D/g, '')
+      if (phoneLimpo.length >= 10 && !isSelfNumber && !projetoExistente) {
+        const { data } = await supabase
+          .from('portfolio_projetos')
+          .select('id, titulo, status, cliente_nome, created_at')
+          .eq('prestador_id', prestadorId)
+          .eq('cliente_whatsapp', clienteWhatsapp)
+          .order('created_at', { ascending: false })
+
+        if (data && data.length > 0) {
+          setProjetosEncontrados(data)
+        } else {
+          setProjetosEncontrados([])
+        }
+      }
+    }
+    const timeoutId = setTimeout(buscarProjetos, 800)
+    return () => clearTimeout(timeoutId)
+  }, [clienteWhatsapp, prestadorId, isSelfNumber, projetoExistente])
+
+  const selecionarProjeto = (proj) => {
+    setProjetoId(proj.id)
+    setTitulo(proj.titulo)
+    setClienteNome(proj.cliente_nome || '')
+    setProjetoStatus(proj.status)
+    setLinkGerado(true)
+    carregarProgresso(proj.id)
+    setProjetosEncontrados([])
+  }
+
+  useEffect(() => {
+    if (zoomEtapa && fotosData[zoomEtapa]) {
+      setLegendaEdit(fotosData[zoomEtapa].legenda || '')
+    }
+  }, [zoomEtapa, fotosData])
+
+  useEffect(() => {
+    if (zoomEtapa && fotosData[zoomEtapa]?.id) {
+      const buscar = async () => {
+        const { data } = await supabase.from('portfolio_comentarios').select('*').eq('foto_id', fotosData[zoomEtapa].id).eq('autor_tipo', 'cliente').order('criado_at', { ascending: true })
+        setComentariosZoom(data || [])
+      }
+      buscar()
+    }
+  }, [zoomEtapa, fotosData])
+
+  useEffect(() => {
+    if (isProjetoConcluido && fotosCarrossel[currentSlide]) {
+      const etapaAtual = fotosCarrossel[currentSlide].etapa
+      const fotoIdAtual = fotosData[etapaAtual]?.id
+      if (fotoIdAtual) {
+        const buscar = async () => {
+          const { data } = await supabase.from('portfolio_comentarios').select('*').eq('foto_id', fotoIdAtual).eq('autor_tipo', 'cliente').order('criado_at', { ascending: true })
+          setComentariosSlideAtual(data || [])
+        }
+        buscar()
+      } else {
+        setComentariosSlideAtual([])
+      }
+    }
+  }, [currentSlide, isProjetoConcluido, fotosCarrossel, fotosData])
+
+  useEffect(() => {
+    if (isProjetoConcluido && fotosCarrossel.length > 0) {
+      setCurrentSlide(fotosCarrossel.length - 1)
+    }
+  }, [isProjetoConcluido])
+
+  useEffect(() => {
+    carregarDadosBase()
     if (projetoExistente) {
-      setProjetoId(projetoExistente.id)
-      setTitulo(projetoExistente.titulo)
-      setClienteWhatsapp(formatarTelefone(projetoExistente.cliente_whatsapp)) // Aplica máscara ao carregar
-      if (projetoExistente.cliente_nome) setClienteNome(projetoExistente.cliente_nome)
-      buscarDadosCliente(projetoExistente.cliente_whatsapp)
+      setProjetoId(projetoExistente.id); setTitulo(projetoExistente.titulo);
+      setClienteWhatsapp(projetoExistente.cliente_whatsapp); 
+      setClienteNome(projetoExistente.cliente_nome);
       carregarProgresso(projetoExistente.id)
     }
-  }, [projetoExistente, carregarProgresso, buscarDadosCliente])
+  }, [projetoExistente, carregarProgresso, carregarDadosBase])
 
-  useEffect(() => {
-    if (whatsappValido && !projetoExistente) buscarDadosCliente(clienteWhatsapp)
-  }, [clienteWhatsapp, whatsappValido, buscarDadosCliente, projetoExistente])
-
-  const abrirChat = (n) => {
-    setChatAberto(n)
-    if (fotosData[n]) setFotosComentarios(prev => ({ ...prev, [fotosData[n].id]: false }))
-  }
-
-  async function buscarMensagens(fotoId) {
-    const { data } = await supabase.from('portfolio_comentarios').select('*').eq('foto_id', fotoId).order('criado_at', { ascending: true })
-    if (data) setHistoricoChat(data)
-  }
-
-  useEffect(() => {
-    if (chatAberto && fotosData[chatAberto]) buscarMensagens(fotosData[chatAberto].id)
-  }, [chatAberto])
-
-  const enviarResposta = async () => {
-    if (!novoComentario.trim() || enviandoComentario) return
-    setEnviandoComentario(true)
-    try {
-      await supabase.from('portfolio_comentarios').insert({
-        foto_id: fotosData[chatAberto].id, projeto_id: projetoId, autor_tipo: 'prestador', texto: novoComentario.trim()
-      })
-      setNovoComentario(''); buscarMensagens(fotosData[chatAberto].id)
-    } catch (e) { alert("Erro ao enviar") } finally { setEnviandoComentario(false) }
-  }
-
-  const handleUpload = async (e, ordem) => {
-    const file = e.target.files[0]; if (!file) return;
-    setLoading(true)
-    try {
-      const { id } = await garantirProjetoNoBanco()
-      const path = `${prestadorId}/${id}/${ordem}.jpg`
-      await supabase.storage.from('portfolios').upload(path, file, { upsert: true })
-      const { data: { publicUrl } } = supabase.storage.from('portfolios').getPublicUrl(path)
-      const { data: fotoDB } = await supabase.from('portfolio_fotos').upsert({ 
-        projeto_id: id, url_foto: publicUrl, ordem, legenda: getEtapaLabel(ordem)
-      }, { onConflict: 'projeto_id, ordem' }).select().single()
-      setFotosUrls(prev => ({ ...prev, [ordem]: `${publicUrl}?t=${Date.now()}` }))
-      setFotosData(prev => ({ ...prev, [ordem]: fotoDB }))
-    } catch (err) { alert(err.message) } finally { setLoading(false) }
-  }
-
-  const garantirProjetoNoBanco = async () => {
-    if (projetoId) return { id: projetoId }
-    const { data: proj, error } = await supabase.from('portfolio_projetos').insert({ 
-      prestador_id: prestadorId, titulo, cliente_whatsapp: clienteWhatsapp.replace(/\D/g, ''), status: 'em_registro' 
-    }).select('id').single()
-    if (error) throw error
-    setProjetoId(proj.id); return { id: proj.id }
-  }
+  const nextSlide = (e) => { e?.stopPropagation(); setCurrentSlide((prev) => (prev + 1) % fotosCarrossel.length) }
+  const prevSlide = (e) => { e?.stopPropagation(); setCurrentSlide((prev) => (prev - 1 + fotosCarrossel.length) % fotosCarrossel.length) }
+  const fotoAtual = fotosCarrossel[currentSlide] || {}
 
   return (
     <>
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl overflow-hidden max-w-xl mx-auto font-sans">
-        <div className="p-8 space-y-8">
-          
-          <div className="grid grid-cols-1 md:grid-cols-[0.9fr_1.1fr] gap-4">
-            
-            {/* CARD TELEFONE - Ajustado */}
-            <div className={`px-5 py-4 rounded-[2rem] border transition-all flex flex-col justify-between relative min-h-[90px] ${whatsappValido ? 'bg-blue-50/20 border-blue-100' : 'bg-slate-50 border-slate-100 shadow-inner'}`}>
-              
-              {/* Topo: Avatar e Nome */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
-                  {clienteFoto ? <img src={clienteFoto} className="w-full h-full object-cover" /> : <User size={14} className="text-slate-300" />}
+      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden max-w-xl mx-auto font-sans animate-in fade-in duration-500">
+        
+        {isProjetoConcluido ? (
+           <div className="flex flex-col w-full">
+             <div className="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 shrink-0 bg-white z-10">
+               <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 rounded-2xl flex items-center justify-center border bg-green-50 border-green-100 text-green-600">
+                   <CheckCircle2 size={18} />
+                 </div>
+                 <div>
+                   <h3 className="text-[11px] font-black text-slate-800 uppercase italic leading-none tracking-tight">{titulo}</h3>
+                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Serviço Concluído</p>
+                 </div>
+               </div>
+               <MoreHorizontal className="text-slate-300 cursor-pointer" />
+             </div>
+
+             <div className="relative bg-slate-900 flex items-center justify-center min-h-[350px] overflow-hidden group">
+                <img src={fotoAtual.url} className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-40 scale-125" aria-hidden="true" />
+                <img src={fotoAtual.url} className="relative z-10 max-w-full max-h-full object-contain shadow-2xl" alt="Registro final" />
+                <div className="absolute top-6 right-6 bg-black/60 backdrop-blur-xl text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-white/20 z-30">
+                  Fase 0{fotoAtual.etapa}
                 </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[10px] font-black uppercase text-slate-400 leading-none mb-0.5">Cliente</span>
-                  <span className="text-[11px] font-black text-slate-900 truncate leading-tight">
-                    {clienteNome || (clienteWhatsapp.length > 5 ? 'Não localizado' : '...')}
-                  </span>
+                {fotosCarrossel.length > 1 && (
+                  <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between items-center z-40">
+                    <button onClick={prevSlide} className="w-10 h-10 bg-white/10 hover:bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:text-slate-900 transition-all shadow-xl active:scale-90 border border-white/10"><ChevronLeft size={20} /></button>
+                    <button onClick={nextSlide} className="w-10 h-10 bg-white/10 hover:bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:text-slate-900 transition-all shadow-xl active:scale-90 border border-white/10"><ChevronRight size={20} /></button>
+                  </div>
+                )}
+             </div>
+
+             <div className="flex flex-col bg-white border-t border-slate-50 overflow-hidden">
+                <div className="p-6 space-y-6">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-4 bg-blue-600 rounded-full"></div>
+                      <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest italic">Legenda</span>
+                    </div>
+                    <p className="text-xs font-medium text-slate-600 leading-relaxed italic pl-4 border-l-2 border-slate-100">
+                      {fotosData[fotoAtual.etapa]?.legenda || "Nenhum detalhamento."}
+                    </p>
+                  </div>
+                  <div className="space-y-4 pt-4 border-t border-slate-50">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Interações do Cliente</h4>
+                      <div className="flex gap-1.5">
+                         {fotosCarrossel.map((_, i) => (
+                           <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide === i ? 'w-6 bg-blue-600' : 'w-1.5 bg-slate-200'}`} />
+                         ))}
+                      </div>
+                    </div>
+                    {comentariosSlideAtual.length === 0 ? (
+                      <p className="text-[11px] text-slate-300 italic pl-1">Sem comentários para esta fase.</p>
+                    ) : (
+                      comentariosSlideAtual.map((com) => (
+                        <div key={com.id} className="flex gap-3 animate-in fade-in slide-in-from-left-2 duration-300">
+                          <div className="w-8 h-8 rounded-xl bg-slate-50 shrink-0 flex items-center justify-center border border-slate-100 shadow-sm">
+                             <User size={14} className="text-slate-400" />
+                          </div>
+                          <div className="max-w-[85%] p-3 rounded-2xl text-xs font-bold leading-tight bg-slate-50 text-slate-700 rounded-tl-none border border-slate-100">
+                             {com.texto}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
+                <div className="p-5 px-8 border-t border-slate-50 flex items-center justify-between bg-white shrink-0">
+                  <div className="flex items-center gap-6 text-slate-400">
+                     <Share2 size={22} className="hover:text-blue-600 cursor-pointer transition-colors" />
+                  </div>
+                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">ID: {projetoId?.split('-')[0] || '...'}</span>
+                </div>
+             </div>
+           </div>
+
+        ) : (
+        
+          <div className="p-8 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`p-4 rounded-[2rem] border transition-all flex flex-col justify-center gap-2 ${isSelfNumber ? 'bg-red-50/50 border-red-200' : isPhoneValid ? 'bg-blue-50/30 border-blue-100' : 'bg-white border-slate-200'}`}>
+                 <div className="flex items-center gap-2 mb-1">
+                   <Smartphone size={14} className={isSelfNumber ? "text-red-500" : isPhoneValid ? "text-blue-600" : "text-slate-400"} />
+                   <span className={`text-[9px] font-bold uppercase italic tracking-widest ${isSelfNumber ? 'text-red-500' : 'text-slate-400'}`}>
+                     {isSelfNumber ? 'Número Inválido' : 'Whatsapp do Cliente'}
+                   </span>
+                 </div>
+                 {projetoId ? (
+                   <span className="text-sm font-semibold text-slate-800 ml-1">{clienteWhatsapp}</span>
+                 ) : (
+                   <input 
+                     type="tel"
+                     placeholder="(00) 00000-0000"
+                     className={`bg-transparent text-sm font-bold placeholder:text-slate-300 outline-none w-full ml-1 ${isSelfNumber ? 'text-red-600' : 'text-slate-800'}`}
+                     value={clienteWhatsapp}
+                     onChange={e => setClienteWhatsapp(e.target.value)}
+                   />
+                 )}
+                 {isSelfNumber && (
+                   <p className="text-[9px] font-bold text-red-500 flex items-center gap-1 mt-1 animate-in fade-in">
+                     <AlertCircle size={10} /> Não use o seu próprio número.
+                   </p>
+                 )}
               </div>
 
-              {/* Base: Input e Botão Ligar */}
-              <div className="flex items-center gap-2 mt-2">
-                <Smartphone size={14} className="text-slate-400 shrink-0" />
-                <input 
-                  className="w-full bg-transparent font-black text-blue-600 placeholder:text-slate-300 outline-none text-xs md:text-sm tracking-tight" // Fonte diminuída
-                  placeholder="(00) 00000-0000" 
-                  type="tel" 
-                  maxLength={15}
-                  value={clienteWhatsapp} 
-                  onChange={handlePhoneChange} // Usa a função com máscara
-                  disabled={projetoId && fotosUrls[1]} 
-                />
-                
-                {/* Botão de Ligar (Só aparece se válido) */}
-                {whatsappValido && (
-                  <a 
-                    href={`tel:${clienteWhatsapp.replace(/\D/g, '')}`} 
-                    className="p-2 bg-green-500 text-white rounded-full shadow-md hover:scale-110 transition-transform active:scale-90"
-                    title="Ligar para o cliente"
-                  >
-                    <Phone size={12} fill="currentColor" />
-                  </a>
+              <div className={`p-4 rounded-[2rem] border transition-all flex flex-col justify-center gap-2 ${!isPhoneValid ? 'opacity-50 grayscale bg-slate-50' : 'bg-white border-slate-200'}`}>
+                <span className="text-[9px] font-bold uppercase text-slate-400 italic tracking-widest mb-1">Nome do Projeto</span>
+                {projetoId ? (
+                   <span className="text-sm font-black text-slate-800 uppercase italic truncate ml-1">{titulo}</span>
+                ) : (
+                   <input 
+                     type="text"
+                     placeholder="Ex: Manutenção Freio Volvo"
+                     disabled={!isPhoneValid}
+                     className="bg-transparent text-sm font-black text-slate-800 uppercase italic placeholder:text-slate-300 outline-none w-full ml-1"
+                     value={titulo}
+                     onChange={e => setTitulo(e.target.value)}
+                   />
                 )}
               </div>
             </div>
-            
-            <div className={`px-5 py-4 rounded-[2rem] border transition-all flex flex-col justify-center ${tituloValido ? 'bg-blue-50/20 border-blue-100' : 'bg-slate-50 border-slate-100 shadow-inner'}`}>
-              <label className="text-[9px] font-black uppercase text-slate-400 mb-2 flex items-center gap-2 italic"><Briefcase size={10} /> Descrição do Serviço</label>
-              <input className="w-full bg-transparent font-black text-slate-900 placeholder:text-slate-300 outline-none text-sm" placeholder="Ex: Reforma Banheiro" value={titulo} onChange={e => setTitulo(e.target.value)} disabled={projetoId && fotosUrls[1]} />
+
+            {projetosEncontrados.length > 0 && !projetoId && (
+              <div className="bg-slate-50 p-6 rounded-[2.5rem] border border-dashed border-slate-200 animate-in slide-in-from-top-4">
+                <p className="text-[9px] font-black uppercase italic text-slate-400 mb-4 tracking-widest text-center">Projetos Identificados</p>
+                <div className="space-y-3">
+                  {projetosEncontrados.map(p => (
+                    <button 
+                      key={p.id}
+                      onClick={() => selecionarProjeto(p)}
+                      className="w-full bg-white p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:border-blue-300 hover:shadow-lg transition-all group"
+                    >
+                      <div className="text-left">
+                        <p className="text-[10px] font-black text-slate-800 uppercase italic leading-none">{p.titulo}</p>
+                        <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">Status: {p.status}</p>
+                      </div>
+                      <div className="flex items-center gap-2 text-blue-600 font-black text-[9px] uppercase italic opacity-0 group-hover:opacity-100 transition-opacity">
+                        Acoplar <ChevronRight size={14} />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="relative space-y-4 before:absolute before:left-[47px] before:top-10 before:bottom-10 before:w-[2px] before:bg-slate-100 before:z-0">
+              {/* ETAPA 1 */}
+              <div className={`relative z-10 flex items-center gap-6 group ${!isTitleValid ? 'opacity-40 pointer-events-none' : ''}`}>
+                 <div className={`w-24 h-24 rounded-[2rem] shrink-0 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative ${fotosUrls[1] ? 'bg-white' : 'bg-slate-100/50 border-slate-200 hover:border-blue-300'}`}>
+                    {fotosUrls[1] ? (
+                      <img src={fotosUrls[1]} onClick={() => setZoomEtapa(1)} className="w-full h-full object-cover cursor-pointer" />
+                    ) : (
+                      <>
+                        <div className="flex flex-col items-center gap-1 text-blue-500/50">
+                           {loading ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
+                           <span className="text-[8px] font-black uppercase italic">Início</span>
+                        </div>
+                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, 1)} disabled={loading || !isTitleValid} />
+                      </>
+                    )}
+                 </div>
+                 <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                       <span className={`text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full border ${fotosUrls[1] ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                        {fotosUrls[1] ? 'Registrado' : 'Obrigatório'}
+                       </span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 1: Chegada</span>
+                    </div>
+                    {isProjetoPendente && fotosUrls[1] && hasLegendaSalva(1) && (
+                        <button onClick={gerarLinkAceite} className="mt-2 flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95">
+                           <LinkIcon size={14} /> <span className="text-[10px] font-black uppercase italic">Enviar WhatsApp</span>
+                        </button>
+                    )}
+                    
+                    {/* CONDUÇÃO PELA MÃO: Alerta de Legenda Pendente na Etapa 1 */}
+                    {fotosUrls[1] && !hasLegendaSalva(1) && (
+                      <div className="mt-2 flex items-center gap-1.5 text-amber-600 animate-in fade-in duration-500">
+                        <AlertCircle size={10} className="shrink-0" />
+                        <span className="text-[8px] font-black uppercase italic leading-none">Aguardando Nota Técnica</span>
+                      </div>
+                    )}
+                    
+                    {!fotosUrls[1] && isTitleValid && <p className="text-[9px] font-black text-blue-500 uppercase italic mt-1 animate-pulse">Aguardando Foto...</p>}
+                 </div>
+              </div>
+
+              {/* ETAPA 2 */}
+              <div className={`relative z-10 flex items-center gap-6 group ${!linkGerado ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
+                 <div className={`w-24 h-24 rounded-[2rem] shrink-0 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative ${fotosUrls[2] ? 'bg-white' : 'bg-slate-100/50 border-slate-200 hover:border-blue-300'}`}>
+                    {fotosUrls[2] ? (
+                      <img src={fotosUrls[2]} onClick={() => setZoomEtapa(2)} className="w-full h-full object-cover cursor-pointer" />
+                    ) : (
+                      <>
+                        <div className="flex flex-col items-center gap-1 text-blue-500/50">
+                           <Camera size={24} /> <span className="text-[8px] font-black uppercase italic">Execução</span>
+                        </div>
+                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, 2)} disabled={loading || !linkGerado} />
+                      </>
+                    )}
+                 </div>
+                 <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full border ${fotosUrls[2] ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                        {fotosUrls[2] ? 'Registrado' : 'Aguardando...'}
+                      </span>
+                      <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 2: Serviço</span>
+                    </div>
+                    <h4 className="text-xs font-semibold text-slate-700 italic mt-1">{projetoStatus === 'em_execucao' || fotosUrls[2] ? "Em andamento" : "Aguardando..."}</h4>
+                 </div>
+              </div>
+
+              {/* ETAPA 3 */}
+              <div className={`relative z-10 flex items-center gap-6 group ${!linkGerado ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
+                 <div className={`w-24 h-24 rounded-[2rem] shrink-0 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative ${fotosUrls[3] ? 'bg-white' : 'bg-slate-100/50 border-slate-200 hover:border-blue-300'}`}>
+                    {fotosUrls[3] ? (
+                      <img src={fotosUrls[3]} onClick={() => setZoomEtapa(3)} className="w-full h-full object-cover cursor-pointer" />
+                    ) : (
+                      <>
+                        <div className="flex flex-col items-center gap-1 text-blue-500/50">
+                           <Camera size={24} /> <span className="text-[8px] font-black uppercase italic">Conclusão</span>
+                        </div>
+                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, 3)} disabled={loading || !linkGerado} />
+                      </>
+                    )}
+                 </div>
+                 <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full border ${fotosUrls[3] ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                        {fotosUrls[3] ? 'Registrado' : 'Aguardando...'}
+                      </span>
+                      <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 3: Entrega</span>
+                    </div>
+                    <h4 className="text-xs font-semibold text-slate-700 italic mt-1">{fotosUrls[3] ? "Finalizado" : "Aguardando..."}</h4>
+                 </div>
+              </div>
             </div>
           </div>
-
-          <div className={`grid grid-cols-1 gap-6 transition-all duration-500 ${tituloValido ? 'opacity-100' : 'opacity-20 pointer-events-none'}`}>
-            {[1, 2, 3].map((n) => {
-              const hasPhoto = !!fotosUrls[n];
-              const temComent = fotosData[n] && fotosComentarios[fotosData[n].id];
-              return (
-                <div key={n} className={`rounded-[2.5rem] border border-slate-100 p-4 flex items-center gap-5 transition-all ${hasPhoto ? 'bg-white shadow-sm' : 'bg-slate-50/50'}`}>
-                  <div className="relative w-24 h-24 shrink-0">
-                    {hasPhoto ? (
-                      <img src={fotosUrls[n]} className="w-full h-full object-cover rounded-[1.5rem]" />
-                    ) : (
-                      <div className="w-full h-full rounded-[1.5rem] flex items-center justify-center bg-white border-2 border-slate-100 text-blue-600 relative active:scale-95 transition-transform">
-                        <Camera size={28} />
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleUpload(e, n)} />
-                      </div>
-                    )}
-                    {hasPhoto && <div className="absolute -top-2 -right-2 bg-green-500 text-white p-1 rounded-full border-4 border-white shadow-sm"><Check size={12} strokeWidth={4}/></div>}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[10px] font-black uppercase text-slate-400">Etapa {n}</p>
-                    <h4 className="text-xl font-black italic uppercase text-slate-800 tracking-tighter mb-3 leading-none">{getEtapaLabel(n)}</h4>
-                    {hasPhoto && (
-                      <div className="flex gap-2">
-                        <button onClick={() => setZoomFoto(fotosUrls[n])} className="flex-1 py-3 bg-slate-50 rounded-2xl text-[10px] font-black uppercase text-slate-600 border border-slate-100 hover:bg-slate-100 transition-colors">Ver</button>
-                        <button onClick={() => abrirChat(n)} className={`flex-1 py-3 rounded-2xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all ${temComent ? 'bg-blue-600 text-white shadow-lg animate-pulse' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}>
-                          <MessageSquare size={12}/> {temComent ? 'Ideia Nova!' : 'Mensagens'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
+        )}
       </div>
 
-      {chatAberto && (
-        <div className="fixed inset-0 z-[110] bg-white flex flex-col animate-in slide-in-from-bottom-10 duration-300">
-          <div className="p-6 border-b flex items-center justify-between bg-white shrink-0 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-md border border-slate-100"><img src={fotosUrls[chatAberto]} className="w-full h-full object-cover" /></div>
-              <div>
-                <h3 className="font-black uppercase italic text-slate-900 tracking-tighter leading-none">{getEtapaLabel(chatAberto)}</h3>
-                <div className="flex items-center gap-1 mt-1 text-green-500 font-bold text-[10px] uppercase"><CheckCircle2 size={10}/> Canal Seguro</div>
+      {zoomEtapa && (
+        <div className="fixed inset-0 z-[200] bg-blue-950/90 backdrop-blur-md flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-300">
+          <button onClick={() => setZoomEtapa(null)} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors z-[210]">
+            <X size={32} />
+          </button>
+          
+          <div className="flex flex-col md:flex-row bg-white rounded-[3rem] overflow-hidden w-full max-w-5xl h-full max-h-[90vh] shadow-2xl">
+            <div className="flex-[1.5] bg-slate-50 flex items-center justify-center relative overflow-hidden">
+              <img src={fotosUrls[zoomEtapa]} className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-10 scale-125" />
+              <img src={fotosUrls[zoomEtapa]} className="relative z-10 max-w-full max-h-full object-contain" alt="Inspeção" />
+              <div className="absolute top-6 left-6 bg-blue-600/90 backdrop-blur-md px-4 py-2 rounded-full text-white text-[10px] font-black uppercase italic tracking-widest border border-blue-400/20 z-20">
+                Registro 0{zoomEtapa}
               </div>
             </div>
-            <button onClick={() => setChatAberto(null)} className="p-4 bg-slate-50 rounded-full text-slate-500 hover:bg-slate-100 transition-colors"><X size={24} /></button>
-          </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
-            {historicoChat.map(msg => (
-              <div key={msg.id} className={`flex gap-3 ${msg.autor_tipo === 'prestador' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-white shadow-sm mt-auto bg-white flex items-center justify-center">
-                  {msg.autor_tipo === 'prestador' ? <User size={14} className="text-slate-300"/> : (clienteFoto ? <img src={clienteFoto} className="w-full h-full object-cover"/> : <User size={14} className="text-slate-300"/>)}
+            <div className="flex-1 p-6 md:p-10 flex flex-col bg-white overflow-hidden border-l border-slate-50">
+              <div className="mb-8 shrink-0">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+                  <h3 className="text-lg font-black text-slate-900 uppercase italic leading-none">Legenda Técnica</h3>
                 </div>
-                <div className={`flex flex-col max-w-[80%] ${msg.autor_tipo === 'prestador' ? 'items-end' : 'items-start'}`}>
-                  <span className={`text-[8px] font-black uppercase mb-1 px-1 ${msg.autor_tipo === 'prestador' ? 'text-slate-400' : 'text-blue-600'}`}>
-                    {msg.autor_tipo === 'prestador' ? 'Você' : (clienteNome.split(' ')[0] || 'Cliente')}
-                  </span>
-                  <div className={`p-4 rounded-3xl text-sm font-bold shadow-sm ${msg.autor_tipo === 'prestador' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white text-slate-700 rounded-tl-none border border-slate-100'}`}>
-                    {msg.texto}
-                  </div>
+                
+                <div className="bg-blue-50/30 p-5 rounded-2xl border border-blue-100/50">
+                  {!isProjetoConcluido && comentariosZoom.length === 0 ? (
+                    <div className="flex flex-col gap-3">
+                      <textarea
+                        value={legendaEdit}
+                        onChange={(e) => setLegendaEdit(e.target.value)}
+                        placeholder="Adicione as notas técnicas para esta fase..."
+                        className="w-full bg-white border border-blue-100 rounded-xl p-3 text-xs font-medium italic text-slate-600 outline-none focus:border-blue-300 resize-none custom-scrollbar"
+                        rows={3}
+                      />
+                      
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex-1">
+                           <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, zoomEtapa)} disabled={loading} />
+                           <button className="w-full text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-4 py-2 rounded-xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
+                              {loading ? <Loader2 size={12} className="animate-spin" /> : <Camera size={12} />} 
+                              <span className="truncate">{loading ? 'Enviando...' : 'Trocar Imagem'}</span>
+                           </button>
+                        </div>
+                        <button
+                          onClick={handleSalvarLegenda}
+                          disabled={salvandoLegenda || legendaEdit.trim() === '' || legendaEdit === (fotosData[zoomEtapa]?.legenda || '')}
+                          className="flex-[1.5] text-[9px] font-black uppercase tracking-widest bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md active:scale-95"
+                        >
+                          {salvandoLegenda ? 'Salvando...' : 'Salvar Nota'}
+                        </button>
+                      </div>
+
+                      {!hasLegendaSalva(zoomEtapa) && zoomEtapa === 1 && (
+                        <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
+                          <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                          <p className="text-[9px] font-bold text-amber-700 leading-tight uppercase tracking-tight">
+                            Atenção: A legenda desta fase é obrigatória para liberar o envio do link de aceite ao cliente.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs font-medium italic text-slate-600 leading-relaxed">
+                      {fotosData[zoomEtapa]?.legenda || "Nenhuma nota técnica registrada."}
+                    </p>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
 
-          <div className="p-6 bg-white border-t flex gap-3 pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
-            <input 
-              className="flex-1 bg-slate-100 rounded-3xl px-6 py-5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-400" 
-              placeholder="Responder para o cliente..." 
-              value={novoComentario} 
-              onChange={e => setNovoComentario(e.target.value)} 
-              onKeyDown={e => e.key === 'Enter' && enviarResposta()}
-            />
-            <button onClick={enviarResposta} disabled={enviandoComentario || !novoComentario.trim()} className="p-5 bg-blue-600 text-white rounded-3xl shadow-xl active:scale-95 transition-all">
-              {enviandoComentario ? <Loader2 className="animate-spin" size={24} /> : <Send size={24} />}
-            </button>
+              <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+                <div className="flex items-center justify-between border-b border-slate-50 pb-2 mb-2">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Feedback do Cliente</h4>
+                  <MessageSquare size={12} className="text-slate-300" />
+                </div>
+                {comentariosZoom.length === 0 ? (
+                  <p className="text-[11px] text-slate-300 italic py-4">Nenhum comentário nesta etapa.</p>
+                ) : (
+                  comentariosZoom.map((com) => (
+                    <div key={com.id} className="flex gap-3 animate-in slide-in-from-left-2">
+                      <div className="w-8 h-8 rounded-xl bg-blue-50 shrink-0 flex items-center justify-center border border-blue-100">
+                        <User size={14} className="text-blue-400" />
+                      </div>
+                      <div className="max-w-[85%] p-3 rounded-2xl text-xs font-bold leading-tight bg-slate-50 text-slate-700 rounded-tl-none border border-slate-100">
+                        {com.texto}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              <button 
+                onClick={() => {
+                  if (!canCloseZoom) {
+                    alert('Por favor, adicione e salve uma legenda técnica para liberar a etapa.');
+                    return;
+                  }
+                  setZoomEtapa(null)
+                }} 
+                className={`mt-6 w-full py-5 rounded-[2rem] font-black uppercase italic text-[10px] tracking-widest transition-all active:scale-95 shrink-0 shadow-xl ${canCloseZoom ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+              >
+                {canCloseZoom ? 'Fechar Inspeção' : 'Legenda Obrigatória'}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-
-      {zoomFoto && (
-        <div className="fixed inset-0 z-[120] bg-black/95 flex items-center justify-center p-5" onClick={() => setZoomFoto(null)}>
-          <img src={zoomFoto} className="max-w-full max-h-[85vh] rounded-[3rem] shadow-2xl border-4 border-white/10" />
         </div>
       )}
     </>

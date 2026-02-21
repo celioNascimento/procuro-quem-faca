@@ -1,14 +1,13 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
-import { MapPin, Filter, Sparkles, ChevronRight } from 'lucide-react'
+import { MapPin, Filter, Sparkles } from 'lucide-react'
 
 import PrestadorCard from '@/components/cards/PrestadorCard'
-import AnuncioCard from '@/components/cards/AnuncioCard'
 
 function ListaConteudo() {
   const searchParams = useSearchParams()
@@ -16,19 +15,16 @@ function ListaConteudo() {
   
   const queryBusca = (searchParams.get('q') || '').trim()
   const filtroHab = (searchParams.get('habilidade') || '').trim()
-  const filtroCid = searchParams.get('cidade')
-  const filtroReg = searchParams.get('regiao')
-  const filtroEst = searchParams.get('estado')
+  const filtroCidNome = searchParams.get('cidade') // Agora usaremos o Nome da cidade para facilitar o match no array
 
-  const [prestadores, setPrestadores] = useState([])
+  const [prestadoresBase, setPrestadoresBase] = useState([])
   const [anuncios, setAnuncios] = useState([])
-  const [cidadesFiltro, setCidadesFiltro] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const toggleCidade = (id) => {
+  const toggleCidade = (nomeCidade) => {
     const params = new URLSearchParams(searchParams)
-    if (filtroCid === id) params.delete('cidade')
-    else params.set('cidade', id)
+    if (filtroCidNome === nomeCidade) params.delete('cidade')
+    else params.set('cidade', nomeCidade)
     router.push(`?${params.toString()}`)
   }
 
@@ -36,37 +32,29 @@ function ListaConteudo() {
     async function fetchDados() {
       setLoading(true);
       try {
-        const { data: cData } = await supabase
-          .from('cidades')
-          .select(`id, nome, prestadores!inner(status)`)
-          .eq('prestadores.status', 'ativo')
-          .eq('ativa', true)
-          .order('nome');
-
-        const cidadesUnicas = Array.from(new Map(cData?.map(item => [item.id, item])).values());
-        setCidadesFiltro(cidadesUnicas || []);
-
+        // 1. Buscamos os prestadores ativos e suas categorias/cidades base
         let query = supabase
           .from('prestadores')
-          .select('*, cidades!inner(id, nome, estado_sigla, regiao_id), categorias(nome)')
+          .select('*, cidades(id, nome, estado_sigla, regiao_id), categorias(nome)')
           .eq('status', 'ativo')
           .order('verificado', { ascending: false });
 
-        if (filtroCid) query = query.eq('cidade_id', filtroCid);
-        if (filtroReg) query = query.eq('cidades.regiao_id', filtroReg);
-        if (filtroEst) query = query.eq('cidades.estado_sigla', filtroEst.toUpperCase());
-
         const { data: pData } = await query;
-        const prestadoresNormalizados = (pData || []).map(p => ({
+        
+        // Normalização inicial
+        const normalizados = (pData || []).map(p => ({
           ...p,
+          cidade_nome: p.cidades?.nome || '',
           categoria: p.categorias?.nome || 'Profissional'
         }));
 
+        // 2. Aplicamos o filtro de texto/habilidade primeiro para saber quem são os candidatos
         const termoUnificado = normalizarTermo(queryBusca, filtroHab);
-        let resultados = filtrarPrestadores(prestadoresNormalizados, termoUnificado);
+        const resultadosPosTexto = filtrarPrestadores(normalizados, termoUnificado);
 
-        setPrestadores(resultados);
+        setPrestadoresBase(resultadosPosTexto);
 
+        // 3. Busca anúncios
         const { data: ads } = await supabase.from('anuncios').select('*').eq('status', true);
         setAnuncios(ads || []);
       } catch (err) {
@@ -76,40 +64,64 @@ function ListaConteudo() {
       }
     }
     fetchDados();
-  }, [queryBusca, filtroHab, filtroCid, filtroReg, filtroEst]);
+  }, [queryBusca, filtroHab]); // Só recarrega se o termo de busca mudar
+
+  // --- LÓGICA DINÂMICA DE CIDADES ---
+  // Extraímos as cidades disponíveis apenas dos prestadores que passaram no filtro de texto
+  const cidadesDisponiveis = useMemo(() => {
+    const cidadesSet = new Set();
+    prestadoresBase.forEach(p => {
+      if (p.cidade_nome) cidadesSet.add(p.cidade_nome);
+      if (p.cidades_atendidas && Array.isArray(p.cidades_atendidas)) {
+        p.cidades_atendidas.forEach(c => {
+          if (c) cidadesSet.add(c.trim());
+        });
+      }
+    });
+    return Array.from(cidadesSet).sort();
+  }, [prestadoresBase]);
+
+  // --- FILTRAGEM FINAL POR CIDADE ---
+  const prestadoresExibidos = useMemo(() => {
+    if (!filtroCidNome) return prestadoresBase;
+
+    return prestadoresBase.filter(p => {
+      const moraAqui = p.cidade_nome === filtroCidNome;
+      const atendeAqui = p.cidades_atendidas?.some(c => c.trim() === filtroCidNome);
+      return moraAqui || atendeAqui;
+    });
+  }, [prestadoresBase, filtroCidNome]);
 
   const bannerTopo = anuncios.find(a => a.posicao === 'topo' && a.status);
 
   return (
-    /* Reduzi space-y-10 para space-y-6 para aproximar banner e resultados */
     <div className="max-w-4xl mx-auto px-6 space-y-6">
       
-      {/* FILTRO POR CIDADES - Reduzi padding vertical (py-4 para py-2) */}
-      {cidadesFiltro.length > 0 && (
+      {/* FILTRO DINÂMICO DE CIDADES */}
+      {cidadesDisponiveis.length > 0 && (
         <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 py-2 bg-[#FAFAFA]/90 backdrop-blur-md border-b border-slate-100">
           <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-1">
             <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm shrink-0">
               <Filter size={12} className="text-blue-600" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Onde:</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Filtrar por Cidade:</span>
             </div>
-            {cidadesFiltro.map(c => (
+            {cidadesDisponiveis.map(nome => (
               <button
-                key={c.id}
-                onClick={() => toggleCidade(c.id)}
+                key={nome}
+                onClick={() => toggleCidade(nome)}
                 className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shrink-0 border ${
-                  filtroCid === c.id 
+                  filtroCidNome === nome 
                   ? 'bg-blue-600 border-blue-600 text-white shadow-md scale-105' 
                   : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300'
                 }`}
               >
-                {c.nome}
+                {nome}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* BANNER DE DESTAQUE - Reduzi altura e margens */}
       {!loading && bannerTopo && (
         <div className="relative group rounded-[2rem] overflow-hidden shadow-xl border-2 border-white animate-in fade-in zoom-in-95 duration-700">
            <img src={bannerTopo.imagem_url} className="w-full h-32 md:h-44 object-cover transition-transform duration-1000 group-hover:scale-105" alt="Destaque" />
@@ -124,14 +136,13 @@ function ListaConteudo() {
         </div>
       )}
 
-      {/* RESULTADOS - Aproximado do título */}
       <div className="grid grid-cols-1 gap-4">
         <div className="flex items-center justify-between px-2">
            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2">
              <MapPin size={12} /> Profissionais
            </h3>
            <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100/50">
-             {prestadores.length} encontrados
+             {prestadoresExibidos.length} encontrados
            </span>
         </div>
 
@@ -141,15 +152,14 @@ function ListaConteudo() {
           ))
         ) : (
           <div className="space-y-2">
-            {prestadores.map((p) => (
+            {prestadoresExibidos.map((p) => (
               <PrestadorCard key={p.id} prestador={p} />
             ))}
           </div>
         )}
       </div>
 
-      {/* EMPTY STATE */}
-      {!loading && prestadores.length === 0 && (
+      {!loading && prestadoresExibidos.length === 0 && (
         <div className="py-12 text-center flex flex-col items-center">
           <div className="w-16 h-16 bg-white rounded-2xl border border-slate-100 flex items-center justify-center shadow-sm mb-4">
              <span className="text-2xl">🏜️</span>
@@ -165,7 +175,6 @@ export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-[#FAFAFA] pb-16 antialiased selection:bg-blue-100">
       <Header href="/" />
-      {/* Ajuste Crítico: pt-20 no mobile e pt-28 no desktop (antes era 24/32) */}
       <div className="pt-20 md:pt-28">
         <Suspense fallback={null}>
           <ListaConteudo />

@@ -4,7 +4,8 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Header from '@/components/Header'
-import PortfolioGrid from '@/components/profile/PortfolioGrid' // Importando o componente que codamos
+import PortfolioGrid from '@/components/profile/PortfolioGrid'
+import { MapPin, ShieldCheck } from 'lucide-react'
 
 function PerfilSkeleton() {
   return (
@@ -33,7 +34,7 @@ export default function PerfilPublico() {
   const params = useParams()
   const router = useRouter()
   const [prestador, setPrestador] = useState(null)
-  const [projetos, setProjetos] = useState([]) // Estado para os projetos
+  const [projetos, setProjetos] = useState([])
   const [loading, setLoading] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
   const [urlRetorno, setUrlRetorno] = useState('/prestadores')
@@ -57,7 +58,6 @@ export default function PerfilPublico() {
     async function carregarPerfil() {
       if (!params?.slug) return;
 
-      // MUDANÇA: Query agora traz os projetos e suas fotos aninhadas
       let query = supabase.from('prestadores').select(`
         *, 
         cidades(nome, estado_sigla),
@@ -65,6 +65,7 @@ export default function PerfilPublico() {
           id, 
           titulo, 
           descricao,
+          status,
           portfolio_fotos (url_foto, ordem, legenda)
         )
       `);
@@ -80,8 +81,13 @@ export default function PerfilPublico() {
 
       if (!error && data) {
         setPrestador(data);
-        // Filtramos e ordenamos os projetos por data de criação
-        setProjetos(data.portfolio_projetos || []);
+        
+        // CORREÇÃO: Filtramos para que apenas 'em_execucao' e 'finalizado' (ou concluído) apareçam na vitrine pública
+        const projetosFiltrados = (data.portfolio_projetos || []).filter(proj => 
+          !['em_registro', 'pendente'].includes(proj.status)
+        );
+        
+        setProjetos(projetosFiltrados);
 
         if (data.categoria) {
           setUrlRetorno(`/prestadores?categoria=${encodeURIComponent(data.categoria)}`);
@@ -124,6 +130,10 @@ export default function PerfilPublico() {
 
   const waLink = `https://wa.me/55${prestador.whatsapp.replace(/\D/g, '')}?text=Olá ${prestador.nome}, vi seu perfil no Procuro Quem Faça e gostaria de um orçamento.`;
   const isPublico = prestador.origem_tipo === 'curadoria_publica';
+  
+  const localizacaoFinal = [prestador.bairro, prestador.cidades?.nome]
+    .filter(item => item && item.trim().length > 0)
+    .join(', ');
 
   return (
     <main className="min-h-screen bg-white font-sans text-slate-800">
@@ -132,51 +142,56 @@ export default function PerfilPublico() {
       <div className="max-w-xl mx-auto pt-28 md:pt-36 pb-12 px-6 animate-in fade-in duration-500">
         <section className="text-center mb-10 relative">
 
-          <Link
-            href={`/denunciar/${prestador.id}`}
-            className="absolute top-0 left-0 z-10 w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-red-500 shadow-sm transition-all hover:scale-105 active:scale-95"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </Link>
+          <div className="absolute top-0 w-full flex justify-between z-10 px-1">
+             <Link
+                href={`/denunciar/${prestador.id}`}
+                className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-red-500 shadow-sm transition-all hover:scale-105 active:scale-95"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+             </Link>
 
-          <button
-            onClick={compartilharPerfil}
-            className="absolute top-0 right-0 z-10 w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-blue-600 shadow-sm transition-all hover:scale-105 active:scale-95"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </button>
+             <button
+                onClick={compartilharPerfil}
+                className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-blue-600 shadow-sm transition-all hover:scale-105 active:scale-95"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+             </button>
+          </div>
 
-          <div className="relative inline-block">
-            <div className="w-32 h-32 rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex items-center justify-center transition-all group-hover:border-blue-400">
+          <div className="relative inline-block mt-4 mb-6">
+            <div className="w-32 h-32 rounded-[2.5rem] bg-slate-50 overflow-hidden flex items-center justify-center transition-all shadow-sm border-2 border-slate-50">
               {prestador.foto_perfil ? (
                 <img src={prestador.foto_perfil} className="w-full h-full object-cover" alt={prestador.nome} />
               ) : (
                 <span className="text-slate-300 font-black text-[10px] uppercase">Sem Foto</span>
               )}
             </div>
-
-            {prestador.verificado && !isPublico && (
-              <div className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-2 rounded-2xl shadow-xl border-4 border-white">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>
+            
+            {prestador.verificado && (
+              <div className="absolute bottom-1 right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-lg border-2 border-white animate-in zoom-in duration-500">
+                <ShieldCheck size={14} strokeWidth={3} />
               </div>
             )}
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-900 uppercase tracking-tight leading-none mb-3 mt-6 italic">
-            {prestador.nome}
-          </h1>
+          <div className="flex flex-col items-center">
+            <h1 className="text-2xl font-bold text-slate-800 uppercase italic tracking-tight leading-none mb-2">
+              {prestador.nome}
+            </h1>
 
-          <div className="flex flex-col items-center gap-2">
-            <span className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-lg shadow-blue-100">
+            <span className="text-blue-600 text-[10px] font-black uppercase tracking-widest mb-3">
               {prestador.categoria}
             </span>
-            <p className="text-slate-400 text-[11px] font-medium uppercase tracking-[0.1em] mt-1 italic">
-              📍 {prestador.bairro}, {prestador.cidades?.nome}
-            </p>
+            
+            {localizacaoFinal && (
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                {localizacaoFinal}
+              </p>
+            )}
           </div>
         </section>
 
@@ -216,7 +231,6 @@ export default function PerfilPublico() {
             </section>
           )}
 
-          {/* IMPLEMENTAÇÃO DO SNAPSHOT 01: O Grid de Portfólio */}
           <section className="space-y-4">
             <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 ml-8 italic">
               Registros de Atividade
