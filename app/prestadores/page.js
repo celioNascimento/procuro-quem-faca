@@ -92,8 +92,9 @@ function ListaConteudo() {
       
       {/* FILTRO DINÂMICO DE CIDADES - Estilo Pílula Premium */}
       {cidadesDisponiveis.length > 0 && (
-        <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 py-3 bg-[#FDFDFD]/90 backdrop-blur-md border-b border-slate-100/60">
-          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-1">
+        /* AJUSTE AQUI: Aumentamos o pb-4 e adicionamos mb-4 para dar respiro no celular */
+        <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 pt-3 pb-5 mb-2 bg-[#FDFDFD]/90 backdrop-blur-md border-b border-slate-100/60 transition-all">
+          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
             <div className="flex items-center gap-2 bg-slate-100/50 px-3 py-2 rounded-2xl shrink-0">
               <Filter size={14} className="text-slate-400" />
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Filtrar</span>
