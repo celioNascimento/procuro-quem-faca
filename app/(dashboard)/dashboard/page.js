@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
-import { Lock } from 'lucide-react'
+import { Lock, Loader2 } from 'lucide-react'
 
 export default function PerfilPage() {
   const [abaAtiva, setAbaAtiva] = useState('perfil') // 'perfil' ou 'portfolio'
@@ -39,13 +39,17 @@ export default function PerfilPage() {
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen">
-      <main className="max-w-5xl mx-auto p-4 md:p-8">
+      <main className="max-w-5xl mx-auto p-5 md:p-8">
         
-        {/* Navegação de Abas Premium */}
-        <div className="flex gap-4 mb-8 bg-white p-2 rounded-[2rem] border border-slate-100 shadow-sm inline-flex">
+        {/* Navegação de Abas Premium - Refinada */}
+        <div className="flex w-full md:w-fit bg-slate-100/60 p-1.5 rounded-[2.5rem] border border-slate-100 mb-8 overflow-x-auto custom-scrollbar">
           <button 
             onClick={() => setAbaAtiva('perfil')}
-            className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${abaAtiva === 'perfil' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-400 hover:bg-slate-50'}`}
+            className={`flex-1 md:flex-none px-6 py-3.5 md:py-4 rounded-[2rem] text-[12px] md:text-[13px] font-semibold transition-all duration-300 whitespace-nowrap ${
+              abaAtiva === 'perfil' 
+                ? 'bg-white text-blue-600 shadow-sm scale-[1.01]' 
+                : 'text-slate-500 hover:bg-white/50'
+            }`}
           >
             Dados Profissionais
           </button>
@@ -53,15 +57,15 @@ export default function PerfilPage() {
           <button 
             disabled={!cadastroCompleto || validando}
             onClick={() => setAbaAtiva('portfolio')}
-            className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+            className={`flex-1 md:flex-none px-6 py-3.5 md:py-4 rounded-[2rem] text-[12px] md:text-[13px] font-semibold transition-all duration-300 whitespace-nowrap flex items-center justify-center gap-2 ${
               abaAtiva === 'portfolio' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' 
+                ? 'bg-white text-blue-600 shadow-sm scale-[1.01]' 
                 : !cadastroCompleto 
-                  ? 'text-slate-200 cursor-not-allowed bg-slate-50/50' 
-                  : 'text-slate-400 hover:bg-slate-50'
+                  ? 'text-slate-400 cursor-not-allowed bg-slate-50/50 opacity-70' 
+                  : 'text-slate-500 hover:bg-white/50'
             }`}
           >
-            {!cadastroCompleto && <Lock size={12} className="text-slate-300" />}
+            {!cadastroCompleto && <Lock size={14} className="text-slate-400" />}
             Meu Portfólio (Fotos)
           </button>
         </div>
@@ -69,8 +73,9 @@ export default function PerfilPage() {
         {/* Renderização Condicional */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           {validando ? (
-            <div className="h-64 flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="h-64 flex flex-col items-center justify-center gap-4">
+              <div className="w-10 h-10 border-[4px] border-slate-100 border-t-blue-600 rounded-full animate-spin" />
+              <p className="text-[12px] font-medium text-slate-400">Verificando credenciais...</p>
             </div>
           ) : (
             abaAtiva === 'perfil' ? <EditarPerfilTab /> : <PortfolioDashboardTab />

@@ -25,7 +25,8 @@ function FormularioCadastro() {
   const searchParams = useSearchParams()
   const reivindicarId = searchParams.get('reivindicar')
 
-  const inputStyle = () => `w-full px-4 py-3.5 rounded-xl border border-slate-100 outline-none transition-all font-bold text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400`
+  // AJUSTE ESTÉTICO: font-medium e text-[14px] para melhor legibilidade
+  const inputStyle = () => `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-[14px] text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400`
 
   const aplicarMascaraWhatsapp = (v) => {
     if (!v) return "";
@@ -193,7 +194,6 @@ function FormularioCadastro() {
 
             if (perfilParaCarregar.slug) setEditouSlugManualmente(true);
         } else {
-            // SIMPLICIDADE ABSURDA: Se é novo e veio do Google, pré-preenche o nome
             const nomeSocial = user?.user_metadata?.full_name || '';
             setFormData(prev => ({ 
               ...prev, 
@@ -394,15 +394,17 @@ function FormularioCadastro() {
             
             <div className="col-span-12 md:col-span-4 space-y-6">
               <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center gap-6 sticky top-24">
-                <div className={`relative w-40 h-40 md:w-48 md:h-48 rounded-[3.5rem] bg-slate-50 border-2 border-dashed flex items-center justify-center overflow-hidden group transition-all ${tentouEnviar && !formData.foto_perfil ? 'border-red-500 bg-red-50' : 'hover:border-blue-400 hover:bg-blue-50'}`}>
+                {/* AJUSTE ESTÉTICO: Borda sólida e sombra, sem dashed, sem bg vermelho intenso */}
+                <div className={`relative w-40 h-40 md:w-48 md:h-48 rounded-[3.5rem] bg-slate-50 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden group transition-all ${tentouEnviar && !formData.foto_perfil ? 'ring-4 ring-red-100' : 'hover:scale-[1.02]'}`}>
                   {formData.foto_perfil ? 
                     <img src={formData.foto_perfil} alt="Preview" className="w-full h-full object-cover transition-transform group-hover:scale-105" /> 
-                    : <span className="text-slate-300 font-black text-xs text-center px-4 uppercase tracking-tighter italic">Foto Profissional</span>
+                    : <span className="text-slate-400 font-bold text-xs text-center px-4 uppercase tracking-widest">Foto Profissional</span>
                   }
-                  <input type="file" accept="image/*" onChange={fazerUploadFoto} className="absolute inset-0 opacity-0 cursor-pointer" />
-                  <div className="absolute bottom-2 bg-black/50 text-white text-[8px] px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">Alterar</div>
+                  <input type="file" accept="image/*" onChange={fazerUploadFoto} className="absolute inset-0 opacity-0 cursor-pointer z-20" />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 font-bold text-[10px] uppercase tracking-widest">Alterar</div>
                 </div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic text-center">Complete seu perfil para finalizar</p>
+                {/* AJUSTE ESTÉTICO: Sem itálico e sem font-black nas labels */}
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center mt-2">Sua foto na vitrine</p>
               </section>
             </div>
 
@@ -411,11 +413,11 @@ function FormularioCadastro() {
               {!userLogado && (
                 <section className="bg-blue-600 p-8 rounded-[2.5rem] shadow-xl shadow-blue-100 space-y-4">
                   <div className="flex justify-between items-center">
-                    <h2 className="font-black uppercase text-[10px] tracking-widest text-blue-100 italic">Crie seu Acesso</h2>
+                    <h2 className="font-bold uppercase text-[11px] tracking-widest text-blue-100">Crie seu Acesso</h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="email" placeholder="E-mail" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-4 rounded-2xl border-none outline-none font-bold text-slate-800 bg-white shadow-inner" required />
-                    <input type="password" placeholder="Senha (mín. 6 caracteres)" value={senha} onChange={e => setSenha(e.target.value)} className={`w-full p-4 rounded-2xl border-none outline-none font-bold text-slate-800 bg-white shadow-inner ${tentouEnviar && senha.length < 6 ? 'border-2 border-red-400' : ''}`} required />
+                    <input type="email" placeholder="E-mail" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-4 rounded-2xl border-none outline-none font-medium text-[14px] text-slate-800 bg-white shadow-inner" required />
+                    <input type="password" placeholder="Senha (mín. 6 caracteres)" value={senha} onChange={e => setSenha(e.target.value)} className={`w-full p-4 rounded-2xl border-none outline-none font-medium text-[14px] text-slate-800 bg-white shadow-inner ${tentouEnviar && senha.length < 6 ? 'border-2 border-red-400' : ''}`} required />
                   </div>
                 </section>
               )}
@@ -423,13 +425,13 @@ function FormularioCadastro() {
               {userLogado && (
                 <section className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="text-center md:text-left">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 italic">Você está logado como:</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Você está logado como:</p>
                       <p className="font-bold text-blue-900 text-sm">{userLogado.email}</p>
                     </div>
                     <button 
                       type="button" 
                       onClick={handleLogout}
-                      className="px-6 py-3 bg-white text-blue-600 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md transition-all border border-blue-100"
+                      className="px-6 py-3 bg-white text-blue-600 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all border border-blue-100"
                     >
                       Entrar com outra conta
                     </button>
@@ -437,7 +439,7 @@ function FormularioCadastro() {
               )}
 
               <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
-                <h2 className="font-black uppercase text-[10px] tracking-widest text-slate-400 italic mb-4">O que você faz?</h2>
+                <h2 className="font-bold uppercase text-[11px] tracking-widest text-slate-400 mb-4">O que você faz?</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <select value={formData.grupo_id || ''} onChange={handleGrupoChange} className={inputStyle()} required>
                     <option value="">Grupo de Atuação</option>
@@ -452,10 +454,10 @@ function FormularioCadastro() {
 
                 {formData.categoria_id && habilidadesExtrasDisponiveis.length > 0 && (
                   <div className="pt-2">
-                    <label className="text-slate-400 font-black text-[9px] uppercase block italic mb-3 tracking-tighter">Habilidades extras:</label>
+                    <label className="text-slate-400 font-bold text-[10px] uppercase block mb-3 tracking-widest">Habilidades extras:</label>
                     <div className="flex flex-wrap gap-2">
                       {habilidadesExtrasDisponiveis.map(h => (
-                        <button key={h} type="button" onClick={() => toggleItem(h, 'habilidades')} className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase border transition-all ${formData.habilidades?.includes(h) ? 'bg-blue-600 text-white border-blue-600 shadow-lg scale-95' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-slate-200'}`}>
+                        <button key={h} type="button" onClick={() => toggleItem(h, 'habilidades')} className={`px-4 py-2.5 rounded-xl text-[11px] font-semibold uppercase transition-all border ${formData.habilidades?.includes(h) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
                           {h}
                         </button>
                       ))}
@@ -469,13 +471,13 @@ function FormularioCadastro() {
                   <input value={formData.nome || ''} placeholder="Nome Profissional" onChange={e => { const novoNome = e.target.value; setFormData(prev => ({ ...prev, nome: novoNome, slug: editouSlugManualmente ? prev.slug : formatarParaSlug(novoNome) })); }} className={inputStyle()} required />
                     
                   <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 relative overflow-hidden">
-                    <label className="text-slate-400 font-black text-[9px] uppercase tracking-widest italic mb-2 block">Link do seu perfil (slug)</label>
+                    <label className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-2 block">Link do seu perfil (slug)</label>
                     <div className="flex items-center gap-1 font-bold text-sm">
-                      <span className="text-slate-300">procuroquemfaca.com.br/</span>
+                      <span className="text-slate-400 font-medium hidden md:inline">procuroquemfaca.com.br/</span>
                       <input 
                         value={formData.slug || ''} 
                         onChange={(e) => { setEditouSlugManualmente(true); setFormData({...formData, slug: formatarParaSlug(e.target.value)}) }} 
-                        className="bg-transparent border-none outline-none text-blue-600 flex-1 min-w-0"
+                        className="bg-transparent border-none outline-none text-blue-600 font-bold flex-1 min-w-0"
                         placeholder="seu-nome"
                       />
                       {checandoSlug ? <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /> : (
@@ -490,7 +492,7 @@ function FormularioCadastro() {
               </section>
 
               <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
-                <h2 className="font-black uppercase text-[10px] tracking-widest text-slate-400 italic">Onde você atende?</h2>
+                <h2 className="font-bold uppercase text-[11px] tracking-widest text-slate-400 mb-4">Onde você atende?</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <select value={formData.estado_sigla || ''} onChange={handleEstadoChange} className={inputStyle()} required>
                     <option value="">Estado</option>
@@ -527,10 +529,10 @@ function FormularioCadastro() {
 
                 {(formData.regiao_id && cidadesRegiao.length > 1 && formData.cidade_id) && (
                   <div className="pt-6 border-t border-slate-50">
-                    <label className="text-slate-400 font-black text-[9px] uppercase block italic mb-4">Cidades vizinhas que você também atende:</label>
+                    <label className="text-slate-400 font-bold text-[10px] uppercase block mb-4 tracking-widest">Cidades vizinhas que você também atende:</label>
                     <div className="flex flex-wrap gap-2">
                       {cidadesRegiao.filter(c => String(c.id) !== String(formData.cidade_id)).map(cid => (
-                        <button key={cid.id} type="button" onClick={() => toggleItem(cid.nome, 'cidades_atendidas')} className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase border transition-all ${formData.cidades_atendidas?.includes(cid.nome) ? 'bg-blue-600 text-white border-blue-600 shadow-lg scale-95' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-slate-300'}`}>
+                        <button key={cid.id} type="button" onClick={() => toggleItem(cid.nome, 'cidades_atendidas')} className={`px-4 py-2.5 rounded-xl text-[11px] font-semibold uppercase transition-all border ${formData.cidades_atendidas?.includes(cid.nome) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
                           {cid.nome}
                         </button>
                       ))}
@@ -545,21 +547,21 @@ function FormularioCadastro() {
                     <input type="checkbox" checked={aceitouTermos} onChange={(e) => setAceitouTermos(e.target.checked)} className="hidden" />
                     {aceitouTermos && <span className="text-white text-xs">✓</span>}
                   </div>
-                  <span className="text-[10px] font-black text-slate-500 uppercase italic transition-colors group-hover:text-blue-600">Li e aceito os termos</span>
+                  <span className="text-[11px] font-bold text-slate-500 transition-colors group-hover:text-blue-600">Li e aceito os termos</span>
                 </label>
                 <label className="flex items-center gap-4 cursor-pointer group">
                   <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${aceitouPrivacidade ? 'bg-blue-600 border-blue-600' : 'border-slate-200'}`}>
                     <input type="checkbox" checked={aceitouPrivacidade} onChange={(e) => setAceitouPrivacidade(e.target.checked)} className="hidden" />
                     {aceitouPrivacidade && <span className="text-white text-xs">✓</span>}
                   </div>
-                  <span className="text-[10px] font-black text-slate-500 uppercase italic transition-colors group-hover:text-blue-600">Política de Privacidade</span>
+                  <span className="text-[11px] font-bold text-slate-500 transition-colors group-hover:text-blue-600">Política de Privacidade</span>
                 </label>
               </section>
 
               <button 
                 type="submit" 
                 disabled={loading || calcularProgresso() < 100}
-                className={`w-full py-6 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.3em] transition-all shadow-2xl ${calcularProgresso() === 100 && slugDisponivel ? 'bg-blue-600 text-white shadow-blue-200 hover:scale-[1.02] active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                className={`w-full py-6 rounded-[2rem] font-bold text-[13px] uppercase tracking-widest transition-all shadow-xl ${calcularProgresso() === 100 && slugDisponivel ? 'bg-blue-600 text-white shadow-blue-100 hover:bg-blue-700 active:scale-95' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
               >
                 {status || (modoEdicao ? 'Salvar Alterações' : (reivindicarId ? 'Assumir Perfil' : 'Finalizar Cadastro'))}
               </button>

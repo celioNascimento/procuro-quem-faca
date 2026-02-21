@@ -1,7 +1,7 @@
 'use client'
 import Image from 'next/image'
 import Link from 'next/link'
-import { LogOut, User } from 'lucide-react'
+import { LogOut, User, ChevronLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -16,17 +16,28 @@ export default function HeaderCliente({ nomeCliente }) {
   return (
     <nav className="w-full bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
       <div className="max-w-xl mx-auto px-6 py-4 flex justify-between items-center">
-        {/* LOGO DA PASTA PUBLIC */}
-        <Link href="/" className="transition-transform active:scale-95">
-          <Image 
-            src="/logo.png" // Caminho da sua logo em public
-            alt="Logo Procuro Quem Faça"
-            width={140}
-            height={40}
-            className="h-9 w-auto object-contain"
-            priority
-          />
-        </Link>
+        
+        {/* BOTÃO VOLTAR E LOGO */}
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => router.back()}
+            className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 border border-slate-100 rounded-2xl transition-all active:scale-90 hover:bg-white hover:shadow-sm"
+            title="Voltar"
+          >
+            <ChevronLeft size={20} strokeWidth={3} />
+          </button>
+
+          <Link href="/" className="transition-transform active:scale-95">
+            <Image 
+              src="/logo.png" 
+              alt="Logo Procuro Quem Faça"
+              width={140}
+              height={40}
+              className="h-8 md:h-9 w-auto object-contain"
+              priority
+            />
+          </Link>
+        </div>
 
         {/* AÇÕES E IDENTIFICAÇÃO */}
         <div className="flex items-center gap-3">
@@ -39,7 +50,7 @@ export default function HeaderCliente({ nomeCliente }) {
           
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-2 p-2.5 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all shadow-sm border border-slate-100"
+            className="flex items-center gap-2 p-2.5 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all shadow-sm border border-slate-100 active:scale-90"
             title="Sair da conta"
           >
             <LogOut size={18} />

@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
-import { MapPin, Filter, Sparkles } from 'lucide-react'
+import { MapPin, Filter, Sparkles, CheckCircle2 } from 'lucide-react'
 
 import PrestadorCard from '@/components/cards/PrestadorCard'
 
@@ -15,7 +15,7 @@ function ListaConteudo() {
   
   const queryBusca = (searchParams.get('q') || '').trim()
   const filtroHab = (searchParams.get('habilidade') || '').trim()
-  const filtroCidNome = searchParams.get('cidade') // Agora usaremos o Nome da cidade para facilitar o match no array
+  const filtroCidNome = searchParams.get('cidade')
 
   const [prestadoresBase, setPrestadoresBase] = useState([])
   const [anuncios, setAnuncios] = useState([])
@@ -32,7 +32,6 @@ function ListaConteudo() {
     async function fetchDados() {
       setLoading(true);
       try {
-        // 1. Buscamos os prestadores ativos e suas categorias/cidades base
         let query = supabase
           .from('prestadores')
           .select('*, cidades(id, nome, estado_sigla, regiao_id), categorias(nome)')
@@ -41,20 +40,17 @@ function ListaConteudo() {
 
         const { data: pData } = await query;
         
-        // Normalização inicial
         const normalizados = (pData || []).map(p => ({
           ...p,
           cidade_nome: p.cidades?.nome || '',
           categoria: p.categorias?.nome || 'Profissional'
         }));
 
-        // 2. Aplicamos o filtro de texto/habilidade primeiro para saber quem são os candidatos
         const termoUnificado = normalizarTermo(queryBusca, filtroHab);
         const resultadosPosTexto = filtrarPrestadores(normalizados, termoUnificado);
 
         setPrestadoresBase(resultadosPosTexto);
 
-        // 3. Busca anúncios
         const { data: ads } = await supabase.from('anuncios').select('*').eq('status', true);
         setAnuncios(ads || []);
       } catch (err) {
@@ -64,10 +60,8 @@ function ListaConteudo() {
       }
     }
     fetchDados();
-  }, [queryBusca, filtroHab]); // Só recarrega se o termo de busca mudar
+  }, [queryBusca, filtroHab]);
 
-  // --- LÓGICA DINÂMICA DE CIDADES ---
-  // Extraímos as cidades disponíveis apenas dos prestadores que passaram no filtro de texto
   const cidadesDisponiveis = useMemo(() => {
     const cidadesSet = new Set();
     prestadoresBase.forEach(p => {
@@ -81,7 +75,6 @@ function ListaConteudo() {
     return Array.from(cidadesSet).sort();
   }, [prestadoresBase]);
 
-  // --- FILTRAGEM FINAL POR CIDADE ---
   const prestadoresExibidos = useMemo(() => {
     if (!filtroCidNome) return prestadoresBase;
 
@@ -95,24 +88,24 @@ function ListaConteudo() {
   const bannerTopo = anuncios.find(a => a.posicao === 'topo' && a.status);
 
   return (
-    <div className="max-w-4xl mx-auto px-6 space-y-6">
+    <div className="max-w-4xl mx-auto px-5 md:px-6 space-y-8">
       
-      {/* FILTRO DINÂMICO DE CIDADES */}
+      {/* FILTRO DINÂMICO DE CIDADES - Estilo Pílula Premium */}
       {cidadesDisponiveis.length > 0 && (
-        <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 py-2 bg-[#FAFAFA]/90 backdrop-blur-md border-b border-slate-100">
+        <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 py-3 bg-[#FDFDFD]/90 backdrop-blur-md border-b border-slate-100/60">
           <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-1">
-            <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm shrink-0">
-              <Filter size={12} className="text-blue-600" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Filtrar por Cidade:</span>
+            <div className="flex items-center gap-2 bg-slate-100/50 px-3 py-2 rounded-2xl shrink-0">
+              <Filter size={14} className="text-slate-400" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Filtrar</span>
             </div>
             {cidadesDisponiveis.map(nome => (
               <button
                 key={nome}
                 onClick={() => toggleCidade(nome)}
-                className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shrink-0 border ${
+                className={`px-5 py-2 rounded-[1.2rem] text-[12px] font-semibold transition-all shrink-0 border ${
                   filtroCidNome === nome 
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-md scale-105' 
-                  : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300'
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-md' 
+                  : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400'
                 }`}
               >
                 {nome}
@@ -122,36 +115,43 @@ function ListaConteudo() {
         </div>
       )}
 
+      {/* BANNER DE ANÚNCIO - Visual Nativo */}
       {!loading && bannerTopo && (
-        <div className="relative group rounded-[2rem] overflow-hidden shadow-xl border-2 border-white animate-in fade-in zoom-in-95 duration-700">
-           <img src={bannerTopo.imagem_url} className="w-full h-32 md:h-44 object-cover transition-transform duration-1000 group-hover:scale-105" alt="Destaque" />
-           <div className="absolute inset-0 bg-gradient-to-r from-blue-900/60 to-transparent flex flex-col justify-center p-6 md:p-10">
-              <div className="flex items-center gap-2 text-blue-200 mb-1">
-                <Sparkles size={14} fill="currentColor" />
-                <span className="text-[8px] font-black uppercase tracking-[0.3em]">Recomendado</span>
+        <div className="relative group rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-white animate-in fade-in zoom-in-95 duration-700">
+           <img src={bannerTopo.imagem_url} className="w-full h-36 md:h-48 object-cover transition-transform duration-1000 group-hover:scale-105" alt="Destaque" />
+           <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 via-slate-900/20 to-transparent flex flex-col justify-center p-8 md:p-12">
+              <div className="flex items-center gap-2 text-blue-400 mb-2">
+                <Sparkles size={16} fill="currentColor" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Destaque da Semana</span>
               </div>
-              <h2 className="text-white text-xl md:text-2xl font-black tracking-tighter leading-none mb-3">{bannerTopo.titulo}</h2>
-              <a href={bannerTopo.link_destino} className="w-fit bg-white text-blue-600 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-md active:scale-95">Confira</a>
+              <h2 className="text-white text-2xl md:text-3xl font-black tracking-tight leading-none mb-4 max-w-xs">{bannerTopo.titulo}</h2>
+              <a href={bannerTopo.link_destino} className="w-fit bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-[11px] font-bold uppercase tracking-wider hover:bg-blue-700 transition-all shadow-lg active:scale-95">Ver Agora</a>
            </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4">
-        <div className="flex items-center justify-between px-2">
-           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2">
-             <MapPin size={12} /> Profissionais
-           </h3>
-           <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100/50">
-             {prestadoresExibidos.length} encontrados
+      {/* LISTA DE PRESTADORES */}
+      <div className="grid grid-cols-1 gap-6">
+        <div className="flex items-center justify-between px-2 border-l-4 border-blue-600 ml-1 py-1">
+           <div className="flex flex-col">
+              <h3 className="text-[13px] md:text-[14px] font-bold text-slate-800 leading-none">
+                Profissionais em Londrina
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">Resultados da busca</p>
+           </div>
+           <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100">
+             {prestadoresExibidos.length} ativos
            </span>
         </div>
 
         {loading ? (
-          Array(4).fill(0).map((_, i) => (
-            <div key={i} className="w-full h-28 bg-white rounded-[2rem] border border-slate-100 animate-pulse" />
-          ))
+          <div className="space-y-4">
+            {Array(4).fill(0).map((_, i) => (
+              <div key={i} className="w-full h-32 bg-white rounded-[2.5rem] border border-slate-50 animate-pulse" />
+            ))}
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-4">
             {prestadoresExibidos.map((p) => (
               <PrestadorCard key={p.id} prestador={p} />
             ))}
@@ -159,12 +159,16 @@ function ListaConteudo() {
         )}
       </div>
 
+      {/* EMPTY STATE - Elegante */}
       {!loading && prestadoresExibidos.length === 0 && (
-        <div className="py-12 text-center flex flex-col items-center">
-          <div className="w-16 h-16 bg-white rounded-2xl border border-slate-100 flex items-center justify-center shadow-sm mb-4">
-             <span className="text-2xl">🏜️</span>
+        <div className="py-20 text-center flex flex-col items-center">
+          <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mb-6 border border-slate-100 shadow-inner">
+             <MapPin size={32} className="text-slate-200" />
           </div>
-          <p className="text-xs font-black text-slate-800 uppercase tracking-tight">Vazio por enquanto</p>
+          <h3 className="text-lg font-bold text-slate-800 mb-2">Nenhum profissional encontrado</h3>
+          <p className="text-[13px] text-slate-400 max-w-[240px] font-medium leading-relaxed">
+            Tente remover os filtros ou buscar por uma categoria diferente.
+          </p>
         </div>
       )}
     </div>
@@ -173,9 +177,9 @@ function ListaConteudo() {
 
 export default function PaginaPrestadores() {
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pb-16 antialiased selection:bg-blue-100">
+    <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
       <Header href="/" />
-      <div className="pt-20 md:pt-28">
+      <div className="pt-24 md:pt-32">
         <Suspense fallback={null}>
           <ListaConteudo />
         </Suspense>

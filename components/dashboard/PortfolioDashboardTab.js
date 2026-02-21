@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import UploadWizard from './UploadWizard'
+import { Plus } from 'lucide-react'
 // import { MessageSquare } from 'lucide-react' // Chat estacionado
 
 export default function PortfolioDashboardTab() {
@@ -89,34 +90,42 @@ export default function PortfolioDashboardTab() {
 
   return (
     <div className="space-y-8 pb-20">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      
+      {/* HEADER DO DASHBOARD - Tipografia Limpa e Alinhamento */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 bg-white p-6 md:p-8 rounded-[2.5rem] md:rounded-[3rem] border border-slate-50 shadow-sm">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter leading-none">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-800 leading-tight">
             {showWizard ? (projetoParaEdicao ? 'Gerenciar Serviço' : 'Novo Serviço') : 'Portfólio Ativo'}
           </h2>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
-            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-            {projetos.length} Projetos Publicados
+          <p className="text-slate-500 text-[12px] font-medium mt-1 flex items-center gap-2">
+            {!showWizard && (
+              <>
+                <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                {projetos.length} {projetos.length === 1 ? 'Projeto Publicado' : 'Projetos Publicados'}
+              </>
+            )}
+            {showWizard && 'Preencha os dados do serviço abaixo'}
           </p>
         </div>
 
         <button 
           onClick={showWizard ? () => setShowWizard(false) : abrirNovo}
-          className={`group flex items-center gap-3 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-xl ${
+          className={`group flex items-center gap-2 px-6 py-3.5 md:py-4 rounded-[2rem] text-[13px] font-bold transition-all duration-300 w-full md:w-auto justify-center ${
             showWizard 
-            ? 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50 shadow-slate-100' 
-            : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:shadow-blue-200 hover:-translate-y-1 shadow-blue-100'
+            ? 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100' 
+            : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-100 active:scale-95'
           }`}
         >
-          {showWizard ? '← Voltar' : (
+          {showWizard ? '← Voltar para Lista' : (
             <>
-              <span>+ Adicionar Trabalho</span>
-              <span className="bg-white/20 px-2 py-0.5 rounded-lg group-hover:bg-white/40 transition-colors">N</span>
+              <Plus size={18} />
+              <span>Adicionar Trabalho</span>
             </>
           )}
         </button>
       </header>
 
+      {/* ÁREA DE CONTEÚDO */}
       {showWizard && meuPrestadorId ? (
         <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
           <UploadWizard 
@@ -131,7 +140,7 @@ export default function PortfolioDashboardTab() {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
           {projetos.map(proj => {
             const fotos = proj.portfolio_fotos || []
             const capa = fotos.sort((a,b) => b.ordem - a.ordem)[0]?.url_foto
@@ -143,40 +152,36 @@ export default function PortfolioDashboardTab() {
               <div 
                 key={proj.id} 
                 onClick={() => abrirEdicao(proj)}
-                className="group relative bg-white p-2 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-blue-200 transition-all duration-500 cursor-pointer flex items-center"
+                className="group relative bg-white p-3 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-100 transition-all duration-500 cursor-pointer flex items-center"
               >
-                {/* Chat Estacionado: Notificações visuais removidas para cumprir cronograma */}
-                {/* {proj.notifCount > 0 && (
-                  <div className="absolute -top-2 -right-2 z-20 bg-red-500 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter shadow-lg shadow-red-100 flex items-center gap-1 animate-bounce">
-                    <MessageSquare size={8} fill="currentColor" />
-                    {proj.notifCount} {proj.notifCount === 1 ? 'Nova' : 'Novas'}
-                  </div>
-                )} 
-                */}
-
-                <div className="w-28 h-28 rounded-[2.5rem] bg-slate-50 overflow-hidden shrink-0 relative">
+                
+                {/* Imagem de Capa do Projeto */}
+                <div className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] bg-slate-50 overflow-hidden shrink-0 relative">
                   <img src={capa || '/placeholder-job.png'} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="" />
-                  <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors" />
+                  <div className="absolute inset-0 bg-slate-900/5 group-hover:bg-transparent transition-colors" />
                 </div>
 
-                <div className="pl-6 pr-8 flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                     <span className={`text-[7px] font-black uppercase px-2 py-1 rounded-lg ${
-                       aguardandoAvaliacao ? 'bg-blue-50 text-blue-600 animate-pulse' : 
-                       jaAvaliado ? 'bg-green-50 text-green-600' : 
-                       'bg-slate-50 text-slate-400'
+                {/* Informações do Projeto */}
+                <div className="pl-5 pr-4 md:pr-6 flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                     <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+                       aguardandoAvaliacao ? 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse' : 
+                       jaAvaliado ? 'bg-green-50 text-green-600 border-green-100' : 
+                       'bg-slate-50 text-slate-500 border-slate-200'
                      }`}>
                        {aguardandoAvaliacao ? 'Aguardando Avaliação' : jaAvaliado ? 'Concluído' : 'Em Progresso'}
                      </span>
-                     <span className="text-slate-300 text-[8px] font-bold uppercase tracking-widest">• {fotos.length} Fotos</span>
+                     <span className="text-slate-400 text-[10px] font-medium whitespace-nowrap">
+                       • {fotos.length} {fotos.length === 1 ? 'Foto' : 'Fotos'}
+                     </span>
                   </div>
                   
-                  <h4 className="font-black text-slate-700 uppercase italic text-sm leading-tight group-hover:text-blue-600 transition-colors truncate">
+                  <h4 className="font-bold text-slate-800 text-[15px] md:text-base leading-tight group-hover:text-blue-600 transition-colors truncate">
                     {proj.titulo}
                   </h4>
                   
-                  <div className="flex items-center gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
-                    <span className="text-blue-500 text-[9px] font-bold uppercase">
+                  <div className="flex items-center gap-1.5 mt-2 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
+                    <span className="text-blue-600 text-[11px] md:text-[12px] font-semibold">
                       Gerenciar Serviço →
                     </span>
                   </div>

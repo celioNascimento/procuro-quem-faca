@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -15,14 +15,11 @@ export default function Home() {
   const [erro, setErro] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  // Previne erro de hidratação garantindo renderização apenas no cliente
   useEffect(() => {
-    // Use um requestAnimationFrame ou apenas mova para garantir o ciclo de vida
     const timer = setTimeout(() => setMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
 
-  // Busca de sugestões (roda apenas no cliente via useEffect)
   useEffect(() => {
     const buscarSugestoes = async () => {
       try {
@@ -80,49 +77,55 @@ export default function Home() {
     router.push(`/prestadores?${params.toString()}`);
   };
 
-  // Retorno simplificado para o servidor evitar mismatch
   if (!mounted) {
-    return <main className="min-h-screen bg-[#F8FAFC]" />
+    return <main className="min-h-screen bg-[#FDFDFD]" />
   }
 
   return (
     <main
-      className="min-h-screen bg-[#F8FAFC] flex flex-col items-center font-sans relative antialiased"
+      className="min-h-screen bg-[#FDFDFD] flex flex-col items-center font-sans relative antialiased"
       suppressHydrationWarning={true}
     >
-      <div className="w-full flex flex-col items-center animate-in fade-in duration-500">
+      <div className="w-full flex flex-col items-center animate-in fade-in duration-700">
 
         <HeroSection onLog={registrarLog} />
 
-        <section className="w-full max-w-2xl px-4 pt-32 md:pt-44 pb-10 flex flex-col items-center text-center">
-          <div className="mb-12 flex justify-center w-full">
-            <Link href="/" className="block w-full max-w-[320px] md:max-w-[500px]">
+        <section className="w-full max-w-2xl px-6 pt-24 md:pt-36 pb-12 flex flex-col items-center text-center">
+          
+          {/* CONTAINER DA LOGO - Ajuste de Escala Profissional */}
+          <div className="mb-10 md:mb-14 flex justify-center w-full">
+            <Link href="/" className="block w-full max-w-[280px] md:max-w-[420px] transition-transform active:scale-95 duration-300">
               <img
                 src="/logo.png"
-                alt="Logo Procuro que Faça"
-                className="w-full h-auto object-contain hover:scale-[1.02] transition-transform"
+                alt="Logo Procuro quem Faça"
+                className="w-full h-auto object-contain drop-shadow-sm"
               />
             </Link>
           </div>
 
-          <SearchForm
-            busca={busca}
-            setBusca={setBusca}
-            onSubmit={dispararBusca}
-            temErro={erro}
-          />
+          {/* FORMULÁRIO DE BUSCA */}
+          <div className="w-full mb-10">
+            <SearchForm
+              busca={busca}
+              setBusca={setBusca}
+              onSubmit={dispararBusca}
+              temErro={erro}
+            />
+          </div>
 
+          {/* SUGESTÕES - Tipografia Equilibrada estilo 'Grande App' */}
           {sugestoes.length > 0 && (
-            <div className="flex flex-col items-center gap-4 mb-16 animate-in slide-in-from-bottom-2">
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
-                {busca.length > 0 ? 'Encontramos para você' : 'Sugestões'}
+            <div className="flex flex-col items-center gap-5 animate-in slide-in-from-bottom-4 duration-500">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] opacity-80">
+                {busca.length > 0 ? 'Encontramos para você' : 'Sugestões de serviços'}
               </span>
-              <div className="flex flex-wrap justify-center gap-3">
+              
+              <div className="flex flex-wrap justify-center gap-2.5">
                 {sugestoes.map((item, index) => (
                   <button
                     key={index}
                     onClick={() => dispararBusca(null, item)}
-                    className="bg-white text-slate-500 px-5 py-2.5 rounded-2xl text-[10px] font-bold border border-slate-100 uppercase hover:text-blue-600 hover:border-blue-500 transition-all active:scale-95 shadow-sm"
+                    className="bg-white text-slate-600 px-5 py-2.5 rounded-2xl text-[12px] font-semibold border border-slate-100 hover:border-blue-500 hover:text-blue-600 transition-all active:scale-95 shadow-sm hover:shadow-md"
                   >
                     {item}
                   </button>
@@ -131,6 +134,13 @@ export default function Home() {
             </div>
           )}
         </section>
+
+        {/* Efeito de Rodapé Visual Suave */}
+        <footer className="mt-auto py-8">
+           <p className="text-[10px] font-medium text-slate-300 uppercase tracking-widest">
+             Londrina e Região Metropolitana
+           </p>
+        </footer>
       </div>
     </main>
   )

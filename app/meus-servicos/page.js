@@ -21,7 +21,6 @@ export default function PainelDoCliente() {
     })
   }
 
-  // PRECISÃO TÉCNICA: Ajuste para garantir a persistência antes do redirecionamento
   const handleAceiteTecnico = async (servico) => {
     try {
       const { error } = await supabase
@@ -37,7 +36,6 @@ export default function PainelDoCliente() {
         return
       }
 
-      // Redireciona apenas após a confirmação do banco
       router.push(`/avaliar/${servico.id}?token=${servico.avaliacao_token}`)
     } catch (err) {
       console.error('Falha na comunicação:', err)
@@ -46,14 +44,11 @@ export default function PainelDoCliente() {
 
   const buscarDados = async (user) => {
     setLoading(true)
-    
     const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     setProfile(prof)
-
     const whatsapp = prof?.whatsapp || localStorage.getItem('cliente_whatsapp')
     
     if (whatsapp) {
-      // VERIFICAÇÃO CIRÚRGICA: Filtramos apenas por 'pendente' para o aceite inicial
       const { data: projs } = await supabase
         .from('portfolio_projetos')
         .select(`
@@ -92,25 +87,25 @@ export default function PainelDoCliente() {
   }, [])
 
   if (loading) return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4 p-6 text-center">
       <div className="w-10 h-10 border-[4px] border-slate-100 border-t-blue-600 rounded-full animate-spin" />
       <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Sincronizando Arquivos</p>
     </div>
   )
 
   if (!session) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-[3rem] p-10 shadow-2xl border border-slate-100 text-center space-y-8">
-        <div className="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto text-blue-600 shadow-inner">
-          <ShieldCheck size={40} />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-slate-100 text-center space-y-8">
+        <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-50 rounded-[1.8rem] flex items-center justify-center mx-auto text-blue-600 shadow-inner">
+          <ShieldCheck size={32} className="md:w-10 md:h-10" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-3xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">Acesse seus<br/>Contratos</h2>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Identidade Digital Necessária</p>
+          <h2 className="text-2xl md:text-3xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">Acesse seus<br/>Contratos</h2>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Identidade Digital Necessária</p>
         </div>
         <button 
           onClick={loginComGoogle}
-          className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest flex items-center justify-center gap-3 hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100"
+          className="w-full py-4 md:py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] md:text-[11px] tracking-widest flex items-center justify-center gap-3 hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100"
         >
           <LogIn size={18} /> Entrar com Google
         </button>
@@ -119,90 +114,93 @@ export default function PainelDoCliente() {
   )
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-slate-900 pb-20 font-sans antialiased">
-      <div className="max-w-xl mx-auto px-6 pt-12 space-y-8">
+    <div className="min-h-screen bg-[#FDFDFD] text-slate-900 pb-24 font-sans antialiased">
+      <div className="max-w-xl mx-auto px-5 pt-8 md:pt-12 space-y-8">
 
-        <div className="flex justify-between items-center bg-white p-5 rounded-[2.5rem] border-2 border-slate-50 shadow-sm">
-          <div className="flex items-center gap-4">
+        {/* Header - Ajustado padding para mobile */}
+        <div className="flex justify-between items-center bg-white p-4 md:p-5 rounded-[2rem] md:rounded-[2.5rem] border-2 border-slate-50 shadow-sm">
+          <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
             <img 
               src={profile?.avatar_url || session.user.user_metadata.avatar_url} 
-              className="w-14 h-14 rounded-2xl object-cover border-2 border-blue-100 shadow-md"
+              className="w-12 h-12 md:w-14 md:h-14 rounded-2xl object-cover border-2 border-blue-100 shadow-md shrink-0"
             />
-            <div>
-              <h2 className="text-sm font-black italic uppercase text-slate-800 leading-none">
+            <div className="min-w-0">
+              <h2 className="text-xs md:text-sm font-black italic uppercase text-slate-800 leading-none truncate">
                 {profile?.full_name || session.user.user_metadata.full_name}
               </h2>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                {profile?.whatsapp || 'WhatsApp não vinculado'}
+              <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 truncate">
+                {profile?.whatsapp || 'Sem WhatsApp'}
               </p>
             </div>
           </div>
-          <div className="bg-blue-50 p-3 rounded-2xl text-blue-600">
-            <User size={20} />
+          <div className="bg-blue-50 p-2.5 md:p-3 rounded-xl md:rounded-2xl text-blue-600 shrink-0">
+            <User size={18} className="md:w-5 md:h-5" />
           </div>
         </div>
 
-        <div className="space-y-1 px-2">
-          <h1 className="text-4xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">
+        {/* Título Principal - Responsividade no texto */}
+        <div className="space-y-1 px-1">
+          <h1 className="text-3xl md:text-4xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">
             Projetos<br />Em Aberto
           </h1>
-          <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] italic">Aguardando seu aceite técnico</p>
+          <p className="text-[9px] md:text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] italic">Aguardando seu aceite técnico</p>
         </div>
 
+        {/* Listagem de Serviços */}
         <div className="space-y-6">
           {servicos.map((servico) => {
             const fotoInicio = servico.portfolio_fotos?.find(f => f.ordem === 1)
             
             return (
-              <div key={servico.id} className="bg-white rounded-[3rem] border-2 border-slate-50 shadow-xl overflow-hidden group transition-all hover:border-blue-100">
-                <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+              <div key={servico.id} className="bg-white rounded-[2.5rem] md:rounded-[3rem] border-2 border-slate-50 shadow-xl overflow-hidden group transition-all">
+                <div className="p-5 md:p-6 border-b border-slate-50 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <img src={servico.prestadores.foto_perfil} className="w-10 h-10 rounded-xl object-cover" />
+                    <img src={servico.prestadores.foto_perfil} className="w-10 h-10 rounded-xl object-cover border border-slate-100" />
                     <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Prestador</p>
-                      <h3 className="text-xs font-black uppercase italic text-slate-800">{servico.prestadores.nome}</h3>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Prestador</p>
+                      <h3 className="text-[11px] font-black uppercase italic text-slate-800">{servico.prestadores.nome}</h3>
                     </div>
                   </div>
                   <a 
                     href={`tel:${servico.prestadores.whatsapp}`} 
-                    className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 hover:bg-green-600 hover:text-white transition-all shadow-sm"
+                    className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 active:bg-green-600 active:text-white transition-all shadow-sm"
                   >
                     <Phone size={18} />
                   </a>
                 </div>
 
-                <div className="p-6 space-y-4">
-                  <div className="flex justify-between items-end">
-                    <div className="space-y-1">
-                      <span className="text-[8px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded-md tracking-tighter">
+                <div className="p-5 md:p-6 space-y-4">
+                  <div className="flex justify-between items-end gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[7px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded-md tracking-tighter">
                         {servico.prestadores.categoria?.nome}
                       </span>
-                      <h4 className="text-xl font-black uppercase italic leading-none tracking-tight text-slate-800">
+                      <h4 className="text-lg md:text-xl font-black uppercase italic leading-none tracking-tight text-slate-800 truncate">
                         {servico.titulo}
                       </h4>
                     </div>
-                    <div className="text-right">
-                       <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Iniciado em</p>
-                       <p className="text-[10px] font-bold text-slate-500 italic">{new Date(servico.created_at).toLocaleDateString()}</p>
+                    <div className="text-right shrink-0">
+                       <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Iniciado</p>
+                       <p className="text-[9px] font-bold text-slate-500 italic">{new Date(servico.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
 
-                  <div className="relative aspect-video rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner group-hover:scale-[1.01] transition-transform">
+                  <div className="relative aspect-video rounded-[1.8rem] md:rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner">
                     {fotoInicio ? (
-                      <img src={fotoInicio.url_foto} className="w-full h-full object-cover" alt="Início do serviço" />
+                      <img src={fotoInicio.url_foto} className="w-full h-full object-cover" alt="Início" />
                     ) : (
-                      <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300 italic text-[10px] uppercase font-black">
+                      <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300 italic text-[9px] uppercase font-black text-center px-4">
                         Aguardando Foto de Início
                       </div>
                     )}
-                    <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-[8px] font-black uppercase tracking-widest border border-white/10">
+                    <div className="absolute top-3 left-3 md:top-4 md:left-4 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[7px] font-black uppercase tracking-widest border border-white/10">
                       Registro de Entrada
                     </div>
                   </div>
 
                   <button 
                     onClick={() => handleAceiteTecnico(servico)}
-                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-100"
+                    className="w-full py-4 md:py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-blue-100"
                   >
                     Aceitar Início <ExternalLink size={14} />
                   </button>
@@ -212,15 +210,14 @@ export default function PainelDoCliente() {
           })}
         </div>
 
-        <div className="bg-blue-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-100">
-          <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12">
-            <ShieldCheck size={120} strokeWidth={3} />
+        {/* Card Informativo - Padding reduzido no mobile */}
+        <div className="bg-blue-600 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-100">
+          <div className="absolute -top-4 -right-4 opacity-10 rotate-12">
+            <ShieldCheck size={100} strokeWidth={3} />
           </div>
-          <div className="relative z-10 space-y-4 text-center">
-            <div className="space-y-1">
-              <p className="text-2xl font-black italic uppercase leading-none tracking-tighter">Protocolo de Confiança</p>
-              <p className="text-[9px] font-black text-blue-100 uppercase tracking-[0.2em]">Sua aprovação é essencial para a segurança do serviço.</p>
-            </div>
+          <div className="relative z-10 space-y-3 text-center">
+            <p className="text-xl md:text-2xl font-black italic uppercase leading-none tracking-tighter">Protocolo de Confiança</p>
+            <p className="text-[8px] md:text-[9px] font-black text-blue-100 uppercase tracking-[0.2em] leading-relaxed max-w-[220px] mx-auto">Sua aprovação é essencial para a segurança do serviço.</p>
           </div>
         </div>
 
