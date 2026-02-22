@@ -44,11 +44,11 @@ export default function Header({ href }) {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md font-sans">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 md:h-24 flex items-center justify-between">
+    <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md font-sans border-b border-slate-50">
+      <div className="max-w-5xl mx-auto px-4 h-16 md:h-24 flex items-center justify-between">
         
-        {/* LADO ESQUERDO: VOLTAR */}
-        <div className="w-20 md:w-32 flex justify-start items-center">
+        {/* LADO ESQUERDO: Ajustado para w-12 no mobile */}
+        <div className="w-12 md:w-32 flex justify-start items-center">
           {href ? (
             <BackButton href={href} />
           ) : (
@@ -63,45 +63,45 @@ export default function Header({ href }) {
           )}
         </div>
 
-        {/* CENTRO: LOGO - Aumentada levemente para compensar o respiro */}
-        <div className="flex-1 flex justify-center px-4">
+        {/* CENTRO: LOGO - Ganhou mais espaço lateral */}
+        <div className="flex-1 flex justify-center px-2">
           <Link href="/" className="transition-all hover:opacity-80 active:scale-95 flex items-center">
             <img 
               src="/logo.png" 
               alt="Logo" 
-              className="h-10 md:h-16 w-auto object-contain max-w-[140px] md:max-w-none" 
+              className="h-9 md:h-14 w-auto object-contain" 
             />
           </Link>
         </div>
 
-        {/* LADO DIREITO: LOGIN OU PERFIL */}
-        <div className="w-20 md:w-32 flex justify-end items-center">
+        {/* LADO DIREITO: Ajustado para w-12 no mobile */}
+        <div className="w-12 md:w-32 flex justify-end items-center">
           {user ? (
             <Link 
               href="/painel/perfil"
               className="flex items-center gap-2 p-1 md:pr-4 rounded-full border border-slate-100 bg-slate-50 hover:bg-blue-50 transition-all group"
             >
-              <div className="w-7 h-7 md:w-9 md:h-9 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
                 {user.user_metadata?.avatar_url ? (
                   <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-400 bg-white"><User size={14}/></div>
                 )}
               </div>
-              <span className="text-[10px] font-black uppercase tracking-tight text-slate-500 hidden md:block">Conta</span>
+              <span className="text-[10px] font-bold uppercase tracking-tight text-slate-500 hidden md:block">Minha Conta</span>
             </Link>
           ) : (
             <button 
               onClick={handleGoogleLogin}
               disabled={authLoading}
-              className="flex items-center gap-2 p-2 md:px-5 md:py-3 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all active:scale-95 disabled:opacity-70"
+              className="flex items-center justify-center md:gap-2 w-9 h-9 md:w-auto md:px-5 md:py-3 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all active:scale-95 disabled:opacity-70"
             >
               {authLoading ? (
-                <Loader2 size={14} className="animate-spin text-blue-600" />
+                <Loader2 size={16} className="animate-spin text-blue-600" />
               ) : (
-                <LogIn size={14} className="text-blue-600 md:text-slate-400" />
+                <LogIn size={16} className="text-blue-600 md:text-slate-400" />
               )}
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 hidden sm:block">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 hidden md:block">
                 {authLoading ? '...' : 'Entrar'}
               </span>
             </button>

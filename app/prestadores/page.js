@@ -183,7 +183,7 @@ export default function PaginaPrestadores() {
     <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
       <Header href="/" />
       {/* AJUSTE: pt reduzido de 24 para 20 no mobile para aproximar do header */}
-      <div className="pt-18 md:pt-24">
+      <div className="pt-15 md:pt-24">
         <Suspense fallback={null}>
           <ListaConteudo />
         </Suspense>
