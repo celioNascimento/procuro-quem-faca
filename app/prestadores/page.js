@@ -92,8 +92,8 @@ function ListaConteudo() {
       
       {/* FILTRO DINÂMICO DE CIDADES - Estilo Pílula Premium */}
       {cidadesDisponiveis.length > 0 && (
-        <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 py-6 mb-4 bg-[#FDFDFD]/95 backdrop-blur-md border-b border-slate-100/80 shadow-sm transition-all">
-          {/* AJUSTE CIRÚRGICO: py-2 adicionado abaixo para afastar a pílula da barra de rolagem/bordas */}
+        /* AJUSTE: py reduzido para 3 para diminuir a altura da barra branca */
+        <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 py-3 mb-4 bg-[#FDFDFD]/95 backdrop-blur-md border-b border-slate-100/80 shadow-sm transition-all">
           <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2">
             <div className="flex items-center gap-2 bg-slate-100/80 px-4 py-2.5 rounded-2xl shrink-0">
               <Filter size={14} className="text-slate-500" />
@@ -182,7 +182,8 @@ export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
       <Header href="/" />
-      <div className="pt-24 md:pt-32">
+      {/* AJUSTE: pt reduzido de 24 para 20 no mobile para aproximar do header */}
+      <div className="pt-18 md:pt-24">
         <Suspense fallback={null}>
           <ListaConteudo />
         </Suspense>
