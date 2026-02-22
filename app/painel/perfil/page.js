@@ -2,11 +2,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+// Adicionado Link para corrigir o ReferenceError
+import Link from 'next/link' 
 import { 
   MapPin, User, ChevronRight, Briefcase, X, Loader2, Camera, CheckCircle2, 
-  Save, Star, Search, ArrowRight, Activity, Clock, Filter
+  Save, Activity, Clock
 } from 'lucide-react'
-import Link from 'next/link'
 import HeaderCliente from '@/components/HeaderCliente'
 
 export default function PerfilDoCliente() {
@@ -28,7 +29,6 @@ export default function PerfilDoCliente() {
     numero: '', complemento: '', bairro: '', cidade: '', uf: '', avatar_url: ''
   })
 
-  // LIMPEZA TIPOGRÁFICA: font-medium para campos preenchíveis, garantindo leitura de "App Nativo"
   const inputStyle = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-slate-800 bg-white shadow-sm placeholder-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400 text-[14px] md:text-[15px]`
 
   const aplicarMascara = (valor) => {
@@ -163,7 +163,6 @@ export default function PerfilDoCliente() {
 
       <div className="max-w-xl mx-auto px-5 md:px-6 pt-8 md:pt-10 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
-        {/* CARDS DE STATUS - Layout Separado para Números e Textos */}
         <div className="grid grid-cols-2 gap-4">
             <div className="bg-white p-5 md:p-6 rounded-[2.5rem] border border-slate-50 shadow-sm flex flex-col justify-center transition-all">
                 <div className="flex items-center gap-2 mb-2">
@@ -192,7 +191,6 @@ export default function PerfilDoCliente() {
             </div>
         </div>
 
-        {/* SWITCH DE ABAS - Menos agressivo */}
         <div className="flex bg-slate-100/60 p-1.5 rounded-[2.5rem] border border-slate-100">
           <button onClick={() => setAba('servicos')} className={`flex-1 py-3.5 md:py-4 rounded-[2rem] text-[12px] md:text-[13px] font-semibold transition-all duration-300 ${aba === 'servicos' ? 'bg-white text-blue-600 shadow-sm scale-[1.01]' : 'text-slate-500'}`}>
             Meus Projetos
@@ -270,7 +268,6 @@ export default function PerfilDoCliente() {
         ) : (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-12">
             <section className="bg-white rounded-[3rem] p-8 md:p-10 border border-slate-50 shadow-sm flex flex-col items-center relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-blue-600/5"></div>
               <div className="relative group cursor-pointer" onClick={() => fileInputRef.current.click()}>
                 <div className="w-28 h-28 md:w-32 md:h-32 rounded-[2.5rem] md:rounded-[3rem] bg-slate-50 border-4 border-white overflow-hidden shadow-xl flex items-center justify-center relative">
                    {uploading ? <Loader2 className="animate-spin text-blue-500" /> : perfil.avatar_url ? <img src={perfil.avatar_url} className="w-full h-full object-cover" /> : <User size={40} className="text-slate-200" />}
@@ -279,46 +276,59 @@ export default function PerfilDoCliente() {
               </div>
               <div className="mt-5 text-center">
                  <h2 className="text-xl md:text-2xl font-bold text-slate-800 leading-none">{perfil.full_name || 'Sua Conta'}</h2>
-                 <p className="text-[12px] font-medium text-slate-500 mt-2">
-                   Gestão de identidade e contato
-                 </p>
+                 <p className="text-[12px] font-medium text-slate-500 mt-2">Gestão de identidade e contato</p>
               </div>
             </section>
 
             <div className="bg-white rounded-[3rem] p-7 md:p-10 border border-slate-50 shadow-sm space-y-8">
                 <div className="space-y-5">
                     <div>
-                        <label className="block text-[11px] md:text-[12px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Nome Completo</label>
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Nome Completo</label>
                         <input value={perfil.full_name} onChange={e => setPerfil({...perfil, full_name: e.target.value})} className={inputStyle} />
                     </div>
                     <div>
-                        <label className="block text-[11px] md:text-[12px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">WhatsApp</label>
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">WhatsApp</label>
                         <input value={perfil.whatsapp} onChange={e => setPerfil({...perfil, whatsapp: aplicarMascara(e.target.value)})} className={inputStyle} />
                     </div>
                 </div>
 
                 <div className="pt-8 border-t border-slate-50 space-y-6">
-                    <h3 className="font-bold text-[14px] md:text-[15px] text-slate-800 flex items-center gap-2 px-1"><MapPin size={18} className="text-blue-600" /> Endereço de Referência</h3>
-                    <div className="grid grid-cols-4 gap-3 md:gap-4">
-                        <div className="col-span-3">
-                          <label className="block text-[11px] md:text-[12px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Logradouro</label>
+                    <h3 className="font-bold text-[14px] text-slate-800 flex items-center gap-2 px-1"><MapPin size={18} className="text-blue-600" /> Endereço de Referência</h3>
+                    
+                    {/* Logradouro e Número lado a lado com proporção correta */}
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-[3]">
+                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Logradouro</label>
                           <input placeholder="Rua / Avenida" value={perfil.logradouro} onChange={e => setPerfil({...perfil, logradouro: e.target.value})} className={inputStyle} />
                         </div>
-                        <div className="col-span-1">
-                          <label className="block text-[11px] md:text-[12px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Nº</label>
-                          <input placeholder="S/N" value={perfil.numero} onChange={e => setPerfil({...perfil, numero: e.target.value})} className={inputStyle} />
+                        <div className="md:w-32 shrink-0">
+                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Nº</label>
+                          <input placeholder="Ex: 123" value={perfil.numero} onChange={e => setPerfil({...perfil, numero: e.target.value})} className={inputStyle} />
                         </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-3 md:gap-4">
+
+                    {/* Bairro e Complemento lado a lado */}
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-1">
+                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Bairro</label>
+                          <input placeholder="Ex: Centro" value={perfil.bairro} onChange={e => setPerfil({...perfil, bairro: e.target.value})} className={inputStyle} />
+                        </div>
+                        <div className="flex-1">
+                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Complemento</label>
+                          <input placeholder="Ex: Apto 12" value={perfil.complemento} onChange={e => setPerfil({...perfil, complemento: e.target.value})} className={inputStyle} />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
                         <div className="col-span-1">
-                          <label className="block text-[11px] md:text-[12px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">UF</label>
+                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">UF</label>
                           <select value={perfil.uf} onChange={e => setPerfil({...perfil, uf: e.target.value, cidade: ''})} className={inputStyle}>
                             <option value="">--</option>
                             {listaEstados.map(e => <option key={e.sigla} value={e.sigla}>{e.sigla}</option>)}
                           </select>
                         </div>
                         <div className="col-span-2">
-                          <label className="block text-[11px] md:text-[12px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Cidade</label>
+                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Cidade</label>
                           <select disabled={!perfil.uf} value={perfil.cidade} onChange={e => setPerfil({...perfil, cidade: e.target.value})} className={inputStyle}>
                             <option value="">Selecione...</option>
                             {listaCidades.map(c => <option key={c.nome} value={c.nome}>{c.nome}</option>)}
@@ -327,8 +337,8 @@ export default function PerfilDoCliente() {
                     </div>
                 </div>
 
-                <button onClick={atualizar} disabled={loading} className="w-full py-5 md:py-6 bg-blue-600 text-white rounded-[2rem] md:rounded-[2.5rem] font-bold text-[14px] md:text-[15px] shadow-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3 group">
-                    {loading ? <Loader2 size={20} className="animate-spin" /> : <><Save size={20} /> Efetivar Alterações</>}
+                <button onClick={atualizar} disabled={loading} className="w-full py-5 md:py-6 bg-blue-600 text-white rounded-[2rem] md:rounded-[2.5rem] font-bold text-[14px] shadow-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3 group">
+                    {loading ? <Loader2 size={20} className="animate-spin" /> : <><Save size={20} /> Salvar Alterações</>}
                 </button>
             </div>
           </div>
