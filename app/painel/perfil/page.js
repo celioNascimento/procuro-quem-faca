@@ -18,10 +18,13 @@ export default function PerfilDoCliente() {
   const [uploading, setUploading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
+  
+  // NOVO: Estado para o Modal de Confirmação de Saída Interna
+  const [confirmLeaveModal, setConfirmLeaveModal] = useState({ show: false, destination: '' })
+  
   const [user, setUser] = useState(null)
   const [servicos, setServicos] = useState([])
   
-  // ESTADO DE ALTERAÇÃO (Para sinalizar mudanças não salvas)
   const [isDirty, setIsDirty] = useState(false)
 
   const [listaEstados, setListaEstados] = useState([])
@@ -43,19 +46,28 @@ export default function PerfilDoCliente() {
     return formatado
   }
 
-  // Monitor de Saída da Página (Browser Level)
+  // Mantido para proteção de F5/Fechar Aba (Nativo do Navegador)
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (isDirty) {
         e.preventDefault()
-        e.returnValue = '' // Dispara o alerta padrão do navegador
+        e.returnValue = '' 
       }
     }
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [isDirty])
 
-  // Função auxiliar para atualizar o perfil e marcar como "sujo"
+  // NOVO: Interceptador de navegação interna
+  const handleNavigation = (e, destino) => {
+    e.preventDefault();
+    if (isDirty) {
+      setConfirmLeaveModal({ show: true, destination: destino })
+    } else {
+      router.push(destino)
+    }
+  }
+
   const handleChangePerfil = (field, value) => {
     setPerfil(prev => ({ ...prev, [field]: value }))
     setIsDirty(true)
@@ -129,7 +141,6 @@ export default function PerfilDoCliente() {
     async function carregarDados() {
       const { data: { user: sessionUser } } = await supabase.auth.getUser()
       
-      // VERIFICAÇÃO DE LOGIN: Se não houver usuário, redireciona para a Home
       if (!sessionUser) {
         router.push('/')
         return
@@ -181,7 +192,7 @@ export default function PerfilDoCliente() {
       })
       if (error) throw error
       
-      setIsDirty(false) // Limpa o estado de alteração após salvar
+      setIsDirty(false) 
       setShowSuccess(true)
       setTimeout(() => setShowSuccess(false), 3000)
     } catch (err) { 
@@ -217,6 +228,35 @@ export default function PerfilDoCliente() {
       <HeaderCliente nomeCliente={perfil.full_name?.split(' ')[0]} />
 
       <input type="file" ref={fileInputRef} onChange={handleUploadFoto} accept="image/*" className="hidden" />
+
+      {/* MODAL DE CONFIRMAÇÃO DE SAÍDA (Adicionado) */}
+      {confirmLeaveModal.show && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95">
+            <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mx-auto border border-amber-100/50">
+              <AlertCircle size={32} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">Sair sem salvar?</h3>
+              <p className="text-[13px] font-medium text-slate-500 leading-relaxed">Você tem alterações pendentes. Se sair desta página agora, elas serão perdidas.</p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button 
+                onClick={() => setConfirmLeaveModal({ show: false, destination: '' })}
+                className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold uppercase text-[11px] tracking-[0.1em] hover:bg-slate-100 transition-all active:scale-95"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => router.push(confirmLeaveModal.destination)}
+                className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.1em] hover:bg-red-600 transition-all active:scale-95 shadow-lg shadow-red-500/30"
+              >
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL DE ERRO ELEGANTE */}
       {errorModal.show && (
@@ -342,9 +382,10 @@ export default function PerfilDoCliente() {
                         </div>
                       </div>
                       <div className="absolute right-5 md:right-6">
-                        <Link href={rotaDestino} className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center border border-slate-100 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                        {/* NOVO: Interceptação no botão de navegar para o projeto */}
+                        <button onClick={(e) => handleNavigation(e, rotaDestino)} className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center border border-slate-100 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                           <ChevronRight size={18} strokeWidth={2.5} />
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   )
@@ -422,7 +463,6 @@ export default function PerfilDoCliente() {
                     </div>
                 </div>
 
-                {/* MODIFICAÇÃO AQUI: Aviso contextual movido para cima do botão */}
                 <div>
                   {isDirty && !showSuccess && (
                     <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest text-center mb-4 flex items-center justify-center gap-1.5 animate-in fade-in duration-300">
