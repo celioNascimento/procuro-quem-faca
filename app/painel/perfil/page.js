@@ -2,11 +2,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-// Adicionado Link para corrigir o ReferenceError
 import Link from 'next/link' 
 import { 
   MapPin, User, ChevronRight, Briefcase, X, Loader2, Camera, CheckCircle2, 
-  Save, Activity, Clock
+  Save, Activity, Clock, AlertCircle
 } from 'lucide-react'
 import HeaderCliente from '@/components/HeaderCliente'
 
@@ -18,9 +17,13 @@ export default function PerfilDoCliente() {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
   const [user, setUser] = useState(null)
   const [servicos, setServicos] = useState([])
   
+  // ESTADO DE ALTERAÇÃO (Para sinalizar mudanças não salvas)
+  const [isDirty, setIsDirty] = useState(false)
+
   const [listaEstados, setListaEstados] = useState([])
   const [listaCidades, setListaCidades] = useState([])
 
@@ -40,18 +43,68 @@ export default function PerfilDoCliente() {
     return formatado
   }
 
+  // Monitor de Saída da Página (Browser Level)
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = '' // Dispara o alerta padrão do navegador
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty])
+
+  // Função auxiliar para atualizar o perfil e marcar como "sujo"
+  const handleChangePerfil = (field, value) => {
+    setPerfil(prev => ({ ...prev, [field]: value }))
+    setIsDirty(true)
+  }
+
   const handleUploadFoto = async (event) => {
     try {
-      setUploading(true)
       const file = event.target.files[0]
       if (!file) return
-      const fileName = `${user.id}-${Date.now()}.${file.name.split('.').pop()}`
+
+      const maxKB = 10240 
+      const fileSizeKB = file.size / 1024
+
+      if (fileSizeKB > maxKB) {
+        setErrorModal({
+          show: true,
+          title: 'Arquivo muito pesado',
+          message: `Sua imagem possui ${(fileSizeKB / 1024).toFixed(1)}MB. Para garantir a performance, o limite é de 10MB.`
+        })
+        event.target.value = '' 
+        return
+      }
+
+      setUploading(true)
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+      
       const { error: uploadError } = await supabase.storage.from('fotos-perfil').upload(fileName, file)
       if (uploadError) throw uploadError
+
       const { data: { publicUrl } } = supabase.storage.from('fotos-perfil').getPublicUrl(fileName)
+
+      const { error: dbError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
+        .eq('id', user.id)
+
+      if (dbError) throw dbError
+
       setPerfil(prev => ({ ...prev, avatar_url: publicUrl }))
+      setShowSuccess(true)
+      setTimeout(() => setShowSuccess(false), 2000)
+
     } catch (error) {
-      alert('Erro no upload')
+      setErrorModal({
+        show: true,
+        title: 'Erro de Sincronização',
+        message: 'Não conseguimos salvar sua nova foto. Verifique sua conexão.'
+      })
     } finally {
       setUploading(false)
     }
@@ -62,7 +115,7 @@ export default function PerfilDoCliente() {
     const numLimpo = whatsapp.replace(/\D/g, '')
     const { data } = await supabase
       .from('portfolio_projetos')
-      .select(`id, titulo, status, created_at, avaliacao_token, cliente_whatsapp, prestadores!inner(nome, foto_perfil, categoria:categorias(nome)), avaliacoes(id)`)
+      .select(`id, titulo, status, created_at, avaliacao_token, cliente_whatsapp, prestadores!inner(nome, foto_perfil, whatsapp, categoria:categorias(nome)), avaliacoes(id)`)
       .eq('cliente_whatsapp', numLimpo)
       .in('status', ['pendente', 'em_execucao', 'finalizado', 'concluido']) 
     
@@ -75,24 +128,29 @@ export default function PerfilDoCliente() {
   useEffect(() => {
     async function carregarDados() {
       const { data: { user: sessionUser } } = await supabase.auth.getUser()
-      if (sessionUser) {
-        setUser(sessionUser)
-        const { data: profileData } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle()
-        
-        setPerfil({
-          full_name: profileData?.full_name || sessionUser.user_metadata?.full_name || '',
-          avatar_url: profileData?.avatar_url || sessionUser.user_metadata?.avatar_url || '',
-          email: sessionUser.email,
-          whatsapp: aplicarMascara(profileData?.whatsapp || ''),
-          logradouro: profileData?.logradouro || '',
-          numero: profileData?.numero || '',
-          complemento: profileData?.complemento || '',
-          bairro: profileData?.bairro || '',
-          cidade: profileData?.cidade || '',
-          uf: profileData?.uf || ''
-        })
-        if (profileData?.whatsapp) buscarServicos(profileData.whatsapp)
+      
+      // VERIFICAÇÃO DE LOGIN: Se não houver usuário, redireciona para a Home
+      if (!sessionUser) {
+        router.push('/')
+        return
       }
+
+      setUser(sessionUser)
+      const { data: profileData } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle()
+      
+      setPerfil({
+        full_name: profileData?.full_name || sessionUser.user_metadata?.full_name || '',
+        avatar_url: profileData?.avatar_url || sessionUser.user_metadata?.avatar_url || '',
+        email: sessionUser.email,
+        whatsapp: aplicarMascara(profileData?.whatsapp || ''),
+        logradouro: profileData?.logradouro || '',
+        numero: profileData?.numero || '',
+        complemento: profileData?.complemento || '',
+        bairro: profileData?.bairro || '',
+        cidade: profileData?.cidade || '',
+        uf: profileData?.uf || ''
+      })
+      if (profileData?.whatsapp) buscarServicos(profileData.whatsapp)
     }
     carregarDados()
     supabase.from('estados').select('sigla, nome').order('nome').then(({data}) => data && setListaEstados(data))
@@ -122,9 +180,17 @@ export default function PerfilDoCliente() {
         updated_at: new Date().toISOString()
       })
       if (error) throw error
+      
+      setIsDirty(false) // Limpa o estado de alteração após salvar
       setShowSuccess(true)
       setTimeout(() => setShowSuccess(false), 3000)
-    } catch (err) { alert("Erro ao salvar") } finally { setLoading(false) }
+    } catch (err) { 
+      setErrorModal({
+        show: true,
+        title: 'Falha ao Salvar',
+        message: 'Ocorreu um problema ao registrar seus dados no servidor.'
+      })
+    } finally { setLoading(false) }
   }
 
   const getStatusInfo = (status) => {
@@ -151,6 +217,27 @@ export default function PerfilDoCliente() {
       <HeaderCliente nomeCliente={perfil.full_name?.split(' ')[0]} />
 
       <input type="file" ref={fileInputRef} onChange={handleUploadFoto} accept="image/*" className="hidden" />
+
+      {/* MODAL DE ERRO ELEGANTE */}
+      {errorModal.show && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto border border-red-100/50">
+              <AlertCircle size={32} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">{errorModal.title}</h3>
+              <p className="text-[13px] font-medium text-slate-500 leading-relaxed">{errorModal.message}</p>
+            </div>
+            <button 
+              onClick={() => setErrorModal({ ...errorModal, show: false })}
+              className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
 
       {showSuccess && (
         <div className="fixed top-20 md:top-24 left-0 right-0 z-[100] flex justify-center px-6 animate-in slide-in-from-top-10 duration-500">
@@ -226,10 +313,10 @@ export default function PerfilDoCliente() {
             <div className="space-y-5">
               {servicosFiltrados.length === 0 ? (
                 <div className="py-24 bg-white rounded-[3rem] border border-slate-50 shadow-sm flex flex-col items-center gap-5 text-center px-10">
-                   <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 border-2 border-dashed border-slate-200">
-                      <Briefcase size={28} />
-                   </div>
-                   <p className="text-[13px] font-medium text-slate-400 leading-relaxed">Nenhum projeto encontrado nesta categoria.</p>
+                    <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 border-2 border-dashed border-slate-200">
+                       <Briefcase size={28} />
+                    </div>
+                    <p className="text-[13px] font-medium text-slate-400 leading-relaxed">Nenhum projeto encontrado nesta categoria.</p>
                 </div>
               ) : (
                 servicosFiltrados.map((s) => {
@@ -242,7 +329,7 @@ export default function PerfilDoCliente() {
                     <div key={s.id} className="bg-white p-5 md:p-6 rounded-[2.5rem] md:rounded-[3rem] border border-slate-50 shadow-sm flex items-center group relative overflow-hidden transition-all hover:border-blue-100 active:scale-[0.99]">
                       <div className="flex items-center gap-4 md:gap-5 flex-1 min-w-0 pr-14 md:pr-20">
                         <div className="w-14 h-14 md:w-16 md:h-16 rounded-[1.2rem] md:rounded-[1.5rem] bg-slate-100 overflow-hidden shrink-0 shadow-inner">
-                            <img src={s.prestadores?.foto_perfil || '/placeholder-avatar.png'} className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500" />
+                            <img src={s.prestadores?.foto_perfil || '/placeholder-avatar.png'} className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-500" alt={s.prestadores?.nome} />
                         </div>
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
                           <div className="flex items-center mb-1">
@@ -268,9 +355,9 @@ export default function PerfilDoCliente() {
         ) : (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-12">
             <section className="bg-white rounded-[3rem] p-8 md:p-10 border border-slate-50 shadow-sm flex flex-col items-center relative overflow-hidden">
-              <div className="relative group cursor-pointer" onClick={() => fileInputRef.current.click()}>
+              <div className="relative group cursor-pointer" onClick={() => !uploading && fileInputRef.current.click()}>
                 <div className="w-28 h-28 md:w-32 md:h-32 rounded-[2.5rem] md:rounded-[3rem] bg-slate-50 border-4 border-white overflow-hidden shadow-xl flex items-center justify-center relative">
-                   {uploading ? <Loader2 className="animate-spin text-blue-500" /> : perfil.avatar_url ? <img src={perfil.avatar_url} className="w-full h-full object-cover" /> : <User size={40} className="text-slate-200" />}
+                   {uploading ? <Loader2 className="animate-spin text-blue-500" /> : perfil.avatar_url ? <img src={perfil.avatar_url} className="w-full h-full object-cover" alt="Avatar" /> : <User size={40} className="text-slate-200" />}
                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-white backdrop-blur-sm"><Camera size={20} /></div>
                 </div>
               </div>
@@ -284,52 +371,50 @@ export default function PerfilDoCliente() {
                 <div className="space-y-5">
                     <div>
                         <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Nome Completo</label>
-                        <input value={perfil.full_name} onChange={e => setPerfil({...perfil, full_name: e.target.value})} className={inputStyle} />
+                        <input value={perfil.full_name} onChange={e => handleChangePerfil('full_name', e.target.value)} className={inputStyle} />
                     </div>
                     <div>
                         <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">WhatsApp</label>
-                        <input value={perfil.whatsapp} onChange={e => setPerfil({...perfil, whatsapp: aplicarMascara(e.target.value)})} className={inputStyle} />
+                        <input value={perfil.whatsapp} onChange={e => handleChangePerfil('whatsapp', aplicarMascara(e.target.value))} className={inputStyle} />
                     </div>
                 </div>
 
                 <div className="pt-8 border-t border-slate-50 space-y-6">
                     <h3 className="font-bold text-[14px] text-slate-800 flex items-center gap-2 px-1"><MapPin size={18} className="text-blue-600" /> Endereço de Referência</h3>
                     
-                    {/* Logradouro e Número lado a lado com proporção correta */}
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-[3]">
                           <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Logradouro</label>
-                          <input placeholder="Rua / Avenida" value={perfil.logradouro} onChange={e => setPerfil({...perfil, logradouro: e.target.value})} className={inputStyle} />
+                          <input placeholder="Rua / Avenida" value={perfil.logradouro} onChange={e => handleChangePerfil('logradouro', e.target.value)} className={inputStyle} />
                         </div>
                         <div className="md:w-32 shrink-0">
                           <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Nº</label>
-                          <input placeholder="Ex: 123" value={perfil.numero} onChange={e => setPerfil({...perfil, numero: e.target.value})} className={inputStyle} />
+                          <input placeholder="Ex: 123" value={perfil.numero} onChange={e => handleChangePerfil('numero', e.target.value)} className={inputStyle} />
                         </div>
                     </div>
 
-                    {/* Bairro e Complemento lado a lado */}
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1">
                           <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Bairro</label>
-                          <input placeholder="Ex: Centro" value={perfil.bairro} onChange={e => setPerfil({...perfil, bairro: e.target.value})} className={inputStyle} />
+                          <input placeholder="Ex: Centro" value={perfil.bairro} onChange={e => handleChangePerfil('bairro', e.target.value)} className={inputStyle} />
                         </div>
                         <div className="flex-1">
                           <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Complemento</label>
-                          <input placeholder="Ex: Apto 12" value={perfil.complemento} onChange={e => setPerfil({...perfil, complemento: e.target.value})} className={inputStyle} />
+                          <input placeholder="Ex: Apto 12" value={perfil.complemento} onChange={e => handleChangePerfil('complemento', e.target.value)} className={inputStyle} />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
                         <div className="col-span-1">
                           <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">UF</label>
-                          <select value={perfil.uf} onChange={e => setPerfil({...perfil, uf: e.target.value, cidade: ''})} className={inputStyle}>
+                          <select value={perfil.uf} onChange={e => handleChangePerfil('uf', e.target.value)} className={inputStyle}>
                             <option value="">--</option>
                             {listaEstados.map(e => <option key={e.sigla} value={e.sigla}>{e.sigla}</option>)}
                           </select>
                         </div>
                         <div className="col-span-2">
                           <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 ml-2 mb-1.5">Cidade</label>
-                          <select disabled={!perfil.uf} value={perfil.cidade} onChange={e => setPerfil({...perfil, cidade: e.target.value})} className={inputStyle}>
+                          <select disabled={!perfil.uf} value={perfil.cidade} onChange={e => handleChangePerfil('cidade', e.target.value)} className={inputStyle}>
                             <option value="">Selecione...</option>
                             {listaCidades.map(c => <option key={c.nome} value={c.nome}>{c.nome}</option>)}
                           </select>
@@ -337,9 +422,18 @@ export default function PerfilDoCliente() {
                     </div>
                 </div>
 
-                <button onClick={atualizar} disabled={loading} className="w-full py-5 md:py-6 bg-blue-600 text-white rounded-[2rem] md:rounded-[2.5rem] font-bold text-[14px] shadow-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3 group">
-                    {loading ? <Loader2 size={20} className="animate-spin" /> : <><Save size={20} /> Salvar Alterações</>}
-                </button>
+                {/* MODIFICAÇÃO AQUI: Aviso contextual movido para cima do botão */}
+                <div>
+                  {isDirty && !showSuccess && (
+                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest text-center mb-4 flex items-center justify-center gap-1.5 animate-in fade-in duration-300">
+                      <AlertCircle size={14} /> Você tem alterações não salvas
+                    </p>
+                  )}
+                  <button onClick={atualizar} disabled={loading} className="w-full py-5 md:py-6 bg-blue-600 text-white rounded-[2rem] md:rounded-[2.5rem] font-black italic uppercase text-[11px] tracking-[0.2em] shadow-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3 group shadow-blue-100">
+                      {loading ? <Loader2 size={20} className="animate-spin" /> : <><Save size={20} /> Salvar Alterações</>}
+                  </button>
+                </div>
+
             </div>
           </div>
         )}
