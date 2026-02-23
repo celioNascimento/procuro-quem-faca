@@ -94,18 +94,31 @@ export default function PainelDoCliente() {
   )
 
   if (!session) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-slate-100 text-center space-y-8">
-        <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-50 rounded-[1.8rem] flex items-center justify-center mx-auto text-blue-600 shadow-inner">
-          <ShieldCheck size={32} className="md:w-10 md:h-10" />
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+      
+      {/* Identidade da Plataforma - Escala Profissional idêntica à Home */}
+      <div className="mb-10 md:mb-14 flex justify-center w-full">
+        <div className="block w-full max-w-[280px] md:max-w-[420px] transition-transform duration-300">
+          <img 
+            src="/logo.png" 
+            alt="Procuro Quem Faça" 
+            className="w-full h-auto object-contain drop-shadow-sm" 
+          />
+        </div>
+      </div>
+
+      {/* Card reduzido para max-w-sm para parecer "App nativo" */}
+      <div className="max-w-sm w-full bg-white rounded-[2.5rem] p-6 md:p-8 shadow-2xl border border-slate-100 text-center space-y-8">
+        <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-50 rounded-[1.5rem] flex items-center justify-center mx-auto text-blue-600 shadow-inner">
+          <ShieldCheck size={28} className="md:w-8 md:h-8" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl md:text-3xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">Acesse seus<br/>Contratos</h2>
+          <h2 className="text-xl md:text-2xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">Acesse seus<br/>Contratos</h2>
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Identidade Digital Necessária</p>
         </div>
         <button 
           onClick={loginComGoogle}
-          className="w-full py-4 md:py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] md:text-[11px] tracking-widest flex items-center justify-center gap-3 hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100"
+          className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] md:text-[11px] tracking-widest flex items-center justify-center gap-3 hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100 touch-manipulation"
         >
           <LogIn size={18} /> Entrar com Google
         </button>
@@ -163,7 +176,8 @@ export default function PainelDoCliente() {
                   </div>
                   <a 
                     href={`tel:${servico.prestadores.whatsapp}`} 
-                    className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 active:bg-green-600 active:text-white transition-all shadow-sm"
+                    // Adicionado touch-manipulation para evitar zoom no celular
+                    className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 active:bg-green-600 active:text-white transition-all shadow-sm touch-manipulation"
                   >
                     <Phone size={18} />
                   </a>
@@ -200,7 +214,8 @@ export default function PainelDoCliente() {
 
                   <button 
                     onClick={() => handleAceiteTecnico(servico)}
-                    className="w-full py-4 md:py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-blue-100"
+                    // Adicionado touch-manipulation para evitar zoom no celular
+                    className="w-full py-4 md:py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-blue-100 touch-manipulation"
                   >
                     Aceitar Início <ExternalLink size={14} />
                   </button>
