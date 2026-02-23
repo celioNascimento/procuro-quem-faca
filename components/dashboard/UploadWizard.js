@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { 
   Smartphone, Camera, X, Loader2, User, 
   CheckCircle2, ChevronRight, ChevronLeft, MoreHorizontal, 
-  Activity, Share2, Search, Check, MessageSquare, Phone, Send, Link as LinkIcon, AlertCircle
+  Activity, Share2, MessageSquare, AlertCircle, Link as LinkIcon
 } from 'lucide-react'
 
 export default function UploadWizard({ prestadorId, projetoExistente = null, onComplete }) {
@@ -26,6 +26,15 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
   const [salvandoLegenda, setSalvandoLegenda] = useState(false)
   const [projetosEncontrados, setProjetosEncontrados] = useState([])
 
+  useEffect(() => {
+    if (zoomEtapa) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => { document.body.style.overflow = 'unset' }
+  }, [zoomEtapa])
+
   const isProjetoConcluido = projetoStatus?.toLowerCase() === 'finalizado'
   const isProjetoPendente = ['pendente', 'em_registro'].includes(projetoStatus?.toLowerCase())
   
@@ -38,6 +47,26 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
 
   const hasLegendaSalva = (etapa) => !!(fotosData[etapa]?.legenda && fotosData[etapa].legenda.trim().length > 0)
   const canCloseZoom = isProjetoConcluido || comentariosZoom.length > 0 || hasLegendaSalva(zoomEtapa)
+
+  // FUNÇÃO DE COMPARTILHAMENTO ATUALIZADA
+  const handleShare = async () => {
+    const shareData = {
+      title: `Projeto: ${titulo}`,
+      text: `Olá! Acompanhe o progresso do serviço "${titulo}" em tempo real.`,
+      url: `${window.location.origin}/meus-servicos`
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        alert('Link do projeto copiado!');
+      }
+    } catch (err) {
+      console.error('Erro ao compartilhar:', err);
+    }
+  };
 
   const renderAvatar = (url) => url && url.trim() !== "" ? url : null;
 
@@ -84,8 +113,8 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
             .insert({
                 prestador_id: prestadorId,
                 titulo: titulo,
-                cliente_whatsapp: clienteWhatsapp,
-                cliente_nome: clienteNome || 'Cliente',
+                cliente_whatsapp: phoneDigitado,
+                cliente_nome: clienteNome.trim() || 'Cliente', // REGISTRO DO NOME CORRIGIDO AQUI
                 status: 'em_registro',
                 avaliacao_token: crypto.randomUUID()
             })
@@ -165,7 +194,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
           .from('portfolio_projetos')
           .select('id, titulo, status, cliente_nome, created_at')
           .eq('prestador_id', prestadorId)
-          .eq('cliente_whatsapp', clienteWhatsapp)
+          .eq('cliente_whatsapp', phoneLimpo)
           .order('created_at', { ascending: false })
 
         if (data && data.length > 0) {
@@ -312,7 +341,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                 </div>
                 <div className="p-5 px-8 border-t border-slate-50 flex items-center justify-between bg-white shrink-0">
                   <div className="flex items-center gap-6 text-slate-400">
-                     <Share2 size={22} className="hover:text-blue-600 cursor-pointer transition-colors" />
+                     <Share2 size={22} className="hover:text-blue-600 cursor-pointer transition-colors" onClick={handleShare} />
                   </div>
                   <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">ID: {projetoId?.split('-')[0] || '...'}</span>
                 </div>
@@ -349,21 +378,36 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
               </div>
 
               <div className={`p-4 rounded-[2rem] border transition-all flex flex-col justify-center gap-2 ${!isPhoneValid ? 'opacity-50 grayscale bg-slate-50' : 'bg-white border-slate-200'}`}>
-                <span className="text-[9px] font-bold uppercase text-slate-400 italic tracking-widest mb-1">Nome do Projeto</span>
+                <span className="text-[9px] font-bold uppercase text-slate-400 italic tracking-widest mb-1">Nome do Cliente</span>
                 {projetoId ? (
-                   <span className="text-sm font-black text-slate-800 uppercase italic truncate ml-1">{titulo}</span>
+                   <span className="text-sm font-black text-slate-800 uppercase italic truncate ml-1">{clienteNome}</span>
                 ) : (
                    <input 
                      type="text"
-                     placeholder="Ex: Manutenção Freio Volvo"
+                     placeholder="Ex: João Silva"
                      disabled={!isPhoneValid}
                      className="bg-transparent text-sm font-black text-slate-800 uppercase italic placeholder:text-slate-300 outline-none w-full ml-1"
-                     value={titulo}
-                     onChange={e => setTitulo(e.target.value)}
+                     value={clienteNome}
+                     onChange={e => setClienteNome(e.target.value)}
                    />
                 )}
               </div>
             </div>
+
+            {/* NOME DO PROJETO ADICIONADO ABAIXO DOS DADOS DO CLIENTE */}
+            {!projetoId && (
+              <div className={`p-4 rounded-[2rem] border transition-all flex flex-col justify-center gap-2 ${!isPhoneValid ? 'opacity-50 grayscale bg-slate-50' : 'bg-white border-slate-200'}`}>
+                <span className="text-[9px] font-bold uppercase text-slate-400 italic tracking-widest mb-1">Título do Projeto</span>
+                <input 
+                  type="text"
+                  placeholder="Ex: Manutenção Freio Volvo"
+                  disabled={!isPhoneValid}
+                  className="bg-transparent text-sm font-black text-slate-800 uppercase italic placeholder:text-slate-300 outline-none w-full ml-1"
+                  value={titulo}
+                  onChange={e => setTitulo(e.target.value)}
+                />
+              </div>
+            )}
 
             {projetosEncontrados.length > 0 && !projetoId && (
               <div className="bg-slate-50 p-6 rounded-[2.5rem] border border-dashed border-slate-200 animate-in slide-in-from-top-4">
@@ -389,7 +433,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
             )}
 
             <div className="relative space-y-4 before:absolute before:left-[47px] before:top-10 before:bottom-10 before:w-[2px] before:bg-slate-100 before:z-0">
-              {/* ETAPA 1 */}
               <div className={`relative z-10 flex items-center gap-6 group ${!isTitleValid ? 'opacity-40 pointer-events-none' : ''}`}>
                  <div className={`w-24 h-24 rounded-[2rem] shrink-0 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative ${fotosUrls[1] ? 'bg-white' : 'bg-slate-100/50 border-slate-200 hover:border-blue-300'}`}>
                     {fotosUrls[1] ? (
@@ -417,7 +460,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                         </button>
                     )}
                     
-                    {/* CONDUÇÃO PELA MÃO: Alerta de Legenda Pendente na Etapa 1 */}
                     {fotosUrls[1] && !hasLegendaSalva(1) && (
                       <div className="mt-2 flex items-center gap-1.5 text-amber-600 animate-in fade-in duration-500">
                         <AlertCircle size={10} className="shrink-0" />
@@ -429,7 +471,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                  </div>
               </div>
 
-              {/* ETAPA 2 */}
               <div className={`relative z-10 flex items-center gap-6 group ${!linkGerado ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
                  <div className={`w-24 h-24 rounded-[2rem] shrink-0 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative ${fotosUrls[2] ? 'bg-white' : 'bg-slate-100/50 border-slate-200 hover:border-blue-300'}`}>
                     {fotosUrls[2] ? (
@@ -454,7 +495,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                  </div>
               </div>
 
-              {/* ETAPA 3 */}
               <div className={`relative z-10 flex items-center gap-6 group ${!linkGerado ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
                  <div className={`w-24 h-24 rounded-[2rem] shrink-0 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative ${fotosUrls[3] ? 'bg-white' : 'bg-slate-100/50 border-slate-200 hover:border-blue-300'}`}>
                     {fotosUrls[3] ? (
@@ -499,7 +539,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
             </div>
 
             <div className="flex-1 p-6 md:p-10 flex flex-col bg-white overflow-hidden border-l border-slate-50">
-              <div className="mb-8 shrink-0">
+              <div className="mb-8 shrink-0 border-b border-slate-50 pb-6">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
                   <h3 className="text-lg font-black text-slate-900 uppercase italic leading-none">Legenda Técnica</h3>
@@ -556,7 +596,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                   <MessageSquare size={12} className="text-slate-300" />
                 </div>
                 {comentariosZoom.length === 0 ? (
-                  <p className="text-[11px] text-slate-300 italic py-4">Nenhum comentário nesta etapa.</p>
+                  <p className="text-[11px] text-slate-300 italic py-4 text-center">Nenhum comentário nesta etapa.</p>
                 ) : (
                   comentariosZoom.map((com) => (
                     <div key={com.id} className="flex gap-3 animate-in slide-in-from-left-2">
@@ -573,10 +613,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
               
               <button 
                 onClick={() => {
-                  if (!canCloseZoom) {
-                    alert('Por favor, adicione e salve uma legenda técnica para liberar a etapa.');
-                    return;
-                  }
+                  if (!canCloseZoom) return;
                   setZoomEtapa(null)
                 }} 
                 className={`mt-6 w-full py-5 rounded-[2rem] font-black uppercase italic text-[10px] tracking-widest transition-all active:scale-95 shrink-0 shadow-xl ${canCloseZoom ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
