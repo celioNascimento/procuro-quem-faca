@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   Clock, CheckCircle2, ChevronRight, User, Smartphone,
-  LayoutGrid, ShieldCheck, Search, Phone, LogIn, ExternalLink
+  LayoutGrid, ShieldCheck, Search, Phone, LogIn, ExternalLink, X, ZoomIn
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -13,6 +13,7 @@ export default function PainelDoCliente() {
   const [profile, setProfile] = useState(null)
   const [servicos, setServicos] = useState([])
   const [loading, setLoading] = useState(true)
+  const [zoomImage, setZoomImage] = useState(null) // Estado para o modal de zoom
 
   const loginComGoogle = async () => {
     await supabase.auth.signInWithOAuth({
@@ -95,8 +96,6 @@ export default function PainelDoCliente() {
 
   if (!session) return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-      
-      {/* Identidade da Plataforma - Escala Profissional idêntica à Home */}
       <div className="mb-10 md:mb-14 flex justify-center w-full">
         <div className="block w-full max-w-[280px] md:max-w-[420px] transition-transform duration-300">
           <img 
@@ -107,7 +106,6 @@ export default function PainelDoCliente() {
         </div>
       </div>
 
-      {/* Card reduzido para max-w-sm para parecer "App nativo" */}
       <div className="max-w-sm w-full bg-white rounded-[2.5rem] p-6 md:p-8 shadow-2xl border border-slate-100 text-center space-y-8">
         <div className="w-14 h-14 md:w-16 md:h-16 bg-blue-50 rounded-[1.5rem] flex items-center justify-center mx-auto text-blue-600 shadow-inner">
           <ShieldCheck size={28} className="md:w-8 md:h-8" />
@@ -128,9 +126,27 @@ export default function PainelDoCliente() {
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-slate-900 pb-24 font-sans antialiased">
+      
+      {/* MODAL DE ZOOM (Adicionado para avaliação do cliente) */}
+      {zoomImage && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setZoomImage(null)}
+        >
+          <button className="absolute top-6 right-6 text-white bg-white/10 p-3 rounded-full hover:bg-white/20 transition-colors">
+            <X size={24} />
+          </button>
+          <img 
+            src={zoomImage} 
+            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300" 
+            alt="Zoom do Registro"
+          />
+          <p className="absolute bottom-10 text-white/50 text-[10px] font-black uppercase tracking-[0.3em]">Toque fora para fechar</p>
+        </div>
+      )}
+
       <div className="max-w-xl mx-auto px-5 pt-8 md:pt-12 space-y-8">
 
-        {/* Header - Ajustado padding para mobile */}
         <div className="flex justify-between items-center bg-white p-4 md:p-5 rounded-[2rem] md:rounded-[2.5rem] border-2 border-slate-50 shadow-sm">
           <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
             <img 
@@ -151,7 +167,6 @@ export default function PainelDoCliente() {
           </div>
         </div>
 
-        {/* Título Principal - Responsividade no texto */}
         <div className="space-y-1 px-1">
           <h1 className="text-3xl md:text-4xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">
             Projetos<br />Em Aberto
@@ -159,7 +174,6 @@ export default function PainelDoCliente() {
           <p className="text-[9px] md:text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] italic">Aguardando seu aceite técnico</p>
         </div>
 
-        {/* Listagem de Serviços */}
         <div className="space-y-6">
           {servicos.map((servico) => {
             const fotoInicio = servico.portfolio_fotos?.find(f => f.ordem === 1)
@@ -176,7 +190,6 @@ export default function PainelDoCliente() {
                   </div>
                   <a 
                     href={`tel:${servico.prestadores.whatsapp}`} 
-                    // Adicionado touch-manipulation para evitar zoom no celular
                     className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 active:bg-green-600 active:text-white transition-all shadow-sm touch-manipulation"
                   >
                     <Phone size={18} />
@@ -199,9 +212,20 @@ export default function PainelDoCliente() {
                     </div>
                   </div>
 
-                  <div className="relative aspect-video rounded-[1.8rem] md:rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner">
+                  {/* Container de Imagem com Acionador de Zoom */}
+                  <div 
+                    onClick={() => fotoInicio && setZoomImage(fotoInicio.url_foto)}
+                    className="relative aspect-video rounded-[1.8rem] md:rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner group/img cursor-zoom-in active:scale-[0.99] transition-transform"
+                  >
                     {fotoInicio ? (
-                      <img src={fotoInicio.url_foto} className="w-full h-full object-cover" alt="Início" />
+                      <>
+                        <img src={fotoInicio.url_foto} className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105" alt="Início" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                          <div className="bg-white/20 backdrop-blur-md p-3 rounded-full text-white border border-white/30">
+                            <ZoomIn size={20} />
+                          </div>
+                        </div>
+                      </>
                     ) : (
                       <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300 italic text-[9px] uppercase font-black text-center px-4">
                         Aguardando Foto de Início
@@ -214,7 +238,6 @@ export default function PainelDoCliente() {
 
                   <button 
                     onClick={() => handleAceiteTecnico(servico)}
-                    // Adicionado touch-manipulation para evitar zoom no celular
                     className="w-full py-4 md:py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-blue-100 touch-manipulation"
                   >
                     Aceitar Início <ExternalLink size={14} />
@@ -225,7 +248,6 @@ export default function PainelDoCliente() {
           })}
         </div>
 
-        {/* Card Informativo - Padding reduzido no mobile */}
         <div className="bg-blue-600 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-100">
           <div className="absolute -top-4 -right-4 opacity-10 rotate-12">
             <ShieldCheck size={100} strokeWidth={3} />
