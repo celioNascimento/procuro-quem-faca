@@ -114,7 +114,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                 prestador_id: prestadorId,
                 titulo: titulo,
                 cliente_whatsapp: phoneDigitado,
-                cliente_nome: clienteNome.trim() || 'Cliente', // REGISTRO DO NOME CORRIGIDO AQUI
+                cliente_nome: clienteNome.trim() || 'Cliente', 
                 status: 'em_registro',
                 avaliacao_token: crypto.randomUUID()
             })
@@ -350,7 +350,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
 
         ) : (
         
-          <div className="p-8 space-y-8">
+          <div className="p-8 space-y-8 overflow-y-auto max-h-[85vh] custom-scrollbar">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className={`p-4 rounded-[2rem] border transition-all flex flex-col justify-center gap-2 ${isSelfNumber ? 'bg-red-50/50 border-red-200' : isPhoneValid ? 'bg-blue-50/30 border-blue-100' : 'bg-white border-slate-200'}`}>
                  <div className="flex items-center gap-2 mb-1">
@@ -491,7 +491,11 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                       </span>
                       <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 2: Serviço</span>
                     </div>
-                    <h4 className="text-xs font-semibold text-slate-700 italic mt-1">{projetoStatus === 'em_execucao' || fotosUrls[2] ? "Em andamento" : "Aguardando..."}</h4>
+                    {!(projetoStatus?.toLowerCase() === 'finalizado' || fotosUrls[3]) && (
+                      <h4 className="text-xs font-semibold text-slate-700 italic mt-1">
+                        {isProjetoPendente ? "Aguardando Aceite" : (projetoStatus === 'em_execucao' || fotosUrls[2] ? "Em andamento" : "Aguardando...")}
+                      </h4>
+                    )}
                  </div>
               </div>
 
