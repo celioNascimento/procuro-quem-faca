@@ -4,7 +4,8 @@ import { supabase } from '@/lib/supabase'
 import { 
   Smartphone, Camera, X, Loader2, User, 
   CheckCircle2, ChevronRight, ChevronLeft, MoreHorizontal, 
-  Activity, Share2, MessageSquare, AlertCircle, Link as LinkIcon
+  Activity, Share2, MessageSquare, AlertCircle, Link as LinkIcon,
+  CloudCheck, RefreshCw
 } from 'lucide-react'
 
 export default function UploadWizard({ prestadorId, projetoExistente = null, onComplete }) {
@@ -25,6 +26,24 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
   const [legendaEdit, setLegendaEdit] = useState('')
   const [salvandoLegenda, setSalvandoLegenda] = useState(false)
   const [projetosEncontrados, setProjetosEncontrados] = useState([])
+  
+  // NOVO: Estado para feedback do Autosave
+  const [statusTitulo, setStatusTitulo] = useState('ocioso') // ocioso, salvando, salvo
+
+  // --- FUNÇÕES DE UTILIDADE E VALIDAÇÃO ---
+  const hasLegendaSalva = (etapa) => !!(fotosData[etapa]?.legenda && fotosData[etapa].legenda.trim().length > 0)
+  
+  const isProjetoConcluido = projetoStatus?.toLowerCase() === 'finalizado'
+  const isProjetoPendente = ['pendente', 'em_registro'].includes(projetoStatus?.toLowerCase())
+  
+  const cleanPhone = (phone) => phone?.replace(/\D/g, '') || ''
+  const phoneDigitado = cleanPhone(clienteWhatsapp)
+  const phonePrestador = cleanPhone(prestadorInfo.whatsapp) 
+  const isSelfNumber = phoneDigitado.length >= 10 && phoneDigitado === phonePrestador
+  const isPhoneValid = phoneDigitado.length >= 10 && !isSelfNumber
+  const isTitleValid = titulo.trim().length > 3
+  
+  const canCloseZoom = isProjetoConcluido || comentariosZoom.length > 0 || hasLegendaSalva(zoomEtapa)
 
   useEffect(() => {
     if (zoomEtapa) {
@@ -35,25 +54,23 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
     return () => { document.body.style.overflow = 'unset' }
   }, [zoomEtapa])
 
-  const isProjetoConcluido = projetoStatus?.toLowerCase() === 'finalizado'
-  const isProjetoPendente = ['pendente', 'em_registro'].includes(projetoStatus?.toLowerCase())
-  
-  const cleanPhone = (phone) => phone?.replace(/\D/g, '') || ''
-  const phoneDigitado = cleanPhone(clienteWhatsapp)
-  const phonePrestador = cleanPhone(prestadorInfo.whatsapp) 
-  const isSelfNumber = phoneDigitado.length >= 10 && phoneDigitado === phonePrestador
-  const isPhoneValid = phoneDigitado.length >= 10 && !isSelfNumber
-  const isTitleValid = titulo.trim().length > 3
-
-  const hasLegendaSalva = (etapa) => !!(fotosData[etapa]?.legenda && fotosData[etapa].legenda.trim().length > 0)
-  const canCloseZoom = isProjetoConcluido || comentariosZoom.length > 0 || hasLegendaSalva(zoomEtapa)
-
-  // FUNÇÃO DE COMPARTILHAMENTO ATUALIZADA
   const handleShare = async () => {
+    let token = ''
+    if (projetoId) {
+      const { data: projData } = await supabase
+        .from('portfolio_projetos')
+        .select('avaliacao_token')
+        .eq('id', projetoId)
+        .single()
+      token = projData?.avaliacao_token || ''
+    }
+
+    const linkProjeto = `${window.location.origin}/meus-servicos${token ? `?token=${token}` : ''}`
+
     const shareData = {
       title: `Projeto: ${titulo}`,
-      text: `Olá! Acompanhe o progresso do serviço "${titulo}" em tempo real.`,
-      url: `${window.location.origin}/meus-servicos`
+      text: `Olá! Acompanhe o progresso do serviço "${titulo}" em tempo real através deste link exclusivo.`,
+      url: linkProjeto
     };
 
     try {
@@ -173,15 +190,45 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
     }
   }
 
+  // AJUSTADO: handleAtualizarTitulo com feedback visual
+  const handleAtualizarTitulo = async () => {
+    if (!projetoId || !isTitleValid) return
+    setStatusTitulo('salvando')
+    try {
+      const { error } = await supabase
+        .from('portfolio_projetos')
+        .update({ titulo: titulo.trim() })
+        .eq('id', projetoId)
+      
+      if (!error) {
+        setStatusTitulo('salvo')
+        setTimeout(() => setStatusTitulo('ocioso'), 3000) // Volta ao ocioso após 3s
+      }
+    } catch (err) {
+      console.error("Erro ao atualizar título:", err)
+      setStatusTitulo('ocioso')
+    }
+  }
+
   const gerarLinkAceite = async () => {
       setLinkGerado(true)
+      
       if (projetoStatus === 'em_registro') {
           await supabase.from('portfolio_projetos').update({ status: 'pendente' }).eq('id', projetoId)
           setProjetoStatus('pendente')
       }
+
+      const { data: projData } = await supabase
+        .from('portfolio_projetos')
+        .select('avaliacao_token')
+        .eq('id', projetoId)
+        .single()
+        
+      const token = projData?.avaliacao_token
       const numTelefone = clienteWhatsapp.replace(/\D/g, '')
-      const linkProjeto = `${window.location.origin}/meus-servicos` 
-      const mensagem = `Olá${clienteNome ? ` ${clienteNome}` : ''}! O projeto *${titulo}* foi iniciado.\n\nVocê pode acompanhar todas as etapas, fotos e adicionar comentários através do link abaixo:\n\n👉 ${linkProjeto}\n\nAguardamos seu aceite para seguirmos com o serviço!`
+      
+      const linkProjeto = `${window.location.origin}/meus-servicos${token ? `?token=${token}` : ''}` 
+      const mensagem = `Olá${clienteNome ? ` ${clienteNome}` : ''}! O projeto *${titulo}* foi iniciado.\n\nVocê pode acompanhar todas as etapas, fotos e adicionar comentários através do link exclusivo abaixo:\n\n👉 ${linkProjeto}\n\nAguardamos seu aceite para seguirmos com o serviço!`
       const urlWhatsapp = `https://wa.me/55${numTelefone}?text=${encodeURIComponent(mensagem)}`
       window.open(urlWhatsapp, '_blank')
   }
@@ -394,20 +441,39 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
               </div>
             </div>
 
-            {/* NOME DO PROJETO ADICIONADO ABAIXO DOS DADOS DO CLIENTE */}
-            {!projetoId && (
-              <div className={`p-4 rounded-[2rem] border transition-all flex flex-col justify-center gap-2 ${!isPhoneValid ? 'opacity-50 grayscale bg-slate-50' : 'bg-white border-slate-200'}`}>
-                <span className="text-[9px] font-bold uppercase text-slate-400 italic tracking-widest mb-1">Título do Projeto</span>
-                <input 
-                  type="text"
-                  placeholder="Ex: Manutenção Freio Volvo"
-                  disabled={!isPhoneValid}
-                  className="bg-transparent text-sm font-black text-slate-800 uppercase italic placeholder:text-slate-300 outline-none w-full ml-1"
-                  value={titulo}
-                  onChange={e => setTitulo(e.target.value)}
-                />
+            <div className={`p-4 rounded-[2rem] border transition-all flex flex-col justify-center gap-2 ${!isPhoneValid ? 'opacity-50 grayscale bg-slate-50' : 'bg-white border-slate-200 focus-within:border-blue-300 relative'}`}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[9px] font-bold uppercase text-slate-400 italic tracking-widest">Título do Projeto</span>
+                
+                {/* FEEDBACK VISUAL DO AUTOSAVE */}
+                {projetoId && (
+                  <div className="flex items-center gap-1.5 animate-in fade-in duration-300">
+                    {statusTitulo === 'salvando' && (
+                      <>
+                        <RefreshCw size={10} className="animate-spin text-blue-500" />
+                        <span className="text-[8px] font-black text-blue-500 uppercase tracking-tighter">Sincronizando...</span>
+                      </>
+                    )}
+                    {statusTitulo === 'salvo' && (
+                      <>
+                        <CloudCheck size={12} className="text-green-500" />
+                        <span className="text-[8px] font-black text-green-500 uppercase tracking-tighter">Salvo</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
+              
+              <input 
+                type="text"
+                placeholder="Ex: Manutenção Freio Volvo"
+                disabled={!isPhoneValid}
+                className="bg-transparent text-sm font-black text-slate-800 uppercase italic placeholder:text-slate-300 outline-none w-full ml-1"
+                value={titulo}
+                onChange={e => setTitulo(e.target.value)}
+                onBlur={handleAtualizarTitulo}
+              />
+            </div>
 
             {projetosEncontrados.length > 0 && !projetoId && (
               <div className="bg-slate-50 p-6 rounded-[2.5rem] border border-dashed border-slate-200 animate-in slide-in-from-top-4">
