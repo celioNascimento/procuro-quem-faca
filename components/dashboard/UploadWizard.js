@@ -490,7 +490,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                         <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">Status: {p.status}</p>
                       </div>
                       <div className="flex items-center gap-2 text-blue-600 font-black text-[9px] uppercase italic opacity-0 group-hover:opacity-100 transition-opacity">
-                        Acoplar <ChevronRight size={14} />
+                       Visualizar<ChevronRight size={14} />
                       </div>
                     </button>
                   ))}

@@ -92,6 +92,20 @@ export default function PerfilDoCliente() {
       }
 
       setUploading(true)
+
+      // LOGICA DE DELEÇÃO DA FOTO ANTIGA INSERIDA AQUI
+      if (perfil.avatar_url) {
+        try {
+          const urlParts = perfil.avatar_url.split('/')
+          const oldFileName = urlParts[urlParts.length - 1]
+          if (oldFileName) {
+            await supabase.storage.from('fotos-perfil').remove([oldFileName])
+          }
+        } catch (removeError) {
+          console.warn("Aviso: Foto antiga não pôde ser removida", removeError)
+        }
+      }
+
       const fileExt = file.name.split('.').pop()
       const fileName = `${user.id}-${Date.now()}.${fileExt}`
       

@@ -1,17 +1,21 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react' // Adicionado useRef
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ModalConfirmacao from '@/components/ui/ModalConfirmacao'
+import { Loader2, Camera, User, AlertCircle } from 'lucide-react' // Adicionados ícones necessários
 
 export default function EditarPerfilTab() {
   const router = useRouter()
+  const fileInputRef = useRef(null) // Referência para o input de arquivo
   const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false) // Estado de upload de foto
   const [status, setStatus] = useState('')
   const [tentouEnviar, setTentouEnviar] = useState(false)
   const [userLogado, setUserLogado] = useState(null)
   const [isModalExcluirOpen, setIsModalExcluirOpen] = useState(false)
+  const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' }) // Modal de erro elegante
 
   // Listas do banco
   const [listaGrupos, setListaGrupos] = useState([])
@@ -35,7 +39,6 @@ export default function EditarPerfilTab() {
     status: 'ativo'
   })
 
-  // AJUSTE ESTÉTICO: font-medium e borda suave
   const inputStyle = () => `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-[14px] text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400`
 
   const aplicarMascaraWhatsapp = (v) => {
@@ -90,22 +93,60 @@ export default function EditarPerfilTab() {
     await carregarCategorias(gid);
   };
 
+  // LOGICA DE UPLOAD REVISADA E PROTEGIDA COM DELEÇÃO DA FOTO ANTIGA
   const fazerUploadFoto = async (e) => {
-    const arquivo = e.target.files[0]
-    if (!arquivo) return
-    setStatus('Subindo foto...')
     try {
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}`
+      const arquivo = e.target.files[0]
+      if (!arquivo) return
+
+      const maxKB = 10240 
+      const fileSizeKB = arquivo.size / 1024
+
+      if (fileSizeKB > maxKB) {
+        setErrorModal({
+          show: true,
+          title: 'Arquivo muito pesado',
+          message: `Sua imagem possui ${(fileSizeKB / 1024).toFixed(1)}MB. Para garantir a performance, o limite é de 10MB.`
+        })
+        e.target.value = '' 
+        return
+      }
+
+      setUploading(true)
+
+      // DELEÇÃO DA FOTO ANTIGA
+      if (formData.foto_perfil) {
+        try {
+          const urlParts = formData.foto_perfil.split('/')
+          const oldFileName = urlParts[urlParts.length - 1]
+          if (oldFileName) {
+            await supabase.storage.from('fotos-perfil').remove([oldFileName])
+          }
+        } catch (removeError) {
+          console.warn("Aviso: Foto antiga não pôde ser removida", removeError)
+        }
+      }
+
+      const fileExt = arquivo.name.split('.').pop()
+      const fileName = `${userLogado.id}-${Date.now()}.${fileExt}`
+
       const { error: uploadError } = await supabase.storage.from('fotos-perfil').upload(fileName, arquivo)
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from('fotos-perfil').getPublicUrl(fileName)
+      
       setFormData(prev => ({ ...prev, foto_perfil: publicUrl }))
-      setStatus('Foto ok!')
-    } catch (err) {
-      setStatus('Erro no upload');
-    } finally {
+      setStatus('✅ Foto atualizada!')
       setTimeout(() => setStatus(''), 2000)
+
+    } catch (err) {
+      setErrorModal({
+        show: true,
+        title: 'Erro no Upload',
+        message: 'Não conseguimos processar sua imagem. Tente novamente ou use outro arquivo.'
+      })
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -123,7 +164,6 @@ export default function EditarPerfilTab() {
       router.push('/')
       router.refresh()
     } catch (err) {
-      console.error(err)
       setStatus('❌ Erro na exclusão')
     }
   }
@@ -233,25 +273,11 @@ export default function EditarPerfilTab() {
 
       if (error) throw error;
 
-      await supabase.from('logs_atividades').insert([{
-        usuario_id: userLogado.id,
-        usuario_email: userLogado.email,
-        acao: 'PERFIL_ATUALIZADO',
-        entidade_tipo: 'configuracao',
-        entidade_id: String(prestadorSalvo.id),
-        detalhes: {
-          plataforma: 'web',
-          campos_alterados: Object.keys(payload).filter(k => payload[k] !== formData[k])
-        }
-      }]);
-
       setStatus('✅ Perfil Atualizado!');
       setTentouEnviar(false);
     } catch (err) {
-      console.error("Erro detalhado do Supabase:", err);
       setStatus(`❌ Erro: ${err.message || 'Verifique os dados'}`);
     }
-
     setTimeout(() => setStatus(''), 3000);
   };
 
@@ -263,6 +289,28 @@ export default function EditarPerfilTab() {
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans antialiased">
+      
+      {/* MODAL DE ERRO ELEGANTE INTEGRADO */}
+      {errorModal.show && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto border border-red-100/50">
+              <AlertCircle size={32} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">{errorModal.title}</h3>
+              <p className="text-[13px] font-medium text-slate-500 leading-relaxed">{errorModal.message}</p>
+            </div>
+            <button 
+              onClick={() => setErrorModal({ ...errorModal, show: false })}
+              className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-5xl mx-auto px-4 pt-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <header className="border-b border-slate-100 pb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Configurações de Perfil</h2>
@@ -272,20 +320,39 @@ export default function EditarPerfilTab() {
         <form onSubmit={handleSalvar} className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="col-span-1 md:col-span-4 space-y-6">
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center gap-6 sticky top-24">
-              {/* FOTO: SEM PONTILHADO, BORDA SÓLIDA E SOMBRA */}
-              <div className="relative w-40 h-40 md:w-48 md:h-48 rounded-[3.5rem] bg-slate-50 border-4 border-white flex items-center justify-center overflow-hidden group transition-all hover:scale-[1.02] shadow-xl">
-                {formData.foto_perfil ? (
+              
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={fazerUploadFoto} 
+                accept="image/*" 
+                className="hidden" 
+              />
+
+              <div 
+                onClick={() => !uploading && fileInputRef.current.click()}
+                className="relative w-40 h-40 md:w-48 md:h-48 rounded-[3.5rem] bg-slate-50 border-4 border-white flex items-center justify-center overflow-hidden group transition-all hover:scale-[1.02] shadow-xl cursor-pointer"
+              >
+                {uploading ? (
+                  <Loader2 className="animate-spin text-blue-500" size={32} />
+                ) : formData.foto_perfil ? (
                   <img src={formData.foto_perfil} className="w-full h-full object-cover" alt="Foto" />
                 ) : (
-                  <span className="text-slate-300 font-bold text-[10px] uppercase tracking-widest">Foto</span>
+                  <User size={48} className="text-slate-200" />
                 )}
-                <input type="file" accept="image/*" onChange={fazerUploadFoto} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-white font-bold text-[10px] uppercase tracking-widest z-20">Alterar Foto</div>
+                
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-white font-bold text-[10px] uppercase tracking-widest z-20 backdrop-blur-sm">
+                  <Camera size={20} className="mb-1" />
+                  <span className="absolute mt-8">Alterar Foto</span>
+                </div>
               </div>
+
               <div className="text-center space-y-3">
                 <div className="flex items-center justify-center gap-2">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Seu perfil está ativo</span>
+                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                    {uploading ? 'Sincronizando foto...' : 'Seu perfil está ativo'}
+                  </span>
                 </div>
                 <p className="text-[11px] font-medium text-slate-400 px-4 leading-relaxed">Clique na imagem para atualizar sua foto de exibição</p>
               </div>

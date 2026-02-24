@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
-import { Lock, Loader2 } from 'lucide-react'
+import { Lock } from 'lucide-react'
 
 export default function PerfilPage() {
   const [abaAtiva, setAbaAtiva] = useState('perfil') // 'perfil' ou 'portfolio'
@@ -12,13 +12,10 @@ export default function PerfilPage() {
 
   useEffect(() => {
     async function verificarPerfil() {
-      // Usamos getSession para garantir a recuperação imediata do ID do usuário
       const { data: { session } } = await supabase.auth.getSession()
       const user = session?.user
 
       if (user?.id) {
-        // CORREÇÃO CIRÚRGICA: Filtramos por 'user_id' para evitar o erro 400
-        // maybeSingle() evita erros caso o perfil ainda não exista no banco
         const { data: prestador } = await supabase
           .from('prestadores')
           .select('whatsapp, categoria_id')
@@ -28,7 +25,7 @@ export default function PerfilPage() {
         if (prestador?.whatsapp && prestador?.categoria_id) {
           setCadastroCompleto(true)
         } else {
-          setAbaAtiva('perfil') // Força a aba perfil se incompleto
+          setAbaAtiva('perfil')
           setCadastroCompleto(false)
         }
       }
@@ -41,7 +38,7 @@ export default function PerfilPage() {
     <div className="bg-[#F8FAFC] min-h-screen">
       <main className="max-w-5xl mx-auto p-5 md:p-8">
         
-        {/* Navegação de Abas Premium - Refinada */}
+        {/* Navegação de Abas - Foco em Perfil e Portfólio */}
         <div className="flex w-full md:w-fit bg-slate-100/60 p-1.5 rounded-[2.5rem] border border-slate-100 mb-8 overflow-x-auto custom-scrollbar">
           <button 
             onClick={() => setAbaAtiva('perfil')}
@@ -70,7 +67,7 @@ export default function PerfilPage() {
           </button>
         </div>
 
-        {/* Renderização Condicional */}
+        {/* Renderização Condicional das Tabs */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           {validando ? (
             <div className="h-64 flex flex-col items-center justify-center gap-4">
