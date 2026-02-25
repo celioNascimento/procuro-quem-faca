@@ -8,6 +8,7 @@ import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import { MapPin, Filter, Sparkles, CheckCircle2 } from 'lucide-react'
 
 import PrestadorCard from '@/components/cards/PrestadorCard'
+import AnuncioCard from '@/components/cards/AnuncioCard' // Inclusão Cirúrgica 01
 
 function ListaConteudo() {
   const searchParams = useSearchParams()
@@ -86,13 +87,13 @@ function ListaConteudo() {
   }, [prestadoresBase, filtroCidNome]);
 
   const bannerTopo = anuncios.find(a => a.posicao === 'topo' && a.status);
+  const anuncioMeio = anuncios.find(a => a.posicao === 'meio' && a.status); // Inclusão Cirúrgica 02
 
   return (
     <div className="max-w-4xl mx-auto px-5 md:px-6 space-y-8">
       
-      {/* FILTRO DINÂMICO DE CIDADES - Estilo Pílula Premium */}
+      {/* FILTRO DINÂMICO DE CIDADES */}
       {cidadesDisponiveis.length > 0 && (
-        /* AJUSTE: py reduzido para 3 para diminuir a altura da barra branca */
         <div className="sticky top-16 md:top-20 z-40 -mx-6 px-6 py-3 mb-4 bg-[#FDFDFD]/95 backdrop-blur-md border-b border-slate-100/80 shadow-sm transition-all">
           <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2">
             <div className="flex items-center gap-2 bg-slate-100/80 px-4 py-2.5 rounded-2xl shrink-0">
@@ -119,7 +120,7 @@ function ListaConteudo() {
         </div>
       )}
 
-      {/* BANNER DE ANÚNCIO - Visual Nativo */}
+      {/* BANNER DE ANÚNCIO - Topo */}
       {!loading && bannerTopo && (
         <div className="relative group rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-white animate-in fade-in zoom-in-95 duration-700">
            <img src={bannerTopo.imagem_url} className="w-full h-36 md:h-48 object-cover transition-transform duration-1000 group-hover:scale-105" alt="Destaque" />
@@ -139,7 +140,7 @@ function ListaConteudo() {
         <div className="flex items-center justify-between px-2 border-l-4 border-blue-600 ml-1 py-1">
            <div className="flex flex-col">
               <h3 className="text-[13px] md:text-[14px] font-bold text-slate-800 leading-none">
-                Profissionais em Londrina
+                Profissionais em {filtroCidNome || 'sua região'}
               </h3>
               <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">Resultados da busca</p>
            </div>
@@ -156,8 +157,15 @@ function ListaConteudo() {
           </div>
         ) : (
           <div className="space-y-4">
-            {prestadoresExibidos.map((p) => (
-              <PrestadorCard key={p.id} prestador={p} />
+            {prestadoresExibidos.map((p, index) => (
+              <div key={p.id}>
+                <PrestadorCard prestador={p} />
+                
+                {/* Inclusão Cirúrgica 03: Injeção de Anúncio a cada 3 cards */}
+                {(index + 1) % 3 === 0 && anuncioMeio && (
+                  <AnuncioCard anuncio={anuncioMeio} />
+                )}
+              </div>
             ))}
           </div>
         )}
@@ -182,7 +190,6 @@ export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
       <Header href="/" />
-      {/* AJUSTE: pt reduzido de 24 para 20 no mobile para aproximar do header */}
       <div className="pt-15 md:pt-24">
         <Suspense fallback={null}>
           <ListaConteudo />

@@ -3,6 +3,7 @@ import "./globals.css";
 import FooterWrapper from "@/components/FooterWrapper";
 import CookieConsent from "@/components/CookieConsent"; 
 import LogAcesso from "@/components/LogAcesso"; 
+import Script from "next/script"; // Importação necessária para o script do Google
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,6 +62,15 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`} 
       suppressHydrationWarning 
     >
+      <head>
+        {/* SCRIPT GLOBAL DO ADSENSE - Carregamento otimizado */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7818876710105434"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+      </head>
       <body className="font-sans antialiased min-h-screen flex flex-col bg-white text-slate-900">
         
         <div className="flex-grow flex flex-col">
