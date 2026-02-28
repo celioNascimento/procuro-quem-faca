@@ -77,32 +77,35 @@ export default function Home() {
   if (!mounted) return <main className="min-h-screen bg-[#FDFDFD]" />
 
   return (
-    <main className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center font-sans relative antialiased overflow-x-hidden">
+    <main className="min-h-screen bg-[#FDFDFD] flex flex-col items-center font-sans relative antialiased overflow-x-hidden">
       
-      {/* BACKGROUND DECO: Um leve gradiente para profundidade */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-50/20 via-transparent to-transparent -z-0" />
+      {/* BACKGROUND DECO: Gradiente sutil fixo no topo */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-50/40 via-transparent to-transparent -z-0 pointer-events-none" />
 
-      <div className="w-full flex flex-col items-center animate-in fade-in zoom-in-95 duration-1000 relative z-10">
+      <div className="w-full flex flex-col items-center animate-in fade-in duration-700 relative z-10">
 
         <HeroSection onLog={registrarLog} />
 
-        {/* SEÇÃO DE BUSCA CENTRALIZADA */}
-        <section className="w-full max-w-4xl px-6 flex flex-col items-center text-center">
+        {/* SEÇÃO DE BUSCA: Ajustada para não ser centralizada verticalmente no mobile */}
+        <section className="w-full max-w-4xl px-6 pt-12 md:pt-32 pb-12 flex flex-col items-center text-center">
           
-          {/* CONTAINER DA LOGO: Monumentalidade e Respiro */}
-          <div className="mb-4 md:mb-8 transition-all duration-700 ease-out translate-y-0 opacity-100">
-            <Link href="/" className="block w-full max-w-[260px] md:max-w-[580px] transition-transform hover:scale-[1.02] active:scale-95 duration-500">
+          {/* CONTAINER DA LOGO: Aproximação técnica da barra de busca */}
+          <div className="mb-0 transition-transform duration-500">
+            <Link href="/" className="block w-full max-w-[240px] md:max-w-[540px] transition-transform active:scale-95 duration-300">
               <img
                 src="/logo.png"
                 alt="Logo Procuro quem Faça"
-                className="w-full h-auto object-contain drop-shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
+                className="w-full h-auto object-contain drop-shadow-sm"
               />
             </Link>
           </div>
 
-          {/* FORMULÁRIO DE BUSCA: Sobreposição Elegante */}
-          <div className="w-full mb-12 -mt-6 md:-mt-16 perspective-1000">
-            <div className="w-full max-w-[640px] mx-auto shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] rounded-[2rem]">
+          {/* FORMULÁRIO DE BUSCA: 
+              -mt-10 no mobile aproxima a barra da logo de forma agressiva e elegante.
+              Removida a sombra excessiva do container pai para usar apenas a interna do componente.
+          */}
+          <div className="w-full mb-10 -mt-10 md:-mt-16 relative z-20">
+            <div className="w-full max-w-[620px] mx-auto">
               <SearchForm
                 busca={busca}
                 setBusca={setBusca}
@@ -112,19 +115,19 @@ export default function Home() {
             </div>
           </div>
 
-          {/* SUGESTÕES: Tags Modernas */}
+          {/* SUGESTÕES: Tags mais compactas */}
           {sugestoes.length > 0 && (
-            <div className="flex flex-col items-center gap-5 animate-in slide-in-from-bottom-6 duration-700">
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.3em]">
-                {busca.length > 0 ? 'Serviços Relacionados' : 'Sugestões em destaque'}
+            <div className="flex flex-col items-center gap-4 animate-in slide-in-from-bottom-4 duration-500">
+              <span className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] opacity-70">
+                {busca.length > 0 ? 'Encontramos para você' : 'Sugestões em destaque'}
               </span>
               
-              <div className="flex flex-wrap justify-center gap-2 md:gap-3">
+              <div className="flex flex-wrap justify-center gap-1.5 md:gap-2 max-w-[320px] md:max-w-none">
                 {sugestoes.map((item, index) => (
                   <button
                     key={index}
                     onClick={() => dispararBusca(null, item)}
-                    className="bg-white/80 backdrop-blur-sm text-slate-500 px-5 py-2.5 rounded-full text-[10px] md:text-[12px] font-bold border border-slate-100 hover:border-blue-500 hover:text-blue-600 hover:bg-white transition-all hover:shadow-md active:scale-90"
+                    className="bg-white text-slate-500 px-4 py-1.5 md:px-5 md:py-2 rounded-2xl text-[10px] md:text-[11px] font-semibold border border-slate-100 hover:border-blue-500 hover:text-blue-600 transition-all active:scale-95 shadow-sm"
                   >
                     {item}
                   </button>
@@ -134,12 +137,12 @@ export default function Home() {
           )}
         </section>
 
-        {/* FOOTER DISCRETO */}
-        <footer className="mt-20 md:mt-32 pb-12 opacity-40">
-           <div className="flex flex-col items-center gap-4">
-             <div className="h-px w-12 bg-slate-200" />
-             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">
-                Londrina • Paraná
+        {/* FOOTER: Mantido discreto no final */}
+        <footer className="mt-auto py-10 opacity-40">
+           <div className="flex flex-col items-center gap-3">
+             <div className="h-px w-8 bg-slate-200" />
+             <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em] italic leading-none">
+                Londrina e Região
              </p>
            </div>
         </footer>
