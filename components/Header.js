@@ -45,10 +45,10 @@ export default function Header({ href }) {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md font-sans border-b border-slate-50">
-      <div className="max-w-5xl mx-auto px-4 h-16 md:h-24 flex items-center justify-between">
+      <div className="max-w-5xl mx-auto px-4 h-20 md:h-28 flex items-center justify-between">
         
-        {/* LADO ESQUERDO: Ajustado para w-12 no mobile */}
-        <div className="w-12 md:w-32 flex justify-start items-center">
+        {/* LADO ESQUERDO */}
+        <div className="w-12 md:w-32 flex justify-start items-center shrink-0">
           {href ? (
             <BackButton href={href} />
           ) : (
@@ -63,19 +63,21 @@ export default function Header({ href }) {
           )}
         </div>
 
-        {/* CENTRO: LOGO - Ganhou mais espaço lateral */}
-        <div className="flex-1 flex justify-center px-2">
-          <Link href="/" className="transition-all hover:opacity-80 active:scale-95 flex items-center">
+        {/* CENTRO: LOGO - Proteção contra encolhimento */}
+        {/* Adicionado w-full para garantir que o container ocupe o centro */}
+        <div className="flex-1 flex justify-center px-2 w-full">
+          {/* Adicionado um controle rígido de largura (w-40 mobile, w-64 desktop) para impedir o esmagamento */}
+          <Link href="/" className="transition-all hover:opacity-80 active:scale-95 flex items-center justify-center w-40 md:w-64">
             <img 
               src="/logo.png" 
               alt="Logo" 
-              className="h-9 md:h-14 w-auto object-contain" 
+              className="w-full h-auto object-contain" 
             />
           </Link>
         </div>
 
-        {/* LADO DIREITO: Ajustado para w-12 no mobile */}
-        <div className="w-12 md:w-32 flex justify-end items-center">
+        {/* LADO DIREITO */}
+        <div className="w-12 md:w-32 flex justify-end items-center shrink-0">
           {user ? (
             <Link 
               href="/painel/perfil"

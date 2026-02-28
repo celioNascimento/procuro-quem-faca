@@ -90,21 +90,26 @@ export default function Home() {
 
         <HeroSection onLog={registrarLog} />
 
-        <section className="w-full max-w-2xl px-6 pt-24 md:pt-36 pb-12 flex flex-col items-center text-center">
+        <section className="w-full max-w-3xl px-6 pt-16 md:pt-24 pb-12 flex flex-col items-center text-center relative z-10">
           
-          {/* CONTAINER DA LOGO - Ajuste de Escala Profissional */}
-          <div className="mb-10 md:mb-14 flex justify-center w-full">
-            <Link href="/" className="block w-full max-w-[280px] md:max-w-[420px] transition-transform active:scale-95 duration-300">
+          {/* CONTAINER DA LOGO 
+              - mb-0 e p-0 garantem que nada empurre a barra para baixo.
+          */}
+          <div className="mb-0 p-0 flex justify-center w-full">
+            <Link href="/" className="block w-full max-w-[280px] md:max-w-[500px] transition-transform active:scale-95 duration-300">
               <img
                 src="/logo.png"
                 alt="Logo Procuro quem Faça"
-                className="w-full h-auto object-contain drop-shadow-sm"
+                className="w-full h-auto object-contain drop-shadow-sm p-0 m-0"
               />
             </Link>
           </div>
 
-          {/* FORMULÁRIO DE BUSCA */}
-          <div className="w-full mb-10">
+          {/* FORMULÁRIO DE BUSCA 
+              - mt-[-2.5rem] no mobile e md:mt-[-4rem] no desktop.
+              - Esta sobreposição ignora as áreas vazias da imagem da logo.
+          */}
+          <div className="w-full mb-8 mt-[-2.5rem] md:mt-[-4rem]">
             <SearchForm
               busca={busca}
               setBusca={setBusca}
@@ -113,19 +118,19 @@ export default function Home() {
             />
           </div>
 
-          {/* SUGESTÕES - Tipografia Equilibrada estilo 'Grande App' */}
+          {/* SUGESTÕES */}
           {sugestoes.length > 0 && (
-            <div className="flex flex-col items-center gap-5 animate-in slide-in-from-bottom-4 duration-500">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] opacity-80">
+            <div className="flex flex-col items-center gap-4 animate-in slide-in-from-bottom-4 duration-500">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] opacity-80">
                 {busca.length > 0 ? 'Encontramos para você' : 'Sugestões de serviços'}
               </span>
               
-              <div className="flex flex-wrap justify-center gap-2.5">
+              <div className="flex flex-wrap justify-center gap-2">
                 {sugestoes.map((item, index) => (
                   <button
                     key={index}
                     onClick={() => dispararBusca(null, item)}
-                    className="bg-white text-slate-600 px-5 py-2.5 rounded-2xl text-[12px] font-semibold border border-slate-100 hover:border-blue-500 hover:text-blue-600 transition-all active:scale-95 shadow-sm hover:shadow-md"
+                    className="bg-white text-slate-600 px-4 py-2 rounded-2xl text-[11px] font-semibold border border-slate-100 hover:border-blue-500 hover:text-blue-600 transition-all active:scale-95 shadow-sm hover:shadow-md"
                   >
                     {item}
                   </button>
@@ -135,7 +140,6 @@ export default function Home() {
           )}
         </section>
 
-        {/* Efeito de Rodapé Visual Suave */}
         <footer className="mt-auto py-8">
            <p className="text-[10px] font-medium text-slate-300 uppercase tracking-widest">
              Londrina e Região Metropolitana

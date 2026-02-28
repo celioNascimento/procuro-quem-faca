@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import Link from 'next/link' 
 import {
   Clock, CheckCircle2, ChevronRight, User, Smartphone,
   LayoutGrid, ShieldCheck, Search, Phone, LogIn, ExternalLink, X, ZoomIn, Briefcase, MapPin
@@ -37,7 +38,6 @@ export default function PainelDoCliente() {
 
   const handleAceiteTecnico = async (servico) => {
     try {
-      // 1. Atualiza status E corrige o nome do cliente com o dado da conta Google/Perfil
       const nomeCorreto = profile?.full_name || session?.user?.user_metadata?.full_name || servico.cliente_nome
 
       const { error } = await supabase
@@ -45,7 +45,7 @@ export default function PainelDoCliente() {
         .update({ 
           status: 'em_execucao',
           aceito_at: new Date().toISOString(),
-          cliente_nome: nomeCorreto // Atualiza o nome na tabela para garantir integridade
+          cliente_nome: nomeCorreto 
         })
         .eq('id', servico.id)
 
@@ -54,9 +54,6 @@ export default function PainelDoCliente() {
         return
       }
 
-      // 2. CORREÇÃO DO CHUNK LOAD ERROR
-      // Usamos window.location.href em vez de router.push para forçar um reload limpo
-      // e garantir que os scripts da nova página sejam carregados corretamente.
       window.location.href = `/avaliar/${servico.id}?token=${servico.avaliacao_token}`
 
     } catch (err) {
@@ -116,15 +113,27 @@ export default function PainelDoCliente() {
 
   if (!session) return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="flex justify-center mb-8">
-           {/* Placeholder para logo, mantendo estrutura */}
-           <div className="w-20 h-20 bg-white rounded-3xl shadow-xl shadow-slate-200/50 flex items-center justify-center text-blue-600">
-              <ShieldCheck size={40} />
-           </div>
+      <div className="w-full max-w-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700">
+        
+        {/* LOGO DO PROJETO 
+            - Escala ampliada: max-w-[320px] md:max-w-[380px]
+            - Margem zerada (mb-0) para encostar no card
+            - z-index elevado para ficar visualmente sobreposta (z-20)
+        */}
+        <div className="flex justify-center mb-0 relative z-20">
+           <Link href="/" className="transition-transform active:scale-95 duration-300 w-full max-w-[320px] md:max-w-[380px] flex justify-center">
+             <img 
+               src="/logo.png" 
+               alt="Logo Procuro Quem Faça" 
+               className="w-full h-auto object-contain drop-shadow-lg" 
+             />
+           </Link>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] border border-slate-50 text-center space-y-8">
+        {/* CARD DE LOGIN 
+            - Margem negativa (-mt-4 md:-mt-8) faz o card "subir" contra a base da logo.
+        */}
+        <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] border border-slate-50 text-center space-y-8 relative z-10 -mt-4 md:-mt-8">
           
           {tokenUrl ? (
             <div className="space-y-4">
@@ -148,11 +157,12 @@ export default function PainelDoCliente() {
             </div>
           )}
 
+          {/* BOTÃO LOGIN - Apenas Texto, Minimalista e Imponente */}
           <button 
             onClick={loginComGoogle}
-            className="w-full py-5 bg-slate-900 text-white rounded-2xl font-bold uppercase text-[11px] tracking-widest flex items-center justify-center gap-3 hover:bg-slate-800 transition-all active:scale-[0.98] shadow-xl shadow-slate-200"
+            className="w-full py-6 bg-blue-600 text-white rounded-3xl font-black italic uppercase text-[12px] md:text-sm tracking-widest text-center hover:bg-blue-700 transition-all active:scale-[0.98] shadow-2xl shadow-blue-200/60"
           >
-            <LogIn size={18} /> Continuar com Google
+            Acessar com Google
           </button>
         </div>
       </div>
@@ -162,7 +172,6 @@ export default function PainelDoCliente() {
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-slate-900 pb-32 font-sans antialiased selection:bg-blue-100">
       
-      {/* MODAL DE ZOOM REFINADO */}
       {zoomImage && (
         <div 
           className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
@@ -182,7 +191,7 @@ export default function PainelDoCliente() {
 
       <div className="max-w-xl mx-auto px-6 pt-10 space-y-10">
 
-        {/* HEADER PERFIL - ESTILO CLEAN */}
+        {/* HEADER PERFIL LOGADO */}
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <div className="relative group cursor-pointer" onClick={() => router.push('/painel/perfil')}>
@@ -190,6 +199,7 @@ export default function PainelDoCliente() {
                 <img 
                   src={profile?.avatar_url || session.user.user_metadata.avatar_url} 
                   className="relative w-14 h-14 rounded-full object-cover border-[3px] border-white shadow-lg shadow-slate-100"
+                  alt="Avatar"
                 />
             </div>
             <div>
@@ -199,33 +209,29 @@ export default function PainelDoCliente() {
               </h2>
             </div>
           </div>
-          <div className="bg-white p-3 rounded-2xl text-slate-400 shadow-sm border border-slate-50">
-            <User size={20} />
-          </div>
+          <Link href="/">
+            <img src="/logo.png" className="h-[29px] w-auto opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all" alt="Logo" />
+          </Link>
         </div>
 
-        {/* TITULO HERO */}
+        {/* TITULO HERO E CARDS */}
         <div className="space-y-2">
           <h1 className="text-4xl md:text-5xl font-black italic uppercase text-slate-800 leading-[0.9] tracking-tighter">
             Projetos<br /><span className="text-blue-600">Pendentes</span>
           </h1>
           <p className="text-[11px] font-medium text-slate-500 pl-1">
-             Você tem <span className="font-bold text-slate-800">{servicos.length}</span> {servicos.length === 1 ? 'projeto aguardando' : 'projetos aguardando'} aprovação.
+              Você tem <span className="font-bold text-slate-800">{servicos.length}</span> {servicos.length === 1 ? 'projeto aguardando' : 'projetos aguardando'} aprovação.
           </p>
         </div>
 
-        {/* LISTA DE CARDS - ESTILO BIG APP */}
         <div className="space-y-8">
           {servicos.map((servico) => {
             const fotoInicio = servico.portfolio_fotos?.find(f => f.ordem === 1)
-            
             return (
               <div key={servico.id} className="bg-white rounded-[2.5rem] p-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-50 group">
-                
-                {/* CABEÇALHO DO CARD */}
                 <div className="flex items-center justify-between px-2 mb-4">
                    <div className="flex items-center gap-3">
-                      <img src={servico.prestadores.foto_perfil} className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-50" />
+                      <img src={servico.prestadores.foto_perfil} className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-50" alt="Prestador" />
                       <div>
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Prestador</p>
                         <h3 className="text-xs font-black uppercase text-slate-800">{servico.prestadores.nome}</h3>
@@ -238,7 +244,6 @@ export default function PainelDoCliente() {
                    </div>
                 </div>
 
-                {/* AREA DA IMAGEM HERO */}
                 <div 
                   onClick={() => fotoInicio && setZoomImage(fotoInicio.url_foto)}
                   className="relative aspect-[4/3] rounded-[2rem] overflow-hidden bg-slate-100 cursor-zoom-in"
@@ -265,7 +270,6 @@ export default function PainelDoCliente() {
                   )}
                 </div>
 
-                {/* INFO E AÇÃO */}
                 <div className="mt-5 px-2 space-y-5">
                    <div>
                       <h4 className="text-xl font-black italic uppercase text-slate-800 leading-tight tracking-tight line-clamp-2">
@@ -294,25 +298,23 @@ export default function PainelDoCliente() {
                       </button>
                    </div>
                 </div>
-
               </div>
             )
           })}
         </div>
 
-        {/* PROTOCOLO CARD */}
         <div className="mt-12 bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative z-10 flex items-center gap-5">
-             <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-blue-400 backdrop-blur-sm">
+              <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-blue-400 backdrop-blur-sm">
                 <ShieldCheck size={24} />
-             </div>
-             <div>
+              </div>
+              <div>
                 <p className="text-lg font-black italic uppercase leading-none tracking-tight">Protocolo Seguro</p>
                 <p className="text-[10px] font-medium text-slate-400 mt-1 leading-relaxed max-w-[200px]">
                   Ao autorizar, você gera um token único de acompanhamento criptografado.
                 </p>
-             </div>
+              </div>
           </div>
         </div>
 

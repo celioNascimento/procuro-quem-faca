@@ -139,16 +139,20 @@ export default function Login() {
           
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-50 via-blue-500/10 to-blue-50" />
 
-          <div className="mb-10 flex justify-center">
-            <Link href="/" className="block transition-transform duration-500 hover:scale-110 active:scale-95">
-              <img src="/logo.png" alt="Logo" className="h-12 w-auto object-contain" />
+          {/* AJUSTE NA LOGO:
+              1. Aumentado +20% (max-w-[310px] mobile, max-w-[370px] desktop).
+              2. Utilizada margem inferior negativa (-mb-2 md:-mb-4) para puxar o título "Acesse sua conta" para cima.
+          */}
+          <div className="-mb-2 md:-mb-4 flex justify-center w-full relative z-10">
+            <Link href="/" className="block w-full max-w-[310px] md:max-w-[370px] transition-transform duration-500 hover:scale-105 active:scale-95">
+              <img src="/logo.png" alt="Logo Procuro Quem Faça" className="w-full h-auto object-contain drop-shadow-sm" />
             </Link>
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight relative z-20">
             Acesse sua conta
           </h1>
-          <p className="text-slate-400 mb-10 text-[11px] font-bold uppercase tracking-[0.2em]">
+          <p className="text-slate-400 mb-10 text-[11px] font-bold uppercase tracking-[0.2em] relative z-20">
             Área do Profissional
           </p>
 

@@ -1,73 +1,85 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Users, MousePointer2, PieChart, TrendingUp } from 'lucide-react'
+import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
+import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
+import { Lock } from 'lucide-react'
 
-export default function AdminStatsTab() {
-  const [stats, setStats] = useState({
-    curadoria: 0,
-    registrados: 0,
-    topCategorias: [],
-    topPrestadores: []
-  })
+export default function PerfilPage() {
+  const [abaAtiva, setAbaAtiva] = useState('perfil') // 'perfil' ou 'portfolio'
+  const [cadastroCompleto, setCadastroCompleto] = useState(false)
+  const [validando, setValidando] = useState(true)
 
   useEffect(() => {
-    async function carregarDados() {
-      // 1. Contagem de Origem
-      const { data: pData } = await supabase
-        .from('prestadores')
-        .select('origem_tipo')
+    async function verificarPerfil() {
+      const { data: { session } } = await supabase.auth.getSession()
+      const user = session?.user
 
-      const curadoria = pData?.filter(p => p.origem_tipo === 'curadoria_publica').length || 0
-      const registrados = pData?.filter(p => p.origem_tipo === 'registro_direto').length || 0
+      if (user?.id) {
+        const { data: prestador } = await supabase
+          .from('prestadores')
+          .select('whatsapp, categoria_id')
+          .eq('user_id', user.id)
+          .maybeSingle()
 
-      // 2. Top Prestadores por Cliques (campo cliques_whatsapp)
-      const { data: topP } = await supabase
-        .from('prestadores')
-        .select('nome, cliques_whatsapp')
-        .order('cliques_whatsapp', { ascending: false })
-        .limit(5)
-
-      setStats(prev => ({ ...prev, curadoria, registrados, topPrestadores: topP || [] }))
+        if (prestador?.whatsapp && prestador?.categoria_id) {
+          setCadastroCompleto(true)
+        } else {
+          setAbaAtiva('perfil')
+          setCadastroCompleto(false)
+        }
+      }
+      setValidando(false)
     }
-    carregarDados()
+    verificarPerfil()
   }, [])
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* CARD 01: ORIGEM DOS DADOS */}
-      <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Users size={20}/></div>
-          <h3 className="font-bold text-slate-800">Origem da Base</h3>
+    <div className="bg-[#F8FAFC] min-h-screen">
+      <main className="max-w-5xl mx-auto p-5 md:p-8">
+        
+        {/* Navegação de Abas - Foco em Perfil e Portfólio */}
+        <div className="flex w-full md:w-fit bg-slate-100/60 p-1.5 rounded-[2.5rem] border border-slate-100 mb-8 overflow-x-auto custom-scrollbar">
+          <button 
+            onClick={() => setAbaAtiva('perfil')}
+            className={`flex-1 md:flex-none px-6 py-3.5 md:py-4 rounded-[2rem] text-[12px] md:text-[13px] font-semibold transition-all duration-300 whitespace-nowrap ${
+              abaAtiva === 'perfil' 
+                ? 'bg-white text-blue-600 shadow-sm scale-[1.01]' 
+                : 'text-slate-500 hover:bg-white/50'
+            }`}
+          >
+            Dados Profissionais
+          </button>
+          
+          <button 
+            disabled={!cadastroCompleto || validando}
+            onClick={() => setAbaAtiva('portfolio')}
+            className={`flex-1 md:flex-none px-6 py-3.5 md:py-4 rounded-[2rem] text-[12px] md:text-[13px] font-semibold transition-all duration-300 whitespace-nowrap flex items-center justify-center gap-2 ${
+              abaAtiva === 'portfolio' 
+                ? 'bg-white text-blue-600 shadow-sm scale-[1.01]' 
+                : !cadastroCompleto 
+                  ? 'text-slate-400 cursor-not-allowed bg-slate-50/50 opacity-70' 
+                  : 'text-slate-500 hover:bg-white/50'
+            }`}
+          >
+            {!cadastroCompleto && <Lock size={14} className="text-slate-400" />}
+            Meu Portfólio (Fotos)
+          </button>
         </div>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-[13px] text-slate-500 font-medium">Curadoria Pública</span>
-            <span className="text-lg font-black text-blue-600">{stats.curadoria}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[13px] text-slate-500 font-medium">Perfis Requeridos</span>
-            <span className="text-lg font-black text-green-600">{stats.registrados}</span>
-          </div>
-        </div>
-      </div>
 
-      {/* CARD 02: TOP PRESTADORES (CLIQUES) */}
-      <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-orange-50 text-orange-600 rounded-2xl"><TrendingUp size={20}/></div>
-          <h3 className="font-bold text-slate-800">Top Conversão (WhatsApp)</h3>
-        </div>
-        <div className="space-y-3">
-          {stats.topPrestadores.map((p, i) => (
-            <div key={i} className="flex justify-between text-[12px] border-b border-slate-50 pb-2">
-              <span className="font-semibold text-slate-700">{p.nome}</span>
-              <span className="text-slate-400">{p.cliques_whatsapp} cliques</span>
+        {/* Renderização Condicional das Tabs */}
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {validando ? (
+            <div className="h-64 flex flex-col items-center justify-center gap-4">
+              <div className="w-10 h-10 border-[4px] border-slate-100 border-t-blue-600 rounded-full animate-spin" />
+              <p className="text-[12px] font-medium text-slate-400">Verificando credenciais...</p>
             </div>
-          ))}
+          ) : (
+            abaAtiva === 'perfil' ? <EditarPerfilTab /> : <PortfolioDashboardTab />
+          )}
         </div>
-      </div>
+        
+      </main>
     </div>
   )
 }
