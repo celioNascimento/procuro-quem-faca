@@ -86,15 +86,16 @@ export default function Home() {
 
         <HeroSection onLog={registrarLog} />
 
-        {/* SEÇÃO DE BUSCA: 
-            Aumentado pt-20 no mobile para descer o conjunto em relação ao cabeçalho.
-            Mantido md:pt-32 para o desktop.
+        {/* SEÇÃO DE BUSCA CENTRALIZADA 
+            pt-16 no mobile para um balanço melhor com o cabeçalho.
         */}
-        <section className="w-full max-w-4xl px-6 pt-20 md:pt-32 pb-12 flex flex-col items-center text-center">
+        <section className="w-full max-w-4xl px-6 pt-16 md:pt-32 pb-12 flex flex-col items-center text-center">
           
-          {/* CONTAINER DA LOGO */}
+          {/* CONTAINER DA LOGO 
+              Aumentada para max-w-[280px] no mobile para maior presença.
+          */}
           <div className="mb-0 transition-transform duration-500">
-            <Link href="/" className="block w-full max-w-[240px] md:max-w-[540px] transition-transform active:scale-95 duration-300">
+            <Link href="/" className="block w-full max-w-[280px] md:max-w-[560px] transition-transform active:scale-95 duration-300">
               <img
                 src="/logo.png"
                 alt="Logo Procuro quem Faça"
@@ -104,10 +105,10 @@ export default function Home() {
           </div>
 
           {/* FORMULÁRIO DE BUSCA: 
-              Aumentada a margem negativa no desktop (md:-mt-24) para "colar" mais na logo.
-              Suavizada no mobile (-mt-12) para equilíbrio.
+              Agressividade máxima no desktop (md:-mt-28) para integrar com a logo.
+              Mobile ajustado para -mt-16 para centralizar o conjunto.
           */}
-          <div className="w-full mb-10 -mt-12 md:-mt-24 relative z-20">
+          <div className="w-full mb-8 -mt-16 md:-mt-28 relative z-20">
             <div className="w-full max-w-[620px] mx-auto">
               <SearchForm
                 busca={busca}
@@ -118,9 +119,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* SUGESTÕES */}
+          {/* SUGESTÕES: Mais próximas da barra de busca (mt-[-0.5rem]) */}
           {sugestoes.length > 0 && (
-            <div className="flex flex-col items-center gap-4 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col items-center gap-4 mt-[-0.5rem] md:mt-0 animate-in slide-in-from-bottom-4 duration-500">
               <span className="text-[9px] md:text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] italic">
                 {busca.length > 0 ? 'Encontramos para você' : 'Sugestões em destaque'}
               </span>
