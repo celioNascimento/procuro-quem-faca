@@ -10,10 +10,10 @@ import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 export default function PerfilPage() {
   return (
     <div className="bg-[#F8FAFC] min-h-screen">
-      <main className="max-w-7xl mx-auto p-4 md:p-8">
-        {/* O EditarPerfilTab contém toda a lógica de fotos, slugs e cidades */}
+      {/* CORREÇÃO CIRÚRGICA: Removido o padding top (pt-0) para que o layout base dite a distância da logo */}
+      <main className="max-w-7xl mx-auto px-4 md:px-8 pb-8 pt-0">
         <EditarPerfilTab />
       </main>
     </div>
   )
-} 
+}

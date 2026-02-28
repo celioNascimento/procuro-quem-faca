@@ -1,21 +1,21 @@
 'use client'
-import { useState, useEffect, useCallback, useRef } from 'react' // Adicionado useRef
+import { useState, useEffect, useCallback, useRef } from 'react' 
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ModalConfirmacao from '@/components/ui/ModalConfirmacao'
-import { Loader2, Camera, User, AlertCircle } from 'lucide-react' // Adicionados ícones necessários
+import { Loader2, Camera, User, AlertCircle } from 'lucide-react' 
 
 export default function EditarPerfilTab() {
   const router = useRouter()
-  const fileInputRef = useRef(null) // Referência para o input de arquivo
+  const fileInputRef = useRef(null) 
   const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState(false) // Estado de upload de foto
+  const [uploading, setUploading] = useState(false) 
   const [status, setStatus] = useState('')
   const [tentouEnviar, setTentouEnviar] = useState(false)
   const [userLogado, setUserLogado] = useState(null)
   const [isModalExcluirOpen, setIsModalExcluirOpen] = useState(false)
-  const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' }) // Modal de erro elegante
+  const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' }) 
 
   // Listas do banco
   const [listaGrupos, setListaGrupos] = useState([])
@@ -93,7 +93,6 @@ export default function EditarPerfilTab() {
     await carregarCategorias(gid);
   };
 
-  // LOGICA DE UPLOAD REVISADA E PROTEGIDA COM DELEÇÃO DA FOTO ANTIGA
   const fazerUploadFoto = async (e) => {
     try {
       const arquivo = e.target.files[0]
@@ -114,7 +113,6 @@ export default function EditarPerfilTab() {
 
       setUploading(true)
 
-      // DELEÇÃO DA FOTO ANTIGA
       if (formData.foto_perfil) {
         try {
           const urlParts = formData.foto_perfil.split('/')
@@ -290,7 +288,6 @@ export default function EditarPerfilTab() {
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans antialiased">
       
-      {/* MODAL DE ERRO ELEGANTE INTEGRADO */}
       {errorModal.show && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95">
@@ -311,15 +308,18 @@ export default function EditarPerfilTab() {
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto px-4 pt-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <header className="border-b border-slate-100 pb-8">
+      {/* CORREÇÃO CIRÚRGICA: O pt-12 (48px) foi alterado para pt-2 md:pt-4 (8px/16px), puxando o conteúdo para cima sem grudar nas bordas no mobile */}
+      <div className="max-w-5xl mx-auto px-2 md:px-4 pt-2 md:pt-4 space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        
+        {/* CORREÇÃO CIRÚRGICA: Redução leve no espaçamento inferior do header para ficar mais compacto */}
+        <header className="border-b border-slate-100 pb-6 md:pb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Configurações de Perfil</h2>
           <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest mt-2">Personalize sua vitrine profissional</p>
         </header>
 
         <form onSubmit={handleSalvar} className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="col-span-1 md:col-span-4 space-y-6">
-            <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center gap-6 sticky top-24">
+            <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center gap-6 sticky top-32">
               
               <input 
                 type="file" 

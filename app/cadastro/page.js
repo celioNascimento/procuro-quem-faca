@@ -25,7 +25,6 @@ function FormularioCadastro() {
   const searchParams = useSearchParams()
   const reivindicarId = searchParams.get('reivindicar')
 
-  // AJUSTE ESTÉTICO: font-medium e text-[14px] para melhor legibilidade
   const inputStyle = () => `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-[14px] text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400`
 
   const aplicarMascaraWhatsapp = (v) => {
@@ -50,6 +49,7 @@ function FormularioCadastro() {
   
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [confirmarSenha, setConfirmarSenha] = useState('')
   const [aceitouTermos, setAceitouTermos] = useState(false)
   const [aceitouPrivacidade, setAceitouPrivacidade] = useState(false)
 
@@ -292,7 +292,8 @@ function FormularioCadastro() {
 
   const handleLogout = async () => {
       await supabase.auth.signOut();
-      window.location.reload();
+      // CORREÇÃO CIRÚRGICA: Redireciona o usuário para o login ao invés de recarregar a página
+      router.push('/login'); 
   }
 
   const calcularProgresso = () => {
@@ -314,6 +315,18 @@ function FormularioCadastro() {
     
     if (!formData.foto_perfil) { setStatus('❌ A foto de perfil é obrigatória.'); return; }
     if (!slugDisponivel) { setStatus('❌ Escolha uma URL diferente.'); return; }
+    
+    if (userLogado && (senha.length > 0 || confirmarSenha.length > 0)) {
+        if (senha.length < 6) {
+            setStatus('❌ A nova senha deve ter no mínimo 6 caracteres.');
+            return;
+        }
+        if (senha !== confirmarSenha) {
+            setStatus('❌ As senhas não coincidem.');
+            return;
+        }
+    }
+
     if (loading || calcularProgresso() < 100) return;
     
     setLoading(true); setStatus('Sincronizando...');
@@ -328,6 +341,12 @@ function FormularioCadastro() {
         if (aErr) throw aErr;
         userId = auth.user?.id;
         if (!userId) throw new Error("Erro ao criar usuário ID");
+      }
+
+      if (userLogado && senha.length >= 6) {
+          setStatus('Atualizando credenciais de acesso...');
+          const { error: passErr } = await supabase.auth.updateUser({ password: senha });
+          if (passErr) throw passErr;
       }
 
       const cidadeSedeNome = listaCidades.find(c => String(c.id) === String(formData.cidade_id))?.nome;
@@ -394,7 +413,6 @@ function FormularioCadastro() {
             
             <div className="col-span-12 md:col-span-4 space-y-6">
               <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center gap-6 sticky top-24">
-                {/* AJUSTE ESTÉTICO: Borda sólida e sombra, sem dashed, sem bg vermelho intenso */}
                 <div className={`relative w-40 h-40 md:w-48 md:h-48 rounded-[3.5rem] bg-slate-50 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden group transition-all ${tentouEnviar && !formData.foto_perfil ? 'ring-4 ring-red-100' : 'hover:scale-[1.02]'}`}>
                   {formData.foto_perfil ? 
                     <img src={formData.foto_perfil} alt="Preview" className="w-full h-full object-cover transition-transform group-hover:scale-105" /> 
@@ -403,7 +421,6 @@ function FormularioCadastro() {
                   <input type="file" accept="image/*" onChange={fazerUploadFoto} className="absolute inset-0 opacity-0 cursor-pointer z-20" />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity z-10 font-bold text-[10px] uppercase tracking-widest">Alterar</div>
                 </div>
-                {/* AJUSTE ESTÉTICO: Sem itálico e sem font-black nas labels */}
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center mt-2">Sua foto na vitrine</p>
               </section>
             </div>
@@ -423,18 +440,45 @@ function FormularioCadastro() {
               )}
 
               {userLogado && (
-                <section className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="text-center md:text-left">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Você está logado como:</p>
-                      <p className="font-bold text-blue-900 text-sm">{userLogado.email}</p>
+                <section className="bg-blue-50 p-6 md:p-8 rounded-[2rem] border border-blue-100 flex flex-col gap-6">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                      <div className="text-center md:text-left">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Você está logado como:</p>
+                        <p className="font-bold text-blue-900 text-sm">{userLogado.email}</p>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={handleLogout}
+                        className="px-6 py-3 bg-white text-blue-600 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all border border-blue-100"
+                      >
+                        Sair / Trocar Conta
+                      </button>
                     </div>
-                    <button 
-                      type="button" 
-                      onClick={handleLogout}
-                      className="px-6 py-3 bg-white text-blue-600 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all border border-blue-100"
-                    >
-                      Entrar com outra conta
-                    </button>
+                    
+                    <div className="pt-5 border-t border-blue-100/60">
+                      <label className="text-blue-500 font-bold text-[10px] uppercase tracking-widest mb-3 block">
+                        Definir Nova Senha (Opcional)
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input 
+                          type="password" 
+                          placeholder="Nova senha (mín 6)" 
+                          value={senha} 
+                          onChange={e => setSenha(e.target.value)} 
+                          className={inputStyle()} 
+                        />
+                        <input 
+                          type="password" 
+                          placeholder="Confirme a senha" 
+                          value={confirmarSenha} 
+                          onChange={e => setConfirmarSenha(e.target.value)} 
+                          className={inputStyle()} 
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-medium mt-3 ml-2">
+                        Deixe em branco para manter a senha atual do seu acesso.
+                      </p>
+                    </div>
                 </section>
               )}
 
@@ -558,13 +602,21 @@ function FormularioCadastro() {
                 </label>
               </section>
 
-              <button 
-                type="submit" 
-                disabled={loading || calcularProgresso() < 100}
-                className={`w-full py-6 rounded-[2rem] font-bold text-[13px] uppercase tracking-widest transition-all shadow-xl ${calcularProgresso() === 100 && slugDisponivel ? 'bg-blue-600 text-white shadow-blue-100 hover:bg-blue-700 active:scale-95' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
-              >
-                {status || (modoEdicao ? 'Salvar Alterações' : (reivindicarId ? 'Assumir Perfil' : 'Finalizar Cadastro'))}
-              </button>
+              <div className="flex flex-col items-center">
+                {status && (
+                  <div className="w-full mb-4 p-4 rounded-2xl text-[10px] font-black text-center uppercase tracking-wider bg-blue-50 text-blue-600 animate-in fade-in">
+                    {status}
+                  </div>
+                )}
+                
+                <button 
+                  type="submit" 
+                  disabled={loading || calcularProgresso() < 100}
+                  className={`w-full py-6 rounded-[2rem] font-bold text-[13px] uppercase tracking-widest transition-all shadow-xl ${calcularProgresso() === 100 && slugDisponivel ? 'bg-blue-600 text-white shadow-blue-100 hover:bg-blue-700 active:scale-95' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+                >
+                  {loading ? 'Salvando...' : (modoEdicao ? 'Salvar Alterações' : (reivindicarId ? 'Assumir Perfil' : 'Finalizar Cadastro'))}
+                </button>
+              </div>
             </div>
           </form>
         </CadastroCard>
