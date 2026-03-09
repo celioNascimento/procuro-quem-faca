@@ -9,7 +9,10 @@ import {
 } from 'lucide-react'
 
 export default function UploadWizard({ prestadorId, projetoExistente = null, onComplete }) {
-  const [loading, setLoading] = useState(false)
+  const [loadingEtapa, setLoadingEtapa] = useState({ 1: false, 2: false, 3: false })
+  const [erroUpload, setErroUpload] = useState(null)
+  const [erroLegenda, setErroLegenda] = useState(null)
+  const [erroTitulo, setErroTitulo] = useState(null)
   const [projetoId, setProjetoId] = useState(projetoExistente?.id || null)
   const [projetoStatus, setProjetoStatus] = useState(projetoExistente?.status || 'pendente')
   const [titulo, setTitulo] = useState(projetoExistente?.titulo || '')
@@ -108,8 +111,18 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
   const handleUpload = async (e, ordem) => {
     const file = e.target.files[0]
     if (!file) return
-    setLoading(true)
-    
+
+    // ── Validação de tamanho: máx 10MB, erro visível ao usuário ──────────
+    const MAX_MB = 10
+    const sizeMB = file.size / (1024 * 1024)
+    if (sizeMB > MAX_MB) {
+      setErroUpload(`A imagem tem ${sizeMB.toFixed(1)}MB. O limite é de ${MAX_MB}MB. Reduza o tamanho e tente novamente.`)
+      e.target.value = ''
+      return
+    }
+    setErroUpload(null)
+    setLoadingEtapa(prev => ({ ...prev, [ordem]: true }))
+
     try {
       const fileExt = file.name.split('.').pop()
       const fileName = `${Math.random()}.${fileExt}`
@@ -121,34 +134,34 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
       const { data: { publicUrl } } = supabase.storage.from('portfolios').getPublicUrl(filePath)
 
       let currentProjId = projetoId
-      
+
       if (!currentProjId) {
-         const { data: newProj, error: projError } = await supabase
-            .from('portfolio_projetos')
-            .insert({
-                prestador_id: prestadorId,
-                titulo: titulo,
-                cliente_whatsapp: phoneDigitado,
-                cliente_nome: clienteNome.trim() || 'Cliente', 
-                status: 'em_registro',
-                avaliacao_token: crypto.randomUUID()
-            })
-            .select()
-            .single()
-         
-         if (projError) throw projError
-         currentProjId = newProj.id
-         setProjetoId(newProj.id)
-         setProjetoStatus('em_registro')
+        const { data: newProj, error: projError } = await supabase
+          .from('portfolio_projetos')
+          .insert({
+            prestador_id: prestadorId,
+            titulo: titulo,
+            cliente_whatsapp: phoneDigitado,
+            cliente_nome: clienteNome.trim() || 'Cliente',
+            status: 'em_registro',
+            avaliacao_token: crypto.randomUUID()
+          })
+          .select()
+          .single()
+
+        if (projError) throw projError
+        currentProjId = newProj.id
+        setProjetoId(newProj.id)
+        setProjetoStatus('em_registro')
       }
 
       const { data, error } = await supabase
         .from('portfolio_fotos')
-        .upsert({ 
-          projeto_id: currentProjId, 
-          url_foto: publicUrl, 
-          ordem: ordem, 
-          prestador_id: prestadorId 
+        .upsert({
+          projeto_id: currentProjId,
+          url_foto: publicUrl,
+          ordem: ordem,
+          prestador_id: prestadorId
         }, { onConflict: 'projeto_id, ordem' })
         .select()
         .single()
@@ -161,8 +174,10 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
       }
     } catch (err) {
       console.error("Erro no upload:", err)
+      setErroUpload('Não foi possível enviar a imagem. Verifique sua conexão e tente novamente.')
     } finally {
-      setLoading(false)
+      setLoadingEtapa(prev => ({ ...prev, [ordem]: false }))
+      e.target.value = ''
     }
   }
 
@@ -183,6 +198,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
       }
     } catch (err) {
       console.error("Erro ao salvar legenda:", err)
+      setErroLegenda('Não foi possível salvar a descrição. Tente novamente.')
     } finally {
       setSalvandoLegenda(false)
     }
@@ -204,6 +220,8 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
     } catch (err) {
       console.error("Erro ao atualizar título:", err)
       setStatusTitulo('ocioso')
+      setErroTitulo('Erro ao salvar título.')
+      setTimeout(() => setErroTitulo(null), 3000)
     }
   }
 
@@ -413,6 +431,21 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
         ) : (
         
           <div className="p-8 space-y-8 overflow-y-auto max-h-[85vh] custom-scrollbar">
+
+            {/* ── Banner de erro de upload — visível, não silencioso ── */}
+            {erroUpload && (
+              <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-[11px] font-black uppercase tracking-wide leading-none mb-1">Imagem não enviada</p>
+                  <p className="text-[11px] font-medium leading-snug">{erroUpload}</p>
+                </div>
+                <button onClick={() => setErroUpload(null)} className="text-red-400 hover:text-red-600 shrink-0">
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className={`p-4 rounded-[2rem] border transition-all flex flex-col justify-center gap-2 ${isSelfNumber ? 'bg-red-50/50 border-red-200' : isPhoneValid ? 'bg-blue-50/30 border-blue-100' : 'bg-white border-slate-200'}`}>
                  <div className="flex items-center gap-2 mb-1">
@@ -480,7 +513,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
               
               <input 
                 type="text"
-                placeholder="Ex: Manutenção Freio Volvo"
+                placeholder="Ex: Corte de cabelo, pintura sala, instalação..."
                 disabled={!isPhoneValid}
                 className="bg-transparent text-sm font-black text-slate-800 uppercase italic placeholder:text-slate-300 outline-none w-full ml-1"
                 value={titulo}
@@ -520,10 +553,10 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                     ) : (
                       <>
                         <div className="flex flex-col items-center gap-1 text-blue-500/50">
-                           {loading ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
-                           <span className="text-[8px] font-black uppercase italic">Início</span>
+                           {loadingEtapa[1] ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
+                           <span className="text-[8px] font-black uppercase italic">Antes</span>
                         </div>
-                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, 1)} disabled={loading || !isTitleValid} />
+                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, 1)} disabled={loadingEtapa[1] || !isTitleValid} />
                       </>
                     )}
                  </div>
@@ -532,7 +565,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                        <span className={`text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full border ${fotosUrls[1] ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
                         {fotosUrls[1] ? 'Registrado' : 'Obrigatório'}
                        </span>
-                       <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 1: Chegada</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 1: Antes</span>
                     </div>
                     {isProjetoPendente && fotosUrls[1] && hasLegendaSalva(1) && (
                         <button onClick={gerarLinkAceite} className="mt-2 flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95">
@@ -543,7 +576,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                     {fotosUrls[1] && !hasLegendaSalva(1) && (
                       <div className="mt-2 flex items-center gap-1.5 text-amber-600 animate-in fade-in duration-500">
                         <AlertCircle size={10} className="shrink-0" />
-                        <span className="text-[8px] font-black uppercase italic leading-none">Aguardando Nota Técnica</span>
+                        <span className="text-[8px] font-black uppercase italic leading-none">Adicione uma descrição</span>
                       </div>
                     )}
                     
@@ -558,9 +591,10 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                     ) : (
                       <>
                         <div className="flex flex-col items-center gap-1 text-blue-500/50">
-                           <Camera size={24} /> <span className="text-[8px] font-black uppercase italic">Execução</span>
+                           {loadingEtapa[2] ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
+                           <span className="text-[8px] font-black uppercase italic">Durante</span>
                         </div>
-                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, 2)} disabled={loading || !linkGerado} />
+                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, 2)} disabled={loadingEtapa[2] || !linkGerado} />
                       </>
                     )}
                  </div>
@@ -569,12 +603,18 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                       <span className={`text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full border ${fotosUrls[2] ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
                         {fotosUrls[2] ? 'Registrado' : 'Aguardando...'}
                       </span>
-                      <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 2: Serviço</span>
+                      <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 2: Durante</span>
                     </div>
                     {!(projetoStatus?.toLowerCase() === 'finalizado' || fotosUrls[3]) && (
                       <h4 className="text-xs font-semibold text-slate-700 italic mt-1">
                         {isProjetoPendente ? "Aguardando Aceite" : (projetoStatus === 'em_execucao' || fotosUrls[2] ? "Em andamento" : "Aguardando...")}
                       </h4>
+                    )}
+                    {fotosUrls[2] && !hasLegendaSalva(2) && (
+                      <div className="mt-1 flex items-center gap-1.5 text-amber-600 animate-in fade-in duration-500">
+                        <AlertCircle size={10} className="shrink-0" />
+                        <span className="text-[8px] font-black uppercase italic leading-none">Adicione uma descrição</span>
+                      </div>
                     )}
                  </div>
               </div>
@@ -586,9 +626,10 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                     ) : (
                       <>
                         <div className="flex flex-col items-center gap-1 text-blue-500/50">
-                           <Camera size={24} /> <span className="text-[8px] font-black uppercase italic">Conclusão</span>
+                           {loadingEtapa[3] ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
+                           <span className="text-[8px] font-black uppercase italic">Depois</span>
                         </div>
-                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, 3)} disabled={loading || !linkGerado} />
+                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, 3)} disabled={loadingEtapa[3] || !linkGerado} />
                       </>
                     )}
                  </div>
@@ -597,9 +638,15 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                       <span className={`text-[9px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full border ${fotosUrls[3] ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
                         {fotosUrls[3] ? 'Registrado' : 'Aguardando...'}
                       </span>
-                      <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 3: Entrega</span>
+                      <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 3: Depois</span>
                     </div>
                     <h4 className="text-xs font-semibold text-slate-700 italic mt-1">{fotosUrls[3] ? "Finalizado" : "Aguardando..."}</h4>
+                    {fotosUrls[3] && !hasLegendaSalva(3) && (
+                      <div className="mt-1 flex items-center gap-1.5 text-amber-600 animate-in fade-in duration-500">
+                        <AlertCircle size={10} className="shrink-0" />
+                        <span className="text-[8px] font-black uppercase italic leading-none">Adicione uma descrição</span>
+                      </div>
+                    )}
                  </div>
               </div>
             </div>
@@ -616,7 +663,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
           <div className="flex flex-col md:flex-row bg-white rounded-[3rem] overflow-hidden w-full max-w-5xl h-full max-h-[90vh] shadow-2xl">
             <div className="flex-[1.5] bg-slate-50 flex items-center justify-center relative overflow-hidden">
               <img src={fotosUrls[zoomEtapa]} className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-10 scale-125" />
-              <img src={fotosUrls[zoomEtapa]} className="relative z-10 max-w-full max-h-full object-contain" alt="Inspeção" />
+              <img src={fotosUrls[zoomEtapa]} className="relative z-10 max-w-full max-h-full object-contain" alt="Foto do registro" />
               <div className="absolute top-6 left-6 bg-blue-600/90 backdrop-blur-md px-4 py-2 rounded-full text-white text-[10px] font-black uppercase italic tracking-widest border border-blue-400/20 z-20">
                 Registro 0{zoomEtapa}
               </div>
@@ -626,7 +673,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
               <div className="mb-8 shrink-0 border-b border-slate-50 pb-6">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-                  <h3 className="text-lg font-black text-slate-900 uppercase italic leading-none">Legenda Técnica</h3>
+                  <h3 className="text-lg font-black text-slate-900 uppercase italic leading-none">Descrição desta fase</h3>
                 </div>
                 
                 <div className="bg-blue-50/30 p-5 rounded-2xl border border-blue-100/50">
@@ -635,17 +682,17 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                       <textarea
                         value={legendaEdit}
                         onChange={(e) => setLegendaEdit(e.target.value)}
-                        placeholder="Adicione as notas técnicas para esta fase..."
+                        placeholder="Adicione as descrição para esta fase..."
                         className="w-full bg-white border border-blue-100 rounded-xl p-3 text-xs font-medium italic text-slate-600 outline-none focus:border-blue-300 resize-none custom-scrollbar"
                         rows={3}
                       />
                       
                       <div className="flex items-center gap-3">
                         <div className="relative flex-1">
-                           <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, zoomEtapa)} disabled={loading} />
+                           <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, zoomEtapa)} disabled={loadingEtapa[zoomEtapa]} />
                            <button className="w-full text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-4 py-2 rounded-xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
-                              {loading ? <Loader2 size={12} className="animate-spin" /> : <Camera size={12} />} 
-                              <span className="truncate">{loading ? 'Enviando...' : 'Trocar Imagem'}</span>
+                              {loadingEtapa[zoomEtapa] ? <Loader2 size={12} className="animate-spin" /> : <Camera size={12} />} 
+                              <span className="truncate">{loadingEtapa[zoomEtapa] ? 'Enviando...' : 'Trocar Foto'}</span>
                            </button>
                         </div>
                         <button
@@ -653,15 +700,20 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                           disabled={salvandoLegenda || legendaEdit.trim() === '' || legendaEdit === (fotosData[zoomEtapa]?.legenda || '')}
                           className="flex-[1.5] text-[9px] font-black uppercase tracking-widest bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md active:scale-95"
                         >
-                          {salvandoLegenda ? 'Salvando...' : 'Salvar Nota'}
+                          {salvandoLegenda ? 'Salvando...' : 'Salvar Descrição'}
                         </button>
+                        {erroLegenda && (
+                          <p className="text-[9px] text-red-500 font-bold mt-1">{erroLegenda}</p>
+                        )}
                       </div>
 
-                      {!hasLegendaSalva(zoomEtapa) && zoomEtapa === 1 && (
+                      {!hasLegendaSalva(zoomEtapa) && (
                         <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
                           <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
                           <p className="text-[9px] font-bold text-amber-700 leading-tight uppercase tracking-tight">
-                            Atenção: A legenda desta fase é obrigatória para liberar o envio do link de aceite ao cliente.
+                            {zoomEtapa === 1
+                              ? 'Adicione uma descrição para liberar o envio do link ao cliente.'
+                              : 'Adicione uma descrição para esta foto antes de fechar.'}
                           </p>
                         </div>
                       )}
