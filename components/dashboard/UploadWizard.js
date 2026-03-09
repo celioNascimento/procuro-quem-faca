@@ -13,6 +13,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
   const [erroUpload, setErroUpload] = useState(null)
   const [erroLegenda, setErroLegenda] = useState(null)
   const [erroTitulo, setErroTitulo] = useState(null)
+  const [aguardandoAvaliacao, setAguardandoAvaliacao] = useState(false)
   const [projetoId, setProjetoId] = useState(projetoExistente?.id || null)
   const [projetoStatus, setProjetoStatus] = useState(projetoExistente?.status || 'pendente')
   const [titulo, setTitulo] = useState(projetoExistente?.titulo || '')
@@ -171,6 +172,8 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
         setFotosData(prev => ({ ...prev, [ordem]: data }))
         setLegendaEdit(data.legenda || '')
         setZoomEtapa(ordem)
+        // Foto de conclusão enviada: aguardar avaliação do cliente
+        if (ordem === 3) setAguardandoAvaliacao(true)
       }
     } catch (err) {
       console.error("Erro no upload:", err)
@@ -246,6 +249,21 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
       const mensagem = `Olá${clienteNome ? ` ${clienteNome}` : ''}! O projeto *${titulo}* foi iniciado.\n\nVocê pode acompanhar todas as etapas, fotos e adicionar comentários através do link exclusivo abaixo:\n\n👉 ${linkProjeto}\n\nAguardamos seu aceite para seguirmos com o serviço!`
       const urlWhatsapp = `https://wa.me/55${numTelefone}?text=${encodeURIComponent(mensagem)}`
       window.open(urlWhatsapp, '_blank')
+  }
+
+  const gerarLinkConclusao = async () => {
+    const { data: projData } = await supabase
+      .from('portfolio_projetos')
+      .select('avaliacao_token')
+      .eq('id', projetoId)
+      .single()
+
+    const token = projData?.avaliacao_token
+    const numTelefone = clienteWhatsapp.replace(/\D/g, '')
+    const linkAvaliacao = `${window.location.origin}/avaliar/${projetoId}?token=${token}`
+    const mensagem = `Olá${clienteNome ? ` ${clienteNome}` : ''}! O serviço *${titulo}* foi concluído! 🎉\n\nAcesse o link abaixo para ver as fotos finais e deixar sua avaliação:\n\n👉 ${linkAvaliacao}\n\nSua opinião é muito importante!`
+    const urlWhatsapp = `https://wa.me/55${numTelefone}?text=${encodeURIComponent(mensagem)}`
+    window.open(urlWhatsapp, '_blank')
   }
 
   useEffect(() => {
@@ -339,8 +357,19 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
         .select('status')
         .eq('id', projetoId)
         .single()
-      if (data && data.status !== projetoStatus) {
-        setProjetoStatus(data.status)
+      if (data) {
+        if (data.status !== projetoStatus) setProjetoStatus(data.status)
+        // Prestador subiu foto 3 mas cliente ainda não avaliou
+        if (data.status === 'em_execucao') {
+          const { data: fotos } = await supabase
+            .from('portfolio_fotos')
+            .select('ordem')
+            .eq('projeto_id', projetoId)
+          const temFoto3 = fotos?.some(f => f.ordem === 3)
+          if (temFoto3) setAguardandoAvaliacao(true)
+        }
+        // Cliente avaliou — status virou finalizado
+        if (data.status === 'finalizado') setAguardandoAvaliacao(false)
       }
     }
     sincronizarStatus()
@@ -431,6 +460,23 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
         ) : (
         
           <div className="p-8 space-y-8 overflow-y-auto max-h-[85vh] custom-scrollbar">
+
+            {/* ── Banner aguardando avaliação do cliente ── */}
+            {aguardandoAvaliacao && !isProjetoConcluido && (
+              <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-500">
+                <Activity size={16} className="shrink-0 animate-pulse" />
+                <div className="flex-1">
+                  <p className="text-[11px] font-black uppercase tracking-wide leading-none mb-1">Serviço concluído</p>
+                  <p className="text-[11px] font-medium leading-snug">Envie o link de avaliação para <span className="font-black">{clienteNome || 'o cliente'}</span> confirmar e avaliar o trabalho.</p>
+                </div>
+                <button
+                  onClick={gerarLinkConclusao}
+                  className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-[9px] font-black uppercase px-3 py-2 rounded-xl transition-all active:scale-95 shadow-md"
+                >
+                  Enviar
+                </button>
+              </div>
+            )}
 
             {/* ── Banner de erro de upload — visível, não silencioso ── */}
             {erroUpload && (
@@ -640,12 +686,40 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                       </span>
                       <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 3: Depois</span>
                     </div>
-                    <h4 className="text-xs font-semibold text-slate-700 italic mt-1">{fotosUrls[3] ? "Finalizado" : "Aguardando..."}</h4>
+                    {/* Foto enviada + descrição salva + aguardando avaliação */}
+                    {fotosUrls[3] && hasLegendaSalva(3) && aguardandoAvaliacao && !isProjetoConcluido && (
+                      <button
+                        onClick={gerarLinkConclusao}
+                        className="mt-2 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-95"
+                      >
+                        <LinkIcon size={14} />
+                        <span className="text-[10px] font-black uppercase italic">Enviar para avaliar</span>
+                      </button>
+                    )}
+                    {/* Foto enviada mas ainda sem descrição */}
                     {fotosUrls[3] && !hasLegendaSalva(3) && (
                       <div className="mt-1 flex items-center gap-1.5 text-amber-600 animate-in fade-in duration-500">
                         <AlertCircle size={10} className="shrink-0" />
                         <span className="text-[8px] font-black uppercase italic leading-none">Adicione uma descrição</span>
                       </div>
+                    )}
+                    {/* Foto enviada + descrição + aguardando (sem botão extra) */}
+                    {fotosUrls[3] && hasLegendaSalva(3) && aguardandoAvaliacao && (
+                      <div className="mt-1 flex items-center gap-1.5 text-blue-500 animate-in fade-in duration-500">
+                        <Activity size={10} className="shrink-0 animate-pulse" />
+                        <span className="text-[8px] font-black uppercase italic leading-none">Aguardando avaliação</span>
+                      </div>
+                    )}
+                    {/* Projeto finalizado pelo cliente */}
+                    {isProjetoConcluido && (
+                      <div className="mt-1 flex items-center gap-1.5 text-green-600 animate-in fade-in duration-300">
+                        <CheckCircle2 size={10} className="shrink-0" />
+                        <span className="text-[8px] font-black uppercase italic leading-none">Avaliado pelo cliente</span>
+                      </div>
+                    )}
+                    {/* Sem foto ainda */}
+                    {!fotosUrls[3] && (
+                      <h4 className="text-xs font-semibold text-slate-400 italic mt-1">Aguardando...</h4>
                     )}
                  </div>
               </div>

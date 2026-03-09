@@ -40,7 +40,7 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
   const fotosCarrossel = projeto?.portfolio_fotos?.sort((a, b) => a.ordem - b.ordem)
     .map(f => ({
       ...f,
-      label: f.ordem === 1 ? 'Início' : f.ordem === 2 ? 'Execução' : 'Conclusão'
+      label: f.ordem === 1 ? 'Antes' : f.ordem === 2 ? 'Durante' : 'Depois'
     })) || []
 
   useEffect(() => {
@@ -132,13 +132,13 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
 
   const fotosOrdenadas = projeto?.portfolio_fotos?.sort((a, b) => a.ordem - b.ordem) || []
   const temConclusao = fotosOrdenadas.some(f => f.ordem === 3)
-  const labelEtapaAtual = visualmenteConcluido ? 'Finalizado' : (projeto?.status === 'em_execucao' ? 'Em Execução' : 'Pendente')
+  const labelEtapaAtual = visualmenteConcluido ? 'Concluído ✓' : (projeto?.status === 'em_execucao' ? 'Aguardando sua avaliação' : 'Em andamento')
 
   // Etapas da linha do tempo
   const etapas = [
-    { ordem: 1, label: 'Início',    sublabel: 'Antes do serviço' },
-    { ordem: 2, label: 'Execução',  sublabel: 'Durante a obra'   },
-    { ordem: 3, label: 'Conclusão', sublabel: 'Entrega final'    },
+    { ordem: 1, label: 'Antes',     sublabel: 'Estado inicial'   },
+    { ordem: 2, label: 'Durante',   sublabel: 'Em andamento'     },
+    { ordem: 3, label: 'Depois',    sublabel: 'Resultado final'  },
   ]
 
   return (
