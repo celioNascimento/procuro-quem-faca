@@ -4,7 +4,6 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-// Componentes
 import HeroSection from '@/components/home/HeroSection'
 import SearchForm from '@/components/home/SearchForm'
 
@@ -13,11 +12,10 @@ export default function Home() {
   const [busca, setBusca] = useState('')
   const [sugestoes, setSugestoes] = useState([])
   const [erro, setErro] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, []);
+  // Removido: useState(mounted) + guard "if (!mounted) return"
+  // O HeroSection não usa mais opacity-0/setTimeout, então não há flash de layout.
+  // O guard escondia a página inteira e causava o salto da logo ao montar.
 
   useEffect(() => {
     const buscarSugestoes = async () => {
@@ -74,25 +72,21 @@ export default function Home() {
     router.push(`/prestadores?${params.toString()}`);
   };
 
-  if (!mounted) return <main className="min-h-screen bg-[#FDFDFD]" />
-
   return (
     <main className="min-h-screen bg-[#FDFDFD] flex flex-col items-center font-sans relative antialiased overflow-x-hidden">
-      
-      {/* BACKGROUND DECO */}
+
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-50/40 via-transparent to-transparent -z-0 pointer-events-none" />
 
       <div className="w-full flex flex-col items-center animate-in fade-in duration-700 relative z-10">
 
         <HeroSection onLog={registrarLog} />
 
-        {/* SEÇÃO DE BUSCA: 
-            Aumentado pt-24 (era pt-16) para baixar o bloco em ~15% no mobile.
-            Mantido md:pt-32 para desktop.
-        */}
-        <section className="w-full max-w-4xl px-6 pt-24 md:pt-32 pb-12 flex flex-col items-center text-center">
-          
-          {/* CONTAINER DA LOGO */}
+        {/* pt-20 = altura exata do header (h-20).
+            Antes era pt-24 no mobile — inconsistente com o header que aparecia
+            com delay via setTimeout/opacity. Agora o espaço é fixo desde o
+            primeiro frame, a logo não sobe mais. */}
+        <section className="w-full max-w-4xl px-6 pt-20 md:pt-32 pb-12 flex flex-col items-center text-center">
+
           <div className="mb-0 transition-transform duration-500">
             <Link href="/" className="block w-full max-w-[280px] md:max-w-[560px] transition-transform active:scale-95 duration-300">
               <img
@@ -103,10 +97,6 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* FORMULÁRIO DE BUSCA: 
-              Agressividade mantida md:-mt-28 no desktop.
-              Mobile suavizado para -mt-14 (ajuste proporcional ao novo pt-24).
-          */}
           <div className="w-full mb-8 -mt-14 md:-mt-28 relative z-20">
             <div className="w-full max-w-[620px] mx-auto">
               <SearchForm
@@ -118,15 +108,12 @@ export default function Home() {
             </div>
           </div>
 
-          {/* SUGESTÕES: 
-              Aproximação mantida com mt-[-0.5rem] no mobile para unidade visual.
-          */}
           {sugestoes.length > 0 && (
             <div className="flex flex-col items-center gap-4 mt-[-0.5rem] md:mt-0 animate-in slide-in-from-bottom-4 duration-500">
               <span className="text-[9px] md:text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] italic">
                 {busca.length > 0 ? 'Encontramos para você' : 'Sugestões em destaque'}
               </span>
-              
+
               <div className="flex flex-wrap justify-center gap-1.5 md:gap-2 max-w-[320px] md:max-w-none">
                 {sugestoes.map((item, index) => (
                   <button
@@ -143,12 +130,12 @@ export default function Home() {
         </section>
 
         <footer className="mt-auto py-10 opacity-30">
-           <div className="flex flex-col items-center gap-3">
-             <div className="h-px w-8 bg-slate-200" />
-             <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em] italic leading-none">
-                Londrina • Paraná
-             </p>
-           </div>
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-px w-8 bg-slate-200" />
+            <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em] italic leading-none">
+              Londrina • Paraná
+            </p>
+          </div>
         </footer>
       </div>
     </main>

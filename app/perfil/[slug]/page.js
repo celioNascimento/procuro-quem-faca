@@ -81,12 +81,18 @@ export default function PerfilPublico() {
 
       if (!error && data) {
         setPrestador(data);
-        
-        // CORREÇÃO: Filtramos para que apenas 'em_execucao' e 'finalizado' (ou concluído) apareçam na vitrine pública
-        const projetosFiltrados = (data.portfolio_projetos || []).filter(proj => 
-          !['em_registro', 'pendente'].includes(proj.status)
-        );
-        
+
+        // Vitrine pública: mostra em_execucao (prova de atividade) e finalizado.
+        // em_registro e pendente ficam ocultos — ainda não foram aceitos pelo cliente.
+        const projetosFiltrados = (data.portfolio_projetos || [])
+          .filter(proj => ['em_execucao', 'finalizado'].includes(proj.status))
+          // Finalizados primeiro, em andamento depois
+          .sort((a, b) => {
+            if (a.status === 'finalizado' && b.status !== 'finalizado') return -1;
+            if (a.status !== 'finalizado' && b.status === 'finalizado') return 1;
+            return 0;
+          });
+
         setProjetos(projetosFiltrados);
 
         if (data.categoria) {
@@ -130,10 +136,14 @@ export default function PerfilPublico() {
 
   const waLink = `https://wa.me/55${prestador.whatsapp.replace(/\D/g, '')}?text=Olá ${prestador.nome}, vi seu perfil no Procuro Quem Faça e gostaria de um orçamento.`;
   const isPublico = prestador.origem_tipo === 'curadoria_publica';
-  
+
   const localizacaoFinal = [prestador.bairro, prestador.cidades?.nome]
     .filter(item => item && item.trim().length > 0)
     .join(', ');
+
+  // Contadores para o resumo de atividade
+  const totalFinalizados = projetos.filter(p => p.status === 'finalizado').length;
+  const totalEmAndamento = projetos.filter(p => p.status === 'em_execucao').length;
 
   return (
     <main className="min-h-screen bg-white font-sans text-slate-800">
@@ -143,23 +153,25 @@ export default function PerfilPublico() {
         <section className="text-center mb-10 relative">
 
           <div className="absolute top-0 w-full flex justify-between z-10 px-1">
-             <Link
-                href={`/denunciar/${prestador.id}`}
-                className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-red-500 shadow-sm transition-all hover:scale-105 active:scale-95"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-             </Link>
+            <Link
+              href={`/denunciar/${prestador.id}`}
+              className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-red-500 shadow-sm transition-all hover:scale-105 active:scale-95"
+              title="Denunciar"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </Link>
 
-             <button
-                onClick={compartilharPerfil}
-                className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-blue-600 shadow-sm transition-all hover:scale-105 active:scale-95"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-             </button>
+            <button
+              onClick={compartilharPerfil}
+              className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-blue-600 shadow-sm transition-all hover:scale-105 active:scale-95"
+              title="Compartilhar"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
           </div>
 
           <div className="relative inline-block mt-4 mb-6">
@@ -170,7 +182,7 @@ export default function PerfilPublico() {
                 <span className="text-slate-300 font-black text-[10px] uppercase">Sem Foto</span>
               )}
             </div>
-            
+
             {prestador.verificado && (
               <div className="absolute bottom-1 right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-lg border-2 border-white animate-in zoom-in duration-500">
                 <ShieldCheck size={14} strokeWidth={3} />
@@ -186,11 +198,27 @@ export default function PerfilPublico() {
             <span className="text-blue-600 text-[10px] font-black uppercase tracking-widest mb-3">
               {prestador.categoria}
             </span>
-            
+
             {localizacaoFinal && (
               <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                 {localizacaoFinal}
               </p>
+            )}
+
+            {/* ── Resumo de atividade ── */}
+            {(totalFinalizados > 0 || totalEmAndamento > 0) && (
+              <div className="flex items-center gap-3 mt-4">
+                {totalFinalizados > 0 && (
+                  <span className="px-3 py-1.5 bg-green-50 border border-green-100 text-green-700 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+                    ✓ {totalFinalizados} {totalFinalizados === 1 ? 'concluído' : 'concluídos'}
+                  </span>
+                )}
+                {totalEmAndamento > 0 && (
+                  <span className="px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+                    ● {totalEmAndamento} em andamento
+                  </span>
+                )}
+              </div>
             )}
           </div>
         </section>
@@ -235,6 +263,7 @@ export default function PerfilPublico() {
             <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 ml-8 italic">
               Registros de Atividade
             </h2>
+            {/* PortfolioGrid recebe projetos já com status para exibir badge internamente se necessário */}
             <PortfolioGrid projetos={projetos} />
           </section>
 
