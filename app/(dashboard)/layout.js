@@ -89,12 +89,6 @@ export default function DashboardLayout({ children }) {
           {children}
         </div>
       </main>
-
-      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-lg px-6 py-3 rounded-full border border-white/10 shadow-2xl z-50 flex items-center gap-10">
-        <Link href="/dashboard" className="text-white text-xl hover:scale-110 transition-transform">🏠</Link>
-        <div className="w-px h-4 bg-white/20" />
-        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-white text-xl hover:scale-110 transition-transform">🚀</button>
-      </div>
     </div>
   )
 }
