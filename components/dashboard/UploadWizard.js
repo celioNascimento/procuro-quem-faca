@@ -26,8 +26,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
   const [legendaEdit, setLegendaEdit] = useState('')
   const [salvandoLegenda, setSalvandoLegenda] = useState(false)
   const [projetosEncontrados, setProjetosEncontrados] = useState([])
-  
-  // NOVO: Estado para feedback do Autosave
   const [statusTitulo, setStatusTitulo] = useState('ocioso') // ocioso, salvando, salvo
 
   // --- FUNÇÕES DE UTILIDADE E VALIDAÇÃO ---
@@ -190,7 +188,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
     }
   }
 
-  // AJUSTADO: handleAtualizarTitulo com feedback visual
   const handleAtualizarTitulo = async () => {
     if (!projetoId || !isTitleValid) return
     setStatusTitulo('salvando')
@@ -202,7 +199,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
       
       if (!error) {
         setStatusTitulo('salvo')
-        setTimeout(() => setStatusTitulo('ocioso'), 3000) // Volta ao ocioso após 3s
+        setTimeout(() => setStatusTitulo('ocioso'), 3000)
       }
     } catch (err) {
       console.error("Erro ao atualizar título:", err)
@@ -312,6 +309,24 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
       carregarProgresso(projetoExistente.id)
     }
   }, [projetoExistente, carregarProgresso, carregarDadosBase])
+
+  // Sincroniza o status do projeto com o banco ao montar (evita status stale entre sessões).
+  // Cenário corrigido: prestador abre o wizard no dia seguinte e o cliente já tinha aceitado —
+  // sem isso, projetoStatus viria como 'pendente' do prop e o botão "Enviar WhatsApp" apareceria indevidamente.
+  useEffect(() => {
+    if (!projetoId) return
+    const sincronizarStatus = async () => {
+      const { data } = await supabase
+        .from('portfolio_projetos')
+        .select('status')
+        .eq('id', projetoId)
+        .single()
+      if (data && data.status !== projetoStatus) {
+        setProjetoStatus(data.status)
+      }
+    }
+    sincronizarStatus()
+  }, [projetoId]) // roda ao mount e sempre que projetoId muda (ex: selecionarProjeto)
 
   const nextSlide = (e) => { e?.stopPropagation(); setCurrentSlide((prev) => (prev + 1) % fotosCarrossel.length) }
   const prevSlide = (e) => { e?.stopPropagation(); setCurrentSlide((prev) => (prev - 1 + fotosCarrossel.length) % fotosCarrossel.length) }
@@ -445,7 +460,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[9px] font-bold uppercase text-slate-400 italic tracking-widest">Título do Projeto</span>
                 
-                {/* FEEDBACK VISUAL DO AUTOSAVE */}
                 {projetoId && (
                   <div className="flex items-center gap-1.5 animate-in fade-in duration-300">
                     {statusTitulo === 'salvando' && (
