@@ -155,7 +155,7 @@ export default function PainelDoCliente() {
       <div className="w-full max-w-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700">
 
         <div className="flex justify-center mb-0 relative z-20">
-          <Link href="/" className="transition-transform active:scale-95 duration-300 w-full max-w-[400px] md:max-w-[450px] flex justify-center">
+          <Link href="/" className="transition-transform active:scale-95 duration-300 w-full max-w-[320px] md:max-w-[380px] flex justify-center">
             <img
               src="/logo.png"
               alt="Logo Procuro Quem Faça"
@@ -219,13 +219,13 @@ export default function PainelDoCliente() {
         </div>
       )}
 
-      <div className="max-w-xl mx-auto px-6 pt-10 space-y-10">
+      <div className="max-w-xl mx-auto px-6 pt-6 space-y-6">
 
         {/* ── HEADER REDESENHADO ────────────────────────────────────────────── */}
-        <header className="relative flex flex-col items-center gap-5 pb-6 border-b border-slate-100">
+        <header className="relative flex flex-col items-center gap-2 pb-4 border-b border-slate-100">
 
           {/* Logo centralizada — elemento principal da identidade */}
-          <Link href="/" className="block w-full max-w-[300px] transition-transform active:scale-95 duration-300">
+          <Link href="/" className="block w-full max-w-[180px] transition-transform active:scale-95 duration-300">
             <img src="/logo.png" alt="Procuro Quem Faça" className="w-full h-auto object-contain drop-shadow-sm" />
           </Link>
 
