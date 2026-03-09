@@ -221,47 +221,69 @@ export default function PainelDoCliente() {
 
       <div className="max-w-xl mx-auto px-6 pt-10 space-y-10">
 
-        {/* HEADER */}
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div
-              className="relative group cursor-pointer"
-              onClick={() => router.push('/painel/perfil')}
-            >
-              <div className="absolute inset-0 bg-blue-600 blur-lg opacity-20 group-hover:opacity-30 transition-opacity rounded-full" />
-              {/* ── Avatar com fallback para iniciais ── */}
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  className="relative w-14 h-14 rounded-full object-cover border-[3px] border-white shadow-lg shadow-slate-100"
-                  alt="Avatar"
-                  onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
-                />
-              ) : null}
-              <div
-                className="relative w-14 h-14 rounded-full bg-blue-600 border-[3px] border-white shadow-lg shadow-slate-100 items-center justify-center text-white font-black text-sm"
-                style={{ display: avatarUrl ? 'none' : 'flex' }}
-              >
-                {iniciais || <User size={20} />}
-              </div>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Olá,</p>
-              <h2 className="text-lg font-black italic uppercase text-slate-800 leading-none truncate max-w-[150px]">
-                {nomeCliente.split(' ')[0] || 'Cliente'}
-              </h2>
-            </div>
-          </div>
+        {/* ── HEADER REDESENHADO ────────────────────────────────────────────── */}
+        <header className="relative flex flex-col items-center gap-5 pb-6 border-b border-slate-100">
 
-          {/* ── Logo em tamanho legível ── */}
-          <Link href="/">
-            <img
-              src="/logo.png"
-              className="h-10 w-auto opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all"
-              alt="Logo"
-            />
+          {/* Logo centralizada — elemento principal da identidade */}
+          <Link href="/" className="block w-full max-w-[220px] transition-transform active:scale-95 duration-300">
+            <img src="/logo.png" alt="Procuro Quem Faça" className="w-full h-auto object-contain drop-shadow-sm" />
           </Link>
-        </div>
+
+          {/* Linha de perfil: avatar + nome completo à esquerda, botão sair à direita */}
+          <div className="w-full flex items-center justify-between gap-4">
+
+            {/* Avatar + nome — sem truncamento, nome completo em duas linhas se precisar */}
+            <button
+              onClick={() => router.push('/painel/perfil')}
+              className="flex items-center gap-3 group text-left"
+            >
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 bg-blue-500 blur-md opacity-0 group-hover:opacity-20 transition-opacity rounded-full" />
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    className="relative w-11 h-11 rounded-full object-cover border-2 border-white shadow-md"
+                    alt="Avatar"
+                    onError={e => {
+                      e.currentTarget.style.display = 'none'
+                      e.currentTarget.nextSibling.style.display = 'flex'
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="relative w-11 h-11 rounded-full bg-blue-600 border-2 border-white shadow-md items-center justify-center text-white font-black text-xs"
+                  style={{ display: avatarUrl ? 'none' : 'flex' }}
+                >
+                  {iniciais || <User size={16} />}
+                </div>
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                  Conectado como
+                </p>
+                {/* Nome completo — quebra linha, sem corte */}
+                <p className="text-sm font-black text-slate-800 uppercase italic leading-tight break-words">
+                  {nomeCliente || 'Cliente'}
+                </p>
+              </div>
+            </button>
+
+            {/* Botão sair — explícito, sem ambiguidade */}
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut()
+                router.push('/')
+              }}
+              className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm active:scale-95"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sair
+            </button>
+          </div>
+        </header>
 
         <div className="space-y-2">
           <h1 className="text-4xl md:text-5xl font-black italic uppercase text-slate-800 leading-[0.9] tracking-tighter">
