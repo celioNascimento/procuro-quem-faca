@@ -1,23 +1,23 @@
 'use client'
-import { useState, useEffect, useCallback, useRef } from 'react' 
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ModalConfirmacao from '@/components/ui/ModalConfirmacao'
-import { Loader2, Camera, User, AlertCircle } from 'lucide-react' 
+import { Loader2, Camera, User, AlertCircle } from 'lucide-react'
 
 export default function EditarPerfilTab() {
   const router = useRouter()
-  const fileInputRef = useRef(null) 
+  const fileInputRef = useRef(null)
   const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState(false) 
+  const [salvando, setSalvando] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [status, setStatus] = useState('')
   const [tentouEnviar, setTentouEnviar] = useState(false)
   const [userLogado, setUserLogado] = useState(null)
   const [isModalExcluirOpen, setIsModalExcluirOpen] = useState(false)
-  const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' }) 
+  const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
 
-  // Listas do banco
   const [listaGrupos, setListaGrupos] = useState([])
   const [listaCategorias, setListaCategorias] = useState([])
   const [listaEstados, setListaEstados] = useState([])
@@ -25,7 +25,6 @@ export default function EditarPerfilTab() {
   const [listaCidades, setListaCidades] = useState([])
   const [cidadesRegiao, setCidadesRegiao] = useState([])
 
-  // Estados para o Slug
   const [slugDisponivel, setSlugDisponivel] = useState(true)
   const [checandoSlug, setChecandoSlug] = useState(false)
   const [editouSlugManualmente, setEditouSlugManualmente] = useState(false)
@@ -68,7 +67,6 @@ export default function EditarPerfilTab() {
     if (rid) query = query.eq('regiao_id', rid)
     else if (sigla) query = query.eq('estado_sigla', sigla)
     else return setListaCidades([]);
-
     const { data } = await query
     setListaCidades(data || [])
     setCidadesRegiao(data || [])
@@ -98,7 +96,7 @@ export default function EditarPerfilTab() {
       const arquivo = e.target.files[0]
       if (!arquivo) return
 
-      const maxKB = 10240 
+      const maxKB = 10240
       const fileSizeKB = arquivo.size / 1024
 
       if (fileSizeKB > maxKB) {
@@ -107,7 +105,7 @@ export default function EditarPerfilTab() {
           title: 'Arquivo muito pesado',
           message: `Sua imagem possui ${(fileSizeKB / 1024).toFixed(1)}MB. Para garantir a performance, o limite é de 10MB.`
         })
-        e.target.value = '' 
+        e.target.value = ''
         return
       }
 
@@ -117,9 +115,7 @@ export default function EditarPerfilTab() {
         try {
           const urlParts = formData.foto_perfil.split('/')
           const oldFileName = urlParts[urlParts.length - 1]
-          if (oldFileName) {
-            await supabase.storage.from('fotos-perfil').remove([oldFileName])
-          }
+          if (oldFileName) await supabase.storage.from('fotos-perfil').remove([oldFileName])
         } catch (removeError) {
           console.warn("Aviso: Foto antiga não pôde ser removida", removeError)
         }
@@ -132,11 +128,9 @@ export default function EditarPerfilTab() {
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from('fotos-perfil').getPublicUrl(fileName)
-      
       setFormData(prev => ({ ...prev, foto_perfil: publicUrl }))
       setStatus('✅ Foto atualizada!')
       setTimeout(() => setStatus(''), 2000)
-
     } catch (err) {
       setErrorModal({
         show: true,
@@ -242,9 +236,20 @@ export default function EditarPerfilTab() {
 
   const handleSalvar = async (e) => {
     e.preventDefault();
-    if (!slugDisponivel) { setStatus('❌ URL indisponível'); return; }
     setTentouEnviar(true);
-    setStatus('Sincronizando...');
+
+    // ── VALIDAÇÃO DE FOTO ──────────────────────────────────────────────────
+    if (!formData.foto_perfil) {
+      setStatus('❌ A foto de perfil é obrigatória.')
+      return
+    }
+    if (!slugDisponivel) {
+      setStatus('❌ URL indisponível. Escolha outra.')
+      return
+    }
+
+    setSalvando(true)
+    setStatus('')
 
     try {
       const cidadeSedeNome = listaCidades.find(c => String(c.id) === String(formData.cidade_id))?.nome;
@@ -263,7 +268,7 @@ export default function EditarPerfilTab() {
 
       if (!payload.id) delete payload.id;
 
-      const { data: prestadorSalvo, error } = await supabase
+      const { error } = await supabase
         .from('prestadores')
         .upsert(payload)
         .select('id')
@@ -271,23 +276,33 @@ export default function EditarPerfilTab() {
 
       if (error) throw error;
 
-      setStatus('✅ Perfil Atualizado!');
-      setTentouEnviar(false);
+      setStatus('✅ Perfil Atualizado!')
+      setTentouEnviar(false)
     } catch (err) {
-      setStatus(`❌ Erro: ${err.message || 'Verifique os dados'}`);
+      setStatus(`❌ Erro: ${err.message || 'Verifique os dados'}`)
+    } finally {
+      setSalvando(false)
+      setTimeout(() => setStatus(''), 3000)
     }
-    setTimeout(() => setStatus(''), 3000);
   };
 
-  if (loading) return <div className="p-20 text-center animate-pulse font-bold text-slate-300 uppercase tracking-widest">Sincronizando perfil...</div>
+  if (loading) return (
+    <div className="p-20 text-center animate-pulse font-bold text-slate-300 uppercase tracking-widest">
+      Sincronizando perfil...
+    </div>
+  )
 
   const habilidadesExtrasDisponiveis = listaCategorias
     .filter(cat => String(cat.id) !== String(formData.categoria_id))
     .map(cat => cat.nome);
 
+  // Foto obrigatória: ring vermelho na foto se tentou salvar sem ela
+  const fotoComErro = tentouEnviar && !formData.foto_perfil
+
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans antialiased">
-      
+
+      {/* Modal de erro */}
       {errorModal.show && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95">
@@ -298,7 +313,7 @@ export default function EditarPerfilTab() {
               <h3 className="text-xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">{errorModal.title}</h3>
               <p className="text-[13px] font-medium text-slate-500 leading-relaxed">{errorModal.message}</p>
             </div>
-            <button 
+            <button
               onClick={() => setErrorModal({ ...errorModal, show: false })}
               className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100"
             >
@@ -308,44 +323,52 @@ export default function EditarPerfilTab() {
         </div>
       )}
 
-      {/* CORREÇÃO CIRÚRGICA: O pt-12 (48px) foi alterado para pt-2 md:pt-4 (8px/16px), puxando o conteúdo para cima sem grudar nas bordas no mobile */}
       <div className="max-w-5xl mx-auto px-2 md:px-4 pt-2 md:pt-4 space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        
-        {/* CORREÇÃO CIRÚRGICA: Redução leve no espaçamento inferior do header para ficar mais compacto */}
+
         <header className="border-b border-slate-100 pb-6 md:pb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Configurações de Perfil</h2>
           <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest mt-2">Personalize sua vitrine profissional</p>
         </header>
 
         <form onSubmit={handleSalvar} className="grid grid-cols-1 md:grid-cols-12 gap-8">
+
+          {/* ── Coluna esquerda: foto ── */}
           <div className="col-span-1 md:col-span-4 space-y-6">
             <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm flex flex-col items-center gap-6 sticky top-32">
-              
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={fazerUploadFoto} 
-                accept="image/*" 
-                className="hidden" 
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={fazerUploadFoto}
+                accept="image/*"
+                className="hidden"
               />
 
-              <div 
+              {/* ── Ring vermelho se tentou salvar sem foto ── */}
+              <div
                 onClick={() => !uploading && fileInputRef.current.click()}
-                className="relative w-40 h-40 md:w-48 md:h-48 rounded-[3.5rem] bg-slate-50 border-4 border-white flex items-center justify-center overflow-hidden group transition-all hover:scale-[1.02] shadow-xl cursor-pointer"
+                className={`relative w-40 h-40 md:w-48 md:h-48 rounded-[3.5rem] bg-slate-50 border-4 border-white flex items-center justify-center overflow-hidden group transition-all hover:scale-[1.02] shadow-xl cursor-pointer ${fotoComErro ? 'ring-4 ring-red-200' : ''}`}
               >
                 {uploading ? (
                   <Loader2 className="animate-spin text-blue-500" size={32} />
                 ) : formData.foto_perfil ? (
                   <img src={formData.foto_perfil} className="w-full h-full object-cover" alt="Foto" />
                 ) : (
-                  <User size={48} className="text-slate-200" />
+                  <User size={48} className={fotoComErro ? 'text-red-200' : 'text-slate-200'} />
                 )}
-                
+
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-white font-bold text-[10px] uppercase tracking-widest z-20 backdrop-blur-sm">
                   <Camera size={20} className="mb-1" />
                   <span className="absolute mt-8">Alterar Foto</span>
                 </div>
               </div>
+
+              {/* ── Aviso de foto obrigatória ── */}
+              {fotoComErro && (
+                <p className="text-red-400 text-[11px] font-bold text-center uppercase tracking-wider animate-in fade-in">
+                  ⚠ Foto obrigatória
+                </p>
+              )}
 
               <div className="text-center space-y-3">
                 <div className="flex items-center justify-center gap-2">
@@ -359,7 +382,9 @@ export default function EditarPerfilTab() {
             </section>
           </div>
 
+          {/* ── Coluna direita: campos ── */}
           <div className="col-span-1 md:col-span-8 space-y-6">
+
             {userLogado && (
               <section className="bg-white p-6 rounded-[2rem] border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
                 <div className="text-center md:text-left">
@@ -389,7 +414,12 @@ export default function EditarPerfilTab() {
                     <div className="flex items-center gap-1 font-bold text-sm">
                       <span className="text-slate-400 font-medium hidden md:inline">procuroquemfaca.com.br/</span>
                       <input value={formData.slug || ''} onChange={(e) => { setEditouSlugManualmente(true); setFormData({ ...formData, slug: formatarParaSlug(e.target.value) }) }} className="bg-transparent border-none outline-none text-blue-600 flex-1 min-w-0" placeholder="seu-link" />
-                      {checandoSlug ? <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /> : ((formData.slug?.length > 2) && (slugDisponivel ? <span className="text-green-500 text-[10px] font-bold uppercase">Livre</span> : <span className="text-red-500 text-[10px] font-bold uppercase">Em uso</span>))}
+                      {checandoSlug
+                        ? <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        : (formData.slug?.length > 2) && (slugDisponivel
+                          ? <span className="text-green-500 text-[10px] font-bold uppercase">Livre</span>
+                          : <span className="text-red-500 text-[10px] font-bold uppercase">Em uso</span>)
+                      }
                     </div>
                   </div>
                 </div>
@@ -417,7 +447,7 @@ export default function EditarPerfilTab() {
                     </div>
                   </div>
                 )}
-                
+
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase text-slate-400 ml-2 tracking-widest">Sobre seus Serviços</label>
                   <textarea value={formData.bio || ''} onChange={e => setFormData({ ...formData, bio: e.target.value })} placeholder="Fale brevemente sobre sua experiência..." className={`${inputStyle()} h-32 resize-none`} />
@@ -458,9 +488,29 @@ export default function EditarPerfilTab() {
               )}
             </section>
 
-            <div className="space-y-6 pt-4">
-              <button type="submit" className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-bold uppercase tracking-[0.2em] text-[13px] shadow-2xl hover:bg-blue-700 active:scale-95 transition-all">
-                {status || 'Atualizar Meu Perfil'}
+            <div className="space-y-4 pt-4">
+
+              {/* ── Feedback separado do botão ── */}
+              {status && (
+                <div className={`w-full p-4 rounded-2xl text-[10px] font-black text-center uppercase tracking-wider animate-in fade-in ${
+                  status.startsWith('❌')
+                    ? 'bg-red-50 text-red-500 border border-red-100'
+                    : 'bg-blue-50 text-blue-600'
+                }`}>
+                  {status}
+                </div>
+              )}
+
+              {/* ── Botão sempre com label fixo ── */}
+              <button
+                type="submit"
+                disabled={salvando || uploading}
+                className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-bold uppercase tracking-[0.2em] text-[13px] shadow-2xl hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+              >
+                {salvando
+                  ? <><Loader2 size={18} className="animate-spin" /> Salvando...</>
+                  : 'Atualizar Meu Perfil'
+                }
               </button>
 
               <div className="text-center">
