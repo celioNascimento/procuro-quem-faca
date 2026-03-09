@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import Link from 'next/link' 
+import Link from 'next/link'
 import {
   Clock, CheckCircle2, ChevronRight, User, Smartphone,
   LayoutGrid, ShieldCheck, Search, Phone, LogIn, ExternalLink, X, ZoomIn, Briefcase, MapPin
@@ -15,7 +15,6 @@ export default function PainelDoCliente() {
   const [servicos, setServicos] = useState([])
   const [loading, setLoading] = useState(true)
   const [zoomImage, setZoomImage] = useState(null)
-  
   const [tokenUrl, setTokenUrl] = useState(null)
 
   useEffect(() => {
@@ -26,8 +25,8 @@ export default function PainelDoCliente() {
   }, [])
 
   const loginComGoogle = async () => {
-    const redirectUrl = tokenUrl 
-      ? `${window.location.origin}/meus-servicos?token=${tokenUrl}` 
+    const redirectUrl = tokenUrl
+      ? `${window.location.origin}/meus-servicos?token=${tokenUrl}`
       : `${window.location.origin}/meus-servicos`
 
     await supabase.auth.signInWithOAuth({
@@ -42,10 +41,10 @@ export default function PainelDoCliente() {
 
       const { error } = await supabase
         .from('portfolio_projetos')
-        .update({ 
+        .update({
           status: 'em_execucao',
           aceito_at: new Date().toISOString(),
-          cliente_nome: nomeCorreto 
+          cliente_nome: nomeCorreto
         })
         .eq('id', servico.id)
 
@@ -55,55 +54,95 @@ export default function PainelDoCliente() {
       }
 
       window.location.href = `/avaliar/${servico.id}?token=${servico.avaliacao_token}`
-
     } catch (err) {
       console.error('Falha na comunicação:', err)
     }
   }
 
-  const buscarDados = async (user) => {
+  const buscarDados = async (user, token) => {
     setLoading(true)
-    const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-    setProfile(prof)
-    const whatsapp = prof?.whatsapp || localStorage.getItem('cliente_whatsapp')
-    
-    if (whatsapp) {
-      const { data: projs } = await supabase
-        .from('portfolio_projetos')
-        .select(`
-          *,
-          prestadores (nome, foto_perfil, whatsapp, categoria:categorias(nome)),
-          portfolio_fotos (*)
-        `)
-        .eq('cliente_whatsapp', whatsapp.replace(/\D/g, ''))
-        .eq('status', 'pendente') 
-        .order('created_at', { ascending: false })
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle()
+      setProfile(prof)
 
-      if (projs && projs.length > 0) {
+      let projs = []
+
+      // ── PRIORIDADE 1: buscar pelo token da URL ─────────────────────────────
+      // É a forma mais confiável — não depende de WhatsApp no perfil do cliente.
+      if (token) {
+        const { data } = await supabase
+          .from('portfolio_projetos')
+          .select(`
+            *,
+            prestadores (nome, foto_perfil, whatsapp, categoria:categorias(nome)),
+            portfolio_fotos (*)
+          `)
+          .eq('avaliacao_token', token)
+          .eq('status', 'pendente')
+          .maybeSingle()
+
+        if (data) projs = [data]
+      }
+
+      // ── PRIORIDADE 2: fallback por WhatsApp (cliente já logado sem token) ──
+      // Útil quando o cliente volta à página sem o token na URL.
+      if (projs.length === 0) {
+        const whatsapp = prof?.whatsapp || localStorage.getItem('cliente_whatsapp')
+        if (whatsapp) {
+          const { data } = await supabase
+            .from('portfolio_projetos')
+            .select(`
+              *,
+              prestadores (nome, foto_perfil, whatsapp, categoria:categorias(nome)),
+              portfolio_fotos (*)
+            `)
+            .eq('cliente_whatsapp', whatsapp.replace(/\D/g, ''))
+            .eq('status', 'pendente')
+            .order('created_at', { ascending: false })
+
+          if (data) projs = data
+        }
+      }
+
+      if (projs.length > 0) {
         setServicos(projs)
       } else {
         router.push('/painel/perfil')
       }
-    } else {
-        router.push('/painel/perfil')
+    } catch (err) {
+      console.error('Erro ao buscar dados:', err)
+      router.push('/painel/perfil')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   useEffect(() => {
+    // Aguarda tokenUrl ser lido antes de buscar
+    if (tokenUrl === null) return
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      if (session) buscarDados(session.user)
+      if (session) buscarDados(session.user, tokenUrl)
       else setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      if (session) buscarDados(session.user)
+      if (session) buscarDados(session.user, tokenUrl)
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [tokenUrl]) // depende de tokenUrl para garantir que o token já foi lido
+
+  // ── Avatar com fallback para iniciais ─────────────────────────────────────
+  const avatarUrl = profile?.avatar_url || session?.user?.user_metadata?.avatar_url
+  const nomeCliente = profile?.full_name || session?.user?.user_metadata?.full_name || ''
+  const iniciais = nomeCliente.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase()
 
   if (loading) return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4 p-6 text-center">
@@ -114,27 +153,19 @@ export default function PainelDoCliente() {
   if (!session) return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700">
-        
-        {/* LOGO DO PROJETO 
-            - Escala ampliada: max-w-[320px] md:max-w-[380px]
-            - Margem zerada (mb-0) para encostar no card
-            - z-index elevado para ficar visualmente sobreposta (z-20)
-        */}
+
         <div className="flex justify-center mb-0 relative z-20">
-           <Link href="/" className="transition-transform active:scale-95 duration-300 w-full max-w-[320px] md:max-w-[380px] flex justify-center">
-             <img 
-               src="/logo.png" 
-               alt="Logo Procuro Quem Faça" 
-               className="w-full h-auto object-contain drop-shadow-lg" 
-             />
-           </Link>
+          <Link href="/" className="transition-transform active:scale-95 duration-300 w-full max-w-[320px] md:max-w-[380px] flex justify-center">
+            <img
+              src="/logo.png"
+              alt="Logo Procuro Quem Faça"
+              className="w-full h-auto object-contain drop-shadow-lg"
+            />
+          </Link>
         </div>
 
-        {/* CARD DE LOGIN 
-            - Margem negativa (-mt-4 md:-mt-8) faz o card "subir" contra a base da logo.
-        */}
         <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] border border-slate-50 text-center space-y-8 relative z-10 -mt-4 md:-mt-8">
-          
+
           {tokenUrl ? (
             <div className="space-y-4">
               <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto text-blue-600 mb-6">
@@ -147,7 +178,7 @@ export default function PainelDoCliente() {
             </div>
           ) : (
             <div className="space-y-4">
-               <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto text-blue-600 mb-6">
+              <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto text-blue-600 mb-6">
                 <ShieldCheck size={32} />
               </div>
               <h2 className="text-2xl font-black italic uppercase text-slate-800 leading-none tracking-tighter">Portal do<br/>Cliente</h2>
@@ -157,8 +188,7 @@ export default function PainelDoCliente() {
             </div>
           )}
 
-          {/* BOTÃO LOGIN - Apenas Texto, Minimalista e Imponente */}
-          <button 
+          <button
             onClick={loginComGoogle}
             className="w-full py-6 bg-blue-600 text-white rounded-3xl font-black italic uppercase text-[12px] md:text-sm tracking-widest text-center hover:bg-blue-700 transition-all active:scale-[0.98] shadow-2xl shadow-blue-200/60"
           >
@@ -171,18 +201,18 @@ export default function PainelDoCliente() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-slate-900 pb-32 font-sans antialiased selection:bg-blue-100">
-      
+
       {zoomImage && (
-        <div 
+        <div
           className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
           onClick={() => setZoomImage(null)}
         >
           <button className="absolute top-6 right-6 text-white/70 bg-white/10 p-3 rounded-full hover:bg-white/20 hover:text-white transition-all">
             <X size={24} />
           </button>
-          <img 
-            src={zoomImage} 
-            className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300 ring-1 ring-white/10" 
+          <img
+            src={zoomImage}
+            className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300 ring-1 ring-white/10"
             alt="Zoom do Registro"
           />
           <p className="absolute bottom-12 text-white/40 text-[10px] font-bold uppercase tracking-[0.3em]">Toque para fechar</p>
@@ -191,36 +221,54 @@ export default function PainelDoCliente() {
 
       <div className="max-w-xl mx-auto px-6 pt-10 space-y-10">
 
-        {/* HEADER PERFIL LOGADO */}
+        {/* HEADER */}
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <div className="relative group cursor-pointer" onClick={() => router.push('/painel/perfil')}>
-                <div className="absolute inset-0 bg-blue-600 blur-lg opacity-20 group-hover:opacity-30 transition-opacity rounded-full"></div>
-                <img 
-                  src={profile?.avatar_url || session.user.user_metadata.avatar_url} 
+            <div
+              className="relative group cursor-pointer"
+              onClick={() => router.push('/painel/perfil')}
+            >
+              <div className="absolute inset-0 bg-blue-600 blur-lg opacity-20 group-hover:opacity-30 transition-opacity rounded-full" />
+              {/* ── Avatar com fallback para iniciais ── */}
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
                   className="relative w-14 h-14 rounded-full object-cover border-[3px] border-white shadow-lg shadow-slate-100"
                   alt="Avatar"
+                  onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
                 />
+              ) : null}
+              <div
+                className="relative w-14 h-14 rounded-full bg-blue-600 border-[3px] border-white shadow-lg shadow-slate-100 items-center justify-center text-white font-black text-sm"
+                style={{ display: avatarUrl ? 'none' : 'flex' }}
+              >
+                {iniciais || <User size={20} />}
+              </div>
             </div>
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Olá,</p>
               <h2 className="text-lg font-black italic uppercase text-slate-800 leading-none truncate max-w-[150px]">
-                {profile?.full_name?.split(' ')[0] || session.user.user_metadata.full_name?.split(' ')[0]}
+                {nomeCliente.split(' ')[0] || 'Cliente'}
               </h2>
             </div>
           </div>
+
+          {/* ── Logo em tamanho legível ── */}
           <Link href="/">
-            <img src="/logo.png" className="h-[29px] w-auto opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all" alt="Logo" />
+            <img
+              src="/logo.png"
+              className="h-10 w-auto opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all"
+              alt="Logo"
+            />
           </Link>
         </div>
 
-        {/* TITULO HERO E CARDS */}
         <div className="space-y-2">
           <h1 className="text-4xl md:text-5xl font-black italic uppercase text-slate-800 leading-[0.9] tracking-tighter">
             Projetos<br /><span className="text-blue-600">Pendentes</span>
           </h1>
           <p className="text-[11px] font-medium text-slate-500 pl-1">
-              Você tem <span className="font-bold text-slate-800">{servicos.length}</span> {servicos.length === 1 ? 'projeto aguardando' : 'projetos aguardando'} aprovação.
+            Você tem <span className="font-bold text-slate-800">{servicos.length}</span> {servicos.length === 1 ? 'projeto aguardando' : 'projetos aguardando'} aprovação.
           </p>
         </div>
 
@@ -230,21 +278,27 @@ export default function PainelDoCliente() {
             return (
               <div key={servico.id} className="bg-white rounded-[2.5rem] p-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-50 group">
                 <div className="flex items-center justify-between px-2 mb-4">
-                   <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3">
+                    {servico.prestadores?.foto_perfil ? (
                       <img src={servico.prestadores.foto_perfil} className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-50" alt="Prestador" />
-                      <div>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Prestador</p>
-                        <h3 className="text-xs font-black uppercase text-slate-800">{servico.prestadores.nome}</h3>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                        <User size={18} className="text-slate-300" />
                       </div>
-                   </div>
-                   <div className="px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
-                      <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">
-                        {servico.prestadores.categoria?.nome || 'Serviço'}
-                      </span>
-                   </div>
+                    )}
+                    <div>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Prestador</p>
+                      <h3 className="text-xs font-black uppercase text-slate-800">{servico.prestadores?.nome}</h3>
+                    </div>
+                  </div>
+                  <div className="px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
+                    <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">
+                      {servico.prestadores?.categoria?.nome || 'Serviço'}
+                    </span>
+                  </div>
                 </div>
 
-                <div 
+                <div
                   onClick={() => fotoInicio && setZoomImage(fotoInicio.url_foto)}
                   className="relative aspect-[4/3] rounded-[2rem] overflow-hidden bg-slate-100 cursor-zoom-in"
                 >
@@ -252,51 +306,51 @@ export default function PainelDoCliente() {
                     <>
                       <img src={fotoInicio.url_foto} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Início" />
                       <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
-                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-800 flex items-center gap-1.5">
-                            <Clock size={10} className="text-blue-600" /> Aguardando Início
-                         </p>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-800 flex items-center gap-1.5">
+                          <Clock size={10} className="text-blue-600" /> Aguardando Início
+                        </p>
                       </div>
                       <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                         <div className="bg-white/30 backdrop-blur-md p-4 rounded-full text-white border border-white/40">
-                            <ZoomIn size={24} />
-                         </div>
+                        <div className="bg-white/30 backdrop-blur-md p-4 rounded-full text-white border border-white/40">
+                          <ZoomIn size={24} />
+                        </div>
                       </div>
                     </>
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-300">
-                       <Briefcase size={32} opacity={0.5} />
-                       <span className="text-[10px] font-bold uppercase tracking-widest">Sem foto de capa</span>
+                      <Briefcase size={32} opacity={0.5} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Sem foto de capa</span>
                     </div>
                   )}
                 </div>
 
                 <div className="mt-5 px-2 space-y-5">
-                   <div>
-                      <h4 className="text-xl font-black italic uppercase text-slate-800 leading-tight tracking-tight line-clamp-2">
-                        {servico.titulo}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-2 text-slate-400">
-                         <Clock size={12} />
-                         <p className="text-[10px] font-medium uppercase tracking-wide">
-                            Criado em {new Date(servico.created_at).toLocaleDateString()}
-                         </p>
-                      </div>
-                   </div>
+                  <div>
+                    <h4 className="text-xl font-black italic uppercase text-slate-800 leading-tight tracking-tight line-clamp-2">
+                      {servico.titulo}
+                    </h4>
+                    <div className="flex items-center gap-2 mt-2 text-slate-400">
+                      <Clock size={12} />
+                      <p className="text-[10px] font-medium uppercase tracking-wide">
+                        Criado em {new Date(servico.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
 
-                   <div className="flex gap-3">
-                      <a 
-                        href={`tel:${servico.prestadores.whatsapp}`} 
-                        className="w-14 h-14 rounded-2xl border-2 border-slate-100 flex items-center justify-center text-slate-400 hover:text-green-600 hover:border-green-100 hover:bg-green-50 transition-all"
-                      >
-                         <Phone size={20} />
-                      </a>
-                      <button 
-                        onClick={() => handleAceiteTecnico(servico)}
-                        className="flex-1 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all"
-                      >
-                        Autorizar Serviço <ChevronRight size={16} />
-                      </button>
-                   </div>
+                  <div className="flex gap-3">
+                    <a
+                      href={`tel:${servico.prestadores?.whatsapp}`}
+                      className="w-14 h-14 rounded-2xl border-2 border-slate-100 flex items-center justify-center text-slate-400 hover:text-green-600 hover:border-green-100 hover:bg-green-50 transition-all"
+                    >
+                      <Phone size={20} />
+                    </a>
+                    <button
+                      onClick={() => handleAceiteTecnico(servico)}
+                      className="flex-1 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all"
+                    >
+                      Autorizar Serviço <ChevronRight size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             )
@@ -304,17 +358,17 @@ export default function PainelDoCliente() {
         </div>
 
         <div className="mt-12 bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="relative z-10 flex items-center gap-5">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-blue-400 backdrop-blur-sm">
-                <ShieldCheck size={24} />
-              </div>
-              <div>
-                <p className="text-lg font-black italic uppercase leading-none tracking-tight">Protocolo Seguro</p>
-                <p className="text-[10px] font-medium text-slate-400 mt-1 leading-relaxed max-w-[200px]">
-                  Ao autorizar, você gera um token único de acompanhamento criptografado.
-                </p>
-              </div>
+            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-blue-400 backdrop-blur-sm">
+              <ShieldCheck size={24} />
+            </div>
+            <div>
+              <p className="text-lg font-black italic uppercase leading-none tracking-tight">Protocolo Seguro</p>
+              <p className="text-[10px] font-medium text-slate-400 mt-1 leading-relaxed max-w-[200px]">
+                Ao autorizar, você gera um token único de acompanhamento criptografado.
+              </p>
+            </div>
           </div>
         </div>
 
