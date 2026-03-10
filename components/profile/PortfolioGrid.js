@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import ProjetoModal from './ProjetoModal'
-import { Camera } from 'lucide-react'
+import { Camera, CheckCircle2, Activity } from 'lucide-react'
 
 export default function PortfolioGrid({ projetos = [] }) {
   const [projetoSelecionado, setProjetoSelecionado] = useState(null)
@@ -16,59 +16,71 @@ export default function PortfolioGrid({ projetos = [] }) {
     )
   }
 
-  // Grid adaptativo — 1 projeto não fica solitário à esquerda
+  // Grid compacto — células menores e mais organizadas
+  // max-w limita para não crescer demais em telas largas
   const gridClass =
-    projetos.length === 1 ? 'grid grid-cols-1 max-w-[220px]' :
-    projetos.length === 2 ? 'grid grid-cols-2 gap-3 md:gap-6' :
-                            'grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6'
+    projetos.length === 1 ? 'grid grid-cols-1 max-w-[160px]' :
+    projetos.length === 2 ? 'grid grid-cols-2 gap-2.5' :
+                            'grid grid-cols-3 gap-2.5'
 
   return (
     <>
       <div className={gridClass}>
         {projetos.map((projeto) => {
           const fotos = projeto.portfolio_fotos || []
-
-          // Number() garante comparação correta quando ordem vem como string do banco
-          const isConcluido = fotos.some(f => Number(f.ordem) === 3)
-
-          // Capa = foto de maior ordem (Depois > Durante > Antes)
+          const isConcluido = projeto.status === 'finalizado' || fotos.some(f => Number(f.ordem) === 3)
           const fotoCapa = [...fotos].sort((a, b) => Number(b.ordem) - Number(a.ordem))[0]?.url_foto
 
           return (
             <div
               key={projeto.id}
               onClick={() => setProjetoSelecionado(projeto)}
-              className="group relative aspect-square bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer"
+              className="group relative cursor-pointer"
             >
-              {/* Foto de capa */}
-              <img
-                src={fotoCapa || '/placeholder-job.png'}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                alt={projeto.titulo}
-                onError={e => { e.target.src = '/placeholder-job.png' }}
-              />
+              {/* Miniatura quadrada — tamanho controlado */}
+              <div className="relative aspect-square bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
 
-              {/* Indicador de status
-                  Concluído → sem indicador (estado esperado, silêncio visual)
-                  Em execução → bolinha pulsante "ao vivo" no canto superior direito */}
-              {!isConcluido && (
-                <div className="absolute top-3 right-3">
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500 border-2 border-white shadow-sm" />
-                  </span>
+                <img
+                  src={fotoCapa || '/placeholder-job.png'}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  alt={projeto.titulo}
+                  onError={e => { e.target.src = '/placeholder-job.png' }}
+                />
+
+                {/* Overlay no hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2.5">
+                  <p className="text-white font-black italic uppercase text-[8px] leading-tight flex items-center gap-1">
+                    <Camera size={8} /> Ver
+                  </p>
                 </div>
-              )}
-
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-5 flex flex-col justify-end">
-                <h4 className="text-white font-black italic uppercase text-[10px] mb-1 leading-tight">
-                  {projeto.titulo}
-                </h4>
-                <p className="text-blue-300 text-[8px] font-bold uppercase tracking-widest flex items-center gap-1">
-                  <Camera size={10} /> Ver registros
-                </p>
               </div>
+
+              {/* Badge de status ABAIXO da miniatura — sempre visível, não flutua sobre a foto */}
+              <div className="flex items-center gap-1 mt-1.5 px-0.5">
+                {isConcluido ? (
+                  <>
+                    <CheckCircle2 size={9} className="text-green-500 shrink-0" />
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                      Concluído
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+                    </span>
+                    <span className="text-[8px] font-bold text-blue-500 uppercase tracking-wider truncate">
+                      Em andamento
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Título truncado */}
+              <p className="text-[8px] font-semibold text-slate-400 truncate mt-0.5 px-0.5">
+                {projeto.titulo}
+              </p>
             </div>
           )
         })}
