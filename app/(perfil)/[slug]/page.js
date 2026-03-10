@@ -5,24 +5,23 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
-import { MapPin, ShieldCheck } from 'lucide-react'
+import { MapPin, ShieldCheck, Flag, Share2, CheckCircle, Loader2 } from 'lucide-react'
 
+// ── Skeleton ────────────────────────────────────────────────────────────────
 function PerfilSkeleton() {
   return (
-    <main className="min-h-screen bg-white font-sans text-slate-800">
+    <main className="min-h-screen bg-white font-sans">
       <div className="fixed top-0 left-0 right-0 z-50 bg-white/90 h-20 border-b border-slate-100/50" />
       <div className="max-w-xl mx-auto pt-32 pb-12 px-6 animate-pulse">
-        <div className="flex flex-col items-center mb-10">
-          <div className="w-32 h-32 rounded-[2.5rem] bg-slate-100" />
-          <div className="h-8 bg-slate-100 rounded-lg w-3/4 mb-3 mt-6" />
-          <div className="h-4 bg-slate-50 rounded-lg w-1/2" />
+        <div className="flex flex-col items-center mb-10 gap-4">
+          <div className="w-28 h-28 rounded-[2rem] bg-slate-100" />
+          <div className="h-7 bg-slate-100 rounded-lg w-2/3" />
+          <div className="h-4 bg-slate-50 rounded-lg w-1/3" />
         </div>
-        <div className="space-y-6">
-          <div className="h-32 bg-slate-50 rounded-[2.5rem]" />
-          <div className="grid grid-cols-3 gap-4">
-            <div className="aspect-square bg-slate-50 rounded-2xl" />
-            <div className="aspect-square bg-slate-50 rounded-2xl" />
-            <div className="aspect-square bg-slate-50 rounded-2xl" />
+        <div className="space-y-4">
+          <div className="h-28 bg-slate-50 rounded-[2rem]" />
+          <div className="grid grid-cols-3 gap-3">
+            {[1,2,3].map(i => <div key={i} className="aspect-square bg-slate-50 rounded-2xl" />)}
           </div>
         </div>
       </div>
@@ -30,6 +29,7 @@ function PerfilSkeleton() {
   )
 }
 
+// ── Componente principal ─────────────────────────────────────────────────────
 export default function PerfilPublico() {
   const params = useParams()
   const router = useRouter()
@@ -38,7 +38,9 @@ export default function PerfilPublico() {
   const [loading, setLoading] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
   const [urlRetorno, setUrlRetorno] = useState('/prestadores')
+  const [compartilhando, setCompartilhando] = useState(false)
 
+  // ── Log de atividade ──────────────────────────────────────────────────────
   const registrarLog = async (acao, detalhes = {}) => {
     try {
       await supabase.from('logs_atividades').insert({
@@ -52,170 +54,171 @@ export default function PerfilPublico() {
     }
   }
 
+  // ── Carregamento ──────────────────────────────────────────────────────────
   useEffect(() => {
     setIsMounted(true)
 
     async function carregarPerfil() {
-      if (!params?.slug) return;
+      if (!params?.slug) return
 
       let query = supabase.from('prestadores').select(`
-        *, 
+        *,
         cidades(nome, estado_sigla),
-        portfolio_projetos (
-          id, 
-          titulo, 
-          descricao,
-          status,
-          portfolio_fotos (url_foto, ordem, legenda)
+        portfolio_projetos(
+          id, titulo, descricao, status,
+          portfolio_fotos(url_foto, ordem, legenda)
         )
-      `);
+      `)
 
-      const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}/.test(params.slug);
-      if (isUUID) {
-        query = query.eq('id', params.slug);
-      } else {
-        query = query.eq('slug', params.slug);
-      }
+      const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}/.test(params.slug)
+      query = isUUID ? query.eq('id', params.slug) : query.eq('slug', params.slug)
 
-      const { data, error } = await query.single();
+      const { data, error } = await query.single()
 
       if (!error && data) {
-        setPrestador(data);
+        setPrestador(data)
 
-        // Vitrine pública: mostra em_execucao (prova de atividade) e finalizado.
-        // em_registro e pendente ficam ocultos — ainda não foram aceitos pelo cliente.
+        // Vitrine: em_execucao (prova de atividade) + finalizado — oculta em_registro e pendente
         const projetosFiltrados = (data.portfolio_projetos || [])
-          .filter(proj => ['em_execucao', 'finalizado'].includes(proj.status))
-          // Finalizados primeiro, em andamento depois
+          .filter(p => ['em_execucao', 'finalizado'].includes(p.status))
           .sort((a, b) => {
-            if (a.status === 'finalizado' && b.status !== 'finalizado') return -1;
-            if (a.status !== 'finalizado' && b.status === 'finalizado') return 1;
-            return 0;
-          });
+            if (a.status === 'finalizado' && b.status !== 'finalizado') return -1
+            if (a.status !== 'finalizado' && b.status === 'finalizado') return 1
+            return 0
+          })
 
-        setProjetos(projetosFiltrados);
+        setProjetos(projetosFiltrados)
 
         if (data.categoria) {
-          setUrlRetorno(`/prestadores?categoria=${encodeURIComponent(data.categoria)}`);
+          setUrlRetorno(`/prestadores?categoria=${encodeURIComponent(data.categoria)}`)
         }
       }
-      setLoading(false);
+      setLoading(false)
     }
-    carregarPerfil();
-  }, [params.slug]);
 
-  const compartilharPerfil = () => {
-    registrarLog('COMPARTILHAR_PERFIL_CLIQUE');
-    const shareData = {
-      title: `Procuro Quem Faça - ${prestador?.nome}`,
-      text: `Confira o trabalho de ${prestador?.nome} (${prestador?.categoria}) em ${prestador?.cidades?.nome}.`,
-      url: typeof window !== 'undefined' ? window.location.href : '',
-    };
+    carregarPerfil()
+  }, [params?.slug])
+
+  // ── Compartilhar ──────────────────────────────────────────────────────────
+  const compartilharPerfil = async () => {
+    registrarLog('COMPARTILHAR_PERFIL_CLIQUE')
+    setCompartilhando(true)
+    setTimeout(() => setCompartilhando(false), 1500)
+
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    const texto = `Confira o trabalho de ${prestador?.nome} no Procuro Quem Faça.`
+
     if (navigator.share) {
-      navigator.share(shareData);
+      try { await navigator.share({ title: prestador?.nome, text: texto, url }) } catch {}
     } else {
-      window.open(`https://wa.me/?text=${encodeURIComponent(shareData.text + " " + shareData.url)}`, '_blank');
+      await navigator.clipboard.writeText(url).catch(() => {})
+      window.open(`https://wa.me/?text=${encodeURIComponent(texto + ' ' + url)}`, '_blank')
     }
-  };
-
-  if (!isMounted || loading) {
-    return <PerfilSkeleton />
   }
+
+  // ── Guards ────────────────────────────────────────────────────────────────
+  if (!isMounted || loading) return <PerfilSkeleton />
 
   if (!prestador) {
     return (
       <main className="min-h-screen bg-[#F8FAFC] font-sans flex flex-col items-center justify-center p-6 text-center">
         <Header href="/" />
-        <div className="pt-24">
-          <h3 className="text-2xl font-bold text-slate-400 uppercase italic mb-4">Perfil não encontrado</h3>
-          <Link href="/" className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">Voltar para a Vitrine</Link>
+        <div className="pt-24 space-y-6">
+          <h3 className="text-2xl font-black text-slate-300 uppercase italic tracking-tighter">Perfil não encontrado</h3>
+          <Link href="/" className="inline-block px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 active:scale-95 transition-all">
+            Voltar para a Vitrine
+          </Link>
         </div>
       </main>
     )
   }
 
-  const waLink = `https://wa.me/55${prestador.whatsapp.replace(/\D/g, '')}?text=Olá ${prestador.nome}, vi seu perfil no Procuro Quem Faça e gostaria de um orçamento.`;
-  const isPublico = prestador.origem_tipo === 'curadoria_publica';
+  // ── Derivações ────────────────────────────────────────────────────────────
+  const waLink = `https://wa.me/55${prestador.whatsapp?.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${prestador.nome}, vi seu perfil no Procuro Quem Faça e gostaria de um orçamento.`)}`
+  const isPublico = prestador.origem_tipo === 'curadoria_publica'
 
-  const localizacaoFinal = [prestador.bairro, prestador.cidades?.nome]
-    .filter(item => item && item.trim().length > 0)
-    .join(', ');
+  const localizacao = [prestador.bairro, prestador.cidades?.nome]
+    .filter(v => v?.trim())
+    .join(', ')
 
-  // Contadores para o resumo de atividade
-  const totalFinalizados = projetos.filter(p => p.status === 'finalizado').length;
-  const totalEmAndamento = projetos.filter(p => p.status === 'em_execucao').length;
+  const totalFinalizados = projetos.filter(p => p.status === 'finalizado').length
+  const totalEmAndamento = projetos.filter(p => p.status === 'em_execucao').length
 
   return (
-    <main className="min-h-screen bg-white font-sans text-slate-800">
+    <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
       <Header href={urlRetorno !== '/prestadores' ? urlRetorno : undefined} />
 
-      <div className="max-w-xl mx-auto pt-28 md:pt-36 pb-12 px-6 animate-in fade-in duration-500">
-        <section className="text-center mb-10 relative">
+      <div className="max-w-xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
 
-          <div className="absolute top-0 w-full flex justify-between z-10 px-1">
+        {/* ── Hero do prestador ── */}
+        <section className="relative mb-8">
+
+          {/* Botões de ação — cantos opostos, discretos */}
+          <div className="flex justify-between items-start mb-6">
             <Link
               href={`/denunciar/${prestador.id}`}
-              className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-red-500 shadow-sm transition-all hover:scale-105 active:scale-95"
-              title="Denunciar"
+              title="Denunciar este perfil"
+              className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-100 rounded-full text-[10px] font-semibold text-slate-400 shadow-sm hover:text-red-500 hover:border-red-100 transition-all active:scale-95"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+              <Flag size={12} />
+              Denunciar
             </Link>
 
             <button
               onClick={compartilharPerfil}
-              className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-blue-600 shadow-sm transition-all hover:scale-105 active:scale-95"
-              title="Compartilhar"
+              title="Compartilhar perfil"
+              className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-100 rounded-full text-[10px] font-semibold text-slate-400 shadow-sm hover:text-blue-600 hover:border-blue-100 transition-all active:scale-95"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
+              {compartilhando
+                ? <><CheckCircle size={12} className="text-green-500" /> Copiado!</>
+                : <><Share2 size={12} /> Compartilhar</>
+              }
             </button>
           </div>
 
-          <div className="relative inline-block mt-4 mb-6">
-            <div className="w-32 h-32 rounded-[2.5rem] bg-slate-50 overflow-hidden flex items-center justify-center transition-all shadow-sm border-2 border-slate-50">
-              {prestador.foto_perfil ? (
-                <img src={prestador.foto_perfil} className="w-full h-full object-cover" alt={prestador.nome} />
-              ) : (
-                <span className="text-slate-300 font-black text-[10px] uppercase">Sem Foto</span>
+          {/* Foto + identidade */}
+          <div className="flex flex-col items-center text-center gap-3">
+            <div className="relative">
+              <div className="w-28 h-28 rounded-[2rem] bg-slate-100 overflow-hidden border-4 border-white shadow-xl">
+                {prestador.foto_perfil
+                  ? <img src={prestador.foto_perfil} className="w-full h-full object-cover" alt={prestador.nome} />
+                  : <span className="w-full h-full flex items-center justify-center text-slate-300 font-black text-[9px] uppercase tracking-widest">Sem Foto</span>
+                }
+              </div>
+              {prestador.verificado && (
+                <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-lg border-2 border-white">
+                  <ShieldCheck size={13} strokeWidth={3} />
+                </div>
               )}
             </div>
 
-            {prestador.verificado && (
-              <div className="absolute bottom-1 right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-lg border-2 border-white animate-in zoom-in duration-500">
-                <ShieldCheck size={14} strokeWidth={3} />
-              </div>
-            )}
-          </div>
+            <div>
+              <h1 className="text-2xl font-black text-slate-800 uppercase italic tracking-tight leading-none">
+                {prestador.nome}
+              </h1>
+              {prestador.categoria && (
+                <p className="text-blue-600 text-[10px] font-black uppercase tracking-widest mt-1">
+                  {prestador.categoria}
+                </p>
+              )}
+              {localizacao && (
+                <p className="flex items-center justify-center gap-1 text-[11px] font-medium text-slate-400 mt-1.5">
+                  <MapPin size={11} /> {localizacao}
+                </p>
+              )}
+            </div>
 
-          <div className="flex flex-col items-center">
-            <h1 className="text-2xl font-bold text-slate-800 uppercase italic tracking-tight leading-none mb-2">
-              {prestador.nome}
-            </h1>
-
-            <span className="text-blue-600 text-[10px] font-black uppercase tracking-widest mb-3">
-              {prestador.categoria}
-            </span>
-
-            {localizacaoFinal && (
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                {localizacaoFinal}
-              </p>
-            )}
-
-            {/* ── Resumo de atividade ── */}
+            {/* Badges de atividade */}
             {(totalFinalizados > 0 || totalEmAndamento > 0) && (
-              <div className="flex items-center gap-3 mt-4">
+              <div className="flex items-center gap-2 flex-wrap justify-center mt-1">
                 {totalFinalizados > 0 && (
-                  <span className="px-3 py-1.5 bg-green-50 border border-green-100 text-green-700 rounded-xl text-[10px] font-bold uppercase tracking-wider">
+                  <span className="px-3 py-1.5 bg-green-50 border border-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
                     ✓ {totalFinalizados} {totalFinalizados === 1 ? 'concluído' : 'concluídos'}
                   </span>
                 )}
                 {totalEmAndamento > 0 && (
-                  <span className="px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl text-[10px] font-bold uppercase tracking-wider">
-                    ● {totalEmAndamento} em andamento
+                  <span className="px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                    ● em andamento
                   </span>
                 )}
               </div>
@@ -223,35 +226,37 @@ export default function PerfilPublico() {
           </div>
         </section>
 
+        {/* ── Banner de reivindicação ── */}
         {isPublico && (
           <Link
             href={`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`}
-            className="block mb-8 bg-indigo-50 border border-indigo-100 p-6 rounded-[2.5rem] group hover:bg-indigo-600 transition-all duration-300 active:scale-[0.98]"
+            className="flex items-center gap-4 mb-6 bg-indigo-50 border border-indigo-100 p-5 rounded-[2rem] group hover:bg-indigo-600 transition-all duration-300 active:scale-[0.98]"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">🤝</div>
-              <div className="text-left">
-                <h4 className="text-indigo-900 font-black uppercase text-[10px] italic group-hover:text-white transition-colors">Este é o seu perfil?</h4>
-                <p className="text-indigo-700/70 text-[9px] font-bold uppercase leading-tight group-hover:text-white/80 transition-colors">Reivindique agora para editar suas informações.</p>
-              </div>
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-lg shadow-sm shrink-0 group-hover:scale-110 transition-transform">🤝</div>
+            <div>
+              <p className="text-indigo-900 font-black uppercase text-[10px] italic group-hover:text-white transition-colors">Este é o seu perfil?</p>
+              <p className="text-indigo-600/70 text-[9px] font-semibold uppercase leading-tight group-hover:text-white/80 transition-colors">Reivindique agora para editar suas informações.</p>
             </div>
           </Link>
         )}
 
-        <div className="space-y-6">
-          <section className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100/50 shadow-inner">
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 mb-4 underline underline-offset-4 decoration-blue-200">Sobre o Profissional</h2>
-            <p className="text-slate-600 text-sm font-normal leading-relaxed">
-              {prestador.bio || "Informações coletadas via curadoria pública. Este profissional ainda não personalizou sua biografia."}
+        <div className="space-y-4">
+
+          {/* ── Sobre ── */}
+          <section className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-3">Sobre o Profissional</h2>
+            <p className="text-slate-600 text-[14px] leading-relaxed">
+              {prestador.bio || 'Informações coletadas via curadoria pública. Este profissional ainda não personalizou sua biografia.'}
             </p>
           </section>
 
-          {prestador.habilidades && prestador.habilidades.length > 0 && (
-            <section className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100/50 shadow-inner">
-              <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 mb-4 underline underline-offset-4 decoration-blue-200">Especialidades</h2>
+          {/* ── Especialidades ── */}
+          {prestador.habilidades?.length > 0 && (
+            <section className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-3">Especialidades</h2>
               <div className="flex flex-wrap gap-2">
                 {prestador.habilidades.map(hab => (
-                  <span key={hab} className="px-4 py-2 bg-white border border-slate-100 text-slate-500 rounded-xl text-[10px] font-bold uppercase shadow-sm">
+                  <span key={hab} className="px-3 py-1.5 bg-slate-50 border border-slate-100 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-wide shadow-sm">
                     {hab}
                   </span>
                 ))}
@@ -259,26 +264,30 @@ export default function PerfilPublico() {
             </section>
           )}
 
-          <section className="space-y-4">
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 ml-8 italic">
+          {/* ── Portfólio ── */}
+          <section className="space-y-3">
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 px-1">
               Registros de Atividade
             </h2>
-            {/* PortfolioGrid recebe projetos já com status para exibir badge internamente se necessário */}
             <PortfolioGrid projetos={projetos} />
           </section>
 
+          {/* ── CTA WhatsApp ── */}
           <div className="pt-2">
             <a
               href={waLink}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => registrarLog('CLIQUE_WHATSAPP_ORCAMENTO')}
-              className="w-full py-6 bg-blue-600 text-white rounded-[2.5rem] font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-4 shadow-[0_15px_30px_rgba(37,99,235,0.2)] hover:bg-blue-700 hover:shadow-none transition-all active:scale-[0.98] italic"
+              className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-blue-100 hover:bg-blue-700 active:scale-[0.98] transition-all italic"
             >
-              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+              <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
               Solicitar Orçamento
             </a>
           </div>
+
         </div>
       </div>
     </main>
