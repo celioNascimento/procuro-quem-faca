@@ -190,21 +190,15 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
         setLegendaEdit(data.legenda || '')
         setZoomEtapa(ordem)
 
-        // Foto 3 enviada: se projeto já estava em execução, marcar como aguardando avaliação.
-        // O status no banco permanece 'em_execucao' — a avaliação do cliente é quem muda para 'finalizado'.
-        // Mas precisamos garantir que o projeto está em 'em_execucao' no banco (pode ter ficado em
-        // 'pendente' se o prestador subiu foto 3 antes do cliente aceitar formalmente).
+        // Foto 3 enviada: garantir status em_execucao no banco em qualquer cenário.
+        // O status permanece em_execucao até o cliente avaliar (que muda para finalizado).
         if (ordem === 3) {
           setAguardandoAvaliacao(true)
-          const statusAtual = projetoStatus
-          if (statusAtual === 'em_registro' || statusAtual === 'pendente') {
-            // Sobe diretamente para em_execucao para garantir que aparece na vitrine pública
-            await supabase
-              .from('portfolio_projetos')
-              .update({ status: 'em_execucao' })
-              .eq('id', currentProjId)
-            setProjetoStatus('em_execucao')
-          }
+          await supabase
+            .from('portfolio_projetos')
+            .update({ status: 'em_execucao' })
+            .eq('id', currentProjId)
+          setProjetoStatus('em_execucao')
         }
       }
     } catch (err) {

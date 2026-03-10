@@ -41,7 +41,16 @@ export default function PortfolioDashboardTab() {
 
   useEffect(() => { carregarDados() }, [carregarDados])
 
-  const abrirEdicao = (projeto) => { setProjetoParaEdicao(projeto); setShowWizard(true) }
+  const abrirEdicao = async (projeto) => {
+    // Busca o status atual do banco antes de abrir — evita prop stale
+    const { data: atualizado } = await supabase
+      .from('portfolio_projetos')
+      .select('*, portfolio_fotos(id, url_foto, ordem), avaliacoes(id)')
+      .eq('id', projeto.id)
+      .single()
+    setProjetoParaEdicao(atualizado || projeto)
+    setShowWizard(true)
+  }
   const abrirNovo   = () => { setProjetoParaEdicao(null); setShowWizard(true) }
 
   const statusConfig = (proj) => {
