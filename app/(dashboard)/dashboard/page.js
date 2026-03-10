@@ -70,7 +70,7 @@ export default function PerfilPage() {
 
         {/* ── Seletor de abas ── */}
         <div className="px-5 md:px-8 pt-6 pb-4 border-b border-slate-100 bg-white sticky top-16 md:top-20 z-40">
-          <div className="flex items-center gap-1 w-full md:w-fit flex-wrap">
+          <div className="flex items-center gap-2 overflow-x-auto" style={{scrollbarWidth:'none',msOverflowStyle:'none'}}>
 
             {abas.map(aba => (
               <button
