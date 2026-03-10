@@ -18,7 +18,14 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
   const [projetoStatus, setProjetoStatus] = useState(projetoExistente?.status || 'pendente')
   const [titulo, setTitulo] = useState(projetoExistente?.titulo || '')
   const [prestadorInfo, setPrestadorInfo] = useState({ nome: '', foto: null, whatsapp: '' })
-  const [clienteWhatsapp, setClienteWhatsapp] = useState(projetoExistente?.cliente_whatsapp || '')
+  // maskPhone definida abaixo — inicialização usa a função inline para não depender de hoisting
+  const [clienteWhatsapp, setClienteWhatsapp] = useState(() => {
+    const raw = projetoExistente?.cliente_whatsapp || ''
+    if (!raw) return ''
+    const v = raw.replace(/\D/g, '').slice(0, 11)
+    if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
+    return v.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, '($1) $2 $3-$4')
+  })
   const [clienteNome, setClienteNome] = useState(projetoExistente?.cliente_nome || '') 
   const [linkGerado, setLinkGerado] = useState(!!projetoExistente) 
   const [fotosUrls, setFotosUrls] = useState({ 1: null, 2: null, 3: null })
@@ -39,6 +46,15 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
   const isProjetoPendente = ['pendente', 'em_registro'].includes(projetoStatus?.toLowerCase())
   
   const cleanPhone = (phone) => phone?.replace(/\D/g, '') || ''
+
+  // Máscara: (00) 00000-0000 ou (00) 0000-0000
+  const maskPhone = (v) => {
+    if (!v) return ''
+    v = v.replace(/\D/g, '').slice(0, 11)
+    if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
+    return v.replace(/(\d{2})(\d{1})(\d{4})(\d{4})/, '($1) $2 $3-$4')
+  }
+
   const phoneDigitado = cleanPhone(clienteWhatsapp)
   const phonePrestador = cleanPhone(prestadorInfo.whatsapp) 
   const isSelfNumber = phoneDigitado.length >= 10 && phoneDigitado === phonePrestador
@@ -292,6 +308,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
     setProjetoId(proj.id)
     setTitulo(proj.titulo)
     setClienteNome(proj.cliente_nome || '')
+    setClienteWhatsapp(prev => maskPhone(prev)) // mantém o que foi digitado, só formata
     setProjetoStatus(proj.status)
     setLinkGerado(true)
     carregarProgresso(proj.id)
@@ -340,7 +357,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
     carregarDadosBase()
     if (projetoExistente) {
       setProjetoId(projetoExistente.id); setTitulo(projetoExistente.titulo);
-      setClienteWhatsapp(projetoExistente.cliente_whatsapp); 
+      setClienteWhatsapp(maskPhone(projetoExistente.cliente_whatsapp)); 
       setClienteNome(projetoExistente.cliente_nome);
       carregarProgresso(projetoExistente.id)
     }
@@ -508,7 +525,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                      placeholder="(00) 00000-0000"
                      className={`bg-transparent text-sm font-bold placeholder:text-slate-300 outline-none w-full ml-1 ${isSelfNumber ? 'text-red-600' : 'text-slate-800'}`}
                      value={clienteWhatsapp}
-                     onChange={e => setClienteWhatsapp(e.target.value)}
+                     onChange={e => setClienteWhatsapp(maskPhone(e.target.value))}
                    />
                  )}
                  {isSelfNumber && (
@@ -686,7 +703,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                       </span>
                       <span className="text-[10px] font-black text-slate-400 uppercase italic">Etapa 3: Depois</span>
                     </div>
-                    {/* Foto enviada + descrição salva + aguardando avaliação */}
+                    {/* Foto enviada + descrição salva + aguardando avaliação → botão de envio */}
                     {fotosUrls[3] && hasLegendaSalva(3) && aguardandoAvaliacao && !isProjetoConcluido && (
                       <button
                         onClick={gerarLinkConclusao}
@@ -695,20 +712,6 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                         <LinkIcon size={14} />
                         <span className="text-[10px] font-black uppercase italic">Enviar para avaliar</span>
                       </button>
-                    )}
-                    {/* Foto enviada mas ainda sem descrição */}
-                    {fotosUrls[3] && !hasLegendaSalva(3) && (
-                      <div className="mt-1 flex items-center gap-1.5 text-amber-600 animate-in fade-in duration-500">
-                        <AlertCircle size={10} className="shrink-0" />
-                        <span className="text-[8px] font-black uppercase italic leading-none">Adicione uma descrição</span>
-                      </div>
-                    )}
-                    {/* Foto enviada + descrição + aguardando (sem botão extra) */}
-                    {fotosUrls[3] && hasLegendaSalva(3) && aguardandoAvaliacao && (
-                      <div className="mt-1 flex items-center gap-1.5 text-blue-500 animate-in fade-in duration-500">
-                        <Activity size={10} className="shrink-0 animate-pulse" />
-                        <span className="text-[8px] font-black uppercase italic leading-none">Aguardando avaliação</span>
-                      </div>
                     )}
                     {/* Projeto finalizado pelo cliente */}
                     {isProjetoConcluido && (
