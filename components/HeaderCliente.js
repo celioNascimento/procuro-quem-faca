@@ -4,16 +4,41 @@ import Link from 'next/link'
 import { LogOut, ChevronLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 export default function HeaderCliente({ nomeCliente }) {
   const router = useRouter()
+  const [saindo, setSaindo] = useState(false)
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
+    setSaindo(true)
+    try {
+      // 1. Encerra a sessão no Supabase (invalida token no servidor + limpa localStorage)
+      await supabase.auth.signOut()
+
+      // 2. Limpa qualquer chave do Supabase que possa ter ficado no storage
+      //    O signOut() já faz isso, mas em casos de erro parcial garantimos manualmente
+      if (typeof window !== 'undefined') {
+        Object.keys(localStorage)
+          .filter(k => k.startsWith('sb-'))
+          .forEach(k => localStorage.removeItem(k))
+        Object.keys(sessionStorage)
+          .filter(k => k.startsWith('sb-'))
+          .forEach(k => sessionStorage.removeItem(k))
+      }
+
+      // 3. window.location.href em vez de router.push —
+      //    força reload completo e descarta todo estado React em memória
+      //    router.push('/') manteria o componente montado com dados do usuário anterior
+      window.location.href = '/'
+
+    } catch (err) {
+      console.error('Erro ao sair:', err)
+      // Mesmo com erro, redireciona — não deixa o usuário preso
+      window.location.href = '/'
+    }
   }
 
-  // Nome completo — sem split, sem max-w fixo, quebra linha se precisar
   const nome = nomeCliente || ''
 
   return (
@@ -51,7 +76,6 @@ export default function HeaderCliente({ nomeCliente }) {
         {/* DIREITA: Nome + Logout */}
         <div className="shrink-0 flex items-center gap-2">
           {nome && (
-            // min-w-0 + break-words = nome nunca corta, empurra para baixo se longo
             <div className="hidden md:flex flex-col items-end min-w-0">
               <span className="text-[9px] font-black uppercase text-slate-400 leading-none tracking-widest whitespace-nowrap">
                 Painel
@@ -64,10 +88,14 @@ export default function HeaderCliente({ nomeCliente }) {
 
           <button
             onClick={handleLogout}
-            className="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all shadow-sm border border-slate-100 active:scale-90"
+            disabled={saindo}
+            className="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all shadow-sm border border-slate-100 active:scale-90 disabled:opacity-50"
             title="Sair da conta"
           >
-            <LogOut size={18} />
+            {saindo
+              ? <div className="w-4 h-4 border-2 border-red-300 border-t-transparent rounded-full animate-spin" />
+              : <LogOut size={18} />
+            }
           </button>
         </div>
 
