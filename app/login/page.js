@@ -15,9 +15,8 @@ export default function Login() {
   const [touched, setTouched] = useState({})
   const [mounted, setMounted] = useState(false)
 
-  // Nenhuma lógica alterada — só UI
   const router = useRouter()
-  let isComponentActive = true;
+  let isComponentActive = true
 
   const handleBlur = (field) => setTouched(prev => ({ ...prev, [field]: true }))
   const emailInvalido = touched.email && (!email.includes('@') || email.length < 5)
@@ -30,69 +29,69 @@ export default function Login() {
         detalhes: { ...detalhes, email_tentativa: email },
         entidade_tipo: 'autenticacao'
       })
-    } catch (err) { }
+    } catch {}
   }
 
   const redirecionarUsuario = async (user) => {
-    if (!isComponentActive) return;
+    if (!isComponentActive) return
     try {
       const { data: perfil } = await supabase
         .from('prestadores')
         .select('id, user_id, origem_tipo, categoria_id')
         .or(`user_id.eq.${user.id},whatsapp.ilike.%${user.email}%`)
-        .maybeSingle();
-      if (!isComponentActive) return;
+        .maybeSingle()
+      if (!isComponentActive) return
       const path = (!perfil || perfil.origem_tipo === 'curadoria_publica' || !perfil.categoria_id)
         ? `/cadastro${perfil?.origem_tipo === 'curadoria_publica' ? `?reivindicar=${perfil.id}` : ''}`
-        : '/dashboard';
-      isComponentActive = false;
-      router.push(path);
-    } catch (err) {
-      if (isComponentActive) router.push('/cadastro');
+        : '/dashboard'
+      isComponentActive = false
+      router.push(path)
+    } catch {
+      if (isComponentActive) router.push('/cadastro')
     }
-  };
+  }
 
   useEffect(() => {
     setMounted(true)
-    isComponentActive = true;
+    isComponentActive = true
     const params = new URLSearchParams(window.location.search)
     const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'))
-    const isRecovery = params.get('type') === 'recovery' || hashParams.get('type') === 'recovery';
+    const isRecovery = params.get('type') === 'recovery' || hashParams.get('type') === 'recovery'
     if (isRecovery) {
-      window.sessionStorage.setItem('recuperacao_em_curso', 'true');
-      isComponentActive = false;
+      window.sessionStorage.setItem('recuperacao_em_curso', 'true')
+      isComponentActive = false
       router.replace(`/recuperar-senha${window.location.hash || window.location.search}`)
       return
     }
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isComponentActive) return;
-      if (window.sessionStorage.getItem('recuperacao_em_curso') === 'true') return;
+      if (!isComponentActive) return
+      if (window.sessionStorage.getItem('recuperacao_em_curso') === 'true') return
       if (event === 'SIGNED_IN' && session) {
-        if (window.location.hash.includes('type=recovery')) return;
+        if (window.location.hash.includes('type=recovery')) return
         await redirecionarUsuario(session.user)
       }
     })
-    return () => { isComponentActive = false; subscription.unsubscribe(); }
+    return () => { isComponentActive = false; subscription.unsubscribe() }
   }, [router])
 
   async function handleEsqueciSenha() {
     if (!email || emailInvalido) { setMensagem('Erro: Digite um e-mail válido primeiro.'); return }
     setLoading(true)
     setMensagem('Verificando conta...')
-    window.sessionStorage.setItem('recuperacao_em_curso', 'true');
+    window.sessionStorage.setItem('recuperacao_em_curso', 'true')
     try {
-      const { data: usuarioExiste, error: rpcError } = await supabase.rpc('verificar_usuario_existe', { email_busca: email });
+      const { data: usuarioExiste, error: rpcError } = await supabase.rpc('verificar_usuario_existe', { email_busca: email })
       if (rpcError || !usuarioExiste) { setMensagem('Erro: Esta conta não foi encontrada.'); setLoading(false); return }
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/recuperar-senha` })
       if (isComponentActive) {
-        if (error) throw error;
+        if (error) throw error
         setMensagem('Sucesso: Link enviado! Verifique seu e-mail.')
         await registrarLogAuth('RECUPERACAO_SENHA_SOLICITADA')
       }
     } catch (err) {
       if (isComponentActive) setMensagem('Erro: ' + (err.message || 'Falha ao processar.'))
     } finally {
-      if (isComponentActive) setLoading(false);
+      if (isComponentActive) setLoading(false)
     }
   }
 
@@ -101,18 +100,18 @@ export default function Login() {
     if (loading) return
     setLoading(true)
     setMensagem('')
-    window.sessionStorage.removeItem('recuperacao_em_curso');
+    window.sessionStorage.removeItem('recuperacao_em_curso')
     try {
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-      if (!isComponentActive) return;
+      if (!isComponentActive) return
       if (!signInError && signInData?.session) {
         await registrarLogAuth('LOGIN_SUCESSO')
         await redirecionarUsuario(signInData.session.user)
         return
       }
-      if (signInError && (signInError.status === 400 || signInError.message.includes("credentials"))) {
+      if (signInError && (signInError.status === 400 || signInError.message.includes('credentials'))) {
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password })
-        if (!isComponentActive) return;
+        if (!isComponentActive) return
         if (signUpError) {
           setMensagem(signUpError.code === 'user_already_exists' ? 'Erro: Senha incorreta.' : 'Erro: ' + signUpError.message)
         } else if (signUpData?.session) {
@@ -140,46 +139,51 @@ export default function Login() {
   return (
     <main className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6 font-sans antialiased text-slate-600">
       {!mounted ? <AuthSkeleton /> : (
-        <div className="w-full max-w-[420px] bg-white p-10 md:p-14 rounded-[3.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-50 text-center relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+        <div className="w-full max-w-[420px] bg-white px-8 pt-8 pb-10 md:px-12 md:pt-10 md:pb-12 rounded-[3rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-50 text-center relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
 
           {/* Barra decorativa topo */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-50 via-blue-500/10 to-blue-50" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-50 via-blue-400/30 to-blue-50" />
 
-          {/* Logo */}
-          <div className="-mb-2 md:-mb-4 flex justify-center w-full relative z-10">
-            <Link href="/" className="block w-full max-w-[310px] md:max-w-[370px] transition-transform duration-500 hover:scale-105 active:scale-95">
-              <img src="/logo.png" alt="Logo Procuro Quem Faça" className="w-full h-auto object-contain drop-shadow-sm" />
+          {/* Logo — tamanho controlado, sem margem negativa */}
+          <div className="flex justify-center mb-4">
+            <Link href="/" className="block transition-transform hover:opacity-80 active:scale-95">
+              <img
+                src="/logo.png"
+                alt="Procuro Quem Faça"
+                className="h-10 md:h-12 w-auto object-contain drop-shadow-sm"
+              />
             </Link>
           </div>
 
-          {/* ── TÍTULO ATUALIZADO ── */}
-          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">
+          {/* Título */}
+          <h1 className="text-xl md:text-2xl font-black text-slate-900 mb-1 tracking-tight">
             Entrar ou Criar Conta
           </h1>
-          {/* ── SUBTÍTULO EXPLICATIVO ── */}
-          <p className="text-slate-400 text-[11px] font-bold uppercase tracking-[0.2em] mb-2">
+
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">
             Área do Profissional
           </p>
-          {/* ── INSTRUÇÃO DIRETA — nova linha ── */}
-          <p className="text-slate-500 text-[12px] font-medium mb-8 leading-relaxed">
+
+          <p className="text-slate-500 text-[12px] font-medium mb-7 leading-relaxed">
             Use seu e-mail e senha abaixo.{' '}
-            <span className="text-blue-600 font-semibold">Primeira vez aqui? Sua conta será criada automaticamente.</span>
+            <span className="text-blue-600 font-semibold">Primeira vez? Sua conta será criada automaticamente.</span>
           </p>
 
           {/* Google */}
           <GoogleButton text="Entrar com Google" onLog={registrarLogAuth} />
 
           {/* Divisor */}
-          <div className="flex items-center gap-4 my-8">
-            <div className="h-[1px] flex-grow bg-slate-100" />
+          <div className="flex items-center gap-4 my-6">
+            <div className="h-px flex-grow bg-slate-100" />
             <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">ou e-mail</span>
-            <div className="h-[1px] flex-grow bg-slate-100" />
+            <div className="h-px flex-grow bg-slate-100" />
           </div>
 
-          <form onSubmit={handleLogin} className="flex flex-col gap-5 text-left">
+          <form onSubmit={handleLogin} className="flex flex-col gap-4 text-left">
+
             {/* E-mail */}
-            <div className="flex flex-col gap-2">
-              <label className="text-slate-500 font-bold text-[10px] uppercase ml-4 tracking-widest">E-mail</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-slate-500 font-bold text-[10px] uppercase ml-1 tracking-widest">E-mail</label>
               <input
                 type="email"
                 placeholder="seu@email.com"
@@ -192,8 +196,8 @@ export default function Login() {
             </div>
 
             {/* Senha */}
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center ml-4 mr-2">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex justify-between items-center ml-1 mr-1">
                 <label className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">Senha</label>
                 <button
                   type="button"
@@ -205,7 +209,7 @@ export default function Login() {
               </div>
               <div className="relative">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Mínimo 6 caracteres"
                   value={password}
                   onBlur={() => handleBlur('password')}
@@ -216,7 +220,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-blue-600 transition-colors p-1"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-blue-600 transition-colors p-1"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,15 +234,14 @@ export default function Login() {
                   )}
                 </button>
               </div>
-              {/* ── DICA CONTEXTUAL — nova linha ── */}
               {!touched.password && (
-                <p className="text-[10px] text-slate-400 ml-4 font-medium">
-                  Se for seu primeiro acesso, escolha uma senha nova aqui.
+                <p className="text-[10px] text-slate-400 ml-1 font-medium">
+                  Primeiro acesso? Escolha uma senha nova aqui.
                 </p>
               )}
             </div>
 
-            {/* Feedback de erro/sucesso */}
+            {/* Feedback */}
             {mensagem && (
               <div className={`p-4 rounded-2xl text-[11px] font-bold text-center uppercase tracking-wider animate-in fade-in duration-300 ${
                 mensagem.includes('Erro')
@@ -249,11 +252,11 @@ export default function Login() {
               </div>
             )}
 
-            {/* Botão principal — label dinâmica */}
+            {/* Botão */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-5 bg-blue-600 text-white rounded-[1.5rem] font-bold shadow-[0_20px_40px_-10px_rgba(37,99,235,0.3)] hover:bg-blue-700 hover:-translate-y-0.5 active:scale-[0.98] transition-all mt-2 uppercase tracking-[0.2em] text-[12px] flex items-center justify-center gap-2"
+              className="w-full py-4 bg-blue-600 text-white rounded-[1.5rem] font-black shadow-lg shadow-blue-100 hover:bg-blue-700 hover:-translate-y-0.5 active:scale-[0.98] transition-all mt-1 uppercase tracking-[0.15em] text-[11px] flex items-center justify-center gap-2"
             >
               {loading
                 ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -262,13 +265,13 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Voltar */}
           <Link
             href="/"
-            className="inline-block mt-10 text-slate-300 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-blue-600 transition-all hover:translate-x-1"
+            className="inline-block mt-8 text-slate-300 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-blue-600 transition-colors"
           >
             ← Voltar para a busca
           </Link>
+
         </div>
       )}
     </main>
