@@ -77,23 +77,22 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
               {prestador.categoria}
             </span>
 
-            {habilidadesVisiveis.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {habilidadesVisiveis.map(hab => (
-                  <span
-                    key={hab}
-                    className="text-[9px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wide"
-                  >
-                    {hab}
-                  </span>
-                ))}
-                {habilidadesExtras > 0 && (
-                  <span className="text-[9px] font-semibold text-slate-400 px-1 py-0.5">
-                    +{habilidadesExtras}
-                  </span>
-                )}
-              </div>
-            )}
+            {/* Área de habilidades com altura fixa — card não muda de tamanho */}
+            <div className="flex flex-wrap gap-1 min-h-[20px]">
+              {habilidadesVisiveis.map(hab => (
+                <span
+                  key={hab}
+                  className="text-[9px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wide"
+                >
+                  {hab}
+                </span>
+              ))}
+              {habilidadesExtras > 0 && (
+                <span className="text-[9px] font-semibold text-slate-400 px-1 py-0.5">
+                  +{habilidadesExtras}
+                </span>
+              )}
+            </div>
 
             <div className="flex items-center gap-1">
               <MapPin size={10} className="shrink-0 text-slate-300" />
