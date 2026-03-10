@@ -9,7 +9,6 @@ import { MapPin, Filter, Sparkles, AlertCircle } from 'lucide-react'
 import PrestadorCard from '@/components/cards/PrestadorCard'
 import AnuncioCard from '@/components/cards/AnuncioCard'
 
-// ── Skeleton ─────────────────────────────────────────────────────────────────
 function ListaSkeleton() {
   return (
     <div className="max-w-4xl mx-auto px-5 md:px-6 space-y-4 pt-6">
@@ -20,7 +19,15 @@ function ListaSkeleton() {
   )
 }
 
-// ── Conteúdo ──────────────────────────────────────────────────────────────────
+// Peso de ordenação — próprios/reivindicados primeiro, verificados primeiro dentro de cada grupo
+function pesoOrdenacao(p) {
+  const isAtivo = ['proprio', 'reivindicado'].includes(p.origem_tipo)
+  if (isAtivo && p.verificado)  return 0
+  if (isAtivo && !p.verificado) return 1
+  if (!isAtivo && p.verificado) return 2
+  return 3
+}
+
 function ListaConteudo() {
   const searchParams  = useSearchParams()
   const router        = useRouter()
@@ -33,7 +40,6 @@ function ListaConteudo() {
   const [anuncios,        setAnuncios]        = useState([])
   const [loading,         setLoading]         = useState(true)
   const [erro,            setErro]            = useState(false)
-  // session buscada uma vez aqui — evita N chamadas dentro de cada card
   const [session,         setSession]         = useState(null)
 
   useEffect(() => {
@@ -45,7 +51,6 @@ function ListaConteudo() {
     catch { /* silencioso */ }
   }
 
-  // pathname explícito — "?cidade=X" sem pathname navega para "/" no App Router
   const toggleCidade = (nomeCidade) => {
     const params = new URLSearchParams(searchParams)
     if (filtroCidNome === nomeCidade) params.delete('cidade')
@@ -57,14 +62,13 @@ function ListaConteudo() {
     async function fetchDados() {
       setLoading(true)
       setErro(false)
-      setPrestadoresBase([]) // limpa antes do fetch — evita cidades fantasmas no filtro
+      setPrestadoresBase([])
 
       try {
         const { data: pData, error: pError } = await supabase
           .from('prestadores')
           .select('*, cidades(id, nome, estado_sigla, regiao_id), categorias(nome)')
           .eq('status', 'ativo')
-          .order('verificado', { ascending: false })
 
         if (pError) throw pError
 
@@ -75,7 +79,13 @@ function ListaConteudo() {
         }))
 
         const termo = normalizarTermo(queryBusca, filtroHab)
-        setPrestadoresBase(filtrarPrestadores(normalizados, termo))
+        const filtrados = filtrarPrestadores(normalizados, termo)
+
+        // Ordenação client-side: próprios/reivindicados primeiro, depois curadoria
+        // Dentro de cada grupo: verificados primeiro
+        const ordenados = [...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b))
+
+        setPrestadoresBase(ordenados)
 
         const { data: ads } = await supabase.from('anuncios').select('*').eq('status', true)
         setAnuncios(ads || [])
@@ -90,7 +100,6 @@ function ListaConteudo() {
     fetchDados()
   }, [queryBusca, filtroHab])
 
-  // Cidades disponíveis nos resultados atuais
   const cidadesDisponiveis = useMemo(() => {
     const set = new Set()
     prestadoresBase.forEach(p => {
@@ -101,7 +110,6 @@ function ListaConteudo() {
     return Array.from(set).sort()
   }, [prestadoresBase])
 
-  // Filtragem client-side normalizada — tolera acentos e espaços
   const prestadoresExibidos = useMemo(() => {
     if (!filtroCidNome) return prestadoresBase
     const cidadeNorm = filtroCidNome.toLowerCase().trim()
@@ -120,10 +128,6 @@ function ListaConteudo() {
 
   return (
     <>
-      {/* ── Filtro de cidades ─────────────────────────────────────────────────
-          sticky top-20 md:top-28 espelha exatamente h-20/h-28 do Header fixed.
-          Como o wrapper pai já tem pt-20/pt-28, o filtro sticky começa
-          imediatamente abaixo do header — sem sobreposição, sem conflito de clique. */}
       {!loading && cidadesDisponiveis.length > 0 && (
         <div className="sticky top-20 md:top-28 z-50 bg-[#FDFDFD]/98 backdrop-blur-sm border-b border-slate-100 shadow-sm">
           <div className="max-w-4xl mx-auto px-5 md:px-6 py-3">
@@ -135,7 +139,6 @@ function ListaConteudo() {
                 <Filter size={13} className="text-slate-500" />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Filtrar</span>
               </div>
-
               <div className="flex items-center gap-2">
                 {cidadesDisponiveis.map(nome => {
                   const nomeNorm = nome.toLowerCase().trim()
@@ -144,7 +147,6 @@ function ListaConteudo() {
                     p.cidade_nome?.toLowerCase().trim() === nomeNorm ||
                     p.cidades_atendidas?.some(c => c?.toLowerCase().trim() === nomeNorm)
                   ).length
-
                   return (
                     <button
                       key={nome}
@@ -170,10 +172,8 @@ function ListaConteudo() {
         </div>
       )}
 
-      {/* ── Conteúdo principal ────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-5 md:px-6 space-y-6 pt-6">
 
-        {/* Banner topo */}
         {!loading && bannerTopo?.imagem_url && (
           <div className="relative group rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-white">
             <img
@@ -198,7 +198,6 @@ function ListaConteudo() {
           </div>
         )}
 
-        {/* Cabeçalho da lista */}
         <div className="flex items-center justify-between px-2 border-l-4 border-blue-600 ml-1 py-1">
           <div>
             <h3 className="text-[13px] md:text-[14px] font-bold text-slate-800 leading-none">{tituloBusca}</h3>
@@ -211,7 +210,6 @@ function ListaConteudo() {
           )}
         </div>
 
-        {/* Erro */}
         {erro && (
           <div className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-[2rem] px-6 py-4">
             <AlertCircle size={18} className="text-red-400 shrink-0" />
@@ -221,7 +219,6 @@ function ListaConteudo() {
           </div>
         )}
 
-        {/* Lista / Skeleton */}
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3, 4].map(i => (
@@ -241,7 +238,6 @@ function ListaConteudo() {
           </div>
         )}
 
-        {/* Estado vazio */}
         {!loading && !erro && prestadoresExibidos.length === 0 && (
           <div className="py-20 text-center flex flex-col items-center gap-5">
             <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center border border-slate-100 shadow-inner">
@@ -268,12 +264,10 @@ function ListaConteudo() {
   )
 }
 
-// ── Página ────────────────────────────────────────────────────────────────────
 export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
       <Header href="/" />
-      {/* pt espelha a altura do header: h-20 mobile / h-28 desktop */}
       <div className="pt-20 md:pt-28">
         <Suspense fallback={<ListaSkeleton />}>
           <ListaConteudo />
