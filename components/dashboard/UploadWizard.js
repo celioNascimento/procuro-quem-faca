@@ -262,7 +262,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
       const numTelefone = clienteWhatsapp.replace(/\D/g, '')
       
       const linkProjeto = `${window.location.origin}/meus-servicos${token ? `?token=${token}` : ''}` 
-      const mensagem = `Olá${clienteNome ? ` ${clienteNome}` : ''}! O projeto *${titulo}* foi iniciado.\n\nVocê pode acompanhar todas as etapas, fotos e adicionar comentários através do link exclusivo abaixo:\n\n👉 ${linkProjeto}\n\nAguardamos seu aceite para seguirmos com o serviço!`
+      const mensagem = `Olá${clienteNome ? `, ${clienteNome}` : ''}! 👋\n\nRegistramos o início do serviço *${titulo}* e preparamos um acompanhamento exclusivo para você.\n\nPor este link você visualiza as fotos de cada etapa e pode deixar comentários em tempo real:\n\n🔗 ${linkProjeto}\n\nAssim que confirmar o início, seguimos com o serviço. Qualquer dúvida, é só chamar!`
       const urlWhatsapp = `https://wa.me/55${numTelefone}?text=${encodeURIComponent(mensagem)}`
       window.open(urlWhatsapp, '_blank')
   }
@@ -277,7 +277,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
     const token = projData?.avaliacao_token
     const numTelefone = clienteWhatsapp.replace(/\D/g, '')
     const linkAvaliacao = `${window.location.origin}/avaliar/${projetoId}?token=${token}`
-    const mensagem = `Olá${clienteNome ? ` ${clienteNome}` : ''}! O serviço *${titulo}* foi concluído! 🎉\n\nAcesse o link abaixo para ver as fotos finais e deixar sua avaliação:\n\n👉 ${linkAvaliacao}\n\nSua opinião é muito importante!`
+    const mensagem = `Olá${clienteNome ? `, ${clienteNome}` : ''}! 🎉\n\nO serviço *${titulo}* foi concluído com sucesso!\n\nAcesse o link abaixo para conferir as fotos do resultado final e deixar sua avaliação — ela é muito importante para nós:\n\n🔗 ${linkAvaliacao}\n\nFoi um prazer trabalhar com você!`
     const urlWhatsapp = `https://wa.me/55${numTelefone}?text=${encodeURIComponent(mensagem)}`
     window.open(urlWhatsapp, '_blank')
   }
