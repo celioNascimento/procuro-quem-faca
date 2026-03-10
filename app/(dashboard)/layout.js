@@ -84,8 +84,8 @@ export default function DashboardLayout({ children }) {
         </div>
       </nav>
 
-      {/* pt espelha a altura do header: h-16 → pt-16, h-20 → pt-20 */}
-      <main className="max-w-7xl mx-auto w-full px-0 pb-24 pt-16 md:pt-20">
+      {/* Header sticky — conteúdo flui naturalmente abaixo, sem pt */}
+      <main className="max-w-7xl mx-auto w-full px-0 pb-24">
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
           {children}
         </div>

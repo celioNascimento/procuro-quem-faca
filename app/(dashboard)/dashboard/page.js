@@ -69,7 +69,7 @@ export default function PerfilPage() {
       <main className="max-w-5xl mx-auto pb-8 pt-0">
 
         {/* ── Seletor de abas ── */}
-        <div className="px-5 md:px-8 py-3 border-b border-slate-100 bg-white sticky top-16 md:top-20 z-40 overflow-hidden">
+        <div className="px-5 md:px-8 py-3 border-b border-slate-100 bg-white sticky top-0 z-40 overflow-hidden">
           <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1" style={{scrollbarWidth:'none',msOverflowStyle:'none'}}>
 
             {abas.map(aba => (
