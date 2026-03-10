@@ -125,12 +125,23 @@ export default function PerfilDoCliente() {
       setUser(sessionUser)
       const { data: profileData } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle()
       const whatsappSalvo = profileData?.whatsapp || ''
+
+      // Se o usuário tem foto do Google mas ainda não tem no profiles,
+      // salva automaticamente para garantir persistência no próximo login
+      const googleAvatar = sessionUser.user_metadata?.avatar_url || ''
+      if (!profileData?.avatar_url && googleAvatar) {
+        supabase.from('profiles').upsert({
+          id: sessionUser.id,
+          avatar_url: googleAvatar,
+          updated_at: new Date().toISOString()
+        }).then(() => {}) // silencioso — não bloqueia o carregamento
+      }
+
       setPerfil({
         full_name: profileData?.full_name || sessionUser.user_metadata?.full_name || '',
-        // BUG FOTO: profiles.avatar_url tem prioridade absoluta — é a foto salva no Storage.
-        // user_metadata.avatar_url é a foto do Google: expira, muda e bloqueia por CORS.
-        // Só usamos metadata se o usuário NUNCA fez upload (primeiro login).
-        avatar_url: profileData?.avatar_url || '',
+        // Prioridade: Storage (upload feito pelo usuário) > Google OAuth (fallback)
+        // Se o usuário nunca fez upload, usa a foto do Google para não ficar vazio
+        avatar_url: profileData?.avatar_url || sessionUser.user_metadata?.avatar_url || '',
         email: sessionUser.email,
         whatsapp: aplicarMascara(whatsappSalvo),
         logradouro: profileData?.logradouro || '',
@@ -417,7 +428,15 @@ export default function PerfilDoCliente() {
                     {uploading
                       ? <Loader2 className="animate-spin text-blue-500" size={24} />
                       : perfil.avatar_url
-                        ? <img src={perfil.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
+                        ? <img
+                            src={perfil.avatar_url}
+                            className="w-full h-full object-cover"
+                            alt="Avatar"
+                            onError={e => {
+                              // URL quebrou (expirou, CORS, etc) — remove src para mostrar ícone
+                              e.target.style.display = 'none'
+                            }}
+                          />
                         : <User size={32} className="text-slate-300" />
                     }
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all rounded-[1.2rem] flex items-center justify-center backdrop-blur-sm">
