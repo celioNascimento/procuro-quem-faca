@@ -11,6 +11,7 @@ export default function Home() {
   const router = useRouter()
   const [busca, setBusca] = useState('')
   const [sugestoes, setSugestoes] = useState([])
+  const [sugestoesReady, setSugestoesReady] = useState(false) // evita flash de ausência
   const [erro, setErro] = useState(false)
 
   const registrarLog = useCallback(async (acao, detalhes = {}, entidade = null) => {
@@ -37,6 +38,8 @@ export default function Home() {
         }
       } catch (err) {
         console.warn('Erro na busca de sugestões:', err.message)
+      } finally {
+        setSugestoesReady(true) // sempre marca como pronto, mesmo se vazio
       }
     }
     const timer = setTimeout(buscarSugestoes, 300)
@@ -65,17 +68,16 @@ export default function Home() {
       {/* Gradiente decorativo */}
       <div
         className="absolute inset-0 pointer-events-none -z-0"
-        style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(219,234,254,0.6) 0%, transparent 65%)' }}
+        style={{ background: 'radial-gradient(ellipse 90% 55% at 50% -5%, rgba(219,234,254,0.65) 0%, transparent 65%)' }}
       />
 
-      {/* Header absoluto */}
       <HeroSection onLog={registrarLog} />
 
-      {/* Área central — ocupa todo o espaço e centraliza verticalmente */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-16">
+      {/* Centro da página — flex-1 garante ocupar todo o espaço disponível */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
 
-        {/* Bloco logo + busca + sugestões — levemente acima do centro */}
-        <div className="w-full max-w-xl flex flex-col items-center text-center gap-5 -mt-12 md:-mt-20">
+        {/* Bloco principal — levemente acima do centro geométrico */}
+        <div className="w-full max-w-xl flex flex-col items-center text-center gap-5 -mt-16">
 
           {/* Logo */}
           <Link href="/" className="block transition-transform active:scale-95 duration-200">
@@ -96,10 +98,10 @@ export default function Home() {
             />
           </div>
 
-          {/* Sugestões */}
-          {sugestoes.length > 0 && (
-            <div className="flex flex-col items-center gap-3 w-full animate-in fade-in slide-in-from-bottom-2 duration-400">
-              <span className="text-[9px] md:text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] italic">
+          {/* Sugestões — só renderiza depois que o fetch completou (evita flash de ausência) */}
+          {sugestoesReady && sugestoes.length > 0 && (
+            <div className="flex flex-col items-center gap-3 w-full animate-in fade-in duration-300">
+              <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] italic">
                 {temBuscaReal ? 'Encontramos para você' : 'Sugestões em destaque'}
               </span>
               <div className="flex flex-wrap justify-center gap-1.5 md:gap-2">
@@ -118,10 +120,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="relative z-10 pb-8 flex justify-center">
-        <div className="flex flex-col items-center gap-2 opacity-25">
-          <div className="h-px w-6 bg-slate-400" />
+      {/* Footer — padding generoso para não grudar na base */}
+      <footer className="relative z-10 py-10 flex justify-center">
+        <div className="flex flex-col items-center gap-2 opacity-20">
+          <div className="h-px w-6 bg-slate-500" />
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] italic">
             Londrina • Paraná
           </p>
