@@ -1,11 +1,13 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { MapPin } from 'lucide-react'
 
 export default function PrestadorCard({ prestador, session, registrarLog }) {
   // Estado local para foto quebrada — fallback para iniciais
   const [imgError, setImgError] = useState(false)
+  const router = useRouter()
 
   if (!prestador) return null
 
@@ -42,7 +44,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
       <div className="flex items-center justify-between gap-4">
 
         {/* ── Esquerda: foto + textos ── */}
-        <div className="flex items-start gap-4 flex-1 min-w-0">
+        <div className="flex items-center gap-4 flex-1 min-w-0">
 
           {/* Avatar com fallback para iniciais quando imagem quebra */}
           <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-slate-50 overflow-hidden shrink-0 border border-slate-100 shadow-sm flex items-center justify-center">
@@ -60,7 +62,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
             )}
           </div>
 
-          <div className="flex flex-col gap-1 flex-1 min-w-0">
+          <div className="flex flex-col flex-1 min-w-0 gap-1">
             {/* Nome + badge público */}
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-bold text-slate-900 text-base md:text-lg tracking-tight leading-tight truncate">
@@ -80,7 +82,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
 
             {/* Habilidades extras */}
             {habilidadesVisiveis.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-0.5">
+              <div className="flex flex-wrap gap-1">
                 {habilidadesVisiveis.map(hab => (
                   <span
                     key={hab}
@@ -98,7 +100,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
             )}
 
             {/* Localização */}
-            <div className="flex items-center gap-1 mt-0.5">
+            <div className="flex items-center gap-1">
               <MapPin size={10} className="shrink-0 text-slate-300" />
               <p className="text-[10px] md:text-[11px] font-medium text-slate-400 tracking-tight truncate">
                 {localizacao}
@@ -111,7 +113,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
             justify-end garante que "Ver Perfil" fique à direita mesmo quando
             "É você?" não existe (isPublico=false). Antes era justify-between
             que jogava o único elemento para a esquerda. */}
-        <div className="flex flex-col items-end gap-2 shrink-0">
+        <div className="flex flex-col items-end justify-center gap-2 shrink-0 self-center">
 
           {/* "É você?" — só para perfis de curadoria pública */}
           {isPublico && (
@@ -121,7 +123,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
                 e.preventDefault()
                 e.stopPropagation()
                 const href = `/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`
-                window.location.href = href
+                router.push(href)
               }}
               className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors whitespace-nowrap cursor-pointer"
             >

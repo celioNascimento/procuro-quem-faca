@@ -66,15 +66,15 @@ export default function Header({ href }) {
         {/* CENTRO: LOGO
             max-h contido dentro do h-20/h-28 do nav — py-3/py-4 dá respiro
             sem deixar a imagem vazar para fora do header */}
-        <div className="flex-1 flex justify-center items-center px-2 py-3 md:py-4">
+        <div className="flex-1 flex justify-center items-center px-2">
           <Link
             href="/"
-            className="transition-all hover:opacity-80 active:scale-95 flex items-center justify-center h-full w-40 md:w-56"
+            className="transition-all hover:opacity-80 active:scale-95 flex items-center justify-center w-40 md:w-56"
           >
             <img
               src="/logo.png"
               alt="Procuro Quem Faça"
-              className="max-h-full w-auto object-contain"
+              className="max-h-10 md:max-h-14 w-auto object-contain"
             />
           </Link>
         </div>
