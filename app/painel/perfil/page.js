@@ -127,7 +127,10 @@ export default function PerfilDoCliente() {
       const whatsappSalvo = profileData?.whatsapp || ''
       setPerfil({
         full_name: profileData?.full_name || sessionUser.user_metadata?.full_name || '',
-        avatar_url: profileData?.avatar_url || sessionUser.user_metadata?.avatar_url || '',
+        // BUG FOTO: profiles.avatar_url tem prioridade absoluta — é a foto salva no Storage.
+        // user_metadata.avatar_url é a foto do Google: expira, muda e bloqueia por CORS.
+        // Só usamos metadata se o usuário NUNCA fez upload (primeiro login).
+        avatar_url: profileData?.avatar_url || '',
         email: sessionUser.email,
         whatsapp: aplicarMascara(whatsappSalvo),
         logradouro: profileData?.logradouro || '',
@@ -153,9 +156,18 @@ export default function PerfilDoCliente() {
   }, [perfil.uf])
 
   const atualizar = async () => {
+    // BUG TELEFONE: validar dígitos antes de qualquer operação
+    const numLimpo = perfil.whatsapp.replace(/\D/g, '')
+    if (perfil.whatsapp && (numLimpo.length < 10 || numLimpo.length > 11)) {
+      setErrorModal({
+        show: true,
+        title: 'Telefone inválido',
+        message: 'O WhatsApp precisa ter 10 ou 11 dígitos. Verifique o número e tente novamente.'
+      })
+      return
+    }
     setLoading(true)
     try {
-      const numLimpo = perfil.whatsapp.replace(/\D/g, '')
       const { error } = await supabase.from('profiles').upsert({
         id: user.id, full_name: perfil.full_name, avatar_url: perfil.avatar_url,
         whatsapp: numLimpo, logradouro: perfil.logradouro, numero: perfil.numero,
