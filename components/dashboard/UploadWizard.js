@@ -64,6 +64,7 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
   const canCloseZoom = isProjetoConcluido || comentariosZoom.length > 0 || hasLegendaSalva(zoomEtapa)
 
   useEffect(() => {
+    setErroUpload(null) // limpa erro ao trocar contexto (abrir/fechar zoom)
     if (zoomEtapa) {
       document.body.style.overflow = 'hidden'
     } else {
@@ -754,6 +755,16 @@ export default function UploadWizard({ prestadorId, projetoExistente = null, onC
                 </div>
                 
                 <div className="bg-blue-50/30 p-5 rounded-2xl border border-blue-100/50">
+                  {/* Erro de upload dentro do zoom — visível mesmo com modal aberto */}
+                  {erroUpload && (
+                    <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl mb-3 animate-in fade-in duration-300">
+                      <AlertCircle size={13} className="shrink-0 mt-0.5" />
+                      <p className="text-[10px] font-bold leading-snug flex-1">{erroUpload}</p>
+                      <button onClick={() => setErroUpload(null)} className="text-red-400 hover:text-red-600 shrink-0">
+                        <X size={12} />
+                      </button>
+                    </div>
+                  )}
                   {!isProjetoConcluido && comentariosZoom.length === 0 ? (
                     <div className="flex flex-col gap-3">
                       <textarea
