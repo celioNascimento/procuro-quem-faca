@@ -37,6 +37,7 @@ export default function PerfilPublico() {
   const searchParams = useSearchParams()
   const [prestador, setPrestador] = useState(null)
   const [projetos, setProjetos] = useState([])
+  const [avaliacoes, setAvaliacoes] = useState([])
   const [loading, setLoading] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
   // ?from= vem do PrestadorCard — preserva ?q= e ?cidade= da busca
@@ -73,7 +74,8 @@ export default function PerfilPublico() {
         categorias(nome),
         portfolio_projetos(
           id, titulo, descricao, status, created_at,
-          portfolio_fotos(url_foto, ordem, legenda)
+          portfolio_fotos(url_foto, ordem, legenda),
+          avaliacoes(id, indica)
         )
       `)
 
@@ -98,6 +100,16 @@ export default function PerfilPublico() {
           })
 
         setProjetos(projetosFiltrados)
+
+        // Buscar avaliações visíveis do prestador
+        const { data: avalData } = await supabase
+          .from('avaliacoes')
+          .select('id, nota, comentario, indica, created_at')
+          .eq('prestador_id', data.id)
+          .eq('visivel', true)
+          .order('created_at', { ascending: false })
+          .limit(10)
+        setAvaliacoes(avalData || [])
 
         // urlRetorno já foi definido via ?from= do PrestadorCard.
         // Só usa categoria como fallback se não havia ?from= (acesso direto)
@@ -271,11 +283,11 @@ export default function PerfilPublico() {
           </section>
 
           {/* ── Especialidades ── */}
-          {prestador.habilidades?.length > 0 && (
+          {(prestador.habilidades?.length ?? 0) > 0 && (
             <section className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
               <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-3">Especialidades</h2>
               <div className="flex flex-wrap gap-2">
-                {prestador.habilidades.map(hab => (
+                {(prestador.habilidades || []).map(hab => (
                   <span key={hab} className="px-3 py-1.5 bg-slate-50 border border-slate-100 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-wide shadow-sm">
                     {hab}
                   </span>
@@ -291,6 +303,57 @@ export default function PerfilPublico() {
             </h2>
             <PortfolioGrid projetos={projetos} />
           </section>
+
+          {/* ── AVALIAÇÕES ─────────────────────────────────────────────────── */}
+          {avaliacoes.length > 0 && (() => {
+            const totalIndica = avaliacoes.filter(a => a.indica).length
+            const mediaNotas = (avaliacoes.reduce((s, a) => s + a.nota, 0) / avaliacoes.length).toFixed(1)
+            return (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between px-1">
+                  <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600">
+                    Avaliações
+                  </h2>
+                  <div className="flex items-center gap-3">
+                    {totalIndica > 0 && (
+                      <span className="flex items-center gap-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-blue-100">
+                        ✦ {totalIndica} {totalIndica === 1 ? 'indicação' : 'indicações'}
+                      </span>
+                    )}
+                    <span className="text-[10px] font-black text-slate-500">
+                      ★ {mediaNotas} · {avaliacoes.length} {avaliacoes.length === 1 ? 'avaliação' : 'avaliações'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {avaliacoes.map(av => (
+                    <div key={av.id} className="bg-white rounded-[2rem] p-5 border border-slate-100 shadow-sm space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        {/* Estrelas */}
+                        <div className="flex gap-0.5">
+                          {[1,2,3,4,5].map(s => (
+                            <span key={s} className={`text-[13px] ${av.nota >= s ? 'text-blue-600' : 'text-slate-200'}`}>★</span>
+                          ))}
+                        </div>
+                        {/* Badge ✦ Indico */}
+                        {av.indica && (
+                          <span className="flex items-center gap-1 bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shrink-0">
+                            ✦ Indico
+                          </span>
+                        )}
+                      </div>
+                      {av.comentario && (
+                        <p className="text-[12px] font-medium text-slate-600 leading-relaxed italic">
+                          "{av.comentario}"
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )
+          })()}
 
           {/* ── CTA WhatsApp — só renderiza se whatsapp existir ── */}
           {waLink && (

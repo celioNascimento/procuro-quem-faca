@@ -30,6 +30,7 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
   const [nota, setNota] = useState(0)
   const [hoverNota, setHoverNota] = useState(0)
   const [comentarioGeral, setComentarioGeral] = useState('')
+  const [indica, setIndica] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => { setMounted(true) }, [])
@@ -112,6 +113,7 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
         prestador_id: projeto.prestador_id,
         nota,
         comentario: comentarioGeral,
+        indica,
         visivel: true,
         status: 'finalizado'
       })
@@ -346,10 +348,17 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
                     <Star size={16} fill="white" className="text-white" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Feedback do Cliente</span>
                   </div>
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <Star key={s} size={10} fill={avaliacaoExistente.nota >= s ? 'white' : 'transparent'} stroke="white" strokeWidth={2} />
-                    ))}
+                  <div className="flex items-center gap-2">
+                    {avaliacaoExistente.indica && (
+                      <span className="flex items-center gap-1 bg-white/20 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/30">
+                        ✦ Indico
+                      </span>
+                    )}
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star key={s} size={10} fill={avaliacaoExistente.nota >= s ? 'white' : 'transparent'} stroke="white" strokeWidth={2} />
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <p className="text-sm font-medium leading-relaxed opacity-90 italic">
@@ -393,6 +402,36 @@ export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
               value={comentarioGeral}
               onChange={e => setComentarioGeral(e.target.value)}
             />
+
+            {/* ── Toggle de indicação ── */}
+            <button
+              type="button"
+              onClick={() => setIndica(v => !v)}
+              className={`w-full flex items-center justify-between px-6 py-4 rounded-[2rem] border-2 transition-all duration-300 ${
+                indica
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100'
+                  : 'bg-white border-slate-200 text-slate-500 hover:border-blue-200'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className={`text-lg leading-none transition-transform duration-300 ${indica ? 'scale-125' : 'scale-100'}`}>
+                  ✦
+                </span>
+                <div className="text-left">
+                  <p className={`text-[11px] font-black uppercase tracking-widest leading-none ${indica ? 'text-white' : 'text-slate-700'}`}>
+                    {indica ? 'Eu indico este profissional' : 'Indicar este profissional?'}
+                  </p>
+                  <p className={`text-[9px] font-medium mt-1 leading-none ${indica ? 'text-blue-100' : 'text-slate-400'}`}>
+                    {indica ? 'Sua indicação ficará visível no perfil' : 'Ajuda outras pessoas a encontrá-lo'}
+                  </p>
+                </div>
+              </div>
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                indica ? 'bg-white border-white' : 'border-slate-300'
+              }`}>
+                {indica && <span className="text-blue-600 font-black text-[10px]">✓</span>}
+              </div>
+            </button>
 
             <button
               disabled={nota === 0 || submitting}

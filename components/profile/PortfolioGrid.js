@@ -30,6 +30,7 @@ export default function PortfolioGrid({ projetos = [] }) {
           const fotos = projeto.portfolio_fotos || []
           const isConcluido = projeto.status === 'finalizado' || fotos.some(f => Number(f.ordem) === 3)
           const fotoCapa = [...fotos].sort((a, b) => Number(b.ordem) - Number(a.ordem))[0]?.url_foto
+          const temIndicacao = (projeto.avaliacoes || []).some(a => a.indica === true)
 
           return (
             <div
@@ -46,6 +47,13 @@ export default function PortfolioGrid({ projetos = [] }) {
                   alt={projeto.titulo}
                   onError={e => { e.target.src = '/placeholder-job.png' }}
                 />
+
+                {/* Badge ✦ Indico — canto superior esquerdo */}
+                {temIndicacao && (
+                  <div className="absolute top-1.5 left-1.5 bg-blue-600 text-white text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
+                    ✦ Indico
+                  </div>
+                )}
 
                 {/* Overlay no hover */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2.5">
