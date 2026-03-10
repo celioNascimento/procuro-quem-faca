@@ -1,14 +1,16 @@
 'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import { MapPin } from 'lucide-react'
 
-// session vem como prop — evita N chamadas ao supabase.auth.getSession()
-// em paralelo quando há múltiplos cards na lista.
-// PaginaPrestadores deve buscar session uma vez e passar para cada card.
 export default function PrestadorCard({ prestador, session, registrarLog }) {
+  // Estado local para foto quebrada — fallback para iniciais
+  const [imgError, setImgError] = useState(false)
+
   if (!prestador) return null
 
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
+  const perfilHref = `/${prestador.slug || prestador.id}`
 
   const getIniciais = (nome) => {
     if (!nome) return '?'
@@ -17,28 +19,39 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
     return partes[0][0].toUpperCase()
   }
 
-  // Localização com guard — bairro pode ser null
-  const localizacao = [prestador.bairro, prestador.cidades?.nome || 'Londrina']
+  // Fallback neutro — 'Londrina' era hardcoded e aparecia para prestadores de outras cidades
+  const localizacao = [prestador.bairro, prestador.cidades?.nome]
     .filter(Boolean)
-    .join(' • ')
+    .join(' • ') || 'Localização não informada'
 
-  // Habilidades extras além da categoria principal — máx 3 para não poluir
-  const habilidades = (prestador.habilidades || []).slice(0, 3)
+  // Habilidades extras — máx 3 visíveis, +N para o restante
+  const todasHabilidades = prestador.habilidades || []
+  const habilidadesVisiveis = todasHabilidades.slice(0, 3)
+  const habilidadesExtras   = todasHabilidades.length - 3
 
   return (
-    <div className={`bg-white border p-5 md:p-6 rounded-[2rem] shadow-sm hover:shadow-md transition-all group ${
-      isPublico ? 'border-slate-100' : 'border-blue-50'
-    }`}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+    // Card inteiro clicável — cursor-pointer coerente com hover:shadow-md
+    // O botão "Ver Perfil" dentro é redundante mas reforça a ação visualmente
+    <Link
+      href={perfilHref}
+      onClick={() => registrarLog?.('CLIQUE_PERFIL', { nome: prestador.nome })}
+      className={`block bg-white border p-5 md:p-6 rounded-[2rem] shadow-sm hover:shadow-md transition-all group cursor-pointer ${
+        isPublico ? 'border-slate-100' : 'border-blue-50'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-4">
 
         {/* ── Esquerda: foto + textos ── */}
         <div className="flex items-start gap-4 flex-1 min-w-0">
+
+          {/* Avatar com fallback para iniciais quando imagem quebra */}
           <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-slate-50 overflow-hidden shrink-0 border border-slate-100 shadow-sm flex items-center justify-center">
-            {prestador.foto_perfil ? (
+            {prestador.foto_perfil && !imgError ? (
               <img
                 src={prestador.foto_perfil}
                 className="w-full h-full object-cover"
                 alt={prestador.nome}
+                onError={() => setImgError(true)}
               />
             ) : (
               <span className="text-sm font-black text-slate-400 tracking-tighter">
@@ -65,10 +78,10 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
               {prestador.categoria}
             </span>
 
-            {/* Habilidades extras — mostradas quando há mais de uma especialidade */}
-            {habilidades.length > 0 && (
+            {/* Habilidades extras */}
+            {habilidadesVisiveis.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-0.5">
-                {habilidades.map(hab => (
+                {habilidadesVisiveis.map(hab => (
                   <span
                     key={hab}
                     className="text-[9px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wide"
@@ -76,15 +89,15 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
                     {hab}
                   </span>
                 ))}
-                {(prestador.habilidades?.length || 0) > 3 && (
+                {habilidadesExtras > 0 && (
                   <span className="text-[9px] font-semibold text-slate-400 px-1 py-0.5">
-                    +{prestador.habilidades.length - 3}
+                    +{habilidadesExtras}
                   </span>
                 )}
               </div>
             )}
 
-            {/* Localização com guard contra bairro null */}
+            {/* Localização */}
             <div className="flex items-center gap-1 mt-0.5">
               <MapPin size={10} className="shrink-0 text-slate-300" />
               <p className="text-[10px] md:text-[11px] font-medium text-slate-400 tracking-tight truncate">
@@ -94,30 +107,33 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
           </div>
         </div>
 
-        {/* ── Direita: ações ── */}
-        <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-3 shrink-0">
-          {/* "É você?" — texto completo, sem corte */}
+        {/* ── Direita: ações — sempre à direita ──────────────────────────────
+            justify-end garante que "Ver Perfil" fique à direita mesmo quando
+            "É você?" não existe (isPublico=false). Antes era justify-between
+            que jogava o único elemento para a esquerda. */}
+        <div className="flex flex-col items-end gap-2 shrink-0">
+
+          {/* "É você?" — só para perfis de curadoria pública */}
           {isPublico && (
-            <Link
-              href={session
-                ? `/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`
-                : `/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`
-              }
-              className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors whitespace-nowrap"
+            <span
+              onClick={e => {
+                // stopPropagation evita que o clique no Link pai também dispare
+                e.preventDefault()
+                e.stopPropagation()
+                const href = `/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`
+                window.location.href = href
+              }}
+              className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors whitespace-nowrap cursor-pointer"
             >
               É você? Reivindique
-            </Link>
+            </span>
           )}
 
-          <Link
-            href={`/${prestador.slug || prestador.id}`}
-            onClick={() => registrarLog?.('CLIQUE_PERFIL', { nome: prestador.nome })}
-            className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] hover:bg-blue-700 transition-all active:scale-95 text-center shadow-lg shadow-blue-100 whitespace-nowrap"
-          >
+          <span className="bg-blue-600 text-white px-5 py-2.5 md:px-6 md:py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] group-hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 whitespace-nowrap">
             Ver Perfil
-          </Link>
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
