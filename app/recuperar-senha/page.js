@@ -188,7 +188,7 @@ export default function NovaSenha() {
 
         {/* ── Logo acima do card — tamanho correto para a nova proporção 5:1 ── */}
         <Link href="/" className="hover:opacity-80 active:scale-95 transition-all">
-          <img src="/logo.png" alt="Procuro Quem Faça" className="h-9 w-auto object-contain" />
+          <img src="/logo.png" alt="Procuro Quem Faça" className="h-12 w-auto object-contain" />
         </Link>
 
         {/* ── Card principal ── */}
