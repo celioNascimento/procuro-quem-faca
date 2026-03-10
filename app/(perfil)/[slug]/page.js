@@ -2,17 +2,19 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Header from '@/components/Header'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
-import { MapPin, ShieldCheck, Flag, Share2, CheckCircle, Loader2 } from 'lucide-react'
+import { MapPin, ShieldCheck, Flag, Share2, CheckCircle } from 'lucide-react'
 
-// ── Skeleton ────────────────────────────────────────────────────────────────
+// ── Skeleton ─────────────────────────────────────────────────────────────────
+// Header real em vez de div simulado — evita flash de z-index ao montar
+// pt-24 espelha pt-24 md:pt-32 do conteúdo real — sem layout shift
 function PerfilSkeleton() {
   return (
-    <main className="min-h-screen bg-white font-sans">
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white/90 h-20 border-b border-slate-100/50" />
-      <div className="max-w-xl mx-auto pt-32 pb-12 px-6 animate-pulse">
+    <main className="min-h-screen bg-[#F8FAFC] font-sans">
+      <Header href="/prestadores" />
+      <div className="max-w-xl mx-auto pt-24 md:pt-32 pb-12 px-6 animate-pulse">
         <div className="flex flex-col items-center mb-10 gap-4">
           <div className="w-28 h-28 rounded-[2rem] bg-slate-100" />
           <div className="h-7 bg-slate-100 rounded-lg w-2/3" />
@@ -21,7 +23,7 @@ function PerfilSkeleton() {
         <div className="space-y-4">
           <div className="h-28 bg-slate-50 rounded-[2rem]" />
           <div className="grid grid-cols-3 gap-3">
-            {[1,2,3].map(i => <div key={i} className="aspect-square bg-slate-50 rounded-2xl" />)}
+            {[1, 2, 3].map(i => <div key={i} className="aspect-square bg-slate-50 rounded-2xl" />)}
           </div>
         </div>
       </div>
@@ -29,10 +31,9 @@ function PerfilSkeleton() {
   )
 }
 
-// ── Componente principal ─────────────────────────────────────────────────────
+// ── Componente principal ──────────────────────────────────────────────────────
 export default function PerfilPublico() {
   const params = useParams()
-  const router = useRouter()
   const [prestador, setPrestador] = useState(null)
   const [projetos, setProjetos] = useState([])
   const [loading, setLoading] = useState(true)
@@ -40,7 +41,7 @@ export default function PerfilPublico() {
   const [urlRetorno, setUrlRetorno] = useState('/prestadores')
   const [compartilhando, setCompartilhando] = useState(false)
 
-  // ── Log de atividade ──────────────────────────────────────────────────────
+  // ── Log de atividade ───────────────────────────────────────────────────────
   const registrarLog = async (acao, detalhes = {}) => {
     try {
       await supabase.from('logs_atividades').insert({
@@ -54,7 +55,7 @@ export default function PerfilPublico() {
     }
   }
 
-  // ── Carregamento ──────────────────────────────────────────────────────────
+  // ── Carregamento ───────────────────────────────────────────────────────────
   useEffect(() => {
     setIsMounted(true)
 
@@ -64,8 +65,9 @@ export default function PerfilPublico() {
       let query = supabase.from('prestadores').select(`
         *,
         cidades(nome, estado_sigla),
+        categorias(nome),
         portfolio_projetos(
-          id, titulo, descricao, status,
+          id, titulo, descricao, status, created_at,
           portfolio_fotos(url_foto, ordem, legenda)
         )
       `)
@@ -78,63 +80,74 @@ export default function PerfilPublico() {
       if (!error && data) {
         setPrestador(data)
 
-        // Vitrine: em_execucao (prova de atividade) + finalizado — oculta em_registro e pendente
+        // Vitrine: em_execucao (prova de atividade) + finalizado
+        // Ordena: finalizados primeiro, depois em_execucao
+        // Dentro de cada grupo: mais recentes primeiro
         const projetosFiltrados = (data.portfolio_projetos || [])
           .filter(p => ['em_execucao', 'finalizado'].includes(p.status))
           .sort((a, b) => {
-            if (a.status === 'finalizado' && b.status !== 'finalizado') return -1
-            if (a.status !== 'finalizado' && b.status === 'finalizado') return 1
-            return 0
+            if (a.status === b.status) {
+              return new Date(b.created_at || 0) - new Date(a.created_at || 0)
+            }
+            return a.status === 'finalizado' ? -1 : 1
           })
 
         setProjetos(projetosFiltrados)
 
-        if (data.categoria) {
-          setUrlRetorno(`/prestadores?categoria=${encodeURIComponent(data.categoria)}`)
+        // urlRetorno: usa categorias.nome (join) com fallback para categoria (coluna direta)
+        // Evita /prestadores?categoria=undefined quando o join não retornar dados
+        const nomeCategoria = data.categorias?.nome || data.categoria
+        if (nomeCategoria) {
+          setUrlRetorno(`/prestadores?q=${encodeURIComponent(nomeCategoria)}`)
         }
       }
+
       setLoading(false)
     }
 
     carregarPerfil()
   }, [params?.slug])
 
-  // ── Compartilhar ──────────────────────────────────────────────────────────
+  // ── Compartilhar ───────────────────────────────────────────────────────────
   const compartilharPerfil = async () => {
     registrarLog('COMPARTILHAR_PERFIL_CLIQUE')
-    setCompartilhando(true)
-    setTimeout(() => setCompartilhando(false), 1500)
-
     const url = typeof window !== 'undefined' ? window.location.href : ''
     const texto = `Confira o trabalho de ${prestador?.nome} no Procuro Quem Faça.`
 
     if (navigator.share) {
       try { await navigator.share({ title: prestador?.nome, text: texto, url }) } catch {}
     } else {
-      await navigator.clipboard.writeText(url).catch(() => {})
-      window.open(`https://wa.me/?text=${encodeURIComponent(texto + ' ' + url)}`, '_blank')
+      // Desktop: só copia o link — não abre WhatsApp sem o usuário pedir
+      try { await navigator.clipboard.writeText(url) } catch {}
     }
+
+    setCompartilhando(true)
+    setTimeout(() => setCompartilhando(false), 1500)
   }
 
-  // ── Guards ────────────────────────────────────────────────────────────────
+  // ── Guards ─────────────────────────────────────────────────────────────────
   if (!isMounted || loading) return <PerfilSkeleton />
 
   if (!prestador) {
     return (
       <main className="min-h-screen bg-[#F8FAFC] font-sans flex flex-col items-center justify-center p-6 text-center">
-        <Header href="/" />
+        <Header href="/prestadores" />
         <div className="pt-24 space-y-6">
           <h3 className="text-2xl font-black text-slate-300 uppercase italic tracking-tighter">Perfil não encontrado</h3>
-          <Link href="/" className="inline-block px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 active:scale-95 transition-all">
-            Voltar para a Vitrine
+          <Link href="/prestadores" className="inline-block px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 active:scale-95 transition-all">
+            Ver Profissionais
           </Link>
         </div>
       </main>
     )
   }
 
-  // ── Derivações ────────────────────────────────────────────────────────────
-  const waLink = `https://wa.me/55${prestador.whatsapp?.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${prestador.nome}, vi seu perfil no Procuro Quem Faça e gostaria de um orçamento.`)}`
+  // ── Derivações ─────────────────────────────────────────────────────────────
+  const temWhatsapp = !!prestador.whatsapp?.replace(/\D/g, '')
+  const waLink = temWhatsapp
+    ? `https://wa.me/55${prestador.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${prestador.nome}, vi seu perfil no Procuro Quem Faça e gostaria de um orçamento.`)}`
+    : null
+
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
 
   const localizacao = [prestador.bairro, prestador.cidades?.nome]
@@ -146,14 +159,16 @@ export default function PerfilPublico() {
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
-      <Header href={urlRetorno !== '/prestadores' ? urlRetorno : undefined} />
+      {/* href sempre definido — evita router.back() ir para fora do site
+          quando usuário chegou direto pela URL */}
+      <Header href={urlRetorno} />
 
       <div className="max-w-xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
 
-        {/* ── Hero do prestador ── */}
+        {/* ── Hero ── */}
         <section className="relative mb-8">
 
-          {/* Botões de ação — cantos opostos, discretos */}
+          {/* Ações discretas */}
           <div className="flex justify-between items-start mb-6">
             <Link
               href={`/denunciar/${prestador.id}`}
@@ -196,9 +211,9 @@ export default function PerfilPublico() {
               <h1 className="text-2xl font-black text-slate-800 uppercase italic tracking-tight leading-none">
                 {prestador.nome}
               </h1>
-              {prestador.categoria && (
+              {(prestador.categorias?.nome || prestador.categoria) && (
                 <p className="text-blue-600 text-[10px] font-black uppercase tracking-widest mt-1">
-                  {prestador.categoria}
+                  {prestador.categorias?.nome || prestador.categoria}
                 </p>
               )}
               {localizacao && (
@@ -208,7 +223,7 @@ export default function PerfilPublico() {
               )}
             </div>
 
-            {/* Badges de atividade */}
+            {/* Badges de atividade — números consistentes em ambos */}
             {(totalFinalizados > 0 || totalEmAndamento > 0) && (
               <div className="flex items-center gap-2 flex-wrap justify-center mt-1">
                 {totalFinalizados > 0 && (
@@ -218,7 +233,7 @@ export default function PerfilPublico() {
                 )}
                 {totalEmAndamento > 0 && (
                   <span className="px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                    ● em andamento
+                    ● {totalEmAndamento} em andamento
                   </span>
                 )}
               </div>
@@ -226,7 +241,7 @@ export default function PerfilPublico() {
           </div>
         </section>
 
-        {/* ── Banner de reivindicação ── */}
+        {/* ── Banner reivindicação ── */}
         {isPublico && (
           <Link
             href={`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`}
@@ -272,21 +287,23 @@ export default function PerfilPublico() {
             <PortfolioGrid projetos={projetos} />
           </section>
 
-          {/* ── CTA WhatsApp ── */}
-          <div className="pt-2">
-            <a
-              href={waLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => registrarLog('CLIQUE_WHATSAPP_ORCAMENTO')}
-              className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-blue-100 hover:bg-blue-700 active:scale-[0.98] transition-all italic"
-            >
-              <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-              Solicitar Orçamento
-            </a>
-          </div>
+          {/* ── CTA WhatsApp — só renderiza se whatsapp existir ── */}
+          {waLink && (
+            <div className="pt-2">
+              <a
+                href={waLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => registrarLog('CLIQUE_WHATSAPP_ORCAMENTO')}
+                className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-blue-100 hover:bg-blue-700 active:scale-[0.98] transition-all italic"
+              >
+                <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                Solicitar Orçamento
+              </a>
+            </div>
+          )}
 
         </div>
       </div>
