@@ -51,13 +51,13 @@ export default function DashboardLayout({ children }) {
 
           {/* Centro — logo com altura que cabe no header */}
           <Link
-            href="/dashboard"
+            href="/"
             className="hover:opacity-80 active:scale-95 transition-all duration-200 flex items-center justify-center"
           >
             <img
               src="/logo.png"
               alt="Logo Procuro Quem Faça"
-              className="h-8 md:h-10 w-auto object-contain drop-shadow-sm"
+              className="h-10 md:h-14 w-auto object-contain drop-shadow-sm"
             />
           </Link>
 
