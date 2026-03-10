@@ -32,6 +32,18 @@ function ListaConteudo() {
   const [anuncios,        setAnuncios]        = useState([])
   const [loading,         setLoading]         = useState(true)
   const [erro,            setErro]            = useState(false)
+  // session buscada UMA vez aqui — evita N chamadas paralelas dentro de cada PrestadorCard
+  const [session,         setSession]         = useState(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+  }, [])
+
+  const registrarLog = async (acao, detalhes = {}) => {
+    try {
+      await supabase.from('logs_atividades').insert([{ acao, detalhes, entidade_tipo: 'prestador' }])
+    } catch { /* silencioso */ }
+  }
 
   // BUG 2 FIX: pathname explícito — router.push("?cidade=X") sem pathname
   // é interpretado como push para "/" em algumas configs do Next.js App Router.
@@ -222,7 +234,7 @@ function ListaConteudo() {
         <div className="space-y-4">
           {prestadoresExibidos.map((p, index) => (
             <div key={p.id}>
-              <PrestadorCard prestador={p} />
+              <PrestadorCard prestador={p} session={session} registrarLog={registrarLog} />
               {anunciosMeio.length > 0 && (index + 1) % 3 === 0 && (
                 <AnuncioCard
                   anuncio={anunciosMeio[Math.floor((index + 1) / 3 - 1) % anunciosMeio.length]}
