@@ -359,9 +359,12 @@ export default function PerfilDoCliente() {
                       }`}
                     >
                       {/* Avatar do prestador com dot de status */}
-                      <div className={`relative w-14 h-14 rounded-2xl overflow-hidden shrink-0 ${info.urgente ? 'ring-2 ring-blue-400 ring-offset-2' : ''}`}>
-                        <img src={s.prestadores?.foto_perfil || '/placeholder-avatar.png'} className="w-full h-full object-cover" alt={s.prestadores?.nome} />
-                        <span className={`absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full border-2 border-white ${info.dot} ${info.urgente ? 'animate-pulse' : ''}`} />
+                      {/* ring-offset não funciona dentro de overflow-hidden — wrapper externo resolve */}
+                      <div className={`relative shrink-0 rounded-2xl p-0.5 ${info.urgente ? 'ring-2 ring-blue-400' : ''}`}>
+                        <div className="w-14 h-14 rounded-[14px] overflow-hidden">
+                          <img src={s.prestadores?.foto_perfil || '/placeholder-avatar.png'} className="w-full h-full object-cover" alt={s.prestadores?.nome} />
+                        </div>
+                        <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${info.dot} ${info.urgente ? 'animate-pulse' : ''}`} />
                       </div>
 
                       {/* Textos */}
