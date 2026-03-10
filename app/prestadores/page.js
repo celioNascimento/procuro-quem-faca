@@ -272,7 +272,7 @@ function ListaConteudo() {
 export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
-      <Header />
+      <Header href="/" />
       {/* pt espelha a altura do header: h-20 mobile / h-28 desktop */}
       <div className="pt-20 md:pt-28">
         <Suspense fallback={<ListaSkeleton />}>

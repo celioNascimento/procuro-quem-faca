@@ -1,18 +1,24 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { MapPin } from 'lucide-react'
 
 export default function PrestadorCard({ prestador, session, registrarLog }) {
   // Estado local para foto quebrada — fallback para iniciais
   const [imgError, setImgError] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
 
   if (!prestador) return null
 
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
-  const perfilHref = `/${prestador.slug || prestador.id}`
+  // ?from= preserva a URL exata da busca (incluindo ?q= e ?cidade=)
+  // PerfilPublico usa esse param para o botão voltar
+  const fromUrl = typeof window !== 'undefined'
+    ? window.location.pathname + window.location.search
+    : '/prestadores'
+  const perfilHref = `/${prestador.slug || prestador.id}?from=${encodeURIComponent(fromUrl)}`
 
   const getIniciais = (nome) => {
     if (!nome) return '?'

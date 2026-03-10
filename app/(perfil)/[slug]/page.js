@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Header from '@/components/Header'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
 import { MapPin, ShieldCheck, Flag, Share2, CheckCircle } from 'lucide-react'
@@ -34,11 +34,16 @@ function PerfilSkeleton() {
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function PerfilPublico() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const [prestador, setPrestador] = useState(null)
   const [projetos, setProjetos] = useState([])
   const [loading, setLoading] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
-  const [urlRetorno, setUrlRetorno] = useState('/prestadores')
+  // ?from= vem do PrestadorCard — preserva ?q= e ?cidade= da busca
+  // Fallback seguro: /prestadores garante que nunca sai do site
+  const fromParam = searchParams?.get('from')
+  const urlRetornoInicial = fromParam ? decodeURIComponent(fromParam) : '/prestadores'
+  const [urlRetorno, setUrlRetorno] = useState(urlRetornoInicial)
   const [compartilhando, setCompartilhando] = useState(false)
 
   // ── Log de atividade ───────────────────────────────────────────────────────
@@ -94,11 +99,11 @@ export default function PerfilPublico() {
 
         setProjetos(projetosFiltrados)
 
-        // urlRetorno: usa categorias.nome (join) com fallback para categoria (coluna direta)
-        // Evita /prestadores?categoria=undefined quando o join não retornar dados
-        const nomeCategoria = data.categorias?.nome || data.categoria
-        if (nomeCategoria) {
-          setUrlRetorno(`/prestadores?q=${encodeURIComponent(nomeCategoria)}`)
+        // urlRetorno já foi definido via ?from= do PrestadorCard.
+        // Só usa categoria como fallback se não havia ?from= (acesso direto)
+        if (!fromParam) {
+          const nomeCategoria = data.categorias?.nome || data.categoria
+          if (nomeCategoria) setUrlRetorno(`/prestadores?q=${encodeURIComponent(nomeCategoria)}`)
         }
       }
 
