@@ -11,32 +11,25 @@ export default function HeroSection({ onLog }) {
   const [sessionLoading, setSessionLoading] = useState(true)
   const [loading, setLoading]               = useState(false)
   const [erroLogin, setErroLogin]           = useState(false)
-  // BUG alternância de abas: guarda se já inicializou para não voltar ao skeleton
   const inicializado = useRef(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session)
-      if (data.session) {
-        setRoleLoading(true)
-        await detectarRole(data.session.user.id)
-      }
-      setSessionLoading(false)
-      inicializado.current = true
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // BUG 3: usar APENAS onAuthStateChange como fonte de verdade.
+    // O listener recebe INITIAL_SESSION na montagem — getSession() é redundante
+    // e cria race condition. Removido getSession().
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
+
       if (session) {
-        // Só mostra skeleton de role se ainda não inicializou
-        // Ao voltar de outra aba, _event = 'TOKEN_REFRESHED' — não reseta o UI
         if (!inicializado.current) setRoleLoading(true)
         await detectarRole(session.user.id)
       } else {
         setRole(null)
         setRoleLoading(false)
       }
-      // Só reseta sessionLoading se ainda não inicializou
+
+      // Só libera o sessionLoading na primeira vez (INITIAL_SESSION)
+      // Eventos subsequentes (TOKEN_REFRESHED ao voltar de aba) não resetam o UI
       if (!inicializado.current) {
         setSessionLoading(false)
         inicializado.current = true
@@ -76,27 +69,13 @@ export default function HeroSection({ onLog }) {
     }
   }
 
-  // ── Estilos ───────────────────────────────────────────────────────────────
-  // Em mobile: apenas ícone + texto curto, sem quebra de linha
-  const btnGhost = [
-    'flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap',
-    'bg-white/80 backdrop-blur-sm border border-slate-200/70',
-    'text-slate-500 text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest',
-    'shadow-sm hover:shadow-md hover:bg-white hover:text-slate-700',
-    'transition-all duration-200 active:scale-95',
-  ].join(' ')
-
-  const btnPrimary = [
-    'flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap',
-    'bg-blue-600 text-white text-[9px] md:text-[10px] font-black uppercase tracking-wider md:tracking-widest',
-    'shadow-md shadow-blue-200/60 hover:bg-blue-700',
-    'transition-all duration-200 active:scale-95',
-  ].join(' ')
-
-  const skeleton = 'h-7 md:h-8 rounded-full animate-pulse bg-slate-100/70'
+  // BUG 5: strings diretas em vez de array.join() — Tailwind faz purge correto
+  const btnGhost = 'flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap bg-white/80 backdrop-blur-sm border border-slate-200/70 text-slate-500 text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-sm hover:shadow-md hover:bg-white hover:text-slate-700 transition-all duration-200 active:scale-95'
+  const btnPrimary = 'flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap bg-blue-600 text-white text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all duration-200 active:scale-95'
+  const skeleton = 'h-7 md:h-8 rounded-full animate-pulse bg-slate-100'
 
   return (
-    <header className="w-full max-w-5xl mx-auto px-4 md:px-5 py-4 md:py-5 flex justify-end items-center gap-2 absolute top-0 left-0 right-0 z-50 h-16 md:h-20">
+    <header className="w-full max-w-5xl mx-auto px-4 md:px-5 flex justify-end items-center gap-2 absolute top-0 left-0 right-0 z-50 h-16 md:h-20">
 
       {sessionLoading ? (
         <div className="flex gap-2">
@@ -112,7 +91,6 @@ export default function HeroSection({ onLog }) {
             </span>
           )}
 
-          {/* Mobile: só ícone Google. Desktop: ícone + texto */}
           <button onClick={handleGoogleLogin} disabled={loading} className={`${btnGhost} disabled:opacity-40`}>
             {loading
               ? <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
@@ -127,7 +105,7 @@ export default function HeroSection({ onLog }) {
           </button>
 
           <Link href="/login" onClick={() => onLog?.('CLIQUE_SOU_PROFISSIONAL')} className={btnPrimary}>
-            <LogIn size={11} className="md:w-3 md:h-3" />
+            <LogIn size={11} />
             <span className="hidden sm:inline">Sou </span>Profissional
           </Link>
         </>
@@ -143,7 +121,7 @@ export default function HeroSection({ onLog }) {
           <Link href="/painel/perfil" className={btnGhost}>
             <User size={12} className="text-blue-500 shrink-0" />
             <span className="hidden sm:inline">{role === 'prestador' ? 'Área do Cliente' : 'Minha Área'}</span>
-            <span className="sm:hidden">{role === 'prestador' ? 'Cliente' : 'Minha Área'}</span>
+            <span className="sm:hidden">{role === 'prestador' ? 'Cliente' : 'Área'}</span>
           </Link>
 
           {role === 'prestador' && (

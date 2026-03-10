@@ -11,7 +11,9 @@ export default function Home() {
   const router = useRouter()
   const [busca, setBusca] = useState('')
   const [sugestoes, setSugestoes] = useState([])
-  const [sugestoesReady, setSugestoesReady] = useState(false) // evita flash de ausência
+  // BUG 1: removido sugestoesReady — o clearTimeout no cleanup cancelava o finally,
+  // deixando sugestoesReady=false para sempre ao trocar de aba.
+  // sugestoes.length > 0 direto é suficiente — 300ms de debounce é imperceptível.
   const [erro, setErro] = useState(false)
 
   const registrarLog = useCallback(async (acao, detalhes = {}, entidade = null) => {
@@ -21,11 +23,14 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+    let cancelado = false // flag para evitar setState em componente desmontado
+
     const buscarSugestoes = async () => {
       try {
         let query = supabase.from('categorias').select('nome')
         if (busca.trim()) query = query.ilike('nome', `%${busca.trim()}%`)
         const { data } = await query.limit(6)
+        if (cancelado) return // componente desmontado — não atualiza estado
         if (data) {
           const corrigidas = data
             .map(i => i.nome)
@@ -37,13 +42,15 @@ export default function Home() {
           setSugestoes(filtradas)
         }
       } catch (err) {
-        console.warn('Erro na busca de sugestões:', err.message)
-      } finally {
-        setSugestoesReady(true) // sempre marca como pronto, mesmo se vazio
+        console.warn('Erro sugestões:', err.message)
       }
     }
+
     const timer = setTimeout(buscarSugestoes, 300)
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      cancelado = true
+    }
   }, [busca])
 
   const dispararBusca = (e, termoManual) => {
@@ -65,7 +72,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans antialiased overflow-x-hidden relative">
 
-      {/* Gradiente decorativo */}
       <div
         className="absolute inset-0 pointer-events-none -z-0"
         style={{ background: 'radial-gradient(ellipse 90% 55% at 50% -5%, rgba(219,234,254,0.65) 0%, transparent 65%)' }}
@@ -73,13 +79,10 @@ export default function Home() {
 
       <HeroSection onLog={registrarLog} />
 
-      {/* Centro da página — flex-1 garante ocupar todo o espaço disponível */}
+      {/* BUG 2: -mt-8 md:-mt-10 compensa o header e centraliza visualmente */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
+        <div className="w-full max-w-xl flex flex-col items-center text-center gap-5 -mt-8 md:-mt-10">
 
-        {/* Bloco principal — levemente acima do centro geométrico */}
-        <div className="w-full max-w-xl flex flex-col items-center text-center gap-5 -mt-16">
-
-          {/* Logo */}
           <Link href="/" className="block transition-transform active:scale-95 duration-200">
             <img
               src="/logo.png"
@@ -88,7 +91,6 @@ export default function Home() {
             />
           </Link>
 
-          {/* Barra de busca */}
           <div className="w-full">
             <SearchForm
               busca={busca}
@@ -98,8 +100,8 @@ export default function Home() {
             />
           </div>
 
-          {/* Sugestões — só renderiza depois que o fetch completou (evita flash de ausência) */}
-          {sugestoesReady && sugestoes.length > 0 && (
+          {/* BUG 1: sem sugestoesReady — renderiza direto quando há dados */}
+          {sugestoes.length > 0 && (
             <div className="flex flex-col items-center gap-3 w-full animate-in fade-in duration-300">
               <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] italic">
                 {temBuscaReal ? 'Encontramos para você' : 'Sugestões em destaque'}
@@ -120,7 +122,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Footer — padding generoso para não grudar na base */}
       <footer className="relative z-10 py-10 flex justify-center">
         <div className="flex flex-col items-center gap-2 opacity-20">
           <div className="h-px w-6 bg-slate-500" />
