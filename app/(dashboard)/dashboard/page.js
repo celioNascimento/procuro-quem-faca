@@ -66,11 +66,11 @@ export default function PerfilPage() {
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen">
-      <main className="max-w-5xl mx-auto pb-8">
+      <main className="max-w-5xl mx-auto pb-8 pt-0">
 
         {/* ── Seletor de abas ── */}
-        <div className="px-5 md:px-8 pt-6 pb-4 border-b border-slate-100 bg-white sticky top-16 md:top-20 z-40">
-          <div className="flex items-center gap-2 overflow-x-auto" style={{scrollbarWidth:'none',msOverflowStyle:'none'}}>
+        <div className="px-5 md:px-8 py-3 border-b border-slate-100 bg-white sticky top-16 md:top-20 z-40 overflow-hidden">
+          <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1" style={{scrollbarWidth:'none',msOverflowStyle:'none'}}>
 
             {abas.map(aba => (
               <button
@@ -112,7 +112,7 @@ export default function PerfilPage() {
         </div>
 
         {/* ── Conteúdo ── */}
-        <div className="animate-in fade-in duration-300 pt-6">
+        <div className="animate-in fade-in duration-300 pt-4">
           {validando ? (
             <div className="h-64 flex flex-col items-center justify-center gap-4">
               <div className="w-10 h-10 border-[3px] border-slate-100 border-t-blue-600 rounded-full animate-spin" />
