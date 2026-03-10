@@ -339,7 +339,7 @@ export default function PerfilDoCliente() {
           <div className="space-y-4 pb-4">
 
             {/* Filtros */}
-            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mb-2 no-scrollbar">
               {[
                 { id: 'todos',       label: 'Todos' },
                 { id: 'pendente',    label: 'Aceitar' },
