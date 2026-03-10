@@ -6,41 +6,77 @@ import { LogIn, User, LayoutDashboard } from 'lucide-react'
 
 export default function HeroSection({ onLog }) {
   const [session, setSession] = useState(null)
+  const [role, setRole] = useState(null) // 'prestador' | 'cliente' | null
   const [loading, setLoading] = useState(false)
+  const [erroLogin, setErroLogin] = useState(false)
 
   useEffect(() => {
     // Sem setTimeout — montagem imediata evita gap de layout
-    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    supabase.auth.getSession().then(async ({ data }) => {
+      setSession(data.session)
+      if (data.session) await detectarRole(data.session.user.id)
+    })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
+      if (session) await detectarRole(session.user.id)
+      else setRole(null)
     })
 
     return () => subscription.unsubscribe()
-  }, []);
+  }, [])
+
+  // Detecta se o usuário tem cadastro como prestador.
+  // Sem prestador cadastrado → trata como cliente (vai para /painel/perfil).
+  const detectarRole = async (userId) => {
+    try {
+      const { data } = await supabase
+        .from('prestadores')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle()
+      setRole(data ? 'prestador' : 'cliente')
+    } catch {
+      setRole('cliente') // fallback seguro
+    }
+  }
 
   const handleGoogleLogin = async () => {
     setLoading(true)
-    onLog('CLIQUE_LOGIN_GOOGLE_HERO')
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/painel/perfil`
-      }
-    })
+    setErroLogin(false)
+    onLog?.('CLIQUE_LOGIN_GOOGLE_HERO')
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/painel/perfil` }
+      })
+      if (error) throw error
+    } catch {
+      setErroLogin(true)
+      setTimeout(() => setErroLogin(false), 3000)
+    } finally {
+      // OAuth redireciona a página — setLoading(false) só alcançado em erro
+      setLoading(false)
+    }
   }
 
   return (
-    // h-20 garante reserva de espaço desde o primeiro render
-    // Removido opacity condicional — header sempre visível, sem flash
+    // h-20 garante reserva de espaço desde o primeiro render — sem flash de layout
     <header className="w-full max-w-5xl px-6 py-6 flex justify-end items-center gap-3 absolute top-0 z-50 h-20">
 
       {!session ? (
         <>
+          {/* Erro de login */}
+          {erroLogin && (
+            <span className="text-[10px] font-bold text-red-500 animate-in fade-in duration-300">
+              Falha ao entrar. Tente novamente.
+            </span>
+          )}
+
           <button
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="group flex items-center gap-3 bg-white border border-slate-200 text-slate-600 px-4 py-2.5 rounded-2xl hover:border-blue-100 hover:bg-blue-50 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            className="group flex items-center gap-2.5 bg-white border border-slate-200 text-slate-600 px-4 py-2.5 rounded-2xl hover:border-blue-100 hover:bg-blue-50 transition-all shadow-sm active:scale-95 disabled:opacity-50"
           >
             {loading ? (
               <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -59,7 +95,7 @@ export default function HeroSection({ onLog }) {
 
           <Link
             href="/login"
-            onClick={() => onLog('CLIQUE_SOU_PROFISSIONAL')}
+            onClick={() => onLog?.('CLIQUE_SOU_PROFISSIONAL')}
             className="bg-white border border-slate-200 text-blue-600 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95 flex items-center gap-2"
           >
             <LogIn size={13} className="opacity-40" />
@@ -68,21 +104,28 @@ export default function HeroSection({ onLog }) {
         </>
       ) : (
         <>
+          {/* Roteamento por role:
+              cliente  → /painel/perfil  (área do cliente)
+              prestador → /dashboard     (painel do prestador)
+              null (carregando) → mostra ambos como fallback seguro */}
           <Link
             href="/painel/perfil"
             className="bg-white border border-slate-200 text-slate-600 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2"
           >
             <User size={14} className="text-blue-500" />
-            Minha Área
+            {role === 'prestador' ? 'Área do Cliente' : 'Minha Área'}
           </Link>
 
-          <Link
-            href="/dashboard"
-            className="bg-white border border-slate-200 text-blue-600 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95 flex items-center gap-2"
-          >
-            <LayoutDashboard size={14} className="opacity-40" />
-            Meu Painel
-          </Link>
+          {/* Só mostra "Meu Painel" para prestadores confirmados ou enquanto carrega role */}
+          {role !== 'cliente' && (
+            <Link
+              href="/dashboard"
+              className="bg-white border border-slate-200 text-blue-600 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95 flex items-center gap-2"
+            >
+              <LayoutDashboard size={14} className="opacity-40" />
+              Meu Painel
+            </Link>
+          )}
         </>
       )}
     </header>
