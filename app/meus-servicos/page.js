@@ -154,17 +154,17 @@ export default function PainelDoCliente() {
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-        <div className="flex justify-center mb-0 relative z-20">
-          <Link href="/" className="transition-transform active:scale-95 duration-300 w-full max-w-[320px] md:max-w-[380px] flex justify-center">
+        <div className="flex justify-center mb-4">
+          <Link href="/" className="transition-transform active:scale-95 duration-300 flex justify-center">
             <img
               src="/logo.png"
               alt="Logo Procuro Quem Faça"
-              className="w-full h-auto object-contain drop-shadow-lg"
+              className="h-10 md:h-12 w-auto object-contain drop-shadow-sm"
             />
           </Link>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] border border-slate-50 text-center space-y-8 relative z-10 -mt-4 md:-mt-8">
+        <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] border border-slate-50 text-center space-y-8">
 
           {tokenUrl ? (
             <div className="space-y-4">
@@ -225,8 +225,8 @@ export default function PainelDoCliente() {
         <header className="relative flex flex-col items-center gap-2 pb-4 border-b border-slate-100">
 
           {/* Logo centralizada — elemento principal da identidade */}
-          <Link href="/" className="block w-full max-w-[180px] transition-transform active:scale-95 duration-300">
-            <img src="/logo.png" alt="Procuro Quem Faça" className="w-full h-auto object-contain drop-shadow-sm" />
+          <Link href="/" className="transition-transform active:scale-95 duration-300 flex items-center">
+            <img src="/logo.png" alt="Procuro Quem Faça" className="h-8 w-auto object-contain drop-shadow-sm" />
           </Link>
 
           {/* Linha de perfil: avatar + nome completo à esquerda, botão sair à direita */}
