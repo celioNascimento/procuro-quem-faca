@@ -73,7 +73,7 @@ export default function PrestadorCard({ prestador, registrarLog }) {
           )}
 
           <Link
-            href={`/perfil/${prestador.slug || prestador.id}`}
+            href={`/${prestador.slug || prestador.id}`}
             onClick={() => registrarLog && registrarLog('CLIQUE_PERFIL', { nome: prestador.nome })}
             className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] hover:bg-blue-700 transition-all active:scale-95 text-center shadow-lg shadow-blue-100 md:w-auto"
           >
