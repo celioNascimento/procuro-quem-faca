@@ -9,29 +9,29 @@ export default function HeroSection({ onLog }) {
   const [role, setRole]                     = useState(null)
   const [roleLoading, setRoleLoading]       = useState(false)
   const [sessionLoading, setSessionLoading] = useState(true)
+  const [isMounted, setIsMounted]           = useState(false)
   const [loading, setLoading]               = useState(false)
   const [erroLogin, setErroLogin]           = useState(false)
   const inicializado = useRef(false)
 
   useEffect(() => {
+    // isMounted garante que o header só renderiza no cliente
+    // evita hydration mismatch que trava o estado em cold load / F5
+    setIsMounted(true)
+
     let cancelado = false
 
     const inicializar = async () => {
       try {
-        // getSession() é síncrono do cache local — nunca bloqueia na rede
-        // resolve o caso em que onAuthStateChange não dispara INITIAL_SESSION
         const { data: { session: sessaoAtual } } = await supabase.auth.getSession()
-
         if (cancelado) return
-
         setSession(sessaoAtual)
-
         if (sessaoAtual?.user?.id) {
           setRoleLoading(true)
           await detectarRole(sessaoAtual.user.id, cancelado)
         }
       } catch {
-        // falha silenciosa — UI mostra botões de login
+        // falha silenciosa — mostra botões de login
       } finally {
         if (!cancelado && !inicializado.current) {
           setSessionLoading(false)
@@ -42,16 +42,11 @@ export default function HeroSection({ onLog }) {
 
     inicializar()
 
-    // onAuthStateChange para atualizações após o load inicial
-    // (login, logout, troca de aba, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, sessao) => {
       if (cancelado) return
-
-      // Ignora INITIAL_SESSION — já tratado pelo getSession() acima
       if (event === 'INITIAL_SESSION') return
 
       setSession(sessao)
-
       if (sessao?.user?.id) {
         setRoleLoading(true)
         await detectarRole(sessao.user.id, cancelado)
@@ -60,7 +55,6 @@ export default function HeroSection({ onLog }) {
         setRoleLoading(false)
       }
 
-      // Garante que sessionLoading cai caso getSession() tenha falhado
       if (!inicializado.current && !cancelado) {
         setSessionLoading(false)
         inicializado.current = true
@@ -110,7 +104,14 @@ export default function HeroSection({ onLog }) {
   return (
     <header className="w-full max-w-5xl mx-auto px-4 md:px-5 flex justify-end items-center gap-2 absolute top-0 left-0 right-0 z-50 h-16 md:h-20">
 
-      {sessionLoading ? (
+      {/* Antes de montar no cliente — espaço reservado invisível, sem skeleton */}
+      {!isMounted ? (
+        <div className="flex gap-2">
+          <div className={`${skeleton} w-24 md:w-32 opacity-0`} />
+          <div className={`${skeleton} w-24 md:w-28 opacity-0`} />
+        </div>
+
+      ) : sessionLoading ? (
         <div className="flex gap-2">
           <div className={`${skeleton} w-24 md:w-32`} />
           <div className={`${skeleton} w-24 md:w-28`} />
