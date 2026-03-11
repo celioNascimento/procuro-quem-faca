@@ -17,13 +17,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // 1. Garantia de Montagem no Cliente
   useEffect(() => {
-    // O delay de 0 tira a execução do ciclo síncrono e limpa o erro
     const timer = setTimeout(() => {
       setMounted(true);
       setIsMobileMenuOpen(false);
     }, 0);
     return () => clearTimeout(timer);
-  }, [pathname]); // adicione as dependências que o erro apontar
+  }, [pathname]);
 
   // 2. Lógica de Autenticação
   useEffect(() => {
@@ -71,11 +70,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isLoginPage = pathname === '/admin/login'
   const mostrarSidebar = userEmail && !isLoginPage
 
-  // PROTEÇÃO CRÍTICA: Se não estiver montado no cliente, retorna nulo 
-  // para que o servidor não gere um HTML que o cliente mudará instantaneamente.
   if (!mounted) return null
 
-  // Estado de Carregamento (Só renderiza após mounted)
   if (loading && !isLoginPage) {
     return (
       <div className="h-screen bg-[#F8FAFC] flex items-center justify-center font-sans">
@@ -122,6 +118,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 ml-4 mt-2">Gestão Geral</p>
             <SidebarLink href="/admin" label="Dashboard" icon={<path d="M3 3h7v9H3V3zm11 0h7v5h-7V3zm0 9h7v9h-7v-9zm-11 11h7v-7H3v7z" />} />
             <SidebarLink href="/admin/moderacao" label="Moderação" icon={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />} />
+            
+            {/* Inclusão Cirúrgica do Link de Ativação */}
+            <SidebarLink
+              href="/admin/ativacao"
+              label="Ativação"
+              icon={<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.14 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.05 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16z" />}
+            />
+
             <SidebarLink href="/admin/povoar" label="Povoar Base" icon={<path d="M12 4v16m8-8H4" />} />
             <SidebarLink href="/admin/anuncios" label="Anúncios" icon={<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />} />
 
@@ -148,9 +152,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
       )}
 
-      {/* Main Content Area */}
       <div className={`flex-1 flex flex-col min-w-0 h-full ${!mostrarSidebar ? 'items-center justify-center' : ''}`}>
-
         {mostrarSidebar && (
           <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 lg:px-10 flex items-center justify-between sticky top-0 z-40 shrink-0">
             <div className="flex items-center gap-4">
