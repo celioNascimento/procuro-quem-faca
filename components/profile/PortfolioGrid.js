@@ -17,11 +17,14 @@ export default function PortfolioGrid({ projetos = [] }) {
   }
 
   // Grid compacto — células menores e mais organizadas
-  // max-w limita para não crescer demais em telas largas
+  // Grid responsivo:
+  // 1 projeto  → coluna única centralizada
+  // 2 projetos → 2 colunas
+  // 3+         → 3 colunas com gap menor para caber em mobile
   const gridClass =
-    projetos.length === 1 ? 'grid grid-cols-1 max-w-[160px]' :
-    projetos.length === 2 ? 'grid grid-cols-2 gap-2.5' :
-                            'grid grid-cols-3 gap-2.5'
+    projetos.length === 1 ? 'grid grid-cols-1 max-w-[200px]' :
+    projetos.length === 2 ? 'grid grid-cols-2 gap-2' :
+                            'grid grid-cols-3 gap-1.5'
 
   return (
     <>
@@ -29,7 +32,11 @@ export default function PortfolioGrid({ projetos = [] }) {
         {projetos.map((projeto) => {
           const fotos = projeto.portfolio_fotos || []
           const isConcluido = projeto.status === 'finalizado' || fotos.some(f => Number(f.ordem) === 3)
-          const fotoCapa = [...fotos].sort((a, b) => Number(b.ordem) - Number(a.ordem))[0]?.url_foto
+          const fotoCapa = (
+            [...fotos]
+              .filter(f => f.url_foto)
+              .sort((a, b) => Number(b.ordem) - Number(a.ordem))[0]?.url_foto
+          ) || '/placeholder-job.png'
           const temIndicacao = (projeto.avaliacoes || []).some(a => a.indica === true)
 
           return (
@@ -39,13 +46,13 @@ export default function PortfolioGrid({ projetos = [] }) {
               className="group relative cursor-pointer"
             >
               {/* Miniatura quadrada — tamanho controlado */}
-              <div className="relative aspect-square bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
+              <div className="relative aspect-square bg-white rounded-xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
 
                 <img
-                  src={fotoCapa || '/placeholder-job.png'}
+                  src={fotoCapa}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   alt={projeto.titulo}
-                  onError={e => { e.target.src = '/placeholder-job.png' }}
+                  onError={e => { e.currentTarget.src = '/placeholder-job.png' }}
                 />
 
                 {/* Badge ✦ Indico — canto superior esquerdo */}
