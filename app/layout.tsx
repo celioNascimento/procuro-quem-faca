@@ -29,9 +29,8 @@ export const metadata = {
     template: "%s | Procuro Quem Faça"
   },
   description: "A plataforma mais rápida para encontrar eletricistas, encanadores e especialistas. Contato direto via WhatsApp.",
-  icons: {
-    icon: '/favicon.png',
-  },
+  // Sem icons manual — Next.js 14 detecta /app/icon.png automaticamente
+  // e gera <link rel="icon"> correto para todos os browsers
   openGraph: {
     title: "Procuro Quem Faça | Encontre Profissionais",
     description: "Eletricistas, encanadores e especialistas a um clique de distância. Contato direto via WhatsApp.",
@@ -41,8 +40,6 @@ export const metadata = {
     type: 'website',
     images: [
       {
-        // Idealmente uma imagem OG dedicada 1200x630px.
-        // /logo.png funciona como fallback mas provavelmente não tem essa proporção.
         url: '/og-image.png',
         width: 1200,
         height: 630,
@@ -67,9 +64,6 @@ export default function RootLayout({
     <html
       lang="pt-br"
       className={`${geistSans.variable} ${geistMono.variable}`}
-      // suppressHydrationWarning: necessário porque extensões de browser
-      // (ex: LastPass, Grammarly) injetam atributos no <html> que causam
-      // mismatch de hidratação. Não mascara bugs reais do app.
       suppressHydrationWarning
     >
       <body className="font-sans antialiased min-h-screen flex flex-col bg-white text-slate-900">
@@ -82,9 +76,6 @@ export default function RootLayout({
         <CookieConsent />
         <LogAcesso />
 
-        {/* AdSense: <Script> com strategy="afterInteractive" deve ficar no <body>,
-            nunca dentro de <head> manual — o Next.js injeta no lugar certo sozinho.
-            strategy="afterInteractive" = carrega após hydration (não bloqueia render). */}
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7818876710105434"
