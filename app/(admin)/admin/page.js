@@ -8,7 +8,8 @@ import { Activity, TrendingUp, Zap, AlertCircle, ArrowUpRight, CheckCircle2, Lay
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ 
     cidades: 0, anuncios: 0, prestadores: 0, logs: 0,
-    curadoria: 0, registrados: 0, reivindicados: 0, topCategorias: []
+    curadoria: 0, registrados: 0, reivindicados: 0, topCategorias: [],
+    ativacao: { total: 0, enviados: 0, ativos: 0 } // <-- Inicializado aqui
   })
   const [radar, setRadar] = useState([])
   const [refreshing, setRefreshing] = useState(false)
@@ -30,11 +31,20 @@ export default function AdminDashboard() {
         supabase.from('logs_atividades').select('*', { count: 'exact', head: true })
       ])
 
-      const { data: pDataAll } = await supabase.from('prestadores').select('origem_tipo, user_id')
+      const { data: pDataAll } = await supabase.from('prestadores').select('origem_tipo, user_id, ativacao_status')
       
       const curadoriaCount = pDataAll?.filter(p => p.origem_tipo === 'curadoria_publica' && !p.user_id).length || 0
       const registradosCount = pDataAll?.filter(p => p.origem_tipo === 'registro_direto').length || 0
       const reivindicadosCount = pDataAll?.filter(p => p.user_id && p.origem_tipo === 'curadoria_publica').length || 0
+
+      // Lógica de Ativação Cirúrgica
+      const ativacaoStats = {
+        total:    pDataAll?.length || 0,
+        enviados: pDataAll?.filter(p => p.ativacao_status !== 'nao_enviado').length || 0,
+        ativos:   pDataAll?.filter(p => 
+          ['perfil_completo', 'avaliacao_recebida'].includes(p.ativacao_status)
+        ).length || 0,
+      }
 
       const { data: logCats } = await supabase.from('logs_atividades').select('entidade_id').eq('acao', 'FILTRO_CATEGORIA')
       const { data: catNames } = await supabase.from('categorias').select('id, nome')
@@ -57,7 +67,9 @@ export default function AdminDashboard() {
 
       setStats({ 
         cidades: cidades.count || 0, anuncios: anuncios.count || 0, prestadores: prestadores.count || 0, logs: logs.count || 0,
-        curadoria: curadoriaCount, registrados: registradosCount, reivindicados: reivindicadosCount, topCategorias: ranking
+        curadoria: curadoriaCount, registrados: registradosCount, reivindicados: reivindicadosCount, 
+        topCategorias: ranking,
+        ativacao: ativacaoStats // <-- Atualizado aqui
       })
       setRadar(lRecent || [])
     } catch (err) { console.error(err) } finally {
@@ -126,6 +138,12 @@ export default function AdminDashboard() {
             <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Demandas Reprimidas</h2>
             <TrendingUp size={16} className="text-blue-600" />
           </div>
+
+          {/* Novo Card de Ativação integrado no fluxo */}
+          <div className="mb-8">
+            <CardAtivacao stats={stats.ativacao} />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {stats.topCategorias.map((c, i) => (
               <motion.div key={i} whileTap={{ scale: 0.98 }} className="bg-white p-5 md:p-6 rounded-[1.8rem] md:rounded-[2rem] border border-zinc-100 shadow-sm flex items-center justify-between group">
@@ -173,6 +191,32 @@ export default function AdminDashboard() {
         <MinimalLink href="/admin/geografia" label="Mapa" icon="📍" />
       </footer>
     </div>
+  )
+}
+
+function CardAtivacao({ stats }) {
+  const pct = stats.total ? Math.round((stats.ativos / stats.total) * 100) : 0
+  return (
+    <Link href="/admin/ativacao" className="block bg-white rounded-[2rem] p-6 border border-zinc-100 shadow-sm hover:shadow-md transition-shadow group">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Ativação de Base</p>
+        <span className="text-[10px] font-black text-blue-600 group-hover:underline uppercase tracking-wider">Ver funil →</span>
+      </div>
+      <div className="flex items-baseline gap-2 mb-3">
+        <span className="text-4xl font-black text-zinc-900 tracking-tighter">{stats.ativos}</span>
+        <span className="text-sm font-bold text-zinc-400">/ {stats.total} ativos</span>
+      </div>
+      <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden mb-3">
+        <div
+          className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-700"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="flex gap-4">
+        <span className="text-[10px] font-bold text-zinc-400">{stats.enviados} enviados</span>
+        <span className="text-[10px] font-bold text-emerald-600">{pct}% completos</span>
+      </div>
+    </Link>
   )
 }
 
