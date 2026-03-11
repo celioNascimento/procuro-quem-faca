@@ -9,7 +9,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ 
     cidades: 0, anuncios: 0, prestadores: 0, logs: 0,
     curadoria: 0, registrados: 0, reivindicados: 0, topCategorias: [],
-    ativacao: { total: 0, enviados: 0, ativos: 0 } // <-- Inicializado aqui
+    ativacao: { total: 0, enviados: 0, ativos: 0 } // Inicialização segura
   })
   const [radar, setRadar] = useState([])
   const [refreshing, setRefreshing] = useState(false)
@@ -31,13 +31,14 @@ export default function AdminDashboard() {
         supabase.from('logs_atividades').select('*', { count: 'exact', head: true })
       ])
 
+      // Inclusão cirúrgica de 'ativacao_status' na query existente
       const { data: pDataAll } = await supabase.from('prestadores').select('origem_tipo, user_id, ativacao_status')
       
       const curadoriaCount = pDataAll?.filter(p => p.origem_tipo === 'curadoria_publica' && !p.user_id).length || 0
       const registradosCount = pDataAll?.filter(p => p.origem_tipo === 'registro_direto').length || 0
       const reivindicadosCount = pDataAll?.filter(p => p.user_id && p.origem_tipo === 'curadoria_publica').length || 0
 
-      // Lógica de Ativação Cirúrgica
+      // Cálculo das métricas de ativação
       const ativacaoStats = {
         total:    pDataAll?.length || 0,
         enviados: pDataAll?.filter(p => p.ativacao_status !== 'nao_enviado').length || 0,
@@ -69,7 +70,7 @@ export default function AdminDashboard() {
         cidades: cidades.count || 0, anuncios: anuncios.count || 0, prestadores: prestadores.count || 0, logs: logs.count || 0,
         curadoria: curadoriaCount, registrados: registradosCount, reivindicados: reivindicadosCount, 
         topCategorias: ranking,
-        ativacao: ativacaoStats // <-- Atualizado aqui
+        ativacao: ativacaoStats
       })
       setRadar(lRecent || [])
     } catch (err) { console.error(err) } finally {
@@ -123,7 +124,7 @@ export default function AdminDashboard() {
         </button>
       </header>
 
-      {/* MÉTRICAS DE IMPACTO - RESPONSIVO */}
+      {/* MÉTRICAS DE IMPACTO */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
         <StatCard label="Frios" valor={stats.curadoria} sub="Curadoria" color="zinc" />
         <StatCard label="Vivos" valor={stats.reivindicados} sub="Reivindicados" color="blue" icon={<CheckCircle2 size={14}/>} />
@@ -139,7 +140,7 @@ export default function AdminDashboard() {
             <TrendingUp size={16} className="text-blue-600" />
           </div>
 
-          {/* Novo Card de Ativação integrado no fluxo */}
+          {/* Inserção do Card de Ativação antes da grid de categorias */}
           <div className="mb-8">
             <CardAtivacao stats={stats.ativacao} />
           </div>
@@ -183,7 +184,7 @@ export default function AdminDashboard() {
         </section>
       </div>
 
-      {/* QUICK ACTIONS - GRID 2X2 MOBILE */}
+      {/* QUICK ACTIONS */}
       <footer className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 pt-10 border-t border-slate-100">
         <MinimalLink href="/admin/moderacao" label="Moderação" icon="⚖️" />
         <MinimalLink href="/admin/anuncios" label="Anúncios" icon="💎" />
@@ -199,8 +200,8 @@ function CardAtivacao({ stats }) {
   return (
     <Link href="/admin/ativacao" className="block bg-white rounded-[2rem] p-6 border border-zinc-100 shadow-sm hover:shadow-md transition-shadow group">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Ativação de Base</p>
-        <span className="text-[10px] font-black text-blue-600 group-hover:underline uppercase tracking-wider">Ver funil →</span>
+        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Ativação</p>
+        <span className="text-[10px] font-black text-blue-600 group-hover:underline uppercase tracking-wider">Ver tudo →</span>
       </div>
       <div className="flex items-baseline gap-2 mb-3">
         <span className="text-4xl font-black text-zinc-900 tracking-tighter">{stats.ativos}</span>
