@@ -100,25 +100,27 @@ export default function Home() {
             />
           </div>
 
-          {/* BUG 1: sem sugestoesReady — renderiza direto quando há dados */}
-          {sugestoes.length > 0 && (
-            <div className="flex flex-col items-center gap-3 w-full animate-in fade-in duration-300">
-              <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] italic">
-                {temBuscaReal ? 'Encontramos para você' : 'Sugestões em destaque'}
-              </span>
-              <div className="flex flex-wrap justify-center gap-1.5 md:gap-2">
-                {sugestoes.map((item) => (
-                  <button
-                    key={item}
-                    onClick={() => dispararBusca(null, item)}
-                    className="bg-white text-slate-500 px-4 py-1.5 rounded-full text-[10px] font-bold border border-slate-100 hover:border-blue-400 hover:text-blue-600 transition-all active:scale-95 shadow-sm uppercase tracking-tighter"
-                  >
-                    {item}
-                  </button>
-                ))}
+          {/* Área de sugestões com altura reservada — evita layout shift */}
+          <div className="min-h-[72px] flex flex-col items-center justify-start gap-3 w-full">
+            {sugestoes.length > 0 && (
+              <div className="flex flex-col items-center gap-3 w-full animate-in fade-in duration-300">
+                <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] italic">
+                  {temBuscaReal ? 'Encontramos para você' : 'Sugestões em destaque'}
+                </span>
+                <div className="flex flex-wrap justify-center gap-1.5 md:gap-2">
+                  {sugestoes.map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => dispararBusca(null, item)}
+                      className="bg-white text-slate-500 px-4 py-1.5 rounded-full text-[10px] font-bold border border-slate-100 hover:border-blue-400 hover:text-blue-600 transition-all active:scale-95 shadow-sm uppercase tracking-tighter"
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
