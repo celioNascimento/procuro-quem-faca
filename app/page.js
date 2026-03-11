@@ -1,10 +1,13 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-import HeroSection from '@/components/home/HeroSection'
+// ssr:false garante que HeroSection nunca renderiza no servidor
+// elimina o mismatch de hidratação que impedia os botões de aparecer no cold load
+const HeroSection = dynamic(() => import('@/components/home/HeroSection'), { ssr: false })
 import SearchForm from '@/components/home/SearchForm'
 
 export default function Home() {
