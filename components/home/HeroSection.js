@@ -14,49 +14,74 @@ export default function HeroSection({ onLog }) {
   const inicializado = useRef(false)
 
   useEffect(() => {
-    // Timeout de segurança — se INITIAL_SESSION não disparar em 2s, libera o UI
-    // Isso resolve o caso em que o Supabase demora ou não dispara o evento
-    const fallbackTimer = setTimeout(() => {
-      if (!inicializado.current) {
-        setSessionLoading(false)
-        inicializado.current = true
+    let cancelado = false
+
+    const inicializar = async () => {
+      try {
+        // getSession() é síncrono do cache local — nunca bloqueia na rede
+        // resolve o caso em que onAuthStateChange não dispara INITIAL_SESSION
+        const { data: { session: sessaoAtual } } = await supabase.auth.getSession()
+
+        if (cancelado) return
+
+        setSession(sessaoAtual)
+
+        if (sessaoAtual?.user?.id) {
+          setRoleLoading(true)
+          await detectarRole(sessaoAtual.user.id, cancelado)
+        }
+      } catch {
+        // falha silenciosa — UI mostra botões de login
+      } finally {
+        if (!cancelado && !inicializado.current) {
+          setSessionLoading(false)
+          inicializado.current = true
+        }
       }
-    }, 2000)
+    }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session)
+    inicializar()
 
-      if (session) {
-        if (!inicializado.current) setRoleLoading(true)
-        await detectarRole(session.user.id)
+    // onAuthStateChange para atualizações após o load inicial
+    // (login, logout, troca de aba, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, sessao) => {
+      if (cancelado) return
+
+      // Ignora INITIAL_SESSION — já tratado pelo getSession() acima
+      if (event === 'INITIAL_SESSION') return
+
+      setSession(sessao)
+
+      if (sessao?.user?.id) {
+        setRoleLoading(true)
+        await detectarRole(sessao.user.id, cancelado)
       } else {
         setRole(null)
         setRoleLoading(false)
       }
 
-      // Só libera sessionLoading na primeira vez — não reseta ao trocar de aba
-      if (!inicializado.current) {
-        clearTimeout(fallbackTimer)
+      // Garante que sessionLoading cai caso getSession() tenha falhado
+      if (!inicializado.current && !cancelado) {
         setSessionLoading(false)
         inicializado.current = true
       }
     })
 
     return () => {
-      clearTimeout(fallbackTimer)
+      cancelado = true
       subscription.unsubscribe()
     }
   }, [])
 
-  const detectarRole = async (userId) => {
+  const detectarRole = async (userId, cancelado = false) => {
     try {
       const { data } = await supabase
         .from('prestadores').select('id').eq('user_id', userId).maybeSingle()
-      setRole(data ? 'prestador' : 'cliente')
+      if (!cancelado) setRole(data ? 'prestador' : 'cliente')
     } catch {
-      setRole('cliente')
+      if (!cancelado) setRole('cliente')
     } finally {
-      setRoleLoading(false)
+      if (!cancelado) setRoleLoading(false)
     }
   }
 
