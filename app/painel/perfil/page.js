@@ -80,9 +80,14 @@ export default function PerfilDoCliente() {
       setUploading(true)
       if (perfil.avatar_url) {
         try {
-          const oldFileName = perfil.avatar_url.split('/').pop()
-          if (oldFileName) await supabase.storage.from('fotos-perfil').remove([oldFileName])
-        } catch {}
+          // Só remove se for do nosso bucket — ignora URLs externas (Google OAuth, etc)
+          const bucketMarker = '/object/public/fotos-perfil/'
+          const markerIdx = perfil.avatar_url.indexOf(bucketMarker)
+          if (markerIdx !== -1) {
+            const oldPath = perfil.avatar_url.slice(markerIdx + bucketMarker.length).split('?')[0]
+            if (oldPath) await supabase.storage.from('fotos-perfil').remove([oldPath])
+          }
+        } catch { /* silencioso — prossegue com novo upload */ }
       }
       const fileExt = file.name.split('.').pop()
       const fileName = `${user.id}-${Date.now()}.${fileExt}`

@@ -113,11 +113,15 @@ export default function EditarPerfilTab() {
 
       if (formData.foto_perfil) {
         try {
-          const urlParts = formData.foto_perfil.split('/')
-          const oldFileName = urlParts[urlParts.length - 1]
-          if (oldFileName) await supabase.storage.from('fotos-perfil').remove([oldFileName])
+          // Só remove se for do nosso bucket — ignora URLs externas (Google OAuth, etc)
+          const bucketMarker = '/object/public/fotos-perfil/'
+          const markerIdx = formData.foto_perfil.indexOf(bucketMarker)
+          if (markerIdx !== -1) {
+            const oldPath = formData.foto_perfil.slice(markerIdx + bucketMarker.length).split('?')[0]
+            if (oldPath) await supabase.storage.from('fotos-perfil').remove([oldPath])
+          }
         } catch (removeError) {
-          console.warn("Aviso: Foto antiga não pôde ser removida", removeError)
+          console.warn('Aviso: Foto antiga não pôde ser removida', removeError)
         }
       }
 
@@ -146,9 +150,14 @@ export default function EditarPerfilTab() {
     setStatus('Excluindo tudo...')
     try {
       if (formData.foto_perfil) {
-        const urlParts = formData.foto_perfil.split('/')
-        const fileName = urlParts[urlParts.length - 1]
-        await supabase.storage.from('fotos-perfil').remove([fileName])
+        try {
+          const bucketMarker = '/object/public/fotos-perfil/'
+          const markerIdx = formData.foto_perfil.indexOf(bucketMarker)
+          if (markerIdx !== -1) {
+            const oldPath = formData.foto_perfil.slice(markerIdx + bucketMarker.length).split('?')[0]
+            if (oldPath) await supabase.storage.from('fotos-perfil').remove([oldPath])
+          }
+        } catch { /* silencioso — prossegue com exclusão da conta */ }
       }
       const { error: dbError } = await supabase.from('prestadores').delete().eq('user_id', userLogado.id)
       if (dbError) throw dbError
