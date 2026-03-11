@@ -1,95 +1,98 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+
+// Fallbacks rotativos — promovem a própria plataforma enquanto AdSense não aprova
+const FALLBACKS = [
+  {
+    emoji: '🔧',
+    titulo: 'Você é prestador de serviços?',
+    subtitulo: 'Crie seu perfil grátis e apareça para centenas de clientes em Londrina.',
+    cta: 'Cadastrar agora',
+    href: '/cadastro',
+    cor: 'from-blue-600 to-blue-700',
+  },
+  {
+    emoji: '⭐',
+    titulo: 'Serviço concluído?',
+    subtitulo: 'Avalie o profissional e ajude outros clientes a encontrar bons prestadores.',
+    cta: 'Ver meus projetos',
+    href: '/meus-servicos',
+    cor: 'from-indigo-600 to-blue-600',
+  },
+  {
+    emoji: '📋',
+    titulo: 'Precisa de um orçamento?',
+    subtitulo: 'Encontre profissionais verificados para qualquer tipo de serviço.',
+    cta: 'Buscar profissionais',
+    href: '/prestadores',
+    cor: 'from-slate-700 to-slate-800',
+  },
+]
 
 export default function AnuncioCard({ anuncio }) {
-  const adRef = useRef(null)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const adRef      = useRef(null)
+  const [mostrarFallback, setMostrarFallback] = useState(false)
+  const [fallback] = useState(() => FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)])
 
-  if (!anuncio) return null
-
+  // Detecta se o AdSense preencheu o slot após 2s
+  // Se a altura do ins continuar 0, exibe o fallback
   useEffect(() => {
-    if (anuncio.tipo !== 'google') return;
+    if (!anuncio?.adsense_slot) {
+      setMostrarFallback(true)
+      return
+    }
 
-    const initAd = () => {
-      try {
-        if (typeof window !== "undefined" && window.adsbygoogle && adRef.current) {
-          const width = adRef.current.offsetWidth;
-          if (width >= 250 && !adRef.current.getAttribute('data-adsbygoogle-status')) {
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-            setIsLoaded(true);
-          }
-        }
-      } catch (e) {
-        console.warn("AdSense logic:", e);
-      }
-    };
+    const timer = setTimeout(() => {
+      const el = adRef.current
+      if (!el) { setMostrarFallback(true); return }
+      const filled = el.offsetHeight > 10
+      if (!filled) setMostrarFallback(true)
+    }, 2000)
 
-    const timer = setTimeout(initAd, 800);
-    return () => clearTimeout(timer);
-  }, [anuncio]);
+    return () => clearTimeout(timer)
+  }, [anuncio])
 
+  // ── AdSense com script ────────────────────────────────────────────────────
+  if (anuncio?.adsense_slot && !mostrarFallback) {
+    return (
+      <div className="my-2 min-h-[100px] w-full" ref={adRef}>
+        <ins
+          className="adsbygoogle"
+          style={{ display: 'block' }}
+          data-ad-client={anuncio.adsense_client || 'ca-pub-XXXXXXXXXXXXXXXX'}
+          data-ad-slot={anuncio.adsense_slot}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+      </div>
+    )
+  }
+
+  // ── Fallback — card de CTA da plataforma ──────────────────────────────────
   return (
-    <div className="py-2 animate-in fade-in slide-in-from-bottom-2 w-full">
-      {/* CSS DE CONTENÇÃO ABSOLUTA */}
-      <style jsx global>{`
-        /* Ataca todas as camadas que o Google cria */
-        .google-fixed-height, 
-        .google-fixed-height ins, 
-        .google-fixed-height iframe,
-        .google-fixed-height span {
-          max-height: 130px !important; /* Trava absoluta */
-          height: 130px !important;
-          overflow: hidden !important;
-        }
-      `}</style>
-
-      <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest ml-4 mb-2">Publicidade</p>
-      
-      {anuncio.tipo === 'google' ? (
-        <div className="w-full bg-white rounded-[2rem] border border-slate-100 overflow-hidden relative h-[130px] flex items-center justify-center google-fixed-height">
-          
-          {!isLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
-              <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest animate-pulse">
-                Carregando...
-              </span>
-            </div>
-          )}
-
-          <div 
-            ref={adRef}
-            className="w-full"
-            /* Forçamos o HTML do banco a também carregar com a trava inline */
-            dangerouslySetInnerHTML={{ 
-              __html: anuncio.codigo_google.replace('<ins', '<ins style="display:block; width:100%; height:130px !important;"') 
-            }} 
-          />
-          
-          <span className="absolute bottom-2 right-6 text-[7px] text-slate-400/50 uppercase font-black pointer-events-none tracking-widest z-20">
-            Google Partner
-          </span>
+    <Link
+      href={fallback.href}
+      className={`block w-full my-2 bg-gradient-to-r ${fallback.cor} rounded-[2.5rem] p-5 text-white shadow-xl active:scale-[0.98] transition-all`}
+    >
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center text-2xl shrink-0">
+          {fallback.emoji}
         </div>
-      ) : (
-        <a 
-          href={anuncio.link_destino} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="block w-full h-32 md:h-44 bg-slate-50 rounded-[2rem] border border-slate-100 overflow-hidden relative group shadow-sm hover:shadow-md transition-all"
-        >
-          {anuncio.imagem_url && (
-            <img 
-              src={anuncio.imagem_url} 
-              className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700" 
-              alt="Anúncio"
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent flex items-end p-6">
-            <span className="text-white font-bold text-sm tracking-tight drop-shadow-md uppercase">
-              {anuncio.titulo}
-            </span>
-          </div>
-        </a>
-      )}
-    </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-black text-[13px] uppercase italic tracking-tight leading-snug">
+            {fallback.titulo}
+          </p>
+          <p className="text-white/70 text-[10px] font-medium mt-0.5 leading-snug">
+            {fallback.subtitulo}
+          </p>
+        </div>
+      </div>
+      <div className="mt-4 flex justify-end">
+        <span className="bg-white/20 border border-white/30 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full">
+          {fallback.cta} →
+        </span>
+      </div>
+    </Link>
   )
 }

@@ -252,8 +252,8 @@ function ListaConteudo() {
             {prestadoresExibidos.map((p, index) => (
               <div key={p.id}>
                 <PrestadorCard prestador={p} session={session} registrarLog={registrarLog} />
-                {anunciosMeio.length > 0 && (index + 1) % 3 === 0 && (
-                  <AnuncioCard anuncio={anunciosMeio[Math.floor((index + 1) / 3 - 1) % anunciosMeio.length]} />
+                {(index + 1) % 4 === 0 && (
+                  <AnuncioCard anuncio={anunciosMeio[Math.floor((index + 1) / 4 - 1) % Math.max(anunciosMeio.length, 1)] || null} />
                 )}
               </div>
             ))}
