@@ -7,8 +7,13 @@ export default function ProjetoModal({ projeto, onClose }) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [comentarios, setComentarios] = useState([])
 
+  // Normaliza: Supabase pode retornar null, objeto único ou array dependendo do count
+  const rawFotos = projeto.portfolio_fotos
+  const fotosNormalizadas = !rawFotos ? [] : Array.isArray(rawFotos) ? rawFotos : [rawFotos]
   // BUG 4: spread antes de sort — evita mutar o array original do objeto projeto
-  const fotos = [...(projeto.portfolio_fotos || [])].sort((a, b) => Number(a.ordem) - Number(b.ordem))
+  const fotos = fotosNormalizadas
+    .filter(f => f && f.url_foto)
+    .sort((a, b) => Number(a.ordem) - Number(b.ordem))
 
   // BUG 3: Number() — ordem pode vir como string do banco
   const isConcluido = projeto.status === 'finalizado' || fotos.some(f => Number(f.ordem) === 3)

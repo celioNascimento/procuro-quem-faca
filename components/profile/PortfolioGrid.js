@@ -1,7 +1,16 @@
 'use client'
 import { useState } from 'react'
 import ProjetoModal from './ProjetoModal'
-import { Camera, CheckCircle2, Activity } from 'lucide-react'
+import { Camera, CheckCircle2 } from 'lucide-react'
+
+// Normaliza portfolio_fotos independente do formato que o Supabase retornar
+// (null → [], objeto único → [objeto], array → array)
+function normalizarFotos(raw) {
+  if (!raw) return []
+  if (Array.isArray(raw)) return raw
+  if (typeof raw === 'object') return [raw]
+  return []
+}
 
 export default function PortfolioGrid({ projetos = [] }) {
   const [projetoSelecionado, setProjetoSelecionado] = useState(null)
@@ -16,11 +25,6 @@ export default function PortfolioGrid({ projetos = [] }) {
     )
   }
 
-  // Grid compacto — células menores e mais organizadas
-  // Grid responsivo:
-  // 1 projeto  → coluna única centralizada
-  // 2 projetos → 2 colunas
-  // 3+         → 3 colunas com gap menor para caber em mobile
   const gridClass =
     projetos.length === 1 ? 'grid grid-cols-1 max-w-[200px]' :
     projetos.length === 2 ? 'grid grid-cols-2 gap-2' :
@@ -30,14 +34,21 @@ export default function PortfolioGrid({ projetos = [] }) {
     <>
       <div className={gridClass}>
         {projetos.map((projeto) => {
-          const fotos = projeto.portfolio_fotos || []
-          const isConcluido = projeto.status === 'finalizado' || fotos.some(f => Number(f.ordem) === 3)
-          const fotoCapa = (
-            [...fotos]
-              .filter(f => f.url_foto)
-              .sort((a, b) => Number(b.ordem) - Number(a.ordem))[0]?.url_foto
-          ) || '/placeholder-job.png'
-          const temIndicacao = (projeto.avaliacoes || []).some(a => a.indica === true)
+          // Normaliza antes de qualquer operação
+          const fotos = normalizarFotos(projeto.portfolio_fotos)
+            .filter(f => f && f.url_foto)
+
+          const isConcluido = projeto.status === 'finalizado'
+            || fotos.some(f => Number(f.ordem) === 3)
+
+          // Capa = foto de maior ordem (Depois > Durante > Antes)
+          const fotoCapa = fotos.length > 0
+            ? [...fotos].sort((a, b) => Number(b.ordem) - Number(a.ordem))[0].url_foto
+            : '/placeholder-job.png'
+
+          // Normaliza avaliacoes da mesma forma
+          const avaliacoes = normalizarFotos(projeto.avaliacoes) // reutiliza mesma lógica
+          const temIndicacao = avaliacoes.some(a => a.indica === true)
 
           return (
             <div
@@ -45,24 +56,28 @@ export default function PortfolioGrid({ projetos = [] }) {
               onClick={() => setProjetoSelecionado(projeto)}
               className="group relative cursor-pointer"
             >
-              {/* Miniatura quadrada — tamanho controlado */}
-              <div className="relative aspect-square bg-white rounded-xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
+              {/* Miniatura quadrada */}
+              <div className="relative aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
 
                 <img
                   src={fotoCapa}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   alt={projeto.titulo}
-                  onError={e => { e.currentTarget.src = '/placeholder-job.png' }}
+                  onError={e => {
+                    if (e.currentTarget.src !== window.location.origin + '/placeholder-job.png') {
+                      e.currentTarget.src = '/placeholder-job.png'
+                    }
+                  }}
                 />
 
-                {/* Badge ✦ Indico — canto superior esquerdo */}
+                {/* Badge ✦ Indico */}
                 {temIndicacao && (
                   <div className="absolute top-1.5 left-1.5 bg-blue-600 text-white text-[7px] font-black tracking-wide px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
                     ✦ Indico
                   </div>
                 )}
 
-                {/* Overlay no hover */}
+                {/* Overlay hover */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2.5">
                   <p className="text-white font-black italic uppercase text-[8px] leading-tight flex items-center gap-1">
                     <Camera size={8} /> Ver
@@ -70,7 +85,7 @@ export default function PortfolioGrid({ projetos = [] }) {
                 </div>
               </div>
 
-              {/* Badge de status ABAIXO da miniatura — sempre visível, não flutua sobre a foto */}
+              {/* Status abaixo da miniatura */}
               <div className="flex items-center gap-1 mt-1.5 px-0.5">
                 {isConcluido ? (
                   <>
@@ -92,7 +107,7 @@ export default function PortfolioGrid({ projetos = [] }) {
                 )}
               </div>
 
-              {/* Título truncado */}
+              {/* Título */}
               <p className="text-[8px] font-semibold text-slate-400 truncate mt-0.5 px-0.5">
                 {projeto.titulo}
               </p>
@@ -105,6 +120,8 @@ export default function PortfolioGrid({ projetos = [] }) {
         <ProjetoModal
           projeto={projetoSelecionado}
           onClose={() => setProjetoSelecionado(null)}
+          // Passa fotos normalizadas para o modal não quebrar pelo mesmo motivo
+          fotosNormalizadas={normalizarFotos(projetoSelecionado.portfolio_fotos).filter(f => f?.url_foto)}
         />
       )}
     </>
