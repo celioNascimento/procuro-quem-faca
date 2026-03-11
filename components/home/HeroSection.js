@@ -14,9 +14,15 @@ export default function HeroSection({ onLog }) {
   const inicializado = useRef(false)
 
   useEffect(() => {
-    // BUG 3: usar APENAS onAuthStateChange como fonte de verdade.
-    // O listener recebe INITIAL_SESSION na montagem — getSession() é redundante
-    // e cria race condition. Removido getSession().
+    // Timeout de segurança — se INITIAL_SESSION não disparar em 2s, libera o UI
+    // Isso resolve o caso em que o Supabase demora ou não dispara o evento
+    const fallbackTimer = setTimeout(() => {
+      if (!inicializado.current) {
+        setSessionLoading(false)
+        inicializado.current = true
+      }
+    }, 2000)
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
 
@@ -28,15 +34,18 @@ export default function HeroSection({ onLog }) {
         setRoleLoading(false)
       }
 
-      // Só libera o sessionLoading na primeira vez (INITIAL_SESSION)
-      // Eventos subsequentes (TOKEN_REFRESHED ao voltar de aba) não resetam o UI
+      // Só libera sessionLoading na primeira vez — não reseta ao trocar de aba
       if (!inicializado.current) {
+        clearTimeout(fallbackTimer)
         setSessionLoading(false)
         inicializado.current = true
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(fallbackTimer)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const detectarRole = async (userId) => {
@@ -69,10 +78,9 @@ export default function HeroSection({ onLog }) {
     }
   }
 
-  // BUG 5: strings diretas em vez de array.join() — Tailwind faz purge correto
-  const btnGhost = 'flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap bg-white/80 backdrop-blur-sm border border-slate-200/70 text-slate-500 text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-sm hover:shadow-md hover:bg-white hover:text-slate-700 transition-all duration-200 active:scale-95'
+  const btnGhost   = 'flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap bg-white/80 backdrop-blur-sm border border-slate-200/70 text-slate-500 text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-sm hover:shadow-md hover:bg-white hover:text-slate-700 transition-all duration-200 active:scale-95'
   const btnPrimary = 'flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap bg-blue-600 text-white text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all duration-200 active:scale-95'
-  const skeleton = 'h-7 md:h-8 rounded-full animate-pulse bg-slate-100'
+  const skeleton   = 'h-7 md:h-8 rounded-full animate-pulse bg-slate-100'
 
   return (
     <header className="w-full max-w-5xl mx-auto px-4 md:px-5 flex justify-end items-center gap-2 absolute top-0 left-0 right-0 z-50 h-16 md:h-20">

@@ -9,11 +9,10 @@ import SearchForm from '@/components/home/SearchForm'
 
 export default function Home() {
   const router = useRouter()
+  const SUGESTOES_PADRAO = ['Pedreiro', 'Eletricista', 'Encanador', 'Pintor', 'Técnico de Ar-condicionado']
+
   const [busca, setBusca] = useState('')
-  const [sugestoes, setSugestoes] = useState([])
-  // BUG 1: removido sugestoesReady — o clearTimeout no cleanup cancelava o finally,
-  // deixando sugestoesReady=false para sempre ao trocar de aba.
-  // sugestoes.length > 0 direto é suficiente — 300ms de debounce é imperceptível.
+  const [sugestoes, setSugestoes] = useState(SUGESTOES_PADRAO)
   const [erro, setErro] = useState(false)
 
   const registrarLog = useCallback(async (acao, detalhes = {}, entidade = null) => {
@@ -30,8 +29,8 @@ export default function Home() {
         let query = supabase.from('categorias').select('nome')
         if (busca.trim()) query = query.ilike('nome', `%${busca.trim()}%`)
         const { data } = await query.limit(6)
-        if (cancelado) return // componente desmontado — não atualiza estado
-        if (data) {
+        if (cancelado) return
+        if (data && data.length > 0) {
           const corrigidas = data
             .map(i => i.nome)
             .map(item => item.toLowerCase() === 'manutenção' ? 'Mecânico' : item)
@@ -41,8 +40,10 @@ export default function Home() {
           })
           setSugestoes(filtradas)
         }
+        // se retornou vazio, mantém as sugestões anteriores (padrão ou última busca)
       } catch (err) {
         console.warn('Erro sugestões:', err.message)
+        // mantém sugestões padrão — não limpa
       }
     }
 
