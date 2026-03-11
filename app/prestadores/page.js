@@ -21,14 +21,17 @@ function ListaSkeleton() {
   )
 }
 
-// Peso de ordenação — vitrine fixo no topo, depois próprios/reivindicados, depois curadoria
+// Ordenação: vitrine → próprio/reivindicado → curadoria → público
+// Dentro de cada grupo: nota média como desempate (maior nota primeiro)
+// Curadoria pública sempre por último, independente de nota
 function pesoOrdenacao(p) {
-  if (p.origem_tipo === 'vitrine')           return -1
+  const nota = p.media_nota || 0  // 0–5, usado como desempate fracionário
+  if (p.origem_tipo === 'vitrine')                              return -1
   const isAtivo = ['proprio', 'reivindicado'].includes(p.origem_tipo)
-  if (isAtivo && p.verificado)  return 0
-  if (isAtivo && !p.verificado) return 1
-  if (!isAtivo && p.verificado) return 2
-  return 3
+  if (isAtivo && p.verificado)   return 0 + (1 - nota / 5) * 0.99   // 0.00–0.99
+  if (isAtivo && !p.verificado)  return 1 + (1 - nota / 5) * 0.99   // 1.00–1.99
+  if (p.origem_tipo === 'curadoria_publica') return 10               // sempre último
+  return 2 + (1 - nota / 5) * 0.99                                   // 2.00–2.99
 }
 
 function ListaConteudo() {
@@ -75,10 +78,26 @@ function ListaConteudo() {
 
         if (pError) throw pError
 
+        // Busca médias de avaliações — usadas na ordenação, não exibidas no card
+        const { data: medias } = await supabase
+          .from('avaliacoes')
+          .select('prestador_id, nota')
+          .eq('visivel', true)
+
+        // Agrupa médias por prestador
+        const mediaMap = {}
+        ;(medias || []).forEach(({ prestador_id, nota }) => {
+          if (!mediaMap[prestador_id]) mediaMap[prestador_id] = { soma: 0, total: 0 }
+          mediaMap[prestador_id].soma  += nota
+          mediaMap[prestador_id].total += 1
+        })
+
         const normalizados = (pData || []).map(p => ({
           ...p,
           cidade_nome: p.cidades?.nome || '',
           categoria:   p.categorias?.nome || 'Profissional',
+          media_nota:  mediaMap[p.id] ? mediaMap[p.id].soma / mediaMap[p.id].total : 0,
+          total_avals: mediaMap[p.id]?.total || 0,
         }))
 
         const termo = normalizarTermo(queryBusca, filtroHab)

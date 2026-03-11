@@ -72,11 +72,6 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
                   ✦ Exemplo
                 </span>
               )}
-              {isPublico && !isVitrine && (
-                <span className="bg-slate-100 text-slate-400 text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide shrink-0 whitespace-nowrap">
-                  Perfil público
-                </span>
-              )}
             </div>
 
             <span className="text-blue-600 text-[10px] md:text-[11px] font-black uppercase tracking-widest">
@@ -107,7 +102,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
               </p>
             </div>
 
-            {/* Reivindique — abaixo da localização, não compete com o nome */}
+            {/* Reivindique — pill sutil integrado, clicável */}
             {isPublico && !isVitrine && (
               <span
                 onClick={e => {
@@ -115,9 +110,9 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
                   e.stopPropagation()
                   router.push(`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`)
                 }}
-                className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors cursor-pointer w-fit"
+                className="w-fit flex items-center gap-1 text-[9px] font-semibold text-slate-400 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-full hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all cursor-pointer"
               >
-                É você? Reivindique
+                <span>👋</span> Este é você?
               </span>
             )}
           </div>
