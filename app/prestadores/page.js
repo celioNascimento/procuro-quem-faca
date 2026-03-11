@@ -259,7 +259,10 @@ function ListaConteudo() {
               <div key={p.id}>
                 <PrestadorCard prestador={p} session={session} registrarLog={registrarLog} />
                 {(index + 1) % 4 === 0 && (
-                  <AnuncioCard anuncio={anunciosMeio[Math.floor((index + 1) / 4 - 1) % Math.max(anunciosMeio.length, 1)] || null} />
+                  <AnuncioCard
+                    anuncio={anunciosMeio[Math.floor((index + 1) / 4 - 1) % Math.max(anunciosMeio.length, 1)] || null}
+                    contexto={queryBusca || filtroHab || ''}
+                  />
                 )}
               </div>
             ))}
