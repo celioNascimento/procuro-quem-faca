@@ -10,7 +10,8 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
 
   if (!prestador) return null
 
-  const isPublico = prestador.origem_tipo === 'curadoria_publica'
+  const isPublico  = prestador.origem_tipo === 'curadoria_publica'
+  const isVitrine  = prestador.origem_tipo === 'vitrine'
 
   const fromUrl = typeof window !== 'undefined'
     ? window.location.pathname + window.location.search
@@ -66,7 +67,12 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
               <h3 className="font-bold text-slate-900 text-base md:text-lg tracking-tight leading-tight truncate">
                 {prestador.nome}
               </h3>
-              {isPublico && (
+              {isVitrine && (
+                <span className="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide shrink-0 whitespace-nowrap">
+                  ✦ Exemplo
+                </span>
+              )}
+              {isPublico && !isVitrine && (
                 <span className="bg-slate-100 text-slate-400 text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide shrink-0 whitespace-nowrap">
                   Perfil público
                 </span>
@@ -100,35 +106,25 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
                 {localizacao}
               </p>
             </div>
+
+            {/* Reivindique — abaixo da localização, não compete com o nome */}
+            {isPublico && !isVitrine && (
+              <span
+                onClick={e => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  router.push(`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`)
+                }}
+                className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors cursor-pointer w-fit"
+              >
+                É você? Reivindique
+              </span>
+            )}
           </div>
         </div>
 
-        {/* ── Direita: ações ──────────────────────────────────────────────────
-            flex-col + justify-between + self-stretch:
-            - self-stretch: ocupa toda a altura do card (items-stretch no pai)
-            - justify-between: "É você?" no topo, "Ver Perfil" sempre na base
-            - Quando isPublico=false: só "Ver Perfil" existe → justify-between
-              com um único filho o empurra para baixo com mt-auto
-            Resultado: "Ver Perfil" sempre ancorado na base, card sempre mesmo tamanho */}
-        <div className="flex flex-col justify-between items-end self-stretch shrink-0 gap-2">
-
-          {/* Espaçador invisível quando não é público — garante que Ver Perfil
-              sempre fique na base independente de ter ou não o link de reivindicação */}
-          {isPublico ? (
-            <span
-              onClick={e => {
-                e.preventDefault()
-                e.stopPropagation()
-                router.push(`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`)
-              }}
-              className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors whitespace-nowrap cursor-pointer"
-            >
-              É você? Reivindique
-            </span>
-          ) : (
-            <span /> // espaçador vazio — mantém Ver Perfil na base
-          )}
-
+        {/* ── Direita: Ver Perfil ── */}
+        <div className="flex items-center self-stretch shrink-0">
           <span className="bg-blue-600 text-white px-5 py-2.5 md:px-6 md:py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] group-hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 whitespace-nowrap">
             Ver Perfil
           </span>

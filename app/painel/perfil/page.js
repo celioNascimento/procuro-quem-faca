@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import {
   MapPin, User, ChevronRight, Briefcase, Loader2, Camera, CheckCircle2,
-  Save, Activity, Clock, AlertCircle, Star, ArrowRight
+  Save, Activity, Clock, AlertCircle, Star, ArrowRight, Trash2
 } from 'lucide-react'
 import HeaderCliente from '@/components/HeaderCliente'
 
@@ -19,6 +19,9 @@ export default function PerfilDoCliente() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
   const [confirmLeaveModal, setConfirmLeaveModal] = useState({ show: false, destination: '' })
+  const [deleteModal, setDeleteModal] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
   const [user, setUser] = useState(null)
   const [servicos, setServicos] = useState([])
   const [isDirty, setIsDirty] = useState(false)
@@ -194,6 +197,31 @@ export default function PerfilDoCliente() {
     } finally { setLoading(false) }
   }
 
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'EXCLUIR') return
+    setDeleting(true)
+    try {
+      // 1. Anonimiza projetos vinculados ao WhatsApp do cliente
+      const numLimpo = perfil.whatsapp.replace(/\D/g, '')
+      if (numLimpo) {
+        await supabase
+          .from('portfolio_projetos')
+          .update({ cliente_nome: 'Cliente removido', cliente_whatsapp: null })
+          .eq('cliente_whatsapp', numLimpo)
+      }
+      // 2. Apaga o perfil
+      await supabase.from('profiles').delete().eq('id', user.id)
+      // 3. Deleta conta via Route API (precisa de service role)
+      await fetch('/api/delete-account', { method: 'POST' })
+      // 4. Desloga e redireciona
+      await supabase.auth.signOut()
+      window.location.href = '/?conta=excluida'
+    } catch {
+      setErrorModal({ show: true, title: 'Erro ao excluir', message: 'Não foi possível excluir sua conta agora. Tente novamente ou entre em contato.' })
+      setDeleting(false)
+    }
+  }
+
   // ── Status do ponto de vista do CLIENTE ──────────────────────────────────
   // IMPORTANTE: o banco mantém status = 'em_execucao' até o cliente avaliar.
   // A presença da foto 3 (ordem === 3) é o sinal de que o prestador concluiu
@@ -243,6 +271,51 @@ export default function PerfilDoCliente() {
     <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans antialiased">
       <HeaderCliente nomeCliente={perfil.full_name} />
       <input type="file" ref={fileInputRef} onChange={handleUploadFoto} accept="image/*" className="hidden" />
+
+      {/* Modal de exclusão de conta */}
+      {deleteModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 space-y-6 animate-in zoom-in-95">
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 bg-red-50 rounded-3xl flex items-center justify-center mx-auto border border-red-100">
+                <Trash2 size={28} className="text-red-500" />
+              </div>
+              <h3 className="text-xl font-black italic uppercase text-slate-800 tracking-tighter">Excluir conta?</h3>
+              <p className="text-[12px] font-medium text-slate-500 leading-relaxed">
+                Esta ação é <strong>permanente</strong> e não pode ser desfeita. Seus dados pessoais serão removidos.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Digite <span className="text-red-500">EXCLUIR</span> para confirmar
+              </label>
+              <input
+                value={deleteConfirmText}
+                onChange={e => setDeleteConfirmText(e.target.value.toUpperCase())}
+                placeholder="EXCLUIR"
+                className="w-full px-5 py-4 rounded-2xl border border-slate-200 outline-none text-[14px] font-bold text-slate-800 focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all placeholder-slate-300"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setDeleteModal(false); setDeleteConfirmText('') }}
+                className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold uppercase text-[11px] tracking-wide hover:bg-slate-100 transition-all active:scale-95"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmText !== 'EXCLUIR' || deleting}
+                className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black uppercase text-[11px] tracking-wide hover:bg-red-600 transition-all active:scale-95 shadow-lg shadow-red-200 disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {deleting ? <Loader2 size={16} className="animate-spin" /> : <><Trash2 size={14} /> Excluir</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal saída sem salvar */}
       {confirmLeaveModal.show && (
@@ -512,6 +585,30 @@ export default function PerfilDoCliente() {
                 className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black italic uppercase text-[11px] tracking-widest shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-blue-100 disabled:opacity-60">
                 {loading ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} /> Salvar alterações</>}
               </button>
+            </div>
+
+            {/* ── Zona de perigo ── */}
+            <div className="bg-white rounded-[2.5rem] border border-red-100 shadow-sm p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                  <Trash2 size={14} className="text-red-500" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-red-500">Zona de Perigo</p>
+                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">Ações irreversíveis</p>
+                </div>
+              </div>
+              <div className="border-t border-red-50 pt-4">
+                <p className="text-[12px] text-slate-500 leading-relaxed mb-4">
+                  Ao excluir sua conta, seus dados pessoais serão removidos permanentemente. O histórico de serviços contratados permanece anonimizado para os prestadores.
+                </p>
+                <button
+                  onClick={() => { setDeleteModal(true); setDeleteConfirmText('') }}
+                  className="w-full py-4 border-2 border-red-200 text-red-500 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-red-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={14} /> Excluir minha conta
+                </button>
+              </div>
             </div>
           </div>
         )}

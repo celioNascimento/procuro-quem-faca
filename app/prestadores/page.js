@@ -21,8 +21,9 @@ function ListaSkeleton() {
   )
 }
 
-// Peso de ordenação — próprios/reivindicados primeiro, verificados primeiro dentro de cada grupo
+// Peso de ordenação — vitrine fixo no topo, depois próprios/reivindicados, depois curadoria
 function pesoOrdenacao(p) {
+  if (p.origem_tipo === 'vitrine')           return -1
   const isAtivo = ['proprio', 'reivindicado'].includes(p.origem_tipo)
   if (isAtivo && p.verificado)  return 0
   if (isAtivo && !p.verificado) return 1

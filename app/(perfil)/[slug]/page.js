@@ -195,7 +195,7 @@ export default function PerfilPublico() {
       <div className="max-w-xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
 
         {/* ── Hero ── */}
-        <section className="relative mb-8">
+        <section className="relative mb-4">
 
           {/* Ações discretas */}
           <div className="flex justify-between items-start mb-6">
@@ -346,7 +346,7 @@ export default function PerfilPublico() {
                   </h2>
                   <div className="flex items-center gap-3">
                     {totalIndica > 0 && (
-                      <span className="flex items-center gap-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-blue-100">
+                      <span className="flex items-center gap-1 bg-blue-50 text-blue-600 text-[9px] font-black tracking-wide px-2.5 py-1 rounded-full border border-blue-100">
                         ✦ {totalIndica} {totalIndica === 1 ? 'indicação' : 'indicações'}
                       </span>
                     )}
@@ -368,7 +368,7 @@ export default function PerfilPublico() {
                         </div>
                         {/* Badge ✦ Indico */}
                         {av.indica && (
-                          <span className="flex items-center gap-1 bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shrink-0">
+                          <span className="flex items-center gap-1 bg-blue-600 text-white text-[8px] font-black tracking-wide px-2.5 py-1 rounded-full shrink-0">
                             ✦ Indico
                           </span>
                         )}
