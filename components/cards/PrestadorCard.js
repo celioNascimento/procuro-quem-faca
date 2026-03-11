@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MapPin, ChevronRight } from 'lucide-react'
+import { MapPin, ChevronRight, Globe } from 'lucide-react'
 
 export default function PrestadorCard({ prestador, session, registrarLog }) {
   const [imgError, setImgError] = useState(false)
@@ -28,61 +28,50 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
   const localizacao = [prestador.bairro, prestador.cidades?.nome]
     .filter(Boolean).join(' • ') || ''
 
-  const habilidades = (prestador.habilidades || []).slice(0, 3)
-  const extras      = (prestador.habilidades?.length || 0) - 3
+  const habilidades = (prestador.habilidades || []).slice(0, 2)
+  const extras      = (prestador.habilidades?.length || 0) - 2
 
   return (
     <Link
       href={perfilHref}
       onClick={() => registrarLog?.('CLIQUE_PERFIL', { nome: prestador.nome })}
-      className={`group block bg-white rounded-[2rem] border shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden ${
-        isVitrine  ? 'border-blue-200' :
-        isPublico  ? 'border-slate-100' :
-                     'border-blue-50'
+      className={`group block bg-white rounded-[2rem] border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden ${
+        isVitrine ? 'border-blue-200' : 'border-slate-100'
       }`}
     >
-      {/* Faixa de destaque — só vitrine */}
-      {isVitrine && (
-        <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-600" />
-      )}
+      {/* Faixa vitrine */}
+      {isVitrine && <div className="h-0.5 bg-gradient-to-r from-blue-500 to-blue-400" />}
 
-      <div className="p-5 flex gap-4">
+      <div className="px-5 py-4 flex items-center gap-4">
 
         {/* ── Foto ── */}
-        <div className="shrink-0">
-          <div className="w-16 h-16 rounded-2xl bg-slate-50 overflow-hidden border border-slate-100 shadow-sm flex items-center justify-center">
-            {prestador.foto_perfil && !imgError ? (
-              <img
-                src={prestador.foto_perfil}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                alt={prestador.nome}
-                onError={() => setImgError(true)}
-              />
-            ) : (
-              <span className="text-lg font-black text-slate-300 tracking-tighter">
-                {getIniciais(prestador.nome)}
-              </span>
-            )}
-          </div>
+        <div className="w-14 h-14 rounded-2xl bg-slate-50 overflow-hidden border border-slate-100 flex items-center justify-center shrink-0">
+          {prestador.foto_perfil && !imgError ? (
+            <img
+              src={prestador.foto_perfil}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              alt={prestador.nome}
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <span className="text-base font-black text-slate-300">
+              {getIniciais(prestador.nome)}
+            </span>
+          )}
         </div>
 
-        {/* ── Conteúdo ── */}
-        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+        {/* ── Textos ── */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
 
-          {/* Nome + botão na mesma linha — nome tem prioridade, botão shrink-0 */}
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="font-black text-slate-900 text-[17px] leading-snug tracking-tight">
-              {prestador.nome}
-              {isVitrine && (
-                <span className="ml-2 align-middle bg-blue-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide">
-                  ✦ Exemplo
-                </span>
-              )}
-            </h3>
-            <span className="shrink-0 mt-0.5 flex items-center gap-1 bg-blue-600 text-white px-3.5 py-2 rounded-xl font-black text-[10px] uppercase tracking-wider group-hover:bg-blue-700 transition-all shadow-md shadow-blue-100 whitespace-nowrap">
-              Ver perfil <ChevronRight size={11} strokeWidth={3} />
-            </span>
-          </div>
+          {/* Nome — máx 2 linhas, peso controlado */}
+          <h3 className="font-black text-slate-900 text-[15px] leading-snug tracking-tight line-clamp-2">
+            {prestador.nome}
+            {isVitrine && (
+              <span className="ml-2 align-middle bg-blue-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                ✦ Exemplo
+              </span>
+            )}
+          </h3>
 
           {/* Categoria */}
           <span className="text-blue-600 text-[10px] font-black uppercase tracking-widest leading-none">
@@ -93,27 +82,43 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
           {habilidades.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-0.5">
               {habilidades.map(hab => (
-                <span key={hab} className="text-[9px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                <span key={hab} className="text-[8px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
                   {hab}
                 </span>
               ))}
               {extras > 0 && (
-                <span className="text-[9px] font-semibold text-slate-400 px-1 py-0.5">+{extras}</span>
+                <span className="text-[8px] font-semibold text-slate-400 px-1">+{extras}</span>
               )}
             </div>
           )}
 
-          {/* Localização */}
-          {localizacao && (
-            <div className="flex items-center gap-1 mt-0.5">
-              <MapPin size={9} className="shrink-0 text-slate-300" />
-              <p className="text-[10px] font-medium text-slate-400 tracking-tight">
-                {localizacao}
-              </p>
-            </div>
-          )}
+          {/* Localização + badge público na mesma linha */}
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            {localizacao && (
+              <div className="flex items-center gap-1">
+                <MapPin size={9} className="shrink-0 text-slate-300" />
+                <p className="text-[10px] font-medium text-slate-400 tracking-tight">
+                  {localizacao}
+                </p>
+              </div>
+            )}
+            {/* Badge transparência — discreto mas presente */}
+            {isPublico && !isVitrine && (
+              <span className="flex items-center gap-1 text-[8px] font-semibold text-slate-400 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded-full">
+                <Globe size={7} /> Perfil público
+              </span>
+            )}
+          </div>
 
-          {/* Reivindique — pill discreto, só para curadoria pública */}
+        </div>
+
+        {/* ── Ver Perfil — coluna direita, centralizado ── */}
+        <div className="shrink-0 flex flex-col items-end gap-2">
+          <span className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded-xl font-black text-[10px] uppercase tracking-wider group-hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 whitespace-nowrap">
+            Ver perfil <ChevronRight size={10} strokeWidth={3} />
+          </span>
+
+          {/* Reivindique — só aparece para curadoria, abaixo do botão */}
           {isPublico && !isVitrine && (
             <span
               onClick={e => {
@@ -121,13 +126,13 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
                 e.stopPropagation()
                 router.push(`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`)
               }}
-              className="mt-0.5 w-fit flex items-center gap-1 text-[9px] font-semibold text-slate-400 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-full hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all cursor-pointer"
+              className="text-[8px] font-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer whitespace-nowrap"
             >
-              👋 Este é você?
+              👋 É você?
             </span>
           )}
-
         </div>
+
       </div>
     </Link>
   )
