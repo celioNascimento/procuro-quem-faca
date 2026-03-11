@@ -35,14 +35,16 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
     <Link
       href={perfilHref}
       onClick={() => registrarLog?.('CLIQUE_PERFIL', { nome: prestador.nome })}
-      className={`group block bg-white rounded-[2rem] border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden ${
+      className={`group relative block bg-white rounded-[2rem] border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden ${
         isVitrine ? 'border-blue-200' : 'border-slate-100'
       }`}
     >
-      {/* Faixa vitrine */}
-      {isVitrine && <div className="h-0.5 bg-gradient-to-r from-blue-500 to-blue-400" />}
+      {/* Faixa lateral vitrine — mais presença que h-0.5 no topo */}
+      {isVitrine && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-blue-600 rounded-l-[2rem]" />
+      )}
 
-      <div className="px-5 py-4 flex items-center gap-4">
+      <div className={`px-5 py-4 flex items-center gap-4 ${isVitrine ? 'pl-6' : ''}`}>
 
         {/* ── Foto ── */}
         <div className="w-14 h-14 rounded-2xl bg-slate-50 overflow-hidden border border-slate-100 flex items-center justify-center shrink-0">
@@ -66,12 +68,12 @@ export default function PrestadorCard({ prestador, session, registrarLog }) {
           {/* Nome — máx 2 linhas, peso controlado */}
           <h3 className="font-black text-slate-900 text-[15px] leading-snug tracking-tight line-clamp-2">
             {prestador.nome}
-            {isVitrine && (
-              <span className="ml-2 align-middle bg-blue-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide">
-                ✦ Exemplo
-              </span>
-            )}
           </h3>
+          {isVitrine && (
+            <span className="w-fit inline-flex items-center gap-1 bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
+              ✦ Perfil exemplo
+            </span>
+          )}
 
           {/* Categoria */}
           <span className="text-blue-600 text-[10px] font-black uppercase tracking-widest leading-none">

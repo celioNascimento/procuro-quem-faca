@@ -101,11 +101,17 @@ function ListaConteudo() {
         }))
 
         const termo = normalizarTermo(queryBusca, filtroHab)
-        const filtrados = filtrarPrestadores(normalizados, termo)
 
-        // Ordenação client-side: próprios/reivindicados primeiro, depois curadoria
-        // Dentro de cada grupo: verificados primeiro
-        const ordenados = [...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b))
+        // Vitrine sempre aparece — separa antes do filtro e reinjecta no topo
+        const vitrines  = normalizados.filter(p => p.origem_tipo === 'vitrine')
+        const demais    = normalizados.filter(p => p.origem_tipo !== 'vitrine')
+        const filtrados = filtrarPrestadores(demais, termo)
+
+        // Vitrines fixas no topo, demais ordenados por peso+nota
+        const ordenados = [
+          ...vitrines,
+          ...[...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b))
+        ]
 
         setPrestadoresBase(ordenados)
 
