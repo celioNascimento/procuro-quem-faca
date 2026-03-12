@@ -7,12 +7,13 @@ import { CheckCircle2, Send, MessageCircle, XCircle, Star, Clock, Copy, External
 // ─── Tipos e constantes ────────────────────────────────────────────────────────
 
 const STATUS = {
-  nao_enviado:        { label: 'Não enviado',   emoji: '○',  cor: 'bg-zinc-100 text-zinc-500',         corBarra: 'bg-zinc-300',        ordem: 0 },
-  enviado:            { label: 'Enviado',        emoji: '📤', cor: 'bg-blue-50 text-blue-600',           corBarra: 'bg-blue-400',        ordem: 1 },
-  respondeu_positivo: { label: 'Respondeu ✓',   emoji: '💬', cor: 'bg-emerald-50 text-emerald-700',     corBarra: 'bg-emerald-400',     ordem: 2 },
-  respondeu_negativo: { label: 'Recusou',        emoji: '✗',  cor: 'bg-red-50 text-red-500',             corBarra: 'bg-red-400',         ordem: 3 },
-  perfil_completo:    { label: 'Perfil completo',emoji: '⭐', cor: 'bg-amber-50 text-amber-700',         corBarra: 'bg-amber-400',       ordem: 4 },
-  avaliacao_recebida: { label: 'Avaliado',       emoji: '🏆', cor: 'bg-violet-50 text-violet-700',       corBarra: 'bg-violet-500',      ordem: 5 },
+  nao_enviado:        { label: 'Não enviado',    emoji: '○',  cor: 'bg-zinc-100 text-zinc-500',      corBarra: 'bg-zinc-300',    ordem: 0 },
+  enviado:            { label: 'Enviado',         emoji: '📤', cor: 'bg-blue-50 text-blue-600',       corBarra: 'bg-blue-400',    ordem: 1 },
+  respondeu_positivo: { label: 'Respondeu ✓',    emoji: '💬', cor: 'bg-emerald-50 text-emerald-700', corBarra: 'bg-emerald-400', ordem: 2 },
+  respondeu_negativo: { label: 'Recusou',         emoji: '✗',  cor: 'bg-red-50 text-red-500',         corBarra: 'bg-red-400',     ordem: 3 },
+  sem_whatsapp:       { label: 'Sem WhatsApp',    emoji: '📵', cor: 'bg-orange-50 text-orange-600',   corBarra: 'bg-orange-400',  ordem: 4 },
+  perfil_completo:    { label: 'Perfil completo', emoji: '⭐', cor: 'bg-amber-50 text-amber-700',     corBarra: 'bg-amber-400',   ordem: 5 },
+  avaliacao_recebida: { label: 'Avaliado',        emoji: '🏆', cor: 'bg-violet-50 text-violet-700',   corBarra: 'bg-violet-500',  ordem: 6 },
 }
 
 const PROXIMOS_STATUS = {
@@ -22,7 +23,7 @@ const PROXIMOS_STATUS = {
   perfil_completo:    'avaliacao_recebida',
 }
 
-const FILTROS = ['todos', 'nao_enviado', 'enviado', 'respondeu_positivo', 'respondeu_negativo', 'perfil_completo', 'avaliacao_recebida']
+const FILTROS = ['todos', 'nao_enviado', 'enviado', 'respondeu_positivo', 'respondeu_negativo', 'sem_whatsapp', 'perfil_completo', 'avaliacao_recebida']
 
 // ─── Componente principal ──────────────────────────────────────────────────────
 
@@ -287,18 +288,18 @@ function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, on
 
               {/* Ações principais */}
               <div className="flex gap-2">
-                {/* Abrir WhatsApp */}
+                {/* Abrir WhatsApp — já marca como enviado automaticamente */}
                 <button
-                  onClick={onAbrir}
+                  onClick={() => { onAbrir(); if (p.ativacao_status === 'nao_enviado') onStatus('enviado') }}
                   className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white rounded-xl text-[11px] font-black uppercase tracking-wider active:opacity-80 transition-opacity"
                 >
                   <MessageCircle size={14} />
-                  Abrir WA
+                  {p.ativacao_status === 'nao_enviado' ? 'Enviar WA' : 'Abrir WA'}
                 </button>
 
-                {/* Copiar link */}
+                {/* Copiar link — também marca como enviado */}
                 <button
-                  onClick={onCopiar}
+                  onClick={() => { onCopiar(); if (p.ativacao_status === 'nao_enviado') onStatus('enviado') }}
                   className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider border transition-all ${
                     copiado
                       ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
@@ -320,8 +321,8 @@ function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, on
                 </a>
               </div>
 
-              {/* Avançar status */}
-              {proximo && (
+              {/* Avançar status — só aparece a partir de "enviado" */}
+              {proximo && p.ativacao_status !== 'nao_enviado' && (
                 <button
                   disabled={salvando}
                   onClick={() => onStatus(proximo)}
@@ -337,13 +338,23 @@ function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, on
                 </button>
               )}
 
-              {/* Botão negativo (só se enviado ou respondeu_positivo) */}
+              {/* Botões negativos */}
               {(p.ativacao_status === 'enviado' || p.ativacao_status === 'respondeu_positivo') && (
                 <button
                   onClick={onNegativo}
                   className="w-full py-2.5 border border-red-100 text-red-400 rounded-xl text-[10px] font-black uppercase tracking-wider active:bg-red-50 transition-colors"
                 >
                   ✗ Marcar como Recusou
+                </button>
+              )}
+
+              {/* Sem WhatsApp — disponível para não enviado e enviado sem resposta */}
+              {(p.ativacao_status === 'nao_enviado' || p.ativacao_status === 'enviado') && (
+                <button
+                  onClick={() => onStatus('sem_whatsapp')}
+                  className="w-full py-2.5 border border-orange-100 text-orange-400 rounded-xl text-[10px] font-black uppercase tracking-wider active:bg-orange-50 transition-colors"
+                >
+                  📵 Número sem WhatsApp
                 </button>
               )}
 
