@@ -2,21 +2,21 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, Send, MessageCircle, XCircle, Star, Clock, Copy, ExternalLink, ChevronDown, Search, Filter } from 'lucide-react'
+import { CheckCircle2, MessageCircle, Copy, ExternalLink, ChevronDown, Search, Phone } from 'lucide-react'
 
-// ─── Tipos e constantes ────────────────────────────────────────────────────────
+// ─── Constantes ────────────────────────────────────────────────────────────────
 
 const STATUS = {
-  nao_enviado:        { label: 'Não enviado',    emoji: '○',  cor: 'bg-zinc-100 text-zinc-500',      corBarra: 'bg-zinc-300',    ordem: 0 },
-  enviado:            { label: 'Enviado',         emoji: '📤', cor: 'bg-blue-50 text-blue-600',       corBarra: 'bg-blue-400',    ordem: 1 },
-  respondeu_positivo: { label: 'Respondeu ✓',    emoji: '💬', cor: 'bg-emerald-50 text-emerald-700', corBarra: 'bg-emerald-400', ordem: 2 },
-  respondeu_negativo: { label: 'Recusou',         emoji: '✗',  cor: 'bg-red-50 text-red-500',         corBarra: 'bg-red-400',     ordem: 3 },
-  sem_whatsapp:       { label: 'Sem WhatsApp',    emoji: '📵', cor: 'bg-orange-50 text-orange-600',   corBarra: 'bg-orange-400',  ordem: 4 },
-  perfil_completo:    { label: 'Perfil completo', emoji: '⭐', cor: 'bg-amber-50 text-amber-700',     corBarra: 'bg-amber-400',   ordem: 5 },
-  avaliacao_recebida: { label: 'Avaliado',        emoji: '🏆', cor: 'bg-violet-50 text-violet-700',   corBarra: 'bg-violet-500',  ordem: 6 },
+  nao_enviado:        { label: 'Não enviado',    dot: '#94a3b8', badge: 'bg-slate-100 text-slate-500',      ordem: 0 },
+  enviado:            { label: 'Enviado',         dot: '#3b82f6', badge: 'bg-blue-50 text-blue-600',         ordem: 1 },
+  respondeu_positivo: { label: 'Respondeu',       dot: '#10b981', badge: 'bg-emerald-50 text-emerald-700',   ordem: 2 },
+  respondeu_negativo: { label: 'Recusou',         dot: '#ef4444', badge: 'bg-red-50 text-red-500',           ordem: 3 },
+  sem_whatsapp:       { label: 'Sem WhatsApp',    dot: '#f97316', badge: 'bg-orange-50 text-orange-600',     ordem: 4 },
+  perfil_completo:    { label: 'Perfil completo', dot: '#f59e0b', badge: 'bg-amber-50 text-amber-700',       ordem: 5 },
+  avaliacao_recebida: { label: 'Avaliado',        dot: '#8b5cf6', badge: 'bg-violet-50 text-violet-700',     ordem: 6 },
 }
 
-const PROXIMOS_STATUS = {
+const PROXIMOS = {
   nao_enviado:        'enviado',
   enviado:            'respondeu_positivo',
   respondeu_positivo: 'perfil_completo',
@@ -25,194 +25,206 @@ const PROXIMOS_STATUS = {
 
 const FILTROS = ['todos', 'nao_enviado', 'enviado', 'respondeu_positivo', 'respondeu_negativo', 'sem_whatsapp', 'perfil_completo', 'avaliacao_recebida']
 
+function montarMsg(p) {
+  return (
+    `Oi ${p.nome}, tudo bem? 👋\n\n` +
+    `Sou o Célio, criador do *Procuro Quem Faça* — uma plataforma aqui de Londrina onde moradores buscam profissionais para serviços.\n\n` +
+    `Montei um perfil pra vocês lá. Aqui está:\n` +
+    `👉 procuroquemfaca.com.br/${p.slug}\n\n` +
+    `Quer ver como fica quando está completo, com fotos dos serviços?\n` +
+    `👉 procuroquemfaca.com.br/carlos-mendes-pedreiro\n\n` +
+    `A diferença tá nas fotos — antes, durante e depois de cada serviço. É como uma indicação permanente: o cliente vê o trabalho, já chega sabendo o que esperar.\n\n` +
+    `É gratuito. Posso ajudar a completar se quiser. 🙂`
+  )
+}
+
 // ─── Componente principal ──────────────────────────────────────────────────────
 
 export default function PaginaAtivacao() {
-  const [prestadores, setPrestadores]   = useState([])
-  const [loading, setLoading]           = useState(true)
-  const [filtro, setFiltro]             = useState('todos')
-  const [busca, setBusca]               = useState('')
-  const [expandido, setExpandido]       = useState(null)
-  const [salvando, setSalvando]         = useState(null)
-  const [copiado, setCopiado]           = useState(null)
-  const [stats, setStats]               = useState({})
+  const [prestadores, setPrestadores] = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [filtro, setFiltro]           = useState('todos')
+  const [busca, setBusca]             = useState('')
+  const [expandido, setExpandido]     = useState(null)
+  const [salvando, setSalvando]       = useState(null)
+  const [copiado, setCopiado]         = useState(null)
+  const [stats, setStats]             = useState({})
 
-  // ── Carregar prestadores ───────────────────────────────────────────────────
   const carregar = useCallback(async (inicial = false) => {
     if (inicial) setLoading(true)
     const { data } = await supabase
       .from('prestadores')
-      .select('id, nome, whatsapp, slug, ativacao_status, ativacao_enviado_em, ativacao_respondeu_em, ativacao_obs')
+      .select('id, nome, whatsapp, slug, ativacao_status, ativacao_enviado_em, ativacao_obs')
       .order('nome')
     setPrestadores(data || [])
-
-    // Calcular stats
-    const contagem = {}
-    ;(data || []).forEach(p => {
-      contagem[p.ativacao_status] = (contagem[p.ativacao_status] || 0) + 1
-    })
-    setStats(contagem)
+    const c = {}
+    ;(data || []).forEach(p => { c[p.ativacao_status] = (c[p.ativacao_status] || 0) + 1 })
+    setStats(c)
     if (inicial) setLoading(false)
   }, [])
 
   useEffect(() => { carregar(true) }, [carregar])
 
-  // ── Atualizar status ───────────────────────────────────────────────────────
-  const atualizarStatus = async (id, novoStatus, obs = null) => {
+  const atualizarStatus = async (id, novoStatus) => {
     setSalvando(id)
     const update = { ativacao_status: novoStatus }
     if (novoStatus === 'enviado')            update.ativacao_enviado_em   = new Date().toISOString()
     if (novoStatus === 'respondeu_positivo') update.ativacao_respondeu_em = new Date().toISOString()
-    if (obs !== null)                        update.ativacao_obs           = obs
-
-    const { error, count } = await supabase
-      .from('prestadores')
-      .update(update)
-      .eq('id', Number(id))
-      .select()
-    if (error) console.error('[ativacao] erro ao salvar:', error)
-    else console.log('[ativacao] salvo ok, id:', id, 'status:', novoStatus, 'rows:', count)
-    await carregar()
+    const { error } = await supabase.from('prestadores').update(update).eq('id', Number(id))
+    if (error) console.error('[ativacao] erro ao salvar', error)
+    else {
+      console.log('[ativacao] salvo ok')
+      setPrestadores(prev => prev.map(p =>
+        p.id === id ? { ...p, ativacao_status: novoStatus, ...update } : p
+      ))
+      setStats(prev => {
+        const antigo = prestadores.find(p => p.id === id)?.ativacao_status
+        const novo = { ...prev }
+        if (antigo) novo[antigo] = Math.max(0, (novo[antigo] || 1) - 1)
+        novo[novoStatus] = (novo[novoStatus] || 0) + 1
+        return novo
+      })
+    }
     setSalvando(null)
   }
 
   const salvarObs = async (id, obs) => {
     await supabase.from('prestadores').update({ ativacao_obs: obs }).eq('id', Number(id))
-    await carregar()
+    setPrestadores(prev => prev.map(p => p.id === id ? { ...p, ativacao_obs: obs } : p))
   }
 
-  // ── Copiar link WhatsApp ───────────────────────────────────────────────────
-  const copiarLink = async (p) => {
-    const nome  = p.nome
-    const slug  = p.slug
-    const wpp   = p.whatsapp?.replace(/\D/g, '')
-    const msg   =
-      `Oi ${nome}, tudo bem? 👋\n\n` +
-      `Sou o Célio, criador do *Procuro Quem Faça* — uma plataforma aqui de Londrina onde moradores buscam profissionais para serviços.\n\n` +
-      `Montei um perfil pra vocês lá. Aqui está:\n` +
-      `👉 procuroquemfaca.com.br/${slug}\n\n` +
-      `Quer ver como fica quando está completo, com fotos dos serviços?\n` +
-      `👉 procuroquemfaca.com.br/carlos-mendes-pedreiro\n\n` +
-      `A diferença tá nas fotos — antes, durante e depois de cada serviço. É como uma indicação permanente: o cliente vê o trabalho, já chega sabendo o que esperar.\n\n` +
-      `É gratuito. Posso ajudar a completar se quiser. 🙂`
-    const link  = `https://wa.me/55${wpp}?text=${encodeURIComponent(msg)}`
+  const abrirWA = (p) => {
+    const wpp = p.whatsapp?.replace(/\D/g, '')
+    window.open(`https://wa.me/55${wpp}?text=${encodeURIComponent(montarMsg(p))}`, '_blank')
+  }
 
+  const copiarLink = async (p) => {
+    const wpp = p.whatsapp?.replace(/\D/g, '')
+    const link = `https://wa.me/55${wpp}?text=${encodeURIComponent(montarMsg(p))}`
     await navigator.clipboard.writeText(link)
     setCopiado(p.id)
     setTimeout(() => setCopiado(null), 2000)
   }
 
-  const abrirWhatsApp = (p) => {
-    const nome  = p.nome
-    const slug  = p.slug
-    const wpp   = p.whatsapp?.replace(/\D/g, '')
-    const msg   =
-      `Oi ${nome}, tudo bem? 👋\n\n` +
-      `Sou o Célio, criador do *Procuro Quem Faça* — uma plataforma aqui de Londrina onde moradores buscam profissionais para serviços.\n\n` +
-      `Montei um perfil pra vocês lá. Aqui está:\n` +
-      `👉 procuroquemfaca.com.br/${slug}\n\n` +
-      `Quer ver como fica quando está completo, com fotos dos serviços?\n` +
-      `👉 procuroquemfaca.com.br/carlos-mendes-pedreiro\n\n` +
-      `A diferença tá nas fotos — antes, durante e depois de cada serviço. É como uma indicação permanente: o cliente vê o trabalho, já chega sabendo o que esperar.\n\n` +
-      `É gratuito. Posso ajudar a completar se quiser. 🙂`
-    window.open(`https://wa.me/55${wpp}?text=${encodeURIComponent(msg)}`, '_blank')
-  }
-
-  // ── Filtrar e buscar ───────────────────────────────────────────────────────
   const lista = prestadores.filter(p => {
-    const passaBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) ||
-                       p.slug?.toLowerCase().includes(busca.toLowerCase())
+    const passaBusca  = p.nome.toLowerCase().includes(busca.toLowerCase()) || p.slug?.toLowerCase().includes(busca.toLowerCase())
     const passaFiltro = filtro === 'todos' || p.ativacao_status === filtro
     return passaBusca && passaFiltro
   })
 
-  const total     = prestadores.length
+  const total    = prestadores.length
+  const enviados = Object.entries(stats).filter(([k]) => k !== 'nao_enviado').reduce((a, [, v]) => a + v, 0)
   const completos = (stats.perfil_completo || 0) + (stats.avaliacao_recebida || 0)
-  const enviados  = Object.entries(stats)
-    .filter(([k]) => k !== 'nao_enviado')
-    .reduce((a, [, v]) => a + v, 0)
-  const pct = total ? Math.round((completos / total) * 100) : 0
+  const pct      = total ? Math.round((enviados / total) * 100) : 0
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      <div className="w-5 h-5 border-2 border-zinc-800 border-t-transparent rounded-full animate-spin" />
     </div>
   )
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4 pb-24 font-sans">
+    <div className="max-w-xl mx-auto pb-24">
 
       {/* ── Cabeçalho ── */}
-      <div className="pt-2 pb-4">
-        <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-1">Campanha</p>
-        <h1 className="text-2xl font-black tracking-tighter text-zinc-900">
-          Ativação de Prestadores
-        </h1>
-        <p className="text-xs text-zinc-400 mt-1">{total} prestadores · atualiza ao vivo</p>
+      <div className="pt-4 pb-6">
+        <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-[0.2em] mb-1">Campanha · {total} prestadores</p>
+        <h1 className="text-[1.75rem] font-bold tracking-tight text-zinc-900 leading-none">Ativação</h1>
       </div>
 
-      {/* ── Barra de progresso geral ── */}
-      <div className="bg-white rounded-2xl p-5 border border-zinc-100 shadow-sm">
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Progresso geral</span>
-          <span className="text-lg font-black text-zinc-900">{pct}%</span>
+      {/* ── Métricas ── */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {[
+          { label: 'Total',      val: total,     color: 'text-zinc-900' },
+          { label: 'Contatados', val: enviados,   color: 'text-blue-600' },
+          { label: 'Ativos',     val: completos,  color: 'text-emerald-600' },
+        ].map(({ label, val, color }) => (
+          <div key={label} className="bg-white rounded-2xl p-4 border border-zinc-100">
+            <p className={`text-2xl font-bold ${color} leading-none mb-1`}>{val}</p>
+            <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Progresso + legenda ── */}
+      <div className="bg-white rounded-2xl p-4 border border-zinc-100 mb-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[11px] text-zinc-400">Enviados</span>
+          <span className="text-[11px] font-semibold text-zinc-700">{pct}%</span>
         </div>
-        <div className="h-2 bg-zinc-100 rounded-full overflow-hidden mb-4">
+        <div className="h-1 bg-zinc-100 rounded-full overflow-hidden mb-3">
           <motion.div
-            className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full"
+            className="h-full bg-zinc-900 rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
+            transition={{ duration: 1, ease: 'easeOut' }}
           />
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <MiniStat label="Total"    valor={total}     cor="text-zinc-900" />
-          <MiniStat label="Enviados" valor={enviados}   cor="text-blue-600" />
-          <MiniStat label="Ativos"   valor={completos}  cor="text-emerald-600" />
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+          {Object.entries(STATUS).map(([key, s]) => {
+            const qtd = stats[key] || 0
+            if (!qtd) return null
+            return (
+              <button
+                key={key}
+                onClick={() => setFiltro(filtro === key ? 'todos' : key)}
+                className={`flex items-center gap-1.5 transition-opacity ${filtro !== 'todos' && filtro !== key ? 'opacity-25' : ''}`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.dot }} />
+                <span className="text-[10px] text-zinc-500">{s.label}</span>
+                <span className="text-[10px] font-semibold text-zinc-800">{qtd}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      {/* ── Pills de status ── */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4">
+      {/* ── Busca ── */}
+      <div className="relative mb-3">
+        <Search size={13} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+        <input
+          value={busca}
+          onChange={e => setBusca(e.target.value)}
+          placeholder="Buscar prestador..."
+          className="w-full pl-9 pr-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-400 transition-colors"
+        />
+      </div>
+
+      {/* ── Pills de filtro ── */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 mb-4 scrollbar-hide -mx-4 px-4">
         {FILTROS.map(f => {
-          const s       = STATUS[f]
-          const qtd     = f === 'todos' ? total : (stats[f] || 0)
-          const ativo   = filtro === f
+          const s  = STATUS[f]
+          const qtd = f === 'todos' ? total : (stats[f] || 0)
+          const on = filtro === f
           return (
             <button
               key={f}
               onClick={() => setFiltro(f)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all border ${
-                ativo
-                  ? 'bg-zinc-900 text-white border-zinc-900'
-                  : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-400'
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-semibold transition-all border ${
+                on ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-white text-zinc-500 border-zinc-200'
               }`}
             >
-              {f === 'todos' ? `Todos · ${qtd}` : `${s.label} · ${qtd}`}
+              {f !== 'todos' && (
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ background: on ? 'rgba(255,255,255,0.6)' : s.dot }}
+                />
+              )}
+              {f === 'todos' ? 'Todos' : s.label} · {qtd}
             </button>
           )
         })}
       </div>
 
-      {/* ── Busca ── */}
-      <div className="relative">
-        <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
-        <input
-          value={busca}
-          onChange={e => setBusca(e.target.value)}
-          placeholder="Buscar prestador..."
-          className="w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-blue-400 transition-colors"
-        />
-      </div>
+      {/* ── Contagem ── */}
+      <p className="text-[10px] text-zinc-400 font-medium uppercase tracking-wider mb-2 px-0.5">
+        {lista.length} resultado{lista.length !== 1 ? 's' : ''}
+      </p>
 
       {/* ── Lista ── */}
-      <div className="space-y-2">
-        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
-          {lista.length} prestador{lista.length !== 1 ? 'es' : ''}
-        </p>
+      <div className="space-y-1.5">
         <AnimatePresence>
-          {lista.map((p) => (
+          {lista.map(p => (
             <CardPrestador
               key={p.id}
               p={p}
@@ -220,10 +232,9 @@ export default function PaginaAtivacao() {
               salvando={salvando === p.id}
               copiado={copiado === p.id}
               onExpand={() => setExpandido(expandido === p.id ? null : p.id)}
-              onStatus={async (novoStatus) => { await atualizarStatus(p.id, novoStatus) }}
-              onNegativo={() => atualizarStatus(p.id, 'respondeu_negativo')}
+              onStatus={async (s) => { await atualizarStatus(p.id, s) }}
               onCopiar={() => copiarLink(p)}
-              onAbrir={() => abrirWhatsApp(p)}
+              onAbrir={() => abrirWA(p)}
               onObs={(obs) => salvarObs(p.id, obs)}
             />
           ))}
@@ -235,40 +246,43 @@ export default function PaginaAtivacao() {
 
 // ─── Card individual ───────────────────────────────────────────────────────────
 
-function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, onNegativo, onCopiar, onAbrir, onObs }) {
-  const st          = STATUS[p.ativacao_status]
-  const proximo     = PROXIMOS_STATUS[p.ativacao_status]
-  const [obs, setObs] = useState(p.ativacao_obs || '')
+function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, onCopiar, onAbrir, onObs }) {
+  const st      = STATUS[p.ativacao_status]
+  const proximo = PROXIMOS[p.ativacao_status]
+  const [obs, setObs]         = useState(p.ativacao_obs || '')
   const [editObs, setEditObs] = useState(false)
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      className="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden"
+      exit={{ opacity: 0 }}
+      className="bg-white rounded-2xl border border-zinc-100 overflow-hidden"
     >
-      {/* Linha superior — sempre visível */}
+      {/* Linha principal */}
       <div
-        className="flex items-center gap-3 p-4 cursor-pointer active:bg-zinc-50 transition-colors"
+        className="flex items-center gap-3 px-4 py-3.5 cursor-pointer select-none active:bg-zinc-50 transition-colors"
         onClick={onExpand}
       >
-        {/* Indicador de status */}
-        <div className={`w-2 h-2 rounded-full shrink-0 ${st.corBarra}`} />
+        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: st.dot }} />
 
-        {/* Nome e status */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-zinc-900 truncate leading-tight">{p.nome}</p>
-          <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${st.cor}`}>
+          <p className="text-[13px] font-semibold text-zinc-900 truncate leading-tight">{p.nome}</p>
+          <span className={`inline-block mt-0.5 px-1.5 py-px rounded text-[9px] font-semibold uppercase tracking-wide ${st.badge}`}>
             {st.label}
           </span>
         </div>
 
-        {/* Seta */}
+        {p.ativacao_enviado_em && (
+          <span className="text-[10px] text-zinc-300 shrink-0 tabular-nums">
+            {new Date(p.ativacao_enviado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+          </span>
+        )}
+
         <ChevronDown
-          size={16}
-          className={`text-zinc-300 transition-transform shrink-0 ${expandido ? 'rotate-180' : ''}`}
+          size={14}
+          className={`text-zinc-300 shrink-0 transition-transform duration-200 ${expandido ? 'rotate-180' : ''}`}
         />
       </div>
 
@@ -279,148 +293,123 @@ function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, on
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.18 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 space-y-3 border-t border-zinc-50 pt-3">
+            <div className="px-4 pb-4 space-y-2 border-t border-zinc-50 pt-3">
 
-              {/* Info */}
-              <div className="flex gap-3 text-[10px] text-zinc-400 font-medium">
-                <span>/{p.slug}</span>
-                {p.ativacao_enviado_em && (
-                  <span>Enviado {new Date(p.ativacao_enviado_em).toLocaleDateString('pt-BR')}</span>
-                )}
-              </div>
+              <p className="text-[10px] text-zinc-400 font-mono">/{p.slug}</p>
 
-              {/* Ações principais */}
+              {/* Ações WhatsApp */}
               <div className="flex gap-2">
-                {/* Abrir WhatsApp — marca como enviado primeiro, depois abre */}
                 <button
-                  onClick={async () => {
-                    if (p.ativacao_status === 'nao_enviado') await onStatus('enviado')
+                  onClick={() => {
                     onAbrir()
+                    if (p.ativacao_status === 'nao_enviado') onStatus('enviado')
                   }}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white rounded-xl text-[11px] font-black uppercase tracking-wider active:opacity-80 transition-opacity"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#25D366] text-white rounded-xl text-[11px] font-semibold"
                 >
-                  <MessageCircle size={14} />
+                  <MessageCircle size={13} />
                   {p.ativacao_status === 'nao_enviado' ? 'Enviar WA' : 'Abrir WA'}
                 </button>
 
-                {/* Copiar link — também marca como enviado */}
                 <button
-                  onClick={async () => {
-                    if (p.ativacao_status === 'nao_enviado') await onStatus('enviado')
+                  onClick={() => {
                     onCopiar()
+                    if (p.ativacao_status === 'nao_enviado') onStatus('enviado')
                   }}
-                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider border transition-all ${
-                    copiado
-                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                      : 'bg-zinc-50 text-zinc-600 border-zinc-200'
+                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-[11px] font-semibold border transition-all ${
+                    copiado ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-zinc-50 text-zinc-600 border-zinc-200'
                   }`}
                 >
-                  {copiado ? <CheckCircle2 size={14} /> : <Copy size={14} />}
-                  {copiado ? 'Copiado!' : 'Copiar'}
+                  {copiado ? <CheckCircle2 size={13} /> : <Copy size={13} />}
+                  {copiado ? 'Copiado' : 'Copiar'}
                 </button>
 
-                {/* Ver perfil */}
                 <a
                   href={`https://procuroquemfaca.com.br/${p.slug}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-center px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl"
+                  className="flex items-center justify-center px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl"
                 >
-                  <ExternalLink size={14} className="text-zinc-500" />
+                  <ExternalLink size={13} className="text-zinc-400" />
                 </a>
               </div>
 
-              {/* Avançar status — só aparece a partir de "enviado" */}
+              {/* Avançar status */}
               {proximo && p.ativacao_status !== 'nao_enviado' && (
                 <button
-                  disabled={salvando}
+                  disabled={!!salvando}
                   onClick={() => onStatus(proximo)}
-                  className="w-full py-3 bg-zinc-900 text-white rounded-xl text-[11px] font-black uppercase tracking-wider disabled:opacity-50 active:opacity-80 transition-opacity flex items-center justify-center gap-2"
+                  className="w-full py-2.5 bg-zinc-900 text-white rounded-xl text-[11px] font-semibold disabled:opacity-40 flex items-center justify-center gap-2"
                 >
                   {salvando
-                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    : <>
-                        <span>{STATUS[proximo].emoji}</span>
-                        Marcar como {STATUS[proximo].label}
-                      </>
+                    ? <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    : `Marcar como ${STATUS[proximo].label}`
                   }
                 </button>
               )}
 
-              {/* Botões negativos */}
+              {/* Recusou */}
               {(p.ativacao_status === 'enviado' || p.ativacao_status === 'respondeu_positivo') && (
                 <button
-                  onClick={onNegativo}
-                  className="w-full py-2.5 border border-red-100 text-red-400 rounded-xl text-[10px] font-black uppercase tracking-wider active:bg-red-50 transition-colors"
+                  onClick={() => onStatus('respondeu_negativo')}
+                  className="w-full py-2 text-zinc-400 rounded-xl text-[10px] font-semibold border border-zinc-100 hover:border-red-100 hover:text-red-400 transition-colors"
                 >
-                  ✗ Marcar como Recusou
+                  Marcar como Recusou
                 </button>
               )}
 
-              {/* Sem WhatsApp — disponível para não enviado e enviado sem resposta */}
+              {/* Sem WhatsApp */}
               {(p.ativacao_status === 'nao_enviado' || p.ativacao_status === 'enviado') && (
                 <button
                   onClick={() => onStatus('sem_whatsapp')}
-                  className="w-full py-2.5 border border-orange-100 text-orange-400 rounded-xl text-[10px] font-black uppercase tracking-wider active:bg-orange-50 transition-colors"
+                  className="w-full py-2 text-zinc-400 rounded-xl text-[10px] font-semibold border border-zinc-100 hover:border-orange-100 hover:text-orange-400 transition-colors flex items-center justify-center gap-1.5"
                 >
-                  📵 Número sem WhatsApp
+                  <Phone size={11} />
+                  Número sem WhatsApp
                 </button>
               )}
 
               {/* Observação */}
-              <div>
-                {editObs ? (
-                  <div className="space-y-2">
-                    <textarea
-                      value={obs}
-                      onChange={e => setObs(e.target.value)}
-                      rows={2}
-                      placeholder="Observação sobre esse prestador..."
-                      className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-200 rounded-xl resize-none focus:outline-none focus:border-blue-300 text-zinc-700"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => { onObs(obs); setEditObs(false) }}
-                        className="flex-1 py-2 bg-zinc-900 text-white rounded-xl text-[10px] font-black uppercase tracking-wider"
-                      >
-                        Salvar
-                      </button>
-                      <button
-                        onClick={() => setEditObs(false)}
-                        className="px-4 py-2 border border-zinc-200 text-zinc-500 rounded-xl text-[10px] font-black uppercase"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
+              {editObs ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={obs}
+                    onChange={e => setObs(e.target.value)}
+                    rows={2}
+                    placeholder="Observação..."
+                    className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-200 rounded-xl resize-none focus:outline-none focus:border-zinc-400 text-zinc-700"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { onObs(obs); setEditObs(false) }}
+                      className="flex-1 py-2 bg-zinc-900 text-white rounded-xl text-[10px] font-semibold"
+                    >
+                      Salvar
+                    </button>
+                    <button
+                      onClick={() => setEditObs(false)}
+                      className="px-4 py-2 border border-zinc-200 text-zinc-400 rounded-xl text-[10px] font-semibold"
+                    >
+                      Cancelar
+                    </button>
                   </div>
-                ) : (
-                  <button
-                    onClick={() => setEditObs(true)}
-                    className="w-full text-left px-3 py-2 bg-zinc-50 border border-zinc-100 rounded-xl text-[10px] text-zinc-400 hover:border-zinc-300 transition-colors"
-                  >
-                    {p.ativacao_obs ? `💬 ${p.ativacao_obs}` : '+ Adicionar observação'}
-                  </button>
-                )}
-              </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setEditObs(true)}
+                  className="w-full text-left px-3 py-2 rounded-xl text-[10px] text-zinc-400 border border-dashed border-zinc-200 hover:border-zinc-300 transition-colors"
+                >
+                  {p.ativacao_obs ? `💬 ${p.ativacao_obs}` : '+ Observação'}
+                </button>
+              )}
 
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </motion.div>
-  )
-}
-
-// ─── Mini stat ─────────────────────────────────────────────────────────────────
-
-function MiniStat({ label, valor, cor }) {
-  return (
-    <div className="text-center">
-      <p className={`text-xl font-black ${cor}`}>{valor}</p>
-      <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">{label}</p>
-    </div>
   )
 }
