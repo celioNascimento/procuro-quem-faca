@@ -38,8 +38,8 @@ export default function PaginaAtivacao() {
   const [stats, setStats]               = useState({})
 
   // ── Carregar prestadores ───────────────────────────────────────────────────
-  const carregar = useCallback(async () => {
-    setLoading(true)
+  const carregar = useCallback(async (inicial = false) => {
+    if (inicial) setLoading(true)
     const { data } = await supabase
       .from('prestadores')
       .select('id, nome, whatsapp, slug, ativacao_status, ativacao_enviado_em, ativacao_respondeu_em, ativacao_obs')
@@ -52,10 +52,10 @@ export default function PaginaAtivacao() {
       contagem[p.ativacao_status] = (contagem[p.ativacao_status] || 0) + 1
     })
     setStats(contagem)
-    setLoading(false)
+    if (inicial) setLoading(false)
   }, [])
 
-  useEffect(() => { carregar() }, [carregar])
+  useEffect(() => { carregar(true) }, [carregar])
 
   // ── Atualizar status ───────────────────────────────────────────────────────
   const atualizarStatus = async (id, novoStatus, obs = null) => {
@@ -65,13 +65,19 @@ export default function PaginaAtivacao() {
     if (novoStatus === 'respondeu_positivo') update.ativacao_respondeu_em = new Date().toISOString()
     if (obs !== null)                        update.ativacao_obs           = obs
 
-    await supabase.from('prestadores').update(update).eq('id', id)
+    const { error, count } = await supabase
+      .from('prestadores')
+      .update(update)
+      .eq('id', Number(id))
+      .select()
+    if (error) console.error('[ativacao] erro ao salvar:', error)
+    else console.log('[ativacao] salvo ok, id:', id, 'status:', novoStatus, 'rows:', count)
     await carregar()
     setSalvando(null)
   }
 
   const salvarObs = async (id, obs) => {
-    await supabase.from('prestadores').update({ ativacao_obs: obs }).eq('id', id)
+    await supabase.from('prestadores').update({ ativacao_obs: obs }).eq('id', Number(id))
     await carregar()
   }
 
