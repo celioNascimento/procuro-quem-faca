@@ -214,7 +214,7 @@ export default function PaginaAtivacao() {
               salvando={salvando === p.id}
               copiado={copiado === p.id}
               onExpand={() => setExpandido(expandido === p.id ? null : p.id)}
-              onStatus={(novoStatus) => atualizarStatus(p.id, novoStatus)}
+              onStatus={async (novoStatus) => { await atualizarStatus(p.id, novoStatus) }}
               onNegativo={() => atualizarStatus(p.id, 'respondeu_negativo')}
               onCopiar={() => copiarLink(p)}
               onAbrir={() => abrirWhatsApp(p)}
@@ -288,9 +288,12 @@ function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, on
 
               {/* Ações principais */}
               <div className="flex gap-2">
-                {/* Abrir WhatsApp — já marca como enviado automaticamente */}
+                {/* Abrir WhatsApp — marca como enviado primeiro, depois abre */}
                 <button
-                  onClick={() => { onAbrir(); if (p.ativacao_status === 'nao_enviado') onStatus('enviado') }}
+                  onClick={async () => {
+                    if (p.ativacao_status === 'nao_enviado') await onStatus('enviado')
+                    onAbrir()
+                  }}
                   className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white rounded-xl text-[11px] font-black uppercase tracking-wider active:opacity-80 transition-opacity"
                 >
                   <MessageCircle size={14} />
@@ -299,7 +302,10 @@ function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, on
 
                 {/* Copiar link — também marca como enviado */}
                 <button
-                  onClick={() => { onCopiar(); if (p.ativacao_status === 'nao_enviado') onStatus('enviado') }}
+                  onClick={async () => {
+                    if (p.ativacao_status === 'nao_enviado') await onStatus('enviado')
+                    onCopiar()
+                  }}
                   className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-wider border transition-all ${
                     copiado
                       ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
