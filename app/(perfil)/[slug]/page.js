@@ -7,9 +7,22 @@ import Header from '@/components/Header'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
 import { MapPin, ShieldCheck, Flag, Share2, CheckCircle } from 'lucide-react'
 
-// ── Skeleton ─────────────────────────────────────────────────────────────────
-// Header real em vez de div simulado — evita flash de z-index ao montar
-// pt-24 espelha pt-24 md:pt-32 do conteúdo real — sem layout shift
+// ── Helpers de cookie ─────────────────────────────────────────────────────────
+
+function setCookie(name, value, days = 30) {
+  if (typeof document === 'undefined') return
+  const expires = new Date(Date.now() + days * 864e5).toUTCString()
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`
+}
+
+function getCookie(name) {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^;]*)'))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
 function PerfilSkeleton() {
   return (
     <main className="min-h-screen bg-[#F8FAFC] font-sans">
@@ -32,24 +45,24 @@ function PerfilSkeleton() {
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────
+
 export default function PerfilPublico() {
-  const params = useParams()
+  const params       = useParams()
   const searchParams = useSearchParams()
   const [prestador, setPrestador] = useState(null)
-  const [projetos, setProjetos] = useState([])
+  const [projetos, setProjetos]   = useState([])
   const [avaliacoes, setAvaliacoes] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading]     = useState(true)
   const [isMounted, setIsMounted] = useState(false)
-  // ?from= vem do PrestadorCard — preserva ?q= e ?cidade= da busca
-  // Fallback seguro: /prestadores garante que nunca sai do site
-  const fromParam = searchParams?.get('from')
+
+  const fromParam        = searchParams?.get('from')
+  const srcParam         = searchParams?.get('src')   // ?src=ativacao
   const urlRetornoInicial = fromParam ? decodeURIComponent(fromParam) : '/prestadores'
   const [urlRetorno, setUrlRetorno] = useState(urlRetornoInicial)
   const [compartilhando, setCompartilhando] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const ctaRef = useRef(null)
 
-  // Detecta quando o CTA fixo sai da viewport → vira bolinha
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => setScrolled(!entry.isIntersecting),
@@ -60,6 +73,7 @@ export default function PerfilPublico() {
   }, [])
 
   // ── Log de atividade ───────────────────────────────────────────────────────
+
   const registrarLog = async (acao, detalhes = {}) => {
     try {
       await supabase.from('logs_atividades').insert({
@@ -73,7 +87,55 @@ export default function PerfilPublico() {
     }
   }
 
+  // ── Rastreamento pós-ativação ──────────────────────────────────────────────
+  // Roda assim que prestador está disponível — uma única vez por perfil/sessão
+
+  useEffect(() => {
+    if (!prestador) return
+
+    const slug       = prestador.slug || String(prestador.id)
+    const cookieKey  = `ativacao_visita_${slug}`
+    const jaRegistrou = getCookie(cookieKey)
+
+    // 1. Veio direto do link do WhatsApp (?src=ativacao) — log imediato
+    if (srcParam === 'ativacao' && !jaRegistrou) {
+      setCookie(cookieKey, 'ativacao', 7)   // expira em 7 dias
+      supabase.from('logs_atividades').insert({
+        acao: 'VISITA_POS_ATIVACAO',
+        entidade_tipo: 'prestador',
+        entidade_id: prestador.id,
+        detalhes: {
+          nome_prestador: prestador.nome,
+          slug,
+          origem: 'link_whatsapp',
+          src: 'ativacao',
+        }
+      }).then(({ error }) => {
+        if (error) console.error('[log ativacao]', error)
+        else console.log('[log ativacao] visita registrada para', prestador.nome)
+      })
+      return
+    }
+
+    // 2. Não veio pelo link mas tem cookie — retornou ao perfil depois
+    if (!srcParam && jaRegistrou === 'ativacao') {
+      supabase.from('logs_atividades').insert({
+        acao: 'RETORNO_POS_ATIVACAO',
+        entidade_tipo: 'prestador',
+        entidade_id: prestador.id,
+        detalhes: {
+          nome_prestador: prestador.nome,
+          slug,
+          origem: 'retorno_cookie',
+        }
+      }).then(({ error }) => {
+        if (!error) console.log('[log ativacao] retorno registrado para', prestador.nome)
+      })
+    }
+  }, [prestador, srcParam])
+
   // ── Carregamento ───────────────────────────────────────────────────────────
+
   useEffect(() => {
     setIsMounted(true)
 
@@ -99,21 +161,15 @@ export default function PerfilPublico() {
       if (!error && data) {
         setPrestador(data)
 
-        // Vitrine: em_execucao (prova de atividade) + finalizado
-        // Ordena: finalizados primeiro, depois em_execucao
-        // Dentro de cada grupo: mais recentes primeiro
         const projetosFiltrados = (data.portfolio_projetos || [])
           .filter(p => ['em_execucao', 'finalizado'].includes(p.status))
           .sort((a, b) => {
-            if (a.status === b.status) {
-              return new Date(b.created_at || 0) - new Date(a.created_at || 0)
-            }
+            if (a.status === b.status) return new Date(b.created_at || 0) - new Date(a.created_at || 0)
             return a.status === 'finalizado' ? -1 : 1
           })
 
         setProjetos(projetosFiltrados)
 
-        // Buscar avaliações visíveis do prestador
         const { data: avalData } = await supabase
           .from('avaliacoes')
           .select('id, nota, comentario, indica, created_at')
@@ -123,8 +179,6 @@ export default function PerfilPublico() {
           .limit(10)
         setAvaliacoes(avalData || [])
 
-        // urlRetorno já foi definido via ?from= do PrestadorCard.
-        // Só usa categoria como fallback se não havia ?from= (acesso direto)
         if (!fromParam) {
           const nomeCategoria = data.categorias?.nome || data.categoria
           if (nomeCategoria) setUrlRetorno(`/prestadores?q=${encodeURIComponent(nomeCategoria)}`)
@@ -138,23 +192,22 @@ export default function PerfilPublico() {
   }, [params?.slug])
 
   // ── Compartilhar ───────────────────────────────────────────────────────────
+
   const compartilharPerfil = async () => {
     registrarLog('COMPARTILHAR_PERFIL_CLIQUE')
-    const url = typeof window !== 'undefined' ? window.location.href : ''
+    const url   = typeof window !== 'undefined' ? window.location.href : ''
     const texto = `Confira o trabalho de ${prestador?.nome} no Procuro Quem Faça.`
-
     if (navigator.share) {
       try { await navigator.share({ title: prestador?.nome, text: texto, url }) } catch {}
     } else {
-      // Desktop: só copia o link — não abre WhatsApp sem o usuário pedir
       try { await navigator.clipboard.writeText(url) } catch {}
     }
-
     setCompartilhando(true)
     setTimeout(() => setCompartilhando(false), 1500)
   }
 
   // ── Guards ─────────────────────────────────────────────────────────────────
+
   if (!isMounted || loading) return <PerfilSkeleton />
 
   if (!prestador) {
@@ -172,45 +225,35 @@ export default function PerfilPublico() {
   }
 
   // ── Derivações ─────────────────────────────────────────────────────────────
+
   const temWhatsapp = !!prestador.whatsapp?.replace(/\D/g, '')
   const waLink = temWhatsapp
     ? `https://wa.me/55${prestador.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${prestador.nome}, vi seu perfil no Procuro Quem Faça e gostaria de um orçamento.`)}`
     : null
 
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
-
-  const localizacao = [prestador.bairro, prestador.cidades?.nome]
-    .filter(v => v?.trim())
-    .join(', ')
-
-  const totalFinalizados = projetos.filter(p => p.status === 'finalizado').length
-  const totalEmAndamento = projetos.filter(p => p.status === 'em_execucao').length
+  const localizacao = [prestador.bairro, prestador.cidades?.nome].filter(v => v?.trim()).join(', ')
+  const totalFinalizados  = projetos.filter(p => p.status === 'finalizado').length
+  const totalEmAndamento  = projetos.filter(p => p.status === 'em_execucao').length
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
-      {/* href sempre definido — evita router.back() ir para fora do site
-          quando usuário chegou direto pela URL */}
       <Header href={urlRetorno} />
 
       <div className="max-w-xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
 
         {/* ── Hero ── */}
         <section className="relative mb-4">
-
-          {/* Ações discretas */}
           <div className="flex justify-between items-start mb-6">
             <Link
               href={`/denunciar/${prestador.id}`}
-              title="Denunciar este perfil"
               className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-100 rounded-full text-[10px] font-semibold text-slate-400 shadow-sm hover:text-red-500 hover:border-red-100 transition-all active:scale-95"
             >
               <Flag size={12} />
               Denunciar
             </Link>
-
             <button
               onClick={compartilharPerfil}
-              title="Compartilhar perfil"
               className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-100 rounded-full text-[10px] font-semibold text-slate-400 shadow-sm hover:text-blue-600 hover:border-blue-100 transition-all active:scale-95"
             >
               {compartilhando
@@ -220,7 +263,6 @@ export default function PerfilPublico() {
             </button>
           </div>
 
-          {/* Foto + identidade */}
           <div className="flex flex-col items-center text-center gap-3">
             <div className="relative">
               <div className="w-28 h-28 rounded-[2rem] bg-slate-100 overflow-hidden border-4 border-white shadow-xl">
@@ -252,7 +294,6 @@ export default function PerfilPublico() {
               )}
             </div>
 
-            {/* Badges de atividade — números consistentes em ambos */}
             {(totalFinalizados > 0 || totalEmAndamento > 0) && (
               <div className="flex items-center gap-2 flex-wrap justify-center mt-1">
                 {totalFinalizados > 0 && (
@@ -308,8 +349,7 @@ export default function PerfilPublico() {
             </section>
           )}
 
-          {/* ── Portfólio ── */}
-          {/* ── CTA WhatsApp fixo — ancora para o IntersectionObserver ── */}
+          {/* ── CTA WhatsApp ── */}
           {waLink && (
             <div ref={ctaRef} className="pt-2">
               <a
@@ -327,6 +367,7 @@ export default function PerfilPublico() {
             </div>
           )}
 
+          {/* ── Portfólio ── */}
           <section className="space-y-3">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 px-1">
               Registros de Atividade
@@ -334,16 +375,14 @@ export default function PerfilPublico() {
             <PortfolioGrid projetos={projetos} />
           </section>
 
-          {/* ── AVALIAÇÕES ─────────────────────────────────────────────────── */}
+          {/* ── Avaliações ── */}
           {avaliacoes.length > 0 && (() => {
             const totalIndica = avaliacoes.filter(a => a.indica).length
-            const mediaNotas = (avaliacoes.reduce((s, a) => s + a.nota, 0) / avaliacoes.length).toFixed(1)
+            const mediaNotas  = (avaliacoes.reduce((s, a) => s + a.nota, 0) / avaliacoes.length).toFixed(1)
             return (
               <section className="space-y-3">
                 <div className="flex items-center justify-between px-1">
-                  <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600">
-                    Avaliações
-                  </h2>
+                  <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600">Avaliações</h2>
                   <div className="flex items-center gap-3">
                     {totalIndica > 0 && (
                       <span className="flex items-center gap-1 bg-blue-50 text-blue-600 text-[9px] font-black tracking-wide px-2.5 py-1 rounded-full border border-blue-100">
@@ -355,18 +394,15 @@ export default function PerfilPublico() {
                     </span>
                   </div>
                 </div>
-
                 <div className="space-y-3">
                   {avaliacoes.map(av => (
                     <div key={av.id} className="bg-white rounded-[2rem] p-5 border border-slate-100 shadow-sm space-y-3">
                       <div className="flex items-start justify-between gap-3">
-                        {/* Estrelas */}
                         <div className="flex gap-0.5">
                           {[1,2,3,4,5].map(s => (
                             <span key={s} className={`text-[13px] ${av.nota >= s ? 'text-blue-600' : 'text-slate-200'}`}>★</span>
                           ))}
                         </div>
-                        {/* Badge ✦ Indico */}
                         {av.indica && (
                           <span className="flex items-center gap-1 bg-blue-600 text-white text-[8px] font-black tracking-wide px-2.5 py-1 rounded-full shrink-0">
                             ✦ Indico
@@ -388,7 +424,7 @@ export default function PerfilPublico() {
         </div>
       </div>
 
-      {/* ── Bolinha flutuante WhatsApp — aparece quando o CTA sai da viewport ── */}
+      {/* ── FAB WhatsApp ── */}
       {waLink && scrolled && (
         <a
           href={waLink}
