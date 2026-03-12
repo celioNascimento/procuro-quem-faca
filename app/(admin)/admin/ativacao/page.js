@@ -30,7 +30,7 @@ function montarMsg(p) {
     `Oi ${p.nome}, tudo bem? 👋\n\n` +
     `Sou o Célio, criador do *Procuro Quem Faça* — uma plataforma aqui de Londrina onde moradores buscam profissionais para serviços.\n\n` +
     `Montei um perfil pra vocês lá. Aqui está:\n` +
-    `👉 procuroquemfaca.com.br/${p.slug}\n\n` +
+    `👉 procuroquemfaca.com.br/${p.slug}?src=ativacao\n\n` +
     `Quer ver como fica quando está completo, com fotos dos serviços?\n` +
     `👉 procuroquemfaca.com.br/carlos-mendes-pedreiro\n\n` +
     `A diferença tá nas fotos — antes, durante e depois de cada serviço. É como uma indicação permanente: o cliente vê o trabalho, já chega sabendo o que esperar.\n\n` +
