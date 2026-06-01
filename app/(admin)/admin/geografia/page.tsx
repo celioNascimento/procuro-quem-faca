@@ -1,9 +1,9 @@
 'use client'
-import { useGeografia } from '@/hooks/useGeografia'
-import { FormEstado } from '@/components/FormEstado'
-import { FormRegiao } from '@/components/FormRegiao'
-import { FormCidade } from '@/components/FormCidade'
-import { TabelaCidades } from '@/components/TabelaCidades'
+import { useGeografia } from './hooks/useGeografia'
+import { FormEstado } from './components/FormEstado'
+import { FormRegiao } from './components/FormRegiao'
+import { FormCidade } from './components/FormCidade'
+import { TabelaCidades } from './components/TabelaCidades'
 
 export default function SuperGestaoGeografia() {
   const { estados, regioes, cidades, loading, error, addEstado, addRegiao, addCidade, atualizarRegiaoCidade } = useGeografia()
