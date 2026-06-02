@@ -88,9 +88,6 @@ export default function Home() {
       <footer className="relative z-10 py-10 flex justify-center">
         <div className="flex flex-col items-center gap-2 opacity-20">
           <div className="h-px w-6 bg-slate-500" />
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] italic">
-            Londrina • Paraná
-          </p>
         </div>
       </footer>
 
