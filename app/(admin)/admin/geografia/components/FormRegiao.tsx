@@ -1,13 +1,18 @@
-'use client'
 import { useState } from 'react'
+import type { Estado } from '../types/geografia'
 
 const inputClass = "w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 placeholder:text-slate-400 outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all text-sm"
 
-export function FormRegiao({ estados, onSubmit }) {
+type Props = {
+  estados: Estado[]
+  onSubmit: (nome: string, estadoSigla: string) => Promise<string | null>
+}
+
+export function FormRegiao({ estados, onSubmit }: Props) {
   const [nome, setNome] = useState('')
   const [estadoSigla, setEstadoSigla] = useState('')
   const [loading, setLoading] = useState(false)
-  const [erro, setErro] = useState(null)
+  const [erro, setErro] = useState<string | null>(null)
 
   const siglaEfetiva = estadoSigla || estados[0]?.sigla || ''
 

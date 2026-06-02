@@ -1,15 +1,22 @@
 'use client'
 import { useState, useMemo } from 'react'
+import type { Estado, Regiao } from '../types/geografia'
 
 const inputClass = "w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 placeholder:text-slate-400 outline-none focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-50 transition-all text-sm"
 const subLabel = "text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-1 block"
 
-export function FormCidade({ estados, regioes, onSubmit }) {
+type Props = {
+  estados: Estado[]
+  regioes: Regiao[]
+  onSubmit: (nome: string, estadoSigla: string, regiaoId: string | null) => Promise<string | null>
+}
+
+export function FormCidade({ estados, regioes, onSubmit }: Props) {
   const [nome, setNome] = useState('')
   const [estadoSigla, setEstadoSigla] = useState('')
   const [regiaoId, setRegiaoId] = useState('')
   const [loading, setLoading] = useState(false)
-  const [erro, setErro] = useState(null)
+  const [erro, setErro] = useState<string | null>(null)  // ← tipado
   const [sucesso, setSucesso] = useState(false)
 
   const siglaEfetiva = estadoSigla || estados[0]?.sigla || ''

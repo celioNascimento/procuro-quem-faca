@@ -1,11 +1,46 @@
 'use client'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import type { Cidade, Regiao } from '../types/geografia'
 
-export function TabelaCidades({ cidades, regioes, onAtualizarRegiao, total }) {
-  const [editandoId, setEditandoId] = useState(null)
-  const [salvando, setSalvando] = useState(null)
+const selectClass = "p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-700 outline-none focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all text-xs"
 
-  async function handleRegiaoChange(cidadeId, regiaoId) {
+type Props = {
+  cidades: Cidade[]
+  regioes: Regiao[]
+  onAtualizarRegiao: (cidadeId: string, regiaoId: string | null) => Promise<string | null>
+  total: number
+}
+
+export function TabelaCidades({ cidades, regioes, onAtualizarRegiao, total }: Props) {
+  const [editandoId, setEditandoId]     = useState<string | null>(null)
+  const [salvando, setSalvando]         = useState<string | null>(null)
+  const [filtroEstado, setFiltroEstado] = useState('')
+  const [filtroRegiao, setFiltroRegiao] = useState('')
+
+  const estados = useMemo(() => {
+    const siglas = [...new Set(cidades.map(c => c.estado_sigla))].sort()
+    return siglas
+  }, [cidades])
+
+  const regioesFiltradas = useMemo(() => {
+    if (!filtroEstado) return regioes
+    return regioes.filter(r => r.estado_sigla === filtroEstado)
+  }, [regioes, filtroEstado])
+
+  const cidadesFiltradas = useMemo(() => {
+    return cidades.filter(c => {
+      if (filtroEstado && c.estado_sigla !== filtroEstado) return false
+      if (filtroRegiao && c.regiao_id !== filtroRegiao) return false
+      return true
+    })
+  }, [cidades, filtroEstado, filtroRegiao])
+
+  function handleEstadoChange(sigla: string) {
+    setFiltroEstado(sigla)
+    setFiltroRegiao('')
+  }
+
+  async function handleRegiaoChange(cidadeId: string, regiaoId: string) {
     setSalvando(cidadeId)
     await onAtualizarRegiao(cidadeId, regiaoId || null)
     setEditandoId(null)
@@ -14,10 +49,53 @@ export function TabelaCidades({ cidades, regioes, onAtualizarRegiao, total }) {
 
   return (
     <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between">
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Municípios Cadastrados</span>
-        <span className="bg-slate-900 text-white px-3 py-1 rounded-lg text-[10px] font-black">{total} total</span>
+
+      <div className="px-8 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+            Municípios Cadastrados
+          </span>
+          <span className="bg-slate-900 text-white px-3 py-1 rounded-lg text-[10px] font-black">
+            {cidadesFiltradas.length}{cidadesFiltradas.length !== total ? ` / ${total}` : ' total'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <select
+            value={filtroEstado}
+            onChange={e => handleEstadoChange(e.target.value)}
+            className={selectClass}
+          >
+            <option value="">Todos os estados</option>
+            {estados.map(sigla => (
+              <option key={sigla} value={sigla}>{sigla}</option>
+            ))}
+          </select>
+
+          {filtroEstado && (
+            <select
+              value={filtroRegiao}
+              onChange={e => setFiltroRegiao(e.target.value)}
+              className={selectClass}
+            >
+              <option value="">Todas as regiões</option>
+              {regioesFiltradas.map(r => (
+                <option key={r.id} value={r.id}>{r.nome}</option>
+              ))}
+            </select>
+          )}
+
+          {(filtroEstado || filtroRegiao) && (
+            <button
+              onClick={() => { setFiltroEstado(''); setFiltroRegiao('') }}
+              className="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+            >
+              ✕ Limpar
+            </button>
+          )}
+        </div>
       </div>
+
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
@@ -28,15 +106,14 @@ export function TabelaCidades({ cidades, regioes, onAtualizarRegiao, total }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {cidades.length === 0 && (
+            {cidadesFiltradas.length === 0 && (
               <tr>
                 <td colSpan={3} className="px-8 py-10 text-center text-slate-400 text-xs font-medium">
-                  Nenhuma cidade cadastrada ainda.
+                  {total === 0 ? 'Nenhuma cidade cadastrada ainda.' : 'Nenhuma cidade encontrada para este filtro.'}
                 </td>
               </tr>
             )}
-            {cidades.map(c => {
-              // regioes já normalizados pelo hook: {nome} | null
+            {cidadesFiltradas.map(c => {
               const nomeRegiao = c.regioes?.nome ?? null
               const regioesDoCidade = regioes.filter(r => r.estado_sigla === c.estado_sigla)
 
