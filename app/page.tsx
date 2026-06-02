@@ -1,63 +1,24 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import dynamic from 'next/dynamic'
-import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-
-// ssr:false garante que HeroSection nunca renderiza no servidor
-// elimina o mismatch de hidratação que impedia os botões de aparecer no cold load
-const HeroSection = dynamic(() => import('@/components/home/HeroSection'), { ssr: false })
+import { useSugestoes } from '@/hooks/useSugestoes'
+import { useLog } from '@/hooks/useLog'
 import SearchForm from '@/components/home/SearchForm'
+
+const HeroSection = dynamic(() => import('@/components/home/HeroSection'), { ssr: false })
 
 export default function Home() {
   const router = useRouter()
-  const SUGESTOES_PADRAO = ['Pedreiro', 'Eletricista', 'Encanador', 'Pintor', 'Técnico de Ar-condicionado']
-
   const [busca, setBusca] = useState('')
-  const [sugestoes, setSugestoes] = useState(SUGESTOES_PADRAO)
   const [erro, setErro] = useState(false)
+  const sugestoes = useSugestoes(busca)
+  const { registrarLog } = useLog()
 
-  const registrarLog = useCallback(async (acao, detalhes = {}, entidade = null) => {
-    try {
-      await supabase.from('logs_atividades').insert([{ acao, detalhes, entidade_tipo: entidade }])
-    } catch { /* silencioso */ }
-  }, [])
+  const temBuscaReal = busca.trim().length > 0
 
-  useEffect(() => {
-    let cancelado = false // flag para evitar setState em componente desmontado
-
-    const buscarSugestoes = async () => {
-      try {
-        let query = supabase.from('categorias').select('nome')
-        if (busca.trim()) query = query.ilike('nome', `%${busca.trim()}%`)
-        const { data } = await query.limit(6)
-        if (cancelado) return
-        if (data && data.length > 0) {
-          const corrigidas = data
-            .map(i => i.nome)
-            .map(item => item.toLowerCase() === 'manutenção' ? 'Mecânico' : item)
-          const filtradas = [...new Set(corrigidas)].filter(item => {
-            const t = item.toLowerCase()
-            return !t.includes('ar condicionado') && !t.includes('ar-condicionado')
-          })
-          setSugestoes(filtradas)
-        }
-        // se retornou vazio, mantém as sugestões anteriores (padrão ou última busca)
-      } catch (err) {
-        console.warn('Erro sugestões:', err.message)
-        // mantém sugestões padrão — não limpa
-      }
-    }
-
-    const timer = setTimeout(buscarSugestoes, 300)
-    return () => {
-      clearTimeout(timer)
-      cancelado = true
-    }
-  }, [busca])
-
-  const dispararBusca = (e, termoManual) => {
+  function dispararBusca(e: React.FormEvent | null, termoManual?: string) {
     if (e?.preventDefault) e.preventDefault()
     const termoFinal = (termoManual || busca || '').trim()
     if (!termoFinal) {
@@ -71,8 +32,6 @@ export default function Home() {
     router.push(`/prestadores?q=${encodeURIComponent(termoFinal)}`)
   }
 
-  const temBuscaReal = busca.trim().length > 0
-
   return (
     <main className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans antialiased overflow-x-hidden relative">
 
@@ -83,7 +42,6 @@ export default function Home() {
 
       <HeroSection onLog={registrarLog} />
 
-      {/* BUG 2: -mt-8 md:-mt-10 compensa o header e centraliza visualmente */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
         <div className="w-full max-w-xl flex flex-col items-center text-center gap-5 -mt-8 md:-mt-10">
 
@@ -104,7 +62,6 @@ export default function Home() {
             />
           </div>
 
-          {/* Área de sugestões com altura reservada — evita layout shift */}
           <div className="min-h-[72px] flex flex-col items-center justify-start gap-3 w-full">
             {sugestoes.length > 0 && (
               <div className="flex flex-col items-center gap-3 w-full animate-in fade-in duration-300">
@@ -112,7 +69,7 @@ export default function Home() {
                   {temBuscaReal ? 'Encontramos para você' : 'Sugestões em destaque'}
                 </span>
                 <div className="flex flex-wrap justify-center gap-1.5 md:gap-2">
-                  {sugestoes.map((item) => (
+                  {sugestoes.map(item => (
                     <button
                       key={item}
                       onClick={() => dispararBusca(null, item)}
