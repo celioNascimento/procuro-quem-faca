@@ -31,16 +31,11 @@
     }
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts",
-    "app/layout.tsx",
-    "app/cadastro/page.js"
-, "app/(admin)/admin/geografia/components/FormEstado.tsx", "app/(admin)/admin/geografia/components/FormCidade.tsx", "lib/supabase.ts", "lib/supabase.ts"  ],
-  "exclude": [
-    "node_modules"
+ "next-env.d.ts",
+  "**/*.ts",
+  "**/*.tsx",
+  "**/*.mts",
+  ".next/types/**/*.ts",
+  ".next/dev/types/**/*.ts"
   ]
 }
