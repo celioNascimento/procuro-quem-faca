@@ -10,32 +10,23 @@ import { useLog } from '@/hooks/useLog'
 import Header from '@/components/Header'
 import PrestadorCard from '@/components/cards/PrestadorCard'
 import AnuncioCard from '@/components/cards/AnuncioCard'
-import { MapPin, Filter, Sparkles, AlertCircle } from 'lucide-react'
+import { MapPin, Filter, AlertCircle } from 'lucide-react'
+import { getTituloBusca } from '@/lib/prestadorUtils'
+import { ListaSkeleton } from '@/components/skeletons/ListaSkeletonPrestadores'
 
-function ListaSkeleton() {
-  return (
-    <div className="max-w-4xl mx-auto px-5 md:px-6 space-y-4 pt-6">
-      {[1, 2, 3, 4].map(i => (
-        <div key={i} className="w-full h-32 bg-white rounded-[2.5rem] border border-slate-50 animate-pulse" />
-      ))}
-    </div>
-  )
-}
 
 function ListaConteudo() {
-  const searchParams  = useSearchParams()
-  const queryBusca    = (searchParams.get('q')          || '').trim()
-  const filtroHab     = (searchParams.get('habilidade')  || '').trim()
-  const filtroCidNome =  searchParams.get('cidade')      || ''
+  const searchParams = useSearchParams()
+  const queryBusca = (searchParams.get('q') || '').trim()
+  const filtroHab = (searchParams.get('habilidade') || '').trim()
+  const filtroCidNome = searchParams.get('cidade') || ''
 
   const { prestadoresBase, prestadoresExibidos, cidadesDisponiveis, loading, erro, toggleCidade } =
     usePrestadores(queryBusca, filtroHab, filtroCidNome)
-  const session           = useSession()
-  const { registrarLog }  = useLog()
+  const session = useSession()
+  const { registrarLog } = useLog()
 
-  const tituloBusca = queryBusca
-    ? `Resultados para "${queryBusca}"`
-    : `Profissionais em ${filtroCidNome || 'sua região'}`
+  const tituloBusca = getTituloBusca(queryBusca, filtroCidNome)
 
   return (
     <>
@@ -53,8 +44,8 @@ function ListaConteudo() {
               <div className="flex items-center gap-2">
                 {cidadesDisponiveis.map(nome => {
                   const nomeNorm = nome.toLowerCase().trim()
-                  const ativo    = filtroCidNome.toLowerCase().trim() === nomeNorm
-                  const count    = prestadoresBase.filter(p =>
+                  const ativo = filtroCidNome.toLowerCase().trim() === nomeNorm
+                  const count = prestadoresBase.filter(p =>
                     p.cidade_nome?.toLowerCase().trim() === nomeNorm ||
                     p.cidades_atendidas?.some(c => c?.toLowerCase().trim() === nomeNorm)
                   ).length
@@ -62,16 +53,14 @@ function ListaConteudo() {
                     <button
                       key={nome}
                       onClick={() => toggleCidade(nome)}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-[1.2rem] text-[11px] font-bold transition-all shrink-0 border ${
-                        ativo
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-[1.2rem] text-[11px] font-bold transition-all shrink-0 border ${ativo
                           ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100'
                           : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600'
-                      }`}
+                        }`}
                     >
                       {nome}
-                      <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
-                        ativo ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                      }`}>
+                      <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${ativo ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                        }`}>
                         {count}
                       </span>
                     </button>
