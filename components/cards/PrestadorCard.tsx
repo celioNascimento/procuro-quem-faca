@@ -18,11 +18,11 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
 
   if (!prestador) return null
 
-  const isPublico  = prestador.origem_tipo === 'curadoria_publica'
+  const isPublico = prestador.origem_tipo === 'curadoria_publica'
   const perfilHref = getPerfilHref(prestador.slug, prestador.id)
   const localizacao = getLocalizacao(prestador.bairro, prestador.cidades?.nome)
   const habilidades = (prestador.habilidades || []).slice(0, 2)
-  const extras      = (prestador.habilidades?.length || 0) - 2
+  const extras = (prestador.habilidades?.length || 0) - 2
 
   return (
     <Link
@@ -30,7 +30,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
       onClick={() => registrarLog?.('CLIQUE_PERFIL', { nome: prestador.nome })}
       className="group relative block bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
     >
-      <div className="px-5 py-4 flex items-center gap-4">
+      <div className="px-5 py-4 md:py-6 md:px-7 flex items-center gap-4">
 
         {/* Foto */}
         <div className="w-14 h-14 rounded-2xl bg-slate-50 overflow-hidden border border-slate-100 flex items-center justify-center shrink-0">
