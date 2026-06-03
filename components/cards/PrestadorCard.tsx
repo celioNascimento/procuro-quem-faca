@@ -56,8 +56,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
           <span className="text-blue-600 text-[10px] font-black uppercase tracking-widest leading-none">
             {prestador.categoria}
           </span>
-          {habilidades.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-0.5 min-h-[20px]">
+                      <div className="flex flex-wrap gap-1 mt-0.5 min-h-[20px]">
               {habilidades.map(hab => (
                 <span key={hab} className="text-[8px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
                   {hab}
