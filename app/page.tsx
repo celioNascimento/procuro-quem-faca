@@ -42,8 +42,9 @@ export default function Home() {
 
       <HeroSection onLog={registrarLog} />
 
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
-        <div className="w-full max-w-xl flex flex-col items-center text-center gap-5 -mt-8 md:-mt-10">
+      {/* Bloco principal — posicionado a ~28% da tela em desktop */}
+      <div className="relative z-10 flex flex-col items-center px-6 pt-[22vh] md:pt-[28vh]">
+        <div className="w-full max-w-xl flex flex-col items-center text-center gap-5">
 
           <Link href="/" className="block transition-transform active:scale-95 duration-200">
             <img
@@ -85,11 +86,28 @@ export default function Home() {
         </div>
       </div>
 
-      <footer className="relative z-10 py-10 flex justify-center">
-        <div className="flex flex-col items-center gap-2 opacity-20">
-          <div className="h-px w-6 bg-slate-500" />
+      {/* CTA para prestadores — preenche o espaço abaixo */}
+      <div className="relative z-10 flex-1 flex items-end justify-center pb-16 px-6">
+        <div className="w-full max-w-xl">
+          <div className="bg-white/70 backdrop-blur-sm border border-slate-100 rounded-[2rem] px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div className="text-center sm:text-left">
+              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                É prestador de serviços?
+              </p>
+              <p className="text-sm font-bold text-slate-700">
+                Cadastre-se e apareça para quem precisa de você
+              </p>
+            </div>
+            <Link
+              href="/login"
+              onClick={() => registrarLog('CLIQUE_CTA_PRESTADOR', {}, 'home')}
+              className="shrink-0 bg-blue-600 text-white px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider hover:bg-blue-700 transition-all active:scale-95 shadow-md"
+            >
+              Quero me cadastrar
+            </Link>
+          </div>
         </div>
-      </footer>
+      </div>
 
     </main>
   )
