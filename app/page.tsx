@@ -93,23 +93,23 @@ export default function Home() {
           <Link
             href="/login"
             onClick={() => registrarLog('CLIQUE_CTA_PRESTADOR', {}, 'home')}
-            className="group flex items-center justify-between gap-4 w-full px-8 py-5 rounded-[2rem] border border-slate-200/80 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300"
+            className="group flex items-center justify-between gap-3 w-full px-5 py-4 md:px-8 md:py-5 rounded-[2rem] border border-slate-200/80 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:border-blue-600 transition-all duration-300">
-                <Briefcase size={16} className="text-blue-500 group-hover:text-white transition-colors duration-300" />
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:border-blue-600 transition-all duration-300">
+                <Briefcase size={14} className="text-blue-500 group-hover:text-white transition-colors duration-300" />
               </div>
               <div className="text-left">
-                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+                <p className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
                   É prestador de serviços?
                 </p>
-                <p className="text-sm font-bold text-slate-700">
+                <p className="text-xs md:text-sm font-bold text-slate-700">
                   Cadastre-se e apareça para quem precisa de você
                 </p>
               </div>
             </div>
             <ArrowRight
-              size={18}
+              size={16}
               className="text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300 shrink-0"
             />
           </Link>
