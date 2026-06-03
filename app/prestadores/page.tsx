@@ -31,7 +31,7 @@ function ListaConteudo() {
   return (
     <>
       {!loading && cidadesDisponiveis.length > 0 && (
-        <div className="sticky top-16 md:top-20 z-50 bg-[#FDFDFD]/98 backdrop-blur-sm border-b border-slate-100 shadow-sm">
+        <div className="sticky top-16 md:top-24 z-50 bg-[#FDFDFD]/98 backdrop-blur-sm border-b border-slate-100 shadow-sm">
           <div className="max-w-4xl mx-auto px-5 md:px-6 py-3">
             <div
               className="flex items-center gap-3 overflow-x-auto py-1"
@@ -144,7 +144,7 @@ export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
       <Header href="/" />
-      <div className="pt-16 md:pt-20">
+      <div className="pt-16 md:pt-24">
         <Suspense fallback={<ListaSkeleton />}>
           <ListaConteudo />
         </Suspense>
