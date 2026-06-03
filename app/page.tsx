@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useSugestoes } from '@/hooks/useSugestoes'
 import { useLog } from '@/hooks/useLog'
 import SearchForm from '@/components/home/SearchForm'
+import { ArrowRight, Briefcase } from 'lucide-react'
 
 const HeroSection = dynamic(() => import('@/components/home/HeroSection'), { ssr: false })
 
@@ -42,9 +43,9 @@ export default function Home() {
 
       <HeroSection onLog={registrarLog} />
 
-      {/* Bloco principal — posicionado a ~28% da tela em desktop */}
-      <div className="relative z-10 flex flex-col items-center px-6 pt-[22vh] md:pt-[28vh]">
-        <div className="w-full max-w-xl flex flex-col items-center text-center gap-5">
+      {/* Bloco principal */}
+      <div className="relative z-10 flex flex-col items-center px-6 pt-[20vh] md:pt-[26vh]">
+        <div className="w-full max-w-2xl flex flex-col items-center text-center gap-6">
 
           <Link href="/" className="block transition-transform active:scale-95 duration-200">
             <img
@@ -86,26 +87,32 @@ export default function Home() {
         </div>
       </div>
 
-      {/* CTA para prestadores — preenche o espaço abaixo */}
-      <div className="relative z-10 flex-1 flex items-end justify-center pb-16 px-6">
-        <div className="w-full max-w-xl">
-          <div className="bg-white/70 backdrop-blur-sm border border-slate-100 rounded-[2rem] px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-            <div className="text-center sm:text-left">
-              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1">
-                É prestador de serviços?
-              </p>
-              <p className="text-sm font-bold text-slate-700">
-                Cadastre-se e apareça para quem precisa de você
-              </p>
+      {/* CTA para prestadores */}
+      <div className="relative z-10 flex-1 flex items-end justify-center pb-12 px-6">
+        <div className="w-full max-w-2xl">
+          <Link
+            href="/login"
+            onClick={() => registrarLog('CLIQUE_CTA_PRESTADOR', {}, 'home')}
+            className="group flex items-center justify-between gap-4 w-full px-8 py-5 rounded-[2rem] border border-slate-200/80 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:border-blue-600 transition-all duration-300">
+                <Briefcase size={16} className="text-blue-500 group-hover:text-white transition-colors duration-300" />
+              </div>
+              <div className="text-left">
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+                  É prestador de serviços?
+                </p>
+                <p className="text-sm font-bold text-slate-700">
+                  Cadastre-se e apareça para quem precisa de você
+                </p>
+              </div>
             </div>
-            <Link
-              href="/login"
-              onClick={() => registrarLog('CLIQUE_CTA_PRESTADOR', {}, 'home')}
-              className="shrink-0 bg-blue-600 text-white px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider hover:bg-blue-700 transition-all active:scale-95 shadow-md"
-            >
-              Quero me cadastrar
-            </Link>
-          </div>
+            <ArrowRight
+              size={18}
+              className="text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300 shrink-0"
+            />
+          </Link>
         </div>
       </div>
 
