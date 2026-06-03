@@ -15,3 +15,8 @@ export function getPerfilHref(slug: string | null, id: string): string {
     : '/prestadores'
   return `/${slug || id}?from=${encodeURIComponent(from)}`
 }
+
+export function getTituloBusca(queryBusca: string, filtroCidNome: string): string {
+  if (queryBusca) return `Resultados para "${queryBusca}"`
+  return `Profissionais em ${filtroCidNome || 'sua região'}`
+}
