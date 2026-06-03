@@ -54,8 +54,8 @@ function ListaConteudo() {
                       key={nome}
                       onClick={() => toggleCidade(nome)}
                       className={`flex items-center gap-1.5 px-4 py-2 rounded-[1.2rem] text-[11px] font-bold transition-all shrink-0 border ${ativo
-                          ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100'
-                          : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600'
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100'
+                        : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600'
                         }`}
                     >
                       {nome}
@@ -144,7 +144,7 @@ export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
       <Header href="/" />
-      <div className="pt-20 md:pt-28">
+      <div className="pt-16 md:pt-20">
         <Suspense fallback={<ListaSkeleton />}>
           <ListaConteudo />
         </Suspense>
