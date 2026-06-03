@@ -14,7 +14,7 @@ export default function Home() {
   const router = useRouter()
   const [busca, setBusca] = useState('')
   const [erro, setErro] = useState(false)
-  const sugestoes = useSugestoes(busca)
+  const { sugestoes, carregado } = useSugestoes(busca)
   const { registrarLog } = useLog()
 
   const temBuscaReal = busca.trim().length > 0
@@ -65,7 +65,7 @@ export default function Home() {
           </div>
 
           <div className="min-h-[72px] flex flex-col items-center justify-start gap-3 w-full">
-            {sugestoes.length > 0 && (
+            {carregado && sugestoes.length > 0 && (
               <div className="flex flex-col items-center gap-3 w-full animate-in fade-in duration-300">
                 <span className="text-[9px] md:text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] italic">
                   {temBuscaReal ? 'Encontramos para você' : 'Sugestões em destaque'}
