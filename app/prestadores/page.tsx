@@ -32,7 +32,7 @@ function ListaConteudo() {
     <>
       {!loading && cidadesDisponiveis.length > 0 && (
         <div className="sticky top-16 md:top-24 z-50 bg-[#FDFDFD]/98 backdrop-blur-sm border-b border-t border-slate-100 shadow-sm">
-          <div className="max-w-4xl mx-auto px-5 md:px-6 py-3">
+          <div className="max-w-4xl mx-auto px-5 md:px-6 py-3 md:py-3">
             <div
               className="flex items-center gap-3 overflow-x-auto py-1"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
