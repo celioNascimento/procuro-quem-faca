@@ -18,11 +18,11 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
 
   if (!prestador) return null
 
-  const isPublico = prestador.origem_tipo === 'curadoria_publica'
+  const isPublico  = prestador.origem_tipo === 'curadoria_publica'
   const perfilHref = getPerfilHref(prestador.slug, prestador.id)
   const localizacao = getLocalizacao(prestador.bairro, prestador.cidades?.nome)
   const habilidades = (prestador.habilidades || []).slice(0, 2)
-  const extras = (prestador.habilidades?.length || 0) - 2
+  const extras      = (prestador.habilidades?.length || 0) - 2
 
   return (
     <Link
@@ -33,7 +33,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
       <div className="px-5 py-4 md:py-6 md:px-7 flex items-center gap-4 min-h-[100px] md:min-h-[110px]">
 
         {/* Foto */}
-        <div className="w-14 h-14 rounded-2xl bg-slate-50 overflow-hidden border border-slate-100 flex items-center justify-center shrink-0">
+        <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-slate-50 overflow-hidden border border-slate-100 flex items-center justify-center shrink-0">
           {prestador.foto_perfil && !imgError ? (
             <img
               src={prestador.foto_perfil}
@@ -56,17 +56,19 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
           <span className="text-blue-600 text-[10px] font-black uppercase tracking-widest leading-none">
             {prestador.categoria}
           </span>
-                      <div className="flex flex-wrap gap-1 mt-0.5 min-h-[20px]">
-              {habilidades.map(hab => (
-                <span key={hab} className="text-[8px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
-                  {hab}
-                </span>
-              ))}
-              {extras > 0 && (
-                <span className="text-[8px] font-semibold text-slate-400 px-1">+{extras}</span>
-              )}
-            </div>
-          )}
+
+          {/* Sempre renderiza — reserva espaço mesmo sem habilidades */}
+          <div className="flex flex-wrap gap-1 mt-0.5 min-h-[20px]">
+            {habilidades.map(hab => (
+              <span key={hab} className="text-[8px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                {hab}
+              </span>
+            ))}
+            {extras > 0 && (
+              <span className="text-[8px] font-semibold text-slate-400 px-1">+{extras}</span>
+            )}
+          </div>
+
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             {localizacao && (
               <div className="flex items-center gap-1">
