@@ -3,19 +3,7 @@ import { useRouter } from 'next/navigation'
 import { getPrestadoresAtivos, getMediasAvaliacoes } from '@/lib/db/prestadores'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import { pesoOrdenacao } from '@/lib/ordenacao'
-
-type Prestador = {
-  id: string
-  origem_tipo: string
-  verificado: boolean
-  cidade_nome: string
-  cidades_atendidas?: string[]
-  cidades?: { nome: string; estado_sigla: string; regiao_id: string } | null
-  categorias?: { nome: string } | null
-  media_nota: number
-  total_avals: number
-  [key: string]: unknown
-}
+import type { Prestador } from '@/types/prestador' // ← importa, não declara
 
 function calcularMedias(medias: { prestador_id: string; nota: number }[]) {
   const map: Record<string, { soma: number; total: number }> = {}
@@ -57,9 +45,9 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
           total_avals: mediaMap[p.id]?.total || 0,
         }))
 
-        const termo     = normalizarTermo(queryBusca, filtroHab)
-        const vitrines  = normalizados.filter(p => p.origem_tipo === 'vitrine')
-        const demais    = normalizados.filter(p => p.origem_tipo !== 'vitrine')
+        const termo    = normalizarTermo(queryBusca, filtroHab)
+        const vitrines = normalizados.filter(p => p.origem_tipo === 'vitrine')
+        const demais   = normalizados.filter(p => p.origem_tipo !== 'vitrine')
         const filtrados = filtrarPrestadores(demais, termo)
 
         setPrestadoresBase([
@@ -77,7 +65,6 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
     fetchDados()
   }, [queryBusca, filtroHab])
 
-  // Cidades disponíveis para o filtro
   const cidadesDisponiveis = useMemo(() => {
     const set = new Set<string>()
     prestadoresBase.forEach(p => {
@@ -88,7 +75,6 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
     return Array.from(set).sort()
   }, [prestadoresBase])
 
-  // Prestadores filtrados pela cidade selecionada
   const prestadoresExibidos = useMemo(() => {
     if (!filtroCidNome) return prestadoresBase
     const cidadeNorm = filtroCidNome.toLowerCase().trim()
