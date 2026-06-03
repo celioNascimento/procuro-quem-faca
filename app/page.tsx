@@ -45,13 +45,13 @@ export default function Home() {
 
       {/* Bloco principal */}
       <div className="relative z-10 flex flex-col items-center px-6 pt-[20vh] md:pt-[26vh]">
-        <div className="w-full max-w-2xl flex flex-col items-center text-center gap-6">
+        <div className="w-full max-w-3xl flex flex-col items-center text-center gap-6">
 
           <Link href="/" className="block transition-transform active:scale-95 duration-200">
             <img
               src="/logo.png"
               alt="Procuro Quem Faça"
-              className="h-12 md:h-16 w-auto object-contain drop-shadow-sm"
+              className="h-14 md:h-24 w-auto object-contain drop-shadow-sm"
             />
           </Link>
 
@@ -89,7 +89,7 @@ export default function Home() {
 
       {/* CTA para prestadores */}
       <div className="relative z-10 flex-1 flex items-end justify-center pb-12 px-6">
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-3xl">
           <Link
             href="/login"
             onClick={() => registrarLog('CLIQUE_CTA_PRESTADOR', {}, 'home')}
