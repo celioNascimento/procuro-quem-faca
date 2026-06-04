@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 import { getPrestadoresAtivos, getMediasAvaliacoes } from '@/lib/db/prestadores'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import { pesoOrdenacao } from '@/lib/ordenacao'
-import type { Prestador } from '@/types/prestador' // ← importa, não declara
+import type { Prestador } from '@/types/prestador'
 
 function calcularMedias(medias: { prestador_id: string; nota: number }[]) {
   const map: Record<string, { soma: number; total: number }> = {}
@@ -22,6 +22,8 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
   const [erro, setErro]       = useState(false)
 
   useEffect(() => {
+    const controller = new AbortController()
+
     async function fetchDados() {
       setLoading(true)
       setErro(false)
@@ -29,8 +31,8 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
 
       try {
         const [{ data: pData, error: pError }, { data: medias }] = await Promise.all([
-          getPrestadoresAtivos(),
-          getMediasAvaliacoes(),
+          getPrestadoresAtivos(controller.signal),
+          getMediasAvaliacoes(controller.signal),
         ])
 
         if (pError) throw pError
@@ -45,9 +47,9 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
           total_avals: mediaMap[p.id]?.total || 0,
         }))
 
-        const termo    = normalizarTermo(queryBusca, filtroHab)
-        const vitrines = normalizados.filter(p => p.origem_tipo === 'vitrine')
-        const demais   = normalizados.filter(p => p.origem_tipo !== 'vitrine')
+        const termo     = normalizarTermo(queryBusca, filtroHab)
+        const vitrines  = normalizados.filter(p => p.origem_tipo === 'vitrine')
+        const demais    = normalizados.filter(p => p.origem_tipo !== 'vitrine')
         const filtrados = filtrarPrestadores(demais, termo)
 
         setPrestadoresBase([
@@ -55,14 +57,21 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
           ...[...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b)),
         ])
       } catch (err) {
+        // AbortError é cancelamento intencional — não é falha real
+        if (err instanceof DOMException && err.name === 'AbortError') return
         console.error('[usePrestadores]', err)
         setErro(true)
       } finally {
-        setLoading(false)
+        // Só atualiza o loading se a requisição não foi abortada
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchDados()
+
+    return () => controller.abort()
   }, [queryBusca, filtroHab])
 
   const cidadesDisponiveis = useMemo(() => {

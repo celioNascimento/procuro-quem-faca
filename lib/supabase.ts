@@ -16,18 +16,10 @@ export const supabase = createBrowserClient(
         if (typeof document === 'undefined') return
         cookiesToSet.forEach(({ name, value, options }) => {
           let updatedCookie = `${name}=${encodeURIComponent(value)}`
-          
-          // Adiciona opções manualmente para garantir compatibilidade
-          if (options.path) updatedCookie += `; path=${options.path}`
+          if (options.path)   updatedCookie += `; path=${options.path}`
           if (options.maxAge) updatedCookie += `; max-age=${options.maxAge}`
-          // Define SameSite como Lax para evitar bloqueios de navegador
-          updatedCookie += '; samesite=lax' 
-          
-          // SÓ adiciona 'secure' se estivermos em produção (HTTPS)
-          if (process.env.NODE_ENV === 'production') {
-            updatedCookie += '; secure'
-          }
-
+          updatedCookie += '; samesite=lax'
+          if (process.env.NODE_ENV === 'production') updatedCookie += '; secure'
           document.cookie = updatedCookie
         })
       },
