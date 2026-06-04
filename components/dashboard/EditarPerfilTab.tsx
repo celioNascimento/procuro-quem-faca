@@ -88,7 +88,7 @@ export default function EditarPerfilTab() {
       }
     }
     inicializar()
-  }, [router, categorias, loc, form])
+  }, [])
 
   // ── Handlers de Ação ─────────────────────────────────────────────────────
   const handleUploadFotoProcess = async (file: File) => {
