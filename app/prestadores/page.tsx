@@ -9,7 +9,7 @@ import { useSession } from '@/hooks/useSession'
 import { useLog } from '@/hooks/useLog'
 import Header from '@/components/Header'
 import PrestadorCard from '@/components/cards/PrestadorCard'
-import AnuncioCard from '@/components/cards/AnuncioCard'
+import { AdCard } from '@/components/ads/AdCard'
 import { MapPin, Filter, AlertCircle } from 'lucide-react'
 import { getTituloBusca } from '@/lib/prestadorUtils'
 import { ListaSkeleton } from '@/components/skeletons/ListaSkeletonPrestadores'
@@ -54,8 +54,8 @@ function ListaConteudo() {
                       key={nome}
                       onClick={() => toggleCidade(nome)}
                       className={`flex items-center gap-1.5 px-4 py-2 rounded-[1.2rem] text-[11px] font-bold transition-all shrink-0 border ${ativo
-                          ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100'
-                          : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600'
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100'
+                        : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600'
                         }`}
                     >
                       {nome}
@@ -106,8 +106,12 @@ function ListaConteudo() {
             {prestadoresExibidos.map((p, index) => (
               <div key={p.id}>
                 <PrestadorCard prestador={p} session={session} registrarLog={registrarLog} />
-                {(index + 1) % 4 === 0 && (
-                  <AnuncioCard anuncio={null} contexto={queryBusca || filtroHab || ''} />
+                {(index + 1) % 5 === 0 && (
+                  <AdCard
+                    page="prestadores"
+                    anuncio={null}
+                    categoria={queryBusca || filtroHab || ''}
+                  />
                 )}
               </div>
             ))}
