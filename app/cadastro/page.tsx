@@ -90,8 +90,10 @@ function FormularioCadastro() {
         if (!user) {
           try {
             const prefill = sessionStorage.getItem('pqf_prefill')
+            console.log('prefill encontrado:', prefill)  // ← adiciona isso
             if (prefill) {
               const { email: e, password: p } = JSON.parse(prefill)
+              console.log('email:', e, 'senha:', p)
               setEmail(e || '')
               setSenha(p || '')
               sessionStorage.removeItem('pqf_prefill') // usa uma vez e descarta
