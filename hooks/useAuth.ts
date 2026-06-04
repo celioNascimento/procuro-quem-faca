@@ -32,7 +32,7 @@ export function useAuth() {
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
-      if (cancelado || event === 'INITIAL_SESSION') return
+      if (cancelado) return
       setSession(s ?? null)
       if (!s) { setRole(null); setRoleLoading(false) }
     })
