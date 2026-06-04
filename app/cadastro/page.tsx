@@ -151,7 +151,7 @@ function FormularioCadastro() {
       }
     }
     carregarTudo()
-  }, [reivindicarId, router, categorias, loc, form])
+  }, [reivindicarId])
 
   // ── Handlers de Interface ────────────────────────────────────────────────
   const handleUploadFotoProcess = async (file: File) => {
