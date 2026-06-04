@@ -87,6 +87,18 @@ function FormularioCadastro() {
         setUserLogado(user)
         if (user) setEmail(user.email || '')
 
+        if (!user) {
+          try {
+            const prefill = sessionStorage.getItem('pqf_prefill')
+            if (prefill) {
+              const { email: e, password: p } = JSON.parse(prefill)
+              setEmail(e || '')
+              setSenha(p || '')
+              sessionStorage.removeItem('pqf_prefill') // usa uma vez e descarta
+            }
+          } catch { }
+        }
+
         // Tipagem explícita adicionada aqui
         let perfilExistente: PrestadorFormData | null = null
         if (user) {
