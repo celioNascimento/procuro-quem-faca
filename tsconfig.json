@@ -9,7 +9,7 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
-     "noImplicitAny": false,
+    "noImplicitAny": false,
     "strictNullChecks": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -31,11 +31,15 @@
     }
   },
   "include": [
- "next-env.d.ts",
-  "**/*.ts",
-  "**/*.tsx",
-  "**/*.mts",
-  ".next/types/**/*.ts",
-  ".next/dev/types/**/*.ts"
-, "app/reivindicar/page.tsx"  ]
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.mts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "app/reivindicar/page.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
