@@ -72,10 +72,20 @@ export function useLoginForm() {
       return
     }
 
+    // Verifica se já tem sessão ativa ao carregar a página
+    // (ex: usuário volta para /login já logado)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isActive.current || !session) return
+      if (window.sessionStorage.getItem('recuperacao_em_curso') === 'true') return
+      redirecionarUsuario(session.user)
+    })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isActive.current) return
       if (window.sessionStorage.getItem('recuperacao_em_curso') === 'true') return
-      if (event === 'SIGNED_IN' && session) {
+      // Só reage ao SIGNED_IN vindo de fora (ex: OAuth)
+      // Login por senha já é tratado diretamente no handleLogin
+      if (event === 'SIGNED_IN' && session && !loading) {
         if (window.location.hash.includes('type=recovery')) return
         await redirecionarUsuario(session.user)
       }
