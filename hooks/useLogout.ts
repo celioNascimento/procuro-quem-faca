@@ -12,14 +12,14 @@ export function useLogout() {
           usuario_email: session.user.email,
           entidade_tipo: 'sessao',
           detalhes: { origem: 'dashboard' }
-        }).then(() => {})
+        }).then(() => { })
       }
       await supabase.auth.signOut()
       if (typeof window !== 'undefined') {
-        localStorage.clear()
+        localStorage.removeItem('pqf_session_cache')
         sessionStorage.clear()
       }
-    } catch {}
+    } catch { }
     window.location.href = '/'
   }
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
 export default function CookieConsent() {
-  // ... (Mantenha todo o código que você postou acima aqui)
+
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
