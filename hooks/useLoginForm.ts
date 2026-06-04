@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
@@ -11,9 +11,9 @@ export function useLoginForm() {
   const [mensagem, setMensagem] = useState('')
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
+  const isActive = useRef(true)  // ← useRef mantém o valor entre renders
 
   const router = useRouter()
-  let isComponentActive = true
 
   const handleBlur = (field: string) => setTouched(prev => ({ ...prev, [field]: true }))
   const emailInvalido = touched.email && (!email.includes('@') || email.length < 5)
@@ -26,11 +26,11 @@ export function useLoginForm() {
         detalhes: { ...detalhes, email_tentativa: email },
         entidade_tipo: 'autenticacao'
       })
-    } catch { }
+    } catch {}
   }
 
   const redirecionarUsuario = async (user: User) => {
-    if (!isComponentActive) return
+    if (!isActive.current) return
     try {
       const { data: perfil } = await supabase
         .from('prestadores')
@@ -38,35 +38,36 @@ export function useLoginForm() {
         .or(`user_id.eq.${user.id},whatsapp.ilike.%${user.email}%`)
         .maybeSingle()
 
-      if (!isComponentActive) return
+      if (!isActive.current) return
 
       const path = (!perfil || perfil.origem_tipo === 'curadoria_publica' || !perfil.categoria_id)
         ? `/cadastro${perfil?.origem_tipo === 'curadoria_publica' ? `?reivindicar=${perfil.id}` : ''}`
         : '/dashboard'
 
-      isComponentActive = false
+      isActive.current = false
       router.push(path)
     } catch {
-      if (isComponentActive) router.push('/cadastro')
+      if (isActive.current) router.push('/cadastro')
     }
   }
 
   useEffect(() => {
+    isActive.current = true
     setMounted(true)
-    isComponentActive = true
+
     const params = new URLSearchParams(window.location.search)
     const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'))
     const isRecovery = params.get('type') === 'recovery' || hashParams.get('type') === 'recovery'
 
     if (isRecovery) {
       window.sessionStorage.setItem('recuperacao_em_curso', 'true')
-      isComponentActive = false
+      isActive.current = false
       router.replace(`/recuperar-senha${window.location.hash || window.location.search}`)
       return
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isComponentActive) return
+      if (!isActive.current) return
       if (window.sessionStorage.getItem('recuperacao_em_curso') === 'true') return
       if (event === 'SIGNED_IN' && session) {
         if (window.location.hash.includes('type=recovery')) return
@@ -74,8 +75,11 @@ export function useLoginForm() {
       }
     })
 
-    return () => { isComponentActive = false; subscription.unsubscribe() }
-  }, [router])
+    return () => {
+      isActive.current = false
+      subscription.unsubscribe()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleEsqueciSenha() {
     if (!email || emailInvalido) { setMensagem('Erro: Digite um e-mail válido primeiro.'); return }
@@ -88,15 +92,15 @@ export function useLoginForm() {
       if (rpcError || !usuarioExiste) { setMensagem('Erro: Esta conta não foi encontrada.'); setLoading(false); return }
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/recuperar-senha` })
-      if (isComponentActive) {
+      if (isActive.current) {
         if (error) throw error
         setMensagem('Sucesso: Link enviado! Verifique seu e-mail.')
         await registrarLogAuth('RECUPERACAO_SENHA_SOLICITADA')
       }
     } catch (err: any) {
-      if (isComponentActive) setMensagem('Erro: ' + (err.message || 'Falha ao processar.'))
+      if (isActive.current) setMensagem('Erro: ' + (err.message || 'Falha ao processar.'))
     } finally {
-      if (isComponentActive) setLoading(false)
+      if (isActive.current) setLoading(false)
     }
   }
 
@@ -109,7 +113,7 @@ export function useLoginForm() {
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (!isComponentActive) return
+      if (!isActive.current) return
 
       if (error) {
         if (error.status === 400 || error.message.toLowerCase().includes('invalid')) {
@@ -125,11 +129,11 @@ export function useLoginForm() {
         await redirecionarUsuario(data.session.user)
       }
     } catch (err: any) {
-      if (isComponentActive && err.name !== 'AbortError') {
+      if (isActive.current && err.name !== 'AbortError') {
         setMensagem('Erro inesperado. Tente novamente.')
       }
     } finally {
-      if (isComponentActive) setLoading(false)
+      if (isActive.current) setLoading(false)
     }
   }
 
