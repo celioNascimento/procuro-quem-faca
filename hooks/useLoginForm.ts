@@ -26,7 +26,7 @@ export function useLoginForm() {
         detalhes: { ...detalhes, email_tentativa: email },
         entidade_tipo: 'autenticacao'
       })
-    } catch {}
+    } catch { }
   }
 
   const redirecionarUsuario = async (user: User) => {
@@ -40,7 +40,13 @@ export function useLoginForm() {
 
       if (!isActive.current) return
 
-      const path = (!perfil || perfil.origem_tipo === 'curadoria_publica' || !perfil.categoria_id)
+      const irParaCadastro = !perfil || perfil.origem_tipo === 'curadoria_publica' || !perfil.categoria_id
+
+      if (irParaCadastro && typeof window !== 'undefined') {
+        sessionStorage.setItem('pqf_prefill', JSON.stringify({ email, password }))
+      }
+
+      const path = irParaCadastro
         ? `/cadastro${perfil?.origem_tipo === 'curadoria_publica' ? `?reivindicar=${perfil.id}` : ''}`
         : '/dashboard'
 
