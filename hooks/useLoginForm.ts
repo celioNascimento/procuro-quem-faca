@@ -26,7 +26,7 @@ export function useLoginForm() {
         detalhes: { ...detalhes, email_tentativa: email },
         entidade_tipo: 'autenticacao'
       })
-    } catch {}
+    } catch { }
   }
 
   const redirecionarUsuario = async (user: User) => {
@@ -37,13 +37,13 @@ export function useLoginForm() {
         .select('id, user_id, origem_tipo, categoria_id')
         .or(`user_id.eq.${user.id},whatsapp.ilike.%${user.email}%`)
         .maybeSingle()
-      
+
       if (!isComponentActive) return
-      
+
       const path = (!perfil || perfil.origem_tipo === 'curadoria_publica' || !perfil.categoria_id)
         ? `/cadastro${perfil?.origem_tipo === 'curadoria_publica' ? `?reivindicar=${perfil.id}` : ''}`
         : '/dashboard'
-        
+
       isComponentActive = false
       router.push(path)
     } catch {
@@ -57,14 +57,14 @@ export function useLoginForm() {
     const params = new URLSearchParams(window.location.search)
     const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'))
     const isRecovery = params.get('type') === 'recovery' || hashParams.get('type') === 'recovery'
-    
+
     if (isRecovery) {
       window.sessionStorage.setItem('recuperacao_em_curso', 'true')
       isComponentActive = false
       router.replace(`/recuperar-senha${window.location.hash || window.location.search}`)
       return
     }
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isComponentActive) return
       if (window.sessionStorage.getItem('recuperacao_em_curso') === 'true') return
@@ -73,7 +73,7 @@ export function useLoginForm() {
         await redirecionarUsuario(session.user)
       }
     })
-    
+
     return () => { isComponentActive = false; subscription.unsubscribe() }
   }, [router])
 
@@ -82,11 +82,11 @@ export function useLoginForm() {
     setLoading(true)
     setMensagem('Verificando conta...')
     window.sessionStorage.setItem('recuperacao_em_curso', 'true')
-    
+
     try {
       const { data: usuarioExiste, error: rpcError } = await supabase.rpc('verificar_usuario_existe', { email_busca: email })
       if (rpcError || !usuarioExiste) { setMensagem('Erro: Esta conta não foi encontrada.'); setLoading(false); return }
-      
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/recuperar-senha` })
       if (isComponentActive) {
         if (error) throw error
@@ -106,33 +106,28 @@ export function useLoginForm() {
     setLoading(true)
     setMensagem('')
     window.sessionStorage.removeItem('recuperacao_em_curso')
-    
+
     try {
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (!isComponentActive) return
-      
-      if (!signInError && signInData?.session) {
-        await registrarLogAuth('LOGIN_SUCESSO')
-        await redirecionarUsuario(signInData.session.user)
+
+      if (error) {
+        if (error.status === 400 || error.message.toLowerCase().includes('invalid')) {
+          setMensagem('Erro: E-mail ou senha incorretos.')
+        } else {
+          setMensagem('Erro: ' + error.message)
+        }
         return
       }
-      
-      if (signInError && (signInError.status === 400 || signInError.message.includes('credentials'))) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password })
-        if (!isComponentActive) return
-        
-        if (signUpError) {
-          setMensagem(signUpError.code === 'user_already_exists' ? 'Erro: Senha incorreta.' : 'Erro: ' + signUpError.message)
-        } else if (signUpData?.session) {
-          await redirecionarUsuario(signUpData.session.user)
-        } else {
-          setMensagem('Conta criada! Verifique seu e-mail.')
-        }
-      } else {
-        setMensagem('Erro: ' + (signInError?.message || 'Erro desconhecido'))
+
+      if (data?.session) {
+        await registrarLogAuth('LOGIN_SUCESSO')
+        await redirecionarUsuario(data.session.user)
       }
     } catch (err: any) {
-      if (isComponentActive && err.name !== 'AbortError') setMensagem('Erro inesperado.')
+      if (isComponentActive && err.name !== 'AbortError') {
+        setMensagem('Erro inesperado. Tente novamente.')
+      }
     } finally {
       if (isComponentActive) setLoading(false)
     }
