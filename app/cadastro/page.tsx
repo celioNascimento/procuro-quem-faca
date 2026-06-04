@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -55,6 +55,7 @@ function FormularioCadastro() {
   const categorias = useCategorias()
   const loc = useLocalizacao()
   const slugCheck = useSlugCheck({ slug: form.formData.slug || '', idAtual: form.formData.id })
+  const inicializadoRef = useRef(false)
 
   // ── Estados Locais (Acesso e UI) ─────────────────────────────────────────
   const [mounted, setMounted] = useState(false)
@@ -67,8 +68,23 @@ function FormularioCadastro() {
   const [modoEdicao, setModoEdicao] = useState(false)
 
   const [userLogado, setUserLogado] = useState<User | null>(null)
-  const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
+  const [email, setEmail] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    try {
+      const prefill = sessionStorage.getItem('pqf_prefill')
+      if (prefill) return JSON.parse(prefill).email || ''
+    } catch { }
+    return ''
+  })
+
+  const [senha, setSenha] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    try {
+      const prefill = sessionStorage.getItem('pqf_prefill')
+      if (prefill) return JSON.parse(prefill).password || ''
+    } catch { }
+    return ''
+  })
   const [confirmarSenha, setConfirmarSenha] = useState('')
   const [aceitouTermos, setAceitouTermos] = useState(false)
   const [aceitouPrivacidade, setAceitouPrivacidade] = useState(false)
@@ -77,30 +93,21 @@ function FormularioCadastro() {
 
   useEffect(() => { setMounted(true) }, [])
 
+  useEffect(() => {
+    sessionStorage.removeItem('pqf_prefill')
+  }, [])
+
   // ── Inicialização de Dados ───────────────────────────────────────────────
   useEffect(() => {
+    if (inicializadoRef.current) return  // ← adiciona essa linha
+    inicializadoRef.current = true
     const carregarTudo = async () => {
       try {
         setLoading(true)
         const { data: { session } } = await supabase.auth.getSession()
         const user = session?.user || null
         setUserLogado(user)
-        if (user) setEmail(user.email || '')
-
-        if (!user) {
-          try {
-            const prefill = sessionStorage.getItem('pqf_prefill')
-            console.log('prefill encontrado:', prefill)  // ← adiciona isso
-            if (prefill) {
-              const { email: e, password: p } = JSON.parse(prefill)
-              console.log('email:', e, 'senha:', p)
-              setEmail(e || '')
-              setSenha(p || '')
-              sessionStorage.removeItem('pqf_prefill') // usa uma vez e descarta
-            }
-          } catch { }
-        }
-
+     
         // Tipagem explícita adicionada aqui
         let perfilExistente: PrestadorFormData | null = null
         if (user) {
