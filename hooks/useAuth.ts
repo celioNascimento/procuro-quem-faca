@@ -4,8 +4,29 @@ import type { Session } from '@supabase/supabase-js'
 
 type Role = 'prestador' | 'cliente' | null
 
+const SESSION_KEY = 'pqf_session_cache'
+
+function getCachedSession(): Session | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    // Verifica se o token ainda não expirou
+    if (parsed?.expires_at && parsed.expires_at * 1000 < Date.now()) {
+      localStorage.removeItem(SESSION_KEY)
+      return null
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
 export function useAuth() {
-  const [session,     setSession]     = useState<Session | null | undefined>(undefined)
+  const [session, setSession] = useState<Session | null | undefined>(() => {
+    if (typeof window === 'undefined') return undefined
+    return getCachedSession() // ← valor imediato, sem flash
+  })
   const [role,        setRole]        = useState<Role>(null)
   const [roleLoading, setRoleLoading] = useState(false)
   const [loading,     setLoading]     = useState(false)
@@ -16,7 +37,16 @@ export function useAuth() {
 
     supabase.auth.getSession().then(async ({ data: { session: s } }) => {
       if (cancelado) return
-      setSession(s ?? null)
+      const sessionVal = s ?? null
+      setSession(sessionVal)
+
+      // Atualiza cache
+      if (sessionVal) {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionVal))
+      } else {
+        localStorage.removeItem(SESSION_KEY)
+      }
+
       if (s?.user?.id) {
         setRoleLoading(true)
         try {
@@ -33,7 +63,15 @@ export function useAuth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       if (cancelado) return
-      setSession(s ?? null)
+      const sessionVal = s ?? null
+      setSession(sessionVal)
+
+      if (sessionVal) {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionVal))
+      } else {
+        localStorage.removeItem(SESSION_KEY)
+      }
+
       if (!s) { setRole(null); setRoleLoading(false) }
     })
 
