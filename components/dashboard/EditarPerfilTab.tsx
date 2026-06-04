@@ -1,7 +1,7 @@
 // components/EditarPerfilTab.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -37,6 +37,8 @@ export default function EditarPerfilTab() {
   const loc = useLocalizacao()
   const slugCheck = useSlugCheck({ slug: form.formData.slug || '', idAtual: form.formData.id })
 
+  const inicializadoRef = useRef(false)
+
   // ── Estados Locais ───────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true)
   const [salvando, setSalvando] = useState(false)
@@ -50,6 +52,10 @@ export default function EditarPerfilTab() {
 
   // ── Inicialização ────────────────────────────────────────────────────────
   useEffect(() => {
+
+    if (inicializadoRef.current) return  // ← evita rodar duas vezes
+    inicializadoRef.current = true
+
     async function inicializar() {
       try {
         setLoading(true)
@@ -97,7 +103,7 @@ export default function EditarPerfilTab() {
     }
 
     inicializar()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, []) 
 
   // ── Handlers de Ação ─────────────────────────────────────────────────────
   const handleUploadFotoProcess = async (file: File) => {
