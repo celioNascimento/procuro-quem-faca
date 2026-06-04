@@ -7,6 +7,12 @@ export function useSession() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   return session

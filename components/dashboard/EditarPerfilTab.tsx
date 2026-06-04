@@ -57,38 +57,47 @@ export default function EditarPerfilTab() {
         if (!session) return router.push('/login')
         setUserLogado(session.user)
 
-        // Carga paralela de domínio
-        await Promise.all([
+        // Busca perfil + dados base ao mesmo tempo
+        const [, , perfilResult] = await Promise.all([
           categorias.carregarGrupos(),
-          loc.carregarEstados()
+          loc.carregarEstados(),
+          supabase
+            .from('prestadores')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .maybeSingle()
         ])
 
-        const { data: perfil } = await supabase
-          .from('prestadores')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .maybeSingle()
-
-        let perfilCarregado = perfil as PrestadorFormData | null
+        const perfilCarregado = perfilResult.data as PrestadorFormData | null
 
         if (perfilCarregado) {
-          if (perfilCarregado.grupo_id) await categorias.carregarCategorias(perfilCarregado.grupo_id)
-          if (perfilCarregado.estado_sigla) await loc.carregarRegioes(perfilCarregado.estado_sigla)
-          await loc.carregarCidades(perfilCarregado.regiao_id, perfilCarregado.estado_sigla)
-
+          // Busca dependentes do perfil ao mesmo tempo
+          await Promise.all([
+            perfilCarregado.grupo_id
+              ? categorias.carregarCategorias(perfilCarregado.grupo_id)
+              : Promise.resolve(),
+            loc.carregarRegioes(perfilCarregado.estado_sigla || 'PR'),
+            loc.carregarCidades(
+              perfilCarregado.regiao_id,
+              perfilCarregado.estado_sigla || 'PR'
+            )
+          ])
           form.carregarPerfil(perfilCarregado)
         } else {
-          await loc.carregarRegioes('PR')
-          await loc.carregarCidades(null, 'PR')
+          await Promise.all([
+            loc.carregarRegioes('PR'),
+            loc.carregarCidades(null, 'PR')
+          ])
         }
       } catch (err) {
-        console.error("Erro ao inicializar dashboard:", err)
+        console.error('Erro inicialização:', err)
       } finally {
         setLoading(false)
       }
     }
+
     inicializar()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Handlers de Ação ─────────────────────────────────────────────────────
   const handleUploadFotoProcess = async (file: File) => {
