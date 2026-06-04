@@ -1,12 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useLogout } from '@/hooks/useLogout'
 
 export default function DashboardLayout({ children }) {
-  const router = useRouter()
   const [mounted, setMounted] = useState(false)
+  const { logout } = useLogout()
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0)
@@ -23,7 +23,7 @@ export default function DashboardLayout({ children }) {
           usuario_email: session.user.email,
           entidade_tipo: 'sessao',
           detalhes: { origem: 'dashboard_centralizado' }
-        }).then(() => {})
+        }).then(() => { })
       }
       await supabase.auth.signOut()
       if (typeof window !== 'undefined') {
@@ -64,7 +64,7 @@ export default function DashboardLayout({ children }) {
           {/* Direita — logout */}
           <div className="w-20 flex justify-end">
             <button
-              onClick={handleLogout}
+              onClick={logout}
               className="group flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-red-50 transition-all active:scale-95"
               title="Encerrar Sessão"
             >
