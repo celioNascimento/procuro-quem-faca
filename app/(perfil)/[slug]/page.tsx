@@ -66,11 +66,10 @@ export default function PerfilPublico() {
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
       <Header href={urlRetorno} />
 
-      <div className="max-w-xl lg:max-w-6xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
+      <div className="max-w-xl lg:max-w-6xl mx-auto pt-24 md:pt-32 pb-16 px-5">
         
-        {/* Espaço de Monetização Estratégico: Topo (Abaixo do Header) */}
-        {/* O padding reduzido (p-4 no mobile) e a limitação de altura ajudam a não empurrar o conteúdo de forma agressiva */}
-        <div className="w-full mb-6 bg-white rounded-[2rem] border border-slate-100 p-4 lg:p-6 shadow-sm overflow-hidden max-h-[160px] md:max-h-none flex items-center justify-center">
+        {/* Espaço de Monetização do Topo com Largura Controlada no Desktop */}
+        <div className="w-full max-w-xl lg:max-w-3xl mx-auto mb-6 bg-white rounded-[2rem] border border-slate-100 p-4 lg:p-6 shadow-sm overflow-hidden flex items-center justify-center">
           <AdCard 
             page={"perfil" as AdPage} 
             categoria={prestador.categorias?.nome || prestador.categoria} 
@@ -80,7 +79,7 @@ export default function PerfilPublico() {
         {isPublico && (
           <Link
             href={`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`}
-            className="flex items-center gap-4 mb-6 bg-indigo-50 border border-indigo-100 p-5 rounded-[2rem] group hover:bg-indigo-600 transition-all duration-300 active:scale-[0.98]"
+            className="flex items-center gap-4 mb-6 bg-indigo-50 border border-indigo-100 p-5 rounded-[2rem] group hover:bg-indigo-600 transition-all duration-300 active:scale-[0.98] animate-in fade-in duration-500"
           >
             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-lg shadow-sm shrink-0 group-hover:scale-110 transition-transform">
               🤝
@@ -96,12 +95,12 @@ export default function PerfilPublico() {
           </Link>
         )}
 
-        {/* Layout em Duas Colunas com Flexbox para Estabilidade Visual */}
+        {/* Layout em Duas Colunas com Flexbox - Livre de interferências estruturais no Sticky */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-4 relative">
           
           {/* Coluna da Esquerda: Identidade Visual (Sticky no Desktop) */}
           <div className="w-full lg:w-1/3 shrink-0 relative">
-            <div className="lg:sticky lg:top-32 flex flex-col gap-6">
+            <div className="lg:sticky lg:top-32 flex flex-col gap-6 animate-in fade-in duration-500">
               <PerfilHero
                 prestador={prestador}
                 projetos={projetos}
@@ -111,8 +110,8 @@ export default function PerfilPublico() {
             </div>
           </div>
 
-          {/* Coluna da Direita: Conteúdo de Leitura Avançada */}
-          <div className="w-full lg:w-2/3 flex flex-col gap-6 lg:gap-8">
+          {/* Coluna da Direita: Conteúdo de Leitura */}
+          <div className="w-full lg:w-2/3 flex flex-col gap-6 lg:gap-8 animate-in fade-in duration-500">
             <div className="space-y-4">
               <PerfilSobre prestador={prestador} />
 
