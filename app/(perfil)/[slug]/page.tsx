@@ -64,7 +64,7 @@ export default function PerfilPublico() {
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
       <Header href={urlRetorno} />
 
-      <div className="max-w-xl lg:max-w-7xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
+      <div className="max-w-xl lg:max-w-6xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
 
         {isPublico && (
           <Link
@@ -85,28 +85,30 @@ export default function PerfilPublico() {
           </Link>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mt-4 lg:items-start">
           
-          {/* Coluna da Esquerda (Identificação + Sobre + CTA) */}
-          <div className="space-y-4">
+          {/* Coluna da Esquerda (Identidade Fixa no Desktop) */}
+          <div className="lg:col-span-4 lg:sticky lg:top-32 flex flex-col">
             <PerfilHero
               prestador={prestador}
               projetos={projetos}
               compartilhando={compartilhando}
               onCompartilhar={handleCompartilhar}
             />
-
-            <PerfilSobre prestador={prestador} />
-
-            <PerfilCTA
-              nome={prestador.nome}
-              whatsapp={prestador.whatsapp}
-              onClique={() => registrarLog('CLIQUE_WHATSAPP_ORCAMENTO', { nome_prestador: prestador.nome }, prestador.id)}
-            />
           </div>
 
-          {/* Coluna da Direita (Portfólio + Avaliações) */}
-          <div className="space-y-4 lg:pl-4">
+          {/* Coluna da Direita (Conteúdo de Leitura) */}
+          <div className="lg:col-span-8 flex flex-col gap-6 lg:gap-8">
+            <div className="space-y-4">
+              <PerfilSobre prestador={prestador} />
+
+              <PerfilCTA
+                nome={prestador.nome}
+                whatsapp={prestador.whatsapp}
+                onClique={() => registrarLog('CLIQUE_WHATSAPP_ORCAMENTO', { nome_prestador: prestador.nome }, prestador.id)}
+              />
+            </div>
+
             <section className="space-y-3">
               <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 px-1">
                 Registros de Atividade
