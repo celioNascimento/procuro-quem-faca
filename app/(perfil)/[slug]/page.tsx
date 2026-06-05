@@ -66,13 +66,6 @@ export default function PerfilPublico() {
 
       <div className="max-w-xl lg:max-w-7xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
 
-        <PerfilHero
-          prestador={prestador}
-          projetos={projetos}
-          compartilhando={compartilhando}
-          onCompartilhar={handleCompartilhar}
-        />
-
         {isPublico && (
           <Link
             href={`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`}
@@ -93,8 +86,18 @@ export default function PerfilPublico() {
         )}
 
         <div className="grid lg:grid-cols-2 gap-8 lg:items-start">
+          
+          {/* Coluna da Esquerda (Identificação + Sobre + CTA) */}
           <div className="space-y-4">
+            <PerfilHero
+              prestador={prestador}
+              projetos={projetos}
+              compartilhando={compartilhando}
+              onCompartilhar={handleCompartilhar}
+            />
+
             <PerfilSobre prestador={prestador} />
+
             <PerfilCTA
               nome={prestador.nome}
               whatsapp={prestador.whatsapp}
@@ -102,15 +105,18 @@ export default function PerfilPublico() {
             />
           </div>
 
-          <div className="space-y-4">
+          {/* Coluna da Direita (Portfólio + Avaliações) */}
+          <div className="space-y-4 lg:pl-4">
             <section className="space-y-3">
               <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 px-1">
                 Registros de Atividade
               </h2>
               <PortfolioGrid projetos={projetos} />
             </section>
+            
             <PerfilAvaliacoes avaliacoes={avaliacoes} />
           </div>
+
         </div>
       </div>
     </main>
