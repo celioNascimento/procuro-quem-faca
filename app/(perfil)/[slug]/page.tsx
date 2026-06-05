@@ -66,16 +66,6 @@ export default function PerfilPublico() {
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
       <Header href={urlRetorno} />
 
-      {/* Bloco de Monetização - Topo (Logo abaixo do Header) */}
-      <div className="w-full bg-white border-b border-slate-100 py-2">
-        <div className="max-w-xl lg:max-w-6xl mx-auto px-5">
-          <AdCard
-            page={"perfil_topo" as AdPage} // Criamos uma nova página para controle de slot
-            categoria={prestador.categorias?.nome || prestador.categoria}
-          />
-        </div>
-      </div>
-
       <div className="max-w-xl lg:max-w-6xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
 
         {isPublico && (
@@ -96,6 +86,16 @@ export default function PerfilPublico() {
             </div>
           </Link>
         )}
+
+        {/* Bloco de Monetização - Topo (Logo abaixo do Header) */}
+        <div className="w-full bg-white border-b border-slate-100 py-2">
+          <div className="max-w-xl lg:max-w-6xl mx-auto px-5">
+            <AdCard
+              page={"perfil_topo" as AdPage} // Criamos uma nova página para controle de slot
+              categoria={prestador.categorias?.nome || prestador.categoria}
+            />
+          </div>
+        </div>
 
         {/* Novo Layout em Flexbox para garantir a trava do Sticky */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-4 relative">
