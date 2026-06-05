@@ -64,7 +64,7 @@ export default function PerfilPublico() {
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
       <Header href={urlRetorno} />
 
-      <div className="max-w-xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
+      <div className="max-w-xl lg:max-w-5xl xl:max-w-6xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
 
         <PerfilHero
           prestador={prestador}
@@ -92,23 +92,29 @@ export default function PerfilPublico() {
           </Link>
         )}
 
-        <div className="space-y-4">
-          <PerfilSobre prestador={prestador} />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 mt-8">
+          
+          <div className="lg:col-span-5 flex flex-col gap-4">
+            <PerfilSobre prestador={prestador} />
 
-          <PerfilCTA
-            nome={prestador.nome}
-            whatsapp={prestador.whatsapp}
-            onClique={() => registrarLog('CLIQUE_WHATSAPP_ORCAMENTO', { nome_prestador: prestador.nome }, prestador.id)}
-          />
+            <PerfilCTA
+              nome={prestador.nome}
+              whatsapp={prestador.whatsapp}
+              onClique={() => registrarLog('CLIQUE_WHATSAPP_ORCAMENTO', { nome_prestador: prestador.nome }, prestador.id)}
+            />
+          </div>
 
-          <section className="space-y-3">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 px-1">
-              Registros de Atividade
-            </h2>
-            <PortfolioGrid projetos={projetos} />
-          </section>
+          <div className="lg:col-span-7 flex flex-col gap-6 lg:gap-8">
+            <section className="space-y-3">
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 px-1">
+                Registros de Atividade
+              </h2>
+              <PortfolioGrid projetos={projetos} />
+            </section>
 
-          <PerfilAvaliacoes avaliacoes={avaliacoes} />
+            <PerfilAvaliacoes avaliacoes={avaliacoes} />
+          </div>
+
         </div>
       </div>
     </main>
