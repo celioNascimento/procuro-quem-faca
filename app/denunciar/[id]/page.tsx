@@ -1,44 +1,29 @@
 'use client'
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
+import { criarDenuncia } from '@/lib/services/denuncia.service'
 
 export default function PaginaDenuncia() {
-  const { id } = useParams()
+  const params = useParams()
+  const id = params?.id as string
   const router = useRouter()
+  
   const [motivo, setMotivo] = useState('')
   const [enviando, setEnviando] = useState(false)
-  const [sucesso, setSucesso] = useState(false) // Novo estado para controlar a tela de sucesso
+  const [sucesso, setSucesso] = useState(false)
 
   async function enviarDenuncia() {
-    if (!motivo) return // Validação visual pode ser feita no botão
+    if (!motivo.trim() || !id) return 
     setEnviando(true)
     
     try {
       const prestadorId = Number(id)
+      
+      // Chamada limpa para a camada de serviço
+      await criarDenuncia(prestadorId, motivo)
 
-      // 1. Cria a Denúncia
-      const { error: denunciaError } = await supabase
-        .from('denuncias')
-        .insert({
-          prestador_id: prestadorId,
-          motivo: motivo,
-          status: 'aberta'
-        })
-
-      if (denunciaError) throw denunciaError
-
-      // 2. Log de Auditoria
-      await supabase.from('logs_atividades').insert({
-        acao: 'DENUNCIA_PERFIL',
-        entidade_tipo: 'prestador',
-        entidade_id: prestadorId,
-        detalhes: { motivo, timestamp: new Date().toISOString() }
-      })
-
-      // Em vez de alert e back, ativamos a tela de sucesso
       setSucesso(true)
       
     } catch (error) {
@@ -128,9 +113,9 @@ export default function PaginaDenuncia() {
             <div className="pt-2 flex flex-col gap-3">
               <button 
                 onClick={enviarDenuncia}
-                disabled={enviando || !motivo}
+                disabled={enviando || !motivo.trim()}
                 className={`w-full py-5 rounded-[1.8rem] font-black uppercase tracking-[0.2em] text-[11px] transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 ${
-                  enviando || !motivo 
+                  enviando || !motivo.trim() 
                     ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none' 
                     : 'bg-red-600 text-white hover:bg-red-700 shadow-red-200'
                 }`}
