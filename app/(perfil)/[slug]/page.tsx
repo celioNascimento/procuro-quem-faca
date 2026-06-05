@@ -68,8 +68,8 @@ export default function PerfilPublico() {
 
       <div className="max-w-xl lg:max-w-6xl mx-auto pt-24 md:pt-32 pb-16 px-5">
         
-        {/* Espaço de Monetização do Topo com Largura Controlada no Desktop */}
-        <div className="w-full max-w-xl lg:max-w-3xl mx-auto mb-6 bg-white rounded-[2rem] border border-slate-100 p-4 lg:p-6 shadow-sm overflow-hidden flex items-center justify-center">
+        {/* Espaço de Monetização do Topo (Sem a div visível, apenas controle de largura) */}
+        <div className="w-full max-w-xl lg:max-w-3xl mx-auto mb-6 flex items-center justify-center animate-in fade-in duration-500">
           <AdCard 
             page={"perfil" as AdPage} 
             categoria={prestador.categorias?.nome || prestador.categoria} 
@@ -95,7 +95,7 @@ export default function PerfilPublico() {
           </Link>
         )}
 
-        {/* Layout em Duas Colunas com Flexbox - Livre de interferências estruturais no Sticky */}
+        {/* Layout em Duas Colunas com Flexbox */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-4 relative">
           
           {/* Coluna da Esquerda: Identidade Visual (Sticky no Desktop) */}
