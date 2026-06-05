@@ -4,6 +4,7 @@ export type AdPage =
   | 'prestadores'
   | 'perfil_prestador'
   | 'busca_servicos'
+  | 'lista_topo'
 
 export type AdFallback = {
   emoji: string

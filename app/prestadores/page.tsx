@@ -103,6 +103,15 @@ function ListaConteudo() {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Anúncio Injetado no Topo da Lista (Apenas se houver resultados) */}
+            {prestadoresExibidos.length > 0 && (
+              <AdCard
+                page="lista_topo"
+                anuncio={null}
+                categoria={queryBusca || filtroHab || ''}
+              />
+            )}
+
             {prestadoresExibidos.map((p, index) => (
               <div key={p.id}>
                 <PrestadorCard prestador={p} session={session} registrarLog={registrarLog} />
