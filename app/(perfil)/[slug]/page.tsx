@@ -8,9 +8,11 @@ import PerfilSobre from '@/components/profile/PerfilSobre'
 import PerfilCTA from '@/components/profile/PerfilCTA'
 import PerfilAvaliacoes from '@/components/profile/PerfilAvaliacoes'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
+import { AdCard } from '../../../components/ads/AdCard' // Ajuste o caminho se ele estiver em subpasta, ex: '@/components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { useRastreamentoAtivacao } from '@/hooks/useRastreamentoAtivacao'
 import { useLog } from '@/hooks/useLog'
+import type { AdPage } from '@/types/ads'
 
 export default function PerfilPublico() {
   const { data, loading, erro } = usePerfilPrestador()
@@ -85,23 +87,31 @@ export default function PerfilPublico() {
           </Link>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mt-4 relative">
+        {/* Novo Layout em Flexbox para garantir a trava do Sticky */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-4 relative">
           
-          {/* Coluna da Esquerda (Pista que vai até o fim do Grid) */}
-          <div className="lg:col-span-4 relative">
-            {/* O Elemento Interno que efetivamente desliza fixo na tela */}
-            <div className="lg:sticky lg:top-32 flex flex-col">
+          {/* Coluna da Esquerda: A "Pista" de rolagem */}
+          <div className="w-full lg:w-1/3 shrink-0 relative">
+            
+            {/* O Elemento que flutua travado na tela */}
+            <div className="lg:sticky lg:top-32 flex flex-col gap-6">
               <PerfilHero
                 prestador={prestador}
                 projetos={projetos}
                 compartilhando={compartilhando}
                 onCompartilhar={handleCompartilhar}
               />
+
+              {/* Anúncio estrategicamente posicionado */}
+              <AdCard 
+                page={"perfil" as AdPage} 
+                categoria={prestador.categorias?.nome || prestador.categoria} 
+              />
             </div>
           </div>
 
-          {/* Coluna da Direita (Conteúdo de Leitura) */}
-          <div className="lg:col-span-8 flex flex-col gap-6 lg:gap-8">
+          {/* Coluna da Direita: Conteúdo de Leitura */}
+          <div className="w-full lg:w-2/3 flex flex-col gap-6 lg:gap-8">
             <div className="space-y-4">
               <PerfilSobre prestador={prestador} />
 
