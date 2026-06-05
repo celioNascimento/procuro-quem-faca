@@ -85,16 +85,19 @@ export default function PerfilPublico() {
           </Link>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mt-4 relative">
           
-          {/* Coluna da Esquerda (Identidade Fixa no Desktop) */}
-          <div className="lg:col-span-4 lg:sticky lg:top-32 self-start flex flex-col">
-            <PerfilHero
-              prestador={prestador}
-              projetos={projetos}
-              compartilhando={compartilhando}
-              onCompartilhar={handleCompartilhar}
-            />
+          {/* Coluna da Esquerda (Pista que vai até o fim do Grid) */}
+          <div className="lg:col-span-4 relative">
+            {/* O Elemento Interno que efetivamente desliza fixo na tela */}
+            <div className="lg:sticky lg:top-32 flex flex-col">
+              <PerfilHero
+                prestador={prestador}
+                projetos={projetos}
+                compartilhando={compartilhando}
+                onCompartilhar={handleCompartilhar}
+              />
+            </div>
           </div>
 
           {/* Coluna da Direita (Conteúdo de Leitura) */}
