@@ -1,8 +1,10 @@
 import type { AdFallback } from '@/types/ads'
 import type { SegmentoAd } from './categoria-segmento'
 
-// Alteramos a rota para '/anuncie' (que criaremos no futuro) ou você pode substituir por um link de WhatsApp
-const ROTA_CAPTACOES = () => '/anuncie' 
+const NUMERO_WHATSAPP = '5543999739597' 
+const MENSAGEM = encodeURIComponent('Olá! Tenho interesse em destacar minha loja no Procuro Quem Faça.')
+
+const ROTA_CAPTACOES = () => `https://wa.me/${NUMERO_WHATSAPP}?text=${MENSAGEM}`
 
 const FALLBACKS_POR_SEGMENTO: Record<SegmentoAd, AdFallback[]> = {
   construcao: [{
