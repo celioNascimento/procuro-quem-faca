@@ -16,7 +16,7 @@ import type { AdPage } from '@/types/ads'
 
 export default function PerfilPublico() {
   const { data, loading, erro } = usePerfilPrestador()
-  const { registrarLog }        = useLog()
+  const { registrarLog } = useLog()
   const [compartilhando, setCompartilhando] = useState(false)
 
   useRastreamentoAtivacao(data?.prestador ?? null)
@@ -25,13 +25,13 @@ export default function PerfilPublico() {
     if (!data) return
     registrarLog('COMPARTILHAR_PERFIL_CLIQUE', { nome_prestador: data.prestador.nome }, data.prestador.id)
 
-    const url   = window.location.href
+    const url = window.location.href
     const texto = `Confira o trabalho de ${data.prestador.nome} no Procuro Quem Faça.`
 
     if (navigator.share) {
-      try { await navigator.share({ title: data.prestador.nome, text: texto, url }) } catch {}
+      try { await navigator.share({ title: data.prestador.nome, text: texto, url }) } catch { }
     } else {
-      try { await navigator.clipboard.writeText(url) } catch {}
+      try { await navigator.clipboard.writeText(url) } catch { }
     }
 
     setCompartilhando(true)
@@ -66,6 +66,16 @@ export default function PerfilPublico() {
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
       <Header href={urlRetorno} />
 
+      {/* Bloco de Monetização - Topo (Logo abaixo do Header) */}
+      <div className="w-full bg-white border-b border-slate-100 py-2">
+        <div className="max-w-xl lg:max-w-6xl mx-auto px-5">
+          <AdCard
+            page={"perfil_topo" as AdPage} // Criamos uma nova página para controle de slot
+            categoria={prestador.categorias?.nome || prestador.categoria}
+          />
+        </div>
+      </div>
+
       <div className="max-w-xl lg:max-w-6xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
 
         {isPublico && (
@@ -89,10 +99,10 @@ export default function PerfilPublico() {
 
         {/* Novo Layout em Flexbox para garantir a trava do Sticky */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-4 relative">
-          
+
           {/* Coluna da Esquerda: A "Pista" de rolagem */}
           <div className="w-full lg:w-1/3 shrink-0 relative">
-            
+
             {/* O Elemento que flutua travado na tela */}
             <div className="lg:sticky lg:top-32 flex flex-col gap-6">
               <PerfilHero
@@ -100,12 +110,6 @@ export default function PerfilPublico() {
                 projetos={projetos}
                 compartilhando={compartilhando}
                 onCompartilhar={handleCompartilhar}
-              />
-
-              {/* Anúncio estrategicamente posicionado */}
-              <AdCard 
-                page={"perfil" as AdPage} 
-                categoria={prestador.categorias?.nome || prestador.categoria} 
               />
             </div>
           </div>
@@ -128,7 +132,7 @@ export default function PerfilPublico() {
               </h2>
               <PortfolioGrid projetos={projetos} />
             </section>
-            
+
             <PerfilAvaliacoes avaliacoes={avaliacoes} />
           </div>
 
