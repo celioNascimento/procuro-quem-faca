@@ -8,7 +8,7 @@ import PerfilSobre from '@/components/profile/PerfilSobre'
 import PerfilCTA from '@/components/profile/PerfilCTA'
 import PerfilAvaliacoes from '@/components/profile/PerfilAvaliacoes'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
-import { AdCard } from '../../../components/ads/AdCard' // Ajuste o caminho se ele estiver em subpasta, ex: '@/components/ads/AdCard'
+import { AdCard } from '../../../components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { useRastreamentoAtivacao } from '@/hooks/useRastreamentoAtivacao'
 import { useLog } from '@/hooks/useLog'
@@ -16,7 +16,7 @@ import type { AdPage } from '@/types/ads'
 
 export default function PerfilPublico() {
   const { data, loading, erro } = usePerfilPrestador()
-  const { registrarLog } = useLog()
+  const { registrarLog }        = useLog()
   const [compartilhando, setCompartilhando] = useState(false)
 
   useRastreamentoAtivacao(data?.prestador ?? null)
@@ -25,13 +25,13 @@ export default function PerfilPublico() {
     if (!data) return
     registrarLog('COMPARTILHAR_PERFIL_CLIQUE', { nome_prestador: data.prestador.nome }, data.prestador.id)
 
-    const url = window.location.href
+    const url   = window.location.href
     const texto = `Confira o trabalho de ${data.prestador.nome} no Procuro Quem Faça.`
 
     if (navigator.share) {
-      try { await navigator.share({ title: data.prestador.nome, text: texto, url }) } catch { }
+      try { await navigator.share({ title: data.prestador.nome, text: texto, url }) } catch {}
     } else {
-      try { await navigator.clipboard.writeText(url) } catch { }
+      try { await navigator.clipboard.writeText(url) } catch {}
     }
 
     setCompartilhando(true)
@@ -67,6 +67,15 @@ export default function PerfilPublico() {
       <Header href={urlRetorno} />
 
       <div className="max-w-xl lg:max-w-6xl mx-auto pt-24 md:pt-32 pb-16 px-5 animate-in fade-in duration-500">
+        
+        {/* Espaço de Monetização Estratégico: Topo (Abaixo do Header) */}
+        {/* O padding reduzido (p-4 no mobile) e a limitação de altura ajudam a não empurrar o conteúdo de forma agressiva */}
+        <div className="w-full mb-6 bg-white rounded-[2rem] border border-slate-100 p-4 lg:p-6 shadow-sm overflow-hidden max-h-[160px] md:max-h-none flex items-center justify-center">
+          <AdCard 
+            page={"perfil" as AdPage} 
+            categoria={prestador.categorias?.nome || prestador.categoria} 
+          />
+        </div>
 
         {isPublico && (
           <Link
@@ -87,23 +96,11 @@ export default function PerfilPublico() {
           </Link>
         )}
 
-        {/* Bloco de Monetização - Topo (Logo abaixo do Header) */}
-        <div className="w-full bg-white border-b border-slate-100 py-2">
-          <div className="max-w-xl lg:max-w-6xl mx-auto px-5">
-            <AdCard
-              page={"perfil_topo" as AdPage} // Criamos uma nova página para controle de slot
-              categoria={prestador.categorias?.nome || prestador.categoria}
-            />
-          </div>
-        </div>
-
-        {/* Novo Layout em Flexbox para garantir a trava do Sticky */}
+        {/* Layout em Duas Colunas com Flexbox para Estabilidade Visual */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-4 relative">
-
-          {/* Coluna da Esquerda: A "Pista" de rolagem */}
+          
+          {/* Coluna da Esquerda: Identidade Visual (Sticky no Desktop) */}
           <div className="w-full lg:w-1/3 shrink-0 relative">
-
-            {/* O Elemento que flutua travado na tela */}
             <div className="lg:sticky lg:top-32 flex flex-col gap-6">
               <PerfilHero
                 prestador={prestador}
@@ -114,7 +111,7 @@ export default function PerfilPublico() {
             </div>
           </div>
 
-          {/* Coluna da Direita: Conteúdo de Leitura */}
+          {/* Coluna da Direita: Conteúdo de Leitura Avançada */}
           <div className="w-full lg:w-2/3 flex flex-col gap-6 lg:gap-8">
             <div className="space-y-4">
               <PerfilSobre prestador={prestador} />
@@ -132,7 +129,7 @@ export default function PerfilPublico() {
               </h2>
               <PortfolioGrid projetos={projetos} />
             </section>
-
+            
             <PerfilAvaliacoes avaliacoes={avaliacoes} />
           </div>
 
