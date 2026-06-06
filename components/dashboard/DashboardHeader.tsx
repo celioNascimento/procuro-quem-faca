@@ -14,7 +14,7 @@ export default function DashboardHeader() {
         {/* Esquerda — voltar */}
         <div className="w-10 md:w-32 shrink-0 flex justify-start items-center">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/')}
             className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 hover:text-blue-600 hover:border-blue-100 hover:shadow-sm transition-all active:scale-95"
             title="Voltar"
           >
