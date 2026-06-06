@@ -3,7 +3,7 @@ import {
   MapPin, User, ChevronRight, Briefcase, Loader2, Camera, CheckCircle2,
   Save, Activity, Clock, AlertCircle, Star, ArrowRight, Trash2
 } from 'lucide-react'
-import HeaderCliente from '@/components/HeaderCliente'
+import HeaderCliente from '@/components/perfil/HeaderCliente'
 import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 
 export default function PerfilDoCliente() {

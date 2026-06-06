@@ -14,7 +14,8 @@ export default function HeaderCliente({ nomeCliente }: HeaderClienteProps) {
 
   return (
     <nav className="w-full bg-white/95 backdrop-blur-md border-b border-slate-50 sticky top-0 z-50 font-sans">
-      <div className="max-w-xl mx-auto px-6 h-20 md:h-24 flex justify-between items-center gap-3">
+      {/* Container ampliado no desktop para acompanhar o layout em duas colunas */}
+      <div className="max-w-xl lg:max-w-6xl mx-auto px-5 lg:px-6 h-20 md:h-24 flex justify-between items-center gap-3">
 
         {/* ESQUERDA: Voltar */}
         <div className="shrink-0">
@@ -27,11 +28,11 @@ export default function HeaderCliente({ nomeCliente }: HeaderClienteProps) {
           </button>
         </div>
 
-        {/* CENTRO: Logo */}
-        <div className="flex-1 flex justify-center">
+        {/* CENTRO/ESQUERDA: Logo (Alinhada à esquerda no Desktop para preencher o layout) */}
+        <div className="flex-1 flex justify-center lg:justify-start lg:pl-6">
           <Link
             href="/"
-            className="transition-transform hover:opacity-80 active:scale-95 flex items-center justify-center w-40 md:w-56"
+            className="transition-transform hover:opacity-80 active:scale-95 flex items-center justify-center lg:justify-start w-40 md:w-56"
           >
             <Image
               src="/logo.png"
@@ -47,7 +48,7 @@ export default function HeaderCliente({ nomeCliente }: HeaderClienteProps) {
         {/* DIREITA: Nome + Logout */}
         <div className="shrink-0 flex items-center gap-2">
           {nome && (
-            <div className="hidden md:flex flex-col items-end min-w-0">
+            <div className="hidden md:flex flex-col items-end min-w-0 mr-2">
               <span className="text-[9px] font-black uppercase text-slate-400 leading-none tracking-widest whitespace-nowrap">
                 Painel
               </span>
