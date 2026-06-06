@@ -13,43 +13,42 @@ export default function HeaderCliente({ nomeCliente }: HeaderClienteProps) {
   const nome = nomeCliente || ''
 
   return (
-    <nav className="w-full bg-white/95 backdrop-blur-md border-b border-slate-50 sticky top-0 z-50 font-sans">
-      <div className="max-w-xl lg:max-w-6xl mx-auto px-5 lg:px-6 h-20 md:h-24 flex items-center gap-3">
+    <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md font-sans border-b border-slate-100 overflow-hidden">
+      <div className="max-w-5xl mx-auto px-4 h-16 md:h-28 flex items-center justify-between">
 
-        {/* ESQUERDA: Voltar */}
-        <button
-          onClick={handleBack}
-          className="shrink-0 w-10 h-10 md:w-11 md:h-11 flex items-center justify-center bg-slate-50 text-slate-400 border border-slate-100 rounded-2xl transition-all active:scale-90 hover:bg-white hover:text-blue-600 hover:border-blue-100 hover:shadow-sm"
-          title="Voltar"
-        >
-          <ChevronLeft size={22} strokeWidth={2.5} />
-        </button>
-
-        {/* LOGO: cresce para ocupar o espaço, mas alinha à esquerda */}
-        <div className="flex-1">
-          <Link
-            href="/"
-            className="transition-transform hover:opacity-80 active:scale-95 inline-flex items-center w-40 md:w-56"
+        {/* Esquerda — voltar */}
+        <div className="w-10 md:w-32 flex justify-start items-center shrink-0">
+          <button
+            onClick={handleBack}
+            className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 hover:text-blue-600 hover:border-blue-100 hover:shadow-sm transition-all active:scale-95"
+            title="Voltar"
           >
+            <ChevronLeft size={20} strokeWidth={3} />
+          </button>
+        </div>
+
+        {/* Centro — logo (idêntico ao Header público) */}
+        <div className="flex-1 flex justify-center items-center px-2">
+          <Link href="/" className="transition-all hover:opacity-80 active:scale-95">
             <Image
               src="/logo.png"
-              alt="Logo Procuro Quem Faça"
+              alt="Procuro Quem Faça"
               width={240}
               height={70}
-              className="w-full h-auto object-contain drop-shadow-sm"
+              className="h-10 md:h-14 w-auto object-contain"
               priority
             />
           </Link>
         </div>
 
-        {/* DIREITA: Nome + Logout — colados à direita */}
-        <div className="shrink-0 flex items-center gap-2">
+        {/* Direita — nome + logout */}
+        <div className="w-10 md:w-32 flex justify-end items-center gap-2 shrink-0">
           {nome && (
-            <div className="hidden md:flex flex-col items-end min-w-0 mr-2">
+            <div className="hidden md:flex flex-col items-end min-w-0">
               <span className="text-[9px] font-black uppercase text-slate-400 leading-none tracking-widest whitespace-nowrap">
                 Painel
               </span>
-              <span className="text-[12px] font-black italic uppercase text-slate-900 tracking-tighter text-right break-words max-w-[120px] leading-tight mt-0.5">
+              <span className="text-[12px] font-black italic uppercase text-slate-900 tracking-tighter text-right max-w-[100px] leading-tight mt-0.5 truncate">
                 {nome}
               </span>
             </div>
@@ -58,7 +57,7 @@ export default function HeaderCliente({ nomeCliente }: HeaderClienteProps) {
           <button
             onClick={handleLogout}
             disabled={saindo}
-            className="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all shadow-sm border border-slate-100 active:scale-90 disabled:opacity-50"
+            className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all active:scale-95 disabled:opacity-50 shrink-0"
             title="Sair da conta"
           >
             {saindo
