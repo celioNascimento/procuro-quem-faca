@@ -2,43 +2,14 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { LogOut, ChevronLeft } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useHeaderCliente } from '@/hooks/useHeaderCliente'
 
-export default function HeaderCliente({ nomeCliente }) {
-  const router = useRouter()
-  const [saindo, setSaindo] = useState(false)
+interface HeaderClienteProps {
+  nomeCliente?: string
+}
 
-  const handleLogout = async () => {
-    setSaindo(true)
-    try {
-      // 1. Encerra a sessão no Supabase (invalida token no servidor + limpa localStorage)
-      await supabase.auth.signOut()
-
-      // 2. Limpa qualquer chave do Supabase que possa ter ficado no storage
-      //    O signOut() já faz isso, mas em casos de erro parcial garantimos manualmente
-      if (typeof window !== 'undefined') {
-        Object.keys(localStorage)
-          .filter(k => k.startsWith('sb-'))
-          .forEach(k => localStorage.removeItem(k))
-        Object.keys(sessionStorage)
-          .filter(k => k.startsWith('sb-'))
-          .forEach(k => sessionStorage.removeItem(k))
-      }
-
-      // 3. window.location.href em vez de router.push —
-      //    força reload completo e descarta todo estado React em memória
-      //    router.push('/') manteria o componente montado com dados do usuário anterior
-      window.location.href = '/'
-
-    } catch (err) {
-      console.error('Erro ao sair:', err)
-      // Mesmo com erro, redireciona — não deixa o usuário preso
-      window.location.href = '/'
-    }
-  }
-
+export default function HeaderCliente({ nomeCliente }: HeaderClienteProps) {
+  const { saindo, handleLogout, handleBack } = useHeaderCliente()
   const nome = nomeCliente || ''
 
   return (
@@ -48,7 +19,7 @@ export default function HeaderCliente({ nomeCliente }) {
         {/* ESQUERDA: Voltar */}
         <div className="shrink-0">
           <button
-            onClick={() => router.back()}
+            onClick={handleBack}
             className="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center bg-slate-50 text-slate-400 border border-slate-100 rounded-2xl transition-all active:scale-90 hover:bg-white hover:text-blue-600 hover:border-blue-100 hover:shadow-sm"
             title="Voltar"
           >

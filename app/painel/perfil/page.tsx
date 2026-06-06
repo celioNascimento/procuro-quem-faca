@@ -1,276 +1,44 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 import {
   MapPin, User, ChevronRight, Briefcase, Loader2, Camera, CheckCircle2,
   Save, Activity, Clock, AlertCircle, Star, ArrowRight, Trash2
 } from 'lucide-react'
 import HeaderCliente from '@/components/HeaderCliente'
+import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 
 export default function PerfilDoCliente() {
-  const router = useRouter()
-  const fileInputRef = useRef(null)
-  const [aba, setAba] = useState('servicos')
-  const [filtroStatus, setFiltroStatus] = useState('todos')
-  const [loading, setLoading] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [loadingServicos, setLoadingServicos] = useState(true)
-  const [showSuccess, setShowSuccess] = useState(false)
-  const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
-  const [confirmLeaveModal, setConfirmLeaveModal] = useState({ show: false, destination: '' })
-  const [deleteModal, setDeleteModal] = useState(false)
-  const [deleteConfirmText, setDeleteConfirmText] = useState('')
-  const [deleting, setDeleting] = useState(false)
-  const [user, setUser] = useState(null)
-  const [servicos, setServicos] = useState([])
-  const [isDirty, setIsDirty] = useState(false)
-  const [listaEstados, setListaEstados] = useState([])
-  const [listaCidades, setListaCidades] = useState([])
-
-  const [perfil, setPerfil] = useState({
-    full_name: '', email: '', whatsapp: '', logradouro: '',
-    numero: '', complemento: '', bairro: '', cidade: '', uf: '', avatar_url: ''
-  })
+  const {
+    fileInputRef,
+    aba, setAba,
+    filtroStatus, setFiltroStatus,
+    loading,
+    uploading,
+    loadingServicos,
+    showSuccess,
+    errorModal, setErrorModal,
+    confirmLeaveModal, confirmarSaida, cancelarSaida,
+    deleteModal, setDeleteModal,
+    deleteConfirmText, setDeleteConfirmText,
+    deleting,
+    servicos,
+    isDirty,
+    listaEstados,
+    listaCidades,
+    perfil,
+    aplicarMascara,
+    handleNavigation,
+    handleChangePerfil,
+    handleUploadFoto,
+    atualizar,
+    handleDeleteAccount,
+    getStatusInfo,
+    getRotaDestino,
+    servicosFiltrados,
+    avaliarCount,
+    ativosCount
+  } = usePerfilCliente()
 
   const inputStyle = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-slate-800 bg-white shadow-sm placeholder-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400 text-[14px] md:text-[15px]`
-
-  const aplicarMascara = (valor) => {
-    if (!valor) return ''
-    const num = valor.replace(/\D/g, "").substring(0, 11)
-    let formatado = num
-    if (num.length > 2) formatado = `(${num.substring(0, 2)}) ${num.substring(2)}`
-    if (num.length > 7) formatado = `(${num.substring(0, 2)}) ${num.substring(2, 7)}-${num.substring(7)}`
-    return formatado
-  }
-
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (isDirty) { e.preventDefault(); e.returnValue = '' }
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [isDirty])
-
-  const handleNavigation = (e, destino) => {
-    e.preventDefault()
-    if (isDirty) {
-      setConfirmLeaveModal({ show: true, destination: destino })
-    } else {
-      router.push(destino)
-    }
-  }
-
-  const handleChangePerfil = (field, value) => {
-    setPerfil(prev => ({ ...prev, [field]: value }))
-    setIsDirty(true)
-  }
-
-  const handleUploadFoto = async (event) => {
-    try {
-      const file = event.target.files[0]
-      if (!file) return
-      const MAX_MB = 10
-      const sizeMB = file.size / (1024 * 1024)
-      if (sizeMB > MAX_MB) {
-        setErrorModal({ show: true, title: 'Imagem muito pesada', message: `A imagem tem ${sizeMB.toFixed(1)}MB. O limite é de ${MAX_MB}MB.` })
-        event.target.value = ''
-        return
-      }
-      setUploading(true)
-      if (perfil.avatar_url) {
-        try {
-          // Só remove se for do nosso bucket — ignora URLs externas (Google OAuth, etc)
-          const bucketMarker = '/object/public/fotos-perfil/'
-          const markerIdx = perfil.avatar_url.indexOf(bucketMarker)
-          if (markerIdx !== -1) {
-            const oldPath = perfil.avatar_url.slice(markerIdx + bucketMarker.length).split('?')[0]
-            if (oldPath) await supabase.storage.from('fotos-perfil').remove([oldPath])
-          }
-        } catch { /* silencioso — prossegue com novo upload */ }
-      }
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`
-      const { error: uploadError } = await supabase.storage.from('fotos-perfil').upload(fileName, file)
-      if (uploadError) throw uploadError
-      const { data: { publicUrl } } = supabase.storage.from('fotos-perfil').getPublicUrl(fileName)
-      const { error: dbError } = await supabase.from('profiles').update({ avatar_url: publicUrl, updated_at: new Date().toISOString() }).eq('id', user.id)
-      if (dbError) throw dbError
-      setPerfil(prev => ({ ...prev, avatar_url: publicUrl }))
-      setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 2000)
-    } catch {
-      setErrorModal({ show: true, title: 'Erro ao salvar foto', message: 'Não foi possível salvar sua foto. Verifique sua conexão.' })
-    } finally { setUploading(false) }
-  }
-
-  async function buscarServicos(whatsapp) {
-    if (!whatsapp) { setLoadingServicos(false); return }
-    setLoadingServicos(true)
-    try {
-      const numLimpo = whatsapp.replace(/\D/g, '')
-      const { data, error } = await supabase
-        .from('portfolio_projetos')
-        .select(`
-          id, titulo, status, created_at, avaliacao_token,
-          portfolio_fotos(ordem),
-          prestadores!inner(nome, foto_perfil, categoria:categorias(nome)),
-          avaliacoes(id)
-        `)
-        .eq('cliente_whatsapp', numLimpo)
-        .in('status', ['pendente', 'em_execucao', 'finalizado', 'concluido'])
-      if (error) throw error
-      if (data) setServicos(data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)))
-    } catch {
-      setErrorModal({ show: true, title: 'Erro ao carregar', message: 'Não foi possível buscar seus projetos. Tente recarregar a página.' })
-    } finally { setLoadingServicos(false) }
-  }
-
-  useEffect(() => {
-    async function carregarDados() {
-      const { data: { user: sessionUser } } = await supabase.auth.getUser()
-      if (!sessionUser) { router.push('/'); return }
-      setUser(sessionUser)
-      const { data: profileData } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).maybeSingle()
-      const whatsappSalvo = profileData?.whatsapp || ''
-
-      // Se o usuário tem foto do Google mas ainda não tem no profiles,
-      // salva automaticamente para garantir persistência no próximo login
-      const googleAvatar = sessionUser.user_metadata?.avatar_url || ''
-      if (!profileData?.avatar_url && googleAvatar) {
-        supabase.from('profiles').upsert({
-          id: sessionUser.id,
-          avatar_url: googleAvatar,
-          updated_at: new Date().toISOString()
-        }).then(() => {}) // silencioso — não bloqueia o carregamento
-      }
-
-      setPerfil({
-        full_name: profileData?.full_name || sessionUser.user_metadata?.full_name || '',
-        // Prioridade: Storage (upload feito pelo usuário) > Google OAuth (fallback)
-        // Se o usuário nunca fez upload, usa a foto do Google para não ficar vazio
-        avatar_url: profileData?.avatar_url || sessionUser.user_metadata?.avatar_url || '',
-        email: sessionUser.email,
-        whatsapp: aplicarMascara(whatsappSalvo),
-        logradouro: profileData?.logradouro || '',
-        numero: profileData?.numero || '',
-        complemento: profileData?.complemento || '',
-        bairro: profileData?.bairro || '',
-        cidade: profileData?.cidade || '',
-        uf: profileData?.uf || ''
-      })
-      buscarServicos(whatsappSalvo)
-    }
-    carregarDados()
-    supabase.from('estados').select('sigla, nome').order('nome')
-      .then(({ data }) => { if (data) setListaEstados(data) })
-      .catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    if (perfil.uf) {
-      supabase.from('cidades').select('nome').eq('estado_sigla', perfil.uf).eq('ativa', true).order('nome')
-        .then(({ data }) => { if (data) setListaCidades(data) })
-    }
-  }, [perfil.uf])
-
-  const atualizar = async () => {
-    // BUG TELEFONE: validar dígitos antes de qualquer operação
-    const numLimpo = perfil.whatsapp.replace(/\D/g, '')
-    if (perfil.whatsapp && (numLimpo.length < 10 || numLimpo.length > 11)) {
-      setErrorModal({
-        show: true,
-        title: 'Telefone inválido',
-        message: 'O WhatsApp precisa ter 10 ou 11 dígitos. Verifique o número e tente novamente.'
-      })
-      return
-    }
-    setLoading(true)
-    try {
-      const { error } = await supabase.from('profiles').upsert({
-        id: user.id, full_name: perfil.full_name, avatar_url: perfil.avatar_url,
-        whatsapp: numLimpo, logradouro: perfil.logradouro, numero: perfil.numero,
-        complemento: perfil.complemento, bairro: perfil.bairro,
-        cidade: perfil.cidade, uf: perfil.uf, updated_at: new Date().toISOString()
-      })
-      if (error) throw error
-      setIsDirty(false)
-      setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 3000)
-    } catch {
-      setErrorModal({ show: true, title: 'Falha ao salvar', message: 'Ocorreu um problema ao registrar seus dados. Tente novamente.' })
-    } finally { setLoading(false) }
-  }
-
-  const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== 'EXCLUIR') return
-    setDeleting(true)
-    try {
-      // 1. Anonimiza projetos vinculados ao WhatsApp do cliente
-      const numLimpo = perfil.whatsapp.replace(/\D/g, '')
-      if (numLimpo) {
-        await supabase
-          .from('portfolio_projetos')
-          .update({ cliente_nome: 'Cliente removido', cliente_whatsapp: null })
-          .eq('cliente_whatsapp', numLimpo)
-      }
-      // 2. Apaga o perfil
-      await supabase.from('profiles').delete().eq('id', user.id)
-      // 3. Deleta conta via Route API (precisa de service role)
-      await fetch('/api/delete-account', { method: 'POST' })
-      // 4. Desloga e redireciona
-      await supabase.auth.signOut()
-      window.location.href = '/?conta=excluida'
-    } catch {
-      setErrorModal({ show: true, title: 'Erro ao excluir', message: 'Não foi possível excluir sua conta agora. Tente novamente ou entre em contato.' })
-      setDeleting(false)
-    }
-  }
-
-  // ── Status do ponto de vista do CLIENTE ──────────────────────────────────
-  // IMPORTANTE: o banco mantém status = 'em_execucao' até o cliente avaliar.
-  // A presença da foto 3 (ordem === 3) é o sinal de que o prestador concluiu
-  // e o cliente precisa avaliar — NÃO é "em andamento", é "Avaliar agora".
-  const getStatusInfo = (servico) => {
-    const s = servico?.status?.toLowerCase()
-    const temFoto3 = servico?.portfolio_fotos?.some(f => f.ordem === 3)
-    const jaAvaliado = servico?.avaliacoes?.length > 0
-
-    if (s === 'pendente')
-      return { label: 'Aguardando aceite', dot: 'bg-amber-400', badge: 'bg-amber-50 text-amber-700 border-amber-200', urgente: false }
-    if (s === 'em_execucao' && temFoto3)
-      return { label: 'Avaliar agora', dot: 'bg-blue-500', badge: 'bg-blue-600 text-white border-blue-600', urgente: true }
-    if (s === 'em_execucao')
-      return { label: 'Em andamento', dot: 'bg-blue-400', badge: 'bg-blue-50 text-blue-700 border-blue-200', urgente: false }
-    if ((s === 'finalizado' || s === 'concluido') && jaAvaliado)
-      return { label: 'Concluído', dot: 'bg-green-400', badge: 'bg-green-50 text-green-700 border-green-200', urgente: false }
-    if (s === 'finalizado' || s === 'concluido')
-      return { label: 'Finalizado', dot: 'bg-green-400', badge: 'bg-green-50 text-green-700 border-green-200', urgente: false }
-    return { label: s, dot: 'bg-slate-300', badge: 'bg-slate-50 text-slate-500 border-slate-200', urgente: false }
-  }
-
-  const getRotaDestino = (s) => {
-    const temFoto3 = s.portfolio_fotos?.some(f => f.ordem === 3)
-    if (s.status === 'pendente') return `/meus-servicos?token=${s.avaliacao_token}`
-    if (s.status === 'em_execucao' && !temFoto3) return `/meus-servicos?token=${s.avaliacao_token}`
-    return `/avaliar/${s.id}?token=${s.avaliacao_token}`
-  }
-
-  const servicosFiltrados = servicos.filter(s => {
-    const st = s.status?.toLowerCase()
-    const temFoto3 = s.portfolio_fotos?.some(f => f.ordem === 3)
-    if (filtroStatus === 'todos') return true
-    if (filtroStatus === 'pendente') return st === 'pendente'
-    if (filtroStatus === 'andamento') return st === 'em_execucao' && !temFoto3
-    if (filtroStatus === 'avaliar') return st === 'em_execucao' && temFoto3
-    if (filtroStatus === 'finalizados') return st === 'finalizado' || st === 'concluido'
-    return true
-  })
-
-  const avaliarCount = servicos.filter(s =>
-    s.status === 'em_execucao' && s.portfolio_fotos?.some(f => f.ordem === 3)
-  ).length
-  const ativosCount = servicos.filter(s => s.status === 'pendente' || s.status === 'em_execucao').length
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans antialiased">
@@ -332,8 +100,8 @@ export default function PerfilDoCliente() {
               <p className="text-[13px] font-medium text-slate-500 leading-relaxed">Suas alterações serão perdidas.</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setConfirmLeaveModal({ show: false, destination: '' })} className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold uppercase text-[11px] tracking-wide hover:bg-slate-100 transition-all active:scale-95">Cancelar</button>
-              <button onClick={() => router.push(confirmLeaveModal.destination)} className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black uppercase text-[11px] tracking-wide hover:bg-red-600 transition-all active:scale-95 shadow-lg shadow-red-200">Sair</button>
+              <button onClick={cancelarSaida} className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold uppercase text-[11px] tracking-wide hover:bg-slate-100 transition-all active:scale-95">Cancelar</button>
+              <button onClick={confirmarSaida} className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black uppercase text-[11px] tracking-wide hover:bg-red-600 transition-all active:scale-95 shadow-lg shadow-red-200">Sair</button>
             </div>
           </div>
         </div>
@@ -460,7 +228,6 @@ export default function PerfilDoCliente() {
                       }`}
                     >
                       {/* Avatar do prestador com dot de status */}
-                      {/* ring-offset não funciona dentro de overflow-hidden — wrapper externo resolve */}
                       <div className={`relative shrink-0 rounded-2xl p-0.5 ${info.urgente ? 'ring-2 ring-blue-400' : ''}`}>
                         <div className="w-14 h-14 rounded-[14px] overflow-hidden">
                           <img src={s.prestadores?.foto_perfil || '/placeholder-avatar.png'} className="w-full h-full object-cover" alt={s.prestadores?.nome} />
@@ -501,7 +268,7 @@ export default function PerfilDoCliente() {
             <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
               <div className="h-20 bg-gradient-to-r from-blue-600 to-blue-500" />
               <div className="px-8 pb-8 -mt-10 flex flex-col items-center">
-                <div className="relative group cursor-pointer" onClick={() => !uploading && fileInputRef.current.click()}>
+                <div className="relative group cursor-pointer" onClick={() => !uploading && fileInputRef.current?.click()}>
                   <div className="w-20 h-20 rounded-[1.5rem] bg-slate-100 border-4 border-white overflow-hidden shadow-xl flex items-center justify-center">
                     {uploading
                       ? <Loader2 className="animate-spin text-blue-500" size={24} />
@@ -511,8 +278,7 @@ export default function PerfilDoCliente() {
                             className="w-full h-full object-cover"
                             alt="Avatar"
                             onError={e => {
-                              // URL quebrou (expirou, CORS, etc) — remove src para mostrar ícone
-                              e.target.style.display = 'none'
+                              (e.target as HTMLImageElement).style.display = 'none'
                             }}
                           />
                         : <User size={32} className="text-slate-300" />
