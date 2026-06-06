@@ -129,12 +129,12 @@ export default function PerfilDoCliente() {
       )}
 
       {/* Container Principal Ampliado com Flexbox */}
-      <div className="max-w-xl lg:max-w-6xl mx-auto px-5 pt-6 lg:pt-10 animate-in fade-in duration-700">
+      <div className="max-w-xl lg:max-w-6xl mx-auto px-5 pt-24 md:pt-36 animate-in fade-in duration-700">
         <div className="flex flex-col lg:flex-row gap-8 relative">
 
           {/* Coluna da Esquerda (1/3): Identidade e Resumo (Sticky no Desktop) */}
           <div className="w-full lg:w-1/3 shrink-0 relative space-y-6">
-            <div className="lg:sticky lg:top-32 flex flex-col gap-6">
+            <div className="lg:sticky lg:top-36 flex flex-col gap-6">
               
               {/* Perfil card com faixa azul */}
               <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
