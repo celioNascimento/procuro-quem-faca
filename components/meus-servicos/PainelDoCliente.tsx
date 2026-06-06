@@ -1,5 +1,5 @@
 'use client'
-import { ShieldCheck, User } from 'lucide-react'
+import { User } from 'lucide-react'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import LoginGate from './LoginGate'
 import ServicoCard from './ServicoCard'
@@ -10,7 +10,7 @@ export default function PainelDoCliente() {
   const {
     session, servicos, loading,
     zoomImage, setZoomImage,
-    tokenUrl, nomeCliente, avatarUrl,
+    tokenUrl, nomeCliente,
     handleAceitar,
   } = usePainelCliente()
 
@@ -22,7 +22,6 @@ export default function PainelDoCliente() {
 
   if (!session) return <LoginGate tokenUrl={tokenUrl} />
 
-  // Pega dados do primeiro serviço (prestador é o mesmo para todos os cards)
   const prestador = servicos[0]?.prestadores
 
   return (
@@ -79,21 +78,26 @@ export default function PainelDoCliente() {
                 </p>
               </div>
 
-              {/* Protocolo seguro */}
-              <div className="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                <div className="relative z-10 flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-blue-400 shrink-0">
-                    <ShieldCheck size={20} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-black italic uppercase leading-none tracking-tight">
-                      Protocolo Seguro
-                    </p>
-                    <p className="text-[10px] font-medium text-slate-400 mt-1.5 leading-relaxed">
-                      Ao autorizar, você gera um token único de acompanhamento criptografado.
-                    </p>
-                  </div>
+              {/* O que acontece ao autorizar */}
+              <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Ao autorizar o serviço
+                </p>
+                <div className="space-y-3">
+                  {[
+                    { n: '01', texto: 'Você confirma que o prestador pode iniciar o trabalho' },
+                    { n: '02', texto: 'Um token único e criptografado é gerado para rastrear o projeto' },
+                    { n: '03', texto: 'Você poderá acompanhar e avaliar ao final' },
+                  ].map(item => (
+                    <div key={item.n} className="flex items-start gap-3">
+                      <span className="text-[10px] font-black text-blue-600 bg-blue-50 rounded-lg px-2 py-1 shrink-0 mt-0.5">
+                        {item.n}
+                      </span>
+                      <p className="text-[12px] text-slate-500 font-medium leading-relaxed">
+                        {item.texto}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -102,29 +106,6 @@ export default function PainelDoCliente() {
 
           {/* Coluna Direita — serviços */}
           <div className="w-full lg:w-2/3 flex flex-col gap-6">
-
-            {/* Título no padrão do app */}
-            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Meus Projetos
-                </p>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                {[
-                  { id: 'todos', label: 'Todos' },
-                  { id: 'pendente', label: 'Aceitar' },
-                ].map(f => (
-                  <span
-                    key={f.id}
-                    className="px-5 py-2.5 rounded-full text-[12px] font-semibold border bg-blue-600 text-white border-blue-600"
-                  >
-                    {f.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-
             <div className="space-y-6">
               {servicos.map(servico => (
                 <ServicoCard
@@ -132,12 +113,12 @@ export default function PainelDoCliente() {
                   servico={servico}
                   onZoom={setZoomImage}
                   onAceitar={handleAceitar}
-                  hidePrestador // oculta o cabeçalho do prestador no card pois já está na esquerda
+                  hidePrestador
                 />
               ))}
             </div>
-
           </div>
+
         </div>
       </div>
     </main>
