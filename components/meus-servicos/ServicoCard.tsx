@@ -1,5 +1,5 @@
 'use client'
-import { Clock, User, Phone, ChevronRight, ZoomIn, Briefcase } from 'lucide-react'
+import { Clock, User, Phone, ChevronRight, ZoomIn, Briefcase, CheckCircle2 } from 'lucide-react'
 import { Servico } from '@/types/painel'
 
 interface Props {
@@ -7,14 +7,30 @@ interface Props {
   onZoom: (url: string) => void
   onAceitar: (servico: Servico) => void
   hidePrestador?: boolean
+  modo?: 'pendente' | 'andamento' | 'concluido'
 }
 
-export default function ServicoCard({ servico, onZoom, onAceitar, hidePrestador = false }: Props) {
+// Label e cor do badge da foto variam conforme o status
+const BADGE = {
+  pendente:  { texto: 'Aguardando Início',  cor: 'text-blue-600' },
+  andamento: { texto: 'Em Andamento',       cor: 'text-amber-500' },
+  concluido: { texto: 'Concluído',          cor: 'text-emerald-600' },
+}
+
+export default function ServicoCard({
+  servico,
+  onZoom,
+  onAceitar,
+  hidePrestador = false,
+  modo = 'pendente',
+}: Props) {
   const fotoInicio = servico.portfolio_fotos?.find(f => f.ordem === 1)
+  const badge = BADGE[modo]
 
   return (
     <div className="bg-white rounded-[2.5rem] p-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-50 group">
 
+      {/* ── Cabeçalho do prestador (opcional) ── */}
       {!hidePrestador && (
         <div className="flex items-center justify-between px-2 mb-4">
           <div className="flex items-center gap-3">
@@ -30,8 +46,12 @@ export default function ServicoCard({ servico, onZoom, onAceitar, hidePrestador 
               </div>
             )}
             <div>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Prestador</p>
-              <h3 className="text-xs font-black uppercase text-slate-800">{servico.prestadores?.nome}</h3>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                Prestador
+              </p>
+              <h3 className="text-xs font-black uppercase text-slate-800">
+                {servico.prestadores?.nome}
+              </h3>
             </div>
           </div>
           <div className="px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
@@ -42,6 +62,7 @@ export default function ServicoCard({ servico, onZoom, onAceitar, hidePrestador 
         </div>
       )}
 
+      {/* ── Foto de capa ── */}
       <div
         onClick={() => fotoInicio && onZoom(fotoInicio.url_foto)}
         className="relative aspect-[4/3] rounded-[2rem] overflow-hidden bg-slate-100 cursor-zoom-in"
@@ -51,13 +72,21 @@ export default function ServicoCard({ servico, onZoom, onAceitar, hidePrestador 
             <img
               src={fotoInicio.url_foto}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              alt="Início"
+              alt="Foto do serviço"
             />
+
+            {/* Badge de status sobre a foto */}
             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-800 flex items-center gap-1.5">
-                <Clock size={10} className="text-blue-600" /> Aguardando Início
+              <p className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 ${badge.cor}`}>
+                {modo === 'concluido'
+                  ? <CheckCircle2 size={10} />
+                  : <Clock size={10} />
+                }
+                {badge.texto}
               </p>
             </div>
+
+            {/* Overlay de zoom no hover */}
             <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <div className="bg-white/30 backdrop-blur-md p-4 rounded-full text-white border border-white/40">
                 <ZoomIn size={24} />
@@ -72,6 +101,7 @@ export default function ServicoCard({ servico, onZoom, onAceitar, hidePrestador 
         )}
       </div>
 
+      {/* ── Informações e ações ── */}
       <div className="mt-5 px-2 space-y-5">
         <div>
           <h4 className="text-xl font-black italic uppercase text-slate-800 leading-tight tracking-tight line-clamp-2">
@@ -80,24 +110,52 @@ export default function ServicoCard({ servico, onZoom, onAceitar, hidePrestador 
           <div className="flex items-center gap-2 mt-2 text-slate-400">
             <Clock size={12} />
             <p className="text-[10px] font-medium uppercase tracking-wide">
-              Criado em {new Date(servico.created_at).toLocaleDateString()}
+              Criado em {new Date(servico.created_at).toLocaleDateString('pt-BR')}
             </p>
           </div>
         </div>
 
+        {/* ── Botões de ação ── */}
         <div className="flex gap-3">
+
+          {/* Botão de telefone — sempre visível */}
           <a
             href={`tel:${servico.prestadores?.whatsapp}`}
             className="w-14 h-14 rounded-2xl border-2 border-slate-100 flex items-center justify-center text-slate-400 hover:text-green-600 hover:border-green-100 hover:bg-green-50 transition-all"
           >
             <Phone size={20} />
           </a>
-          <button
-            onClick={() => onAceitar(servico)}
-            className="flex-1 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all"
-          >
-            Autorizar Serviço <ChevronRight size={16} />
-          </button>
+
+          {/* PENDENTE — Autorizar */}
+          {modo === 'pendente' && (
+            <button
+              onClick={() => onAceitar(servico)}
+              className="flex-1 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all"
+            >
+              Autorizar Serviço <ChevronRight size={16} />
+            </button>
+          )}
+
+          {/* ANDAMENTO — Acompanhar */}
+          {modo === 'andamento' && (
+            <button
+              onClick={() => onAceitar(servico)}
+              className="flex-1 bg-slate-800 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 hover:bg-slate-700 active:scale-[0.98] transition-all"
+            >
+              Acompanhar <ChevronRight size={16} />
+            </button>
+          )}
+
+          {/* CONCLUÍDO — Ver avaliação */}
+          {modo === 'concluido' && (
+            <button
+              onClick={() => onAceitar(servico)}
+              className="flex-1 bg-emerald-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 hover:bg-emerald-700 active:scale-[0.98] transition-all"
+            >
+              Ver avaliação <ChevronRight size={16} />
+            </button>
+          )}
+
         </div>
       </div>
 

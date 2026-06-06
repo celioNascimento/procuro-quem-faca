@@ -20,7 +20,7 @@ export async function getServicoPorToken(token: string) {
     .from('portfolio_projetos')
     .select(SELECT_SERVICOS)
     .eq('avaliacao_token', token)
-    .eq('status', 'pendente')
+    .in('status', ['em_registro', 'pendente', 'em_execucao', 'concluido'])
     .maybeSingle()
   return data ? [data] : []
 }
@@ -30,7 +30,7 @@ export async function getServicosPorWhatsapp(whatsapp: string) {
     .from('portfolio_projetos')
     .select(SELECT_SERVICOS)
     .eq('cliente_whatsapp', whatsapp.replace(/\D/g, ''))
-    .eq('status', 'pendente')
+    .in('status', ['em_registro', 'pendente', 'em_execucao', 'concluido'])
     .order('created_at', { ascending: false })
   return data ?? []
 }
@@ -50,7 +50,8 @@ export async function aceitarServico(
     .eq('id', servicoId)
 
   if (error) throw error
-  window.location.href = `/avaliar/${servicoId}?token=${avaliacaoToken}`
+
+  window.location.href = `/acompanhamento/${avaliacaoToken}`
 }
 
 export async function loginComGoogle(tokenUrl: string | null) {
