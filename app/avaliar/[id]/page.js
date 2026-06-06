@@ -7,7 +7,7 @@ import {
   Phone, Briefcase, CheckCircle2, Loader2, Send, Activity, LayoutGrid,
   Share2, ChevronLeft, MoreHorizontal, ZoomIn, Camera
 } from 'lucide-react'
-import HeaderCliente from '@/components/HeaderCliente'
+import HeaderCliente from '@/components/perfil/HeaderCliente'
 
 export default function PaginaAvaliacaoCliente({ params: paramsPromise }) {
   const params = use(paramsPromise)
