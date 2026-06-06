@@ -6,39 +6,42 @@ interface Props {
   servico: Servico
   onZoom: (url: string) => void
   onAceitar: (servico: Servico) => void
+  hidePrestador?: boolean
 }
 
-export default function ServicoCard({ servico, onZoom, onAceitar }: Props) {
+export default function ServicoCard({ servico, onZoom, onAceitar, hidePrestador = false }: Props) {
   const fotoInicio = servico.portfolio_fotos?.find(f => f.ordem === 1)
 
   return (
     <div className="bg-white rounded-[2.5rem] p-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-50 group">
 
-      {/* Prestador */}
-      <div className="flex items-center justify-between px-2 mb-4">
-        <div className="flex items-center gap-3">
-          {servico.prestadores?.foto_perfil ? (
-            <img
-              src={servico.prestadores.foto_perfil}
-              className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-50"
-              alt="Prestador"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-              <User size={18} className="text-slate-300" />
+      {/* Prestador — oculto quando já aparece na coluna esquerda */}
+      {!hidePrestador && (
+        <div className="flex items-center justify-between px-2 mb-4">
+          <div className="flex items-center gap-3">
+            {servico.prestadores?.foto_perfil ? (
+              <img
+                src={servico.prestadores.foto_perfil}
+                className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-50"
+                alt="Prestador"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                <User size={18} className="text-slate-300" />
+              </div>
+            )}
+            <div>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Prestador</p>
+              <h3 className="text-xs font-black uppercase text-slate-800">{servico.prestadores?.nome}</h3>
             </div>
-          )}
-          <div>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Prestador</p>
-            <h3 className="text-xs font-black uppercase text-slate-800">{servico.prestadores?.nome}</h3>
+          </div>
+          <div className="px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
+            <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">
+              {servico.prestadores?.categoria?.nome || 'Serviço'}
+            </span>
           </div>
         </div>
-        <div className="px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
-          <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">
-            {servico.prestadores?.categoria?.nome || 'Serviço'}
-          </span>
-        </div>
-      </div>
+      )}
 
       {/* Foto */}
       <div
@@ -86,10 +89,10 @@ export default function ServicoCard({ servico, onZoom, onAceitar }: Props) {
         </div>
 
         <div className="flex gap-3">
-          <a>
+          
             href={`tel:${servico.prestadores?.whatsapp}`}
             className="w-14 h-14 rounded-2xl border-2 border-slate-100 flex items-center justify-center text-slate-400 hover:text-green-600 hover:border-green-100 hover:bg-green-50 transition-all"
-          
+          <a>
             <Phone size={20} />
           </a>
           <button
