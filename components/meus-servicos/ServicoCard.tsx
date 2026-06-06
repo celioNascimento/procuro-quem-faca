@@ -15,7 +15,6 @@ export default function ServicoCard({ servico, onZoom, onAceitar, hidePrestador 
   return (
     <div className="bg-white rounded-[2.5rem] p-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-50 group">
 
-      {/* Prestador — oculto quando já aparece na coluna esquerda */}
       {!hidePrestador && (
         <div className="flex items-center justify-between px-2 mb-4">
           <div className="flex items-center gap-3">
@@ -43,7 +42,6 @@ export default function ServicoCard({ servico, onZoom, onAceitar, hidePrestador 
         </div>
       )}
 
-      {/* Foto */}
       <div
         onClick={() => fotoInicio && onZoom(fotoInicio.url_foto)}
         className="relative aspect-[4/3] rounded-[2rem] overflow-hidden bg-slate-100 cursor-zoom-in"
@@ -74,7 +72,6 @@ export default function ServicoCard({ servico, onZoom, onAceitar, hidePrestador 
         )}
       </div>
 
-      {/* Info + Ações */}
       <div className="mt-5 px-2 space-y-5">
         <div>
           <h4 className="text-xl font-black italic uppercase text-slate-800 leading-tight tracking-tight line-clamp-2">
@@ -89,10 +86,10 @@ export default function ServicoCard({ servico, onZoom, onAceitar, hidePrestador 
         </div>
 
         <div className="flex gap-3">
-          
+          <a
             href={`tel:${servico.prestadores?.whatsapp}`}
             className="w-14 h-14 rounded-2xl border-2 border-slate-100 flex items-center justify-center text-slate-400 hover:text-green-600 hover:border-green-100 hover:bg-green-50 transition-all"
-          <a>
+          >
             <Phone size={20} />
           </a>
           <button
