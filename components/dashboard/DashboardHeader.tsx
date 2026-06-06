@@ -1,42 +1,36 @@
 import Link from 'next/link'
+import { LogOut } from 'lucide-react'
 import { useLogout } from '@/hooks/useLogout'
 
 export default function DashboardHeader() {
   const { logout } = useLogout()
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100 h-16 md:h-20 flex items-center">
-      <div className="max-w-7xl mx-auto w-full px-6 flex items-center justify-between h-full">
+    <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md font-sans border-b border-slate-100">
+      <div className="max-w-5xl mx-auto px-4 h-16 md:h-28 flex items-center justify-between">
 
-        {/* Logo alinhada à esquerda (Padrão Desktop) */}
-        <Link
-          href="/"
-          className="hover:opacity-80 active:scale-95 transition-all duration-200 flex items-center justify-start"
-        >
-          <img
-            src="/logo.png"
-            alt="Logo Procuro Quem Faça"
-            className="h-10 md:h-14 w-auto object-contain drop-shadow-sm"
-          />
-        </Link>
+        {/* Esquerda — espaço reservado para simetria */}
+        <div className="w-10 md:w-32 shrink-0" />
 
-        {/* Ação de Saída alinhada à direita */}
-        <div className="flex justify-end">
+        {/* Centro — logo */}
+        <div className="flex-1 flex justify-center items-center px-2">
+          <Link href="/" className="transition-all hover:opacity-80 active:scale-95">
+            <img
+              src="/logo.png"
+              alt="Procuro Quem Faça"
+              className="h-10 md:h-14 w-auto object-contain drop-shadow-sm"
+            />
+          </Link>
+        </div>
+
+        {/* Direita — logout */}
+        <div className="w-10 md:w-32 shrink-0 flex justify-end items-center">
           <button
             onClick={logout}
-            className="group flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-red-50 transition-all active:scale-95"
+            className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all active:scale-95 shadow-sm"
             title="Encerrar Sessão"
           >
-            <span className="hidden md:inline text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 group-hover:text-red-500 transition-colors italic">
-              Sair
-            </span>
-            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 group-hover:bg-red-100 group-hover:text-red-600 transition-all shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-            </div>
+            <LogOut size={18} />
           </button>
         </div>
 
