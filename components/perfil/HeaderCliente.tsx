@@ -14,25 +14,22 @@ export default function HeaderCliente({ nomeCliente }: HeaderClienteProps) {
 
   return (
     <nav className="w-full bg-white/95 backdrop-blur-md border-b border-slate-50 sticky top-0 z-50 font-sans">
-      {/* Container ampliado no desktop para acompanhar o layout em duas colunas */}
-      <div className="max-w-xl lg:max-w-6xl mx-auto px-5 lg:px-6 h-20 md:h-24 flex justify-between items-center gap-3">
+      <div className="max-w-xl lg:max-w-6xl mx-auto px-5 lg:px-6 h-20 md:h-24 flex items-center gap-3">
 
         {/* ESQUERDA: Voltar */}
-        <div className="shrink-0">
-          <button
-            onClick={handleBack}
-            className="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center bg-slate-50 text-slate-400 border border-slate-100 rounded-2xl transition-all active:scale-90 hover:bg-white hover:text-blue-600 hover:border-blue-100 hover:shadow-sm"
-            title="Voltar"
-          >
-            <ChevronLeft size={22} strokeWidth={2.5} />
-          </button>
-        </div>
+        <button
+          onClick={handleBack}
+          className="shrink-0 w-10 h-10 md:w-11 md:h-11 flex items-center justify-center bg-slate-50 text-slate-400 border border-slate-100 rounded-2xl transition-all active:scale-90 hover:bg-white hover:text-blue-600 hover:border-blue-100 hover:shadow-sm"
+          title="Voltar"
+        >
+          <ChevronLeft size={22} strokeWidth={2.5} />
+        </button>
 
-        {/* CENTRO/ESQUERDA: Logo (Alinhada à esquerda no Desktop para preencher o layout) */}
-        <div className="flex-1 flex justify-center lg:justify-start lg:pl-6">
+        {/* LOGO: cresce para ocupar o espaço, mas alinha à esquerda */}
+        <div className="flex-1">
           <Link
             href="/"
-            className="transition-transform hover:opacity-80 active:scale-95 flex items-center justify-center lg:justify-start w-40 md:w-56"
+            className="transition-transform hover:opacity-80 active:scale-95 inline-flex items-center w-40 md:w-56"
           >
             <Image
               src="/logo.png"
@@ -45,7 +42,7 @@ export default function HeaderCliente({ nomeCliente }: HeaderClienteProps) {
           </Link>
         </div>
 
-        {/* DIREITA: Nome + Logout */}
+        {/* DIREITA: Nome + Logout — colados à direita */}
         <div className="shrink-0 flex items-center gap-2">
           {nome && (
             <div className="hidden md:flex flex-col items-end min-w-0 mr-2">
