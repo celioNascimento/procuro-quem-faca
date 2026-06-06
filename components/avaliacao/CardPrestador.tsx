@@ -1,4 +1,4 @@
-import { Phone, Share2, Briefcase, MapPin } from 'lucide-react'
+import { Phone, Share2, Briefcase } from 'lucide-react'
 import type { Projeto } from '@/hooks/useAvaliacao'
 
 type Props = {
@@ -12,32 +12,33 @@ export function CardPrestador({ projeto, onShare }: Props) {
   return (
     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
 
-      {/* Topo azul — fundo de vitrine */}
-      <div className="h-24 bg-gradient-to-br from-blue-600 to-blue-500 relative">
-        {/* Círculos decorativos */}
-        <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
-        <div className="absolute -top-4 -left-4 w-20 h-20 bg-white/10 rounded-full" />
+      {/* Banner azul — mais alto para dar espaço à foto */}
+      <div className="h-36 bg-gradient-to-br from-blue-700 via-blue-600 to-blue-400 relative">
+        {/* Círculos decorativos de fundo */}
+        <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-white/10 rounded-full" />
+        <div className="absolute -top-6 -left-6 w-28 h-28 bg-white/10 rounded-full" />
+        <div className="absolute bottom-4 left-6 w-10 h-10 bg-white/10 rounded-full" />
 
-        {/* Botões flutuantes no canto */}
-        <div className="absolute top-3 right-3 flex gap-2">
+        {/* Botões share + tel no canto superior direito */}
+        <div className="absolute top-4 right-4 flex gap-2">
           <button
             onClick={onShare}
-            className="w-8 h-8 bg-white/20 backdrop-blur-sm text-white rounded-xl flex items-center justify-center active:scale-95 transition-all border border-white/30 hover:bg-white/30"
+            className="w-9 h-9 bg-white/20 backdrop-blur-sm text-white rounded-xl flex items-center justify-center active:scale-95 transition-all border border-white/30 hover:bg-white/30"
           >
-            <Share2 size={13} />
+            <Share2 size={14} />
           </button>
           <a
             href={`tel:${prestador?.whatsapp}`}
-            className="w-8 h-8 bg-green-500 text-white rounded-xl flex items-center justify-center shadow-md active:scale-95 transition-all"
+            className="w-9 h-9 bg-green-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-green-900/30 active:scale-95 transition-all"
           >
-            <Phone size={13} fill="currentColor" />
+            <Phone size={14} fill="currentColor" />
           </a>
         </div>
       </div>
 
-      {/* Foto centralizada sobrepondo o banner */}
-      <div className="flex justify-center -mt-10 mb-3 relative z-10">
-        <div className="w-20 h-20 rounded-2xl bg-white overflow-hidden border-4 border-white shadow-lg">
+      {/* Foto grande centralizada — sobrepõe o banner */}
+      <div className="flex justify-center -mt-14 mb-4 relative z-10">
+        <div className="w-28 h-28 rounded-3xl bg-white overflow-hidden border-4 border-white shadow-2xl shadow-blue-200/60">
           <img
             src={prestador?.foto_perfil}
             className="w-full h-full object-cover"
@@ -46,26 +47,32 @@ export function CardPrestador({ projeto, onShare }: Props) {
         </div>
       </div>
 
-      {/* Nome e categoria */}
-      <div className="px-5 pb-5 text-center space-y-3">
+      {/* Conteúdo textual */}
+      <div className="px-5 pb-5 text-center space-y-4">
+
+        {/* Categoria + Nome */}
         <div>
-          <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.2em]">
+          <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.25em]">
             {prestador?.categoria?.nome}
           </p>
-          <h2 className="text-base font-black text-slate-800 uppercase tracking-tight leading-tight mt-0.5">
+          <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-none mt-1">
             {prestador?.nome}
           </h2>
         </div>
 
-        {/* Divider */}
-        <div className="flex items-center gap-2">
+        {/* Divider elegante */}
+        <div className="flex items-center gap-2 px-4">
           <div className="flex-1 h-px bg-slate-100" />
-          <div className="w-1 h-1 bg-slate-200 rounded-full" />
+          <div className="flex gap-1">
+            <div className="w-1 h-1 bg-blue-200 rounded-full" />
+            <div className="w-1 h-1 bg-blue-400 rounded-full" />
+            <div className="w-1 h-1 bg-blue-200 rounded-full" />
+          </div>
           <div className="flex-1 h-px bg-slate-100" />
         </div>
 
         {/* Serviço em andamento */}
-        <div className="bg-slate-50 rounded-2xl px-4 py-3 flex items-start gap-3 text-left">
+        <div className="bg-slate-50 rounded-2xl px-4 py-3 flex items-start gap-3 text-left border border-slate-100">
           <div className="w-7 h-7 bg-blue-50 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
             <Briefcase size={13} className="text-blue-500" />
           </div>
@@ -82,7 +89,7 @@ export function CardPrestador({ projeto, onShare }: Props) {
         {/* Whatsapp pill */}
         <a
           href={`tel:${prestador?.whatsapp}`}
-          className="flex items-center justify-center gap-2 w-full py-2.5 bg-green-50 text-green-700 rounded-xl border border-green-100 text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all hover:bg-green-100"
+          className="flex items-center justify-center gap-2 w-full py-3 bg-green-50 text-green-700 rounded-2xl border border-green-100 text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all hover:bg-green-100"
         >
           <Phone size={12} fill="currentColor" />
           {prestador?.whatsapp}
