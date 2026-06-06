@@ -35,10 +35,10 @@ export async function getServicosPorWhatsapp(whatsapp: string) {
   return data ?? []
 }
 
+// ✅ Apenas dois parâmetros — avaliacaoToken removido (navegação é responsabilidade do hook)
 export async function aceitarServico(
   servicoId: string,
   nomeCliente: string,
-  avaliacaoToken: string
 ) {
   const { error } = await supabase
     .from('portfolio_projetos')
@@ -50,8 +50,6 @@ export async function aceitarServico(
     .eq('id', servicoId)
 
   if (error) throw error
-
-  
 }
 
 export async function loginComGoogle(tokenUrl: string | null) {
