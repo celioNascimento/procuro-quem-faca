@@ -84,13 +84,14 @@ export default function PaginaAvaliacaoCliente({
         do prestador + status, coluna direita com o conteúdo principal.
         Em mobile volta a ser uma coluna normal.
       */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* pt-20 cobre h-16 (64px) no mobile; md:pt-36 cobre h-28 (112px) no desktop */}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 md:pt-36 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
         {/* ── LAYOUT DESKTOP: duas colunas ────────────────────────────────── */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-6">
 
           {/* Coluna esquerda — sticky no desktop */}
-          <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-24 space-y-4">
+          <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-32 space-y-4">
             <CardPrestador
               projeto={projeto}
               onShare={handleShare}
