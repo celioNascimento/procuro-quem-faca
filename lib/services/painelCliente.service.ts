@@ -51,7 +51,7 @@ export async function aceitarServico(
 
   if (error) throw error
 
-  window.location.href = `/acompanhamento/${avaliacaoToken}`
+  
 }
 
 export async function loginComGoogle(tokenUrl: string | null) {
