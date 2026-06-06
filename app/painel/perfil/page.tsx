@@ -223,7 +223,7 @@ export default function PerfilDoCliente() {
             {aba === 'servicos' ? (
               <div className="space-y-4 pb-4">
                 {/* Filtros */}
-                <div className="flex gap-2 overflow-x-auto pb-2 -mb-2 no-scrollbar">
+                <div className="flex flex-wrap justify-center gap-2 pb-2">
                   {[
                     { id: 'todos',       label: 'Todos' },
                     { id: 'pendente',    label: 'Aceitar' },
@@ -232,7 +232,7 @@ export default function PerfilDoCliente() {
                     { id: 'finalizados', label: 'Concluídos' }
                   ].map(f => (
                     <button key={f.id} onClick={() => setFiltroStatus(f.id)}
-                      className={`px-4 py-2 rounded-full text-[11px] font-semibold transition-all shrink-0 border whitespace-nowrap ${
+                      className={`px-5 py-2.5 rounded-full text-[12px] font-semibold transition-all shrink-0 border whitespace-nowrap ${
                         filtroStatus === f.id
                           ? 'bg-blue-600 text-white border-blue-600 shadow-md'
                           : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
