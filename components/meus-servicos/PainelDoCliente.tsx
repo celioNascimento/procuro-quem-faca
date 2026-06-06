@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { User } from 'lucide-react'
+import { User, Clock, Loader2, CheckCircle2, ClipboardList, LayoutGrid } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import LoginGate from './LoginGate'
@@ -8,33 +8,54 @@ import ServicoCard from './ServicoCard'
 import ZoomImageModal from './ZoomImageModal'
 import { usePainelCliente } from '@/hooks/usePainelCliente'
 
-// ── Definição das pílulas ──────────────────────────────────────────────────────
+// ── Tipos ──────────────────────────────────────────────────────────────────────
 type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido'
 
-const PILULAS: { valor: Filtro; label: string; cor: string; corAtiva: string }[] = [
+// ── Config das linhas de filtro ────────────────────────────────────────────────
+const FILTROS: {
+  valor: Filtro
+  label: string
+  sublabel: string
+  icon: React.ElementType
+  cor: string        // texto + ícone quando inativo
+  corAtiva: string   // fundo quando ativo
+  corIcone: string   // cor do ícone quando ativo
+}[] = [
   {
     valor: 'todos',
     label: 'Todos',
-    cor: 'bg-slate-100 text-slate-500 border-slate-200',
-    corAtiva: 'bg-slate-800 text-white border-slate-800',
+    sublabel: 'projetos',
+    icon: LayoutGrid,
+    cor: 'text-slate-400',
+    corAtiva: 'bg-slate-800',
+    corIcone: 'text-white',
   },
   {
     valor: 'pendente',
     label: 'Pendentes',
-    cor: 'bg-blue-50 text-blue-500 border-blue-100',
-    corAtiva: 'bg-blue-600 text-white border-blue-600',
+    sublabel: 'aguardando aprovação',
+    icon: ClipboardList,
+    cor: 'text-blue-400',
+    corAtiva: 'bg-blue-600',
+    corIcone: 'text-white',
   },
   {
     valor: 'em_execucao',
     label: 'Em andamento',
-    cor: 'bg-amber-50 text-amber-500 border-amber-100',
-    corAtiva: 'bg-amber-500 text-white border-amber-500',
+    sublabel: 'em execução',
+    icon: Loader2,
+    cor: 'text-amber-400',
+    corAtiva: 'bg-amber-500',
+    corIcone: 'text-white',
   },
   {
     valor: 'concluido',
     label: 'Concluídos',
-    cor: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    corAtiva: 'bg-emerald-600 text-white border-emerald-600',
+    sublabel: 'finalizados',
+    icon: CheckCircle2,
+    cor: 'text-emerald-500',
+    corAtiva: 'bg-emerald-600',
+    corIcone: 'text-white',
   },
 ]
 
@@ -56,7 +77,6 @@ export default function PainelDoCliente() {
   const concluidos  = servicos.filter(s => s.status === 'concluido')
   const totalPendentes = pendentes.length + emRegistro.length
 
-  // Contadores para cada pílula
   const contadores: Record<Filtro, number> = {
     todos:       servicos.length,
     pendente:    totalPendentes,
@@ -64,22 +84,20 @@ export default function PainelDoCliente() {
     concluido:   concluidos.length,
   }
 
-  // ── Serviços filtrados para exibição ─────────────────────────────────────────
+  // ── Serviços filtrados ────────────────────────────────────────────────────────
   const servicosFiltrados = (() => {
     if (filtroAtivo === 'pendente')    return [...pendentes, ...emRegistro]
     if (filtroAtivo === 'em_execucao') return emAndamento
     if (filtroAtivo === 'concluido')   return concluidos
-    return servicos // 'todos'
+    return servicos
   })()
 
-  // Modo de cada card (define cor e texto do botão)
   const getModo = (status: string) => {
     if (status === 'em_execucao') return 'andamento' as const
     if (status === 'concluido')   return 'concluido' as const
     return 'pendente' as const
   }
 
-  // Handler unificado por status
   const getOnAceitar = (servico: any) => {
     if (servico.status === 'em_execucao')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
@@ -142,54 +160,70 @@ export default function PainelDoCliente() {
                 </div>
               )}
 
-              {/* Card de resumo com pílulas de filtro */}
-              <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Meus projetos
-                </p>
+              {/* Card de filtros — lista vertical */}
+              <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                <div className="px-6 pt-5 pb-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    Meus projetos
+                  </p>
+                </div>
 
-                {/* Pílulas */}
-                <div className="flex flex-wrap gap-2">
-                  {PILULAS.map(pilula => {
-                    const ativa = filtroAtivo === pilula.valor
-                    const count = contadores[pilula.valor]
-                    // Oculta pílulas sem projetos (exceto "Todos")
-                    if (pilula.valor !== 'todos' && count === 0) return null
+                <div className="flex flex-col pb-3">
+                  {FILTROS.map((filtro, i) => {
+                    const ativo = filtroAtivo === filtro.valor
+                    const count = contadores[filtro.valor]
+                    const Icon  = filtro.icon
+
+                    // Oculta linhas sem projetos (exceto "Todos")
+                    if (filtro.valor !== 'todos' && count === 0) return null
+
                     return (
                       <button
-                        key={pilula.valor}
-                        onClick={() => setFiltroAtivo(pilula.valor)}
+                        key={filtro.valor}
+                        onClick={() => setFiltroAtivo(filtro.valor)}
                         className={`
-                          flex items-center gap-1.5 px-3 py-1.5 rounded-full border
-                          text-[10px] font-black uppercase tracking-wider
-                          transition-all duration-200 active:scale-95
-                          ${ativa ? pilula.corAtiva : pilula.cor}
+                          relative flex items-center gap-3 px-6 py-3.5
+                          transition-all duration-200 text-left
+                          ${ativo ? 'bg-slate-50' : 'hover:bg-slate-50/60'}
                         `}
                       >
-                        {pilula.label}
+                        {/* Indicador lateral ativo */}
+                        {ativo && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-blue-600" />
+                        )}
+
+                        {/* Ícone */}
+                        <div className={`
+                          w-8 h-8 rounded-xl flex items-center justify-center shrink-0
+                          transition-all duration-200
+                          ${ativo ? `${filtro.corAtiva}` : 'bg-slate-100'}
+                        `}>
+                          <Icon
+                            size={14}
+                            className={ativo ? filtro.corIcone : filtro.cor}
+                          />
+                        </div>
+
+                        {/* Texto */}
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-[11px] font-black uppercase tracking-wider leading-none ${ativo ? 'text-slate-800' : 'text-slate-500'}`}>
+                            {filtro.label}
+                          </p>
+                          <p className="text-[9px] text-slate-400 font-medium mt-0.5 capitalize">
+                            {count === 1 ? '1 projeto' : `${count} projetos`}
+                          </p>
+                        </div>
+
+                        {/* Contador badge */}
                         <span className={`
-                          px-1.5 py-0.5 rounded-full text-[9px] font-black
-                          ${ativa ? 'bg-white/20' : 'bg-white/80'}
+                          text-[10px] font-black px-2 py-0.5 rounded-full
+                          ${ativo ? `${filtro.corAtiva} text-white` : 'bg-slate-100 text-slate-400'}
                         `}>
                           {count}
                         </span>
                       </button>
                     )
                   })}
-                </div>
-
-                {/* Contador do filtro ativo */}
-                <div>
-                  <span className="text-4xl font-black text-slate-800">
-                    {contadores[filtroAtivo]}
-                  </span>
-                  <p className="text-[11px] text-slate-400 font-medium mt-1">
-                    {contadores[filtroAtivo] === 1 ? 'projeto' : 'projetos'}{' '}
-                    {filtroAtivo === 'todos'       && 'no total'}
-                    {filtroAtivo === 'pendente'    && 'aguardando aprovação'}
-                    {filtroAtivo === 'em_execucao' && 'em andamento'}
-                    {filtroAtivo === 'concluido'   && 'concluídos'}
-                  </p>
                 </div>
               </div>
 
@@ -223,6 +257,25 @@ export default function PainelDoCliente() {
 
           {/* ── Coluna Direita — cards filtrados ── */}
           <div className="w-full lg:w-2/3 flex flex-col gap-6">
+
+            {/* Título da seção ativa */}
+            <div className="flex items-center gap-3">
+              {(() => {
+                const f = FILTROS.find(f => f.valor === filtroAtivo)!
+                const Icon = f.icon
+                return (
+                  <>
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${f.corAtiva}`}>
+                      <Icon size={13} className="text-white" />
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      {f.label} · {contadores[filtroAtivo]} {contadores[filtroAtivo] === 1 ? 'projeto' : 'projetos'}
+                    </p>
+                  </>
+                )
+              })()}
+            </div>
+
             {servicosFiltrados.length > 0 ? (
               servicosFiltrados.map(servico => (
                 <ServicoCard
@@ -236,6 +289,7 @@ export default function PainelDoCliente() {
               ))
             ) : (
               <div className="flex flex-col items-center justify-center py-24 text-slate-300">
+                <Clock size={32} className="mb-3 opacity-40" />
                 <p className="text-[11px] font-black uppercase tracking-widest">
                   Nenhum projeto nesta categoria
                 </p>
