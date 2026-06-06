@@ -74,61 +74,85 @@ export default function PaginaAvaliacaoCliente({
   if (!projeto) return null
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-20 font-sans antialiased">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased">
+      {/* Header fixo — ocupa espaço real com padding-top no body */}
       <HeaderCliente nomeCliente={projeto.cliente_nome} />
 
-      <div className="max-w-xl mx-auto px-5 pt-6 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/*
+        pt-20 compensa o header fixo (~64px + folga).
+        No desktop usamos duas colunas: coluna esquerda "sticky" com o card
+        do prestador + status, coluna direita com o conteúdo principal.
+        Em mobile volta a ser uma coluna normal.
+      */}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-        <CardPrestador
-          projeto={projeto}
-          onShare={handleShare}
-        />
+        {/* ── LAYOUT DESKTOP: duas colunas ────────────────────────────────── */}
+        <div className="flex flex-col lg:flex-row lg:items-start gap-6">
 
-        {!visualmenteConcluido && (
-          <LinhaDeTempo
-            fotosOrdenadas={fotosOrdenadas}
-            comentarios={comentarios}
-            labelEtapaAtual={labelEtapaAtual}
-            status={projeto.status}
-            onFotoClick={setFotoSelecionada}
-          />
-        )}
+          {/* Coluna esquerda — sticky no desktop */}
+          <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-24 space-y-4">
+            <CardPrestador
+              projeto={projeto}
+              onShare={handleShare}
+            />
 
-        {visualmenteConcluido && (
-          <StatusMini
-            labelEtapaAtual={labelEtapaAtual}
-            totalFotos={fotosOrdenadas.length}
-          />
-        )}
+            {visualmenteConcluido && (
+              <StatusMini
+                labelEtapaAtual={labelEtapaAtual}
+                totalFotos={fotosOrdenadas.length}
+              />
+            )}
 
-        {visualmenteConcluido && (
-          <CarrosselFinalizacao
-            projeto={projeto}
-            fotosCarrossel={fotosCarrossel}
-            currentSlide={currentSlide}
-            onNext={nextSlide}
-            onPrev={prevSlide}
-            avaliacaoExistente={avaliacaoExistente}
-          />
-        )}
+            <RodapeSeguranca />
+          </aside>
 
-        {!visualmenteConcluido && temConclusao && (
-          <BlocoAvaliacao
-            nota={nota}
-            setNota={setNota}
-            hoverNota={hoverNota}
-            setHoverNota={setHoverNota}
-            comentarioGeral={comentarioGeral}
-            setComentarioGeral={setComentarioGeral}
-            indica={indica}
-            setIndica={setIndica}
-            submitting={submitting}
-            onSubmit={handleFinalizarAvaliacao}
-          />
-        )}
+          {/* Coluna direita — conteúdo principal */}
+          <div className="flex-1 min-w-0 space-y-5">
 
-        <RodapeSeguranca />
-      </div>
+            {!visualmenteConcluido && (
+              <LinhaDeTempo
+                fotosOrdenadas={fotosOrdenadas}
+                comentarios={comentarios}
+                labelEtapaAtual={labelEtapaAtual}
+                status={projeto.status}
+                onFotoClick={setFotoSelecionada}
+              />
+            )}
+
+            {visualmenteConcluido && (
+              <CarrosselFinalizacao
+                projeto={projeto}
+                fotosCarrossel={fotosCarrossel}
+                currentSlide={currentSlide}
+                onNext={nextSlide}
+                onPrev={prevSlide}
+                avaliacaoExistente={avaliacaoExistente}
+              />
+            )}
+
+            {!visualmenteConcluido && temConclusao && (
+              <BlocoAvaliacao
+                nota={nota}
+                setNota={setNota}
+                hoverNota={hoverNota}
+                setHoverNota={setHoverNota}
+                comentarioGeral={comentarioGeral}
+                setComentarioGeral={setComentarioGeral}
+                indica={indica}
+                setIndica={setIndica}
+                submitting={submitting}
+                onSubmit={handleFinalizarAvaliacao}
+              />
+            )}
+
+            {/* RodapeSeguranca aparece aqui só no mobile (no desktop está no aside) */}
+            <div className="lg:hidden">
+              <RodapeSeguranca />
+            </div>
+          </div>
+
+        </div>
+      </main>
 
       {fotoSelecionada && !visualmenteConcluido && (
         <ModalDiscussao
