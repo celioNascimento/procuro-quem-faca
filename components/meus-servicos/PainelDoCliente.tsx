@@ -86,7 +86,7 @@ export default function PainelDoCliente() {
                 <div className="space-y-3">
                   {[
                     { n: '01', texto: 'Você confirma que o prestador pode iniciar o trabalho' },
-                    { n: '02', texto: 'Um token único e criptografado é gerado para rastrear o projeto' },
+                    { n: '02', texto: 'Um token único é gerado para rastrear o projeto' },
                     { n: '03', texto: 'Você poderá acompanhar e avaliar ao final' },
                   ].map(item => (
                     <div key={item.n} className="flex items-start gap-3">
