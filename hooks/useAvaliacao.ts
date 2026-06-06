@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  fetchProjetoComToken,
+  fetchProjetoPorToken,
   fetchAvaliacaoPorProjeto,
   fetchComentariosPorProjeto,
   inserirComentario,
@@ -50,29 +50,30 @@ export type Avaliacao = {
   indica: boolean
 }
 
-export function useAvaliacao(projetoId: string, token: string | null) {
+// ✅ Recebe apenas o token — que é o parâmetro dinâmico da rota /acompanhamento/[token]
+export function useAvaliacao(token: string) {
   const router = useRouter()
 
   // ── Dados remotos ───────────────────────────────────────────────────────────
-  const [projeto, setProjeto] = useState<Projeto | null>(null)
+  const [projeto, setProjeto]                     = useState<Projeto | null>(null)
   const [avaliacaoExistente, setAvaliacaoExistente] = useState<Avaliacao | null>(null)
-  const [comentarios, setComentarios] = useState<Comentario[]>([])
+  const [comentarios, setComentarios]             = useState<Comentario[]>([])
 
   // ── UI state ────────────────────────────────────────────────────────────────
-  const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
+  const [loading, setLoading]               = useState(true)
+  const [mounted, setMounted]               = useState(false)
   const [fotoSelecionada, setFotoSelecionada] = useState<FotoOrdenada | null>(null)
-  const [currentSlide, setCurrentSlide] = useState(0)
+  const [currentSlide, setCurrentSlide]     = useState(0)
 
   // ── Formulário de avaliação ─────────────────────────────────────────────────
-  const [nota, setNota] = useState(0)
-  const [hoverNota, setHoverNota] = useState(0)
+  const [nota, setNota]                       = useState(0)
+  const [hoverNota, setHoverNota]             = useState(0)
   const [comentarioGeral, setComentarioGeral] = useState('')
-  const [indica, setIndica] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
+  const [indica, setIndica]                   = useState(false)
+  const [submitting, setSubmitting]           = useState(false)
 
   // ── Formulário de comentário ────────────────────────────────────────────────
-  const [novoComentario, setNovoComentario] = useState('')
+  const [novoComentario, setNovoComentario]         = useState('')
   const [enviandoComentario, setEnviandoComentario] = useState(false)
 
   // ── Derivados ───────────────────────────────────────────────────────────────
@@ -85,9 +86,9 @@ export function useAvaliacao(projetoId: string, token: string | null) {
   const fotosOrdenadas: FotoOrdenada[] =
     projeto?.portfolio_fotos?.sort((a, b) => a.ordem - b.ordem) ?? []
 
-  const temConclusao = fotosOrdenadas.some((f) => f.ordem === 3)
+  const temConclusao = fotosOrdenadas.some(f => f.ordem === 3)
 
-  const fotosCarrossel: FotoOrdenada[] = fotosOrdenadas.map((f) => ({
+  const fotosCarrossel: FotoOrdenada[] = fotosOrdenadas.map(f => ({
     ...f,
     label: f.ordem === 1 ? 'Antes' : f.ordem === 2 ? 'Durante' : 'Depois',
   }))
@@ -102,13 +103,16 @@ export function useAvaliacao(projetoId: string, token: string | null) {
   useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
-    if (!token || !mounted || !projetoId) return
+    // ✅ Só precisa do token — sem projetoId
+    if (!token || !mounted) return
 
     async function carregar() {
       try {
-        const projData = await fetchProjetoComToken(projetoId, token!)
+        // ✅ Busca direto pelo token
+        const projData = await fetchProjetoPorToken(token)
         if (!projData) { setLoading(false); return }
 
+        // Com o projeto em mãos, busca avaliação e comentários pelo id real
         const [avalData, comData] = await Promise.all([
           fetchAvaliacaoPorProjeto(projData.id),
           fetchComentariosPorProjeto(projData.id),
@@ -125,7 +129,7 @@ export function useAvaliacao(projetoId: string, token: string | null) {
     }
 
     carregar()
-  }, [projetoId, token, mounted])
+  }, [token, mounted])
 
   // Posiciona carrossel na última foto quando concluído
   useEffect(() => {
@@ -136,10 +140,10 @@ export function useAvaliacao(projetoId: string, token: string | null) {
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const nextSlide = () =>
-    setCurrentSlide((prev) => (prev + 1) % fotosCarrossel.length)
+    setCurrentSlide(prev => (prev + 1) % fotosCarrossel.length)
 
   const prevSlide = () =>
-    setCurrentSlide((prev) => (prev - 1 + fotosCarrossel.length) % fotosCarrossel.length)
+    setCurrentSlide(prev => (prev - 1 + fotosCarrossel.length) % fotosCarrossel.length)
 
   const handleShare = async () => {
     const shareData = {
@@ -168,7 +172,7 @@ export function useAvaliacao(projetoId: string, token: string | null) {
         autor_tipo: 'cliente',
         texto: novoComentario.trim(),
       })
-      setComentarios((prev) => [...prev, novo])
+      setComentarios(prev => [...prev, novo])
       setNovoComentario('')
     } catch (err) {
       console.error(err)
@@ -191,7 +195,7 @@ export function useAvaliacao(projetoId: string, token: string | null) {
         status: 'finalizado',
       })
       await finalizarProjeto(projeto!.id)
-      setProjeto((prev) => prev ? { ...prev, status: 'finalizado' } : prev)
+      setProjeto(prev => prev ? { ...prev, status: 'finalizado' } : prev)
       router.push('/sucesso')
     } catch (err) {
       console.error(err)

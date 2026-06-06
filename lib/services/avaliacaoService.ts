@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/supabase'
 
-export async function fetchProjetoComToken(id: string, token: string) {
+// ✅ Busca pelo avaliacao_token (único no banco — constraint unique)
+// Não precisa mais do id do projeto
+export async function fetchProjetoPorToken(token: string) {
   const { data, error } = await supabase
     .from('portfolio_projetos')
     .select(`
@@ -8,7 +10,6 @@ export async function fetchProjetoComToken(id: string, token: string) {
       portfolio_fotos(*),
       prestadores(nome, foto_perfil, whatsapp, categoria:categorias(nome))
     `)
-    .eq('id', id)
     .eq('avaliacao_token', token)
     .single()
 

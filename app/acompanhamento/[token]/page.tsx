@@ -1,6 +1,5 @@
 'use client'
 import { use } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { useAvaliacao } from '@/hooks/useAvaliacao'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import { CardPrestador }        from '@/components/acompanhamento/CardPrestador'
@@ -11,15 +10,16 @@ import { BlocoAvaliacao }       from '@/components/acompanhamento/BlocoAvaliacao
 import { ModalDiscussao }       from '@/components/acompanhamento/ModalDiscussao'
 import { RodapeSeguranca }      from '@/components/acompanhamento/RodapeSeguranca'
 
+// ✅ O parâmetro dinâmico da rota é [token], não [id]
+// Certifique-se que a pasta da rota se chama [token]: /acompanhamento/[token]/page.tsx
 export default function PaginaAvaliacaoCliente({
   params: paramsPromise,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ token: string }>
 }) {
-  const { id } = use(paramsPromise)
-  const searchParams = useSearchParams()
-  const token = searchParams.get('token')
+  const { token } = use(paramsPromise)
 
+  // ✅ Passa apenas o token — o hook resolve o projeto internamente
   const {
     // dados
     projeto,
@@ -60,7 +60,7 @@ export default function PaginaAvaliacaoCliente({
     handleShare,
     handleEnviarComentario,
     handleFinalizarAvaliacao,
-  } = useAvaliacao(id, token)
+  } = useAvaliacao(token)
 
   // ── Loading / not mounted ──────────────────────────────────────────────────
   if (!mounted || loading) {
@@ -75,19 +75,10 @@ export default function PaginaAvaliacaoCliente({
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased">
-      {/* Header fixo — ocupa espaço real com padding-top no body */}
       <HeaderCliente nomeCliente={projeto.cliente_nome} />
 
-      {/*
-        pt-20 compensa o header fixo (~64px + folga).
-        No desktop usamos duas colunas: coluna esquerda "sticky" com o card
-        do prestador + status, coluna direita com o conteúdo principal.
-        Em mobile volta a ser uma coluna normal.
-      */}
-      {/* pt-20 cobre h-16 (64px) no mobile; md:pt-36 cobre h-28 (112px) no desktop */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 md:pt-36 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-        {/* ── LAYOUT DESKTOP: duas colunas ────────────────────────────────── */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-6">
 
           {/* Coluna esquerda — sticky no desktop */}
@@ -146,7 +137,7 @@ export default function PaginaAvaliacaoCliente({
               />
             )}
 
-            {/* RodapeSeguranca aparece aqui só no mobile (no desktop está no aside) */}
+            {/* RodapeSeguranca só no mobile */}
             <div className="lg:hidden">
               <RodapeSeguranca />
             </div>
