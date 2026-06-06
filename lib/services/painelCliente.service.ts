@@ -1,0 +1,67 @@
+import { supabase } from '@/lib/supabase'
+
+const SELECT_SERVICOS = `
+  *,
+  prestadores (nome, foto_perfil, whatsapp, categoria:categorias(nome)),
+  portfolio_fotos (*)
+`
+
+export async function getProfile(userId: string) {
+  const { data } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .maybeSingle()
+  return data
+}
+
+export async function getServicoPorToken(token: string) {
+  const { data } = await supabase
+    .from('portfolio_projetos')
+    .select(SELECT_SERVICOS)
+    .eq('avaliacao_token', token)
+    .eq('status', 'pendente')
+    .maybeSingle()
+  return data ? [data] : []
+}
+
+export async function getServicosPorWhatsapp(whatsapp: string) {
+  const { data } = await supabase
+    .from('portfolio_projetos')
+    .select(SELECT_SERVICOS)
+    .eq('cliente_whatsapp', whatsapp.replace(/\D/g, ''))
+    .eq('status', 'pendente')
+    .order('created_at', { ascending: false })
+  return data ?? []
+}
+
+export async function aceitarServico(
+  servicoId: string,
+  nomeCliente: string,
+  avaliacaoToken: string
+) {
+  const { error } = await supabase
+    .from('portfolio_projetos')
+    .update({
+      status: 'em_execucao',
+      aceito_at: new Date().toISOString(),
+      cliente_nome: nomeCliente,
+    })
+    .eq('id', servicoId)
+
+  if (error) throw error
+  window.location.href = `/avaliar/${servicoId}?token=${avaliacaoToken}`
+}
+
+export async function loginComGoogle(tokenUrl: string | null) {
+  const base = typeof window !== 'undefined' ? window.location.origin : ''
+  const redirectTo = tokenUrl
+    ? `${base}/meus-servicos?token=${tokenUrl}`
+    : `${base}/meus-servicos`
+
+  await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
+}
+
+export async function logout() {
+  await supabase.auth.signOut()
+}
