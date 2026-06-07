@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { LogIn, User, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { usePathname, useSearchParams } from 'next/navigation'
 
 const btnGhost   = 'flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full whitespace-nowrap bg-white/80 backdrop-blur-sm border border-slate-200/70 text-slate-500 text-[10px] md:text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md hover:bg-white hover:text-slate-700 transition-all duration-200 active:scale-95'
 const btnPrimary = 'flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full whitespace-nowrap bg-blue-600 text-white text-[10px] md:text-xs font-black uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all duration-200 active:scale-95'
@@ -13,6 +14,14 @@ type Props = {
 
 export function HeaderBotoes({ onLog }: Props) {
   const { session, role, roleLoading, loading, erroLogin, loginGoogle } = useAuth()
+
+  const pathname     = usePathname()
+  const searchParams = useSearchParams()
+
+  // Monta a URL completa da página atual para usar como origem no dashboard
+  const queryString  = searchParams.toString()
+  const origemAtual  = queryString ? `${pathname}?${queryString}` : pathname
+  const dashboardHref = `/dashboard?origem=${encodeURIComponent(origemAtual)}`
 
   if (session === undefined || roleLoading) {
     return (
@@ -67,7 +76,7 @@ export function HeaderBotoes({ onLog }: Props) {
         <span className="sm:hidden">{role === 'prestador' ? 'Cliente' : 'Área'}</span>
       </Link>
       {role === 'prestador' && (
-        <Link href="/dashboard" className={btnPrimary}>
+        <Link href={dashboardHref} className={btnPrimary}>
           <LayoutDashboard size={13} className="shrink-0" />
           <span className="hidden sm:inline">Meu Painel</span>
           <span className="sm:hidden">Painel</span>
