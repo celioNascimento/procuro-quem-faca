@@ -33,7 +33,7 @@ const maskPhone = (v?: string | null): string => {
 
 const renderAvatar = (url?: string | null): string | null => url && url.trim() !== "" ? url : null
 
-export function useUploadWizard(prestadorId: string | number, projetoExistente: Projeto | null) {
+export function useUploadWizard(prestadorId: number, projetoExistente: Projeto | null) {
   const projeto = projetoExistente as ProjetoCompleto | null
 
   // ── Estados ──────────────────────────────────────────────────────────────
@@ -100,8 +100,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
 
   const carregarDadosBase = useCallback(async () => {
     try {
-      // Cast seguro forçando o tipo se os serviços ainda tiverem caches de tipagem antigos
-      const data = await getPrestadorBaseInfo(prestadorId as any)
+      const data = await getPrestadorBaseInfo(prestadorId)
       if (data) setPrestadorInfo({ nome: data.nome, foto: renderAvatar(data.foto_perfil), whatsapp: data.whatsapp || '' })
     } catch (err) {
       console.error('Erro ao carregar dados base:', err)
@@ -128,8 +127,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       const phoneLimpo = clienteWhatsapp.replace(/\D/g, '')
       if (phoneLimpo.length >= 10 && !isSelfNumber && !projetoExistente) {
         try {
-          // Cast seguro forçando o tipo
-          const data = await buscarProjetosPorTelefone(prestadorId as any, phoneLimpo)
+          const data = await buscarProjetosPorTelefone(prestadorId, phoneLimpo)
           setProjetosEncontrados(data || [])
         } catch (err) {
           console.error('Erro ao buscar projetos:', err)
@@ -199,7 +197,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
 
   useEffect(() => {
     if (!projetoId) return
-    const idSincronizado = projetoId 
+    const idSincronizado = projetoId // Isola o ID para evitar perda de escopo
     const sincronizarStatus = async () => {
       try {
         const data = await getStatusETokenProjeto(idSincronizado)
@@ -265,7 +263,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     try {
       const fileExt = file.name.split('.').pop()
       const fileName = `${Math.random()}.${fileExt}`
-      const filePath = `${String(prestadorId)}/${fileName}` // Garante que o Storage lê como string
+      const filePath = `${prestadorId}/${fileName}`
 
       const publicUrl = await uploadImagemPortfolio(filePath, file)
 
@@ -274,7 +272,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       // Criação inicial se o projeto não existe
       if (!currentProjId) {
         const newProj = await criarNovoProjeto({
-          prestador_id: prestadorId as any, // Bypass TS interface restriction
+          prestador_id: prestadorId,
           titulo: titulo,
           cliente_whatsapp: phoneDigitado,
           cliente_nome: clienteNome.trim() || 'Cliente',
@@ -287,10 +285,10 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       }
 
       const data = await upsertFotoProjeto({
-        projeto_id: currentProjId,
+        projeto_id: currentProjId, // Estritamente string garantida
         url_foto: publicUrl,
         ordem: ordem,
-        prestador_id: prestadorId as any // Bypass TS interface restriction
+        prestador_id: prestadorId
       })
 
       setFotosUrls(prev => ({ ...prev, [ordem]: publicUrl }))

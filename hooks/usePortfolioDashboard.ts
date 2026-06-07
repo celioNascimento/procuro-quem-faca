@@ -19,35 +19,36 @@ export type Projeto = {
   titulo: string
   status: string
   created_at: string
-  prestador_id: string | number // Atualizado para suportar a tipagem do seu DB
+  prestador_id: number
   portfolio_fotos: Foto[]
   avaliacoes: { id: string }[]
   notifCount: number
 }
 
 export function usePortfolioDashboard() {
-  const [projetos, setProjetos]                   = useState<Projeto[]>([])
-  const [loading, setLoading]                     = useState(true)
-  const [meuPrestadorId, setMeuPrestadorId]       = useState<string | number | null>(null)
-  const [perfilPrestador, setPerfilPrestador]     = useState<Prestador | null>(null) // Novo estado
-  const [showWizard, setShowWizard]               = useState(false)
+  const [projetos, setProjetos]               = useState<Projeto[]>([])
+  const [loading, setLoading]                 = useState(true)
+  const [meuPrestadorId, setMeuPrestadorId]   = useState<number | null>(null)
+  const [perfilPrestador, setPerfilPrestador] = useState<Prestador | null>(null)
+  const [showWizard, setShowWizard]           = useState(false)
   const [projetoParaEdicao, setProjetoParaEdicao] = useState<Projeto | null>(null)
 
-  // ── Carregamento inicial ───────────────────────────────────────────────────
+  // ── Carregamento inicial ─────────────────────────────────────────────────
   const carregarDados = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Busca o perfil completo
       const prestador = await getPrestadorPerfilDoUsuario(user.id)
       if (!prestador) return
 
-      // Forçamos o cast parcial de volta para Prestador para satisfazer o front-end
       setPerfilPrestador(prestador as unknown as Prestador)
-      setMeuPrestadorId(prestador.id)
 
-      const meusProjetos = await getProjetosPorPrestador(prestador.id)
+      // Garante que o ID sempre chega como number para o UploadWizard
+      const prestadorIdNum = Number(prestador.id)
+      setMeuPrestadorId(prestadorIdNum)
+
+      const meusProjetos = await getProjetosPorPrestador(prestadorIdNum)
       setProjetos(meusProjetos.map(p => ({ ...p, notifCount: 0 })))
     } catch (err) {
       console.error('Erro dashboard:', err)
@@ -58,7 +59,7 @@ export function usePortfolioDashboard() {
 
   useEffect(() => { carregarDados() }, [carregarDados])
 
-  // ── Ações ──────────────────────────────────────────────────────────────────
+  // ── Ações ────────────────────────────────────────────────────────────────
 
   // Busca o projeto fresco do banco antes de abrir edição — evita dados stale
   const abrirEdicao = async (projeto: Projeto) => {
@@ -78,7 +79,7 @@ export function usePortfolioDashboard() {
     carregarDados()
   }
 
-  // ── Métricas derivadas ─────────────────────────────────────────────────────
+  // ── Métricas derivadas ───────────────────────────────────────────────────
   const totalConcluidos = projetos.filter(
     p => p.status === 'finalizado' && p.avaliacoes?.length > 0
   ).length
@@ -91,7 +92,7 @@ export function usePortfolioDashboard() {
     projetos,
     loading,
     meuPrestadorId,
-    perfilPrestador, // Exportado para a vitrine
+    perfilPrestador,
     showWizard,
     projetoParaEdicao,
     totalConcluidos,

@@ -8,7 +8,7 @@ import { WizardZoomModal } from './wizard/WizardZoomModal'
 
 // A tipagem correta para o componente pai
 interface UploadWizardProps {
-  prestadorId: string | number;
+  prestadorId: number
   projetoExistente?: Projeto | null
   onComplete: () => void
 }
