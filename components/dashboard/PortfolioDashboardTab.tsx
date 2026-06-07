@@ -29,7 +29,6 @@ export default function PortfolioDashboardTab() {
   }
 
   // ── Wizard ──────────────────────────────────────────────────────────────
-  // meuPrestadorId agora é number | null — o guard `&& meuPrestadorId` é suficiente
   if (showWizard && meuPrestadorId !== null) {
     return (
       <div className="px-5 md:px-8">
@@ -77,7 +76,7 @@ export default function PortfolioDashboardTab() {
       )}
 
       {projetos.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {projetos.map(proj => (
             <ProjetoCard
               key={proj.id}
@@ -85,6 +84,17 @@ export default function PortfolioDashboardTab() {
               onClick={abrirEdicao}
             />
           ))}
+
+          {/* Slot vazio — mantém a grade quando há número ímpar de projetos */}
+          {projetos.length % 2 !== 0 && (
+            <button
+              onClick={abrirNovo}
+              className="flex flex-col items-center justify-center gap-2 rounded-[2rem] border-2 border-dashed border-slate-200 text-slate-300 hover:border-blue-300 hover:text-blue-400 hover:bg-blue-50/50 transition-all active:scale-95 min-h-[7rem]"
+            >
+              <span className="text-2xl font-black leading-none">+</span>
+              <span className="text-[9px] font-black uppercase tracking-widest">Novo projeto</span>
+            </button>
+          )}
         </div>
       )}
     </div>
