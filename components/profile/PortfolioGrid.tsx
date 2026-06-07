@@ -102,7 +102,6 @@ export default function PortfolioGrid({ projetos }: Props) {
         <ProjetoModal
           projeto={projetoSelecionado}
           onClose={() => setProjetoSelecionado(null)}
-          fotosNormalizadas={projetoSelecionado.portfolio_fotos}
         />
       )}
     </>

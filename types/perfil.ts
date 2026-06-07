@@ -1,6 +1,7 @@
 import type { Prestador } from './prestador'
 
 export interface FotoProjeto {
+  id: string      
   url_foto: string
   ordem: number
   legenda?: string
