@@ -64,13 +64,13 @@ export default function PortfolioDashboardTab() {
   }
 
   // ── Dados derivados do perfil ────────────────────────────────────────────
-  const nomeCidade = perfilPrestador?.cidade_nome ?? null
-  const categoria  = perfilPrestador?.categoria ?? null
+  const nomeCidade   = perfilPrestador?.cidade_nome ?? null
+  const categoria    = perfilPrestador?.categoria ?? null
   const subcategoria = perfilPrestador?.categorias?.nome ?? null
-  const whatsapp   = perfilPrestador?.whatsapp ?? null
-  const mediaNota  = perfilPrestador?.media_nota ?? null
-  const totalAvals = perfilPrestador?.total_avals ?? 0
-  const slug       = perfilPrestador?.slug ?? null
+  const whatsapp     = perfilPrestador?.whatsapp ?? null
+  const mediaNota    = perfilPrestador?.media_nota ?? null
+  const totalAvals   = perfilPrestador?.total_avals ?? 0
+  const slug         = perfilPrestador?.slug ?? null
 
   // ── Lista ──────────────────────────────────────────────────────────────
   return (
@@ -100,12 +100,12 @@ export default function PortfolioDashboardTab() {
             </div>
 
             {/* Nome + slug */}
-            <div className="px-4 py-3 border-t border-slate-100">
-              <p className="font-black text-[13px] text-slate-800 truncate">
+            <div className="px-4 py-4 border-t border-slate-100">
+              <p className="font-black text-[17px] text-slate-800 leading-tight tracking-tight">
                 {perfilPrestador?.nome ?? '—'}
               </p>
               {slug && (
-                <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                <p className="text-[11px] text-blue-400 font-bold truncate mt-1 tracking-wide">
                   @{slug}
                 </p>
               )}
@@ -113,68 +113,72 @@ export default function PortfolioDashboardTab() {
           </div>
 
           {/* ── Card: dados profissionais ── */}
-          <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm divide-y divide-slate-100">
+          {(categoria || subcategoria || nomeCidade || whatsapp || (mediaNota !== null && totalAvals > 0)) && (
+            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm divide-y divide-slate-100">
 
-            {/* Categoria */}
-            {(categoria || subcategoria) && (
-              <div className="flex gap-3 items-start px-4 py-3">
-                <Wrench size={14} className="text-slate-400 mt-0.5 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
-                    Categoria
-                  </p>
-                  {categoria && (
-                    <p className="text-[12px] font-bold text-slate-700 truncate">{categoria}</p>
-                  )}
-                  {subcategoria && (
-                    <p className="text-[11px] text-slate-400 truncate">{subcategoria}</p>
-                  )}
+              {/* Categoria */}
+              {(categoria || subcategoria) && (
+                <div className="flex gap-3 items-start px-4 py-3">
+                  <Wrench size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+                      Categoria
+                    </p>
+                    {categoria && (
+                      <p className="text-[12px] font-bold text-slate-700 truncate">{categoria}</p>
+                    )}
+                    {subcategoria && (
+                      <p className="text-[11px] text-slate-400 truncate">{subcategoria}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Cidade */}
-            {nomeCidade && (
-              <div className="flex gap-3 items-start px-4 py-3">
-                <MapPin size={14} className="text-slate-400 mt-0.5 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
-                    Cidade
-                  </p>
-                  <p className="text-[12px] font-bold text-slate-700 truncate">{nomeCidade}</p>
+              {/* Cidade */}
+              {nomeCidade && (
+                <div className="flex gap-3 items-start px-4 py-3">
+                  <MapPin size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+                      Cidade
+                    </p>
+                    <p className="text-[12px] font-bold text-slate-700 truncate">{nomeCidade}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* WhatsApp */}
-            {whatsapp && (
-              <div className="flex gap-3 items-start px-4 py-3">
-                <Phone size={14} className="text-slate-400 mt-0.5 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
-                    WhatsApp
-                  </p>
-                  <p className="text-[12px] font-bold text-slate-700 truncate">{whatsapp}</p>
+              {/* WhatsApp */}
+              {whatsapp && (
+                <div className="flex gap-3 items-start px-4 py-3">
+                  <Phone size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+                      WhatsApp
+                    </p>
+                    <p className="text-[12px] font-bold text-slate-700 truncate">{whatsapp}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Avaliação */}
-            {mediaNota !== null && totalAvals > 0 && (
-              <div className="flex gap-3 items-start px-4 py-3">
-                <Star size={14} className="text-slate-400 mt-0.5 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
-                    Avaliação
-                  </p>
-                  <p className="text-[12px] font-bold text-slate-700">
-                    {mediaNota.toFixed(1)}
-                    <span className="font-normal text-slate-400 ml-1">· {totalAvals} avaliação{totalAvals > 1 ? 'ões' : ''}</span>
-                  </p>
+              {/* Avaliação */}
+              {mediaNota !== null && totalAvals > 0 && (
+                <div className="flex gap-3 items-start px-4 py-3">
+                  <Star size={14} className="text-slate-400 mt-0.5 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+                      Avaliação
+                    </p>
+                    <p className="text-[12px] font-bold text-slate-700">
+                      {mediaNota.toFixed(1)}
+                      <span className="font-normal text-slate-400 ml-1">
+                        · {totalAvals} avaliação{totalAvals > 1 ? 'ões' : ''}
+                      </span>
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* ── Link: ver perfil público ── */}
           {slug && (
