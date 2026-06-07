@@ -5,8 +5,11 @@ import Header from '@/components/Header'
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams()
 
-  // Usa a origem passada pelo HeaderBotoes; fallback para /prestadores
-  const origem = searchParams.get('origem') ?? '/prestadores'
+  // Origem capturada pelo HeaderBotoes no momento do clique:
+  //   - vindo da busca  → /prestadores?q=...
+  //   - vindo do perfil → /celionascimento
+  //   - acesso direto   → fallback /
+  const origem = searchParams.get('origem') ?? '/'
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans antialiased">
