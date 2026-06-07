@@ -12,6 +12,7 @@ export default function PortfolioDashboardTab() {
     projetos,
     loading,
     meuPrestadorId,
+    perfilPrestador, // Trazemos o perfil completo que configuramos
     showWizard,
     projetoParaEdicao,
     totalConcluidos,
@@ -37,34 +38,49 @@ export default function PortfolioDashboardTab() {
         {/* ── Coluna Esquerda: Identidade do Prestador ── */}
         <aside className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm sticky top-32 flex flex-col items-center text-center">
           
-          {/* Mock da Foto/Logo (Ajustaremos com dados reais do banco depois) */}
+          {/* Foto/Avatar do Banco */}
           <div className="w-32 h-32 bg-slate-50 rounded-[2rem] mb-6 border border-slate-100 shadow-inner flex items-center justify-center overflow-hidden">
-             <span className="font-black text-slate-300 text-3xl italic">Lev</span>
+             {perfilPrestador?.foto_perfil ? (
+               <img src={perfilPrestador.foto_perfil} alt={perfilPrestador.nome} className="w-full h-full object-cover" />
+             ) : (
+               <span className="font-black text-slate-300 text-3xl italic">
+                 {perfilPrestador?.nome?.charAt(0) || 'L'}
+               </span>
+             )}
           </div>
           
           <h2 className="text-xl font-black text-slate-800 uppercase italic tracking-tight">
-            celioNascimento
+            {perfilPrestador?.nome || 'Prestador'}
           </h2>
+          
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 mb-6">
-            Instalação e Assistência
+            {perfilPrestador?.categorias?.nome || 'Profissional'}
           </p>
           
-          {/* Tags de Habilidades */}
+          {/* Tags de Habilidades do Banco */}
           <div className="flex flex-wrap gap-2 justify-center mb-8">
-            <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase rounded-full">Informática</span>
-            <span className="px-3 py-1 bg-slate-100 text-slate-600 text-[9px] font-black uppercase rounded-full">Eletrodomésticos</span>
+             {perfilPrestador?.habilidades?.slice(0, 3).map((hab, idx) => (
+               <span key={idx} className="px-3 py-1 bg-slate-100 text-slate-600 text-[9px] font-black uppercase rounded-full">
+                 {hab}
+               </span>
+             ))}
           </div>
           
           <div className="w-full h-px bg-slate-50 mb-8" />
           
-          {/* Link Público */}
+          {/* Link Público Real */}
           <div className="w-full text-left bg-slate-50 p-4 rounded-3xl border border-slate-100">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-between">
               Seu Perfil Público
               <CheckCircle2 size={12} className="text-green-500" />
             </p>
-            <a href="#" className="text-[10px] font-bold text-blue-600 truncate hover:underline flex items-center gap-1">
-              procuroquemfaca.com.br/celio
+            <a 
+              href={`/p/${perfilPrestador?.slug}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[10px] font-bold text-blue-600 truncate hover:underline flex items-center gap-1"
+            >
+              procuroquemfaca.com.br/{perfilPrestador?.slug || 'slug'}
               <ExternalLink size={10} />
             </a>
           </div>
@@ -74,7 +90,6 @@ export default function PortfolioDashboardTab() {
         <div className="space-y-6">
           {showWizard && meuPrestadorId ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-400">
-              {/* Mini header do Wizard */}
               <div className="flex items-center justify-between mb-6 px-2">
                 <div>
                   <h2 className="text-lg font-black text-slate-800 uppercase italic tracking-tight">
@@ -101,7 +116,6 @@ export default function PortfolioDashboardTab() {
             </div>
           ) : (
             <>
-              {/* ── Cabeçalho com métricas ── */}
               <DashboardHeader
                 totalProjetos={projetos.length}
                 totalConcluidos={totalConcluidos}
@@ -109,12 +123,10 @@ export default function PortfolioDashboardTab() {
                 onNovoProjeto={abrirNovo}
               />
 
-              {/* ── Estado vazio ── */}
               {projetos.length === 0 && (
                 <EstadoVazio onNovoProjeto={abrirNovo} />
               )}
 
-              {/* ── Grid de projetos ── */}
               {projetos.length > 0 && (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   {projetos.map(proj => (

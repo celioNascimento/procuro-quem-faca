@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { Prestador } from '@/types/prestador'
 import {
-  getPrestadorIdDoUsuario,
+  getPrestadorPerfilDoUsuario,
   getProjetosPorPrestador,
   getProjetoAtualizado,
 } from '@/lib/services/portfolioDashboard.service'
@@ -18,7 +19,7 @@ export type Projeto = {
   titulo: string
   status: string
   created_at: string
-  prestador_id: number
+  prestador_id: string | number // Atualizado para suportar a tipagem do seu DB
   portfolio_fotos: Foto[]
   avaliacoes: { id: string }[]
   notifCount: number
@@ -27,7 +28,8 @@ export type Projeto = {
 export function usePortfolioDashboard() {
   const [projetos, setProjetos]                   = useState<Projeto[]>([])
   const [loading, setLoading]                     = useState(true)
-  const [meuPrestadorId, setMeuPrestadorId]       = useState<number | null>(null)
+  const [meuPrestadorId, setMeuPrestadorId]       = useState<string | number | null>(null)
+  const [perfilPrestador, setPerfilPrestador]     = useState<Prestador | null>(null) // Novo estado
   const [showWizard, setShowWizard]               = useState(false)
   const [projetoParaEdicao, setProjetoParaEdicao] = useState<Projeto | null>(null)
 
@@ -37,12 +39,15 @@ export function usePortfolioDashboard() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const prestadorId = await getPrestadorIdDoUsuario(user.id)
-      if (!prestadorId) return
+      // Busca o perfil completo
+      const prestador = await getPrestadorPerfilDoUsuario(user.id)
+      if (!prestador) return
 
-      setMeuPrestadorId(prestadorId)
+      // Forçamos o cast parcial de volta para Prestador para satisfazer o front-end
+      setPerfilPrestador(prestador as unknown as Prestador)
+      setMeuPrestadorId(prestador.id)
 
-      const meusProjetos = await getProjetosPorPrestador(prestadorId)
+      const meusProjetos = await getProjetosPorPrestador(prestador.id)
       setProjetos(meusProjetos.map(p => ({ ...p, notifCount: 0 })))
     } catch (err) {
       console.error('Erro dashboard:', err)
@@ -86,6 +91,7 @@ export function usePortfolioDashboard() {
     projetos,
     loading,
     meuPrestadorId,
+    perfilPrestador, // Exportado para a vitrine
     showWizard,
     projetoParaEdicao,
     totalConcluidos,

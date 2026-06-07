@@ -33,7 +33,7 @@ const maskPhone = (v?: string | null): string => {
 
 const renderAvatar = (url?: string | null): string | null => url && url.trim() !== "" ? url : null
 
-export function useUploadWizard(prestadorId: number, projetoExistente: Projeto | null) {
+export function useUploadWizard(prestadorId: string | number, projetoExistente: Projeto | null) {
   const projeto = projetoExistente as ProjetoCompleto | null
 
   // ── Estados ──────────────────────────────────────────────────────────────
