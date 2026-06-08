@@ -45,20 +45,27 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
   const [projetoId, setProjetoId] = useState<string | null>(projeto?.id || null)
   const [projetoStatus, setProjetoStatus] = useState<string>(projeto?.status || 'pendente')
   const [titulo, setTitulo] = useState<string>(projeto?.titulo || '')
-  const [prestadorInfo, setPrestadorInfo] = useState({ nome: '', foto: null as string | null, whatsapp: '' })
-  
+
+  // ── prestadorInfo expõe slug como identificador público ─────────────────
+  const [prestadorInfo, setPrestadorInfo] = useState({
+    nome: '',
+    foto: null as string | null,
+    whatsapp: '',
+    slug: '' as string | null
+  })
+
   const [clienteWhatsapp, setClienteWhatsapp] = useState<string>(() => {
     const raw = projeto?.cliente_whatsapp || ''
     return maskPhone(raw)
   })
-  
-  const [clienteNome, setClienteNome] = useState<string>(projeto?.cliente_nome || '') 
-  const [linkGerado, setLinkGerado] = useState<boolean>(!!projeto) 
+
+  const [clienteNome, setClienteNome] = useState<string>(projeto?.cliente_nome || '')
+  const [linkGerado, setLinkGerado] = useState<boolean>(!!projeto)
   const [fotosUrls, setFotosUrls] = useState<Record<number, string | null>>({ 1: null, 2: null, 3: null })
-  const [fotosData, setFotosData] = useState<Record<number, FotoPortfolio | null>>({ 1: null, 2: null, 3: null }) 
+  const [fotosData, setFotosData] = useState<Record<number, FotoPortfolio | null>>({ 1: null, 2: null, 3: null })
   const [zoomEtapa, setZoomEtapa] = useState<number | null>(null)
   const [comentariosZoom, setComentariosZoom] = useState<ComentarioPortfolio[]>([])
-  const [comentariosSlideAtual, setComentariosSlideAtual] = useState<ComentarioPortfolio[]>([]) 
+  const [comentariosSlideAtual, setComentariosSlideAtual] = useState<ComentarioPortfolio[]>([])
   const [currentSlide, setCurrentSlide] = useState<number>(0)
   const [legendaEdit, setLegendaEdit] = useState<string>('')
   const [salvandoLegenda, setSalvandoLegenda] = useState<boolean>(false)
@@ -66,17 +73,18 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
   const [statusTitulo, setStatusTitulo] = useState<string>('ocioso') // ocioso, salvando, salvo
 
   // ── Variáveis Derivadas ──────────────────────────────────────────────────
-  const hasLegendaSalva = (etapa: number | null) => !!(etapa && fotosData[etapa]?.legenda && fotosData[etapa]?.legenda!.trim().length > 0)
-  
+  const hasLegendaSalva = (etapa: number | null) =>
+    !!(etapa && fotosData[etapa]?.legenda && fotosData[etapa]?.legenda!.trim().length > 0)
+
   const isProjetoConcluido = projetoStatus?.toLowerCase() === 'finalizado'
   const isProjetoPendente = ['pendente', 'em_registro'].includes(projetoStatus?.toLowerCase())
-  
+
   const phoneDigitado = cleanPhone(clienteWhatsapp)
-  const phonePrestador = cleanPhone(prestadorInfo.whatsapp) 
+  const phonePrestador = cleanPhone(prestadorInfo.whatsapp)
   const isSelfNumber = phoneDigitado.length >= 10 && phoneDigitado === phonePrestador
   const isPhoneValid = phoneDigitado.length >= 10 && !isSelfNumber
   const isTitleValid = titulo.trim().length > 3
-  
+
   const canCloseZoom = isProjetoConcluido || comentariosZoom.length > 0 || hasLegendaSalva(zoomEtapa)
 
   const fotosCarrossel = [
@@ -101,7 +109,14 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
   const carregarDadosBase = useCallback(async () => {
     try {
       const data = await getPrestadorBaseInfo(prestadorId)
-      if (data) setPrestadorInfo({ nome: data.nome, foto: renderAvatar(data.foto_perfil), whatsapp: data.whatsapp || '' })
+      if (data) {
+        setPrestadorInfo({
+          nome: data.nome,
+          foto: renderAvatar(data.foto_perfil),
+          whatsapp: data.whatsapp || '',
+          slug: data.slug || null   // ✅ slug já existe em prestadores
+        })
+      }
     } catch (err) {
       console.error('Erro ao carregar dados base:', err)
     }
@@ -193,11 +208,11 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
       setClienteNome(projeto.cliente_nome || '')
       carregarProgresso(projeto.id)
     }
-  }, [projetoExistente, carregarProgresso, carregarDadosBase]) // Dependência original mantida
+  }, [projetoExistente, carregarProgresso, carregarDadosBase])
 
   useEffect(() => {
     if (!projetoId) return
-    const idSincronizado = projetoId // Isola o ID para evitar perda de escopo
+    const idSincronizado = projetoId
     const sincronizarStatus = async () => {
       try {
         const data = await getStatusETokenProjeto(idSincronizado)
@@ -269,7 +284,6 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
 
       let currentProjId: string = projetoId || ''
 
-      // Criação inicial se o projeto não existe
       if (!currentProjId) {
         const newProj = await criarNovoProjeto({
           prestador_id: prestadorId,
@@ -285,7 +299,7 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
       }
 
       const data = await upsertFotoProjeto({
-        projeto_id: currentProjId, // Estritamente string garantida
+        projeto_id: currentProjId,
         url_foto: publicUrl,
         ordem: ordem,
         prestador_id: prestadorId
@@ -345,7 +359,7 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
   const gerarLinkAceite = async () => {
     setLinkGerado(true)
     if (projetoId) {
-      const currentId = projetoId // Garante escopo limpo do ID
+      const currentId = projetoId
       if (projetoStatus === 'em_registro') {
         await atualizarStatusProjeto(currentId, 'pendente')
         setProjetoStatus('pendente')
@@ -354,8 +368,8 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
       const projData = await getStatusETokenProjeto(currentId)
       const token = projData?.avaliacao_token
       const numTelefone = clienteWhatsapp.replace(/\D/g, '')
-      
-      const linkProjeto = `${window.location.origin}/meus-servicos${token ? `?token=${token}` : ''}` 
+
+      const linkProjeto = `${window.location.origin}/meus-servicos${token ? `?token=${token}` : ''}`
       const mensagem = `Olá${clienteNome ? `, ${clienteNome}` : ''}! 👋\n\nRegistramos o início do serviço *${titulo}* e preparamos um acompanhamento exclusivo para você.\n\nPor este link você visualiza as fotos de cada etapa e pode deixar comentários em tempo real:\n\n🔗 ${linkProjeto}\n\nAssim que confirmar o início, seguimos com o serviço. Qualquer dúvida, é só chamar!`
       const urlWhatsapp = `https://wa.me/55${numTelefone}?text=${encodeURIComponent(mensagem)}`
       window.open(urlWhatsapp, '_blank')
@@ -378,15 +392,23 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
     setProjetoId(proj.id)
     setTitulo(proj.titulo)
     setClienteNome(proj.cliente_nome || '')
-    setClienteWhatsapp(prev => maskPhone(prev)) // Correção: mantém o número válido já digitado
+    setClienteWhatsapp(prev => maskPhone(prev))
     setProjetoStatus(proj.status)
     setLinkGerado(true)
     carregarProgresso(proj.id)
     setProjetosEncontrados([])
   }
 
-  const nextSlide = (e?: React.MouseEvent) => { e?.stopPropagation(); setCurrentSlide((prev) => (prev + 1) % fotosCarrossel.length) }
-  const prevSlide = (e?: React.MouseEvent) => { e?.stopPropagation(); setCurrentSlide((prev) => (prev - 1 + fotosCarrossel.length) % fotosCarrossel.length) }
+  const nextSlide = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setCurrentSlide((prev) => (prev + 1) % fotosCarrossel.length)
+  }
+
+  const prevSlide = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setCurrentSlide((prev) => (prev - 1 + fotosCarrossel.length) % fotosCarrossel.length)
+  }
+
   const handleZoomClose = () => { if (canCloseZoom) setZoomEtapa(null) }
 
   return {
@@ -394,14 +416,16 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
       loadingEtapa, erroUpload, erroLegenda, erroTitulo, aguardandoAvaliacao,
       projetoId, projetoStatus, titulo, clienteWhatsapp, clienteNome, linkGerado,
       fotosUrls, fotosData, zoomEtapa, comentariosZoom, comentariosSlideAtual,
-      currentSlide, legendaEdit, salvandoLegenda, projetosEncontrados, statusTitulo
+      currentSlide, legendaEdit, salvandoLegenda, projetosEncontrados, statusTitulo,
+      prestadorInfo    // ✅ exposto em state, com nome/foto/whatsapp/username
     },
     derived: {
       hasLegendaSalva, isProjetoConcluido, isProjetoPendente, isSelfNumber,
       isPhoneValid, isTitleValid, canCloseZoom, fotosCarrossel, fotoAtual
     },
     actions: {
-      setErroUpload, setErroLegenda, setClienteWhatsapp: (v: string | null) => setClienteWhatsapp(maskPhone(v)),
+      setErroUpload, setErroLegenda,
+      setClienteWhatsapp: (v: string | null) => setClienteWhatsapp(maskPhone(v)),
       setClienteNome, setTitulo, setZoomEtapa, setLegendaEdit,
       handleShare, handleUpload, handleSalvarLegenda, handleAtualizarTitulo,
       gerarLinkAceite, gerarLinkConclusao, selecionarProjeto, nextSlide, prevSlide, handleZoomClose
