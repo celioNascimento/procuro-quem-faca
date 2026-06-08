@@ -1,5 +1,5 @@
 import { Phone, Share2, Briefcase } from 'lucide-react'
-import type { Projeto } from '@/hooks/useAvaliacao'
+import type { Projeto } from '@/types/avaliacao'
 
 type Props = {
   projeto: Projeto

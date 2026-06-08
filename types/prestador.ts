@@ -1,9 +1,7 @@
-//types/prestador.ts
-
 import { Cidade } from './localizacao';
 
 export type Prestador = {
-  id: string;
+  id: number;                // bigint no Supabase → number no TS
   slug: string | null;
   nome: string;
   whatsapp: string;
@@ -16,7 +14,7 @@ export type Prestador = {
   cidades_atendidas?: string[];
   cidades?: { nome: string; estado_sigla: string; regiao_id: string } | null;
   categorias?: { nome: string } | null;
-  
+
   // Computados
   cidade_nome: string;
   categoria: string;
@@ -33,4 +31,4 @@ export interface PrestadorFormData extends Omit<Prestador, 'id' | 'cidades' | 'c
   regiao_id: string | number;
   cidade_id: string | number;
   status?: string;
-} 
+}

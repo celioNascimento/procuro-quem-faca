@@ -1,7 +1,6 @@
 import { supabase } from '@/lib/supabase'
+import type { AvaliacaoRaw, AvaliacaoInsertPayload } from '@/types/avaliacao'
 
-// ✅ Busca pelo avaliacao_token (único no banco — constraint unique)
-// Não precisa mais do id do projeto
 export async function fetchProjetoPorToken(token: string) {
   const { data, error } = await supabase
     .from('portfolio_projetos')
@@ -51,15 +50,7 @@ export async function inserirComentario(payload: {
   return data
 }
 
-export async function inserirAvaliacao(payload: {
-  projeto_id: string
-  prestador_id: string
-  nota: number
-  comentario: string
-  indica: boolean
-  visivel: boolean
-  status: string
-}) {
+export async function inserirAvaliacao(payload: AvaliacaoInsertPayload) {
   const { error } = await supabase.from('avaliacoes').insert(payload)
   if (error) throw error
 }
@@ -74,4 +65,30 @@ export async function finalizarProjeto(projetoId: string) {
     .eq('id', projetoId)
 
   if (error) throw error
+}
+
+export async function fetchAvaliacoesPorPrestador(prestadorId: number): Promise<AvaliacaoRaw[]> {
+  const { data, error } = await supabase
+    .from('avaliacoes')
+    .select(`
+      id,
+      nota,
+      comentario,
+      created_at,
+      indica,
+      resposta_prestador,
+      cliente_id,
+      portfolio_projetos(titulo)
+    `)
+    .eq('prestador_id', prestadorId)
+    .eq('visivel', true)
+    .eq('em_disputa', false)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Erro ao buscar avaliações:', error.message)
+    return []
+  }
+
+  return data ?? []
 }
