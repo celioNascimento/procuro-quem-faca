@@ -5,6 +5,7 @@ import { DashboardHeader } from './DashboardHeader'
 import { EstadoVazio } from './EstadoVazio'
 import { ProjetoCard } from './ProjetoCard'
 import { PrestadorSideCard } from './PrestadorSideCard'
+import { PrestadorCardHorizontal } from './PrestadorCardHorizontal'
 import UploadWizard from './UploadWizard'
 
 export default function PortfolioDashboardTab() {
@@ -34,7 +35,9 @@ export default function PortfolioDashboardTab() {
   if (showWizard && meuPrestadorId !== null) {
     return (
       <div className="px-5 md:px-8">
-        <div className="flex items-center justify-between mb-6">
+
+        {/* Cabeçalho: título + botão voltar */}
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-black text-slate-800 uppercase italic tracking-tight">
               {projetoParaEdicao ? 'Gerenciar Serviço' : 'Novo Serviço'}
@@ -50,6 +53,16 @@ export default function PortfolioDashboardTab() {
             ← Voltar
           </button>
         </div>
+
+        {/* Card horizontal do prestador — acima do wizard */}
+        <PrestadorCardHorizontal
+          nome={perfilPrestador?.nome ?? ''}
+          foto={perfilPrestador?.foto_perfil ?? null}
+          whatsapp={perfilPrestador?.whatsapp ?? ''}
+          slug={perfilPrestador?.slug ?? null}
+        />
+
+        {/* Wizard */}
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-400">
           <UploadWizard
             key={projetoParaEdicao?.id || 'novo'}
@@ -58,6 +71,7 @@ export default function PortfolioDashboardTab() {
             onComplete={fecharWizard}
           />
         </div>
+
       </div>
     )
   }
@@ -79,7 +93,7 @@ export default function PortfolioDashboardTab() {
           total_avals={perfilPrestador?.total_avals}
         />
 
-        {/* ── Coluna direita — header + projetos ── */}
+        {/* Coluna direita — header + projetos */}
         <div className="flex-1 min-w-0 space-y-6">
           <DashboardHeader
             totalProjetos={projetos.length}
