@@ -1,45 +1,166 @@
-import { useState, useEffect } from 'react'
-import { fetchAvaliacoesPorPrestador } from '@/lib/services/avaliacao.service'
-import { normalizar, calcularStats, type Avaliacao, type AvaliacoesStats } from '@/lib/utils/avaliacao.utils'
+'use client'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  fetchProjetoPorToken,
+  fetchAvaliacaoPorProjeto,
+  fetchComentariosPorProjeto,
+  inserirComentario,
+  inserirAvaliacao,
+  finalizarProjeto,
+} from '@/lib/services/avaliacao.service'
+import type { FotoOrdenada, Comentario, Projeto, Avaliacao } from '@/types/avaliacao'
 
-interface UseAvaliacoesReturn {
-  avaliacoes: Avaliacao[]
-  stats: AvaliacoesStats
-  loading: boolean
-  error: string | null
-  refetch: () => void
-}
+// ✅ Recebe apenas o token — parâmetro dinâmico da rota /acompanhamento/[token]
+export function useAvaliacao(token: string) {
+  const router = useRouter()
 
-export function useAvaliacoes(prestadorId: number): UseAvaliacoesReturn {
-  const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([])
-  const [loading, setLoading]       = useState(true)
-  const [error, setError]           = useState<string | null>(null)
-  const [tick, setTick]             = useState(0)
+  const [projeto, setProjeto]                       = useState<Projeto | null>(null)
+  const [avaliacaoExistente, setAvaliacaoExistente] = useState<Avaliacao | null>(null)
+  const [comentarios, setComentarios]               = useState<Comentario[]>([])
+
+  const [loading, setLoading]                 = useState(true)
+  const [mounted, setMounted]                 = useState(false)
+  const [fotoSelecionada, setFotoSelecionada] = useState<FotoOrdenada | null>(null)
+  const [currentSlide, setCurrentSlide]       = useState(0)
+
+  const [nota, setNota]                       = useState(0)
+  const [hoverNota, setHoverNota]             = useState(0)
+  const [comentarioGeral, setComentarioGeral] = useState('')
+  const [indica, setIndica]                   = useState(false)
+  const [submitting, setSubmitting]           = useState(false)
+
+  const [novoComentario, setNovoComentario]         = useState('')
+  const [enviandoComentario, setEnviandoComentario] = useState(false)
+
+  const isProjetoConcluido =
+    projeto?.status?.toLowerCase() === 'concluido' ||
+    projeto?.status?.toLowerCase() === 'finalizado'
+
+  const visualmenteConcluido = isProjetoConcluido || !!avaliacaoExistente
+
+  const fotosOrdenadas: FotoOrdenada[] =
+    projeto?.portfolio_fotos?.sort((a, b) => a.ordem - b.ordem) ?? []
+
+  const temConclusao = fotosOrdenadas.some(f => f.ordem === 3)
+
+  const fotosCarrossel: FotoOrdenada[] = fotosOrdenadas.map(f => ({
+    ...f,
+    label: f.ordem === 1 ? 'Antes' : f.ordem === 2 ? 'Durante' : 'Depois',
+  }))
+
+  const labelEtapaAtual = visualmenteConcluido
+    ? 'Concluído ✓'
+    : projeto?.status === 'em_execucao'
+    ? 'Aguardando sua avaliação'
+    : 'Em andamento'
+
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
-    if (!prestadorId) return
-    let cancelado = false
+    if (!token || !mounted) return
 
-    async function buscar() {
-      setLoading(true)
-      setError(null)
+    async function carregar() {
+      try {
+        const projData = await fetchProjetoPorToken(token)
+        if (!projData) { setLoading(false); return }
 
-      const raw = await fetchAvaliacoesPorPrestador(prestadorId)
+        const [avalData, comData] = await Promise.all([
+          fetchAvaliacaoPorProjeto(projData.id),
+          fetchComentariosPorProjeto(projData.id),
+        ])
 
-      if (cancelado) return
-      setAvaliacoes(raw.map(normalizar))
-      setLoading(false)
+        if (avalData) setAvaliacaoExistente(avalData)
+        setComentarios(comData)
+        setProjeto(projData)
+      } catch (err) {
+        console.error('Erro ao carregar projeto:', err)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    buscar()
-    return () => { cancelado = true }
-  }, [prestadorId, tick])
+    carregar()
+  }, [token, mounted])
+
+  useEffect(() => {
+    if (visualmenteConcluido && fotosCarrossel.length > 0) {
+      setCurrentSlide(fotosCarrossel.length - 1)
+    }
+  }, [visualmenteConcluido, fotosCarrossel.length])
+
+  const nextSlide = () =>
+    setCurrentSlide(prev => (prev + 1) % fotosCarrossel.length)
+
+  const prevSlide = () =>
+    setCurrentSlide(prev => (prev - 1 + fotosCarrossel.length) % fotosCarrossel.length)
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `Serviço: ${projeto?.titulo}`,
+      text: `Acompanhe o progresso: "${projeto?.titulo}"`,
+      url: window.location.href,
+    }
+    try {
+      if (navigator.share) await navigator.share(shareData)
+      else {
+        await navigator.clipboard.writeText(window.location.href)
+        alert('Link copiado!')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleEnviarComentario = async () => {
+    if (!novoComentario.trim() || !fotoSelecionada || enviandoComentario) return
+    setEnviandoComentario(true)
+    try {
+      const novo = await inserirComentario({
+        foto_id: fotoSelecionada.id,
+        projeto_id: projeto!.id,
+        autor_tipo: 'cliente',
+        texto: novoComentario.trim(),
+      })
+      setComentarios(prev => [...prev, novo])
+      setNovoComentario('')
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setEnviandoComentario(false)
+    }
+  }
+
+  const handleFinalizarAvaliacao = async () => {
+    if (nota === 0 || submitting || avaliacaoExistente) return
+    setSubmitting(true)
+    try {
+      await inserirAvaliacao({
+        projeto_id: projeto!.id,
+        prestador_id: projeto!.prestador_id,
+        nota,
+        comentario: comentarioGeral,
+        indica,
+        visivel: true,
+        status: 'finalizado',
+      })
+      await finalizarProjeto(projeto!.id)
+      setProjeto(prev => prev ? { ...prev, status: 'finalizado' } : prev)
+      router.push('/sucesso')
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return {
-    avaliacoes,
-    stats: calcularStats(avaliacoes),
-    loading,
-    error,
-    refetch: () => setTick(t => t + 1),
+    projeto, avaliacaoExistente, comentarios,
+    fotosOrdenadas, fotosCarrossel, temConclusao, labelEtapaAtual, visualmenteConcluido,
+    loading, mounted, fotoSelecionada, setFotoSelecionada, currentSlide, nextSlide, prevSlide,
+    nota, setNota, hoverNota, setHoverNota, comentarioGeral, setComentarioGeral,
+    indica, setIndica, submitting,
+    novoComentario, setNovoComentario, enviandoComentario,
+    handleShare, handleEnviarComentario, handleFinalizarAvaliacao,
   }
 }
