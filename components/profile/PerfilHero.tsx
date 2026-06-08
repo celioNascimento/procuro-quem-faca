@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MapPin, ShieldCheck, Flag, Share2, CheckCircle, Wrench, Star } from 'lucide-react'
+import { MapPin, ShieldCheck, Flag, Share2, CheckCircle, Star } from 'lucide-react'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
 
 interface Props {
@@ -14,16 +14,17 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
     .filter(v => v?.trim())
     .join(', ')
 
-  const totalFinalizados = projetos.filter(p => p.status === 'finalizado').length
-  const totalEmAndamento = projetos.filter(p => p.status === 'em_execucao').length
-  const slug             = prestador.slug
+  const totalFinalizados  = projetos.filter(p => p.status === 'finalizado').length
+  const totalEmAndamento  = projetos.filter(p => p.status === 'em_execucao').length
+  const totalProjetos     = projetos.length
+  const slug              = prestador.slug
+  const categoria         = prestador.categorias?.nome || prestador.categoria
 
   return (
     <section className="flex flex-col gap-3">
 
       {/* ── Card: foto + identidade ── */}
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-        {/* Foto */}
         <div className="aspect-square bg-slate-50 flex items-center justify-center relative">
           {prestador.foto_perfil ? (
             <img
@@ -37,7 +38,6 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
             </span>
           )}
 
-          {/* Badge verificado sobre a foto */}
           {prestador.verificado && (
             <div className="absolute bottom-3 right-3 bg-blue-600 text-white p-1.5 rounded-full shadow-lg border-2 border-white">
               <ShieldCheck size={14} strokeWidth={3} />
@@ -45,18 +45,15 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
           )}
         </div>
 
-        {/* Nome + slug + localização */}
         <div className="px-4 py-4 border-t border-slate-100">
           <h1 className="font-black text-[17px] text-slate-800 leading-tight tracking-tight uppercase italic">
             {prestador.nome}
           </h1>
-
           {slug && (
             <p className="text-[11px] text-blue-400 font-bold truncate mt-1 tracking-wide">
               @{slug}
             </p>
           )}
-
           {localizacao && (
             <p className="flex items-center gap-1 text-[11px] font-medium text-slate-400 mt-2">
               <MapPin size={12} className="shrink-0" />
@@ -66,49 +63,61 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
         </div>
       </div>
 
-      {/* ── Card: dados profissionais ── */}
-      {(prestador.categorias?.nome || prestador.categoria || localizacao ||
-        (totalFinalizados > 0) || (totalEmAndamento > 0)) && (
-        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm divide-y divide-slate-100">
+      {/* ── Card: portfólio — estilo DashboardHeader ── */}
+      {(totalProjetos > 0 || categoria) && (
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[2rem] p-6 text-white relative overflow-hidden">
+          {/* Decoração geométrica */}
+          <div className="absolute -top-5 -right-5 w-28 h-28 bg-white/5 rounded-full" />
+          <div className="absolute -bottom-8 -left-3 w-36 h-36 bg-white/[0.04] rounded-full" />
 
-          {/* Categoria */}
-          {(prestador.categorias?.nome || prestador.categoria) && (
-            <div className="flex gap-3 items-start px-4 py-3">
-              <Wrench size={14} className="text-slate-400 mt-0.5 shrink-0" />
-              <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
-                  Especialidade
-                </p>
-                <p className="text-[12px] font-bold text-slate-700 truncate">
-                  {prestador.categorias?.nome || prestador.categoria}
-                </p>
-              </div>
-            </div>
-          )}
+          <div className="relative z-10 flex flex-col gap-3.5">
+            {/* Título */}
+            <div>
+              <p className="text-blue-200 text-[9px] font-black uppercase tracking-[0.3em] mb-1">
+                Portfólio
+              </p>
+              <h2 className="text-2xl font-black uppercase italic tracking-tight leading-none">
+                {totalProjetos === 0
+                  ? 'Sem Registros'
+                  : `${totalProjetos} ${totalProjetos === 1 ? 'Projeto' : 'Projetos'}`}
+              </h2>
 
-          {/* Projetos concluídos / em andamento */}
-          {(totalFinalizados > 0 || totalEmAndamento > 0) && (
-            <div className="flex gap-3 items-start px-4 py-3">
-              <Star size={14} className="text-slate-400 mt-0.5 shrink-0" />
-              <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">
-                  Atividade
-                </p>
-                <div className="flex flex-wrap gap-2">
+              {(totalFinalizados > 0 || totalEmAndamento > 0) && (
+                <div className="flex items-center gap-4 mt-2.5 flex-wrap">
                   {totalFinalizados > 0 && (
-                    <span className="px-2.5 py-1 bg-green-50 border border-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                      ✓ {totalFinalizados} {totalFinalizados === 1 ? 'concluído' : 'concluídos'}
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-100">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-300 shrink-0" />
+                      {totalFinalizados} concluído{totalFinalizados > 1 ? 's' : ''}
                     </span>
                   )}
                   {totalEmAndamento > 0 && (
-                    <span className="px-2.5 py-1 bg-blue-50 border border-blue-100 text-blue-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                      ● {totalEmAndamento} em andamento
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-100">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-300 animate-pulse shrink-0" />
+                      {totalEmAndamento} em andamento
                     </span>
                   )}
                 </div>
-              </div>
+              )}
             </div>
-          )}
+
+            {/* Divisor + rodapé com avaliação e categoria */}
+            {categoria && (
+              <>
+                <div className="w-full h-px bg-white/10" />
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-100">
+                    <Star size={11} className="text-yellow-300 fill-yellow-300 shrink-0" />
+                    {prestador.categorias?.nome || prestador.categoria}
+                  </span>
+                  {prestador.verificado && (
+                    <span className="bg-white/10 border border-white/15 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.12em]">
+                      Verificado
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
 
