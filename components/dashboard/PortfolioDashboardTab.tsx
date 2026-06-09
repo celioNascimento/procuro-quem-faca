@@ -30,23 +30,24 @@ export default function PortfolioDashboardTab() {
     )
   }
 
-  // ── Layout base: sempre side card + coluna direita ──────────────────────
   return (
     <div className="px-5 md:px-8 pb-20">
       <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
 
-        {/* Side card — fixo em ambos os modos */}
-        <PrestadorSideCard
-          nome={perfilPrestador?.nome}
-          slug={perfilPrestador?.slug}
-          foto_perfil={perfilPrestador?.foto_perfil}
-          categoria={perfilPrestador?.categoria}
-          subcategoria={perfilPrestador?.categorias?.nome}
-          cidade_nome={perfilPrestador?.cidade_nome}
-          whatsapp={perfilPrestador?.whatsapp}
-          media_nota={perfilPrestador?.media_nota}
-          total_avals={perfilPrestador?.total_avals}
-        />
+        {/* Side card — sempre presente, largura fixa */}
+        <div className="w-full md:w-52 shrink-0">
+          <PrestadorSideCard
+            nome={perfilPrestador?.nome}
+            slug={perfilPrestador?.slug}
+            foto_perfil={perfilPrestador?.foto_perfil}
+            categoria={perfilPrestador?.categoria}
+            subcategoria={perfilPrestador?.categorias?.nome}
+            cidade_nome={perfilPrestador?.cidade_nome}
+            whatsapp={perfilPrestador?.whatsapp}
+            media_nota={perfilPrestador?.media_nota}
+            total_avals={perfilPrestador?.total_avals}
+          />
+        </div>
 
         {/* Coluna direita */}
         <div className="flex-1 min-w-0">
@@ -54,7 +55,7 @@ export default function PortfolioDashboardTab() {
           {/* ── Modo Wizard ── */}
           {showWizard && meuPrestadorId !== null ? (
             <>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-5">
                 <div>
                   <h2 className="text-lg font-black text-slate-800 uppercase italic tracking-tight">
                     {projetoParaEdicao ? 'Gerenciar Serviço' : 'Novo Serviço'}
