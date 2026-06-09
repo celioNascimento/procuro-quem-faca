@@ -31,7 +31,8 @@ export default function PortfolioDashboardTab() {
 
   return (
     <div className="px-5 md:px-8 pb-20">
-      <div className="flex flex-col md:flex-row gap-3 md:gap-4 items-start">
+      {/* gap original mantido — o espaço vinha do max-w do card, não do gap */}
+      <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
 
         {/* ── Coluna esquerda ── */}
         <div className="w-full md:w-56 shrink-0 flex flex-col gap-3">

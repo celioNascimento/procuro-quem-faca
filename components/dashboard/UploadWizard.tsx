@@ -14,9 +14,7 @@ interface UploadWizardProps {
   projetoExistente?: Projeto | null
   onComplete: () => void
   onHookReady?: (hookData: HookData) => void
-  /** Exibe o cabeçalho interno com título + botão voltar */
   onVoltar?: () => void
-  /** Define o label do cabeçalho interno */
   isEdicao?: boolean
 }
 
@@ -42,7 +40,8 @@ export default function UploadWizard({
 
   return (
     <>
-      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden max-w-xl mx-auto font-sans animate-in fade-in duration-500">
+      {/* Sem max-w nem mx-auto — ocupa toda a coluna direita */}
+      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden w-full font-sans animate-in fade-in duration-500">
 
         {/* ── Cabeçalho interno discreto ── */}
         {onVoltar && (
@@ -51,7 +50,6 @@ export default function UploadWizard({
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
                 {isEdicao ? 'Gerenciando serviço' : 'Novo serviço'}
               </span>
-              {/* Mostra título + cliente quando estiver editando e já tiver dados */}
               {isEdicao && titulo && (
                 <span className="text-sm font-black text-slate-700 leading-tight truncate max-w-[16rem]">
                   {titulo}
