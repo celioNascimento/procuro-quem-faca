@@ -26,22 +26,20 @@ export default function PortfolioDashboardTab() {
     <div className="px-5 md:px-8 pb-20">
       <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
 
-        {/* ── Coluna esquerda: some quando o wizard está aberto ── */}
-        {!showWizard && (
-          <div className="w-full md:w-56 shrink-0 flex flex-col gap-3">
-            <PrestadorSideCard
-              nome={perfilPrestador?.nome}
-              slug={perfilPrestador?.slug}
-              foto_perfil={perfilPrestador?.foto_perfil}
-              categoria={perfilPrestador?.categoria}
-              subcategoria={perfilPrestador?.categorias?.nome}
-              cidade_nome={perfilPrestador?.cidade_nome}
-              whatsapp={perfilPrestador?.whatsapp}
-              media_nota={perfilPrestador?.media_nota}
-              total_avals={perfilPrestador?.total_avals}
-            />
-          </div>
-        )}
+        {/* ── Coluna esquerda: sempre visível ── */}
+        <div className="w-full md:w-56 shrink-0 flex flex-col gap-3">
+          <PrestadorSideCard
+            nome={perfilPrestador?.nome}
+            slug={perfilPrestador?.slug}
+            foto_perfil={perfilPrestador?.foto_perfil}
+            categoria={perfilPrestador?.categoria}
+            subcategoria={perfilPrestador?.categorias?.nome}
+            cidade_nome={perfilPrestador?.cidade_nome}
+            whatsapp={perfilPrestador?.whatsapp}
+            media_nota={perfilPrestador?.media_nota}
+            total_avals={perfilPrestador?.total_avals}
+          />
+        </div>
 
         {/* ── Coluna direita ── */}
         <div className="flex-1 min-w-0">
