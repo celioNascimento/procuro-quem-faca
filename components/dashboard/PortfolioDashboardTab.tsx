@@ -19,7 +19,6 @@ export default function PortfolioDashboardTab() {
     abrirEdicao, abrirNovo, fecharWizard,
   } = usePortfolioDashboard()
 
-  // hookData do wizard — preenchido via callback onHookReady
   const [wizardHookData, setWizardHookData] = useState<HookData | null>(null)
 
   if (loading) {
@@ -32,7 +31,7 @@ export default function PortfolioDashboardTab() {
 
   return (
     <div className="px-5 md:px-8 pb-20">
-      <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+      <div className="flex flex-col md:flex-row gap-3 md:gap-4 items-start">
 
         {/* ── Coluna esquerda ── */}
         <div className="w-full md:w-56 shrink-0 flex flex-col gap-3">
@@ -48,7 +47,6 @@ export default function PortfolioDashboardTab() {
             total_avals={perfilPrestador?.total_avals}
           />
 
-          {/* Timeline: só aparece no modo wizard e quando hookData já foi entregue */}
           {showWizard && meuPrestadorId !== null && wizardHookData && (
             <WizardTimeline hookData={wizardHookData} />
           )}
@@ -57,34 +55,17 @@ export default function PortfolioDashboardTab() {
         {/* ── Coluna direita ── */}
         <div className="flex-1 min-w-0">
           {showWizard && meuPrestadorId !== null ? (
-            <>
-              <div className="flex items-start justify-between mb-5">
-                <div>
-                  <h2 className="text-lg font-black text-slate-800 uppercase italic tracking-tight leading-none">
-                    {projetoParaEdicao ? 'Gerenciar Serviço' : 'Novo Serviço'}
-                  </h2>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-widest mt-1">
-                    Preencha os dados abaixo
-                  </p>
-                </div>
-                <button
-                  onClick={fecharWizard}
-                  className="px-4 py-2 bg-slate-50 text-slate-500 border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95 shrink-0 ml-4"
-                >
-                  ← Voltar
-                </button>
-              </div>
-
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-400">
-                <UploadWizard
-                  key={projetoParaEdicao?.id || 'novo'}
-                  prestadorId={meuPrestadorId}
-                  projetoExistente={projetoParaEdicao}
-                  onComplete={fecharWizard}
-                  onHookReady={setWizardHookData}
-                />
-              </div>
-            </>
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-400">
+              <UploadWizard
+                key={projetoParaEdicao?.id || 'novo'}
+                prestadorId={meuPrestadorId}
+                projetoExistente={projetoParaEdicao}
+                onComplete={fecharWizard}
+                onHookReady={setWizardHookData}
+                onVoltar={fecharWizard}
+                isEdicao={!!projetoParaEdicao}
+              />
+            </div>
           ) : (
             <div className="space-y-6">
               <DashboardHeader
