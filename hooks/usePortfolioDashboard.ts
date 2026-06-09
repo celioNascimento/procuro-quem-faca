@@ -20,6 +20,8 @@ export type Projeto = {
   status: string
   created_at: string
   prestador_id: number
+  cliente_nome: string | null
+  cliente_whatsapp: string
   portfolio_fotos: Foto[]
   avaliacoes: { id: string }[]
   notifCount: number
@@ -33,7 +35,6 @@ export function usePortfolioDashboard() {
   const [showWizard, setShowWizard]           = useState(false)
   const [projetoParaEdicao, setProjetoParaEdicao] = useState<Projeto | null>(null)
 
-  // ── Carregamento inicial ─────────────────────────────────────────────────
   const carregarDados = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -44,7 +45,6 @@ export function usePortfolioDashboard() {
 
       setPerfilPrestador(prestador as unknown as Prestador)
 
-      // Garante que o ID sempre chega como number para o UploadWizard
       const prestadorIdNum = Number(prestador.id)
       setMeuPrestadorId(prestadorIdNum)
 
@@ -59,9 +59,6 @@ export function usePortfolioDashboard() {
 
   useEffect(() => { carregarDados() }, [carregarDados])
 
-  // ── Ações ────────────────────────────────────────────────────────────────
-
-  // Busca o projeto fresco do banco antes de abrir edição — evita dados stale
   const abrirEdicao = async (projeto: Projeto) => {
     const atualizado = await getProjetoAtualizado(projeto.id)
     setProjetoParaEdicao(atualizado ?? projeto)
@@ -79,7 +76,6 @@ export function usePortfolioDashboard() {
     carregarDados()
   }
 
-  // ── Métricas derivadas ───────────────────────────────────────────────────
   const totalConcluidos = projetos.filter(
     p => p.status === 'finalizado' && p.avaliacoes?.length > 0
   ).length

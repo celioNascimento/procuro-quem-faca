@@ -21,6 +21,7 @@ export async function getProjetosPorPrestador(prestadorId: number) {
     .from('portfolio_projetos')
     .select(`
       id, titulo, status, created_at, prestador_id,
+      cliente_nome, cliente_whatsapp,
       portfolio_fotos (id, url_foto, ordem),
       avaliacoes (id)
     `)
@@ -36,6 +37,7 @@ export async function getProjetoAtualizado(projetoId: string): Promise<Projeto |
     .from('portfolio_projetos')
     .select(`
       id, titulo, status, created_at, prestador_id,
+      cliente_nome, cliente_whatsapp,
       portfolio_fotos (id, url_foto, ordem),
       avaliacoes (id)
     `)
@@ -51,7 +53,7 @@ export async function getProjetoAtualizado(projetoId: string): Promise<Projeto |
 // Funções usadas pelo useUploadWizard (re-exportadas aqui para centralizar)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export { 
+export {
   getPrestadorBaseInfo,
   getFotosDoProjeto,
   getComentariosDaFoto,
