@@ -1,15 +1,12 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Phone, User, Briefcase, Smartphone, AlertCircle, RefreshCw, CloudCheck } from 'lucide-react'
+import { Phone, User, Briefcase, AlertCircle, RefreshCw, CloudCheck, X, Activity } from 'lucide-react'
+import { Camera, Loader2, CheckCircle2, ChevronRight, Link as LinkIcon } from 'lucide-react'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
 import { useUploadWizard } from '@/hooks/useUploadWizard'
 import { WizardCompleted } from './wizard/WizardCompleted'
 import { WizardZoomModal } from './wizard/WizardZoomModal'
-import {
-  Smartphone as SmartphoneIcon, Camera, X, Loader2, CheckCircle2, ChevronRight,
-  Activity, Link as LinkIcon,
-} from 'lucide-react'
 
 type HookData = ReturnType<typeof useUploadWizard>
 
@@ -51,21 +48,56 @@ export default function UploadWizard({
 
   const onHookReadyRef = useRef(onHookReady)
   onHookReadyRef.current = onHookReady
-
-  // Notifica o pai sempre que hookData mudar (não só no mount)
-  useEffect(() => {
-    onHookReadyRef.current?.(hookData)
-  })
+  useEffect(() => { onHookReadyRef.current?.(hookData) })
 
   const totalFotos = [fotosUrls[1], fotosUrls[2], fotosUrls[3]].filter(Boolean).length
-  const temCliente = !!(clienteNome || clienteWhatsapp)
+
+  // Campo de input/display reutilizável no hero
+  const HeroField = ({
+    icon: Icon, label, value, placeholder, onChange, disabled = false, isError = false, errorMsg = '',
+    isTextArea = false,
+  }: {
+    icon: any, label: string, value: string, placeholder: string,
+    onChange?: (v: string) => void, disabled?: boolean, isError?: boolean,
+    errorMsg?: string, isTextArea?: boolean,
+  }) => (
+    <div className={`bg-white/15 backdrop-blur-sm rounded-2xl px-3 py-2.5 border transition-all ${
+      isError ? 'border-red-400/60 bg-red-400/20' : 'border-white/20'
+    } ${disabled ? 'opacity-40' : ''}`}>
+      <div className="flex items-center gap-1.5 mb-1">
+        <Icon size={9} className="text-white/60 shrink-0" />
+        <span className="text-[8px] font-black uppercase tracking-widest text-white/60">{label}</span>
+      </div>
+      {/* Modo edição: projetoId ainda não existe → input; senão → texto */}
+      {onChange && !projetoId ? (
+        <input
+          type="text"
+          placeholder={placeholder}
+          disabled={disabled}
+          className="bg-transparent text-white text-[12px] font-bold placeholder:text-white/30 outline-none w-full"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          onBlur={label.toLowerCase().includes('título') ? handleAtualizarTitulo : undefined}
+        />
+      ) : (
+        <span className={`text-[12px] font-bold block truncate ${value ? 'text-white' : 'text-white/30'}`}>
+          {value || placeholder}
+        </span>
+      )}
+      {isError && errorMsg && (
+        <p className="text-[8px] font-bold text-red-200 flex items-center gap-1 mt-1">
+          <AlertCircle size={8} /> {errorMsg}
+        </p>
+      )}
+    </div>
+  )
 
   return (
     <>
-      <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden w-full font-sans animate-in fade-in duration-500">
+      <div className="bg-[#F8FAFC] rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden w-full font-sans animate-in fade-in duration-500">
 
         {/* ══════════════════════════════════════════
-            HERO AZUL — prestador + dados do cliente
+            HERO AZUL
         ══════════════════════════════════════════ */}
         <div className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 px-6 pt-6 pb-7 overflow-hidden">
           <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-white/10" />
@@ -81,7 +113,7 @@ export default function UploadWizard({
             </button>
           )}
 
-          {/* Avatar + nome prestador */}
+          {/* Prestador */}
           <div className="flex items-center gap-3 mb-5">
             <div className="w-12 h-12 rounded-2xl overflow-hidden bg-white/20 border-2 border-white/40 shrink-0 shadow-lg">
               {prestadorInfo.foto ? (
@@ -94,7 +126,7 @@ export default function UploadWizard({
                 </div>
               )}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 pr-16">
               <p className="text-white/60 text-[9px] font-black uppercase tracking-widest leading-none mb-0.5">
                 {isEdicao ? 'Gerenciando serviço' : 'Novo serviço'}
               </p>
@@ -105,100 +137,69 @@ export default function UploadWizard({
             </div>
           </div>
 
-          {/* ── Campos do cliente integrados no hero ── */}
-          <div className="space-y-2">
-
-            {/* Status badge */}
-            {projetoStatus && (
-              <div className="flex justify-end mb-1">
-                <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border ${
-                  projetoStatus === 'em_execucao'
-                    ? 'bg-white/20 text-white border-white/30 animate-pulse'
-                    : projetoStatus === 'concluido'
-                    ? 'bg-green-400/30 text-white border-green-300/30'
-                    : 'bg-white/15 text-white/80 border-white/20'
-                }`}>
-                  {projetoStatus.replace('_', ' ')}
-                </span>
-              </div>
-            )}
-
-            {/* Grid whatsapp + nome */}
-            <div className="grid grid-cols-2 gap-2">
-              {/* WhatsApp */}
-              <div className={`bg-white/15 backdrop-blur-sm rounded-2xl px-3 py-2.5 border transition-all ${
-                isSelfNumber ? 'border-red-400/50 bg-red-400/20' : isPhoneValid ? 'border-white/30' : 'border-white/15'
+          {/* Status */}
+          {projetoStatus && (
+            <div className="flex justify-end mb-2">
+              <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border ${
+                projetoStatus === 'em_execucao' ? 'bg-white/20 text-white border-white/30 animate-pulse'
+                : projetoStatus === 'concluido' ? 'bg-green-400/30 text-white border-green-300/30'
+                : 'bg-white/15 text-white/80 border-white/20'
               }`}>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Smartphone size={9} className="text-white/60" />
-                  <span className="text-[8px] font-black uppercase tracking-widest text-white/60">
-                    {isSelfNumber ? 'Inválido' : 'WhatsApp'}
-                  </span>
-                </div>
-                {projetoId ? (
-                  <span className="text-white text-[12px] font-bold block">{clienteWhatsapp || '—'}</span>
-                ) : (
-                  <input
-                    type="tel"
-                    placeholder="(00) 00000-0000"
-                    className="bg-transparent text-white text-[12px] font-bold placeholder:text-white/30 outline-none w-full"
-                    value={clienteWhatsapp}
-                    onChange={e => setClienteWhatsapp(e.target.value)}
-                  />
-                )}
-                {isSelfNumber && (
-                  <p className="text-[8px] font-bold text-red-200 flex items-center gap-1 mt-1">
-                    <AlertCircle size={8} /> Seu próprio número
-                  </p>
-                )}
-              </div>
-
-              {/* Nome */}
-              <div className={`bg-white/15 backdrop-blur-sm rounded-2xl px-3 py-2.5 border border-white/15 transition-all ${!isPhoneValid ? 'opacity-40' : ''}`}>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <User size={9} className="text-white/60" />
-                  <span className="text-[8px] font-black uppercase tracking-widest text-white/60">Cliente</span>
-                </div>
-                {projetoId ? (
-                  <span className="text-white text-[12px] font-bold block truncate">{clienteNome || '—'}</span>
-                ) : (
-                  <input
-                    type="text"
-                    placeholder="Nome do cliente"
-                    disabled={!isPhoneValid}
-                    className="bg-transparent text-white text-[12px] font-bold placeholder:text-white/30 outline-none w-full"
-                    value={clienteNome}
-                    onChange={e => setClienteNome(e.target.value)}
-                  />
-                )}
-              </div>
+                {projetoStatus.replace('_', ' ')}
+              </span>
             </div>
+          )}
 
-            {/* Título do projeto */}
-            <div className={`bg-white/15 backdrop-blur-sm rounded-2xl px-3 py-2.5 border border-white/15 transition-all ${!isPhoneValid ? 'opacity-40' : ''}`}>
+          {/* Campos do cliente */}
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <HeroField
+                icon={Phone}
+                label={isSelfNumber ? 'Número inválido' : 'WhatsApp do cliente'}
+                value={clienteWhatsapp}
+                placeholder="(00) 00000-0000"
+                onChange={v => setClienteWhatsapp(v)}
+                isError={isSelfNumber}
+                errorMsg="Não use o seu próprio número."
+              />
+              <HeroField
+                icon={User}
+                label="Nome do cliente"
+                value={clienteNome}
+                placeholder="Nome do cliente"
+                onChange={v => setClienteNome(v)}
+                disabled={!isPhoneValid}
+              />
+            </div>
+            <div className={`bg-white/15 backdrop-blur-sm rounded-2xl px-3 py-2.5 border border-white/20 transition-all ${!isPhoneValid ? 'opacity-40' : ''}`}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
                   <Briefcase size={9} className="text-white/60" />
                   <span className="text-[8px] font-black uppercase tracking-widest text-white/60">Título do serviço</span>
                 </div>
-                {projetoId && (
+                {projetoId && statusTitulo !== 'ocioso' && (
                   <div className="flex items-center gap-1">
                     {statusTitulo === 'salvando' && <RefreshCw size={8} className="animate-spin text-white/60" />}
                     {statusTitulo === 'salvo' && <CloudCheck size={9} className="text-green-300" />}
                   </div>
                 )}
               </div>
-              <input
-                type="text"
-                placeholder="Ex: Instalação, pintura, formatação..."
-                disabled={!isPhoneValid}
-                className="bg-transparent text-white text-[12px] font-black italic uppercase placeholder:text-white/30 outline-none w-full"
-                value={titulo}
-                onChange={e => setTitulo(e.target.value)}
-                onBlur={handleAtualizarTitulo}
-              />
+              {!projetoId ? (
+                <input
+                  type="text"
+                  placeholder="Ex: Instalação, pintura, formatação..."
+                  disabled={!isPhoneValid}
+                  className="bg-transparent text-white text-[12px] font-black italic uppercase placeholder:text-white/30 outline-none w-full"
+                  value={titulo}
+                  onChange={e => setTitulo(e.target.value)}
+                  onBlur={handleAtualizarTitulo}
+                />
+              ) : (
+                <span className={`text-[12px] font-black italic uppercase block truncate ${titulo ? 'text-white' : 'text-white/30'}`}>
+                  {titulo || 'Sem título'}
+                </span>
+              )}
             </div>
-
           </div>
         </div>
 
@@ -212,7 +213,7 @@ export default function UploadWizard({
 
             {/* Banner aguardando avaliação */}
             {aguardandoAvaliacao && !isProjetoConcluido && (
-              <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-500">
+              <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-2xl animate-in fade-in duration-500">
                 <Activity size={16} className="shrink-0 animate-pulse" />
                 <div className="flex-1">
                   <p className="text-[11px] font-black uppercase tracking-wide leading-none mb-1">Serviço concluído</p>
@@ -346,10 +347,8 @@ export default function UploadWizard({
                           ) : (
                             <label className={`aspect-video flex flex-col items-center justify-center gap-2 ${!bloqueada ? 'cursor-pointer' : ''}`}>
                               <div className="flex flex-col items-center gap-2">
-                                {isLoading
-                                  ? <Loader2 size={28} className="animate-spin text-blue-400" />
-                                  : <Camera size={28} className={isAtual ? 'text-blue-400' : 'text-slate-300'} />
-                                }
+                                {isLoading ? <Loader2 size={28} className="animate-spin text-blue-400" />
+                                  : <Camera size={28} className={isAtual ? 'text-blue-400' : 'text-slate-300'} />}
                                 <span className={`text-[10px] font-black uppercase tracking-wider ${isAtual ? 'text-blue-500' : 'text-slate-300'}`}>
                                   {isLoading ? 'Enviando...' : isAtual ? 'Toque para registrar' : 'Aguardando registro'}
                                 </span>
