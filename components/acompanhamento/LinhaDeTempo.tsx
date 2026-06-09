@@ -1,5 +1,5 @@
 import { Camera, MessageSquare, CheckCircle2 } from 'lucide-react'
-import type { FotoOrdenada, Comentario } from '@/hooks/useAvaliacao'
+import type { FotoOrdenada, Comentario } from '@/types/avaliacao'
 
 const ETAPAS = [
   { ordem: 1, label: 'Antes',   sublabel: 'Estado inicial'  },
