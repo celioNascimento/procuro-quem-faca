@@ -1,26 +1,26 @@
 'use client'
 
+import { useState } from 'react'
 import { usePortfolioDashboard } from '@/hooks/usePortfolioDashboard'
+import { useUploadWizard } from '@/hooks/useUploadWizard'
 import { DashboardHeader } from './DashboardHeader'
 import { EstadoVazio } from './EstadoVazio'
 import { ProjetoCard } from './ProjetoCard'
 import { PrestadorSideCard } from './PrestadorSideCard'
+import { WizardTimeline } from './wizard/WizardTimeline'
 import UploadWizard from './UploadWizard'
+
+type HookData = ReturnType<typeof useUploadWizard>
 
 export default function PortfolioDashboardTab() {
   const {
-    projetos,
-    loading,
-    meuPrestadorId,
-    perfilPrestador,
-    showWizard,
-    projetoParaEdicao,
-    totalConcluidos,
-    totalAtivos,
-    abrirEdicao,
-    abrirNovo,
-    fecharWizard,
+    projetos, loading, meuPrestadorId, perfilPrestador,
+    showWizard, projetoParaEdicao, totalConcluidos, totalAtivos,
+    abrirEdicao, abrirNovo, fecharWizard,
   } = usePortfolioDashboard()
+
+  // hookData do wizard — preenchido via callback onHookReady
+  const [wizardHookData, setWizardHookData] = useState<HookData | null>(null)
 
   if (loading) {
     return (
@@ -34,22 +34,28 @@ export default function PortfolioDashboardTab() {
     <div className="px-5 md:px-8 pb-20">
       <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
 
-        {/* Side card — largura definida pelo próprio componente */}
-        <PrestadorSideCard
-          nome={perfilPrestador?.nome}
-          slug={perfilPrestador?.slug}
-          foto_perfil={perfilPrestador?.foto_perfil}
-          categoria={perfilPrestador?.categoria}
-          subcategoria={perfilPrestador?.categorias?.nome}
-          cidade_nome={perfilPrestador?.cidade_nome}
-          whatsapp={perfilPrestador?.whatsapp}
-          media_nota={perfilPrestador?.media_nota}
-          total_avals={perfilPrestador?.total_avals}
-        />
+        {/* ── Coluna esquerda ── */}
+        <div className="w-full md:w-56 shrink-0 flex flex-col gap-3">
+          <PrestadorSideCard
+            nome={perfilPrestador?.nome}
+            slug={perfilPrestador?.slug}
+            foto_perfil={perfilPrestador?.foto_perfil}
+            categoria={perfilPrestador?.categoria}
+            subcategoria={perfilPrestador?.categorias?.nome}
+            cidade_nome={perfilPrestador?.cidade_nome}
+            whatsapp={perfilPrestador?.whatsapp}
+            media_nota={perfilPrestador?.media_nota}
+            total_avals={perfilPrestador?.total_avals}
+          />
 
-        {/* Coluna direita */}
+          {/* Timeline: só aparece no modo wizard e quando hookData já foi entregue */}
+          {showWizard && meuPrestadorId !== null && wizardHookData && (
+            <WizardTimeline hookData={wizardHookData} />
+          )}
+        </div>
+
+        {/* ── Coluna direita ── */}
         <div className="flex-1 min-w-0">
-
           {showWizard && meuPrestadorId !== null ? (
             <>
               <div className="flex items-start justify-between mb-5">
@@ -75,10 +81,10 @@ export default function PortfolioDashboardTab() {
                   prestadorId={meuPrestadorId}
                   projetoExistente={projetoParaEdicao}
                   onComplete={fecharWizard}
+                  onHookReady={setWizardHookData}
                 />
               </div>
             </>
-
           ) : (
             <div className="space-y-6">
               <DashboardHeader
@@ -87,21 +93,12 @@ export default function PortfolioDashboardTab() {
                 totalAtivos={totalAtivos}
                 onNovoProjeto={abrirNovo}
               />
-
-              {projetos.length === 0 && (
-                <EstadoVazio onNovoProjeto={abrirNovo} />
-              )}
-
+              {projetos.length === 0 && <EstadoVazio onNovoProjeto={abrirNovo} />}
               {projetos.length > 0 && (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   {projetos.map(proj => (
-                    <ProjetoCard
-                      key={proj.id}
-                      projeto={proj}
-                      onClick={abrirEdicao}
-                    />
+                    <ProjetoCard key={proj.id} projeto={proj} onClick={abrirEdicao} />
                   ))}
-
                   {projetos.length % 2 !== 0 && (
                     <button
                       onClick={abrirNovo}
@@ -115,8 +112,8 @@ export default function PortfolioDashboardTab() {
               )}
             </div>
           )}
-
         </div>
+
       </div>
     </div>
   )
