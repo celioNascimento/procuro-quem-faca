@@ -34,8 +34,8 @@ export default function PortfolioDashboardTab() {
     <div className="px-5 md:px-8 pb-20">
       <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
 
-        {/* Side card — sempre presente, largura fixa */}
-        <div className="w-full md:w-52 shrink-0">
+        {/* Side card */}
+        <div className="w-full md:w-60 shrink-0">
           <PrestadorSideCard
             nome={perfilPrestador?.nome}
             slug={perfilPrestador?.slug}
@@ -52,21 +52,21 @@ export default function PortfolioDashboardTab() {
         {/* Coluna direita */}
         <div className="flex-1 min-w-0">
 
-          {/* ── Modo Wizard ── */}
           {showWizard && meuPrestadorId !== null ? (
             <>
-              <div className="flex items-center justify-between mb-5">
+              {/* Header do wizard — fora do card */}
+              <div className="flex items-start justify-between mb-5">
                 <div>
-                  <h2 className="text-lg font-black text-slate-800 uppercase italic tracking-tight">
+                  <h2 className="text-lg font-black text-slate-800 uppercase italic tracking-tight leading-none">
                     {projetoParaEdicao ? 'Gerenciar Serviço' : 'Novo Serviço'}
                   </h2>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-widest mt-0.5">
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-widest mt-1">
                     Preencha os dados abaixo
                   </p>
                 </div>
                 <button
                   onClick={fecharWizard}
-                  className="px-4 py-2 bg-slate-50 text-slate-500 border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
+                  className="px-4 py-2 bg-slate-50 text-slate-500 border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95 shrink-0 ml-4"
                 >
                   ← Voltar
                 </button>
@@ -83,7 +83,6 @@ export default function PortfolioDashboardTab() {
             </>
 
           ) : (
-            // ── Modo Lista ──
             <div className="space-y-6">
               <DashboardHeader
                 totalProjetos={projetos.length}

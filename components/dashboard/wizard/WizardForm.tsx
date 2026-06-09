@@ -25,7 +25,16 @@ export function WizardForm({ hookData }: Props) {
   } = hookData.actions
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
+
+      {/* ── Badge de status ── */}
+      {projetoStatus && (
+        <div className="flex justify-end">
+          <span className="text-[9px] font-black uppercase tracking-wide px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+            {projetoStatus.replace('_', ' ')}
+          </span>
+        </div>
+      )}
 
       {/* ── Banner aguardando avaliação ── */}
       {aguardandoAvaliacao && !isProjetoConcluido && (
@@ -57,16 +66,6 @@ export function WizardForm({ hookData }: Props) {
           <button onClick={() => setErroUpload(null)} className="text-red-400 hover:text-red-600 shrink-0">
             <X size={14} />
           </button>
-        </div>
-      )}
-
-      {/* ── Status badge ── */}
-      {projetoStatus && (
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Gerenciar serviço</p>
-          <span className="text-[9px] font-black uppercase tracking-wide px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
-            {projetoStatus.replace('_', ' ')}
-          </span>
         </div>
       )}
 
@@ -180,7 +179,6 @@ export function WizardForm({ hookData }: Props) {
 
         {/* Etapa 1 — Antes */}
         <div className={`flex gap-4 p-4 rounded-[2rem] border transition-all ${fotosUrls[1] ? 'bg-white border-slate-100 shadow-sm' : 'bg-white border-slate-100'} ${!isTitleValid ? 'opacity-40 pointer-events-none' : ''}`}>
-          {/* Thumb */}
           <div className={`shrink-0 rounded-2xl overflow-hidden relative transition-all duration-300 flex items-center justify-center border-2 ${fotosUrls[1] ? 'w-32 h-32 border-transparent shadow-md' : 'w-20 h-20 border-dashed border-slate-200 bg-slate-50 hover:border-blue-300 hover:bg-blue-50/40'}`}>
             {fotosUrls[1] ? (
               <>
@@ -200,9 +198,8 @@ export function WizardForm({ hookData }: Props) {
             )}
           </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
-            <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className={`text-[9px] font-black uppercase tracking-tighter px-2.5 py-1 rounded-full border ${fotosUrls[1] ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
                 {fotosUrls[1] ? 'Registrado' : 'Obrigatório'}
               </span>
@@ -210,7 +207,7 @@ export function WizardForm({ hookData }: Props) {
             </div>
 
             {isProjetoPendente && fotosUrls[1] && hasLegendaSalva(1) && (
-              <button onClick={gerarLinkAceite} className="mt-1 w-fit flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl shadow-md shadow-green-200 transition-all active:scale-95">
+              <button onClick={gerarLinkAceite} className="w-fit flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl shadow-md shadow-green-200 transition-all active:scale-95">
                 <LinkIcon size={13} />
                 <span className="text-[10px] font-black uppercase italic">Enviar WhatsApp</span>
               </button>
@@ -250,8 +247,8 @@ export function WizardForm({ hookData }: Props) {
             )}
           </div>
 
-          <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
-            <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className={`text-[9px] font-black uppercase tracking-tighter px-2.5 py-1 rounded-full border ${fotosUrls[2] ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
                 {fotosUrls[2] ? 'Registrado' : 'Aguardando...'}
               </span>
@@ -294,8 +291,8 @@ export function WizardForm({ hookData }: Props) {
             )}
           </div>
 
-          <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
-            <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className={`text-[9px] font-black uppercase tracking-tighter px-2.5 py-1 rounded-full border ${fotosUrls[3] ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
                 {fotosUrls[3] ? 'Registrado' : 'Aguardando...'}
               </span>
@@ -305,7 +302,7 @@ export function WizardForm({ hookData }: Props) {
             {fotosUrls[3] && hasLegendaSalva(3) && aguardandoAvaliacao && !isProjetoConcluido && (
               <button
                 onClick={gerarLinkConclusao}
-                className="mt-1 w-fit flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl shadow-md shadow-blue-100 transition-all active:scale-95"
+                className="w-fit flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl shadow-md shadow-blue-100 transition-all active:scale-95"
               >
                 <LinkIcon size={13} />
                 <span className="text-[10px] font-black uppercase italic">Enviar para avaliar</span>
