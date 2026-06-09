@@ -1,16 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import { usePortfolioDashboard } from '@/hooks/usePortfolioDashboard'
-import { useUploadWizard } from '@/hooks/useUploadWizard'
 import { DashboardHeader } from './DashboardHeader'
 import { EstadoVazio } from './EstadoVazio'
 import { ProjetoCard } from './ProjetoCard'
 import { PrestadorSideCard } from './PrestadorSideCard'
-import { WizardTimeline } from './wizard/WizardTimeline'
 import UploadWizard from './UploadWizard'
-
-type HookData = ReturnType<typeof useUploadWizard>
 
 export default function PortfolioDashboardTab() {
   const {
@@ -18,8 +13,6 @@ export default function PortfolioDashboardTab() {
     showWizard, projetoParaEdicao, totalConcluidos, totalAtivos,
     abrirEdicao, abrirNovo, fecharWizard,
   } = usePortfolioDashboard()
-
-  const [wizardHookData, setWizardHookData] = useState<HookData | null>(null)
 
   if (loading) {
     return (
@@ -31,7 +24,6 @@ export default function PortfolioDashboardTab() {
 
   return (
     <div className="px-5 md:px-8 pb-20">
-      {/* gap original mantido — o espaço vinha do max-w do card, não do gap */}
       <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
 
         {/* ── Coluna esquerda ── */}
@@ -47,10 +39,7 @@ export default function PortfolioDashboardTab() {
             media_nota={perfilPrestador?.media_nota}
             total_avals={perfilPrestador?.total_avals}
           />
-
-          {showWizard && meuPrestadorId !== null && wizardHookData && (
-            <WizardTimeline hookData={wizardHookData} />
-          )}
+          {/* WizardTimeline removido — redundante com as etapas já no WizardForm */}
         </div>
 
         {/* ── Coluna direita ── */}
@@ -62,7 +51,6 @@ export default function PortfolioDashboardTab() {
                 prestadorId={meuPrestadorId}
                 projetoExistente={projetoParaEdicao}
                 onComplete={fecharWizard}
-                onHookReady={setWizardHookData}
                 onVoltar={fecharWizard}
                 isEdicao={!!projetoParaEdicao}
               />
