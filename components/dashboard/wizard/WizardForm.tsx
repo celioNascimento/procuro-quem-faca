@@ -21,11 +21,11 @@ export function WizardForm({ hookData }: Props) {
 
   const {
     setErroUpload, setClienteWhatsapp, setClienteNome, setTitulo, handleAtualizarTitulo,
-    selecionarProjeto, setZoomEtapa, handleUpload, gerarLinkAceite, gerarLinkConclusao,
+    selecionarProjeto, setZoomEtapa, handleUpload, gerarLinkAceite, gerarLinkConclusao
   } = hookData.actions
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
 
       {/* ── Banner aguardando avaliação ── */}
       {aguardandoAvaliacao && !isProjetoConcluido && (
@@ -60,7 +60,7 @@ export function WizardForm({ hookData }: Props) {
         </div>
       )}
 
-      {/* ── Header: status badge ── */}
+      {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Gerenciar serviço</p>
         {projetoStatus && (
@@ -149,7 +149,7 @@ export function WizardForm({ hookData }: Props) {
         </div>
       </div>
 
-      {/* Projetos encontrados */}
+      {/* ── Projetos encontrados ── */}
       {projetosEncontrados.length > 0 && !projetoId && (
         <div className="bg-slate-50 p-5 rounded-2xl border border-dashed border-slate-200 animate-in slide-in-from-top-4">
           <p className="text-[9px] font-black uppercase italic text-slate-400 mb-3 tracking-widest text-center">Projetos identificados</p>
