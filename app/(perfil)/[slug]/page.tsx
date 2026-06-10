@@ -1,5 +1,4 @@
 'use client'
-import { useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import PerfilSkeleton from '@/components/skeletons/PerfilSkeleton'
@@ -12,54 +11,30 @@ import { AdCard } from '../../../components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { useRastreamentoAtivacao } from '@/hooks/useRastreamentoAtivacao'
 import { useLog } from '@/hooks/useLog'
+import { useCompartilharPerfil } from '@/hooks/useCompartilharPerfil'
 import type { AdPage } from '@/types/ads'
+import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
 
-export default function PerfilPublico() {
-  const { data, loading, erro } = usePerfilPrestador()
-  const { registrarLog }        = useLog()
-  const [compartilhando, setCompartilhando] = useState(false)
+// ── Sub-componente interno — hooks chamados após os dados estarem garantidos ──
 
-  useRastreamentoAtivacao(data?.prestador ?? null)
+interface PerfilCarregadoProps {
+  prestador: PrestadorPerfil
+  projetos: ProjetoPerfil[]
+  avaliacoes: ReturnType<typeof usePerfilPrestador>['data'] extends infer D
+    ? D extends { avaliacoes: infer A } ? A : never
+    : never
+  urlRetorno: string
+}
 
-  const handleCompartilhar = async () => {
-    if (!data) return
-    registrarLog('COMPARTILHAR_PERFIL_CLIQUE', { nome_prestador: data.prestador.nome }, data.prestador.id)
+function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: PerfilCarregadoProps) {
+  const { registrarLog } = useLog()
 
-    const url   = window.location.href
-    const texto = `Confira o trabalho de ${data.prestador.nome} no Procuro Quem Faça.`
+  const { status: statusCompartilhamento, compartilhar } = useCompartilharPerfil({
+    prestador,
+    projetos,
+    origem: 'perfil_publico',
+  })
 
-    if (navigator.share) {
-      try { await navigator.share({ title: data.prestador.nome, text: texto, url }) } catch {}
-    } else {
-      try { await navigator.clipboard.writeText(url) } catch {}
-    }
-
-    setCompartilhando(true)
-    setTimeout(() => setCompartilhando(false), 1500)
-  }
-
-  if (loading) return <PerfilSkeleton />
-
-  if (erro || !data) {
-    return (
-      <main className="min-h-screen bg-[#F8FAFC] font-sans flex flex-col items-center justify-center p-6 text-center">
-        <Header href="/prestadores" />
-        <div className="pt-24 space-y-6">
-          <h3 className="text-2xl font-black text-slate-300 uppercase italic tracking-tighter">
-            Perfil não encontrado
-          </h3>
-          <Link
-            href="/prestadores"
-            className="inline-block px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 active:scale-95 transition-all"
-          >
-            Ver Profissionais
-          </Link>
-        </div>
-      </main>
-    )
-  }
-
-  const { prestador, projetos, avaliacoes, urlRetorno } = data
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
 
   return (
@@ -67,12 +42,11 @@ export default function PerfilPublico() {
       <Header href={urlRetorno} />
 
       <div className="max-w-xl lg:max-w-6xl mx-auto pt-24 md:pt-32 pb-16 px-5">
-        
-        {/* Espaço de Monetização do Topo (Sem a div visível, apenas controle de largura) */}
+
         <div className="w-full max-w-xl lg:max-w-3xl mx-auto mb-6 flex items-center justify-center animate-in fade-in duration-500">
-          <AdCard 
-            page={"perfil" as AdPage} 
-            categoria={prestador.categorias?.nome || prestador.categoria} 
+          <AdCard
+            page={"perfil" as AdPage}
+            categoria={prestador.categorias?.nome || prestador.categoria}
           />
         </div>
 
@@ -95,22 +69,19 @@ export default function PerfilPublico() {
           </Link>
         )}
 
-        {/* Layout em Duas Colunas com Flexbox */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-4 relative">
-          
-          {/* Coluna da Esquerda: Identidade Visual (Sticky no Desktop) */}
+
           <div className="w-full lg:w-1/3 shrink-0 relative">
             <div className="lg:sticky lg:top-32 flex flex-col gap-6 animate-in fade-in duration-500">
               <PerfilHero
                 prestador={prestador}
                 projetos={projetos}
-                compartilhando={compartilhando}
-                onCompartilhar={handleCompartilhar}
+                compartilhando={statusCompartilhamento === 'copiado'}
+                onCompartilhar={compartilhar}
               />
             </div>
           </div>
 
-          {/* Coluna da Direita: Conteúdo de Leitura */}
           <div className="w-full lg:w-2/3 flex flex-col gap-6 lg:gap-8 animate-in fade-in duration-500">
             <div className="space-y-4">
               <PerfilSobre prestador={prestador} />
@@ -118,7 +89,7 @@ export default function PerfilPublico() {
               <PerfilCTA
                 nome={prestador.nome}
                 whatsapp={prestador.whatsapp}
-                onClique={() => registrarLog('CLIQUE_WHATSAPP_ORCAMENTO', { nome_prestador: prestador.nome }, prestador.id)}
+                onClique={() => registrarLog('CLIQUE_WHATSAPP_ORCAMENTO', { nome_prestador: prestador.nome }, String(prestador.id))}
               />
             </div>
 
@@ -128,7 +99,7 @@ export default function PerfilPublico() {
               </h2>
               <PortfolioGrid projetos={projetos} />
             </section>
-            
+
             <PerfilAvaliacoes avaliacoes={avaliacoes} />
           </div>
 
@@ -136,4 +107,35 @@ export default function PerfilPublico() {
       </div>
     </main>
   )
+}
+
+// ── Componente raiz — só gerencia loading/erro ─────────────────────────────
+
+export default function PerfilPublico() {
+  const { data, loading, erro } = usePerfilPrestador()
+
+  useRastreamentoAtivacao(data?.prestador ?? null)
+
+  if (loading) return <PerfilSkeleton />
+
+  if (erro || !data) {
+    return (
+      <main className="min-h-screen bg-[#F8FAFC] font-sans flex flex-col items-center justify-center p-6 text-center">
+        <Header href="/prestadores" />
+        <div className="pt-24 space-y-6">
+          <h3 className="text-2xl font-black text-slate-300 uppercase italic tracking-tighter">
+            Perfil não encontrado
+          </h3>
+          <Link
+            href="/prestadores"
+            className="inline-block px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 active:scale-95 transition-all"
+          >
+            Ver Profissionais
+          </Link>
+        </div>
+      </main>
+    )
+  }
+
+  return <PerfilCarregado {...data} />
 }
