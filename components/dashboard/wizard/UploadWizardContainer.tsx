@@ -286,17 +286,20 @@ export function UploadWizardContainer({
                           )}
                         </div>
 
-                        <div className={`relative w-full rounded-2xl overflow-hidden border-2 transition-all group ${
-                          concluida ? 'border-green-100 shadow-sm hover:shadow-md cursor-pointer'
-                          : isAtual ? 'border-dashed border-blue-200 bg-blue-50/30 hover:border-blue-400 cursor-pointer'
-                          : 'border-dashed border-slate-200 bg-slate-50'
-                        }`}>
+                        <div
+                          className={`relative w-full rounded-2xl overflow-hidden border-2 transition-all group ${
+                            concluida ? 'border-green-100 shadow-sm hover:shadow-md cursor-pointer'
+                            : isAtual ? 'border-dashed border-blue-200 bg-blue-50/30 hover:border-blue-400 cursor-pointer'
+                            : 'border-dashed border-slate-200 bg-slate-50'
+                          }`}
+                          onClick={concluida ? (e) => { e.stopPropagation(); setZoomEtapa(etapa.ordem) } : undefined}
+                        >
                           {concluida ? (
                             <>
                               <div className="aspect-video">
                                 <img
                                   src={fotoUrl!}
-                                  onClick={() => setZoomEtapa(etapa.ordem)}
+                                  onClick={(e) => { e.stopPropagation(); setZoomEtapa(etapa.ordem) }}
                                   className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
                                   alt={etapa.label}
                                 />
