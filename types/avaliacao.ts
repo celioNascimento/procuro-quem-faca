@@ -25,6 +25,7 @@ export interface Avaliacao {
   indica: boolean
   resposta_prestador: string | null
   cliente_id: string | null
+  status: string | null                          // 'pendente' | 'finalizado'
   portfolio_projetos: { titulo: string } | null
 }
 
