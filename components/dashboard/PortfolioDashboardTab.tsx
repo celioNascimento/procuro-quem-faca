@@ -5,7 +5,7 @@ import { DashboardHeader } from './DashboardHeader'
 import { EstadoVazio } from './EstadoVazio'
 import { ProjetoCard } from './ProjetoCard'
 import { PrestadorSideCard } from './PrestadorSideCard'
-import UploadWizard from './UploadWizard'
+import { UploadWizardContainer } from './wizard/UploadWizardContainer'
 
 export default function PortfolioDashboardTab() {
   const {
@@ -45,7 +45,12 @@ export default function PortfolioDashboardTab() {
         <div className="flex-1 min-w-0">
           {showWizard && meuPrestadorId !== null ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-400">
-              <UploadWizard
+              {/*
+                O key garante que ao trocar de projeto o UploadWizardContainer
+                seja destruído e recriado, reiniciando o useUploadWizard
+                com o projetoExistente correto.
+              */}
+              <UploadWizardContainer
                 key={projetoParaEdicao?.id || 'novo'}
                 prestadorId={meuPrestadorId}
                 projetoExistente={projetoParaEdicao}
