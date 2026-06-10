@@ -60,6 +60,14 @@ export function buildTextoWhatsApp(
 
 // ── Compartilhamento nativo / clipboard ───────────────────────────────────
 
+// navigator.share existe em alguns desktops (Chrome/Edge) mas trava aguardando
+// uma UI nativa que nunca aparece — restringimos ao mobile via pointer: coarse
+function isMobileShare(): boolean {
+  if (typeof navigator === 'undefined' || !navigator.share) return false
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(pointer: coarse)').matches
+}
+
 export async function compartilharViaNative(
   titulo: string,
   texto: string,
@@ -67,7 +75,7 @@ export async function compartilharViaNative(
 ): Promise<'native' | 'clipboard' | 'erro'> {
   if (typeof navigator === 'undefined') return 'erro'
 
-  if (navigator.share) {
+  if (isMobileShare()) {
     try {
       await navigator.share({ title: titulo, text: texto, url })
       return 'native'
