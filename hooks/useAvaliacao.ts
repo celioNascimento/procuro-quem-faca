@@ -11,7 +11,6 @@ import {
 } from '@/lib/services/avaliacao.service'
 import type { FotoOrdenada, Comentario, Projeto, Avaliacao } from '@/types/avaliacao'
 
-// ✅ Recebe apenas o token — parâmetro dinâmico da rota /acompanhamento/[token]
 export function useAvaliacao(token: string) {
   const router = useRouter()
 
@@ -37,7 +36,11 @@ export function useAvaliacao(token: string) {
     projeto?.status?.toLowerCase() === 'concluido' ||
     projeto?.status?.toLowerCase() === 'finalizado'
 
-  const visualmenteConcluido = isProjetoConcluido || !!avaliacaoExistente
+  // FIX: uma avaliação com status 'pendente' (default da tabela) não deve
+  // travar a tela no carrossel — só consideramos concluído quando a avaliação
+  // foi de fato finalizada pelo cliente (status = 'finalizado').
+  const avaliacaoFinalizada = avaliacaoExistente?.status === 'finalizado'
+  const visualmenteConcluido = isProjetoConcluido || avaliacaoFinalizada
 
   const fotosOrdenadas: FotoOrdenada[] =
     projeto?.portfolio_fotos?.sort((a, b) => a.ordem - b.ordem) ?? []
@@ -132,7 +135,7 @@ export function useAvaliacao(token: string) {
   }
 
   const handleFinalizarAvaliacao = async () => {
-    if (nota === 0 || submitting || avaliacaoExistente) return
+    if (nota === 0 || submitting || avaliacaoFinalizada) return
     setSubmitting(true)
     try {
       await inserirAvaliacao({
