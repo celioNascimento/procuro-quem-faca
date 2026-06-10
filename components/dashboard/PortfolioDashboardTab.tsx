@@ -48,7 +48,7 @@ export default function PortfolioDashboardTab() {
               {/*
                 O key garante que ao trocar de projeto o UploadWizardContainer
                 seja destruído e recriado, reiniciando o useUploadWizard
-                com o projetoExistente correto.
+                com o projetoExistente correto — mesmo comportamento de antes.
               */}
               <UploadWizardContainer
                 key={projetoParaEdicao?.id || 'novo'}
