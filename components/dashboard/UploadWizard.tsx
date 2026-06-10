@@ -264,7 +264,13 @@ export default function UploadWizard({
                         )}
                       </div>
 
-                      <div className={`flex-1 pb-6 ${isLast ? 'pb-0' : ''} ${bloqueada ? 'opacity-40 pointer-events-none' : ''}`}>
+                      {/*
+                        FIX: O wrapper da etapa mantém a opacidade reduzida quando bloqueada,
+                        mas NÃO tem mais pointer-events-none — isso impedia o clique de zoom
+                        mesmo em fotos já concluídas. O pointer-events-none agora fica apenas
+                        no label de upload (quando bloqueada && !concluida).
+                      */}
+                      <div className={`flex-1 pb-6 ${isLast ? 'pb-0' : ''} ${bloqueada ? 'opacity-40' : ''}`}>
                         <div className="flex items-center justify-between mb-3">
                           <div>
                             <p className={`text-[11px] font-black uppercase tracking-wide leading-none ${concluida ? 'text-green-600' : isAtual ? 'text-blue-600' : 'text-slate-300'}`}>
@@ -314,7 +320,9 @@ export default function UploadWizard({
                               )}
                             </>
                           ) : (
-                            <label className={`aspect-video flex flex-col items-center justify-center gap-2 ${!bloqueada ? 'cursor-pointer' : ''}`}>
+                            // FIX: pointer-events-none movido para cá — bloqueia apenas o upload,
+                            // nunca interfere com o clique de zoom nas fotos já enviadas acima.
+                            <label className={`aspect-video flex flex-col items-center justify-center gap-2 ${!bloqueada ? 'cursor-pointer' : 'pointer-events-none'}`}>
                               <div className="flex flex-col items-center gap-2">
                                 {isLoading ? <Loader2 size={28} className="animate-spin text-blue-400" />
                                   : <Camera size={28} className={isAtual ? 'text-blue-400' : 'text-slate-300'} />}
