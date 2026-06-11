@@ -7,13 +7,13 @@ export function useSlides(fotos: FotoProjeto[]) {
   const sorted = [...fotos].sort((a, b) => a.ordem - b.ordem)
   const fotoAtual = sorted[current] ?? null
 
-  const next = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const next = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
     setCurrent(p => (p + 1) % sorted.length)
   }
 
-  const prev = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const prev = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
     setCurrent(p => (p - 1 + sorted.length) % sorted.length)
   }
 
