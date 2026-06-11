@@ -1,32 +1,34 @@
-import { X } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ReactNode } from 'react'
+import React from 'react'
+
+interface Navegacao {
+  onPrev: (e?: React.MouseEvent) => void
+  onNext: (e?: React.MouseEvent) => void
+}
 
 interface Props {
   fotoUrl: string
-  ordemLabel: string        // ex: "Registro 01" ou "Fase Início"
-  onClose?: () => void      // undefined = sem botão de fechar no overlay
-  children: ReactNode       // coluna direita — cada modal passa o seu
+  ordemLabel: string
+  onClose?: () => void
+  navegacao?: Navegacao    // opcional — só ProjetoModal usa
+  children: ReactNode
 }
 
 /**
- * Estrutura visual compartilhada pelos dois modais de foto:
+ * Estrutura visual compartilhada por:
  * - WizardZoomModal  (prestador — edita legenda, faz upload)
- * - ModalDiscussao   (cliente   — leitura, comentários bidirecionais)
+ * - ModalDiscussao   (cliente   — comentários bidirecionais)
+ * - ProjetoModal     (público   — visualização + navegação entre fotos)
  *
- * Responsabilidades deste componente:
- * - Overlay escuro sem backdrop-blur (performance)
- * - Painel esquerdo com a foto
- * - Badge de fase no canto superior esquerdo
- * - Botão X no canto superior direito do overlay (desktop)
- * - Slot `children` para a coluna direita customizável
- *
- * Cada modal filho cuida apenas da sua lógica de negócio.
+ * Sem backdrop-blur em nenhum ponto — substituído por bg sólido.
+ * A prop `navegacao` é opcional: quando passada, exibe setas prev/next
+ * sobrepostas à foto.
  */
-export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, children }: Props) {
+export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, children }: Props) {
   return (
     <div className="fixed inset-0 z-[200] bg-slate-900/95 flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-300">
 
-      {/* Botão fechar flutuante — só aparece se onClose for passado */}
       {onClose && (
         <button
           onClick={onClose}
@@ -40,7 +42,7 @@ export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, children }: Props)
 
         {/* ── Painel esquerdo: foto ── */}
         <div className="flex-[1.5] bg-slate-900 flex items-center justify-center relative overflow-hidden">
-          {/* Fundo gradiente em vez de blur-3xl — mesmo efeito, GPU zero */}
+          {/* Gradiente em vez de blur-3xl — mesmo efeito visual, GPU zero */}
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950 opacity-80" />
           <img
             src={fotoUrl}
@@ -50,6 +52,24 @@ export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, children }: Props)
           <div className="absolute top-6 left-6 bg-blue-600/90 px-4 py-2 rounded-full text-white text-[10px] font-black uppercase italic tracking-widest border border-blue-400/20 z-20">
             {ordemLabel}
           </div>
+
+          {/* Setas de navegação — só quando navegacao for passado */}
+          {navegacao && (
+            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between items-center z-40">
+              <button
+                onClick={navegacao.onPrev}
+                className="w-10 h-10 bg-white/10 hover:bg-white/90 rounded-full flex items-center justify-center text-white hover:text-slate-900 transition-all shadow-xl active:scale-90 border border-white/10"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                onClick={navegacao.onNext}
+                className="w-10 h-10 bg-white/10 hover:bg-white/90 rounded-full flex items-center justify-center text-white hover:text-slate-900 transition-all shadow-xl active:scale-90 border border-white/10"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── Painel direito: slot customizável ── */}
