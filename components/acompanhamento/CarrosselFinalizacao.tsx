@@ -10,7 +10,7 @@ type Props = {
   avaliacaoExistente: Avaliacao | null
 }
 
-export function CarrosselFinalizacao({
+export default function CarrosselFinalizacao({
   projeto,
   fotosCarrossel,
   currentSlide,
