@@ -1,6 +1,6 @@
 import { Camera, X, Loader2, User, MessageSquare, AlertCircle } from 'lucide-react'
-import { useUploadWizard } from '@/hooks/useUploadWizard'
 import { useRef } from 'react'
+import { useUploadWizard } from '@/hooks/useUploadWizard'
 
 interface Props {
   hookData: ReturnType<typeof useUploadWizard>
@@ -19,33 +19,47 @@ export function WizardZoomModal({ hookData }: Props) {
     handleSalvarLegenda, handleZoomClose
   } = hookData.actions
 
-  // DEBUG — remover depois
-  const renderCount = useRef(0)
-  renderCount.current++
-  console.log('[ZoomModal] render #', renderCount.current)
-
   if (!zoomEtapa) return null
 
   return (
-    <div className="fixed inset-0 z-[200] bg-blue-950/90 backdrop-blur-md flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-300">
-      <button onClick={() => setZoomEtapa(null)} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors z-[210]">
+    // FIX: backdrop-blur-md removido do overlay — era o maior culpado.
+    // Substituído por bg sólido com leve transparência, visualmente equivalente.
+    <div className="fixed inset-0 z-[200] bg-blue-950/95 flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-300">
+      <button
+        onClick={() => setZoomEtapa(null)}
+        className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors z-[210]"
+      >
         <X size={32} />
       </button>
 
       <div className="flex flex-col md:flex-row bg-white rounded-[3rem] overflow-hidden w-full max-w-5xl h-full max-h-[90vh] shadow-2xl">
-        <div className="flex-[1.5] bg-slate-50 flex items-center justify-center relative overflow-hidden">
-          <img src={fotosUrls[zoomEtapa]!} className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-10 scale-125" />
-          <img src={fotosUrls[zoomEtapa]!} className="relative z-10 max-w-full max-h-full object-contain" alt="Foto do registro" />
-          <div className="absolute top-6 left-6 bg-blue-600/90 backdrop-blur-md px-4 py-2 rounded-full text-white text-[10px] font-black uppercase italic tracking-widest border border-blue-400/20 z-20">
+
+        {/* Painel da foto */}
+        <div className="flex-[1.5] bg-slate-900 flex items-center justify-center relative overflow-hidden">
+          {/*
+            FIX: a img de fundo com blur-3xl foi o segundo culpado.
+            Substituída por um gradiente CSS puro — efeito visual similar,
+            custo de GPU zero.
+          */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950 opacity-80" />
+          <img
+            src={fotosUrls[zoomEtapa]!}
+            className="relative z-10 max-w-full max-h-full object-contain"
+            alt="Foto do registro"
+          />
+          <div className="absolute top-6 left-6 bg-blue-600/90 px-4 py-2 rounded-full text-white text-[10px] font-black uppercase italic tracking-widest border border-blue-400/20 z-20">
             Registro 0{zoomEtapa}
           </div>
         </div>
 
+        {/* Painel lateral */}
         <div className="flex-1 p-6 md:p-10 flex flex-col bg-white overflow-hidden border-l border-slate-50">
           <div className="mb-8 shrink-0 border-b border-slate-50 pb-6">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-              <h3 className="text-lg font-black text-slate-900 uppercase italic leading-none">Descrição desta fase</h3>
+              <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+              <h3 className="text-lg font-black text-slate-900 uppercase italic leading-none">
+                Descrição desta fase
+              </h3>
             </div>
 
             <div className="bg-blue-50/30 p-5 rounded-2xl border border-blue-100/50">
@@ -58,38 +72,54 @@ export function WizardZoomModal({ hookData }: Props) {
                   </button>
                 </div>
               )}
+
               {!isProjetoConcluido && comentariosZoom.length === 0 ? (
                 <div className="flex flex-col gap-3">
                   <textarea
                     value={legendaEdit}
                     onChange={(e) => setLegendaEdit(e.target.value)}
-                    placeholder="Adicione as descrição para esta fase..."
+                    placeholder="Adicione a descrição para esta fase..."
                     className="w-full bg-white border border-blue-100 rounded-xl p-3 text-xs font-medium italic text-slate-600 outline-none focus:border-blue-300 resize-none custom-scrollbar"
                     rows={3}
                   />
 
                   <div className="flex items-center gap-3">
                     <div className="relative flex-1">
-                      <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleUpload(e, zoomEtapa)} disabled={loadingEtapa[zoomEtapa]} />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={(e) => handleUpload(e, zoomEtapa)}
+                        disabled={loadingEtapa[zoomEtapa]}
+                      />
                       <button className="w-full text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-4 py-2 rounded-xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
-                        {loadingEtapa[zoomEtapa] ? <Loader2 size={12} className="animate-spin" /> : <Camera size={12} />}
-                        <span className="truncate">{loadingEtapa[zoomEtapa] ? 'Enviando...' : 'Trocar Foto'}</span>
+                        {loadingEtapa[zoomEtapa]
+                          ? <Loader2 size={12} className="animate-spin" />
+                          : <Camera size={12} />}
+                        <span className="truncate">
+                          {loadingEtapa[zoomEtapa] ? 'Enviando...' : 'Trocar Foto'}
+                        </span>
                       </button>
                     </div>
                     <button
                       onClick={handleSalvarLegenda}
-                      disabled={salvandoLegenda || legendaEdit.trim() === '' || legendaEdit === (fotosData[zoomEtapa]?.legenda || '')}
+                      disabled={
+                        salvandoLegenda ||
+                        legendaEdit.trim() === '' ||
+                        legendaEdit === (fotosData[zoomEtapa]?.legenda || '')
+                      }
                       className="flex-[1.5] text-[9px] font-black uppercase tracking-widest bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md active:scale-95"
                     >
                       {salvandoLegenda ? 'Salvando...' : 'Salvar Descrição'}
                     </button>
-                    {erroLegenda && (
-                      <p className="text-[9px] text-red-500 font-bold mt-1">{erroLegenda}</p>
-                    )}
                   </div>
 
+                  {erroLegenda && (
+                    <p className="text-[9px] text-red-500 font-bold">{erroLegenda}</p>
+                  )}
+
                   {!hasLegendaSalva(zoomEtapa) && (
-                    <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-1 duration-500">
+                    <div className="mt-2 p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3">
                       <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
                       <p className="text-[9px] font-bold text-amber-700 leading-tight uppercase tracking-tight">
                         {zoomEtapa === 1
@@ -109,11 +139,15 @@ export function WizardZoomModal({ hookData }: Props) {
 
           <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
             <div className="flex items-center justify-between border-b border-slate-50 pb-2 mb-2">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Feedback do Cliente</h4>
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
+                Feedback do Cliente
+              </h4>
               <MessageSquare size={12} className="text-slate-300" />
             </div>
             {comentariosZoom.length === 0 ? (
-              <p className="text-[11px] text-slate-300 italic py-4 text-center">Nenhum comentário nesta etapa.</p>
+              <p className="text-[11px] text-slate-300 italic py-4 text-center">
+                Nenhum comentário nesta etapa.
+              </p>
             ) : (
               comentariosZoom.map((com) => (
                 <div key={com.id} className="flex gap-3 animate-in slide-in-from-left-2">
@@ -130,7 +164,11 @@ export function WizardZoomModal({ hookData }: Props) {
 
           <button
             onClick={handleZoomClose}
-            className={`mt-6 w-full py-5 rounded-[2rem] font-black uppercase italic text-[10px] tracking-widest transition-all active:scale-95 shrink-0 shadow-xl ${canCloseZoom ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+            className={`mt-6 w-full py-5 rounded-[2rem] font-black uppercase italic text-[10px] tracking-widest transition-all active:scale-95 shrink-0 shadow-xl ${
+              canCloseZoom
+                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100'
+                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+            }`}
           >
             {canCloseZoom ? 'Fechar Inspeção' : 'Legenda Obrigatória'}
           </button>
