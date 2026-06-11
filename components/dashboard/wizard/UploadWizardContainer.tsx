@@ -54,11 +54,6 @@ export function UploadWizardContainer({
 
     const totalFotos = [fotosUrls[1], fotosUrls[2], fotosUrls[3]].filter(Boolean).length
 
-    // DEBUG — remover depois
-    const renderCount = useRef(0)
-    renderCount.current++
-    console.log('[Container] render #', renderCount.current, '| zoomEtapa:', zoomEtapa)
-
     return (
         <>
             <div className="bg-[#F8FAFC] rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden w-full font-sans animate-in fade-in duration-500">
