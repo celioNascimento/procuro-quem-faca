@@ -1,6 +1,6 @@
 'use client'
 import RatingStars from '@/components/ui/RatingStars'
-import type { Avaliacao } from '@/hooks/useAvaliacoes'
+import type { Avaliacao } from '@/types/avaliacao'
 
 interface AvaliacaoCardProps {
   avaliacao: Avaliacao

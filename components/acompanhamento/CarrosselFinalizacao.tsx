@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
-import type { FotoOrdenada, Avaliacao, Projeto } from '@/hooks/useAvaliacao'
+import type { FotoOrdenada, Avaliacao, Projeto } from '@/types/avaliacao'
 
 type Props = {
   projeto: Projeto

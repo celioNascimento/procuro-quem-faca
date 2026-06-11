@@ -1,82 +1,95 @@
+'use client'
+import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { uploadImagemPortfolio } from '@/lib/services/uploadWizard.service'
+import { inserirAvaliacao, finalizarProjeto } from '@/lib/services/avaliacao.service'
 
-const BUCKET = 'evidencias-contestacao'
-const MAX_KB = 10240
-const MAX_ARQUIVOS = 5
+type Status = 'idle' | 'uploading' | 'saving' | 'done' | 'error'
 
-export type UploadArquivoResult =
-  | { ok: true; url: string; file: File }
-  | { ok: false; error: 'TOO_LARGE'; sizeMB: number; file: File }
-  | { ok: false; error: 'UPLOAD_FAILED'; file: File }
-
-export interface UploadEvidenciasResult {
-  urls: string[]
-  falhas: Exclude<UploadArquivoResult, { ok: true }>[]
+interface SubmitPayload {
+  projetoId: string
+  prestadorId: number
+  clienteId: string
+  nota: number
+  comentario: string
+  isContestacao: boolean
+  fotosEvidencia: File[]
 }
 
-function extrairPathDoBucket(url: string, bucket: string): string | null {
-  const marker = `/object/public/${bucket}/`
-  const idx = url.indexOf(marker)
-  if (idx === -1) return null
-  return url.slice(idx + marker.length).split('?')[0] || null
-}
+export function useSubmitAvaliacao(onComplete: () => void) {
+  const [status, setStatus] = useState<Status>('idle')
+  const [erro, setErro] = useState<string | null>(null)
 
-export async function removerEvidencias(urls: string[]): Promise<void> {
-  const paths = urls
-    .map((url) => extrairPathDoBucket(url, BUCKET))
-    .filter((p): p is string => p !== null)
+  async function submit({
+    projetoId,
+    prestadorId,
+    clienteId,
+    nota,
+    comentario,
+    isContestacao,
+    fotosEvidencia,
+  }: SubmitPayload) {
+    if (status === 'uploading' || status === 'saving') return
+    setErro(null)
 
-  if (paths.length > 0) {
-    await supabase.storage.from(BUCKET).remove(paths).catch(() => {})
+    try {
+      let urlsEvidencia: string[] = []
+
+      // 1. Upload de fotos de evidência (só contestação)
+      if (isContestacao && fotosEvidencia.length > 0) {
+        setStatus('uploading')
+        const uploads = await Promise.allSettled(
+          fotosEvidencia.slice(0, 5).map((file, i) => {
+            const ext = file.name.split('.').pop()
+            const path = `contestacoes/${projetoId}/${i}-${Date.now()}.${ext}`
+            return uploadImagemPortfolio(path, file)
+          })
+        )
+
+        const falhas: string[] = []
+        uploads.forEach((result, i) => {
+          if (result.status === 'fulfilled') {
+            urlsEvidencia.push(result.value)
+          } else {
+            falhas.push(fotosEvidencia[i].name)
+          }
+        })
+
+        if (falhas.length > 0) {
+          setErro(`Arquivos com falha: ${falhas.join(', ')}`)
+        }
+      }
+
+      // 2. Salvar avaliação
+      setStatus('saving')
+      await inserirAvaliacao({
+        projeto_id: projetoId,
+        prestador_id: String(prestadorId),  // ✅ converte number → string
+        nota: isContestacao ? 1 : nota,
+        comentario,
+        indica: !isContestacao,
+        visivel: !isContestacao,
+        status: isContestacao ? 'em_disputa' : 'finalizado',
+      })
+
+      // 3. Finalizar projeto ou marcar em disputa
+      if (!isContestacao) {
+        await finalizarProjeto(projetoId)
+      } else {
+        await supabase
+          .from('portfolio_projetos')
+          .update({ status: 'em_disputa' })
+          .eq('id', projetoId)
+      }
+
+      setStatus('done')
+      onComplete()
+    } catch (err) {
+      console.error('Erro ao submeter avaliação:', err)
+      setErro('Erro ao salvar. Tente novamente.')
+      setStatus('error')
+    }
   }
+
+  return { status, erro, submit }
 }
-
-async function uploadUmArquivo(
-  arquivo: File,
-  contestacaoId: string,
-  index: number
-): Promise<UploadArquivoResult> {
-  const fileSizeKB = arquivo.size / 1024
-
-  if (fileSizeKB > MAX_KB) {
-    return { ok: false, error: 'TOO_LARGE', sizeMB: fileSizeKB / 1024, file: arquivo }
-  }
-
-  const ext = arquivo.name.split('.').pop()
-  const fileName = `${contestacaoId}/${index}-${Date.now()}.${ext}`
-
-  const { error: uploadError } = await supabase.storage
-    .from(BUCKET)
-    .upload(fileName, arquivo)
-
-  if (uploadError) return { ok: false, error: 'UPLOAD_FAILED', file: arquivo }
-
-  const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(fileName)
-
-  return { ok: true, url: publicUrl, file: arquivo }
-}
-
-export async function uploadEvidencias(
-  arquivos: File[],
-  contestacaoId: string
-): Promise<UploadEvidenciasResult> {
-  const limitados = arquivos.slice(0, MAX_ARQUIVOS)
-
-  const resultados = await Promise.all(
-    limitados.map((arquivo, i) => uploadUmArquivo(arquivo, contestacaoId, i))
-  )
-
-  type OkResult = Extract<UploadArquivoResult, { ok: true }>
-  type FailResult = Exclude<UploadArquivoResult, { ok: true }>
-
-  return resultados.reduce<UploadEvidenciasResult>(
-    (acc, r) => {
-      if (r.ok) acc.urls.push((r as OkResult).url)
-      else acc.falhas.push(r as FailResult)
-      return acc
-    },
-    { urls: [], falhas: [] }
-  )
-}
-
-export { MAX_ARQUIVOS, MAX_KB }
