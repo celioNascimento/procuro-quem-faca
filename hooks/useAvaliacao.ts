@@ -36,9 +36,6 @@ export function useAvaliacao(token: string) {
     projeto?.status?.toLowerCase() === 'concluido' ||
     projeto?.status?.toLowerCase() === 'finalizado'
 
-  // FIX: uma avaliação com status 'pendente' (default da tabela) não deve
-  // travar a tela no carrossel — só consideramos concluído quando a avaliação
-  // foi de fato finalizada pelo cliente (status = 'finalizado').
   const avaliacaoFinalizada = avaliacaoExistente?.status === 'finalizado'
   const visualmenteConcluido = isProjetoConcluido || avaliacaoFinalizada
 
@@ -52,11 +49,18 @@ export function useAvaliacao(token: string) {
     label: f.ordem === 1 ? 'Antes' : f.ordem === 2 ? 'Durante' : 'Depois',
   }))
 
+  // Label evolui conforme o estado real do projeto:
+  // pendente/em_registro → Em andamento
+  // em_execucao sem foto 3 → Registrando etapas (prestador ainda fotografando)
+  // em_execucao com foto 3 → Aguardando sua avaliação (todas as fotos prontas)
+  // concluido/finalizado  → Concluído ✓
   const labelEtapaAtual = visualmenteConcluido
     ? 'Concluído ✓'
     : projeto?.status === 'em_execucao'
-    ? 'Aguardando sua avaliação'
-    : 'Em andamento'
+      ? temConclusao
+        ? 'Aguardando sua avaliação'
+        : 'Registrando etapas'
+      : 'Em andamento'
 
   useEffect(() => { setMounted(true) }, [])
 
