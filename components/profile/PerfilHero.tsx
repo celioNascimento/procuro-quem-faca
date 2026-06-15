@@ -34,7 +34,7 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
 
           {/* Avatar */}
           <div className="relative shrink-0">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
+            <div className="w-28 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
               {prestador.foto_perfil ? (
                 <img
                   src={prestador.foto_perfil}
@@ -58,7 +58,7 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
 
           {/* Nome + slug + localização no banner */}
           <div className="flex-1 min-w-0">
-            <h1 className="font-black text-[15px] text-slate-800 leading-tight tracking-tight uppercase italic truncate">
+            <h1 className="font-black text-[15px] text-slate-800 leading-tight tracking-tight uppercase italic break-words">
               {prestador.nome}
             </h1>
             {slug && (
