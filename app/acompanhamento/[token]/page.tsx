@@ -1,16 +1,14 @@
 'use client'
 import { use } from 'react'
-import { useAvaliacao } from '@/hooks/useAvaliacao'
-import HeaderCliente from '@/components/perfil/HeaderCliente'
-import { CardPrestador }        from '@/components/acompanhamento/CardPrestador'
-import { LinhaDeTempo }         from '@/components/acompanhamento/LinhaDeTempo'
-import { StatusMini }           from '@/components/acompanhamento/StatusMini'
-import CarrosselFinalizacao from '@/components/acompanhamento/CarrosselFinalizacao'
-import { BlocoAvaliacao }       from '@/components/acompanhamento/BlocoAvaliacao'
-import { ModalDiscussao }       from '@/components/acompanhamento/ModalDiscussao'
-import { RodapeSeguranca }      from '@/components/acompanhamento/RodapeSeguranca'
+import { useAcompanhamento } from '@/hooks/useAcompanhamento'
+import HeaderCliente        from '@/components/perfil/HeaderCliente'
+import { CardPrestador }    from '@/components/acompanhamento/CardPrestador'
+import { LinhaDeTempo }     from '@/components/acompanhamento/LinhaDeTempo'
+import { StatusMini }       from '@/components/acompanhamento/StatusMini'
+import { ModalDiscussao }   from '@/components/acompanhamento/ModalDiscussao'
+import { RodapeSeguranca }  from '@/components/acompanhamento/RodapeSeguranca'
 
-export default function PaginaAvaliacaoCliente({
+export default function PaginaAcompanhamento({
   params: paramsPromise,
 }: {
   params: Promise<{ token: string }>
@@ -18,15 +16,11 @@ export default function PaginaAvaliacaoCliente({
   const { token } = use(paramsPromise)
 
   const {
-    projeto, avaliacaoExistente, comentarios, fotosOrdenadas, fotosCarrossel,
-    temConclusao, labelEtapaAtual, visualmenteConcluido,
+    projeto, comentarios, fotosOrdenadas, temConclusao, labelEtapaAtual,
     loading, mounted, fotoSelecionada, setFotoSelecionada,
-    currentSlide, nextSlide, prevSlide,
-    nota, setNota, hoverNota, setHoverNota,
-    comentarioGeral, setComentarioGeral, indica, setIndica, submitting,
     novoComentario, setNovoComentario, enviandoComentario,
-    handleShare, handleEnviarComentario, handleFinalizarAvaliacao,
-  } = useAvaliacao(token)
+    handleShare, handleEnviarComentario,
+  } = useAcompanhamento(token)
 
   if (!mounted || loading) {
     return (
@@ -43,72 +37,32 @@ export default function PaginaAvaliacaoCliente({
       <HeaderCliente nomeCliente={projeto.cliente_nome} />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 md:pt-36 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-
-        {/*
-          FIX: adicionado `items-start` para que o flex container não
-          estique os filhos — sem isso o aside nunca tem altura menor
-          que o pai e o sticky não dispara.
-          O `lg:flex-row` já existia; só garantimos que ambas as colunas
-          se alinham pelo topo e têm altura própria.
-        */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-6">
 
-          {/* Coluna esquerda — sticky no desktop */}
+          {/* Coluna esquerda — sticky */}
           <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-32 space-y-4">
             <CardPrestador
               projeto={projeto}
               onShare={handleShare}
             />
-
-            {visualmenteConcluido && (
+            {temConclusao && (
               <StatusMini
                 labelEtapaAtual={labelEtapaAtual}
                 totalFotos={fotosOrdenadas.length}
               />
             )}
-
             <RodapeSeguranca />
           </aside>
 
-          {/* Coluna direita — conteúdo principal (rola normalmente) */}
+          {/* Coluna direita */}
           <div className="flex-1 min-w-0 space-y-5">
-
-            {!visualmenteConcluido && (
-              <LinhaDeTempo
-                fotosOrdenadas={fotosOrdenadas}
-                comentarios={comentarios}
-                labelEtapaAtual={labelEtapaAtual}
-                status={projeto.status}
-                onFotoClick={setFotoSelecionada}
-              />
-            )}
-
-            {visualmenteConcluido && (
-              <CarrosselFinalizacao
-                projeto={projeto}
-                fotosCarrossel={fotosCarrossel}
-                currentSlide={currentSlide}
-                onNext={nextSlide}
-                onPrev={prevSlide}
-                avaliacaoExistente={avaliacaoExistente}
-              />
-            )}
-
-            {!visualmenteConcluido && temConclusao && (
-              <BlocoAvaliacao
-                nota={nota}
-                setNota={setNota}
-                hoverNota={hoverNota}
-                setHoverNota={setHoverNota}
-                comentarioGeral={comentarioGeral}
-                setComentarioGeral={setComentarioGeral}
-                indica={indica}
-                setIndica={setIndica}
-                submitting={submitting}
-                onSubmit={handleFinalizarAvaliacao}
-              />
-            )}
-
+            <LinhaDeTempo
+              fotosOrdenadas={fotosOrdenadas}
+              comentarios={comentarios}
+              labelEtapaAtual={labelEtapaAtual}
+              status={projeto.status}
+              onFotoClick={setFotoSelecionada}
+            />
             <div className="lg:hidden">
               <RodapeSeguranca />
             </div>
@@ -117,7 +71,7 @@ export default function PaginaAvaliacaoCliente({
         </div>
       </main>
 
-      {fotoSelecionada && !visualmenteConcluido && (
+      {fotoSelecionada && (
         <ModalDiscussao
           foto={fotoSelecionada}
           projeto={projeto}
