@@ -30,9 +30,9 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
 
         {/* Banner + Avatar sobrepostos */}
-        <div className="relative w-full h-20 bg-gradient-to-br from-blue-50 to-slate-100">
-          <div className="absolute -bottom-10 left-5">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden border-4 border-white shadow-md bg-slate-100">
+        <div className="relative w-full h-32 bg-gradient-to-br from-blue-50 to-slate-100">
+          <div className="absolute -bottom-14 left-6">
+            <div className="w-28 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-slate-100">
               {prestador.foto_perfil ? (
                 <img
                   src={prestador.foto_perfil}
@@ -49,15 +49,15 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
             </div>
 
             {prestador.verificado && (
-              <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1 rounded-full shadow border-2 border-white">
-                <ShieldCheck size={11} strokeWidth={3} />
+              <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow border-2 border-white">
+                <ShieldCheck size={12} strokeWidth={3} />
               </div>
             )}
           </div>
         </div>
 
         {/* Nome + slug + localização + chips */}
-        <div className="pt-12 px-4 pb-4">
+        <div className="pt-16 px-5 pb-5">
           <h1 className="font-black text-[17px] text-slate-800 leading-tight tracking-tight uppercase italic">
             {prestador.nome}
           </h1>
