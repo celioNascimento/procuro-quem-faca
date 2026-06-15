@@ -30,7 +30,7 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
 
         {/* Foto — proporção 4:3 mais compacta */}
-        <div className="w-full aspect-square bg-slate-50 flex items-center justify-center relative overflow-hidden">
+        <div className="w-full h-48 bg-slate-50 flex items-center justify-center relative overflow-hidden">
           {prestador.foto_perfil ? (
             <img
               src={prestador.foto_perfil}
