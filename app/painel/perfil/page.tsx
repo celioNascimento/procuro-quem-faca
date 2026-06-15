@@ -9,6 +9,8 @@ import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 export default function PerfilDoCliente() {
   const {
     fileInputRef,
+    filtroRef,
+    irParaAvaliar,
     aba, setAba,
     filtroStatus, setFiltroStatus,
     loading,
@@ -45,7 +47,6 @@ export default function PerfilDoCliente() {
       <HeaderCliente nomeCliente={perfil.full_name} />
       <input type="file" ref={fileInputRef} onChange={handleUploadFoto} accept="image/*" className="hidden" />
 
-      {/* Modais mantidos intactos (Delete, Sair sem salvar, Erro, Sucesso) */}
       {deleteModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 space-y-6 animate-in zoom-in-95">
@@ -58,7 +59,6 @@ export default function PerfilDoCliente() {
                 Esta ação é <strong>permanente</strong> e não pode ser desfeita. Seus dados pessoais serão removidos.
               </p>
             </div>
-
             <div className="space-y-2">
               <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400">
                 Digite <span className="text-red-500">EXCLUIR</span> para confirmar
@@ -70,7 +70,6 @@ export default function PerfilDoCliente() {
                 className="w-full px-5 py-4 rounded-2xl border border-slate-200 outline-none text-[14px] font-bold text-slate-800 focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all placeholder-slate-300"
               />
             </div>
-
             <div className="flex gap-3">
               <button
                 onClick={() => { setDeleteModal(false); setDeleteConfirmText('') }}
@@ -128,15 +127,13 @@ export default function PerfilDoCliente() {
         </div>
       )}
 
-      {/* Container Principal Ampliado com Flexbox */}
       <div className="max-w-xl lg:max-w-6xl mx-auto px-5 pt-24 md:pt-36 animate-in fade-in duration-700">
         <div className="flex flex-col lg:flex-row gap-8 relative">
 
-          {/* Coluna da Esquerda (1/3): Identidade e Resumo (Sticky no Desktop) */}
+          {/* Coluna da Esquerda */}
           <div className="w-full lg:w-1/3 shrink-0 relative space-y-6">
             <div className="lg:sticky lg:top-36 flex flex-col gap-6">
               
-              {/* Perfil card com faixa azul */}
               <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                 <div className="h-20 bg-gradient-to-r from-blue-600 to-blue-500" />
                 <div className="px-8 pb-8 -mt-10 flex flex-col items-center">
@@ -149,9 +146,7 @@ export default function PerfilDoCliente() {
                               src={perfil.avatar_url}
                               className="w-full h-full object-cover"
                               alt="Avatar"
-                              onError={e => {
-                                (e.target as HTMLImageElement).style.display = 'none'
-                              }}
+                              onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                             />
                           : <User size={32} className="text-slate-300" />
                       }
@@ -165,7 +160,6 @@ export default function PerfilDoCliente() {
                 </div>
               </div>
 
-              {/* Resumo de Atividades (Movido para a barra lateral) */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white rounded-[2rem] p-5 border border-slate-100 shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
@@ -188,13 +182,13 @@ export default function PerfilDoCliente() {
             </div>
           </div>
 
-          {/* Coluna da Direita (2/3): Conteúdo Dinâmico */}
+          {/* Coluna da Direita */}
           <div className="w-full lg:w-2/3 flex flex-col gap-6">
 
-            {/* CTA quando há serviços para avaliar */}
+            {/* ✅ CTA azul — agora usa irParaAvaliar para scroll + filtro */}
             {avaliarCount > 0 && (
               <button
-                onClick={() => { setAba('servicos'); setFiltroStatus('avaliar') }}
+                onClick={irParaAvaliar}
                 className="w-full bg-blue-600 rounded-[2rem] p-5 flex items-center gap-4 active:scale-[0.98] transition-all shadow-xl shadow-blue-200 animate-in fade-in duration-500 text-left"
               >
                 <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
@@ -222,8 +216,9 @@ export default function PerfilDoCliente() {
 
             {aba === 'servicos' ? (
               <div className="space-y-4 pb-4">
-                {/* Filtros */}
-                <div className="flex flex-wrap justify-center gap-2 pb-2">
+
+                {/* ✅ filtroRef aplicado aqui para o scroll funcionar */}
+                <div ref={filtroRef} className="flex flex-wrap justify-center gap-2 pb-2">
                   {[
                     { id: 'todos',       label: 'Todos' },
                     { id: 'pendente',    label: 'Aceitar' },
@@ -242,7 +237,6 @@ export default function PerfilDoCliente() {
                   ))}
                 </div>
 
-                {/* Lista */}
                 {loadingServicos ? (
                   <div className="space-y-3">
                     {[1, 2, 3].map(i => <div key={i} className="h-[80px] bg-slate-100 rounded-[2rem] animate-pulse" />)}
@@ -296,7 +290,6 @@ export default function PerfilDoCliente() {
             ) : (
 
               <div className="space-y-4 pb-12 animate-in fade-in duration-300">
-                {/* Formulário */}
                 <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 md:p-8 space-y-5">
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Nome Completo</label>
@@ -361,7 +354,6 @@ export default function PerfilDoCliente() {
                   </button>
                 </div>
 
-                {/* ── Zona de perigo ── */}
                 <div className="bg-white rounded-[2.5rem] border border-red-100 shadow-sm p-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center shrink-0">

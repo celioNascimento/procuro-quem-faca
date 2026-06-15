@@ -15,6 +15,7 @@ const aplicarMascara = (valor: string) => {
 export function usePerfilCliente() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const filtroRef = useRef<HTMLDivElement>(null)
   const [aba, setAba] = useState('servicos')
   const [filtroStatus, setFiltroStatus] = useState('todos')
   const [loading, setLoading] = useState(false)
@@ -172,6 +173,14 @@ export function usePerfilCliente() {
     }
   }
 
+  const irParaAvaliar = () => {
+    setAba('servicos')
+    setFiltroStatus('avaliar')
+    setTimeout(() => {
+      filtroRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 50)
+  }
+
   const getStatusInfo = (servico: any) => {
     const s = servico?.status?.toLowerCase()
     const temFoto3 = servico?.portfolio_fotos?.some((f: any) => f.ordem === 3)
@@ -225,6 +234,8 @@ export function usePerfilCliente() {
   return {
     router,
     fileInputRef,
+    filtroRef,
+    irParaAvaliar,
     aba, setAba,
     filtroStatus, setFiltroStatus,
     loading,
