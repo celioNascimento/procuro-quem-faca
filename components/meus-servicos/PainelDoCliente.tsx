@@ -102,7 +102,7 @@ export default function PainelDoCliente() {
     if (servico.status === 'em_execucao')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
     if (servico.status === 'concluido')
-      return () => router.push(`/avaliar/${servico.avaliacao_token}`)
+      return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
     return () => handleAceitar(servico)
   }
 
