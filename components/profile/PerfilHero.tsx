@@ -34,7 +34,7 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
           {prestador.foto_perfil ? (
             <img
               src={prestador.foto_perfil}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain p-4"  // 👈 object-contain + padding
               alt={prestador.nome}
             />
           ) : (
