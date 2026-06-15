@@ -10,10 +10,10 @@ export async function fetchProjetoPorToken(token: string) {
       prestadores(nome, foto_perfil, whatsapp, categoria:categorias(nome))
     `)
     .eq('avaliacao_token', token)
-    .single()
+    .maybeSingle()                  // ← era .single(); nunca lança PGRST116
 
-  if (error) throw error
-  return data
+  if (error) throw error            // só lança erros reais (rede, permissão…)
+  return data                       // null quando não encontrado, objeto quando encontrado
 }
 
 export async function fetchAvaliacaoPorProjeto(projetoId: string) {
