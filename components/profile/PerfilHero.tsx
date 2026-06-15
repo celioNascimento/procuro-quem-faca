@@ -26,13 +26,15 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
   return (
     <section className="flex flex-col gap-3">
 
-      {/* ── Card: foto + identidade ── */}
+      {/* ── Card principal ── */}
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
 
-        {/* Banner + Avatar sobrepostos */}
-        <div className="relative w-full h-32 bg-gradient-to-br from-blue-50 to-slate-100">
-          <div className="absolute -bottom-14 left-6">
-            <div className="w-28 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-slate-100">
+        {/* Banner com avatar + nome lado a lado */}
+        <div className="w-full bg-gradient-to-br from-blue-50 to-slate-100 px-5 py-5 flex items-center gap-4">
+
+          {/* Avatar */}
+          <div className="relative shrink-0">
+            <div className="w-20 h-20 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
               {prestador.foto_perfil ? (
                 <img
                   src={prestador.foto_perfil}
@@ -40,74 +42,74 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
                   alt={prestador.nome}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-slate-300 font-black text-[9px] uppercase tracking-widest text-center px-1">
+                <div className="w-full h-full flex items-center justify-center bg-slate-100">
+                  <span className="text-slate-300 font-black text-[8px] uppercase tracking-widest text-center px-1">
                     Sem Foto
                   </span>
                 </div>
               )}
             </div>
-
             {prestador.verificado && (
-              <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow border-2 border-white">
-                <ShieldCheck size={12} strokeWidth={3} />
+              <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1 rounded-full shadow border-2 border-white">
+                <ShieldCheck size={10} strokeWidth={3} />
               </div>
             )}
           </div>
+
+          {/* Nome + slug + localização no banner */}
+          <div className="flex-1 min-w-0">
+            <h1 className="font-black text-[15px] text-slate-800 leading-tight tracking-tight uppercase italic truncate">
+              {prestador.nome}
+            </h1>
+            {slug && (
+              <p className="text-[10px] text-blue-400 font-bold truncate mt-0.5 tracking-wide">
+                @{slug}
+              </p>
+            )}
+            {localizacao && (
+              <p className="flex items-center gap-1 text-[10px] font-medium text-slate-400 mt-1.5">
+                <MapPin size={11} className="shrink-0" />
+                {localizacao}
+              </p>
+            )}
+          </div>
+
         </div>
 
-        {/* Nome + slug + localização + chips */}
-        <div className="pt-16 px-5 pb-5">
-          <h1 className="font-black text-[17px] text-slate-800 leading-tight tracking-tight uppercase italic">
-            {prestador.nome}
-          </h1>
-          {slug && (
-            <p className="text-[11px] text-blue-400 font-bold truncate mt-1 tracking-wide">
-              @{slug}
-            </p>
-          )}
-          {localizacao && (
-            <p className="flex items-center gap-1 text-[11px] font-medium text-slate-400 mt-2">
-              <MapPin size={12} className="shrink-0" />
-              {localizacao}
-            </p>
-          )}
+        {/* Chips */}
+        {(categoria || totalFinalizados > 0 || totalEmAndamento > 0 || stats.exibir) && (
+          <div className="flex flex-wrap gap-1.5 px-4 py-3 border-t border-slate-100">
 
-          {/* ── Chips discretos ── */}
-          {(categoria || totalFinalizados > 0 || totalEmAndamento > 0 || stats.exibir) && (
-            <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-slate-100">
+            {categoria && (
+              <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-600 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-100">
+                <Wrench size={10} className="shrink-0" />
+                {categoria}
+              </span>
+            )}
 
-              {categoria && (
-                <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-600 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-100">
-                  <Wrench size={10} className="shrink-0" />
-                  {categoria}
-                </span>
-              )}
+            {totalFinalizados > 0 && (
+              <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-green-100">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
+                {totalFinalizados} concluído{totalFinalizados > 1 ? 's' : ''}
+              </span>
+            )}
 
-              {totalFinalizados > 0 && (
-                <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-green-100">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
-                  {totalFinalizados} concluído{totalFinalizados > 1 ? 's' : ''}
-                </span>
-              )}
+            {totalEmAndamento > 0 && (
+              <span className="inline-flex items-center gap-1 bg-slate-50 text-slate-500 text-[10px] font-bold px-2.5 py-1 rounded-full border border-slate-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
+                {totalEmAndamento} em andamento
+              </span>
+            )}
 
-              {totalEmAndamento > 0 && (
-                <span className="inline-flex items-center gap-1 bg-slate-50 text-slate-500 text-[10px] font-bold px-2.5 py-1 rounded-full border border-slate-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
-                  {totalEmAndamento} em andamento
-                </span>
-              )}
+            {stats.exibir && (
+              <span className="inline-flex items-center gap-1 bg-slate-50 text-slate-500 text-[10px] font-bold px-2.5 py-1 rounded-full border border-slate-200">
+                <Star size={10} className="text-yellow-400 fill-yellow-400 shrink-0" />
+                {stats.media} · {stats.total} avaliações
+              </span>
+            )}
 
-              {stats.exibir && (
-                <span className="inline-flex items-center gap-1 bg-slate-50 text-slate-500 text-[10px] font-bold px-2.5 py-1 rounded-full border border-slate-200">
-                  <Star size={10} className="text-yellow-400 fill-yellow-400 shrink-0" />
-                  {stats.media} · {stats.total} avaliações
-                </span>
-              )}
-
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* ── Ações secundárias ── */}
