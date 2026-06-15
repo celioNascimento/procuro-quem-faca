@@ -190,7 +190,7 @@ export default function PainelDoCliente() {
                         {/* Indicador lateral ativo */}
                         {ativo && (
                           <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-blue-600" />
-                        )}
+                        )} 
 
                         {/* Ícone */}
                         <div className={`
