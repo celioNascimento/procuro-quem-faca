@@ -24,7 +24,7 @@ export default function PortfolioGrid({ projetos }: Props) {
   const gridClass =
     projetos.length === 1 ? 'grid grid-cols-1 max-w-[200px]' :
     projetos.length === 2 ? 'grid grid-cols-2 gap-2' :
-                            'grid grid-cols-3 gap-1.5'
+                            'grid grid-cols-2 sm:grid-cols-3 gap-2'
 
   return (
     <>
