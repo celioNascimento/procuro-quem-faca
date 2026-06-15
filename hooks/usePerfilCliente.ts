@@ -194,7 +194,8 @@ export function usePerfilCliente() {
     const temFoto3 = s.portfolio_fotos?.some((f: any) => f.ordem === 3)
     if (s.status === 'pendente') return `/meus-servicos?token=${s.avaliacao_token}`
     if (s.status === 'em_execucao' && !temFoto3) return `/meus-servicos?token=${s.avaliacao_token}`
-    return `/avaliar/${s.id}?token=${s.avaliacao_token}`
+    // ✅ CORRIGIDO: usa só o avaliacao_token na rota, sem o id do projeto como segmento
+    return `/avaliar/${s.avaliacao_token}`
   }
 
   const servicosFiltrados = servicos.filter(s => {
