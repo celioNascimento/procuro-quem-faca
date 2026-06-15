@@ -18,8 +18,8 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
 
   const totalFinalizados = projetos.filter(p => p.status === 'finalizado').length
   const totalEmAndamento = projetos.filter(p => p.status === 'em_execucao').length
-  const slug = prestador.slug
-  const categoria = prestador.categorias?.nome || prestador.categoria
+  const slug             = prestador.slug
+  const categoria        = prestador.categorias?.nome || prestador.categoria
 
   const { stats } = useAvaliacoes(prestador.id)
 
@@ -29,29 +29,35 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
       {/* ── Card: foto + identidade ── */}
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
 
-        {/* Foto — proporção 4:3 mais compacta */}
-        <div className="w-full h-48 bg-slate-50 flex items-center justify-center relative overflow-hidden">
-          {prestador.foto_perfil ? (
-            <img
-              src={prestador.foto_perfil}
-              className="w-full h-full object-contain p-4"  // 👈 object-contain + padding
-              alt={prestador.nome}
-            />
-          ) : (
-            <span className="text-slate-300 font-black text-[9px] uppercase tracking-widest">
-              Sem Foto
-            </span>
-          )}
-
-          {prestador.verificado && (
-            <div className="absolute bottom-3 right-3 bg-blue-600 text-white p-1.5 rounded-full shadow-lg border-2 border-white">
-              <ShieldCheck size={14} strokeWidth={3} />
+        {/* Banner + Avatar sobrepostos */}
+        <div className="relative w-full h-20 bg-gradient-to-br from-blue-50 to-slate-100">
+          <div className="absolute -bottom-10 left-5">
+            <div className="w-20 h-20 rounded-2xl overflow-hidden border-4 border-white shadow-md bg-slate-100">
+              {prestador.foto_perfil ? (
+                <img
+                  src={prestador.foto_perfil}
+                  className="w-full h-full object-cover"
+                  alt={prestador.nome}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-slate-300 font-black text-[9px] uppercase tracking-widest text-center px-1">
+                    Sem Foto
+                  </span>
+                </div>
+              )}
             </div>
-          )}
+
+            {prestador.verificado && (
+              <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1 rounded-full shadow border-2 border-white">
+                <ShieldCheck size={11} strokeWidth={3} />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Nome + slug + localização + chips */}
-        <div className="px-4 py-4 border-t border-slate-100">
+        <div className="pt-12 px-4 pb-4">
           <h1 className="font-black text-[17px] text-slate-800 leading-tight tracking-tight uppercase italic">
             {prestador.nome}
           </h1>
