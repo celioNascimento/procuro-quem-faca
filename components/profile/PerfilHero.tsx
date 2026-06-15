@@ -18,8 +18,8 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
 
   const totalFinalizados = projetos.filter(p => p.status === 'finalizado').length
   const totalEmAndamento = projetos.filter(p => p.status === 'em_execucao').length
-  const slug             = prestador.slug
-  const categoria        = prestador.categorias?.nome || prestador.categoria
+  const slug = prestador.slug
+  const categoria = prestador.categorias?.nome || prestador.categoria
 
   const { stats } = useAvaliacoes(prestador.id)
 
@@ -30,7 +30,7 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
 
         {/* Foto — proporção 4:3 mais compacta */}
-        <div className="w-full aspect-[4/3] bg-slate-50 flex items-center justify-center relative overflow-hidden">
+        <div className="w-full aspect-square bg-slate-50 flex items-center justify-center relative overflow-hidden">
           {prestador.foto_perfil ? (
             <img
               src={prestador.foto_perfil}
