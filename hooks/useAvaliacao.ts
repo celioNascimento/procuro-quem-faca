@@ -12,17 +12,17 @@ import type { FotoOrdenada, Avaliacao, Projeto } from '@/types/avaliacao'
 export function useAvaliar(token: string) {
   const router = useRouter()
 
-  const [projeto, setProjeto]                       = useState<Projeto | null>(null)
+  const [projeto, setProjeto] = useState<Projeto | null>(null)
   const [avaliacaoExistente, setAvaliacaoExistente] = useState<Avaliacao | null>(null)
-  const [loading, setLoading]                       = useState(true)
-  const [mounted, setMounted]                       = useState(false)
-  const [currentSlide, setCurrentSlide]             = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
+  const [currentSlide, setCurrentSlide] = useState(0)
 
-  const [nota, setNota]                       = useState(0)
-  const [hoverNota, setHoverNota]             = useState(0)
+  const [nota, setNota] = useState(0)
+  const [hoverNota, setHoverNota] = useState(0)
   const [comentarioGeral, setComentarioGeral] = useState('')
-  const [indica, setIndica]                   = useState(false)
-  const [submitting, setSubmitting]           = useState(false)
+  const [indica, setIndica] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   const avaliacaoFinalizada = avaliacaoExistente?.status === 'finalizado'
 
@@ -42,11 +42,11 @@ export function useAvaliar(token: string) {
         const projData = await fetchProjetoPorToken(token)
         if (!projData) { setLoading(false); return }
 
+        setProjeto(projData)  // 👈 seta o projeto ANTES de buscar avaliação
+
         const avalData = await fetchAvaliacaoPorProjeto(projData.id)
         if (avalData) setAvaliacaoExistente(avalData)
 
-        setProjeto(projData)
-        // Começa no último slide (foto "Depois")
         const total = projData.portfolio_fotos?.length ?? 0
         if (total > 0) setCurrentSlide(total - 1)
       } catch (err) {
