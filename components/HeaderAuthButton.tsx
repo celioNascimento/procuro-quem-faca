@@ -1,12 +1,26 @@
 'use client'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { LogIn, Loader2, User, AlertCircle } from 'lucide-react'
+import { LogIn, Loader2, User, AlertCircle, LogOut, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useLogout } from '@/hooks/useLogout'
 
 export function HeaderAuthButton() {
   const { session, loading, erroLogin, loginGoogle } = useAuth()
   const { logout } = useLogout()
+  const [aberto, setAberto] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Fecha o dropdown ao clicar fora
+  useEffect(() => {
+    function handleClickFora(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setAberto(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickFora)
+    return () => document.removeEventListener('mousedown', handleClickFora)
+  }, [])
 
   if (session === undefined) {
     return <div className="w-9 h-9 rounded-full animate-pulse bg-slate-100" />
@@ -14,12 +28,47 @@ export function HeaderAuthButton() {
 
   if (session) {
     return (
-      <div className="flex items-center gap-2">
-        <Link
-          href="/dashboard/perfil"
-          className="flex items-center gap-2 p-1 md:pr-4 rounded-full border border-slate-100 bg-slate-50 hover:bg-blue-50 transition-all"
-        >
-          <div className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
+      <div className="relative" ref={ref}>
+
+        {/* ── Desktop: dois botões lado a lado ── */}
+        <div className="hidden md:flex items-center gap-2">
+          <Link
+            href="/dashboard/perfil"
+            className="flex items-center gap-2 p-1 pr-4 rounded-full border border-slate-100 bg-slate-50 hover:bg-blue-50 transition-all"
+          >
+            <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
+              {session.user.user_metadata?.avatar_url ? (
+                <img
+                  src={session.user.user_metadata.avatar_url}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-400 bg-white">
+                  <User size={14} />
+                </div>
+              )}
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-tight text-slate-500 whitespace-nowrap">
+              Minha Conta
+            </span>
+          </Link>
+
+          <button
+            onClick={logout}
+            className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50 transition-all active:scale-95"
+            title="Sair"
+          >
+            <LogOut size={14} />
+          </button>
+        </div>
+
+        {/* ── Mobile: avatar abre dropdown ── */}
+        <div className="flex md:hidden">
+          <button
+            onClick={() => setAberto(v => !v)}
+            className="w-9 h-9 rounded-full overflow-hidden border-2 border-slate-100 shadow-sm active:scale-95 transition-all"
+          >
             {session.user.user_metadata?.avatar_url ? (
               <img
                 src={session.user.user_metadata.avatar_url}
@@ -27,27 +76,35 @@ export function HeaderAuthButton() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-400 bg-white">
+              <div className="w-full h-full flex items-center justify-center text-slate-400 bg-slate-50">
                 <User size={14} />
               </div>
             )}
-          </div>
-          <span className="text-[10px] font-bold uppercase tracking-tight text-slate-500 hidden md:block whitespace-nowrap">
-            Minha Conta
-          </span>
-        </Link>
+          </button>
 
-        <button
-          onClick={logout}
-          className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50 transition-all active:scale-95"
-          title="Sair"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-        </button>
+          {/* Dropdown */}
+          {aberto && (
+            <div className="absolute right-0 top-11 w-44 bg-white rounded-2xl border border-slate-100 shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <Link
+                href="/dashboard/perfil"
+                onClick={() => setAberto(false)}
+                className="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-slate-600 uppercase tracking-wide hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              >
+                <LayoutDashboard size={13} />
+                Minha Conta
+              </Link>
+              <div className="h-px bg-slate-100 mx-3" />
+              <button
+                onClick={() => { logout(); setAberto(false) }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wide hover:bg-red-50 hover:text-red-500 transition-colors"
+              >
+                <LogOut size={13} />
+                Sair
+              </button>
+            </div>
+          )}
+        </div>
+
       </div>
     )
   }
