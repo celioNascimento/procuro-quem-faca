@@ -1,9 +1,10 @@
 'use client'
 import {
-  MapPin, User, ChevronRight, Briefcase, Loader2, Camera, CheckCircle2,
-  Save, Activity, Clock, AlertCircle, Star, ArrowRight, Trash2
+  MapPin, ChevronRight, Briefcase, Loader2, CheckCircle2,
+  Save, AlertCircle, Star, ArrowRight, Trash2
 } from 'lucide-react'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
+import CardPerfilCliente from '@/components/perfil/CardPerfilCliente'
 import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 
 export default function PerfilDoCliente() {
@@ -45,8 +46,11 @@ export default function PerfilDoCliente() {
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans antialiased">
       <HeaderCliente nomeCliente={perfil.full_name} />
+
+      {/* Input de upload oculto */}
       <input type="file" ref={fileInputRef} onChange={handleUploadFoto} accept="image/*" className="hidden" />
 
+      {/* ── Modal: excluir conta ── */}
       {deleteModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 space-y-6 animate-in zoom-in-95">
@@ -89,10 +93,13 @@ export default function PerfilDoCliente() {
         </div>
       )}
 
+      {/* ── Modal: sair sem salvar ── */}
       {confirmLeaveModal.show && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95">
-            <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mx-auto border border-amber-100"><AlertCircle size={32} /></div>
+            <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mx-auto border border-amber-100">
+              <AlertCircle size={32} />
+            </div>
             <div className="space-y-2">
               <h3 className="text-xl font-black italic uppercase text-slate-800 tracking-tighter">Sair sem salvar?</h3>
               <p className="text-[13px] font-medium text-slate-500 leading-relaxed">Suas alterações serão perdidas.</p>
@@ -105,19 +112,28 @@ export default function PerfilDoCliente() {
         </div>
       )}
 
+      {/* ── Modal: erro ── */}
       {errorModal.show && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95">
-            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto border border-red-100"><AlertCircle size={32} /></div>
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto border border-red-100">
+              <AlertCircle size={32} />
+            </div>
             <div className="space-y-2">
               <h3 className="text-xl font-black italic uppercase text-slate-800 tracking-tighter">{errorModal.title}</h3>
               <p className="text-[13px] font-medium text-slate-500 leading-relaxed">{errorModal.message}</p>
             </div>
-            <button onClick={() => setErrorModal({ ...errorModal, show: false })} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest italic hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100">Entendido</button>
+            <button
+              onClick={() => setErrorModal({ ...errorModal, show: false })}
+              className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest italic hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100"
+            >
+              Entendido
+            </button>
           </div>
         </div>
       )}
 
+      {/* ── Toast: salvo com sucesso ── */}
       {showSuccess && (
         <div className="fixed top-20 left-0 right-0 z-[100] flex justify-center px-6 animate-in slide-in-from-top-10 duration-500">
           <div className="bg-white border border-green-100 shadow-2xl rounded-full px-6 py-3 flex items-center gap-3">
@@ -130,62 +146,30 @@ export default function PerfilDoCliente() {
       <div className="max-w-xl lg:max-w-6xl mx-auto px-5 pt-24 md:pt-36 animate-in fade-in duration-700">
         <div className="flex flex-col lg:flex-row gap-8 relative">
 
-          {/* Coluna da Esquerda */}
-          <div className="w-full lg:w-1/3 shrink-0 relative space-y-6">
-            <div className="lg:sticky lg:top-36 flex flex-col gap-6">
-              
-              <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-                <div className="h-20 bg-gradient-to-r from-blue-600 to-blue-500" />
-                <div className="px-8 pb-8 -mt-10 flex flex-col items-center">
-                  <div className="relative group cursor-pointer" onClick={() => !uploading && fileInputRef.current?.click()}>
-                    <div className="w-20 h-20 rounded-[1.5rem] bg-slate-100 border-4 border-white overflow-hidden shadow-xl flex items-center justify-center">
-                      {uploading
-                        ? <Loader2 className="animate-spin text-blue-500" size={24} />
-                        : perfil.avatar_url
-                          ? <img
-                              src={perfil.avatar_url}
-                              className="w-full h-full object-cover"
-                              alt="Avatar"
-                              onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                            />
-                          : <User size={32} className="text-slate-300" />
-                      }
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all rounded-[1.2rem] flex items-center justify-center backdrop-blur-sm">
-                        <Camera size={18} className="text-white" />
-                      </div>
-                    </div>
-                  </div>
-                  <h2 className="text-lg font-black text-slate-800 mt-3 leading-none text-center">{perfil.full_name || 'Sua conta'}</h2>
-                  <p className="text-[11px] text-slate-400 mt-1 text-center truncate max-w-full px-4">{perfil.email}</p>
-                </div>
-              </div>
+          {/* ── Coluna Esquerda ── */}
+          <div className="w-full lg:w-1/3 shrink-0 relative">
+            <div className="lg:sticky lg:top-36 flex flex-col gap-4">
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white rounded-[2rem] p-5 border border-slate-100 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-xl bg-blue-50 flex items-center justify-center"><Activity size={14} className="text-blue-600" /></div>
-                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Ativos</p>
-                  </div>
-                  <span className="text-3xl lg:text-4xl font-black text-slate-800 leading-none">{ativosCount}</span>
-                  <p className="text-[10px] lg:text-[11px] text-slate-400 font-medium mt-1">em andamento</p>
-                </div>
-                <div className="bg-white rounded-[2rem] p-5 border border-slate-100 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-xl bg-slate-50 flex items-center justify-center"><Clock size={14} className="text-slate-400" /></div>
-                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Histórico</p>
-                  </div>
-                  <span className="text-3xl lg:text-4xl font-black text-slate-800 leading-none">{servicos.length}</span>
-                  <p className="text-[10px] lg:text-[11px] text-slate-400 font-medium mt-1">projetos</p>
-                </div>
-              </div>
+              <CardPerfilCliente
+                nome={perfil.full_name}
+                email={perfil.email}
+                avatarUrl={perfil.avatar_url}
+                bairro={perfil.bairro}
+                cidade={perfil.cidade}
+                uf={perfil.uf}
+                ativosCount={ativosCount}
+                totalCount={servicos.length}
+                uploading={uploading}
+                onUploadClick={() => !uploading && fileInputRef.current?.click()}
+              />
 
             </div>
           </div>
 
-          {/* Coluna da Direita */}
+          {/* ── Coluna Direita ── */}
           <div className="w-full lg:w-2/3 flex flex-col gap-6">
 
-            {/* ✅ CTA azul — agora usa irParaAvaliar para scroll + filtro */}
+            {/* CTA avaliar */}
             {avaliarCount > 0 && (
               <button
                 onClick={irParaAvaliar}
@@ -207,31 +191,39 @@ export default function PerfilDoCliente() {
             {/* Abas */}
             <div className="flex bg-slate-100/80 p-1.5 rounded-[2rem] gap-1">
               {[{ id: 'servicos', label: 'Meus Projetos' }, { id: 'dados', label: 'Minha Conta' }].map(a => (
-                <button key={a.id} onClick={() => setAba(a.id)}
-                  className={`flex-1 py-3.5 rounded-[1.5rem] text-[12px] font-semibold transition-all duration-200 ${aba === a.id ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                <button
+                  key={a.id}
+                  onClick={() => setAba(a.id)}
+                  className={`flex-1 py-3.5 rounded-[1.5rem] text-[12px] font-semibold transition-all duration-200 ${
+                    aba === a.id ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
                   {a.label}
                 </button>
               ))}
             </div>
 
+            {/* ── Aba: Meus Projetos ── */}
             {aba === 'servicos' ? (
               <div className="space-y-4 pb-4">
 
-                {/* ✅ filtroRef aplicado aqui para o scroll funcionar */}
                 <div ref={filtroRef} className="flex flex-wrap justify-center gap-2 pb-2">
                   {[
                     { id: 'todos',       label: 'Todos' },
                     { id: 'pendente',    label: 'Aceitar' },
                     { id: 'andamento',   label: 'Em andamento' },
                     { id: 'avaliar',     label: avaliarCount > 0 ? `Avaliar (${avaliarCount})` : 'Avaliar' },
-                    { id: 'finalizados', label: 'Concluídos' }
+                    { id: 'finalizados', label: 'Concluídos' },
                   ].map(f => (
-                    <button key={f.id} onClick={() => setFiltroStatus(f.id)}
+                    <button
+                      key={f.id}
+                      onClick={() => setFiltroStatus(f.id)}
                       className={`px-5 py-2.5 rounded-full text-[12px] font-semibold transition-all shrink-0 border whitespace-nowrap ${
                         filtroStatus === f.id
                           ? 'bg-blue-600 text-white border-blue-600 shadow-md'
                           : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-                      }`}>
+                      }`}
+                    >
                       {f.label}
                     </button>
                   ))}
@@ -254,20 +246,28 @@ export default function PerfilDoCliente() {
                       const info = getStatusInfo(s)
                       const rota = getRotaDestino(s)
                       return (
-                        <button key={s.id} onClick={(e) => handleNavigation(e, rota)}
+                        <button
+                          key={s.id}
+                          onClick={(e) => handleNavigation(e, rota)}
                           className={`w-full bg-white rounded-[2rem] border p-4 flex items-center gap-4 text-left transition-all active:scale-[0.98] group ${
                             info.urgente ? 'border-blue-200 shadow-md shadow-blue-50' : 'border-slate-100 shadow-sm hover:border-slate-200 hover:shadow-md'
                           }`}
                         >
                           <div className={`relative shrink-0 rounded-2xl p-0.5 ${info.urgente ? 'ring-2 ring-blue-400' : ''}`}>
                             <div className="w-14 h-14 rounded-[14px] overflow-hidden">
-                              <img src={s.prestadores?.foto_perfil || '/placeholder-avatar.png'} className="w-full h-full object-cover" alt={s.prestadores?.nome} />
+                              <img
+                                src={s.prestadores?.foto_perfil || '/placeholder-avatar.png'}
+                                className="w-full h-full object-cover"
+                                alt={s.prestadores?.nome}
+                              />
                             </div>
                             <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${info.dot} ${info.urgente ? 'animate-pulse' : ''}`} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border tracking-wider ${info.badge}`}>{info.label}</span>
+                              <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border tracking-wider ${info.badge}`}>
+                                {info.label}
+                              </span>
                               {s.prestadores?.categoria?.nome && (
                                 <span className="text-[9px] text-slate-400 truncate">{s.prestadores.categoria.nome}</span>
                               )}
@@ -289,6 +289,7 @@ export default function PerfilDoCliente() {
 
             ) : (
 
+              /* ── Aba: Minha Conta ── */
               <div className="space-y-4 pb-12 animate-in fade-in duration-300">
                 <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 md:p-8 space-y-5">
                   <div>
@@ -348,8 +349,11 @@ export default function PerfilDoCliente() {
                       <AlertCircle size={12} /> Alterações não salvas
                     </p>
                   )}
-                  <button onClick={atualizar} disabled={loading}
-                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black italic uppercase text-[11px] tracking-widest shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-blue-100 disabled:opacity-60">
+                  <button
+                    onClick={atualizar}
+                    disabled={loading}
+                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black italic uppercase text-[11px] tracking-widest shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-blue-100 disabled:opacity-60"
+                  >
                     {loading ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} /> Salvar alterações</>}
                   </button>
                 </div>

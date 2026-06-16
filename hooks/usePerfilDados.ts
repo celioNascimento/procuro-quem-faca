@@ -1,0 +1,165 @@
+'use client'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import * as ClienteService from '@/lib/services/cliente.service'
+
+const aplicarMascara = (valor: string) => {
+  if (!valor) return ''
+  const num = valor.replace(/\D/g, '').substring(0, 11)
+  let formatado = num
+  if (num.length > 2) formatado = `(${num.substring(0, 2)}) ${num.substring(2)}`
+  if (num.length > 7) formatado = `(${num.substring(0, 2)}) ${num.substring(2, 7)}-${num.substring(7)}`
+  return formatado
+}
+
+export { aplicarMascara }
+
+export function usePerfilDados() {
+  const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [user, setUser]         = useState<any>(null)
+  const [loading, setLoading]   = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [isDirty, setIsDirty]   = useState(false)
+  const [listaEstados, setListaEstados] = useState<any[]>([])
+  const [listaCidades, setListaCidades] = useState<any[]>([])
+  const [deleteModal, setDeleteModal]   = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
+
+  const [perfil, setPerfil] = useState({
+    full_name: '', email: '', whatsapp: '', logradouro: '',
+    numero: '', complemento: '', bairro: '', cidade: '', uf: '', avatar_url: '',
+  })
+
+  useEffect(() => {
+    async function carregarDados() {
+      const { data: { user: sessionUser } } = await supabase.auth.getUser()
+      if (!sessionUser) { router.push('/'); return }
+      setUser(sessionUser)
+
+      const profileData = await ClienteService.fetchClienteProfile(sessionUser.id)
+      const googleAvatar = sessionUser.user_metadata?.avatar_url || ''
+      const avatarFinal = profileData?.avatar_url || googleAvatar
+
+      setPerfil({
+        full_name:    profileData?.full_name || sessionUser.user_metadata?.full_name || '',
+        avatar_url:   avatarFinal,
+        email:        sessionUser.email || '',
+        whatsapp:     aplicarMascara(profileData?.whatsapp || ''),
+        logradouro:   profileData?.logradouro || '',
+        numero:       profileData?.numero || '',
+        complemento:  profileData?.complemento || '',
+        bairro:       profileData?.bairro || '',
+        cidade:       profileData?.cidade || '',
+        uf:           profileData?.uf || '',
+      })
+
+      // Salva foto do Google no banco se ainda não tiver avatar próprio
+      if (!profileData?.avatar_url && googleAvatar) {
+        await ClienteService.updateClienteProfile(sessionUser.id, { avatar_url: googleAvatar })
+      }
+    }
+
+    carregarDados()
+    ClienteService.fetchEstados()
+      .then(data => { if (data) setListaEstados(data) })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (perfil.uf) {
+      ClienteService.fetchCidades(perfil.uf)
+        .then(data => { if (data) setListaCidades(data) })
+        .catch(() => {})
+    }
+  }, [perfil.uf])
+
+  const handleChangePerfil = (field: string, value: string) => {
+    setPerfil(prev => ({ ...prev, [field]: value }))
+    setIsDirty(true)
+  }
+
+  const handleUploadFoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = event.target.files?.[0]
+      if (!file) return
+      const sizeMB = file.size / (1024 * 1024)
+      if (sizeMB > 10) {
+        setErrorModal({ show: true, title: 'Imagem muito pesada', message: `A imagem tem ${sizeMB.toFixed(1)}MB. O limite é de 10MB.` })
+        event.target.value = ''
+        return
+      }
+      setUploading(true)
+      const publicUrl = await ClienteService.uploadClienteAvatar(user.id, file, perfil.avatar_url)
+      setPerfil(prev => ({ ...prev, avatar_url: publicUrl }))
+      setShowSuccess(true)
+      setTimeout(() => setShowSuccess(false), 2000)
+    } catch {
+      setErrorModal({ show: true, title: 'Erro ao salvar foto', message: 'Não foi possível salvar sua foto. Verifique sua conexão.' })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const atualizar = async () => {
+    const numLimpo = perfil.whatsapp.replace(/\D/g, '')
+    if (perfil.whatsapp && (numLimpo.length < 10 || numLimpo.length > 11)) {
+      setErrorModal({ show: true, title: 'Telefone inválido', message: 'O WhatsApp precisa ter 10 ou 11 dígitos.' })
+      return
+    }
+    setLoading(true)
+    try {
+      await ClienteService.updateClienteProfile(user.id, {
+        full_name: perfil.full_name, avatar_url: perfil.avatar_url,
+        whatsapp: numLimpo, logradouro: perfil.logradouro, numero: perfil.numero,
+        complemento: perfil.complemento, bairro: perfil.bairro,
+        cidade: perfil.cidade, uf: perfil.uf,
+      })
+      setIsDirty(false)
+      setShowSuccess(true)
+      setTimeout(() => setShowSuccess(false), 3000)
+    } catch {
+      setErrorModal({ show: true, title: 'Falha ao salvar', message: 'Ocorreu um problema ao registrar seus dados. Tente novamente.' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'EXCLUIR' || !user) return
+    setDeleting(true)
+    try {
+      await ClienteService.deleteClienteAccount(user.id, perfil.whatsapp)
+      window.location.href = '/?conta=excluida'
+    } catch {
+      setErrorModal({ show: true, title: 'Erro ao excluir', message: 'Não foi possível excluir sua conta agora.' })
+      setDeleting(false)
+    }
+  }
+
+  return {
+    fileInputRef,
+    user,
+    perfil,
+    isDirty,
+    loading,
+    uploading,
+    showSuccess,
+    listaEstados,
+    listaCidades,
+    deleteModal, setDeleteModal,
+    deleteConfirmText, setDeleteConfirmText,
+    deleting,
+    errorModal, setErrorModal,
+    aplicarMascara,
+    handleChangePerfil,
+    handleUploadFoto,
+    atualizar,
+    handleDeleteAccount,
+  }
+}
