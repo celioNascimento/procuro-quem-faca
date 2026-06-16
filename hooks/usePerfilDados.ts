@@ -19,14 +19,14 @@ export function usePerfilDados() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [user, setUser]         = useState<any>(null)
-  const [loading, setLoading]   = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
-  const [isDirty, setIsDirty]   = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
   const [listaEstados, setListaEstados] = useState<any[]>([])
   const [listaCidades, setListaCidades] = useState<any[]>([])
-  const [deleteModal, setDeleteModal]   = useState(false)
+  const [deleteModal, setDeleteModal] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
@@ -39,6 +39,8 @@ export function usePerfilDados() {
   useEffect(() => {
     async function carregarDados() {
       const { data: { user: sessionUser } } = await supabase.auth.getUser()
+      console.log('sessionUser:', sessionUser)
+      console.log('auth error:', error)  // 👈 vai mostrar o 403 aqui
       if (!sessionUser) { router.push('/'); return }
       setUser(sessionUser)
 
@@ -47,16 +49,16 @@ export function usePerfilDados() {
       const avatarFinal = profileData?.avatar_url || googleAvatar
 
       setPerfil({
-        full_name:    profileData?.full_name || sessionUser.user_metadata?.full_name || '',
-        avatar_url:   avatarFinal,
-        email:        sessionUser.email || '',
-        whatsapp:     aplicarMascara(profileData?.whatsapp || ''),
-        logradouro:   profileData?.logradouro || '',
-        numero:       profileData?.numero || '',
-        complemento:  profileData?.complemento || '',
-        bairro:       profileData?.bairro || '',
-        cidade:       profileData?.cidade || '',
-        uf:           profileData?.uf || '',
+        full_name: profileData?.full_name || sessionUser.user_metadata?.full_name || '',
+        avatar_url: avatarFinal,
+        email: sessionUser.email || '',
+        whatsapp: aplicarMascara(profileData?.whatsapp || ''),
+        logradouro: profileData?.logradouro || '',
+        numero: profileData?.numero || '',
+        complemento: profileData?.complemento || '',
+        bairro: profileData?.bairro || '',
+        cidade: profileData?.cidade || '',
+        uf: profileData?.uf || '',
       })
 
       // Salva foto do Google no banco se ainda não tiver avatar próprio
@@ -68,14 +70,14 @@ export function usePerfilDados() {
     carregarDados()
     ClienteService.fetchEstados()
       .then(data => { if (data) setListaEstados(data) })
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   useEffect(() => {
     if (perfil.uf) {
       ClienteService.fetchCidades(perfil.uf)
         .then(data => { if (data) setListaCidades(data) })
-        .catch(() => {})
+        .catch(() => { })
     }
   }, [perfil.uf])
 
