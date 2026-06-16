@@ -39,13 +39,13 @@ export function usePerfilDados() {
   useEffect(() => {
     async function carregarDados() {
       const { data: { user: sessionUser } } = await supabase.auth.getUser()
-      console.log('sessionUser:', sessionUser)
-      console.log('auth error:', error)  // 👈 vai mostrar o 403 aqui
       if (!sessionUser) { router.push('/'); return }
       setUser(sessionUser)
 
       const profileData = await ClienteService.fetchClienteProfile(sessionUser.id)
-      const googleAvatar = sessionUser.user_metadata?.avatar_url || ''
+      const googleAvatar = sessionUser.user_metadata?.picture
+        || sessionUser.user_metadata?.avatar_url
+        || ''
       const avatarFinal = profileData?.avatar_url || googleAvatar
 
       setPerfil({
