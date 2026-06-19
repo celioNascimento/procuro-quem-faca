@@ -3,26 +3,31 @@ import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { insertAcesso } from '@/lib/db/acessos'
 
+const SESSAO_KEY = 'sessao_registrada'
+
+/**
+ * Componente invisível. Renderiza null e registra um acesso por sessão de browser.
+ * Coloque uma única vez no layout raiz, após o provider de auth.
+ */
 export default function LogAcesso() {
   useEffect(() => {
-    const registrarAcesso = async () => {
-      if (sessionStorage.getItem('sessao_registrada')) return
+    const registrar = async () => {
+      if (sessionStorage.getItem(SESSAO_KEY)) return
+
+      const { data: { session } } = await supabase.auth.getSession()
 
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-
         await insertAcesso({
           userId: session?.user?.id ?? null,
           userEmail: session?.user?.email ?? null,
         })
-
-        sessionStorage.setItem('sessao_registrada', 'true')
+        sessionStorage.setItem(SESSAO_KEY, 'true')
       } catch (err) {
-        console.error('Erro log acesso:', err)
+        console.error('[LogAcesso] Falha ao registrar acesso:', err)
       }
     }
 
-    registrarAcesso()
+    registrar()
   }, [])
 
   return null
