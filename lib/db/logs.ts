@@ -21,3 +21,16 @@ export async function insertLog(payload: LogPayload): Promise<void> {
 
   if (error) throw error
 }
+
+// ↓ FUNÇÃO NOVA — adicionar abaixo de insertLog
+export async function checkLogExists(usuarioId: string, acao: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('logs_atividades')
+    .select('id')
+    .eq('usuario_id', usuarioId)
+    .eq('acao', acao)
+    .limit(1)
+    .maybeSingle()
+
+  return !!data
+}

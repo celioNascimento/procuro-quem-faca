@@ -1,48 +1,68 @@
-import { useState, useEffect } from 'react'
+'use client'
+import { useEffect, useState } from 'react'
+import { insertLog, checkLogExists } from '@/lib/db/logs'
 import { supabase } from '@/lib/supabase'
-import { checkConsentLog, insertConsentLog } from '@/lib/db/cookieConsent'
+import posthog from 'posthog-js'
 
-const LOCAL_KEY = 'app_cookie_consent'
-const DELAY_MS = 1500
+const LOCAL_KEY = 'cookie_consent_aceito'
+const ACAO = 'ACEITE_COOKIES'
 
 export function useCookieConsent() {
   const [isVisible, setIsVisible] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>
+    async function verificar() {
+      try {
+        const localAceite = localStorage.getItem(LOCAL_KEY)
 
-    const verificar = async () => {
-      // 1. Cache local — evita qualquer requisição ao banco
-      if (localStorage.getItem(LOCAL_KEY)) return
-
-      // 2. Usuário autenticado — verifica se já aceitou em outra sessão
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        const jaAceitou = await checkConsentLog(session.user.id)
-        if (jaAceitou) {
-          localStorage.setItem(LOCAL_KEY, 'true')
+        if (localAceite) {
+          setIsVisible(false)
           return
         }
-      }
 
-      // 3. Sem registro — exibe o banner após delay
-      timer = setTimeout(() => setIsVisible(true), DELAY_MS)
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (session?.user?.id) {
+          const jaAceitouNoBanco = await checkLogExists(session.user.id, ACAO)
+
+          if (jaAceitouNoBanco) {
+            localStorage.setItem(LOCAL_KEY, 'true')
+            setIsVisible(false)
+            return
+          }
+        }
+
+        setIsVisible(true)
+      } catch {
+        setIsVisible(true)
+      } finally {
+        setLoading(false)
+      }
     }
 
     verificar()
-    return () => clearTimeout(timer)
   }, [])
 
-  const aceitar = async () => {
-    localStorage.setItem(LOCAL_KEY, 'true')
-    setIsVisible(false)
-
+  async function aceitar() {
     try {
-      await insertConsentLog()
+      await insertLog({
+        acao: ACAO,
+        entidadeTipo: 'consentimento',
+        detalhes: {
+          navegador: window.navigator.userAgent,
+          resolucao: `${window.screen.width}x${window.screen.height}`,
+          data_aceite: new Date().toISOString(),
+        },
+      })
     } catch (err) {
-      console.error('[useCookieConsent] Erro ao gravar aceite:', err)
+      console.error('Erro ao registrar consentimento:', err)
+    } finally {
+      localStorage.setItem(LOCAL_KEY, 'true')
+      posthog.opt_in_capturing()
+      setIsVisible(false)
     }
   }
 
-  return { isVisible, aceitar }
+  return { isVisible, aceitar, loading }
 }
