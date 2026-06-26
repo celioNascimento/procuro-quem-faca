@@ -9,8 +9,8 @@ import PerfilAvaliacoes from '@/components/profile/PerfilAvaliacoes'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
 import { AdCard } from '../../../components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
-import { useRastreamentoAtivacao } from '@/hooks/useRastreamentoAtivacao'
-import { useLog } from '@/hooks/useLog'
+import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
+import { insertLog } from '@/hooks/useLog'
 import { useCompartilharPerfil } from '@/hooks/useCompartilharPerfil'
 import type { AdPage } from '@/types/ads'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
@@ -27,8 +27,6 @@ interface PerfilCarregadoProps {
 }
 
 function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: PerfilCarregadoProps) {
-  const { registrarLog } = useLog()
-
   const { status: statusCompartilhamento, compartilhar } = useCompartilharPerfil({
     prestador,
     projetos,
@@ -89,7 +87,11 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               <PerfilCTA
                 nome={prestador.nome}
                 whatsapp={prestador.whatsapp}
-                onClique={() => registrarLog('CLIQUE_WHATSAPP_ORCAMENTO', { nome_prestador: prestador.nome }, String(prestador.id))}
+                onClique={() => insertLog({
+                  acao: 'CLIQUE_WHATSAPP_ORCAMENTO',
+                  detalhes: { nome_prestador: prestador.nome },
+                  entidadeId: String(prestador.id),
+                })}
               />
             </div>
 
@@ -114,8 +116,6 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
 export default function PerfilPublico() {
   const { data, loading, erro } = usePerfilPrestador()
 
-  useRastreamentoAtivacao(data?.prestador ?? null)
-
   if (loading) return <PerfilSkeleton />
 
   if (erro || !data) {
@@ -137,5 +137,10 @@ export default function PerfilPublico() {
     )
   }
 
-  return <PerfilCarregado {...data} />
+  return (
+    <>
+      <RastreamentoAtivacaoProvider prestador={data.prestador} />
+      <PerfilCarregado {...data} />
+    </>
+  )
 }

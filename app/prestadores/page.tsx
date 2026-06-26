@@ -6,7 +6,6 @@ import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { usePrestadores } from '@/hooks/usePrestadores'
 import { useSession } from '@/hooks/useSession'
-import { useLog } from '@/hooks/useLog'
 import Header from '@/components/Header'
 import PrestadorCard from '@/components/cards/PrestadorCard'
 import { AdCard } from '@/components/ads/AdCard'
@@ -24,7 +23,6 @@ function ListaConteudo() {
   const { prestadoresBase, prestadoresExibidos, cidadesDisponiveis, loading, erro, toggleCidade } =
     usePrestadores(queryBusca, filtroHab, filtroCidNome)
   const session = useSession()
-  const { registrarLog } = useLog()
 
   const tituloBusca = getTituloBusca(queryBusca, filtroCidNome)
 
@@ -114,7 +112,7 @@ function ListaConteudo() {
 
             {prestadoresExibidos.map((p, index) => (
               <div key={p.id}>
-                <PrestadorCard prestador={p} session={session} registrarLog={registrarLog} />
+                <PrestadorCard prestador={p} session={session} />
                 {(index + 1) % 5 === 0 && (
                   <AdCard
                     page="prestadores"
