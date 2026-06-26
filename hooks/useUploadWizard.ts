@@ -31,7 +31,7 @@ const maskPhone = (v?: string | null): string => {
 
 const renderAvatar = (url?: string | null): string | null => url && url.trim() !== "" ? url : null
 
-export function useUploadWizard(prestadorId: number, projetoExistente: Projeto | null) {
+export function useUploadWizard(prestadorId: string | number, projetoExistente: Projeto | null) {
   const projeto = projetoExistente as ProjetoCompleto | null
 
   // ── Estados ──────────────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
 
   const carregarDadosBase = useCallback(async () => {
     try {
-      const data = await getPrestadorBaseInfo(prestadorId)
+      const data = await getPrestadorBaseInfo(Number(prestadorId))
       if (data) {
         setPrestadorInfo({
           nome: data.nome,
@@ -136,7 +136,7 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
       const phoneLimpo = clienteWhatsapp.replace(/\D/g, '')
       if (phoneLimpo.length >= 10 && !isSelfNumber && !projetoExistente) {
         try {
-          const data = await buscarProjetosPorTelefone(prestadorId, phoneLimpo)
+          const data = await buscarProjetosPorTelefone(Number(prestadorId), phoneLimpo)
           setProjetosEncontrados(data || [])
         } catch (err) {
           console.error('Erro ao buscar projetos:', err)
@@ -291,7 +291,7 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
 
       if (!currentProjId) {
         const newProj = await criarNovoProjeto({
-          prestador_id: prestadorId,
+          prestador_id: Number(prestadorId),
           titulo: titulo,
           cliente_whatsapp: phoneDigitado,
           cliente_nome: clienteNome.trim() || 'Cliente',
@@ -307,7 +307,7 @@ export function useUploadWizard(prestadorId: number, projetoExistente: Projeto |
         projeto_id: currentProjId,
         url_foto: publicUrl,
         ordem: ordem,
-        prestador_id: prestadorId
+        prestador_id: Number(prestadorId)
       })
 
       setFotosUrls(prev => ({ ...prev, [ordem]: publicUrl }))
