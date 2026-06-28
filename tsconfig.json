@@ -37,8 +37,8 @@
     "**/*.mts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "app/reivindicar/page.tsx"
-  ],
+    "app/reivindicar/page.js"
+, "app/(admin)/admin/moderacao/page.js"  ],
   "exclude": [
     "node_modules"
   ],
