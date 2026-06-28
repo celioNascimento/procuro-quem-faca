@@ -2,7 +2,12 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export default function GoogleButton({ text = "Continuar com Google", onLog }) {
+interface GoogleButtonProps {
+  text?: string
+  onLog?: (acao: string, detalhes?: Record<string, any>) => Promise<void> | void
+}
+
+export default function GoogleButton({ text = "Continuar com Google", onLog }: GoogleButtonProps) {
   const [isRedirecting, setIsRedirecting] = useState(false)
 
   const handleLogin = async () => {
@@ -14,7 +19,7 @@ export default function GoogleButton({ text = "Continuar com Google", onLog }) {
         await onLog('TENTATIVA_LOGIN_GOOGLE', { platform: 'web' })
       }
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           // IMPORTANTE: Use origin para garantir que a URL seja absoluta e sem barras extras
@@ -27,7 +32,7 @@ export default function GoogleButton({ text = "Continuar com Google", onLog }) {
       })
 
       if (error) throw error
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro login Google:', error.message)
       setIsRedirecting(false)
     }
