@@ -1,4 +1,5 @@
 import "./globals.css"
+import { Suspense } from 'react'
 import { geistSans, geistMono } from "@/lib/fonts"
 import { AdSenseScript } from "@/lib/scripts/AdSenseScript"
 import FooterWrapper from "@/components/FooterWrapper"
@@ -7,7 +8,7 @@ import LogAcesso from "@/components/LogAcesso"
 import { PostHogProvider } from "@/components/PostHogProvider"    
 import { PostHogPageview } from "@/components/PostHogPageview"
 import { LocationProvider } from "../lib/contexts/LocationContext"
-import LocationModal from "@/components/location/LocationModal" // <-- Importe aqui
+import LocationModal from "@/components/location/LocationModal"
 
 export { metadata } from "./metadata"
 
@@ -15,23 +16,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-br" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased min-h-screen flex flex-col bg-white text-slate-900">
-        <PostHogProvider>                                          
-          <PostHogPageview />                                      
-          
+        <PostHogProvider>
+          <Suspense fallback={null}>
+            <PostHogPageview />
+          </Suspense>
+
           <LocationProvider>
             <div className="flex-grow flex flex-col">
               {children}
             </div>
-            
-            <LocationModal /> {/* <-- Injetado aqui */}
-            
+
+            <LocationModal />
+
             <FooterWrapper />
             <CookieConsent />
             <LogAcesso />
             <AdSenseScript />
           </LocationProvider>
-          
-        </PostHogProvider>                                         
+
+        </PostHogProvider>
       </body>
     </html>
   )
