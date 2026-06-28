@@ -9,7 +9,7 @@ function calcularMedias(medias: { prestador_id: string; nota: number }[]) {
   const map: Record<string, { soma: number; total: number }> = {}
   medias.forEach(({ prestador_id, nota }) => {
     if (!map[prestador_id]) map[prestador_id] = { soma: 0, total: 0 }
-    map[prestador_id].soma  += nota
+    map[prestador_id].soma += nota
     map[prestador_id].total += 1
   })
   return map
@@ -53,7 +53,7 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
           // silencioso — falha não bloqueia nada
         }
       },
-      () => {}, // permissão negada — silencioso
+      () => { }, // permissão negada — silencioso
       { timeout: 8000 }
     )
   }, []) // só na montagem
@@ -79,16 +79,16 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
         const normalizados: Prestador[] = (pData || []).map(p => ({
           ...p,
           cidade_nome: p.cidades?.nome || '',
-          categoria:   p.categorias?.nome || 'Profissional',
-          media_nota:  mediaMap[p.id] ? mediaMap[p.id].soma / mediaMap[p.id].total : 0,
+          categoria: p.categorias?.nome || 'Profissional',
+          media_nota: mediaMap[p.id] ? mediaMap[p.id].soma / mediaMap[p.id].total : 0,
           total_avals: mediaMap[p.id]?.total || 0,
         }))
 
         const { termo, cidadeExtraida } = parsearBusca(queryBusca)
         const termoNorm = normalizarTermo(termo, filtroHab)
 
-        const vitrines  = normalizados.filter(p => p.origem_tipo === 'vitrine')
-        const demais    = normalizados.filter(p => p.origem_tipo !== 'vitrine')
+        const vitrines = normalizados.filter(p => p.origem_tipo === 'vitrine')
+        const demais = normalizados.filter(p => p.origem_tipo !== 'vitrine')
         const filtrados = filtrarPrestadores(demais, termoNorm)
 
         setPrestadoresBase([
@@ -117,13 +117,22 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
   }, [queryBusca, filtroHab])
 
   const cidadesDisponiveis = useMemo(() => {
-    const set = new Set<string>()
+    const contagem: Record<string, number> = {}
+
     prestadoresBase.forEach(p => {
-      if (p.cidade_nome) set.add(p.cidade_nome)
-      if (Array.isArray(p.cidades_atendidas))
-        p.cidades_atendidas.forEach(c => { if (c?.trim()) set.add(c.trim()) })
+      if (p.cidade_nome) {
+        contagem[p.cidade_nome] = (contagem[p.cidade_nome] || 0) + 1
+      }
+      if (Array.isArray(p.cidades_atendidas)) {
+        p.cidades_atendidas.forEach(c => {
+          if (c?.trim()) contagem[c.trim()] = (contagem[c.trim()] || 0) + 1
+        })
+      }
     })
-    return Array.from(set).sort()
+
+    return Object.entries(contagem)
+      .sort((a, b) => b[1] - a[1]) // mais prestadores primeiro
+      .map(([nome]) => nome)
   }, [prestadoresBase])
 
   // Prioridade: URL > cidade extraída da query > geolocalização
