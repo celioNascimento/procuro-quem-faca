@@ -5,10 +5,8 @@ import { AdSenseScript } from "@/lib/scripts/AdSenseScript"
 import FooterWrapper from "@/components/FooterWrapper"
 import CookieConsent from "@/components/CookieConsent"
 import LogAcesso from "@/components/LogAcesso"
-import { PostHogProvider } from "@/components/PostHogProvider"    
+import { PostHogProvider } from "@/components/PostHogProvider"
 import { PostHogPageview } from "@/components/PostHogPageview"
-import { LocationProvider } from "../lib/contexts/LocationContext"
-import LocationModal from "@/components/location/LocationModal"
 
 export { metadata } from "./metadata"
 
@@ -21,19 +19,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <PostHogPageview />
           </Suspense>
 
-          <LocationProvider>
-            <div className="flex-grow flex flex-col">
-              {children}
-            </div>
+          <div className="flex-grow flex flex-col">
+            {children}
+          </div>
 
-            <LocationModal />
-
-            <FooterWrapper />
-            <CookieConsent />
-            <LogAcesso />
-            <AdSenseScript />
-          </LocationProvider>
-
+          <FooterWrapper />
+          <CookieConsent />
+          <LogAcesso />
+          <AdSenseScript />
         </PostHogProvider>
       </body>
     </html>
