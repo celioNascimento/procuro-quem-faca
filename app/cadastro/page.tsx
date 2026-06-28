@@ -107,7 +107,7 @@ function FormularioCadastro() {
         const { data: { session } } = await supabase.auth.getSession()
         const user = session?.user || null
         setUserLogado(user)
-     
+
         // Tipagem explícita adicionada aqui
         let perfilExistente: PrestadorFormData | null = null
         if (user) {
@@ -116,7 +116,7 @@ function FormularioCadastro() {
         }
 
         // Regra de negócio intacta: bloqueia cadastro duplicado
-        if (user && !reivindicarId && perfilExistente && perfilExistente.origem_tipo !== 'curadoria_publica' && perfilExistente.categoria_id) {
+        if (user && !reivindicarId && perfilExistente && perfilExistente.origem_tipo !== 'curadoria_publica' && perfilExistente.status !== 'pendente') {
           setIsRedirecting(true)
           router.replace('/dashboard')
           return

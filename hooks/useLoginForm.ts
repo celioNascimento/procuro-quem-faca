@@ -34,13 +34,13 @@ export function useLoginForm() {
     try {
       const { data: perfil } = await supabase
         .from('prestadores')
-        .select('id, user_id, origem_tipo, categoria_id')
+        .select('id, user_id, origem_tipo, status')
         .or(`user_id.eq.${user.id},whatsapp.ilike.%${user.email}%`)
         .maybeSingle()
 
       if (!isActive.current) return
 
-      const irParaCadastro = !perfil || perfil.origem_tipo === 'curadoria_publica' || !perfil.categoria_id
+      const irParaCadastro = !perfil || perfil.origem_tipo === 'curadoria_publica' || perfil.status === 'pendente'
 
       if (irParaCadastro && typeof window !== 'undefined') {
         sessionStorage.setItem('pqf_prefill', JSON.stringify({ email, password }))
