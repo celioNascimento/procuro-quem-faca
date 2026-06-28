@@ -20,19 +20,21 @@ export default function SearchForm({ busca, setBusca, onSubmit, temErro }: Props
   return (
     <form onSubmit={handleSubmitInterno} className="w-full flex flex-col items-center gap-4 group">
       <div className="w-full relative">
-        <div className={`absolute -inset-1 rounded-[2.2rem] blur opacity-10 transition-opacity duration-500 ${temErro ? 'bg-red-500' : 'bg-blue-600'
-          }`} />
+        <div className={`absolute -inset-1 rounded-[2.2rem] blur opacity-10 transition-opacity duration-500 ${
+          temErro ? 'bg-red-500' : 'bg-blue-600'
+        }`} />
 
         <input
           ref={inputRef}
           type="text"
-          placeholder={temErro ? 'Digite algo para buscar...' : 'O que você precisa hoje?'}
+          placeholder={temErro ? 'Digite algo para buscar...' : 'Ex: pedreiro em Londrina'}
           value={busca || ''}
           onChange={e => setBusca(e.target.value)}
-          className={`relative w-full h-16 md:h-[72px] pl-8 pr-8 md:pr-48 rounded-[2.2rem] border shadow-2xl outline-none text-lg md:text-xl transition-all duration-300 font-medium ${temErro
+          className={`relative w-full h-16 md:h-[72px] pl-8 pr-8 md:pr-48 rounded-[2.2rem] border shadow-2xl outline-none text-lg md:text-xl transition-all duration-300 font-medium ${
+            temErro
               ? 'border-red-400 bg-white placeholder:text-red-400 shadow-red-100'
               : 'border-slate-200 bg-white text-slate-700 focus:border-blue-500 shadow-blue-900/5'
-            }`}
+          }`}
         />
 
         <button

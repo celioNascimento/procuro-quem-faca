@@ -15,11 +15,48 @@ function calcularMedias(medias: { prestador_id: string; nota: number }[]) {
   return map
 }
 
+// Extrai "pedreiro" e "Londrina" de "pedreiro em Londrina"
+function parsearBusca(query: string): { termo: string; cidadeExtraida: string | null } {
+  const match = query.match(/^(.+?)\s+em\s+(.+)$/i)
+  if (match) {
+    return {
+      termo: match[1].trim(),
+      cidadeExtraida: match[2].trim(),
+    }
+  }
+  return { termo: query, cidadeExtraida: null }
+}
+
 export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidNome: string) {
   const router = useRouter()
   const [prestadoresBase, setPrestadoresBase] = useState<Prestador[]>([])
   const [loading, setLoading] = useState(true)
-  const [erro, setErro]       = useState(false)
+  const [erro, setErro] = useState(false)
+  const [cidadeGeo, setCidadeGeo] = useState<string | null>(null)
+
+  // Geolocalização silenciosa — só roda uma vez, só se não vier cidade na URL
+  useEffect(() => {
+    if (filtroCidNome) return // URL já tem cidade, não precisa de geo
+    if (!navigator.geolocation) return
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+          )
+          const data = await res.json()
+          const nome = data.address?.city || data.address?.town || data.address?.municipality
+          if (nome) setCidadeGeo(nome)
+        } catch {
+          // silencioso — falha não bloqueia nada
+        }
+      },
+      () => {}, // permissão negada — silencioso
+      { timeout: 8000 }
+    )
+  }, []) // só na montagem
 
   useEffect(() => {
     const controller = new AbortController()
@@ -47,30 +84,35 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
           total_avals: mediaMap[p.id]?.total || 0,
         }))
 
-        const termo     = normalizarTermo(queryBusca, filtroHab)
+        const { termo, cidadeExtraida } = parsearBusca(queryBusca)
+        const termoNorm = normalizarTermo(termo, filtroHab)
+
         const vitrines  = normalizados.filter(p => p.origem_tipo === 'vitrine')
         const demais    = normalizados.filter(p => p.origem_tipo !== 'vitrine')
-        const filtrados = filtrarPrestadores(demais, termo)
+        const filtrados = filtrarPrestadores(demais, termoNorm)
 
         setPrestadoresBase([
           ...vitrines,
           ...[...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b)),
         ])
+
+        // Se extraiu cidade da query e não tem cidade na URL, aplica via router
+        if (cidadeExtraida && !filtroCidNome) {
+          const params = new URLSearchParams(window.location.search)
+          params.set('cidade', cidadeExtraida)
+          // Atualiza a URL sem recarregar — silencioso
+          router.replace(`/prestadores?${params.toString()}`, { scroll: false })
+        }
       } catch (err) {
-        // AbortError é cancelamento intencional — não é falha real
         if (err instanceof DOMException && err.name === 'AbortError') return
         console.error('[usePrestadores]', err)
         setErro(true)
       } finally {
-        // Só atualiza o loading se a requisição não foi abortada
-        if (!controller.signal.aborted) {
-          setLoading(false)
-        }
+        if (!controller.signal.aborted) setLoading(false)
       }
     }
 
     fetchDados()
-
     return () => controller.abort()
   }, [queryBusca, filtroHab])
 
@@ -84,14 +126,17 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
     return Array.from(set).sort()
   }, [prestadoresBase])
 
+  // Prioridade: URL > cidade extraída da query > geolocalização
+  const cidadeEfetiva = filtroCidNome || cidadeGeo || null
+
   const prestadoresExibidos = useMemo(() => {
-    if (!filtroCidNome) return prestadoresBase
-    const cidadeNorm = filtroCidNome.toLowerCase().trim()
+    if (!cidadeEfetiva) return prestadoresBase
+    const cidadeNorm = cidadeEfetiva.toLowerCase().trim()
     return prestadoresBase.filter(p =>
       p.cidade_nome?.toLowerCase().trim() === cidadeNorm ||
       p.cidades_atendidas?.some(c => c?.toLowerCase().trim() === cidadeNorm)
     )
-  }, [prestadoresBase, filtroCidNome])
+  }, [prestadoresBase, cidadeEfetiva])
 
   function toggleCidade(nomeCidade: string) {
     const params = new URLSearchParams(window.location.search)
@@ -100,5 +145,5 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
     router.push(`/prestadores?${params.toString()}`)
   }
 
-  return { prestadoresBase, prestadoresExibidos, cidadesDisponiveis, loading, erro, toggleCidade }
+  return { prestadoresBase, prestadoresExibidos, cidadesDisponiveis, cidadeGeo, loading, erro, toggleCidade }
 }
