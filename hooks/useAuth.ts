@@ -27,10 +27,10 @@ export function useAuth() {
     if (typeof window === 'undefined') return undefined
     return getCachedSession() // ← valor imediato, sem flash
   })
-  const [role,        setRole]        = useState<Role>(null)
+  const [role, setRole] = useState<Role>(null)
   const [roleLoading, setRoleLoading] = useState(false)
-  const [loading,     setLoading]     = useState(false)
-  const [erroLogin,   setErroLogin]   = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [erroLogin, setErroLogin] = useState(false)
 
   useEffect(() => {
     let cancelado = false
@@ -85,7 +85,7 @@ export function useAuth() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/painel/perfil` },
+        options: { redirectTo: `${window.location.origin}/auth/callback?next=/painel/perfil` },
       })
       if (error) throw error
     } catch {
