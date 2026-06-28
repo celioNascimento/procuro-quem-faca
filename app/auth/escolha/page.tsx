@@ -37,11 +37,12 @@ export default function PaginaEscolha() {
     checarStatusExistente()
   }, [router])
 
-  const selecionarRole = async (role) => {
+  const selecionarRole = async (role: 'prestador' | 'cliente') => {
     if (loading) return
     setLoading(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
       await supabase.from('logs_atividades').insert({
         acao: 'ROLE_SELECTION_COMPLETED',
