@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSugestoes } from '@/hooks/useSugestoes'
-import { useLog } from '@/hooks/useLog'
+import { insertLog } from '@/hooks/useLog'
 import SearchForm from '@/components/home/SearchForm'
 import { ArrowRight, Briefcase } from 'lucide-react'
 
@@ -15,7 +15,6 @@ export default function Home() {
   const [busca, setBusca] = useState('')
   const [erro, setErro] = useState(false)
   const { sugestoes, carregado } = useSugestoes(busca)
-  const { registrarLog } = useLog()
 
   const temBuscaReal = busca.trim().length > 0
 
@@ -29,7 +28,7 @@ export default function Home() {
     }
     setErro(false)
     if (termoManual) setBusca(termoManual)
-    registrarLog('BUSCA_REALIZADA', { termo: termoFinal }, 'busca')
+    insertLog({ acao: 'BUSCA_REALIZADA', detalhes: { termo: termoFinal }, entidadeTipo: 'busca' })
     router.push(`/prestadores?q=${encodeURIComponent(termoFinal)}`)
   }
 
@@ -41,7 +40,7 @@ export default function Home() {
         style={{ background: 'radial-gradient(ellipse 90% 55% at 50% -5%, rgba(219,234,254,0.65) 0%, transparent 65%)' }}
       />
 
-      <HeroSection onLog={registrarLog} />
+      <HeroSection />
 
       {/* Bloco principal */}
       <div className="relative z-10 flex flex-col items-center px-6 pt-[20vh] md:pt-[26vh]">
@@ -92,7 +91,7 @@ export default function Home() {
         <div className="w-full max-w-3xl">
           <Link
             href="/login"
-            onClick={() => registrarLog('CLIQUE_CTA_PRESTADOR', {}, 'home')}
+            onClick={() => insertLog({ acao: 'CLIQUE_CTA_PRESTADOR', entidadeTipo: 'home' })}
             className="group flex items-center justify-between gap-3 w-full px-5 py-4 md:px-8 md:py-5 rounded-[2rem] border border-slate-200/80 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300"
           >
             <div className="flex items-center gap-3">

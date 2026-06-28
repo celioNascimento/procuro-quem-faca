@@ -3,24 +3,20 @@ import Link from 'next/link'
 import { LogIn, User, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { insertLog } from '@/hooks/useLog'
 
 const btnGhost   = 'flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full whitespace-nowrap bg-white/80 backdrop-blur-sm border border-slate-200/70 text-slate-500 text-[10px] md:text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md hover:bg-white hover:text-slate-700 transition-all duration-200 active:scale-95'
 const btnPrimary = 'flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full whitespace-nowrap bg-blue-600 text-white text-[10px] md:text-xs font-black uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all duration-200 active:scale-95'
 const skeleton   = 'h-8 md:h-9 rounded-full animate-pulse bg-slate-100'
 
-type Props = {
-  onLog?: (acao: string) => void
-}
-
-export function HeaderBotoes({ onLog }: Props) {
+export function HeaderBotoes() {
   const { session, role, roleLoading, loading, erroLogin, loginGoogle } = useAuth()
 
   const pathname     = usePathname()
   const searchParams = useSearchParams()
 
-  // Monta a URL completa da página atual para usar como origem no dashboard
-  const queryString  = searchParams.toString()
-  const origemAtual  = queryString ? `${pathname}?${queryString}` : pathname
+  const queryString   = searchParams.toString()
+  const origemAtual   = queryString ? `${pathname}?${queryString}` : pathname
   const dashboardHref = `/dashboard?origem=${encodeURIComponent(origemAtual)}`
 
   if (session === undefined || roleLoading) {
@@ -41,7 +37,7 @@ export function HeaderBotoes({ onLog }: Props) {
           </span>
         )}
         <button
-          onClick={() => loginGoogle(onLog)}
+          onClick={() => loginGoogle()}
           disabled={loading}
           className={`${btnGhost} disabled:opacity-40`}
         >
@@ -58,7 +54,7 @@ export function HeaderBotoes({ onLog }: Props) {
         </button>
         <Link
           href="/login"
-          onClick={() => onLog?.('CLIQUE_SOU_PROFISSIONAL')}
+          onClick={() => insertLog({ acao: 'CLIQUE_SOU_PROFISSIONAL' })}
           className={btnPrimary}
         >
           <LogIn size={13} />
