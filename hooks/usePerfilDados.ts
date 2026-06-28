@@ -37,12 +37,19 @@ export function usePerfilDados() {
   })
 
   useEffect(() => {
-    async function carregarDados() {
-      const { data: { user: sessionUser } } = await supabase.auth.getUser()
-      if (!sessionUser) { router.push('/'); return }
+    let cancelado = false
+    let jaCarregou = false
+
+    async function processarUsuario(sessionUser: any) {
+      if (cancelado || jaCarregou) return
+      jaCarregou = true
+      clearTimeout(timeoutSemSessao)
+
       setUser(sessionUser)
 
       const profileData = await ClienteService.fetchClienteProfile(sessionUser.id)
+      if (cancelado) return
+
       const googleAvatar = sessionUser.user_metadata?.picture
         || sessionUser.user_metadata?.avatar_url
         || ''
@@ -67,10 +74,32 @@ export function usePerfilDados() {
       }
     }
 
-    carregarDados()
+    // 1) Verifica se já existe uma sessão pronta (caso comum: já estava logado)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!cancelado && session?.user) processarUsuario(session.user)
+    })
+
+    // 2) Escuta o momento em que o login termina de ser processado
+    //    (caso do redirecionamento vindo do Google, que demora um instante)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!cancelado && session?.user) processarUsuario(session.user)
+    })
+
+    // 3) Rede de segurança: se depois de 2s ainda não achou nenhuma sessão,
+    //    aí sim consideramos que o usuário não está logado de verdade
+    const timeoutSemSessao = setTimeout(() => {
+      if (!cancelado && !jaCarregou) router.push('/')
+    }, 2000)
+
     ClienteService.fetchEstados()
       .then(data => { if (data) setListaEstados(data) })
       .catch(() => { })
+
+    return () => {
+      cancelado = true
+      clearTimeout(timeoutSemSessao)
+      subscription.unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
