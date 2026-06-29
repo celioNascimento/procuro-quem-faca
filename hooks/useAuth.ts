@@ -11,7 +11,6 @@ function getCachedSession(): Session | null {
     const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw)
-    // Verifica se o token ainda não expirou
     if (parsed?.expires_at && parsed.expires_at * 1000 < Date.now()) {
       localStorage.removeItem(SESSION_KEY)
       return null
@@ -25,9 +24,10 @@ function getCachedSession(): Session | null {
 export function useAuth() {
   const [session, setSession] = useState<Session | null | undefined>(() => {
     if (typeof window === 'undefined') return undefined
-    return getCachedSession() // ← valor imediato, sem flash
+    return getCachedSession()
   })
   const [role, setRole] = useState<Role>(null)
+  const [prestadorStatus, setPrestadorStatus] = useState<string | null>(null) // ← novo
   const [roleLoading, setRoleLoading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [erroLogin, setErroLogin] = useState(false)
@@ -40,7 +40,6 @@ export function useAuth() {
       const sessionVal = s ?? null
       setSession(sessionVal)
 
-      // Atualiza cache
       if (sessionVal) {
         localStorage.setItem(SESSION_KEY, JSON.stringify(sessionVal))
       } else {
@@ -51,8 +50,14 @@ export function useAuth() {
         setRoleLoading(true)
         try {
           const { data } = await supabase
-            .from('prestadores').select('id').eq('user_id', s.user.id).maybeSingle()
-          if (!cancelado) setRole(data ? 'prestador' : 'cliente')
+            .from('prestadores')
+            .select('id, status') // ← status incluído
+            .eq('user_id', s.user.id)
+            .maybeSingle()
+          if (!cancelado) {
+            setRole(data ? 'prestador' : 'cliente')
+            setPrestadorStatus(data?.status ?? null) // ← salva status
+          }
         } catch {
           if (!cancelado) setRole('cliente')
         } finally {
@@ -72,7 +77,11 @@ export function useAuth() {
         localStorage.removeItem(SESSION_KEY)
       }
 
-      if (!s) { setRole(null); setRoleLoading(false) }
+      if (!s) {
+        setRole(null)
+        setPrestadorStatus(null) // ← limpa junto
+        setRoleLoading(false)
+      }
     })
 
     return () => { cancelado = true; subscription.unsubscribe() }
@@ -96,5 +105,5 @@ export function useAuth() {
     }
   }
 
-  return { session, role, roleLoading, loading, erroLogin, loginGoogle }
+  return { session, role, prestadorStatus, roleLoading, loading, erroLogin, loginGoogle } // ← expõe
 }

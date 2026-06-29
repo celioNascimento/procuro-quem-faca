@@ -10,14 +10,18 @@ const btnPrimary = 'flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounde
 const skeleton   = 'h-8 md:h-9 rounded-full animate-pulse bg-slate-100'
 
 export function HeaderBotoes() {
-  const { session, role, roleLoading, loading, erroLogin, loginGoogle } = useAuth()
+  const { session, role, prestadorStatus, roleLoading, loading, erroLogin, loginGoogle } = useAuth()
 
   const pathname     = usePathname()
   const searchParams = useSearchParams()
 
-  const queryString   = searchParams.toString()
-  const origemAtual   = queryString ? `${pathname}?${queryString}` : pathname
-  const dashboardHref = `/dashboard?origem=${encodeURIComponent(origemAtual)}`
+  const queryString = searchParams.toString()
+  const origemAtual = queryString ? `${pathname}?${queryString}` : pathname
+
+  const cadastroPendente = role === 'prestador' && prestadorStatus === 'pendente'
+  const painelHref = cadastroPendente
+    ? '/cadastro'
+    : `/dashboard?origem=${encodeURIComponent(origemAtual)}`
 
   if (session === undefined || roleLoading) {
     return (
@@ -72,10 +76,14 @@ export function HeaderBotoes() {
         <span className="sm:hidden">{role === 'prestador' ? 'Cliente' : 'Área'}</span>
       </Link>
       {role === 'prestador' && (
-        <Link href={dashboardHref} className={btnPrimary}>
+        <Link href={painelHref} className={btnPrimary}>
           <LayoutDashboard size={13} className="shrink-0" />
-          <span className="hidden sm:inline">Meu Painel</span>
-          <span className="sm:hidden">Painel</span>
+          <span className="hidden sm:inline">
+            {cadastroPendente ? 'Completar Cadastro' : 'Meu Painel'}
+          </span>
+          <span className="sm:hidden">
+            {cadastroPendente ? 'Cadastro' : 'Painel'}
+          </span>
         </Link>
       )}
     </>
