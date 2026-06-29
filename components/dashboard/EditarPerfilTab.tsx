@@ -196,7 +196,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         categoria_id: form.formData.categoria_id || null,
         cidades_atendidas: cidadesLimpo,
         user_id: userLogado?.id,
-        status: form.formData.status || 'ativo',
+        status: 'ativo',
         ativacao_status: novoAtivacaoStatus,
       }
 

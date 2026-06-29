@@ -22,8 +22,7 @@ export function usePerfilStatus() {
       const completo = !!(
         prestador?.nome?.trim() &&
         prestador?.whatsapp &&
-        prestador?.categoria_id &&
-        prestador?.status === 'ativo'
+        prestador?.categoria_id
       )
       setCadastroCompleto(completo)
       setSlug(prestador?.slug || null)
