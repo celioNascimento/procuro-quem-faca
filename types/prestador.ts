@@ -1,5 +1,14 @@
 import { Cidade } from './localizacao';
 
+export type AtivacaoStatus =
+  | 'nao_enviado'
+  | 'enviado'
+  | 'respondeu_positivo'
+  | 'respondeu_negativo'
+  | 'sem_whatsapp'
+  | 'perfil_completo'
+  | 'avaliacao_recebida';
+
 export type Prestador = {
   id: number;                // bigint no Supabase → number no TS
   slug: string | null;
@@ -14,6 +23,7 @@ export type Prestador = {
   cidades_atendidas?: string[];
   cidades?: { nome: string; estado_sigla: string; regiao_id: string } | null;
   categorias?: { nome: string } | null;
+  ativacao_status?: AtivacaoStatus;
 
   // Computados
   cidade_nome: string;
