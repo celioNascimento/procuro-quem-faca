@@ -28,7 +28,7 @@ import { fazerUploadFoto } from '@/lib/uploadFoto'
 
 const inputStyleBase = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-[14px] text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400`
 
-export default function EditarPerfilTab() {
+export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } = {}) {
   const router = useRouter()
 
   // ── Instanciação dos Hooks ───────────────────────────────────────────────
@@ -210,6 +210,7 @@ export default function EditarPerfilTab() {
         .single()
 
       if (error) throw error
+      onSalvar?.()
 
       // Reflete o novo status no estado local, pra UI já refletir sem precisar recarregar o perfil
       if (novoAtivacaoStatus !== statusAtual) {
@@ -218,6 +219,7 @@ export default function EditarPerfilTab() {
 
       setStatus('✅ Perfil Atualizado!')
       setTentouEnviar(false)
+      onSalvar?.()
     } catch (err: any) {
       setStatus(`❌ Erro: ${err.message || 'Verifique os dados'}`)
     } finally {

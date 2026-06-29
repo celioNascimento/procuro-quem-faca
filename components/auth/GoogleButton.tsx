@@ -59,4 +59,4 @@ export default function GoogleButton({ text = "Continuar com Google", onLog }: G
       )}
     </button>
   )
-}
+} 
