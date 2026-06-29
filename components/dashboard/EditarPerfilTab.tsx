@@ -149,7 +149,7 @@ export default function EditarPerfilTab() {
     }
   }
 
-  const handleSalvar = async (e: React.FormEvent) => {
+ const handleSalvar = async (e: React.FormEvent) => {
     e.preventDefault()
     setTentouEnviar(true)
 
@@ -169,6 +169,24 @@ export default function EditarPerfilTab() {
       const cidadeSedeNome = loc.listaCidades.find(c => String(c.id) === String(form.formData.cidade_id))?.nome
       const cidadesLimpo = (form.formData.cidades_atendidas || []).filter(c => c !== cidadeSedeNome)
 
+      // Verifica se todos os campos obrigatórios da vitrine estão preenchidos
+      const camposObrigatoriosOk =
+        !!form.formData.nome &&
+        !!form.formData.foto_perfil &&
+        !!form.formData.whatsapp &&
+        !!form.formData.slug &&
+        !!form.formData.cidade_id &&
+        !!form.formData.grupo_id &&
+        !!form.formData.categoria_id
+
+      // Só "promove" o status para perfil_completo se ainda não passou por outra etapa do funil de ativação.
+      // Evita sobrescrever estados como 'respondeu_positivo' / 'sem_whatsapp' que vêm de outro fluxo.
+      const statusAtual = form.formData.ativacao_status
+      const novoAtivacaoStatus =
+        camposObrigatoriosOk && (statusAtual === 'nao_enviado' || !statusAtual)
+          ? 'perfil_completo'
+          : statusAtual
+
       // 1. Montamos os dados desestruturando o 'id' para fora do restante (restData)
       const { id, ...restData } = {
         ...form.formData,
@@ -178,7 +196,8 @@ export default function EditarPerfilTab() {
         categoria_id: form.formData.categoria_id || null,
         cidades_atendidas: cidadesLimpo,
         user_id: userLogado?.id,
-        status: form.formData.status || 'ativo'
+        status: form.formData.status || 'ativo',
+        ativacao_status: novoAtivacaoStatus,
       }
 
       // 2. Se houver ID (edição), anexamos ele de volta. Se não (criação), mandamos sem ID.
@@ -191,6 +210,11 @@ export default function EditarPerfilTab() {
         .single()
 
       if (error) throw error
+
+      // Reflete o novo status no estado local, pra UI já refletir sem precisar recarregar o perfil
+      if (novoAtivacaoStatus !== statusAtual) {
+        form.set({ ativacao_status: novoAtivacaoStatus })
+      }
 
       setStatus('✅ Perfil Atualizado!')
       setTentouEnviar(false)
