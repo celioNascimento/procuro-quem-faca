@@ -246,7 +246,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       try {
         const projData = await getStatusETokenProjeto(projetoId)
         token = projData?.avaliacao_token || ''
-      } catch (err) {}
+      } catch (err) { }
     }
     const linkProjeto = `${window.location.origin}/meus-servicos${token ? `?token=${token}` : ''}`
     const shareData = {
@@ -330,17 +330,24 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
   }
 
   const handleSalvarLegenda = async () => {
-    if (!zoomEtapa || !fotosData[zoomEtapa]) return
+    const etapaAlvo = zoomEtapa
+    const fotoAlvo = etapaAlvo ? fotosData[etapaAlvo] : null
+    if (!etapaAlvo || !fotoAlvo) return
+
     setSalvandoLegenda(true)
+    setErroLegenda(null)
+
     try {
-      await atualizarLegendaFoto(fotosData[zoomEtapa]!.id, legendaEdit)
-      setFotosData(prev => ({
-        ...prev,
-        [zoomEtapa]: { ...prev[zoomEtapa]!, legenda: legendaEdit }
-      }))
-    } catch (err) {
-      console.error("Erro ao salvar legenda:", err)
+      await atualizarLegendaFoto(fotoAlvo.id, legendaEdit)
+      setFotosData(prev => {
+        const atual = prev[etapaAlvo]
+        if (!atual) return prev
+        return { ...prev, [etapaAlvo]: { ...atual, legenda: legendaEdit } }
+      })
+    } catch (err: any) {
+      console.error('Erro ao salvar legenda — RAW:', err)
       setErroLegenda('Não foi possível salvar a descrição. Tente novamente.')
+      setTimeout(() => setErroLegenda(null), 4000)
     } finally {
       setSalvandoLegenda(false)
     }

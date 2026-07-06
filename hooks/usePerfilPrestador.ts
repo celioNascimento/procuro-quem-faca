@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { insertLog } from '@/hooks/useLog'
 import type { PerfilData, ProjetoPerfil, FotoProjeto } from '@/types/perfil'
 
 interface UsePerfilPrestadorReturn {
@@ -38,7 +39,6 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
       try {
         const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}/.test(slug)
 
-        // ✅ Fix do bug do ternário
         let query = supabase
           .from('prestadores')
           .select(`
@@ -69,7 +69,6 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
 
         if (avalError) throw avalError
 
-        // ✅ Normalização feita aqui — PortfolioGrid recebe dados já limpos
         const projetos: ProjetoPerfil[] = normalizarArray(prestadorRaw.portfolio_projetos)
           .filter(p => ['em_execucao', 'finalizado'].includes(p.status))
           .map(p => ({
@@ -84,11 +83,32 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
             return a.status === 'finalizado' ? -1 : 1
           })
 
+        // ── Captura de origem (?from=) ──────────────────────────────
+        // O parâmetro só serve pra reconstruir o botão "voltar" e pra
+        // log de analytics. Ele NÃO deve permanecer visível na URL
+        // pública/compartilhável, então é lido aqui, guardado em
+        // memória (urlRetorno) e depois removido da barra de endereço.
         const fromParam = searchParams?.get('from')
         let urlRetorno = fromParam ? decodeURIComponent(fromParam) : '/prestadores'
         if (!fromParam) {
           const cat = prestadorRaw.categorias?.nome || prestadorRaw.categoria
           if (cat) urlRetorno = `/prestadores?q=${encodeURIComponent(cat)}`
+        }
+
+        if (fromParam) {
+          // log de analytics: de onde o clique veio (sem depender da URL)
+          insertLog({
+            acao: 'VISITA_PERFIL_VIA_BUSCA',
+            detalhes: { origem: urlRetorno },
+            entidadeId: String(prestadorRaw.id),
+          })
+
+          // limpa a URL visível sem disparar navegação/refetch do Next
+          if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href)
+            url.searchParams.delete('from')
+            window.history.replaceState({}, '', url.pathname + url.search)
+          }
         }
 
         setData({

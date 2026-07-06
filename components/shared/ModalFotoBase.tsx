@@ -11,20 +11,10 @@ interface Props {
   fotoUrl: string
   ordemLabel: string
   onClose?: () => void
-  navegacao?: Navegacao    // opcional — só ProjetoModal usa
+  navegacao?: Navegacao
   children: ReactNode
 }
 
-/**
- * Estrutura visual compartilhada por:
- * - WizardZoomModal  (prestador — edita legenda, faz upload)
- * - ModalDiscussao   (cliente   — comentários bidirecionais)
- * - ProjetoModal     (público   — visualização + navegação entre fotos)
- *
- * Sem backdrop-blur em nenhum ponto — substituído por bg sólido.
- * A prop `navegacao` é opcional: quando passada, exibe setas prev/next
- * sobrepostas à foto.
- */
 export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, children }: Props) {
   return (
     <div className="fixed inset-0 z-[200] bg-slate-900/95 flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-300">
@@ -41,8 +31,9 @@ export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, childre
       <div className="flex flex-col md:flex-row bg-white rounded-[3rem] overflow-hidden w-full max-w-5xl h-full max-h-[90vh] shadow-2xl">
 
         {/* ── Painel esquerdo: foto ── */}
-        <div className="flex-[1.5] bg-slate-900 flex items-center justify-center relative overflow-hidden">
-          {/* Gradiente em vez de blur-3xl — mesmo efeito visual, GPU zero */}
+        {/* FIX: shrink-0 + max-h limitada em mobile, para não consumir todo o espaço vertical
+            disponível e sobrar altura insuficiente para o painel direito (children) */}
+        <div className="flex-[1.5] md:flex-[1.5] shrink-0 max-h-[35vh] md:max-h-none md:h-full bg-slate-900 flex items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950 opacity-80" />
           <img
             src={fotoUrl}
@@ -53,7 +44,6 @@ export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, childre
             {ordemLabel}
           </div>
 
-          {/* Setas de navegação — só quando navegacao for passado */}
           {navegacao && (
             <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between items-center z-40">
               <button
@@ -73,7 +63,10 @@ export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, childre
         </div>
 
         {/* ── Painel direito: slot customizável ── */}
-        <div className="flex-1 flex flex-col bg-white overflow-hidden border-l border-slate-50">
+        {/* FIX: min-h-0 é essencial — sem isso, um flex item não consegue encolher
+            abaixo do tamanho do seu conteúdo, e o overflow-y-auto interno do filho
+            (WizardZoomModal) nunca entra em ação, cortando o conteúdo */}
+        <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden border-l border-slate-50">
           {children}
         </div>
 
