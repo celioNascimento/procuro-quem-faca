@@ -5,17 +5,48 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertCircle, CheckCircle2, TrendingUp, Zap, ArrowUpRight, Database } from 'lucide-react'
 
-export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    cidades: 0, anuncios: 0, prestadores: 0, logs: 0,
-    curadoria: 0, registrados: 0, reivindicados: 0, topCategorias: [],
-    ativacao: { total: 0, enviados: 0, ativos: 0 }
-  })
-  const [radar, setRadar]       = useState([])
-  const [refreshing, setRefreshing] = useState(false)
-  const [notificacao, setNotificacao] = useState(null)
+// ─── Tipos ───────────────────────────────────────────────────────────────────
 
-  const hapticFeedback = useCallback((intensity = 10) => {
+interface CategoriaRanking {
+  nome: string
+  total: number
+}
+
+interface RadarItem {
+  acao: string
+  detalhes: { termo?: string } | null
+  created_at: string
+}
+
+interface Stats {
+  cidades: number
+  anuncios: number
+  prestadores: number
+  logs: number
+  curadoria: number
+  registrados: number
+  reivindicados: number
+  topCategorias: CategoriaRanking[]
+  ativacao: {
+    total: number
+    enviados: number
+    ativos: number
+  }
+}
+
+const STATS_INICIAL: Stats = {
+  cidades: 0, anuncios: 0, prestadores: 0, logs: 0,
+  curadoria: 0, registrados: 0, reivindicados: 0, topCategorias: [],
+  ativacao: { total: 0, enviados: 0, ativos: 0 }
+}
+
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<Stats>(STATS_INICIAL)
+  const [radar, setRadar] = useState<RadarItem[]>([])
+  const [refreshing, setRefreshing] = useState(false)
+  const [notificacao, setNotificacao] = useState<string | null>(null)
+
+  const hapticFeedback = useCallback((intensity: number | number[] = 10) => {
     if (typeof window !== 'undefined' && navigator.vibrate) navigator.vibrate(intensity)
   }, [])
 
@@ -39,9 +70,15 @@ export default function AdminDashboard() {
       }
       const { data: logCats }  = await supabase.from('logs_atividades').select('entidade_id').eq('acao', 'FILTRO_CATEGORIA')
       const { data: catNames } = await supabase.from('categorias').select('id, nome')
-      const counts  = logCats?.reduce((acc, log) => { acc[log.entidade_id] = (acc[log.entidade_id] || 0) + 1; return acc }, {})
-      const ranking = Object.entries(counts || {})
-        .map(([id, total]) => ({ nome: catNames?.find(c => c.id === id)?.nome || 'Outros', total }))
+      const counts = logCats?.reduce((acc: Record<string, number>, log) => {
+        if (log.entidade_id) acc[log.entidade_id] = (acc[log.entidade_id] || 0) + 1
+        return acc
+      }, {})
+      const ranking: CategoriaRanking[] = Object.entries(counts || {})
+        .map(([id, total]) => ({
+          nome: catNames?.find(c => c.id === id)?.nome || 'Outros',
+          total: total as number
+        }))
         .sort((a, b) => b.total - a.total).slice(0, 4)
       const { data: lRecent } = await supabase.from('logs_atividades')
         .select('acao, detalhes, created_at')
@@ -54,7 +91,7 @@ export default function AdminDashboard() {
         reivindicados: reivindicadosCount, topCategorias: ranking,
         ativacao: ativacaoStats
       })
-      setRadar(lRecent || [])
+      setRadar((lRecent as RadarItem[]) || [])
     } catch (err) { console.error(err) } finally { setRefreshing(false) }
   }, [hapticFeedback])
 
@@ -244,7 +281,14 @@ export default function AdminDashboard() {
 
 // ─── Componentes ───────────────────────────────────────────────────────────────
 
-function StatCard({ label, valor, sub, highlight = false }) {
+interface StatCardProps {
+  label: string
+  valor: number
+  sub: string
+  highlight?: boolean
+}
+
+function StatCard({ label, valor, sub, highlight = false }: StatCardProps) {
   return (
     <div className={`p-4 md:p-5 rounded-2xl border transition-all ${
       highlight

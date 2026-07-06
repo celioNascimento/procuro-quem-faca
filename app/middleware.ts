@@ -1,15 +1,14 @@
-// middleware.js
 import { createServerClient } from '@supabase/ssr'
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request) {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: { headers: request.headers },
   })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
@@ -30,27 +29,47 @@ export async function middleware(request) {
   const isDashboard = url.pathname.startsWith('/dashboard')
   const isCadastro = url.pathname.startsWith('/cadastro')
   const isLogin = url.pathname === '/login'
+  const isAdmin = url.pathname.startsWith('/admin')
 
   // 2. Lógica de Redirecionamento
 
   // REGRA A: Proteção de Áreas Privadas (Dashboard e Cadastro)
-  // Se o usuário tenta acessar área restrita sem estar logado
   if (!user && (isDashboard || isCadastro)) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // REGRA B: Evitar Login Duplicado
-  // Se o usuário já está logado e tenta ir para a página de login
   if (user && isLogin) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // REGRA C: Rotas Públicas (Home, /prestadores, etc)
-  // Não fazemos nada, apenas retornamos a resposta com os cookies atualizados
+  // REGRA C: Proteção da Área Administrativa
+  // Bloqueia qualquer acesso a /admin que não venha de um usuário
+  // presente em perfis_admin. Sem usuário → redireciona para home,
+  // sem revelar que a rota existe.
+  if (isAdmin) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+
+    const { data: adminProfile } = await supabase
+      .from('perfis_admin')
+      .select('role')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!adminProfile) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+
+    // Usuário validado como admin — segue com a resposta,
+    // com os cookies de sessão já atualizados acima.
+  }
+
+  // REGRA D: Rotas Públicas (Home, /prestadores, etc)
   return response
 }
 
 export const config = {
-  // Mantemos o matcher para ignorar arquivos estáticos
   matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }
