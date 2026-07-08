@@ -41,6 +41,21 @@ Explicar o diferencial do PQF (registro fotográfico + avaliação vinculada a p
 
 ## Planejado
 
+- [ ] Documentar `origem_tipo: 'vitrine'` em `03-banco-de-dados.md` — valor usado em `usePrestadores` (prioridade máxima, sem filtro de busca) mas não estava no schema/valores conhecidos até agora
+- [ ] Padronizar nome do parâmetro de URL de "retorno" — `?from=` (usado em `PrestadorCard`/perfil público) vs. `?origem=` (usado no dashboard) fazem a mesma coisa com nomes diferentes
+- [ ] Avaliar se `usePrestadores` deveria usar a view `prestadores_ranqueados` em vez de recalcular médias de avaliação no frontend — duplica lógica que já existe no banco
+- [ ] Deletar `components/dashboard/UploadWizard.tsx` (confirmado legado — `PortfolioDashboardTab.tsx` já usa `UploadWizardContainer`)
+- [ ] Deletar `components/dashboard/PortfolioTab.js` (confirmado mock/protótipo com imagens do Picsum, não conectado a dados reais — nome quase idêntico ao `PortfolioDashboardTab.tsx` real é risco de confusão)
+- [ ] Deletar `ProjetoTimeline.jsx` — chat em tempo real descartado, ver decisão abaixo
+- [ ] Opcional: finalizar refatoração do wizard — trocar hero inline de `UploadWizardContainer.tsx` por `<PrestadorCardHorizontal />` + `<WizardForm hookData={hookData} />`, já preparados para esse uso (comentário no próprio `PrestadorCardHorizontal.tsx` documenta a intenção)
+- [ ] `AnunciosTab.js` em `components/dashboard/` — ainda não confirmado se está em uso ou é legado
+- [ ] Página `/sucesso`: botão "Compartilhar Resultado" sem `onClick` implementado — decidir se implementa `navigator.share` ou remove o botão
+- [ ] Página `/sucesso`: não recebe nem exibe dados do projeto/prestador avaliado — avaliar se vale personalizar (ex: "Sua avaliação para [nome] foi registrada")
+
+## Decisões de escopo
+
+**Chat em tempo real (`ProjetoTimeline.jsx` + tabela `projeto_mensagens`) — não será implementado.** O WhatsApp já cumpre o papel de comunicação direta entre cliente e prestador; replicar isso no app duplicaria esforço (Realtime, moderação, notificações) sem necessidade real. O componente e, se existir em produção, a tabela `projeto_mensagens`, devem ser removidos do código. Comentários pontuais por foto (`portfolio_comentarios`, via `ModalDiscussao`/`WizardZoomModal`) continuam sendo o mecanismo de feedback assíncrono dentro do app.
+
 - [ ] Conversão gradual de arquivos `.js`/`.jsx` restantes para `.ts`/`.tsx` (ex: `app/recuperar-senha` / `NovaSenha`, `HeaderMobile.js`, `Footer.js`, `FooterWrapper.js`, `not-found.js`, `sitemap.js`) — feito arquivo por arquivo para não quebrar nada
 - [ ] Reorganizar `components/perfil/` vs `components/profile/` — provável duplicação PT/EN
 - [ ] Resolver duplicação `perfis` vs `profiles` no banco

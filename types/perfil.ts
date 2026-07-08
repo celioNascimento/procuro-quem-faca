@@ -1,3 +1,5 @@
+// types/perfil.ts
+
 import type { Prestador } from './prestador'
 
 export interface FotoProjeto {

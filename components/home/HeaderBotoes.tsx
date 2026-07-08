@@ -1,3 +1,5 @@
+//components/home/HeaderBotoes.tsx
+
 'use client'
 import Link from 'next/link'
 import { LogIn, User, LayoutDashboard } from 'lucide-react'

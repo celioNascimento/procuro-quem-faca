@@ -1,3 +1,5 @@
+//dashboard/wizard/WizardForm.tsx
+
 import {
   Smartphone, Camera, X, Loader2, CheckCircle2, ChevronRight,
   Activity, AlertCircle, Link as LinkIcon, CloudCheck, RefreshCw,

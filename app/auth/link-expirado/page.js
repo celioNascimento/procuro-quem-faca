@@ -1,3 +1,5 @@
+// app/auth/link-expirado/page.js
+
 'use client'
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'

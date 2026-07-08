@@ -1,3 +1,5 @@
+//components/home/HeroSection.tsx
+
 'use client'
 import { Suspense } from 'react'
 import { HeaderBotoes } from './HeaderBotoes'

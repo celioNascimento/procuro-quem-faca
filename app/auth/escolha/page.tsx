@@ -1,7 +1,11 @@
+// app/auth/escolha/page.tsx
+
 'use client'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { getStatusOnboarding } from '@/lib/services/auth.service'
+import { resolverDestinoPosLogin } from '@/lib/auth/resolverDestinoPosLogin'
 
 export default function PaginaEscolha() {
   const router = useRouter()
@@ -21,17 +25,14 @@ export default function PaginaEscolha() {
         return
       }
 
-      const [{ data: profile }, { data: prestador }] = await Promise.all([
-        supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
-        supabase.from('prestadores').select('categoria_id').eq('user_id', user.id).maybeSingle()
-      ])
+      const { profile, prestador } = await getStatusOnboarding(supabase, user.id)
+      const destino = resolverDestinoPosLogin(profile, prestador)
 
-      if (profile?.role === 'prestador' && !prestador?.categoria_id) {
-        router.push('/cadastro')
-      } else if (profile?.role === 'cliente' || (profile?.role === 'prestador' && prestador?.categoria_id)) {
-        router.push('/dashboard') 
-      } else {
+      if (destino === '/auth/escolha') {
+        // Usuário ainda não tem role definido: fica nesta tela
         setLoading(false)
+      } else {
+        router.push(destino)
       }
     }
     checarStatusExistente()
@@ -57,7 +58,7 @@ export default function PaginaEscolha() {
       })
 
       router.push(role === 'prestador' ? '/cadastro' : '/dashboard')
-      
+
     } catch (err) {
       console.error('Erro ao definir papel:', err)
       setLoading(false)

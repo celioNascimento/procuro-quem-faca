@@ -1,3 +1,5 @@
+//hooks/useLog.ts
+
 import { supabase } from '@/lib/supabase'
 
 export interface LogPayload {

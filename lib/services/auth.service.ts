@@ -1,19 +1,39 @@
-import { supabase } from '@/lib/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { ProfileRole, PrestadorResumo } from '@/lib/auth/resolverDestinoPosLogin'
 
-export async function logoutCliente(): Promise<void> {
-  // 1. Encerra a sessão no Supabase (invalida token no servidor + limpa localStorage nativo do supabase)
-  await supabase.auth.signOut()
+/**
+ * Busca o estado de onboarding do usuário (role do profile + resumo do
+ * cadastro de prestador, se existir).
+ *
+ * Recebe o client Supabase como parâmetro em vez de importar um fixo —
+ * é o que permite reuso tanto no browser (useLoginForm, /auth/escolha,
+ * que usam o client singleton de lib/supabase) quanto no server
+ * (app/auth/callback/route.ts, que usa um client criado por requisição
+ * via createServerClient).
+ *
+ * Único ponto de leitura dessas duas tabelas para decisões de onboarding —
+ * resolverDestinoPosLogin.ts é o único ponto de decisão a partir do
+ * resultado. Nenhum chamador deve montar sua própria query equivalente.
+ */
+export async function getStatusOnboarding(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<{ profile: ProfileRole | null; prestador: PrestadorResumo | null }> {
+  const [{ data: profile }, { data: prestador }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle(),
+    supabase
+      .from('prestadores')
+      .select('id, categoria_id, nome, origem_tipo, status')
+      .eq('user_id', userId)
+      .maybeSingle()
+  ])
 
-  // 2. Limpeza manual de resíduos no storage
-  if (typeof window !== 'undefined') {
-    Object.keys(localStorage)
-      .filter(k => k.startsWith('sb-'))
-      .forEach(k => localStorage.removeItem(k))
-    Object.keys(sessionStorage)
-      .filter(k => k.startsWith('sb-'))
-      .forEach(k => sessionStorage.removeItem(k))
+  return {
+    profile: profile as ProfileRole | null,
+    prestador: prestador as PrestadorResumo | null
   }
-
-  // 3. Força reload completo para limpar a memória do React
-  window.location.href = '/'
 }

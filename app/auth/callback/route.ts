@@ -1,7 +1,11 @@
+// app/auth/callback/route.ts
+
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getStatusOnboarding } from '@/lib/services/auth.service'
+import { resolverDestinoPosLogin } from '@/lib/auth/resolverDestinoPosLogin'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -33,39 +37,17 @@ export async function GET(request: NextRequest) {
     const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && session) {
-      // Se quem pediu o login já sabe pra onde quer ir (ex: botão "Área do Cliente" na Home),
-      // respeitamos esse destino direto, sem aplicar a lógica de papel (role) abaixo.
+      // Se quem pediu o login já sabe pra onde quer ir (ex: botão "Área do
+      // Cliente" na Home), respeitamos esse destino direto, sem aplicar a
+      // lógica de papel (role) abaixo.
       if (next) {
         return NextResponse.redirect(`${origin}${next}`)
       }
 
-      const user = session.user
+      const { profile, prestador } = await getStatusOnboarding(supabase, session.user.id)
+      const destino = resolverDestinoPosLogin(profile, prestador)
 
-      const [{ data: profile }, { data: prestador }] = await Promise.all([
-        supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
-        supabase.from('prestadores').select('id, categoria_id, nome, origem_tipo').eq('user_id', user.id).maybeSingle()
-      ])
-
-      // --- LÓGICA DE REDIRECIONAMENTO CONSOLIDADA ---
-
-      // 1. Prestador Completo OU Cliente -> Dashboard
-      if (
-        (profile?.role === 'prestador' && prestador?.categoria_id && prestador?.nome) ||
-        (profile?.role === 'cliente')
-      ) {
-        return NextResponse.redirect(`${origin}/dashboard`)
-      }
-
-      // 2. Prestador Incompleto -> Cadastro
-      if (profile?.role === 'prestador') {
-        if (prestador?.origem_tipo === 'curadoria_publica') {
-          return NextResponse.redirect(`${origin}/cadastro?reivindicar=${prestador.id}`)
-        }
-        return NextResponse.redirect(`${origin}/cadastro`)
-      }
-
-      // 3. Usuário novo ou sem role -> Escolha
-      return NextResponse.redirect(`${origin}/auth/escolha`)
+      return NextResponse.redirect(`${origin}${destino}`)
     }
   }
 

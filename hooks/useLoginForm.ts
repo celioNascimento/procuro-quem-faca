@@ -1,7 +1,11 @@
+// hooks/useLoginForm.ts
+
 import { useState, useEffect, useRef, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
+import { getStatusOnboarding } from '@/lib/services/auth.service'
+import { resolverDestinoPosLogin } from '@/lib/auth/resolverDestinoPosLogin'
 
 export function useLoginForm() {
   const [email, setEmail] = useState('')
@@ -32,26 +36,20 @@ export function useLoginForm() {
   const redirecionarUsuario = async (user: User) => {
     if (!isActive.current) return
     try {
-      const { data: perfil } = await supabase
-        .from('prestadores')
-        .select('id, user_id, origem_tipo, status')
-        .or(`user_id.eq.${user.id},whatsapp.ilike.%${user.email}%`)
-        .maybeSingle()
-
+      const { profile, prestador } = await getStatusOnboarding(supabase, user.id)
       if (!isActive.current) return
 
-      const irParaCadastro = !perfil || perfil.origem_tipo === 'curadoria_publica' || perfil.status === 'pendente'
+      const destino = resolverDestinoPosLogin(profile, prestador)
 
-      if (irParaCadastro && typeof window !== 'undefined') {
+      // Pré-preenche o cadastro com email/senha sempre que o destino for
+      // /cadastro (com ou sem ?reivindicar=), já que resolverDestinoPosLogin
+      // é quem decide isso agora — não precisa mais checar origem_tipo aqui.
+      if (destino.startsWith('/cadastro') && typeof window !== 'undefined') {
         sessionStorage.setItem('pqf_prefill', JSON.stringify({ email, password }))
       }
 
-      const path = irParaCadastro
-        ? `/cadastro${perfil?.origem_tipo === 'curadoria_publica' ? `?reivindicar=${perfil.id}` : ''}`
-        : '/dashboard'
-
       isActive.current = false
-      router.push(path)
+      router.push(destino)
     } catch {
       if (isActive.current) router.push('/cadastro')
     }

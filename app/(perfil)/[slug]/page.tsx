@@ -1,3 +1,5 @@
+//  app/(perfil)/[slug]/page.tsx
+
 'use client'
 import Link from 'next/link'
 import Header from '@/components/Header'
@@ -12,7 +14,6 @@ import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
 import { insertLog } from '@/hooks/useLog'
 import { useCompartilharPerfil } from '@/hooks/useCompartilharPerfil'
-import type { AdPage } from '@/types/ads'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
 
 // ── Sub-componente interno — hooks chamados após os dados estarem garantidos ──
@@ -43,7 +44,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
 
         <div className="w-full max-w-xl lg:max-w-3xl mx-auto mb-6 flex items-center justify-center animate-in fade-in duration-500">
           <AdCard
-            page={"perfil" as AdPage}
+            page="perfil_prestador"
             categoria={prestador.categorias?.nome || prestador.categoria}
           />
         </div>

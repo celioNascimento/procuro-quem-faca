@@ -1,3 +1,5 @@
+//hooks/useCompartilharPerfil.ts
+
 'use client'
 import { useState, useCallback } from 'react'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'

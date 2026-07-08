@@ -1,3 +1,5 @@
+//components/ads/AdCard.tsx
+
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { AdCardFallback } from './AdCardFallback'

@@ -9,7 +9,7 @@ export function getLocalizacao(bairro?: string, cidadeNome?: string): string {
   return [bairro, cidadeNome].filter(Boolean).join(' • ')
 }
 
-export function getPerfilHref(slug: string | null, id: string): string {
+export function getPerfilHref(slug: string | null, id: string | number): string {
   const from = typeof window !== 'undefined'
     ? window.location.pathname + window.location.search
     : '/prestadores'

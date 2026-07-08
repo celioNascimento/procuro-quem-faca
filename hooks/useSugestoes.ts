@@ -1,3 +1,5 @@
+//hooks/useSugestoes.ts
+
 import { useState, useEffect } from 'react'
 import { getSugestoesDestaque, getSugestoesPorBusca } from '@/lib/db/categorias'
 import { SUGESTOES_FALLBACK } from '@/config/categorias'

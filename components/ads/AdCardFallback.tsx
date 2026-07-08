@@ -1,3 +1,5 @@
+//components/ads/AdCardFallback.tsx
+
 'use client'
 import Link from 'next/link'
 import type { AdFallback } from '@/types/ads'
