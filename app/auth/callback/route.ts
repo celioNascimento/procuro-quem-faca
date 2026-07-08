@@ -4,8 +4,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getStatusOnboarding, garantirRoleInicial } from '@/lib/services/auth.service'
-import { resolverDestinoPosLogin } from '@/lib/auth/resolverDestinoPosLogin'
+import { getStatusOnboarding, garantirRoleInicial, getPrestadorResumo } from '@/lib/services/auth.service'
+import { resolverDestinoPosLogin, type ProfileRole } from '@/lib/auth/resolverDestinoPosLogin'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -49,11 +49,21 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}${next}`)
       }
 
+      // Quando há roleSugerida, garantirRoleInicial já devolve a role
+      // confirmada na mesma requisição do upsert — não refazemos a leitura
+      // de profile via getStatusOnboarding, que seria uma request separada
+      // sujeita ao mesmo atraso de propagação que causava a queda em
+      // /auth/escolha logo após a conta ser criada.
+      let profile: ProfileRole | null
+      let prestador
+
       if (roleSugerida) {
-        await garantirRoleInicial(supabase, session.user.id, roleSugerida)
+        profile = await garantirRoleInicial(supabase, session.user.id, roleSugerida)
+        prestador = await getPrestadorResumo(supabase, session.user.id)
+      } else {
+        ;({ profile, prestador } = await getStatusOnboarding(supabase, session.user.id))
       }
 
-      const { profile, prestador } = await getStatusOnboarding(supabase, session.user.id)
       const destino = resolverDestinoPosLogin(profile, prestador)
 
       return NextResponse.redirect(`${origin}${destino}`)

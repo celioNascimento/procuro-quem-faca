@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
-import { getStatusOnboarding, garantirRoleInicial } from '@/lib/services/auth.service'
+import { getStatusOnboarding, garantirRoleInicial, getPrestadorResumo } from '@/lib/services/auth.service'
 import { resolverDestinoPosLogin } from '@/lib/auth/resolverDestinoPosLogin'
 
 // Esta tela de login é a "Área do Profissional" — qualquer conta criada
@@ -174,8 +174,22 @@ export function useLoginForm() {
       }
 
       await registrarLogAuth('CADASTRO_CRIADO_AUTOMATICO')
-      await garantirRoleInicial(supabase, novaConta.user.id, ROLE_PADRAO_DESTA_TELA)
-      await redirecionarUsuario(novaConta.session.user)
+      const profileAtualizado = await garantirRoleInicial(supabase, novaConta.user.id, ROLE_PADRAO_DESTA_TELA)
+      if (!isActive.current) return
+
+      // Não usamos redirecionarUsuario aqui: ele releria o profile via
+      // getStatusOnboarding numa request separada, sujeito ao mesmo atraso
+      // de propagação que causava a queda em /auth/escolha. Como acabamos
+      // de criar a conta, sabemos que não existe prestador vinculado ainda.
+      const prestador = await getPrestadorResumo(supabase, novaConta.user.id)
+      const destino = resolverDestinoPosLogin(profileAtualizado, prestador)
+
+      if (destino.startsWith('/cadastro') && typeof window !== 'undefined') {
+        sessionStorage.setItem('pqf_prefill', JSON.stringify({ email, password }))
+      }
+
+      isActive.current = false
+      router.push(destino)
     } catch (err: any) {
       if (isActive.current && err.name !== 'AbortError') {
         setMensagem('Erro inesperado. Tente novamente.')
