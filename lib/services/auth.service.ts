@@ -17,12 +17,19 @@ import type { ProfileRole, PrestadorResumo } from '@/lib/auth/resolverDestinoPos
  */
 /**
  * Garante que o usuário tenha uma role definida em `profiles`, aplicando
- * `roleDesejado` apenas se ainda não existir um profile — nunca sobrescreve
+ * `roleDesejado` apenas se ainda não houver role gravada — nunca sobrescreve
  * uma role já escolhida. Usado nos dois pontos onde uma conta pode ser
  * criada implicitamente por um contexto que já sabe qual role faz sentido:
  * (1) cadastro automático por e-mail/senha na tela "Área do Profissional"
  * (hooks/useLoginForm.ts) e (2) primeiro login via Google vindo dessa mesma
  * tela (app/auth/callback/route.ts, acionado por hooks/useGoogleAuth.ts).
+ *
+ * IMPORTANTE: checamos `!profile?.role`, não `!profile`. Se o projeto tiver
+ * um trigger no banco que cria a linha em `profiles` automaticamente ao
+ * criar o usuário em auth.users (padrão comum, ex: handle_new_user), essa
+ * linha já existe com role nula quando esta função roda — checar apenas
+ * "existe profile?" faria essa função nunca agir, e o usuário cairia em
+ * /auth/escolha em vez do /cadastro esperado.
  */
 export async function garantirRoleInicial(
   supabase: SupabaseClient,
@@ -31,11 +38,11 @@ export async function garantirRoleInicial(
 ): Promise<void> {
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id')
+    .select('id, role')
     .eq('id', userId)
     .maybeSingle()
 
-  if (!profile) {
+  if (!profile?.role) {
     await supabase.from('profiles').upsert({
       id: userId,
       role: roleDesejado,
