@@ -4,13 +4,18 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getStatusOnboarding } from '@/lib/services/auth.service'
+import { getStatusOnboarding, garantirRoleInicial } from '@/lib/services/auth.service'
 import { resolverDestinoPosLogin } from '@/lib/auth/resolverDestinoPosLogin'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next')
+  // Setado por hooks/useGoogleAuth.ts quando o botão Google é usado num
+  // contexto que já sabe qual role faz sentido (ex: tela "Área do
+  // Profissional"). Só é aplicado a contas sem profile ainda — ver
+  // garantirRoleInicial em lib/services/auth.service.ts.
+  const roleSugerida = searchParams.get('role')
   const isDev = process.env.NODE_ENV === 'development'
 
   if (code) {
@@ -42,6 +47,10 @@ export async function GET(request: NextRequest) {
       // lógica de papel (role) abaixo.
       if (next) {
         return NextResponse.redirect(`${origin}${next}`)
+      }
+
+      if (roleSugerida) {
+        await garantirRoleInicial(supabase, session.user.id, roleSugerida)
       }
 
       const { profile, prestador } = await getStatusOnboarding(supabase, session.user.id)

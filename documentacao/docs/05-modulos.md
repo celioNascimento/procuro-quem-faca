@@ -314,15 +314,16 @@ Todo compartilhamento é registrado via `registrarCompartilhamento({ prestador_i
 ### `RastreamentoAtivacaoProvider`
 Wrapper fino em `Suspense` (por usar `useSearchParams`) que só invoca `useRastreamentoAtivacao(prestador, srcParam)` — captura parâmetro `?src=` (provavelmente identifica a origem de uma campanha de ativação via WhatsApp, ver `ativacao_status` em `03-banco-de-dados.md`) e não renderiza nada (`return null`). Lógica real do rastreamento está no hook, não revisado ainda.
 
-### 🐛 Bug de tipagem: `AdCard` no perfil usa valor inválido de `AdPage`
+### ✅ Corrigido: `AdCard` no perfil usava valor inválido de `AdPage`
 
+O código original tinha:
 ```typescript
 <AdCard page={"perfil" as AdPage} categoria={...} />
 ```
 
-`AdPage` (em `types/ads.ts`) não inclui `'perfil'` — só `'perfil_prestador'`. O cast `as AdPage` faz o TypeScript aceitar, mas o valor real em runtime não corresponde a nenhuma opção válida do tipo. Se `useAdContext` faz um switch/lookup por `page` para resolver o conteúdo do fallback, essa posição provavelmente cai num caso não tratado ou default genérico em vez do fallback pensado especificamente para perfil.
+`AdPage` (em `types/ads.ts`) não inclui `'perfil'` — só `'perfil_prestador'`. O cast `as AdPage` fazia o TypeScript aceitar, mas o valor real em runtime não correspondia a nenhuma opção válida do tipo, provavelmente fazendo essa posição cair num fallback genérico em vez do pensado para o perfil.
 
-**Fix sugerido:** trocar `"perfil" as AdPage` por `"perfil_prestador"` (o valor real do tipo) — elimina a necessidade do cast e corrige o comportamento.
+**Correção aplicada:** trocado para `page="perfil_prestador"`, removendo o cast e o import de `AdPage` que só existia por causa dele.
 
 ## Acompanhamento do Cliente
 

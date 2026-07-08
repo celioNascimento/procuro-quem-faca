@@ -4,8 +4,14 @@ import { useState, useEffect, useRef, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
-import { getStatusOnboarding } from '@/lib/services/auth.service'
+import { getStatusOnboarding, garantirRoleInicial } from '@/lib/services/auth.service'
 import { resolverDestinoPosLogin } from '@/lib/auth/resolverDestinoPosLogin'
+
+// Esta tela de login é a "Área do Profissional" — qualquer conta criada
+// implicitamente por aqui (e-mail/senha sem cadastro prévio) nasce como
+// prestador. Se este hook um dia for reusado por uma tela de cliente,
+// esse valor precisa deixar de ser fixo e virar parâmetro do hook.
+const ROLE_PADRAO_DESTA_TELA = 'prestador'
 
 export function useLoginForm() {
   const [email, setEmail] = useState('')
@@ -129,19 +135,47 @@ export function useLoginForm() {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (!isActive.current) return
 
-      if (error) {
-        if (error.status === 400 || error.message.toLowerCase().includes('invalid')) {
-          setMensagem('Erro: E-mail ou senha incorretos.')
-        } else {
-          setMensagem('Erro: ' + error.message)
-        }
+      if (!error && data?.session) {
+        await registrarLogAuth('LOGIN_SUCESSO')
+        await redirecionarUsuario(data.session.user)
         return
       }
 
-      if (data?.session) {
-        await registrarLogAuth('LOGIN_SUCESSO')
-        await redirecionarUsuario(data.session.user)
+      const credenciaisInvalidas = error?.status === 400 || error?.message?.toLowerCase().includes('invalid')
+      if (!credenciaisInvalidas) {
+        setMensagem('Erro: ' + (error?.message || 'Falha ao autenticar.'))
+        return
       }
+
+      // Credenciais inválidas: o Supabase não diferencia "conta não existe"
+      // de "senha errada" no erro do signIn (por segurança, evita enumeração
+      // de e-mails). Por isso tentamos criar a conta — se ela já existir,
+      // o próprio signUp revela isso via `identities: []` na resposta,
+      // sem gerar sessão nem sobrescrever a senha existente.
+      const { data: novaConta, error: signUpError } = await supabase.auth.signUp({ email, password })
+      if (!isActive.current) return
+
+      if (signUpError) {
+        setMensagem('Erro: ' + signUpError.message)
+        return
+      }
+
+      const contaJaExistia = (novaConta.user?.identities?.length ?? 0) === 0
+      if (contaJaExistia) {
+        setMensagem('Erro: E-mail ou senha incorretos.')
+        return
+      }
+
+      if (!novaConta.session || !novaConta.user) {
+        // Projeto com confirmação de e-mail obrigatória: conta foi criada,
+        // mas ainda não há sessão para redirecionar automaticamente.
+        setMensagem('Sucesso: Conta criada! Verifique seu e-mail para confirmar o acesso.')
+        return
+      }
+
+      await registrarLogAuth('CADASTRO_CRIADO_AUTOMATICO')
+      await garantirRoleInicial(supabase, novaConta.user.id, ROLE_PADRAO_DESTA_TELA)
+      await redirecionarUsuario(novaConta.session.user)
     } catch (err: any) {
       if (isActive.current && err.name !== 'AbortError') {
         setMensagem('Erro inesperado. Tente novamente.')

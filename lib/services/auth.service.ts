@@ -15,6 +15,35 @@ import type { ProfileRole, PrestadorResumo } from '@/lib/auth/resolverDestinoPos
  * resolverDestinoPosLogin.ts é o único ponto de decisão a partir do
  * resultado. Nenhum chamador deve montar sua própria query equivalente.
  */
+/**
+ * Garante que o usuário tenha uma role definida em `profiles`, aplicando
+ * `roleDesejado` apenas se ainda não existir um profile — nunca sobrescreve
+ * uma role já escolhida. Usado nos dois pontos onde uma conta pode ser
+ * criada implicitamente por um contexto que já sabe qual role faz sentido:
+ * (1) cadastro automático por e-mail/senha na tela "Área do Profissional"
+ * (hooks/useLoginForm.ts) e (2) primeiro login via Google vindo dessa mesma
+ * tela (app/auth/callback/route.ts, acionado por hooks/useGoogleAuth.ts).
+ */
+export async function garantirRoleInicial(
+  supabase: SupabaseClient,
+  userId: string,
+  roleDesejado: string
+): Promise<void> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', userId)
+    .maybeSingle()
+
+  if (!profile) {
+    await supabase.from('profiles').upsert({
+      id: userId,
+      role: roleDesejado,
+      updated_at: new Date()
+    })
+  }
+}
+
 export async function getStatusOnboarding(
   supabase: SupabaseClient,
   userId: string
