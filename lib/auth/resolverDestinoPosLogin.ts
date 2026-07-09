@@ -3,27 +3,31 @@
  * com base no papel escolhido (profiles.role) e no estado do cadastro
  * de prestador, se aplicável.
  *
- * Fonte única de verdade para essa decisão — usada pelo callback de OAuth
- * (app/auth/callback/route.ts), pela tela de escolha de papel
- * (app/auth/escolha/page.tsx) e pelo login por senha (hooks/useLoginForm.ts).
+ * Fonte única de verdade para essa decisão — usada por:
+ * - app/auth/callback/route.ts (login via Google)
+ * - hooks/useLoginForm.ts (login/cadastro via e-mail e senha)
  *
- * Antes da consolidação, a mesma lógica estava duplicada em até três lugares,
- * com critérios de "prestador completo" divergentes entre si (um checava só
- * categoria_id, outro categoria_id + nome, e o useLoginForm ainda considerava
- * status === 'pendente' e um `.or(whatsapp.ilike...)` que os demais não tinham).
- * Isso podia gerar decisões inconsistentes dependendo de qual dos pontos de
- * entrada o usuário passasse primeiro.
+ * Antes, a mesma lógica estava duplicada nesses pontos com critérios de
+ * "prestador completo" e "role indefinida" diferentes entre si — o que
+ * podia gerar decisões inconsistentes dependendo de por qual caminho o
+ * usuário passasse primeiro.
  *
- * DECISÃO DE COMPORTAMENTO (2026-07-08): o critério de "prestador completo"
- * usado aqui é: categoria_id + nome preenchidos E status !== 'pendente'.
- * O campo `status` foi mantido (em vez de descartado) porque o useLoginForm
- * original o usava para mandar prestadores pendentes de volta pro /cadastro
- * mesmo com categoria_id/nome já preenchidos. Se essa regra de negócio não
- * for mais desejada, remova a checagem de `status` de isPrestadorCompleto.
+ * NÃO ROTEIA MAIS PARA '/auth/escolha' — essa tela foi removida. Todo
+ * ponto de entrada que pode criar uma conta nova hoje já sabe qual role
+ * atribuir e grava isso via garantirRoleInicial (lib/services/auth.service.ts)
+ * antes de chegar aqui:
+ * - GoogleButton na tela "Área do Profissional" → roleDesejado='prestador'
+ * - handleLogin (useLoginForm), fallback de signUp → 'prestador'
+ * - Botão "Área do cliente" da home → nem passa por aqui, usa ?next= direto
  *
- * O `.or(user_id.eq...,whatsapp.ilike...)` que existia apenas no useLoginForm
- * foi removido por ser resíduo confirmado (não replicado aqui nem em
- * getStatusOnboarding) — toda busca de prestador agora é só por user_id.
+ * `profile` chegando como null/sem role aqui deveria ser residual — um
+ * usuário criado antes desse mecanismo existir, ou (cenário hoje
+ * desligado, mas mantido documentado para religar no futuro) uma conta
+ * com confirmação de e-mail pendente que nunca voltou a logar para que
+ * garantirRoleInicial rodasse. Nesse caso residual, caímos em '/dashboard'
+ * como fallback seguro — useAuth deriva cliente/prestador sozinho pela
+ * existência de um registro em `prestadores`, então o dashboard genérico
+ * se vira sem depender de profiles.role.
  */
 
 export interface ProfileRole {
@@ -38,12 +42,17 @@ export interface PrestadorResumo {
   status: string | null
 }
 
+/**
+ * "Completo" aqui significa: tem os dados mínimos da vitrine preenchidos
+ * (categoria_id + nome) E não está com status='pendente'. Um prestador
+ * pendente com dados preenchidos ainda é tratado como incompleto de
+ * propósito — alinhado com o mesmo critério que useAuth/HeaderBotoes já
+ * usa para decidir entre '/dashboard' e '/cadastro' no header do site.
+ * Divergir desse critério aqui reintroduziria o mesmo tipo de
+ * inconsistência que motivou essa consolidação.
+ */
 export function isPrestadorCompleto(prestador: PrestadorResumo | null): boolean {
-  return !!(
-    prestador?.categoria_id &&
-    prestador?.nome &&
-    prestador?.status !== 'pendente'
-  )
+  return !!(prestador?.categoria_id && prestador?.nome && prestador?.status !== 'pendente')
 }
 
 export function resolverDestinoPosLogin(
@@ -57,13 +66,14 @@ export function resolverDestinoPosLogin(
     return '/dashboard'
   }
 
-  // Escolheu ser prestador mas ainda não completou o cadastro (ou está pendente)
+  // Escolheu ser prestador (ou nasceu como prestador por padrão da tela
+  // de origem) mas ainda não completou o cadastro
   if (profile?.role === 'prestador') {
     return prestador?.origem_tipo === 'curadoria_publica'
       ? `/cadastro?reivindicar=${prestador.id}`
       : '/cadastro'
   }
 
-  // Sem role definido ainda → tela de escolha
-  return '/auth/escolha'
+  // Role residual/ausente — ver nota no topo do arquivo
+  return '/dashboard'
 }

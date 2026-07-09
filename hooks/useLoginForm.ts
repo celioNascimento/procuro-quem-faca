@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
-import { getStatusOnboarding, garantirRoleInicial, getPrestadorResumo } from '@/lib/services/auth.service'
+import { garantirRoleInicial, getPrestadorResumo } from '@/lib/services/auth.service'
 import { resolverDestinoPosLogin } from '@/lib/auth/resolverDestinoPosLogin'
 
 // Esta tela de login é a "Área do Profissional" — qualquer conta criada
@@ -42,14 +42,20 @@ export function useLoginForm() {
   const redirecionarUsuario = async (user: User) => {
     if (!isActive.current) return
     try {
-      const { profile, prestador } = await getStatusOnboarding(supabase, user.id)
+      // garantirRoleInicial só grava se ainda não houver role — nunca
+      // sobrescreve uma escolha existente. Cobre o caso residual de uma
+      // conta criada sem role (ex: se confirmação de e-mail for ligada no
+      // futuro, o signUp em handleLogin não chega a chamar
+      // garantirRoleInicial antes do usuário sair da tela; quando ele
+      // volta para logar de verdade, cai aqui). Hoje, com confirmação de
+      // e-mail desligada, esse branch normalmente já encontra a role
+      // gravada e só devolve o valor existente.
+      const profile = await garantirRoleInicial(supabase, user.id, ROLE_PADRAO_DESTA_TELA)
+      const prestador = await getPrestadorResumo(supabase, user.id)
       if (!isActive.current) return
 
       const destino = resolverDestinoPosLogin(profile, prestador)
 
-      // Pré-preenche o cadastro com email/senha sempre que o destino for
-      // /cadastro (com ou sem ?reivindicar=), já que resolverDestinoPosLogin
-      // é quem decide isso agora — não precisa mais checar origem_tipo aqui.
       if (destino.startsWith('/cadastro') && typeof window !== 'undefined') {
         sessionStorage.setItem('pqf_prefill', JSON.stringify({ email, password }))
       }
@@ -169,6 +175,11 @@ export function useLoginForm() {
       if (!novaConta.session || !novaConta.user) {
         // Projeto com confirmação de e-mail obrigatória: conta foi criada,
         // mas ainda não há sessão para redirecionar automaticamente.
+        // Não chamamos garantirRoleInicial aqui de propósito — a conta
+        // ainda não tem sessão ativa e o RLS de `profiles` provavelmente
+        // exige auth.uid() = id para o upsert funcionar. Quando esse
+        // usuário confirmar o e-mail e voltar para logar de verdade,
+        // redirecionarUsuario (acima) cobre esse caso residual.
         setMensagem('Sucesso: Conta criada! Verifique seu e-mail para confirmar o acesso.')
         return
       }

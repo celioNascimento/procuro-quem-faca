@@ -52,8 +52,7 @@ export async function GET(request: NextRequest) {
       // Quando há roleSugerida, garantirRoleInicial já devolve a role
       // confirmada na mesma requisição do upsert — não refazemos a leitura
       // de profile via getStatusOnboarding, que seria uma request separada
-      // sujeita ao mesmo atraso de propagação que causava a queda em
-      // /auth/escolha logo após a conta ser criada.
+      // sujeita a atraso de propagação logo após a conta ser criada.
       let profile: ProfileRole | null
       let prestador
 
