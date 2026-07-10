@@ -1,3 +1,5 @@
+//app/painel/perfil/page.tsx
+
 'use client'
 import {
   MapPin, ChevronRight, Briefcase, Loader2, CheckCircle2,

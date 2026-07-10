@@ -1,3 +1,5 @@
+//hooks/usePerfilDados.ts
+
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -161,11 +163,18 @@ export function usePerfilDados() {
     }
   }
 
+  // FIX: deleteClienteAccount (service) agora só limpa dados de domínio
+  // (profiles + anonimização de projetos). A remoção real do usuário em
+  // auth.users e o encerramento de sessão são orquestrados aqui, na mesma
+  // ordem de antes — comportamento idêntico ao usuário final, só reorganizado
+  // por responsabilidade entre hook (orquestração) e service (dados).
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== 'EXCLUIR' || !user) return
     setDeleting(true)
     try {
       await ClienteService.deleteClienteAccount(user.id, perfil.whatsapp)
+      await fetch('/api/delete-account', { method: 'POST' })
+      await supabase.auth.signOut()
       window.location.href = '/?conta=excluida'
     } catch {
       setErrorModal({ show: true, title: 'Erro ao excluir', message: 'Não foi possível excluir sua conta agora.' })

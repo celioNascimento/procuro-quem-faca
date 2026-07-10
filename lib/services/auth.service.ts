@@ -1,4 +1,7 @@
+// lib/services/auth.service.ts
+
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import type { ProfileRole, PrestadorResumo } from '@/lib/auth/resolverDestinoPosLogin'
 
 /**
@@ -19,21 +22,20 @@ import type { ProfileRole, PrestadorResumo } from '@/lib/auth/resolverDestinoPos
  *    apenas "existe profile?" faria essa função nunca agir.
  *
  * 2. O upsert já encadeia `.select('role')` na MESMA requisição, em vez de
- *    escrever e depois fazer uma leitura separada (ex: chamar
- *    getStatusOnboarding logo em seguida) torcendo pra já refletir a
- *    escrita. Essa segunda leitura em outra request não tem garantia de
- *    ver o resultado da escrita anterior a tempo — foi exatamente essa
- *    dependência que fazia o usuário cair em /auth/escolha mesmo depois
- *    do upsert ter sido disparado. Retornamos o valor already-known em
- *    memória (o `roleDesejado` que acabamos de gravar) como fallback caso
- *    a leitura de confirmação do upsert falhe por qualquer motivo.
+ *    escrever e depois fazer uma leitura separada. Essa segunda leitura em
+ *    outra request não tem garantia de ver o resultado da escrita anterior
+ *    a tempo — foi exatamente essa dependência que fazia o usuário cair em
+ *    /auth/escolha (hoje removida) mesmo depois do upsert ter sido
+ *    disparado. Retornamos o valor already-known em memória (o
+ *    `roleDesejado` que acabamos de gravar) como fallback caso a leitura de
+ *    confirmação do upsert falhe por qualquer motivo.
  */
 export async function garantirRoleInicial(
-  supabase: SupabaseClient,
+  supabaseClient: SupabaseClient,
   userId: string,
   roleDesejado: string
 ): Promise<ProfileRole> {
-  const { data: profileExistente } = await supabase
+  const { data: profileExistente } = await supabaseClient
     .from('profiles')
     .select('id, role')
     .eq('id', userId)
@@ -43,7 +45,7 @@ export async function garantirRoleInicial(
     return { role: profileExistente.role }
   }
 
-  const { data: upserted, error } = await supabase
+  const { data: upserted, error } = await supabaseClient
     .from('profiles')
     .upsert({ id: userId, role: roleDesejado, updated_at: new Date() })
     .select('role')
@@ -63,10 +65,10 @@ export async function garantirRoleInicial(
  * com o prestador, sem refazer a leitura de profile que já tem em mãos.
  */
 export async function getPrestadorResumo(
-  supabase: SupabaseClient,
+  supabaseClient: SupabaseClient,
   userId: string
 ): Promise<PrestadorResumo | null> {
-  const { data } = await supabase
+  const { data } = await supabaseClient
     .from('prestadores')
     .select('id, categoria_id, nome, origem_tipo, status')
     .eq('user_id', userId)
@@ -80,10 +82,9 @@ export async function getPrestadorResumo(
  * cadastro de prestador, se existir).
  *
  * Recebe o client Supabase como parâmetro em vez de importar um fixo —
- * é o que permite reuso tanto no browser (useLoginForm, /auth/escolha,
- * que usam o client singleton de lib/supabase) quanto no server
- * (app/auth/callback/route.ts, que usa um client criado por requisição
- * via createServerClient).
+ * é o que permite reuso tanto no browser (useLoginForm, que usa o client
+ * singleton de lib/supabase) quanto no server (app/auth/callback/route.ts,
+ * que usa um client criado por requisição via createServerClient).
  *
  * Único ponto de leitura dessas duas tabelas para decisões de onboarding —
  * resolverDestinoPosLogin.ts é o único ponto de decisão a partir do
@@ -95,20 +96,33 @@ export async function getPrestadorResumo(
  * subsequente) + getPrestadorResumo.
  */
 export async function getStatusOnboarding(
-  supabase: SupabaseClient,
+  supabaseClient: SupabaseClient,
   userId: string
 ): Promise<{ profile: ProfileRole | null; prestador: PrestadorResumo | null }> {
   const [{ data: profile }, prestador] = await Promise.all([
-    supabase
+    supabaseClient
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .maybeSingle(),
-    getPrestadorResumo(supabase, userId)
+    getPrestadorResumo(supabaseClient, userId)
   ])
 
   return {
     profile: profile as ProfileRole | null,
     prestador
   }
+}
+
+/**
+ * Logout genérico — não é específico de cliente ou prestador, apesar do
+ * nome (mantido para compatibilidade com o import já existente em
+ * hooks/useHeaderCliente.ts, que é usado tanto na área do cliente quanto
+ * em telas de acompanhamento/avaliação). Usa o client singleton do browser
+ * (lib/supabase), não recebe client por parâmetro como as funções acima —
+ * só faz sentido ser chamada client-side, nunca de um Route Handler.
+ */
+export async function logoutCliente(): Promise<void> {
+  const { error } = await supabase.auth.signOut()
+  if (error) throw error
 }

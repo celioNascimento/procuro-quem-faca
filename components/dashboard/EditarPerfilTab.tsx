@@ -1,4 +1,4 @@
-// components/EditarPerfilTab.tsx
+// components/dashboard/EditarPerfilTab.tsx
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -48,6 +48,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
   const [userLogado, setUserLogado] = useState<User | null>(null)
 
   const [isModalExcluirOpen, setIsModalExcluirOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
 
   // ── Inicialização ────────────────────────────────────────────────────────
@@ -63,7 +64,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         if (!session) return router.push('/login')
         setUserLogado(session.user)
 
-        // Busca perfil + dados base ao mesmo tempo
         const [, , perfilResult] = await Promise.all([
           categorias.carregarGrupos(),
           loc.carregarEstados(),
@@ -77,7 +77,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         const perfilCarregado = perfilResult.data as PrestadorFormData | null
 
         if (perfilCarregado) {
-          // Busca dependentes do perfil ao mesmo tempo
           await Promise.all([
             perfilCarregado.grupo_id
               ? categorias.carregarCategorias(perfilCarregado.grupo_id)
@@ -103,7 +102,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
     }
 
     inicializar()
-  }, []) 
+  }, [])
 
   // ── Handlers de Ação ─────────────────────────────────────────────────────
   const handleUploadFotoProcess = async (file: File) => {
@@ -122,7 +121,14 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
     setUploading(false)
   }
 
+  // FIX: antes só removia a foto do storage e a linha em `prestadores`,
+  // sem chamar /api/delete-account — o usuário continuava existindo em
+  // auth.users, diferente do que já acontecia (corretamente) do lado do
+  // cliente em usePerfilDados.handleDeleteAccount. Alinhado agora: os dois
+  // fluxos de exclusão de conta (cliente e prestador) removem o usuário de
+  // auth.users de verdade via a mesma rota, que já usa service role.
   const handleExcluirContaTotal = async () => {
+    setDeleting(true)
     setStatus('Excluindo tudo...')
     try {
       if (form.formData.foto_perfil) {
@@ -141,11 +147,13 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         if (dbError) throw dbError
       }
 
+      await fetch('/api/delete-account', { method: 'POST' })
       await supabase.auth.signOut()
       router.push('/')
       router.refresh()
     } catch (err) {
       setStatus('❌ Erro na exclusão')
+      setDeleting(false)
     }
   }
 
@@ -169,7 +177,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
       const cidadeSedeNome = loc.listaCidades.find(c => String(c.id) === String(form.formData.cidade_id))?.nome
       const cidadesLimpo = (form.formData.cidades_atendidas || []).filter(c => c !== cidadeSedeNome)
 
-      // Verifica se todos os campos obrigatórios da vitrine estão preenchidos
       const camposObrigatoriosOk =
         !!form.formData.nome &&
         !!form.formData.foto_perfil &&
@@ -179,15 +186,12 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         !!form.formData.grupo_id &&
         !!form.formData.categoria_id
 
-      // Só "promove" o status para perfil_completo se ainda não passou por outra etapa do funil de ativação.
-      // Evita sobrescrever estados como 'respondeu_positivo' / 'sem_whatsapp' que vêm de outro fluxo.
       const statusAtual = form.formData.ativacao_status
       const novoAtivacaoStatus =
         camposObrigatoriosOk && (statusAtual === 'nao_enviado' || !statusAtual)
           ? 'perfil_completo'
           : statusAtual
 
-      // 1. Montamos os dados desestruturando o 'id' para fora do restante (restData)
       const { id, ...restData } = {
         ...form.formData,
         cidade_id: form.formData.cidade_id || null,
@@ -200,7 +204,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         ativacao_status: novoAtivacaoStatus,
       }
 
-      // 2. Se houver ID (edição), anexamos ele de volta. Se não (criação), mandamos sem ID.
       const finalPayload = id ? { id, ...restData } : restData;
 
       const { error } = await supabase
@@ -212,7 +215,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
       if (error) throw error
       onSalvar?.()
 
-      // Reflete o novo status no estado local, pra UI já refletir sem precisar recarregar o perfil
       if (novoAtivacaoStatus !== statusAtual) {
         form.set({ ativacao_status: novoAtivacaoStatus })
       }
@@ -253,18 +255,16 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
 
         <form onSubmit={handleSalvar} className="grid grid-cols-1 md:grid-cols-12 gap-8">
 
-          {/* ── Coluna Esquerda: Foto ── */}
           <div className="col-span-1 md:col-span-4 space-y-6">
             <FotoUpload
               fotoUrl={form.formData.foto_perfil}
               uploading={uploading}
               tentouEnviar={tentouEnviar}
               onChange={handleUploadFotoProcess}
-              variant="dashboard" // Estilo levemente diferente configurado no componente
+              variant="dashboard"
             />
           </div>
 
-          {/* ── Coluna Direita: Campos ── */}
           <div className="col-span-1 md:col-span-8 space-y-6">
 
             {userLogado && (
@@ -323,7 +323,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               onToggleCidade={(nome) => form.toggleItem(nome, 'cidades_atendidas')}
             />
 
-            {/* Ações Finais */}
             <div className="space-y-4 pt-4">
               {status && (
                 <div className={`w-full p-4 rounded-2xl text-[10px] font-black text-center uppercase tracking-wider animate-in fade-in ${status.startsWith('❌') ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-600'

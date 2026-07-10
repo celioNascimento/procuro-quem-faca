@@ -1,3 +1,5 @@
+// app/acompanhamento/[token]/page.tsx
+
 'use client'
 import { use } from 'react'
 import { useAcompanhamento } from '@/hooks/useAcompanhamento'

@@ -1,3 +1,5 @@
+//hooks/useHeaderCliente.ts
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { logoutCliente } from '@/lib/services/auth.service'

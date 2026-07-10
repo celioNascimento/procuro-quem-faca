@@ -1,3 +1,5 @@
+// components/meus-servicos/PainelDoCliente.tsx
+
 'use client'
 import { useState } from 'react'
 import { User, Clock, Loader2, CheckCircle2, ClipboardList, LayoutGrid } from 'lucide-react'
@@ -9,6 +11,11 @@ import ZoomImageModal from './ZoomImageModal'
 import { usePainelCliente } from '@/hooks/usePainelCliente'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
+// 'concluido' aqui é só o identificador interno do filtro de UI — não é o
+// valor de status gravado no banco. O valor real em portfolio_projetos.status
+// é 'finalizado' (ver 03-banco-de-dados.md). As duas coisas são independentes
+// de propósito: o filtro pode se chamar como quiser, desde que a comparação
+// com servico.status (mais abaixo) use o valor real do banco.
 type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido'
 
 // ── Config das linhas de filtro ────────────────────────────────────────────────
@@ -71,10 +78,14 @@ export default function PainelDoCliente() {
   } = usePainelCliente()
 
   // ── Grupos por status ────────────────────────────────────────────────────────
+  // FIX: 'finalizado' é o valor real gravado em portfolio_projetos.status.
+  // 'concluido' nunca existiu como valor de banco — era um bug que fazia
+  // projetos finalizados caírem silenciosamente no grupo "pendentes"
+  // (fallback do getOnAceitar) e sumirem da aba "Concluídos".
   const emRegistro  = servicos.filter(s => s.status === 'em_registro')
   const pendentes   = servicos.filter(s => s.status === 'pendente')
   const emAndamento = servicos.filter(s => s.status === 'em_execucao')
-  const concluidos  = servicos.filter(s => s.status === 'concluido')
+  const concluidos  = servicos.filter(s => s.status === 'finalizado')
   const totalPendentes = pendentes.length + emRegistro.length
 
   const contadores: Record<Filtro, number> = {
@@ -85,6 +96,8 @@ export default function PainelDoCliente() {
   }
 
   // ── Serviços filtrados ────────────────────────────────────────────────────────
+  // Aqui filtroAtivo compara com o `valor` do próprio FILTROS (estado de UI),
+  // não com servico.status — não precisa mudar, já usava os arrays corrigidos acima.
   const servicosFiltrados = (() => {
     if (filtroAtivo === 'pendente')    return [...pendentes, ...emRegistro]
     if (filtroAtivo === 'em_execucao') return emAndamento
@@ -94,14 +107,14 @@ export default function PainelDoCliente() {
 
   const getModo = (status: string) => {
     if (status === 'em_execucao') return 'andamento' as const
-    if (status === 'concluido')   return 'concluido' as const
+    if (status === 'finalizado')  return 'concluido' as const  // FIX: comparava com 'concluido', valor inexistente no banco
     return 'pendente' as const
   }
 
   const getOnAceitar = (servico: any) => {
     if (servico.status === 'em_execucao')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
-    if (servico.status === 'concluido')
+    if (servico.status === 'finalizado')  // FIX: comparava com 'concluido', valor inexistente no banco
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
     return () => handleAceitar(servico)
   }
