@@ -1,3 +1,5 @@
+//components/perfil/FotoUpload.tsx
+
 'use client'
 
 import { useRef } from 'react'
