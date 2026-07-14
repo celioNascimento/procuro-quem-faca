@@ -1,3 +1,5 @@
+//components/perfil/SecaoDadosPessoais.tsx
+
 'use client'
 
 interface SecaoDadosPessoaisProps {

@@ -1,3 +1,5 @@
+//components/profile/PerfilSobre.tsx
+
 import type { PrestadorPerfil } from '@/types/perfil'
 
 interface Props {

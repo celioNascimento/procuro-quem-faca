@@ -1,3 +1,5 @@
+//components/profile/FotosEvidenciaPicker.tsx
+
 'use client'
 import { useRef } from 'react'
 import { MAX_ARQUIVOS } from '../../lib/uploadEvidencias'

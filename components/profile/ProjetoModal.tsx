@@ -1,3 +1,5 @@
+//components/profile/ProjetoModal.tsx
+
 'use client'
 import { X, Share2, CheckCircle2, Activity, User, Camera } from 'lucide-react'
 import type { ProjetoPerfil } from '@/types/perfil'

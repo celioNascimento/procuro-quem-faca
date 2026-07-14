@@ -1,3 +1,5 @@
+//components/perfil/SecaoTermos.tsx
+
 'use client'
 
 interface SecaoTermosProps {

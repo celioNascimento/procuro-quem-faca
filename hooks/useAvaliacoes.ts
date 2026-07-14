@@ -1,3 +1,5 @@
+//hooks/useAvaliacoes.ts
+
 import { useState, useEffect } from 'react'
 import { fetchAvaliacoesPorPrestador } from '@/lib/services/avaliacao.service'
 import { normalizar, calcularStats } from '@/lib/utils/avaliacao.utils'
