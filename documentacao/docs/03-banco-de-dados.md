@@ -34,11 +34,11 @@ auth.users ── anunciantes ── anuncios ── anuncios_metricas_diarias
 | Tabela | Propósito |
 |---|---|
 | `prestadores` | Perfil de prestador de serviço — dados profissionais, status, ativação |
-| `perfis` | Dados complementares de perfil (nome, whatsapp, bio, localização) |
-| `profiles` | Dados complementares de perfil — **ver observação de duplicação abaixo** |
+| `perfis` | Dados complementares de perfil — **provável legado, ver observação abaixo** |
+| `profiles` | Dados complementares de perfil, **incluindo `role`** (`cliente`/`prestador`) — confirmada como tabela ativa |
 | `perfis_admin` | Controle de acesso administrativo (`owner`, `moderator`, `editor`) |
 
-> ⚠️ **Duplicação a investigar:** `perfis` e `profiles` parecem cobrir o mesmo propósito (dados de perfil vinculados a `auth.users`), com nomenclatura PT/EN. Provável resquício de refatoração incompleta. Antes de criar novos campos de perfil, confirmar qual tabela está ativa em produção — só uma deve ser a fonte de verdade.
+> ✅ **Resolvido: `profiles` é a tabela ativa.** Confirmado ao revisar o fluxo de onboarding (`app/auth/callback/route.ts`, `hooks/useLoginForm.ts`) — ambos leem/escrevem em `profiles.role` ativamente, campo que não existe em `perfis`. `perfis` não apareceu em nenhum fluxo de código revisado até agora. **Ação recomendada:** confirmar no Supabase se `perfis` tem alguma linha de dado real ou uso residual antes de descontinuar; se estiver vazia/não referenciada, remover do schema evita confusão futura sobre qual tabela usar para novos campos de perfil.
 
 ### `prestadores`
 
@@ -47,10 +47,12 @@ Tabela central do domínio profissional.
 **Campos-chave:**
 - `status` (`pendente` | `ativo` | outros) — controla se o prestador aparece publicamente e se é redirecionado para completar cadastro
 - `ativacao_status` — funil de ativação via WhatsApp: `nao_enviado` → `enviado` → `respondeu_positivo`/`respondeu_negativo`/`sem_whatsapp` → `perfil_completo` → `avaliacao_recebida`
-- `origem_tipo` — `registro_direto` (auto-cadastro) vs. curadoria manual inicial
-- `slug` — usado na URL pública (`/p/[slug]`)
+- `origem_tipo` — `registro_direto` (auto-cadastro), `curadoria_publica` (curadoria manual inicial), `reivindicado`, e **`vitrine`** (ver nota abaixo — valor de prioridade máxima na busca, ainda a documentar formalmente)
+- `slug` — usado na URL pública (`/[slug]`)
 - `bloqueado` + `motivo_bloqueio` — moderação
 - `verificado` — selo de confiança
+
+> ⚠️ **`origem_tipo: 'vitrine'`** — encontrado em uso real no hook `usePrestadores` (prestadores com esse valor aparecem sempre no topo da busca, sem passar pelo filtro de termo). Não havia constraint/check visível para esta coluna no schema levantado, então não há validação de banco impedindo outros valores livres. Significado exato de negócio (destaque pago? curadoria editorial?) ainda não confirmado — ver `07-roadmap.md`.
 
 **Índices:** `slug` (unique), `user_id` (unique — um prestador por usuário), `ativacao_status`.
 
@@ -81,7 +83,7 @@ Prestadores referenciam `cidade_id` e `regiao_id`; também têm `cidades_atendid
 | `portfolio_curtidas` | Curtidas de usuários autenticados em projetos (portfólio público) |
 | `projeto_logs` | Log de ações realizadas em um projeto (auditoria) |
 
-**`portfolio_projetos.status`** (inferido do código): `em_registro` → `pendente` → `em_execucao` → `finalizado`.
+**`portfolio_projetos.status`** — valores confirmados em uso real no código: `em_registro` → `pendente` → `em_execucao` → `finalizado`. **`'concluido'` NÃO é um valor válido** — foi encontrado como bug em múltiplos pontos do frontend (ver `05-modulos.md`, seção Painel do Cliente) comparando contra esse valor inexistente; o valor correto gravado no banco é sempre `finalizado`.
 
 **`avaliacao_token`** — UUID único por projeto, usado para o cliente acessar a página de avaliação sem precisar de login.
 
@@ -102,11 +104,13 @@ Prestadores referenciam `cidade_id` e `regiao_id`; também têm `cidades_atendid
 - `resposta_prestador` — direito de resposta do prestador
 - Trigger `trigger_bloquear_auto_avaliacao` — impede que o próprio prestador se autoavalie
 
+**Fluxo de contestação confirmado em código** (`FormularioAvaliacao.tsx`, ativo): ao marcar "Reportar problema / Solicitar Garantia", a avaliação é gravada com `em_disputa: true`, `visivel: false` (nota forçada a mínima), e uma linha correspondente é criada em `contestacoes` com a descrição e fotos de evidência (via `FotosEvidenciaPicker`, upload múltiplo limitado por `MAX_ARQUIVOS`). Contestações ficam ocultas do público até mediação/resposta.
+
 > 💡 **Nota para o roadmap de avaliação bidirecional:** a estrutura atual de `avaliacoes` é unidirecional (cliente → prestador). Implementar "prestador avalia cliente" exigirá uma nova tabela (ex: `avaliacoes_clientes`) ou um campo `tipo_avaliacao` nesta mesma tabela invertendo `cliente_id`/`prestador_id` como avaliador/avaliado — a decidir em `07-roadmap.md`.
 
 ### View: `prestadores_ranqueados`
 
-View que agrega `prestadores` + média de `avaliacoes.nota` (`media_interna`) + contagem de projetos (`total_projetos`), filtrando apenas `status = 'ativo'` e ordenando por nota e volume de projetos. Base provável do algoritmo de ranking/busca.
+View que agrega `prestadores` + média de `avaliacoes.nota` (`media_interna`) + contagem de projetos (`total_projetos`), filtrando apenas `status = 'ativo'` e ordenando por nota e volume de projetos. Base provável do algoritmo de ranking/busca — **porém o frontend (`usePrestadores`) não usa essa view hoje**, recalculando médias em JS a partir de dados brutos (ver `05-modulos.md`).
 
 ### Anúncios
 
@@ -137,13 +141,15 @@ O PQF tem um sistema de anúncios com **leilão de lance (CPC) e segmentação g
 
 **`anuncios_metricas_diarias`** agrega `impressoes`, `cliques` e `custo_total` por `anuncio_id` + `data_referencia`, permitindo relatório histórico diário sem recalcular a partir de eventos brutos.
 
-> 💡 Este sistema de anúncios é uma funcionalidade de monetização relevante o suficiente para merecer sua própria seção detalhada — considerar um `08-sistema-anuncios.md` dedicado se a complexidade crescer (lógica de leilão, fallback quando não há anúncio pago elegível, integração AdSense).
+**Status atual de uso:** o frontend (`AdCard.tsx`) sempre recebe `anuncio={null}` nos pontos de chamada revisados — a infraestrutura de leilão existe e está pronta, mas o "encanamento" de popular esse campo a partir de uma query real ainda não foi implementado. Decisão de produto documentada em `05-modulos.md`: por ora, o espaço de anúncio funciona como CTA de contato direto via WhatsApp.
 
 ### Infraestrutura / cross-cutting
 
 | Tabela | Propósito |
 |---|---|
 | `logs_atividades` | Log genérico de atividades do sistema (ação, entidade, IP, usuário) |
+
+**⚠️ `projeto_mensagens`** — tabela referenciada por múltiplas versões de um componente de chat em tempo real (`ProjetoTimeline`, em pelo menos 3 pontos do código revisados) que **não será implementado** (decisão de produto — WhatsApp já cobre essa necessidade). Se essa tabela existir de fato no banco, é candidata a remoção junto com o código — ver `07-roadmap.md`. Uma verificação (`grep`) no código-fonte não encontrou mais nenhuma referência ativa a `projeto_mensagens`, sugerindo que os componentes que a usavam já não fazem parte do projeto atual.
 
 ## Row Level Security (RLS) — padrão observado
 

@@ -95,23 +95,23 @@ components/
 ├── home/              # Landing page
 ├── location/          # Seleção/detecção de localização
 ├── meus-servicos/      # Serviços do cliente
-├── perfil/, profile/  # Perfil (nota: dois diretórios — ver observação abaixo)
+├── perfil/, profile/  # Perfil — ver observação abaixo
 ├── shared/            # Compartilhados entre domínios (ex: ModalFotoBase)
 ├── skeletons/         # Loading states
 ├── ui/                # Primitivos de UI (botões, inputs genéricos)
 └── vistas/            # Views compostas
 ```
 
-> **Observação:** existem `components/perfil/` e `components/profile/` simultaneamente — provável duplicação histórica (PT/EN) a ser consolidada. Vale revisar qual é o ativo antes de adicionar novos arquivos em qualquer um dos dois.
+> ✅ **Resolvido: `components/perfil/` e `components/profile/` NÃO são duplicação.** Nota anterior estava incorreta — após revisar o conteúdo completo das duas pastas, elas têm propósitos distintos: `perfil/` mistura componentes de área logada do **cliente** (`HeaderCliente`, `CardPerfilCliente`) com as seções reutilizáveis do formulário de **prestador** (`SecaoDadosPessoais`, `SecaoLocalizacao`, `SecaoOQueVoceFaz`, `SecaoTermos`, `FotoUpload`), usadas tanto no Cadastro quanto na Edição de Perfil. `profile/` é especificamente o **perfil público** e módulo de **avaliação** (`PerfilHero`, `PerfilSobre`, `PortfolioGrid`, `ProjetoModal`, `FormularioAvaliacao`, `AvaliacoesTab`). É nomenclatura inconsistente (uma pasta em português, outra em inglês) para conjuntos de responsabilidade diferentes — não candidata a fusão. Item removido do roadmap de limpeza.
 
 ## `hooks/` — Um hook por responsabilidade
 
 Cada hook tem uma responsabilidade única e nomeada pelo domínio que orquestra:
 
-- **Autenticação/sessão:** `useAuth`, `useSession`, `useLoginForm`, `useLogout`
+- **Autenticação/sessão:** `useAuth`, `useSession`, `useLoginForm`, `useLogout`, `useGoogleAuth`
 - **Perfil/prestador:** `usePerfilPrestador`, `usePerfilStatus`, `usePerfilUI`, `usePrestadorForm`, `usePrestadores`
 - **Cliente:** `usePerfilCliente`, `usePerfilDados`, `usePainelCliente`, `useServicosCliente`
-- **Portfólio/avaliação:** `useUploadWizard`, `usePortfolioDashboard`, `useAvaliacao`, `useAvaliacoes`, `useSubmitAvaliacao`, `useComentariosFoto`
+- **Portfólio/avaliação:** `useUploadWizard`, `usePortfolioDashboard`, `useAvaliacao` (função `useAvaliar`), `useAvaliacoes`, `useSubmitAvaliacao`, `useComentariosFoto`
 - **Suporte/UX:** `useCookieConsent`, `useLog`, `useSlides`, `useSugestoes`, `useCompartilharPerfil`, `useSlugCheck`
 - **Localização:** `useLocalizacao`, `useHeaderCliente` (geolocalização silenciosa)
 - **Categorias/anúncios:** `useCategorias`, `useAdContext`
@@ -122,6 +122,7 @@ Cada hook tem uma responsabilidade única e nomeada pelo domínio que orquestra:
 ```
 lib/
 ├── ads/          # Lógica de segmentação de anúncios, fallbacks
+├── auth/          # resolverDestinoPosLogin.ts — decisão pura de destino pós-login
 ├── contexts/     # React Contexts (ex: LocationContext)
 ├── db/           # Funções de acesso a tabelas específicas (acessos, logs, geografia)
 ├── scripts/      # Scripts auxiliares (ex: AdSense)
@@ -131,7 +132,7 @@ lib/
 
 **`lib/db/` vs `lib/services/`** — distinção importante:
 - `db/` → acesso direto a tabelas de infraestrutura/cross-cutting (logs, cookies, geografia, acessos)
-- `services/` → operações de domínio de produto, orquestradas por hooks (auth, avaliação, cliente, portfolio)
+- `services/` → operações de domínio de produto, orquestradas por hooks (auth, avaliação, cliente, portfolio, painel do cliente)
 
 ## `types/` — Tipos compartilhados por domínio
 
@@ -151,3 +152,4 @@ Configurações estáticas versionadas no código (não no banco), como `categor
 - Preferência por **reescrita completa de arquivo** em vez de diffs parciais, especialmente em sessões via mobile
 - Comentários `// FIX: ...` deixados no código explicando bugs corrigidos e o motivo — útil para não reintroduzir o mesmo bug
 - Nomenclatura em português para domínio de negócio (`prestadores`, `avaliacao`, `cadastro`), inglês para termos técnicos genéricos
+- Quando duas versões do mesmo componente coexistem (`.js` legado + `.tsx` ativo, ex: `FormularioAvaliacao`), a versão `.tsx` que integra hooks/services do padrão arquitetural acima é a ativa — a `.js` costuma ser um protótipo anterior com lógica inline

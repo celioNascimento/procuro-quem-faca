@@ -26,6 +26,18 @@ Um único formulário multiuso que cobre **três cenários diferentes**, decidid
 | `useLocalizacao` | Carrega estados, regiões e cidades em cascata |
 | `useSlugCheck` | Verifica disponibilidade do slug em tempo real conforme o usuário digita |
 
+### Subcomponentes de seção (`components/perfil/`)
+
+Reaproveitados tanto no Cadastro quanto na Edição de Perfil (dashboard) — inputs controlados simples, sem lógica própria de negócio, recebendo estado e callbacks via props:
+
+| Componente | Campos |
+|---|---|
+| `FotoUpload` | Upload de foto de perfil, preview, dois variantes visuais (`cadastro` mais espaçoso, `dashboard` mais compacto) |
+| `SecaoDadosPessoais` | Nome, slug (com indicador de disponibilidade em tempo real), WhatsApp, bio |
+| `SecaoOQueVoceFaz` | Grupo de atuação, categoria/profissão principal, habilidades extras (chips togglable) |
+| `SecaoLocalizacao` | Estado, região, cidade sede, bairro, cidades vizinhas atendidas (chips) |
+| `SecaoTermos` | Checkboxes de aceite de termos e política de privacidade |
+
 ### Fluxo de inicialização (`useEffect` com `inicializadoRef` para rodar uma única vez)
 
 ```
@@ -60,24 +72,15 @@ supabase.auth.signUp({ email, password: senha, ... })
 ```
 Se o email já existe (`already registered`), tenta login automático com a senha informada em vez de mostrar erro — só falha de verdade se a senha estiver incorreta, caso em que mostra modal orientando ir para `/login`.
 
-> 💡 **Isso é um segundo ponto de criação de conta**, além da tela `/login` documentada em [`04-autenticacao.md`](./04-autenticacao.md). Vale adicionar uma nota lá cruzando essa informação: existem dois lugares onde uma conta nova pode ser criada (login direto, ou auto-cadastro dentro do formulário de prestador).
+> 💡 **Isso é um segundo ponto de criação de conta**, além da tela `/login` documentada em [`04-autenticacao.md`](./04-autenticacao.md).
 
 ### Validação e progresso
 
 `calcularProgresso()` roda a cada render, verificando 9 condições (nome, whatsapp, categoria, cidade, foto, termos, privacidade, slug disponível, senha válida se aplicável) e retorna uma porcentagem — usada tanto na barra de progresso do header quanto para habilitar/desabilitar o botão de submit (exige 100%).
 
-**Campos obrigatórios:**
-- Nome (>3 caracteres)
-- WhatsApp (≥10 dígitos)
-- Grupo, categoria e cidade selecionados
-- Foto de perfil (upload via `fazerUploadFoto`, limite de 10MB)
-- Aceite de termos e privacidade (checkboxes separados)
-- Slug disponível
-- Senha válida (só se estiver criando conta ou trocando senha)
-
 ### Upload de foto
 
-`fazerUploadFoto(file, userId, fotoAntigaUrl?)` — função em `lib/uploadFoto.ts` (não detalhada aqui). Trata erro de arquivo grande (`TOO_LARGE`) com modal específico mostrando o tamanho real do arquivo.
+`fazerUploadFoto(file, userId, fotoAntigaUrl?)` — função em `lib/uploadFoto.ts`. Trata erro de arquivo grande (`TOO_LARGE`) com modal específico mostrando o tamanho real do arquivo.
 
 ### Submit — o que acontece na ordem
 
@@ -87,22 +90,20 @@ Se o email já existe (`already registered`), tenta login automático com a senh
 3. Se logado e trocando senha → updateUser({ password })
 4. Limpa nome de cidades_atendidas duplicando a cidade-sede
 5. Se reivindicando → deleta qualquer outro registro de prestador do mesmo user_id
-   (evita um usuário ficar com 2 prestadores — reforça a constraint de índice único)
 6. upsert em `prestadores` com status: 'ativo', origem_tipo calculado
 7. Se não estava logado → signInWithPassword (garante sessão ativa)
 8. Redireciona para /dashboard (hard redirect via window.location.href, não router.push)
 ```
 
-**Nota técnica:** o uso de `window.location.href` em vez de `router.push` no redirecionamento final é provavelmente proposital — força reload completo da aplicação, garantindo que o `useAuth` reprocesse a sessão do zero (evita estado de `role` desatualizado logo após criar o prestador).
+**Nota técnica:** o uso de `window.location.href` força reload completo, garantindo que o `useAuth` reprocesse a sessão do zero.
 
 ### Exclusão de perfil
 
-Botão de excluir (dentro de `CadastroCard`, visível em modo edição/reivindicação) abre `ModalConfirmacao` → `handleExcluirPerfil` deleta o registro de `prestadores` diretamente (cascata via FK cuida de fotos/projetos/avaliações vinculados, conforme `on delete CASCADE` documentado em `03-banco-de-dados.md`).
+Botão de excluir (dentro de `CadastroCard`) abre `ModalConfirmacao` → `handleExcluirPerfil` deleta o registro de `prestadores` diretamente (cascata via FK cuida de fotos/projetos/avaliações vinculados).
 
 ### Pontos de atenção
 
-- **Tipagem `as any`** em `form.set({ nome: nomeSocial, slug: form.handleNomeChange(nomeSocial) as any })` — indica que `handleNomeChange` provavelmente tem efeito colateral (atualiza state internamente) mas também retorna um valor usado aqui de forma não totalmente tipada. Vale revisar a assinatura desse handler se for mexer nessa função.
-- **Regra de bloqueio de recadastro** (`perfilExistente.status !== 'pendente'`) depende de `status`, que é o mesmo campo usado pelo `useAuth`/`HeaderBotoes` para decidir se redireciona para `/cadastro` ou `/dashboard` — os dois pontos do código precisam continuar sincronizados quanto ao significado de `pendente`.
+- **Regra de bloqueio de recadastro** (`perfilExistente.status !== 'pendente'`) depende de `status`, o mesmo campo usado pelo `useAuth`/`HeaderBotoes`.
 
 ---
 
@@ -120,9 +121,7 @@ app/(dashboard)/dashboard/
 
 ### `layout.tsx` — `DashboardLayout`
 
-Envolve toda a área `(dashboard)`. Particularidade: o `Header` recebe `href` dinâmico via `?origem=` na query string (o mesmo `origem` que o `HeaderBotoes` do site público monta ao gerar o link "Meu Painel" — ver [`04-autenticacao.md`](./04-autenticacao.md)). Isso permite que "voltar" no dashboard leve o prestador de volta à página exata de onde ele veio, não sempre para a home.
-
-Usa `Suspense` porque `useSearchParams()` exige isso no App Router.
+O `Header` recebe `href` dinâmico via `?origem=` na query string — permite que "voltar" no dashboard leve o prestador de volta à página exata de onde ele veio.
 
 ### `usePerfilStatus` — gatekeeper do dashboard
 
@@ -130,281 +129,228 @@ Usa `Suspense` porque `useSearchParams()` exige isso no App Router.
 cadastroCompleto = !!(prestador?.nome?.trim() && prestador?.whatsapp && prestador?.categoria_id)
 ```
 
-Três campos mínimos definem "cadastro completo": nome, whatsapp e categoria. Note que isso é **mais permissivo** que a validação de 100% exigida no formulário de cadastro (`calcularProgresso`) — um prestador pode ter `cadastroCompleto: true` aqui sem ter preenchido foto, bio, termos, etc. novamente (esses já foram exigidos na criação inicial do registro `ativo`).
-
-Também retorna `slug`, usado para montar o link "Ver meu perfil" (`/${slug}`, abre em nova aba).
+Três campos mínimos — mais permissivo que a validação de 100% do cadastro original.
 
 ### `perfil/page.tsx` — `PerfilPage`
 
-Tela principal onde o prestador passa o dia a dia. Duas abas:
-
 | Aba | Componente | Condição de bloqueio |
 |---|---|---|
-| **Meus Projetos** (padrão, abre primeiro) | `PortfolioDashboardTab` | Bloqueada se `!cadastroCompleto` |
+| **Meus Projetos** (padrão) | `PortfolioDashboardTab` | Bloqueada se `!cadastroCompleto` |
 | **Dados Profissionais** | `EditarPerfilTab` | Nunca bloqueada |
 
-**Lógica de redirecionamento automático:** se `!validando && !cadastroCompleto`, força a aba para `perfil` mesmo que o padrão seja `portfolio` — garante que um prestador com cadastro incompleto sempre caia primeiro na tela de completar dados, não numa aba de portfólio vazia e bloqueada.
-
-Terceiro item na barra de navegação (não é bem uma "aba", é um link externo): **"Ver meu perfil"**, só aparece quando `slug` existe e abre `/${slug}` em nova guia — deixa o prestador conferir como o perfil público está aparecendo sem sair do dashboard.
+Se `!validando && !cadastroCompleto`, força a aba para `perfil`. Terceiro item "Ver meu perfil" (link externo, `/${slug}`) só aparece quando `slug` existe.
 
 ### Aba "Dados Profissionais" — `EditarPerfilTab.tsx`
 
-Reaproveita quase integralmente os mesmos hooks e subcomponentes do `FormularioCadastro` (`usePrestadorForm`, `useCategorias`, `useLocalizacao`, `useSlugCheck`, `SecaoOQueVoceFaz`, `SecaoDadosPessoais`, `SecaoLocalizacao`, `FotoUpload`) — é essencialmente o mesmo formulário, sem a parte de criação de conta (usuário já está logado) e sem o fluxo de reivindicação.
+Reaproveita os mesmos hooks e subcomponentes de seção do `FormularioCadastro`.
 
-**Particularidade importante — promoção automática do funil de ativação:**
-
+**Promoção automática do funil de ativação:**
 ```typescript
 const novoAtivacaoStatus =
   camposObrigatoriosOk && (statusAtual === 'nao_enviado' || !statusAtual)
     ? 'perfil_completo'
     : statusAtual
 ```
+Não sobrescreve estados que vieram de outro fluxo (`respondeu_positivo`, `sem_whatsapp`).
 
-Ao salvar, se todos os campos obrigatórios da vitrine estiverem preenchidos **e** o prestador ainda não passou por nenhuma etapa do funil de ativação via WhatsApp (`ativacao_status` ainda é `nao_enviado`), o sistema promove automaticamente para `perfil_completo`. Isso **não sobrescreve** estados que já vieram de outro fluxo (`respondeu_positivo`, `sem_whatsapp`, etc.) — a condição protege contra regressão do funil de ativação documentado em [`03-banco-de-dados.md`](./03-banco-de-dados.md).
-
-**Exclusão de conta** (`handleExcluirContaTotal`) vai além do `EditarPerfilTab` de cadastro: também remove a foto do Storage manualmente (extraindo o path da URL pública) antes de deletar o registro e fazer `signOut()` — limpeza mais completa que o `handleExcluirPerfil` do formulário de cadastro original, que só deleta a linha do banco.
+**✅ Exclusão de conta corrigida (simétrica com o cliente):** `handleExcluirContaTotal` remove a foto do Storage, deleta a linha em `prestadores`, **e agora também chama `/api/delete-account`** (remoção real do usuário em `auth.users` via service role) + `signOut()`. Antes dessa correção, o prestador ficava órfão em `auth.users` mesmo após "excluir a conta" — lacuna de LGPD real, já corrigida. Ver também Painel do Cliente, que já fazia essa chamada corretamente.
 
 ### Aba "Meus Projetos" — `PortfolioDashboardTab.tsx`
 
-Orquestra `usePortfolioDashboard` e alterna entre duas visões:
+Orquestra `usePortfolioDashboard`, alterna entre visão lista (`PrestadorSideCard` + `DashboardHeader` + grid de `ProjetoCard`/`EstadoVazio`) e visão wizard (`PrestadorSideCard` + `UploadWizardContainer`, com `key` por projeto para reset de estado).
 
-**Visão lista** (`showWizard === false`):
-```
-PrestadorSideCard (coluna fixa)  +  DashboardHeader (stats) → EstadoVazio ou grid de ProjetoCard
-```
-
-**Visão wizard** (`showWizard === true`):
-```
-PrestadorSideCard (coluna fixa)  +  UploadWizardContainer (key por projeto)
-```
-
-| Subcomponente | Papel |
-|---|---|
-| `PrestadorSideCard` | Card fixo na coluna esquerda com foto, nome, categoria, cidade, WhatsApp e média de avaliação do prestador — sempre visível, tanto na lista quanto durante edição de projeto |
-| `DashboardHeader` | Banner azul com contagem total de projetos, concluídos e ativos + botão "Adicionar Trabalho" |
-| `EstadoVazio` | Empty state clicável — mesmo clique de `onNovoProjeto` no header |
-| `ProjetoCard` | Card de cada projeto na grade, com thumbnail (foto de maior `ordem`, i.e. a mais recente/"depois"), contador de fotos, e badge de status visual |
-
-**Lógica de status visual em `ProjetoCard` (`getStatusConfig`)** — mapeia `status` do projeto + presença de avaliação em 5 rótulos diferentes:
-
-| `status` do projeto | `avaliacoes.length > 0`? | Label exibido |
-|---|---|---|
-| `em_registro` | — | Rascunho |
-| `pendente` | — | Aguard. cliente |
-| `em_execucao` | — | Em progresso |
-| `finalizado` | Sim | Concluído |
-| `finalizado` | Não | Aguard. avaliação |
-
-Isso é uma **derivação de UI** sobre os dois campos de banco (`portfolio_projetos.status` + existência de linha em `avaliacoes`) — não existe um status de banco chamado "aguardando avaliação" diretamente; é calculado no frontend.
-
-**Grid ímpar:** quando o número de projetos é ímpar, um botão "+" extra preenche o espaço vazio no grid de 2 colunas — detalhe de polimento visual.
+**`getStatusConfig` (`ProjetoCard`)** — mapeia `status` + presença de avaliação em 5 rótulos: Rascunho (`em_registro`), Aguard. cliente (`pendente`), Em progresso (`em_execucao`), Concluído (`finalizado` + avaliado), Aguard. avaliação (`finalizado` sem avaliação). Derivação de UI, não existe status de banco "aguardando avaliação".
 
 ### ✅ Confirmado: `UploadWizard.tsx` é seguro para deletar
 
-`PortfolioDashboardTab.tsx` já importa e usa `UploadWizardContainer` (não o `UploadWizard.tsx` antigo):
+`PortfolioDashboardTab.tsx` já usa `UploadWizardContainer` (via `key={projetoParaEdicao?.id || 'novo'}`), não o `UploadWizard.tsx` antigo — o bug de loop que motivou a reescrita foi corrigido de ponta a ponta.
 
-```typescript
-import { UploadWizardContainer } from './wizard/UploadWizardContainer'
-// ...
-<UploadWizardContainer key={projetoParaEdicao?.id || 'novo'} ... />
-```
+### Refatoração do wizard em subcomponentes
 
-O uso de `key={projetoParaEdicao?.id || 'novo'}` no componente pai é exatamente o mecanismo de remontagem mencionado no comentário do `UploadWizardContainer.tsx` — confirma que a correção do bug de loop foi aplicada de ponta a ponta.
-
-### Refatoração do wizard em subcomponentes — mais clara agora
-
-`PrestadorCardHorizontal.tsx` tem um comentário de uso explícito no próprio arquivo:
-
-```typescript
-/**
- * Card horizontal do prestador exibido ACIMA do WizardForm.
- * Substitui a coluna esquerda que ficava dentro do wizard.
- *
- * Uso em PortfolioDashboardTab (ou onde o wizard é montado):
- *   <PrestadorCardHorizontal ... />
- *   <WizardForm hookData={hookData} />
- */
-```
-
-Isso confirma a intenção: **substituir o cabeçalho azul inline** do `UploadWizardContainer.tsx` (com WhatsApp/nome/título do cliente sobre fundo gradiente azul) por um layout mais simples — um card horizontal com dados do *prestador* (não do cliente) acima do formulário, deixando `WizardForm` cuidar só dos dados do serviço e da timeline.
-
-**`TimelineVertical`** (`components/shared/TimelineVertical.tsx`) não é órfão — já está em uso ativo pela `LinhaDeTempo` (módulo de Acompanhamento do Cliente, documentado adiante). `WizardTimeline.tsx` reaproveitaria esse mesmo componente do lado do prestador, dando consistência visual entre a timeline que o prestador vê no dashboard e a que o cliente vê ao acompanhar o serviço — mas essa integração specific ainda não foi feita no `UploadWizardContainer.tsx` atual.
+`PrestadorCardHorizontal.tsx` documenta no próprio código a intenção: substituir o hero azul inline do `UploadWizardContainer.tsx` por `<PrestadorCardHorizontal />` + `<WizardForm hookData={hookData} />`. `TimelineVertical` (`components/shared/`) já está em uso ativo do lado do cliente (`LinhaDeTempo`) — não é código órfão, só falta a integração do lado do prestador (`WizardTimeline.tsx`).
 
 **Resumo do estado real:**
 - `UploadWizard.tsx` → deletar (legado, confirmado não usado)
-- `UploadWizardContainer.tsx` → ativo, funcional, mas ainda com hero/form/timeline inline
-- `PrestadorCardHorizontal.tsx` + `WizardForm.tsx` + `WizardTimeline.tsx` → peças prontas de uma refatoração visual (hero simplificado + reuso do design system de timeline), não finalizada
+- `UploadWizardContainer.tsx` → ativo, funcional, hero/form/timeline ainda inline
+- `PrestadorCardHorizontal.tsx` + `WizardForm.tsx` + `WizardTimeline.tsx` → peças prontas de refatoração não finalizada
 
-### ⚠️ `PortfolioTab.js` é código placeholder/mock — não confundir com `PortfolioDashboardTab.tsx`
+### ⚠️ `PortfolioTab.js` é mock — não confundir com `PortfolioDashboardTab.tsx`
 
-```javascript
-// PortfolioTab.js
-{[1, 2, 3, 4, 5, 6].map(i => (
-  <img src={`https://picsum.photos/400/400?random=${i}`} ... />
-))}
+Usa imagens aleatórias do Picsum, não conectado a dados reais. Candidato a remoção.
+
+---
+
+## Painel do Cliente
+
+**Rota:** `app/painel/perfil/page.tsx` (edição de dados) e `app/meus-servicos/page.tsx` (lista de serviços)
+
+Dois módulos distintos do lado do cliente, com propósitos diferentes:
+
+### `PerfilDoCliente` (`app/painel/perfil/page.tsx`) — dados + lista simplificada
+
+**Hook:** `usePerfilCliente`, que compõe três hooks menores:
+- `usePerfilDados` — dados pessoais (nome, whatsapp, endereço), upload de avatar, exclusão de conta
+- `useServicosCliente` — busca serviços pelo WhatsApp do cliente, com filtros e navegação contextual
+- `usePerfilUI` — estado de aba ativa, modal de confirmação de saída com alterações não salvas (`beforeunload`)
+
+**`CardPerfilCliente`** — card de identidade com avatar clicável (upload direto), nome, email, localização, contadores de projetos ativos/totais.
+
+**Duas abas:** "Meus Projetos" (lista filtrada por status) e "Minha Conta" (edição de dados + endereço completo + zona de perigo/exclusão).
+
+**Roteamento contextual por serviço** (`getRotaDestino` em `useServicosCliente`):
+```
+status='pendente' → /meus-servicos?token=...  (aceitar)
+status='em_execucao' sem foto 3 → /acompanhamento/[token]
+status='em_execucao' com foto 3 → /avaliar/[token]
+default → /avaliar/[token]
 ```
 
-Usa imagens aleatórias do Picsum — claramente um protótipo/mock, não conectado a dados reais. `PortfolioDashboardTab.tsx` é o componente real e ativo (usa `usePortfolioDashboard`, `ProjetoCard`, dados do Supabase). `PortfolioTab.js` é candidato a remoção — nome quase idêntico ao componente real é um risco de confusão para quem for editar o código depois.
+### `PainelDoCliente` (`app/meus-servicos/page.tsx`) — foco em aceitar/gerenciar múltiplos projetos
+
+**Hook:** `usePainelCliente` + **`lib/services/painelCliente.service.ts`** (service dedicado, distinto de `cliente.service.ts`).
+
+Acesso via `?token=` na URL (link enviado pelo prestador) **ou** fallback por WhatsApp salvo no perfil/localStorage. Tela de gate (`LoginGate`) se não houver sessão.
+
+Filtros: Todos / Pendentes / Em andamento / Concluídos, com contadores. Ação principal: `handleAceitar` (atualiza `status: 'em_execucao'`, `aceito_at`, `cliente_nome`) — atualiza estado local antes de navegar (feedback otimista) e usa `router.push` (não hard reload).
+
+### 🐛 Bug corrigido: `'concluido'` não existe no banco, mas era comparado em 3+ lugares
+
+O valor real gravado em `portfolio_projetos.status` é **`'finalizado'`** (confirmado por dado real do banco). `'concluido'` nunca foi um valor válido. Isso causava:
+
+1. **Na query** (`painelCliente.service.ts`): `.in('status', [..., 'concluido'])` — projetos finalizados **nem eram buscados do banco**, sumindo completamente de `/meus-servicos`. Corrigido para `'finalizado'`.
+2. **Em `PainelDoCliente.tsx`**: três comparações (`concluidos = servicos.filter(s => s.status === 'concluido')`, `getModo`, `getOnAceitar`) tratavam `'finalizado'` como cai no fallback — projeto concluído aparecia com UI de "pendente" e, ao clicar, era roteado para o fluxo de **aceitar serviço** em vez de acompanhamento. Todas as 3 comparações corrigidas para `'finalizado'`.
+3. **Em `cliente.service.ts`** (`fetchClienteServicos`), a query já incluía tanto `'finalizado'` quanto `'concluido'` na lista — mais seguro, mas ainda carregava um valor que nunca ocorre; limpo para manter só os 3 valores reais (`pendente`, `em_execucao`, `finalizado`).
+
+O identificador de filtro de UI em `PainelDoCliente.tsx` (`Filtro = 'concluido'`) continua se chamando assim internamente — é só um nome de estado de UI, não compara diretamente com `servico.status` (a comparação real usa os arrays já corrigidos).
+
+### ✅ Exclusão de conta do cliente — arquitetura de responsabilidade única
+
+`ClienteService.deleteClienteAccount` (service) agora só limpa **dados de domínio**: deleta `profiles`, anonimiza `cliente_nome`/`cliente_whatsapp` em `portfolio_projetos`. A chamada real a `/api/delete-account` (remoção em `auth.users` via service role) e o `signOut()` foram movidos para `usePerfilDados.handleDeleteAccount` (hook orquestrador) — mesma responsabilidade que antes, reorganizada para "uma função, um trabalho": o service cuida de dados, o hook decide quando invalidar sessão/conta.
+
+**`app/api/delete-account/route.js`** — Route Handler que usa um client Supabase normal para identificar o usuário logado, e um client **admin** (service role, nunca exposto ao browser) só para `supabaseAdmin.auth.admin.deleteUser(user.id)`. Compartilhado entre os fluxos de exclusão de cliente e prestador.
+
+### 🐛 Bug de build corrigido: `logoutCliente` não existia
+
+`hooks/useHeaderCliente.ts` importava `logoutCliente` de `@/lib/services/auth.service`, mas essa função nunca tinha sido criada lá. Adicionada como wrapper simples de `supabase.auth.signOut()` — nome mantido (embora genérico, não específico de cliente) por compatibilidade com o import já existente, usado tanto na área do cliente quanto em telas de acompanhamento/avaliação.
+
+> ⚠️ **Duplicação não resolvida, mantida por segurança:** `painelCliente.service.ts` também tem uma função `logout()` fazendo a mesma coisa. Não foi removida porque não foi confirmado se `LoginGate.tsx` (não revisado) depende dela — candidata a consolidação numa próxima rodada, após confirmação.
+
+### `ensureGoogleAvatarProfile` — código morto removido
+
+Existia em `cliente.service.ts` mas nunca era chamada — `usePerfilDados` já fazia a mesma lógica inline (salvar avatar do Google se ainda não houver um próprio). Removida.
 
 ---
 
 ## Portfólio Público (perfil `[slug]`)
 
-**Rota:** `app/[slug]/page.tsx` (a confirmar caminho exato)
-**Componente:** `PerfilPublico` → `PerfilCarregado` (padrão: componente raiz só trata loading/erro, subcomponente interno só renderiza depois que os dados existem — evita hooks condicionais)
+**Rota:** `app/[slug]/page.tsx`
+**Componente:** `PerfilPublico` → `PerfilCarregado`
 
-Estrutura em duas colunas (sticky na esquerda em desktop): `PerfilHero` + ações na esquerda; `PerfilSobre`, `PerfilCTA` (WhatsApp), `PortfolioGrid` e `PerfilAvaliacoes` na direita.
+Estrutura em duas colunas: `PerfilHero` + ações na esquerda; `PerfilSobre`, `PerfilCTA`, `PortfolioGrid`, `PerfilAvaliacoes` na direita.
 
 ### `usePerfilPrestador` — hook de carregamento
 
-Busca em duas queries paralelas-sequenciais:
-1. `prestadores` com joins de `cidades`, `categorias`, `portfolio_projetos` (incluindo `portfolio_fotos` e `avaliacoes.indica` aninhados) — filtrado por `slug` **ou** por `id` se o parâmetro da URL for um UUID (regex simples detecta o formato)
-2. `avaliacoes` separadamente, filtrando `visivel = true` e limitando a 10, mais recentes primeiro
+Duas queries: `prestadores` com joins (`cidades`, `categorias`, `portfolio_projetos` + `portfolio_fotos` + `avaliacoes.indica`), filtrado por `slug` ou `id` (UUID); e `avaliacoes` separada, `visivel = true`, limite 10.
 
-**Por que uma segunda query separada para avaliações**, já que o join já trouxe `avaliacoes(id, indica)` por projeto? Porque o join traz só `indica` (usado no `PortfolioGrid` para o badge "✦ Indico" por projeto), enquanto a segunda query traz o objeto completo de avaliação (`nota`, `comentario`) para a seção `PerfilAvaliacoes` — e só as **visíveis** (`visivel = true`), aplicando moderação. É uma escolha deliberada de não misturar os dois propósitos na mesma query.
+**Filtro de projetos:** só `em_execucao` e `finalizado` aparecem publicamente. **Ordenação:** finalizados primeiro, depois por data.
 
-**Filtro de projetos exibidos:** só `em_execucao` e `finalizado` aparecem no portfólio público — projetos em `em_registro` ou `pendente` (ainda não aceitos pelo cliente) ficam invisíveis publicamente, o que faz sentido para não expor trabalho não confirmado.
+**Captura e limpeza do `?from=`:** usado como `urlRetorno` + log `VISITA_PERFIL_VIA_BUSCA`, removido da URL visível via `history.replaceState` sem novo fetch. Sem `?from=`, monta `urlRetorno` como `/prestadores?q=<categoria>`.
 
-**Ordenação de projetos:** finalizados primeiro, depois por data mais recente dentro de cada grupo de status.
+> Nome do parâmetro (`?from=`) diverge do `?origem=` usado no dashboard — mesma ideia, nomes diferentes. Ver roadmap.
 
-**Captura e limpeza do parâmetro `?from=`:**
-```
-Tem ?from=? → usa como urlRetorno + loga 'VISITA_PERFIL_VIA_BUSCA' + remove da URL visível via history.replaceState
-Não tem? → monta urlRetorno como /prestadores?q=<categoria> (fallback razoável de "voltar para resultados parecidos")
-```
-A remoção do `?from=` da URL visível (sem disparar navegação/refetch) é proposital — evita que o parâmetro apareça em links compartilhados/salvos pelo usuário, mantendo a URL pública limpa (`/[slug]`), enquanto ainda usa a informação internamente para o botão "voltar" e analytics.
+### `PerfilHero.tsx`, `PerfilSobre.tsx`, `PerfilCTA.tsx`, `PortfolioGrid.tsx`, `PerfilAvaliacoes.tsx`
 
-> Nota de nomenclatura: confirma-se aqui que o parâmetro é `?from=` (não `?origem=`, usado no dashboard) — reforça o item já registrado no roadmap sobre padronizar esse nome entre os dois fluxos.
+Já documentados em detalhe nas rodadas anteriores — hero com chips condicionais e ações (denunciar/compartilhar); bio com fallback textual motivando reivindicação; CTA de WhatsApp com botão flutuante persistente via `IntersectionObserver`; grid de projetos com badge "Indico"; lista simples de até 10 avaliações (retorna `null` se vazia — não mostra "nenhuma avaliação").
 
-### `PerfilHero.tsx`
-- Usa `useAvaliacoes(prestador.id)` para stats de nota/total — hook próprio, separado da carga inicial de `usePerfilPrestador` (uma terceira fonte de dados de avaliação, além do join e da query de `PerfilAvaliacoes` — os três coexistem para propósitos diferentes: badge por projeto, stats agregados do hero, e lista detalhada)
-- Ações secundárias: "Denunciar" (`/denunciar/[id]`) e "Compartilhar" (via `useCompartilharPerfil`)
+### `ProjetoModal.tsx` (abre a partir do `PortfolioGrid`)
 
-### `PerfilSobre.tsx`
-Bio do prestador com fallback textual explícito quando vazia: *"Informações coletadas via curadoria pública. Este profissional ainda não personalizou sua biografia."* — reforça sutilmente ao visitante (e principalmente ao próprio prestador, se for ver seu perfil) que reivindicar/completar o perfil melhora a apresentação. Lista de habilidades como chips, só renderiza a seção se houver alguma.
+Modal de detalhe de um projeto do portfólio público — usa `ModalFotoBase` (mesmo componente compartilhado do wizard do prestador) com navegação entre fotos via `useSlides`, comentários por foto via `useComentariosFoto`, botão de compartilhar (`navigator.share` com fallback de clipboard). Trata caso sem fotos com modal simplificado próprio.
 
-### `PerfilCTA.tsx` — botão de WhatsApp com CTA persistente
+### `useCompartilharPerfil` — hook completo, com service dedicado
 
-Comportamento notável: usa `IntersectionObserver` no botão principal de CTA para detectar quando ele sai da viewport (`scrolled` state) — quando isso acontece, um **botão flutuante circular** (fixed, canto inferior direito) aparece como CTA persistente. Garante que o caminho para contato via WhatsApp esteja sempre acessível independente de quanto o visitante rolou a página.
-
-Se o prestador não tiver WhatsApp válido, o componente retorna `null` — sem CTA quebrado ou vazio.
-
-Mensagem pré-formatada no link `wa.me`: *"Olá {nome}, vi seu perfil no Procuro Quem Faça e gostaria de um orçamento."* — mesma modelo de mensagem padronizada visto em outros pontos do sistema (aceite/conclusão de projeto).
-
-### `PortfolioGrid.tsx`
-Grid responsivo (2 ou 3 colunas conforme quantidade de projetos) de cards de projeto, cada um abrindo `ProjetoModal` (não revisado ainda) ao clicar. Capa = foto de maior `ordem` (mais recente/"depois"), com fallback para `/placeholder-job.png` se não houver foto ou se a imagem falhar ao carregar (`onError` com guard para não entrar em loop infinito de fallback).
-
-Badge "✦ Indico" aparece se **qualquer** avaliação do projeto tiver `indica: true` — nota: um projeto pode ter mais de uma avaliação vinculada em teoria (múltiplos registros em `avaliacoes` para o mesmo `projeto_id`), embora o fluxo de avaliação (`useAvaliar`) pareça ter sido desenhado para uma avaliação por projeto. Vale confirmar se há proteção de unicidade no banco (constraint) além da lógica de UI que oculta `BlocoAvaliacao` se já existir `avaliacaoExistente`.
-
-Status visual simplificado (2 estados, diferente do `ProjetoCard` do dashboard que tem 5): "Concluído" (`finalizado` ou já tem foto de ordem 3) vs. "Em andamento" (com indicador pulsante). Público não precisa ver o detalhe fino de `pendente`/`em_registro`/etc. que o prestador vê no dashboard.
-
-### `PerfilAvaliacoes.tsx`
-Lista as até 10 avaliações visíveis carregadas por `usePerfilPrestador`. Calcula média local (`mediaNotas`) e contagem de indicações a partir do array já em memória — sem nova query. Não renderiza nada (`return null`) se não houver avaliações — seção inteira some, não mostra "nenhuma avaliação ainda".
-
-### `useCompartilharPerfil` — hook completo
-
-Mais robusto do que documentado anteriormente: usa uma camada de service (`lib/services/compartilharPerfil.service.ts`) com funções puras (`buildUrlPerfil`, `buildTextoPadrao`, `buildTextoWhatsApp`) e efeitos (`compartilharViaNative`, `compartilharViaWhatsApp`, `registrarCompartilhamento`).
-
-**Dois modos de compartilhamento, expostos separadamente:**
-- `compartilhar()` — tenta Web Share API nativa do dispositivo; se não disponível, cai para copiar link (clipboard), mostrando "Copiado!" por 2s
-- `compartilharWhatsApp(numeroDestinatario?)` — abre WhatsApp diretamente com mensagem formatada, podendo mirar um número específico ou abrir o seletor de contato
-
-Todo compartilhamento é registrado via `registrarCompartilhamento({ prestador_id, canal, origem })` — rastreamento de qual canal (`clipboard`/`native_share`/`whatsapp`) e de onde (`perfil_publico`/`dashboard`/`pagina_sucesso`) o compartilhamento ocorreu, útil para entender quais pontos do produto geram mais divulgação orgânica.
+`lib/services/compartilharPerfil.service.ts`: funções puras (`buildUrlPerfil`, `buildTextoPadrao`, `buildTextoWhatsApp`) + efeitos (`compartilharViaNative`, `compartilharViaWhatsApp`, `registrarCompartilhamento`). Dois modos expostos: `compartilhar()` (nativo/clipboard) e `compartilharWhatsApp(numero?)`. Todo compartilhamento é logado com canal + origem.
 
 ### `RastreamentoAtivacaoProvider`
-Wrapper fino em `Suspense` (por usar `useSearchParams`) que só invoca `useRastreamentoAtivacao(prestador, srcParam)` — captura parâmetro `?src=` (provavelmente identifica a origem de uma campanha de ativação via WhatsApp, ver `ativacao_status` em `03-banco-de-dados.md`) e não renderiza nada (`return null`). Lógica real do rastreamento está no hook, não revisado ainda.
+
+Wrapper `Suspense` que só invoca `useRastreamentoAtivacao(prestador, srcParam)` a partir do `?src=` — não renderiza nada.
 
 ### ✅ Corrigido: `AdCard` no perfil usava valor inválido de `AdPage`
 
-O código original tinha:
-```typescript
-<AdCard page={"perfil" as AdPage} categoria={...} />
-```
+`page={"perfil" as AdPage}` → `page="perfil_prestador"`. O cast mascarava um valor que não existe no tipo `AdPage`. Import de `AdPage` removido do arquivo por não ser mais necessário.
 
-`AdPage` (em `types/ads.ts`) não inclui `'perfil'` — só `'perfil_prestador'`. O cast `as AdPage` fazia o TypeScript aceitar, mas o valor real em runtime não correspondia a nenhuma opção válida do tipo, provavelmente fazendo essa posição cair num fallback genérico em vez do pensado para o perfil.
-
-**Correção aplicada:** trocado para `page="perfil_prestador"`, removendo o cast e o import de `AdPage` que só existia por causa dele.
-
-## Acompanhamento do Cliente
-
-**Rota:** `app/acompanhamento/[token]/page.tsx` (a confirmar caminho exato)
-**Hook:** `useAcompanhamento(token)` — acesso via `avaliacao_token` do projeto, sem exigir login do cliente
-
-Layout de duas colunas: `CardPrestador` + `StatusMini` + `RodapeSeguranca` (sticky, esquerda) e `LinhaDeTempo` (direita).
-
-**`LinhaDeTempo.tsx`** é a versão **do lado do cliente** do mesmo conceito visual da timeline do prestador (`WizardTimeline.tsx`, ainda não integrada) — e efetivamente já usa o componente compartilhado `TimelineVertical`:
-
-```typescript
-import { TimelineVertical, TimelineEstado, TimelineNo } from '@/components/shared/TimelineVertical'
-```
-
-Isso confirma que `TimelineVertical` é peça real de design system do projeto, não código órfão — só falta o lado do prestador (`WizardTimeline.tsx`) ser efetivamente conectado ao `UploadWizardContainer.tsx` para os dois lados (cliente e prestador) compartilharem a mesma base visual de timeline.
-
-**Diferenças de estado entre as duas timelines:**
-- `WizardTimeline` (prestador): 3 estados (`concluido`/`ativo`/`pendente`) baseados só em `fotosUrls`
-- `LinhaDeTempo` (cliente): mesma lógica de estado, mas cada nó é **clicável** (`onFotoClick`) e abre `ModalDiscussao` — o cliente pode comentar em cada foto, algo que não existe do lado do prestador na timeline em si (comentários do prestador ficam dentro do `WizardZoomModal`, não na lista)
-
-Contador de comentários por foto aparece inline em cada nó da timeline do cliente (`MessageSquare` + contagem), dando visibilidade de "essa etapa tem N comentários" sem precisar abrir o modal.
+---
 
 ## Avaliação
 
-**Rota:** `app/avaliar/[token]/page.tsx` (a confirmar caminho exato)
-**Hook:** `useAvaliar(token)` — não detalhado neste documento ainda (código não revisado)
+**Rota:** `app/avaliar/[token]/page.tsx`
+**Hook:** `useAvaliar` (arquivo `hooks/useAvaliacao.ts` — nota: nome do arquivo no singular, export com nome diferente)
 
-Reaproveita `CardPrestador` e `RodapeSeguranca` do módulo de Acompanhamento. Componentes específicos: `CarrosselFinalizacao` (mostra as 3 fotos finais) e `BlocoAvaliacao` (nota, comentário, campo "indica" — mapeando diretamente para as colunas `nota`, `comentario`, `indica` de `avaliacoes` documentadas em `03-banco-de-dados.md`).
+Reaproveita `CardPrestador` e `RodapeSeguranca` do módulo de Acompanhamento. `CarrosselFinalizacao` mostra as 3 fotos finais; `BlocoAvaliacao` captura nota/comentário/indica.
 
-Se `avaliacaoExistente` já existir, oculta `BlocoAvaliacao` — impede reavaliação (reforçado também por regra de negócio/constraint no banco, a confirmar se há um índice único `projeto_id` em `avaliacoes` além do trigger de auto-avaliação já documentado).
+**Fluxo de submit (`handleFinalizarAvaliacao`):** `inserirAvaliacao` (grava `nota`, `comentario`, `indica`, `visivel: true`, `status: 'finalizado'`) → `finalizarProjeto` (marca o projeto como `finalizado`) → atualiza estado local → `router.push('/sucesso')`.
+
+Se `avaliacaoExistente?.status === 'finalizado'`, oculta `BlocoAvaliacao` — impede reavaliação.
+
+### `FormularioAvaliacao` — sistema de contestação/garantia descoberto
+
+Existem **duas versões** deste componente em `components/profile/`:
+
+- **`FormularioAvaliacao.tsx`** (ativo) — delega toda a lógica a `useSubmitAvaliacao` (estados `uploading`/`saving`), integra upload real de fotos de evidência via `FotosEvidenciaPicker`
+- **`FormularioAvaliacao.js`** (legado) — grava direto no Supabase inline, com `alert()` como feedback, e tem o state `fotosEvidencia` declarado mas **nunca conectado a nenhum input real** — protótipo anterior, não funcional de fato. Candidato a remoção.
+
+**Fluxo de contestação** (só na versão `.tsx` ativa): checkbox "Reportar problema / Solicitar Garantia" troca o formulário para modo contestação — oculta seleção de estrelas, muda placeholder do textarea, ativa `FotosEvidenciaPicker` (upload múltiplo, limite `MAX_ARQUIVOS`, preview com tamanho do arquivo, remoção individual). No submit, grava `avaliacoes` com `nota: 1`, `em_disputa: true`, `visivel: false`, e cria linha correspondente em `contestacoes` com descrição + URLs das fotos.
+
+> Este fluxo de contestação é **diferente do fluxo de avaliação normal** (`useAvaliar`/`app/avaliar/[token]`) — `FormularioAvaliacao` parece ser usado em outro contexto ainda não mapeado (talvez uma ação disponível a qualquer momento no perfil, não só no fluxo linear pós-serviço). Vale confirmar onde esse componente é efetivamente renderizado.
+
+### `AvaliacoesTab` / `AvaliacaoCard` / `AvaliacoesResumo` — pausados intencionalmente
+
+Conjunto mais rico de exibição de avaliações (distribuição por nota em barras, % de indicação, resposta do prestador) que **não está conectado a nenhuma tela hoje** — só se referenciam entre si.
+
+**Decisão registrada:** não plugar nem remover por ora. `PerfilAvaliacoes` (em produção) esconde a seção inteira quando não há avaliações (`return null`); `AvaliacoesTab` tem um estado vazio que **mostra ativamente** "Nenhuma avaliação ainda" — com o volume de tráfego/avaliações atual do produto, isso reforçaria a sensação de plataforma vazia, o oposto do que se quer no estágio atual. Revisitar quando houver volume suficiente de avaliações para a distribuição por nota fazer sentido visualmente.
+
+🐛 **Bug corrigido:** `AvaliacoesResumo.tsx` importava `AvaliacoesStats` de `@/hooks/useAvaliacoes` (que só *usa*, não declara, esse tipo) em vez de `@/types/avaliacao` (declaração real). Import corrigido.
+
+---
+
+## Acompanhamento do Cliente
+
+**Rota:** `app/acompanhamento/[token]/page.tsx`
+**Hook:** `useAcompanhamento(token)` — acesso via `avaliacao_token`, sem exigir login.
+
+Layout de duas colunas: `CardPrestador` + `StatusMini` + `RodapeSeguranca` (esquerda) e `LinhaDeTempo` (direita).
+
+`LinhaDeTempo.tsx` usa `TimelineVertical` (componente compartilhado, confirmado em uso real — ver Dashboard do Prestador). Diferença chave em relação à timeline do prestador: cada nó é clicável e abre `ModalDiscussao`, com contador de comentários inline por foto.
+
+---
 
 ## Reivindicação de Perfil
 
 **Rota:** `app/reivindicar/page.tsx`
-**Componente:** `PaginaReivindicar` → `ReivindicarConteudo`
 
-Tela intermediária entre o perfil público (banner "Este é o seu perfil?") e o formulário de cadastro. Puramente informativa/motivacional — lista vantagens de "assumir" o perfil (edição total, prioridade no ranking) e, ao confirmar, apenas redireciona:
-
-```typescript
-router.push(`/cadastro?reivindicar=${prestadorId}`)
-```
-
-Toda a lógica real de reivindicação (validar se já tem dono, transferir dados, etc.) vive no `FormularioCadastro`, já documentado na seção de Cadastro. Esta página não faz nenhuma chamada ao Supabase além de checar se há sessão ativa (`checkSession`, resultado não usado para nenhuma decisão visível no componente — possível código residual).
+Tela intermediária, puramente informativa/motivacional. Só redireciona para `/cadastro?reivindicar=<id>` — toda lógica real vive no `FormularioCadastro`.
 
 ## Página de Sucesso
 
 **Rota:** `app/sucesso/page.tsx`
-**Componente:** `PaginaSucesso`
 
-Tela de agradecimento pós-avaliação. **Puramente estática** — sem hooks de dados, sem props, sem parâmetros de rota. O botão "Compartilhar Resultado" não tem `onClick` implementado (`<button>` sem handler) — provavelmente placeholder visual ainda não conectado a `navigator.share` ou similar.
-
-> ⚠️ Não recebe nenhum dado do projeto/avaliação que acabou de ser feita — não personaliza com nome do prestador ou nota dada. Vale avaliar se isso é intencional (tela genérica) ou uma oportunidade perdida de reforçar a experiência (ex: "Sua avaliação para João Silva foi registrada").
+Puramente estática, sem hooks de dados nem props. Botão "Compartilhar Resultado" sem `onClick` implementado. Não personaliza com dados do projeto/prestador avaliado.
 
 ## Denúncia
 
 **Rota:** `app/denunciar/[id]/page.tsx`
-**Componente:** `PaginaDenuncia`
 **Service:** `criarDenuncia(prestadorId, motivo)` em `lib/services/denuncia.service.ts`
 
-Formulário simples: textarea de motivo → `criarDenuncia` → tela de sucesso inline (sem navegação, troca de estado `sucesso`). Mapeia diretamente para a tabela `denuncias` documentada em `03-banco-de-dados.md` (`prestador_id`, `motivo`, `status: 'aberta'` por padrão).
+Formulário simples → tabela `denuncias` (`status: 'aberta'` por padrão). Aviso de "banimento por denúncia falsa" é só texto informativo, sem enforcement técnico visível nesta tela.
 
-Aviso no rodapé ("Falsas denúncias podem levar ao banimento") é só texto informativo — não há enforcement técnico visível nesta tela (a aplicação de banimento por denúncias falsas, se existir, aconteceria no admin/moderação).
+## ⚠️ Chat em tempo real — decisão: não será implementado (confirmado limpo)
 
-## ⚠️ Chat em tempo real — decisão: não será implementado
+Foram encontradas **três versões diferentes** de um componente `ProjetoTimeline` implementando chat em tempo real via tabela `projeto_mensagens` + Supabase Realtime, em pontos distintos do código (incluindo uma versão em `components/profile/` com confirmação de leitura estilo WhatsApp).
 
-Existe um componente `ProjetoTimeline.jsx` (ainda em JS, sem tipagem) implementando um **chat em tempo real completo** entre cliente e prestador, usando uma tabela **`projeto_mensagens`** que não apareceu no schema revisado em `03-banco-de-dados.md`:
+**Decisão registrada:** não será implementado — o WhatsApp já cumpre esse papel; replicar duplicaria esforço (Realtime, moderação, notificações) sem necessidade real.
 
-```typescript
-supabase.from('projeto_mensagens').select('*').eq('projeto_id', idDoProjeto)
-// realtime via supabase.channel(`room_${idDoProjeto}`)
-```
+**Status da limpeza:** uma busca (`grep`/`Select-String`) por `projeto_mensagens` em todo o código-fonte atual **não retornou nenhuma ocorrência** — os componentes `ProjetoTimeline` já não fazem parte do projeto ativo (ou foram removidos em alguma limpeza anterior, ou existiam apenas em versões/branches não mescladas). Nada a apagar. Se a tabela `projeto_mensagens` existir no banco, está órfã e pode ser removida do schema sem risco.
 
-Campos inferidos do código: `id`, `projeto_id`, `conteudo`, `remetente_tipo` (`cliente`/`prestador`), `tipo_evento` (`chat` vs. eventos de sistema, ex: mudança de fase), `created_at`.
-
-**Isso seria funcionalmente diferente do que já existe:**
-- `portfolio_comentarios` → comentário vinculado a uma **foto específica** (`foto_id`), estilo "feedback pontual sobre essa etapa" — é o que `ModalDiscussao` (Acompanhamento) e `WizardZoomModal` (Dashboard) já cobrem
-- `projeto_mensagens` (este achado) → chat contínuo vinculado ao projeto inteiro, com UI de bolhas estilo WhatsApp, Realtime via canal Supabase
-
-**Decisão registrada:** este recurso **não será implementado**. O WhatsApp já cumpre o papel de comunicação direta entre cliente e prestador — replicar isso dentro do app duplicaria esforço (Realtime, moderação, notificações) sem necessidade real, já que a base de usuários já está habituada ao WhatsApp como canal principal.
-
-`ProjetoTimeline.jsx` e a tabela `projeto_mensagens` (se existir em produção) são candidatos a remoção — ver `07-roadmap.md`.
+---
 
 ## Busca e Listagem de Prestadores
 
@@ -412,149 +358,73 @@ Módulo com dois pontos de entrada: a **home** (busca inicial) e **`/prestadores
 
 ### Home — `app/page.tsx`
 
-**Componentes:** `Home` → `HeroSection` (dynamic import, `ssr: false`) + `SearchForm`
+`Home` → `HeroSection` (dynamic import, `ssr: false`, só envolve `HeaderBotoes`) + `SearchForm`.
 
-`HeroSection` só envolve `HeaderBotoes` (documentado em `04-autenticacao.md`) em um `Suspense` — nome é um pouco enganoso, não é um "hero" de conteúdo, é a barra de navegação superior posicionada em `absolute`.
+**`SearchForm.tsx`:** input controlado + botão, estado de erro visual. Usa `useRef` para ler valor do input diretamente no submit.
 
-**`SearchForm.tsx`:** input controlado + botão, com estado de erro visual (borda/placeholder vermelhos) quando o usuário tenta submeter vazio. Usa `useRef` para ler o valor do input diretamente no submit (`inputRef.current?.value`) em vez de confiar só no state `busca` — parece uma proteção contra o valor do state estar dessincronizado no momento exato do submit (event handler assíncrono vs. render), embora `busca` também seja atualizado via `onChange`.
+**Fluxo de submit:** sem termo → erro 3s; com termo → `insertLog('BUSCA_REALIZADA')` (fire-and-forget) → `router.push('/prestadores?q=<termo>')`.
 
-**Fluxo de submit (`dispararBusca` em `Home`):**
-```
-Sem termo → mostra erro por 3s, não navega
-Com termo → insertLog('BUSCA_REALIZADA', { termo }) → router.push('/prestadores?q=<termo>')
-```
-
-Log de busca é fire-and-forget (não aguarda antes de navegar) — não deve atrasar a navegação, mas também significa que uma falha no insert de log é totalmente silenciosa para o usuário.
-
-**Sugestões (`useSugestoes`):**
-- Sem debounce no carregamento inicial (busca vazia) — chama na hora
-- Com debounce de 300ms conforme o usuário digita
-- Fallback em duas camadas: se o banco retornar vazio **ou** der erro, usa `SUGESTOES_FALLBACK` de `config/categorias.ts` — buscador nunca fica sem nenhuma sugestão visível
-- Rótulo muda dinamicamente: "Sugestões em destaque" (busca vazia) vs. "Encontramos para você" (busca ativa)
-- Clicar numa sugestão dispara a busca diretamente (`dispararBusca(null, item)`), sem precisar de submit do form
+**Sugestões (`useSugestoes`):** sem debounce no carregamento inicial, 300ms conforme digita. Fallback em duas camadas (banco vazio ou erro) para `SUGESTOES_FALLBACK`. Clicar dispara busca direto.
 
 ### `/prestadores` — Listagem
 
-Já documentado na seção anterior (parâmetros de URL, chips de cidade, injeção de anúncios). Detalhando agora o hook central:
+**Parâmetros de URL:** `q` (busca livre), `habilidade`, `cidade` (chip).
+
+**Chips de cidade:** contagem por cidade calculada comparando `cidade_nome` e presença em `cidades_atendidas` — um prestador pode contar em mais de um chip.
+
+**Injeção de anúncios:** `AdCard` no topo (`lista_topo`) e a cada 5 prestadores (`prestadores`), com `categoria={queryBusca || filtroHab}`.
 
 ### `usePrestadores` — lógica completa
 
-**Carregamento de dados:** busca `prestadores` ativos + médias de avaliação em paralelo (`getPrestadoresAtivos`, `getMediasAvaliacoes`, ambos em `lib/db/prestadores.ts`, com suporte a `AbortSignal` para cancelar requisições obsoletas se a busca mudar rápido).
+**Carregamento:** `prestadores` ativos + médias de avaliação em paralelo, com `AbortSignal`. **Cálculo de média local** em JS (`calcularMedias`) — não usa a view `prestadores_ranqueados` que já faz isso no banco.
 
-**Cálculo de média local:** em vez de depender de uma query agregada do banco, o hook busca todas as notas (`{ prestador_id, nota }[]`) e calcula soma/total em JS (`calcularMedias`). Isso é diferente da view `prestadores_ranqueados` documentada em `03-banco-de-dados.md`, que já calcula `media_interna` no banco — **o frontend não usa essa view**, recalculando por conta própria. Vale avaliar se migrar para a view economizaria payload e lógica duplicada, ou se há um motivo (ex: a view só considera `status = 'ativo'`, e aqui pode ser necessário incluir prestadores em outros status).
+**Parsing de busca com cidade embutida:** `"pedreiro em Londrina"` → `{ termo: "pedreiro", cidadeExtraida: "Londrina" }` via regex, sincroniza `?cidade=` na URL via `router.replace` silencioso.
 
-**Parsing de busca com cidade embutida (`parsearBusca`):**
-```typescript
-"pedreiro em Londrina" → { termo: "pedreiro", cidadeExtraida: "Londrina" }
-```
-Regex simples (`/^(.+?)\s+em\s+(.+)$/i`) extrai cidade quando o usuário digita no formato natural "X em Y" — bate com o placeholder do `SearchForm` ("Ex: pedreiro em Londrina"), então é um padrão pensado e comunicado ao usuário, não uma feature escondida.
+**Origem `'vitrine'` tem prioridade absoluta:** prestadores com esse `origem_tipo` aparecem sempre no topo, sem passar pelo filtro de busca. Valor não documentado formalmente em `03-banco-de-dados.md` até esta rodada — adicionado lá como pendência de confirmação de significado de negócio.
 
-Se extrai cidade e a URL não tinha `?cidade=`, aplica via `router.replace` (silencioso, sem novo carregamento perceptível) — sincroniza a URL com o que foi entendido da busca livre.
+**Geolocalização silenciosa:** só roda se não houver `?cidade=`; usa Nominatim (OpenStreetMap) para reverse geocode; falha silenciosa em qualquer erro/negação de permissão.
 
-**Origem `'vitrine'` tem prioridade absoluta:**
-```typescript
-const vitrines = normalizados.filter(p => p.origem_tipo === 'vitrine')
-const demais = normalizados.filter(p => p.origem_tipo !== 'vitrine')
-const filtrados = filtrarPrestadores(demais, termoNorm)
-setPrestadoresBase([...vitrines, ...filtrados.sort(...)])
-```
-Prestadores com `origem_tipo: 'vitrine'` (valor não visto antes em `03-banco-de-dados.md` — os valores documentados eram `registro_direto`, `curadoria_publica`, `reivindicado`) aparecem **sempre no topo**, **sem passar pelo filtro de termo de busca**. Isso é provavelmente um mecanismo de destaque pago ou curadoria editorial forte — vale confirmar o significado exato de `'vitrine'` e se deveria estar documentado em `03-banco-de-dados.md` como um valor válido de `origem_tipo`.
+**Prioridade de cidade efetiva:** `URL > cidade extraída da busca > geolocalização`.
 
-> ⚠️ Adicionar `'vitrine'` à lista de valores de `origem_tipo` em `03-banco-de-dados.md` — não havia constraint/check visível para essa coluna no schema fornecido, então não há validação de banco impedindo outros valores livres também.
+### `PrestadorCard.tsx`
 
-**Ordenação dos demais:** `pesoOrdenacao(prestador)` (em `lib/ordenacao.ts`, não revisado) define a ordem de exibição dos não-vitrine — provavelmente combina fatores como verificação, avaliação, completude de perfil. A documentar quando o código for revisado.
-
-**Geolocalização silenciosa:**
-```typescript
-navigator.geolocation.getCurrentPosition(...) → Nominatim (OpenStreetMap) reverse geocoding
-```
-Só roda se **não houver** `?cidade=` na URL. Usa a API pública do Nominatim (OpenStreetMap) para reverse geocode — serviço gratuito, mas sujeito a rate limit e sem SLA; se cair, falha silenciosamente (não bloqueia a listagem, só não teria filtro de cidade automático). Permissão negada pelo usuário também falha silenciosamente — não há prompt algum além do nativo do browser.
-
-**Prioridade de cidade efetiva:** `URL (?cidade=) > cidade extraída da busca textual > geolocalização`. Faz sentido — intenção explícita do usuário (URL ou texto digitado) sempre vence sobre inferência de localização.
-
-### `PrestadorCard.tsx` — card individual
-
-Reaproveita `getIniciais`, `getLocalizacao`, `getPerfilHref` de `lib/prestadorUtils.ts` (agora corrigido — ver nota de bug abaixo).
-
-**Link de perfil carrega contexto de origem:**
-```typescript
-getPerfilHref(slug, id) → `/${slug || id}?from=${encodeURIComponent(pathname + search)}`
-```
-Isso é o `?from=` que o `usePerfilPrestador` (perfil público) provavelmente consome para o botão "voltar" saber para onde retornar — mesma ideia do `?origem=` usado no dashboard (`04-autenticacao.md`), mas com nome de parâmetro diferente (`from` vs. `origem`). Vale padronizar o nome do parâmetro entre os dois fluxos se forem conceitualmente a mesma coisa.
-
-**"É você?" inline:** para prestadores de `origem_tipo: 'curadoria_publica'`, um pequeno link de texto no canto do card leva direto para `/reivindicar` — ponto de entrada adicional ao fluxo de reivindicação, além do banner já documentado dentro do perfil público (`PerfilHero`).
-
-**Fallback de imagem:** `onError` no `<img>` seta `imgError`, trocando para as iniciais do nome — evita ícone quebrado do browser se a URL da foto falhar.
+Reaproveita `getIniciais`, `getLocalizacao`, `getPerfilHref` de `lib/prestadorUtils.ts`. Link de perfil carrega `?from=` com o pathname+search atual. "É você?" inline para `origem_tipo: 'curadoria_publica'`. Fallback de imagem via `onError`.
 
 ### 🐛 Bug corrigido: `getPerfilHref` — tipo incompatível
 
-**Sintoma:** `Argument of type 'number' is not assignable to parameter of type 'string'`, no `PrestadorCard.tsx`, chamando `getPerfilHref(prestador.slug, prestador.id)`.
+`prestadores.id` é `bigint`/`number`, mas `getPerfilHref` declarava `id: string`. Assinatura corrigida para `string | number` — corpo da função não mudou (template literal já convertia em runtime).
 
-**Causa:** `prestadores.id` é `bigint` no banco (`03-banco-de-dados.md`), tipado como `number` no TypeScript — mas `getPerfilHref` declarava `id: string`.
+### Log de atividades — `insertLog` + `checkLogExists`
 
-**Fix:**
-```typescript
-// lib/prestadorUtils.ts
-export function getPerfilHref(slug: string | null, id: string | number): string {
-```
-O corpo da função não precisou mudar — o template literal (`` `/${slug || id}...` ``) já convertia `number` para string automaticamente em runtime; o erro era puramente de tipagem estática, não de comportamento.
-
-### Log de atividades — `insertLog` e função auxiliar nova
-
-`hooks/useLog.ts` centraliza a escrita em `logs_atividades` (documentada em `03-banco-de-dados.md`), capturando `usuario_id`/`usuario_email` da sessão atual automaticamente — todo lugar que chama `insertLog` não precisa se preocupar em passar dados do usuário manualmente.
-
-Função nova adicionada: `checkLogExists(usuarioId, acao)` — verifica se um usuário já disparou uma ação específica alguma vez. Não vi ainda nenhum lugar chamando essa função no código revisado até agora; possível uso: evitar logs duplicados de eventos "primeira vez" (ex: primeiro clique em algo), ou gating de alguma feature "mostre isso só uma vez por usuário". A confirmar propósito quando aparecer em uso.
+`hooks/useLog.ts` centraliza escrita em `logs_atividades`, capturando usuário da sessão automaticamente. `checkLogExists(usuarioId, acao)` foi adicionada mas ainda sem nenhum ponto de uso identificado no código revisado.
 
 ### Peças ainda não documentadas deste módulo
 
 | Peça | Status |
 |---|---|
-| `lib/buscaUtils.ts` (`normalizarTermo`, `filtrarPrestadores`) | Não revisado — lógica real de matching de texto |
-| `lib/ordenacao.ts` (`pesoOrdenacao`) | Não revisado — critério de ranking dos resultados |
-| `lib/db/prestadores.ts` (`getPrestadoresAtivos`, `getMediasAvaliacoes`) | Não revisado |
-| `lib/db/categorias.ts` (`getSugestoesDestaque`, `getSugestoesPorBusca`) | Não revisado |
-| Significado de `origem_tipo: 'vitrine'` | Não documentado em nenhum lugar visto até agora |
+| `lib/buscaUtils.ts` (`normalizarTermo`, `filtrarPrestadores`) | Não revisado |
+| `lib/ordenacao.ts` (`pesoOrdenacao`) | Não revisado |
+| `lib/db/prestadores.ts`, `lib/db/categorias.ts` | Não revisados |
+| Significado de negócio de `origem_tipo: 'vitrine'` | Não confirmado |
 
 ---
 
 ## Sistema de Anúncios (frontend)
 
-O backend do sistema de anúncios (leilão CPC, segmentação, `anunciantes`/`anuncios`) já foi documentado em `03-banco-de-dados.md`. Esta seção cobre a camada de exibição no app.
+Backend (leilão CPC, segmentação) documentado em `03-banco-de-dados.md`.
 
-### `AdCard.tsx` — componente de exibição
+### `AdCard.tsx`
 
-**Dois modos de renderização:**
+Dois modos: AdSense real (`<ins className="adsbygoogle">`, com checagem de 2s + `offsetHeight` para detectar bloqueio/adblock) ou `AdCardFallback`.
 
-1. **AdSense real** — se `anuncio?.adsense_slot` existir, renderiza um `<ins className="adsbygoogle">` (Google AdSense). Tem uma checagem de segurança: espera 2s e verifica se o elemento tem altura (`offsetHeight > 10`) — se o AdSense não carregou nada visível (bloqueado por adblock, sem preenchimento disponível, etc.), cai para o fallback automaticamente.
-2. **Fallback** (`AdCardFallback`) — usado sempre que não há slot de AdSense, ou quando o AdSense falha silenciosamente.
+### 💡 Decisão de produto: fallback como canal de contato direto
 
-### 💡 Decisão de produto atual: fallback como canal de contato direto
+Hoje `AdCard` é sempre chamado com `anuncio={null}` — cai sempre no fallback, configurado para direcionar ao WhatsApp do fundador. Racional: sem tráfego significativo ainda, não compensa operacionalizar o leilão real; o espaço de anúncio funciona como CTA comercial direto enquanto a base cresce. Infraestrutura de leilão já pronta no banco, só falta o "encanamento" de popular `anuncio` a partir de uma query real.
 
-Nos pontos de uso vistos até agora (`app/prestadores/page.tsx`), `AdCard` é sempre chamado com `anuncio={null}`:
+### `AdPage` — posições confirmadas
 
-```typescript
-<AdCard page="lista_topo" anuncio={null} categoria={queryBusca || filtroHab || ''} />
-```
+`'prestadores'`, `'perfil_prestador'` (agora corrigido, ver Portfólio Público), `'lista_topo'` em uso. `'busca_servicos'` ainda não visto.
 
-Ou seja, **hoje o sistema sempre cai no fallback** — não há preenchimento real de `anuncio` vindo do banco (`anunciantes`/`anuncios`) nos pontos de chamada revisados. O fallback foi configurado para direcionar para o **WhatsApp do próprio fundador**, funcionando como canal de contato comercial direto.
+### Peças ainda não documentadas
 
-**Racional documentado pelo usuário:** em um estágio sem tráfego significativo, não compensa operacionalizar o leilão de anúncios real (que exige anunciantes pagantes e volume para ser atrativo). Usar o espaço de anúncio como CTA de contato direto acelera conversas comerciais (parcerias, anunciantes early-adopter, feedback) enquanto a base de usuários cresce — o inventário publicitário "se paga sozinho" promovendo o próprio produto até fazer sentido ligar o sistema de leilão real.
-
-Isso é uma escolha consciente de sequenciamento, não um bug ou feature incompleta — mas é importante deixar registrado que a **infraestrutura de leilão (`anunciantes`, `anuncios`, CPC, segmentação) já existe no banco e está pronta**; o que falta é o "encanamento" de fato popular o campo `anuncio` no `AdCard` a partir de uma query real quando fizer sentido ativar.
-
-### `AdPage` — pontos de inventário definidos
-
-```typescript
-type AdPage = 'prestadores' | 'perfil_prestador' | 'busca_servicos' | 'lista_topo'
-```
-
-Quatro posições de anúncio mapeadas no tipo. Confirmadas em uso: `lista_topo` (topo da listagem), `prestadores` (a cada 5 cards, ver seção de Busca/Listagem), e `perfil_prestador` (no perfil público — **porém com bug de tipagem**, ver seção de Portfólio Público: o código passa `"perfil"` em vez de `"perfil_prestador"`, mascarado por um `as AdPage`). `busca_servicos` ainda não visto em uso — possivelmente para a home.
-
-### Peças ainda não documentadas deste módulo
-
-| Peça | Status |
-|---|---|
-| `useAdContext(page, categoria)` | Não revisado — provavelmente resolve `fallback` (conteúdo do CTA) e `contexto` com base na página/categoria |
-| `AdCardFallback.tsx` | Não revisado — o card visual que efetivamente aparece hoje na maior parte do site |
-| `AdFallback` (tipo) | Já se sabe a forma (`emoji`, `titulo`, `subtitulo`, `cta`, `href(contexto)`, `cor`) — falta ver o conteúdo real configurado |
-| Ponto de integração real com `anuncios`/`anunciantes` do banco | Não existe ainda nos call sites revisados — a implementar quando o leilão for ativado |
+`useAdContext`, `AdCardFallback.tsx`, conteúdo real do `AdFallback` configurado, ponto de integração real com `anuncios`/`anunciantes`.

@@ -10,7 +10,7 @@ Botão "Entrar com Google" (`GoogleButton`), fluxo padrão via `signInWithOAuth`
 
 ### 2. Email/senha com auto-criação de conta
 
-A tela de login (`app/login/page.tsx`) tem um formulário de email/senha abaixo do botão Google. O texto da UI ("Primeira vez? Sua conta será criada automaticamente") indica que **login e cadastro são a mesma ação** — não há uma tela de "criar conta" separada. Isso é tratado pelo hook `useLoginForm` (não detalhado aqui — ver `hooks/useLoginForm.ts` para a lógica exata de signIn vs signUp).
+A tela de login (`app/login/page.tsx`) tem um formulário de email/senha abaixo do botão Google. O texto da UI ("Primeira vez? Sua conta será criada automaticamente") indica que **login e cadastro são a mesma ação** — não há uma tela de "criar conta" separada. Isso é tratado pelo hook `useLoginForm`.
 
 ### Recuperação de senha
 
@@ -82,7 +82,7 @@ Localizado em `hooks/useAuth.ts`. Responsabilidades:
 
 Consolidado em torno de duas peças centrais, usadas por todo ponto de entrada que pode autenticar ou criar uma conta:
 
-- **`lib/services/auth.service.ts`** — única camada de I/O: `getStatusOnboarding` (lê `profile` + `prestador` de um usuário existente), `garantirRoleInicial` (grava `role` só se ainda não houver, retornando o valor confirmado na mesma requisição — evita depender de uma leitura separada logo após a escrita), `getPrestadorResumo` (busca só o prestador)
+- **`lib/services/auth.service.ts`** — única camada de I/O: `getStatusOnboarding` (lê `profile` + `prestador` de um usuário existente), `garantirRoleInicial` (grava `role` só se ainda não houver, retornando o valor confirmado na mesma requisição — evita depender de uma leitura separada logo após a escrita), `getPrestadorResumo` (busca só o prestador), `logoutCliente` (signOut genérico, usado por `useHeaderCliente`)
 - **`lib/auth/resolverDestinoPosLogin.ts`** — única função pura de decisão: `resolverDestinoPosLogin(profile, prestador) → string`
 
 ```
@@ -114,7 +114,7 @@ resolverDestinoPosLogin(profile, prestador):
 | `GoogleButton` na tela `/login` ("Área do Profissional") | `prestador` | `useGoogleAuth` passa `?role=prestador` na URL de callback |
 | `handleLogin` em `/login`, fallback de `signUp` | `prestador` | `garantirRoleInicial` chamado direto após criar a conta |
 
-N�o existe mais uma tela perguntando "como você quer usar o PQF" — cada ponto de entrada já sabe a resposta pelo contexto em que está.
+Não existe mais uma tela perguntando "como você quer usar o PQF" — cada ponto de entrada já sabe a resposta pelo contexto em que está.
 
 ### `app/auth/callback/route.ts` — Route Handler do OAuth
 
@@ -128,7 +128,7 @@ Lê `?role=` da URL (setado por `useGoogleAuth` quando aplicável) — se presen
 
 ### `app/auth/link-expirado/page.js` — Link de recuperação inválido
 
-Tela de erro dedicada para quando um link de recuperação de senha (ver `NovaSenha` em `04-autenticacao.md`, seção de Recuperação) chega expirado, já usado, ou com token corrompido. Registra um log de segurança (`LINK_RECUPERACAO_EXPIRADO`, `entidade_tipo: 'seguranca'`) com URL da tentativa e user agent, antes de oferecer botão único para reiniciar o processo em `/login`.
+Tela de erro dedicada para quando um link de recuperação de senha (ver `NovaSenha` acima, seção de Recuperação) chega expirado, já usado, ou com token corrompido. Registra um log de segurança (`LINK_RECUPERACAO_EXPIRADO`, `entidade_tipo: 'seguranca'`) com URL da tentativa e user agent, antes de oferecer botão único para reiniciar o processo em `/login`.
 
 > Nota de conversão: ainda `.js`, candidato à lista de conversão para `.tsx` no roadmap.
 
@@ -197,3 +197,4 @@ lib/
 - **`perfis` vs `profiles` — resolvido: `profiles` é a tabela ativa.** Confirmado ao revisar o fluxo de onboarding: `profiles.role` é usado ativamente em `auth/callback` e `useLoginForm`. `perfis` (sem "o" — nome em português) não apareceu em nenhum fluxo revisado até agora e é forte candidata a tabela legada. Ver ação recomendada em `03-banco-de-dados.md`.
 - **Conversão `.js` → `.tsx` pendente:** `app/recuperar-senha` (`NovaSenha`) e `app/auth/link-expirado/page.js` ainda em JavaScript puro, sem tipagem. Candidatas à conversão gradual — ver `07-roadmap.md`.
 - **Tensão `useAuth().role` vs `profiles.role`** — ver seção de Papéis acima. Não resolvida de raiz; apenas o ponto de maior risco (destino pós-login) foi consolidado.
+- **Exclusão de conta agora é simétrica entre cliente e prestador** — ambos os fluxos chamam `/api/delete-account` (remoção real de `auth.users` via service role) além de limpar dados de domínio. Ver `05-modulos.md`, seção Painel do Cliente / Dashboard do Prestador.
