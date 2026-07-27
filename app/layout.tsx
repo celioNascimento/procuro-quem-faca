@@ -3,7 +3,6 @@
 import "./globals.css"
 import { Suspense } from 'react'
 import { geistSans, geistMono } from "@/lib/fonts"
-import { AdSenseScript } from "@/lib/scripts/AdSenseScript"
 import FooterWrapper from "@/components/FooterWrapper"
 import CookieConsent from "@/components/CookieConsent"
 import LogAcesso from "@/components/LogAcesso"
@@ -28,7 +27,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <FooterWrapper />
           <CookieConsent />
           <LogAcesso />
-          <AdSenseScript />
         </PostHogProvider>
       </body>
     </html>

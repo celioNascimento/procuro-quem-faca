@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { insertLog } from '@/hooks/useLog'
+import { insertLog } from '@/lib/db/logs'
 import { buscarPrestadorPorUserId } from '@/lib/services/cadastroPrestador.service'
 import { removerFotoPrestador, deletarPrestadorPorUserId } from '@/lib/services/exclusaoConta.service'
 import * as ClienteService from '@/lib/services/cliente.service'

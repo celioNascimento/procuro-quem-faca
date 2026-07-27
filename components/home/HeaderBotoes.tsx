@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { LogIn, User, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { insertLog } from '@/hooks/useLog'
+import { insertLog } from '@/lib/db/logs'
 
 const btnGhost   = 'flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full whitespace-nowrap bg-white/80 backdrop-blur-sm border border-slate-200/70 text-slate-500 text-[10px] md:text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md hover:bg-white hover:text-slate-700 transition-all duration-200 active:scale-95'
 const btnPrimary = 'flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full whitespace-nowrap bg-blue-600 text-white text-[10px] md:text-xs font-black uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all duration-200 active:scale-95'
