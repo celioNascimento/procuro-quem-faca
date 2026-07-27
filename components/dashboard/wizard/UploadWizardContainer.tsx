@@ -1,4 +1,4 @@
-//dashboard/wizard/UploadWizardContainer.tsx
+//dashboard/wizard/UploadWizardContainer.tsx 
 
 'use client'
 
@@ -81,7 +81,7 @@ export function UploadWizardContainer({
                     {projetoStatus && (
                         <div className="flex justify-start mb-4">
                             <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border ${projetoStatus === 'em_execucao' ? 'bg-white/20 text-white border-white/30 animate-pulse'
-                                : projetoStatus === 'concluido' ? 'bg-green-400/30 text-white border-green-300/30'
+                                : projetoStatus === 'finalizado' ? 'bg-green-400/30 text-white border-green-300/30'
                                     : 'bg-white/15 text-white/80 border-white/20'
                                 }`}>
                                 {projetoStatus.replace('_', ' ')}

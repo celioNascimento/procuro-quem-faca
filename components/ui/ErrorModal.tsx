@@ -1,3 +1,5 @@
+//components/ui/ErrorModal.tsx
+
 'use client'
 
 import Link from 'next/link'

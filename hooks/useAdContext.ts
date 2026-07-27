@@ -1,3 +1,5 @@
+//hooks/useAdContext.ts
+
 import { useState } from 'react'
 import { resolverSegmento } from '@/lib/ads/categoria-segmento'
 import { getFallbackPorSegmento } from '@/lib/ads/fallbacks'

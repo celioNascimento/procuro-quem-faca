@@ -1,4 +1,4 @@
-//dashboard/wizard/WizardZoomModal.tsx
+//dashboard/wizard/WizardZoomModal.tsx 
 
 import { Camera, X, Loader2, User, MessageSquare, AlertCircle } from 'lucide-react'
 import { useUploadWizard } from '@/hooks/useUploadWizard'

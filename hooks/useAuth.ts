@@ -31,6 +31,7 @@ export function useAuth() {
   const [roleLoading, setRoleLoading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [erroLogin, setErroLogin] = useState(false)
+  const [sessionChecked, setSessionChecked] = useState(false)
 
   useEffect(() => {
     let cancelado = false
@@ -39,6 +40,7 @@ export function useAuth() {
       if (cancelado) return
       const sessionVal = s ?? null
       setSession(sessionVal)
+      setSessionChecked(true)
 
       if (sessionVal) {
         localStorage.setItem(SESSION_KEY, JSON.stringify(sessionVal))
@@ -70,6 +72,7 @@ export function useAuth() {
       if (cancelado) return
       const sessionVal = s ?? null
       setSession(sessionVal)
+      setSessionChecked(true)
 
       if (sessionVal) {
         localStorage.setItem(SESSION_KEY, JSON.stringify(sessionVal))
@@ -105,5 +108,5 @@ export function useAuth() {
     }
   }
 
-  return { session, role, prestadorStatus, roleLoading, loading, erroLogin, loginGoogle } // ← expõe
+  return { session, role, prestadorStatus, roleLoading, loading, erroLogin, loginGoogle, sessionChecked } 
 }

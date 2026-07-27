@@ -1,3 +1,5 @@
+//lib/db/categorias.ts
+
 import { supabase } from '@/lib/supabase'
 
 export async function getSugestoesDestaque() {

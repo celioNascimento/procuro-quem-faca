@@ -1,3 +1,5 @@
+//components/dashboard/EstadoVazio.tsx
+
 import { Camera } from 'lucide-react'
 
 interface Props {

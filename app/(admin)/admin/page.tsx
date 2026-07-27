@@ -1,122 +1,17 @@
+//app/(admin)/admin/page.tsx
+
 'use client'
-import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertCircle, CheckCircle2, TrendingUp, Zap, ArrowUpRight, Database } from 'lucide-react'
-
-// ─── Tipos ───────────────────────────────────────────────────────────────────
-
-interface CategoriaRanking {
-  nome: string
-  total: number
-}
-
-interface RadarItem {
-  acao: string
-  detalhes: { termo?: string } | null
-  created_at: string
-}
-
-interface Stats {
-  cidades: number
-  anuncios: number
-  prestadores: number
-  logs: number
-  curadoria: number
-  registrados: number
-  reivindicados: number
-  topCategorias: CategoriaRanking[]
-  ativacao: {
-    total: number
-    enviados: number
-    ativos: number
-  }
-}
-
-const STATS_INICIAL: Stats = {
-  cidades: 0, anuncios: 0, prestadores: 0, logs: 0,
-  curadoria: 0, registrados: 0, reivindicados: 0, topCategorias: [],
-  ativacao: { total: 0, enviados: 0, ativos: 0 }
-}
+import { AlertCircle, TrendingUp, Zap, ArrowUpRight } from 'lucide-react'
+import { useAdminDashboard } from '@/hooks/useAdminDashboard'
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats>(STATS_INICIAL)
-  const [radar, setRadar] = useState<RadarItem[]>([])
-  const [refreshing, setRefreshing] = useState(false)
-  const [notificacao, setNotificacao] = useState<string | null>(null)
-
-  const hapticFeedback = useCallback((intensity: number | number[] = 10) => {
-    if (typeof window !== 'undefined' && navigator.vibrate) navigator.vibrate(intensity)
-  }, [])
-
-  const carregarDashboard = useCallback(async (isRefresh = false) => {
-    if (isRefresh) { setRefreshing(true); hapticFeedback(15) }
-    try {
-      const [cidades, anuncios, prestadores, logs] = await Promise.all([
-        supabase.from('cidades').select('*', { count: 'exact', head: true }),
-        supabase.from('anuncios').select('*', { count: 'exact', head: true }),
-        supabase.from('prestadores').select('*', { count: 'exact', head: true }),
-        supabase.from('logs_atividades').select('*', { count: 'exact', head: true })
-      ])
-      const { data: pDataAll } = await supabase.from('prestadores').select('origem_tipo, user_id, ativacao_status')
-      const curadoriaCount    = pDataAll?.filter(p => p.origem_tipo === 'curadoria_publica' && !p.user_id).length || 0
-      const registradosCount  = pDataAll?.filter(p => p.origem_tipo === 'registro_direto').length || 0
-      const reivindicadosCount = pDataAll?.filter(p => p.user_id && p.origem_tipo === 'curadoria_publica').length || 0
-      const ativacaoStats = {
-        total:    pDataAll?.length || 0,
-        enviados: pDataAll?.filter(p => p.ativacao_status !== 'nao_enviado').length || 0,
-        ativos:   pDataAll?.filter(p => ['perfil_completo', 'avaliacao_recebida'].includes(p.ativacao_status)).length || 0,
-      }
-      const { data: logCats }  = await supabase.from('logs_atividades').select('entidade_id').eq('acao', 'FILTRO_CATEGORIA')
-      const { data: catNames } = await supabase.from('categorias').select('id, nome')
-      const counts = logCats?.reduce((acc: Record<string, number>, log) => {
-        if (log.entidade_id) acc[log.entidade_id] = (acc[log.entidade_id] || 0) + 1
-        return acc
-      }, {})
-      const ranking: CategoriaRanking[] = Object.entries(counts || {})
-        .map(([id, total]) => ({
-          nome: catNames?.find(c => c.id === id)?.nome || 'Outros',
-          total: total as number
-        }))
-        .sort((a, b) => b.total - a.total).slice(0, 4)
-      const { data: lRecent } = await supabase.from('logs_atividades')
-        .select('acao, detalhes, created_at')
-        .in('acao', ['CLIQUE_WHATSAPP', 'BUSCA_SEM_SUCESSO', 'DENUNCIA_PERFIL'])
-        .order('created_at', { ascending: false }).limit(8)
-      setStats({
-        cidades: cidades.count || 0, anuncios: anuncios.count || 0,
-        prestadores: prestadores.count || 0, logs: logs.count || 0,
-        curadoria: curadoriaCount, registrados: registradosCount,
-        reivindicados: reivindicadosCount, topCategorias: ranking,
-        ativacao: ativacaoStats
-      })
-      setRadar((lRecent as RadarItem[]) || [])
-    } catch (err) { console.error(err) } finally { setRefreshing(false) }
-  }, [hapticFeedback])
-
-  useEffect(() => {
-    carregarDashboard()
-    const canal = supabase.channel('realtime_console')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs_atividades' }, (payload) => {
-        if (payload.new.acao === 'DENUNCIA_PERFIL') {
-          setNotificacao('Alerta de Segurança')
-          hapticFeedback([50, 30, 50])
-          setTimeout(() => setNotificacao(null), 4000)
-        }
-        carregarDashboard()
-      }).subscribe()
-    return () => { supabase.removeChannel(canal) }
-  }, [carregarDashboard, hapticFeedback])
-
-  const pctAtivacao = stats.ativacao.total
-    ? Math.round((stats.ativacao.enviados / stats.ativacao.total) * 100)
-    : 0
+  const { stats, radar, refreshing, notificacao, pctAtivacao, carregarDashboard } = useAdminDashboard()
 
   return (
     <div className="max-w-5xl mx-auto pb-24 px-4 md:px-6">
 
-      {/* ── Notificação ── */}
       <AnimatePresence>
         {notificacao && (
           <motion.div
@@ -133,7 +28,6 @@ export default function AdminDashboard() {
         )}
       </AnimatePresence>
 
-      {/* ── Cabeçalho ── */}
       <header className="flex items-center justify-between pt-6 md:pt-10 pb-6 md:pb-8 border-b border-zinc-100">
         <div>
           <div className="flex items-center gap-1.5 mb-1">
@@ -141,7 +35,7 @@ export default function AdminDashboard() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
             </span>
-            <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-[0.2em]">Operação Londrina</p>
+            <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-[0.2em]">Painel operacional</p>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 leading-none">
             Admin
@@ -155,15 +49,13 @@ export default function AdminDashboard() {
         </button>
       </header>
 
-      {/* ── Métricas principais ── */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 pt-6">
-        <StatCard label="Curadoria" valor={stats.curadoria}     sub="perfis frios" />
-        <StatCard label="Ativos"    valor={stats.reivindicados} sub="reivindicados" highlight />
-        <StatCard label="Orgânicos" valor={stats.registrados}   sub="diretos" />
-        <StatCard label="Anúncios"  valor={stats.anuncios}      sub="visíveis" />
+        <StatCard label="Curadoria" valor={stats.curadoria} sub="perfis frios" />
+        <StatCard label="Ativos" valor={stats.reivindicados} sub="reivindicados" highlight />
+        <StatCard label="Orgânicos" valor={stats.registrados} sub="diretos" />
+        <StatCard label="Anúncios" valor={stats.anuncios} sub="visíveis" />
       </section>
 
-      {/* ── Card de Ativação em destaque ── */}
       <section className="mt-4">
         <Link href="/admin/ativacao" className="group block bg-zinc-900 text-white rounded-2xl p-5 md:p-6 hover:bg-zinc-800 transition-colors">
           <div className="flex items-center justify-between mb-4">
@@ -193,10 +85,8 @@ export default function AdminDashboard() {
         </Link>
       </section>
 
-      {/* ── Grid principal ── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mt-4">
 
-        {/* Demandas reprimidas */}
         <section className="lg:col-span-3 bg-white rounded-2xl border border-zinc-100 p-5 md:p-6">
           <div className="flex items-center justify-between mb-5">
             <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">Categorias mais buscadas</p>
@@ -221,7 +111,6 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        {/* Pulso de conversão */}
         <section className="lg:col-span-2 bg-zinc-950 rounded-2xl p-5 md:p-6 relative overflow-hidden">
           <div className="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]" />
           <p className="text-[10px] font-medium text-zinc-600 uppercase tracking-widest mb-5 relative z-10">Pulso ao vivo</p>
@@ -241,8 +130,7 @@ export default function AdminDashboard() {
                   <p className="text-[9px] text-zinc-600 mt-0.5">
                     {item.acao === 'BUSCA_SEM_SUCESSO'
                       ? `"${item.detalhes?.termo}"`
-                      : item.created_at.slice(11, 16) + 'h'
-                    }
+                      : item.created_at.slice(11, 16) + 'h'}
                   </p>
                 </div>
               </div>
@@ -257,13 +145,12 @@ export default function AdminDashboard() {
         </section>
       </div>
 
-      {/* ── Quick actions ── */}
       <footer className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 pt-4 border-t border-zinc-100">
         {[
-          { href: '/admin/moderacao', label: 'Moderação',  icon: '⚖️' },
-          { href: '/admin/ativacao',  label: 'Ativação',   icon: '📲' },
-          { href: '/admin/logs',      label: 'Analytics',  icon: '📈' },
-          { href: '/admin/geografia', label: 'Mapa',       icon: '📍' },
+          { href: '/admin/moderacao', label: 'Moderação', icon: '⚖️' },
+          { href: '/admin/ativacao', label: 'Ativação', icon: '📲' },
+          { href: '/admin/logs', label: 'Analytics', icon: '📈' },
+          { href: '/admin/geografia', label: 'Mapa', icon: '📍' },
         ].map(({ href, label, icon }) => (
           <Link
             key={href}
@@ -279,8 +166,6 @@ export default function AdminDashboard() {
   )
 }
 
-// ─── Componentes ───────────────────────────────────────────────────────────────
-
 interface StatCardProps {
   label: string
   valor: number
@@ -291,9 +176,7 @@ interface StatCardProps {
 function StatCard({ label, valor, sub, highlight = false }: StatCardProps) {
   return (
     <div className={`p-4 md:p-5 rounded-2xl border transition-all ${
-      highlight
-        ? 'bg-blue-600 border-blue-500 shadow-sm shadow-blue-100'
-        : 'bg-white border-zinc-100'
+      highlight ? 'bg-blue-600 border-blue-500 shadow-sm shadow-blue-100' : 'bg-white border-zinc-100'
     }`}>
       <p className={`text-[9px] font-medium uppercase tracking-widest mb-2 ${highlight ? 'text-blue-200' : 'text-zinc-400'}`}>
         {label}

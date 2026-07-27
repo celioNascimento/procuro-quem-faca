@@ -1,8 +1,11 @@
 // hooks/useLogout.ts
+
 import { supabase } from '@/lib/supabase'
 
 export function useLogout() {
-  const logout = async () => {
+  const logout = async (opts?: { origem?: string; redirectTo?: string }) => {
+    const origem = opts?.origem ?? 'dashboard'
+    const redirectTo = opts?.redirectTo ?? '/'
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
@@ -11,7 +14,7 @@ export function useLogout() {
           usuario_id: session.user.id,
           usuario_email: session.user.email,
           entidade_tipo: 'sessao',
-          detalhes: { origem: 'dashboard' }
+          detalhes: { origem }
         }).then(() => { })
       }
       await supabase.auth.signOut()
@@ -20,7 +23,7 @@ export function useLogout() {
         sessionStorage.clear()
       }
     } catch { }
-    window.location.href = '/'
+    window.location.href = redirectTo
   }
 
   return { logout }

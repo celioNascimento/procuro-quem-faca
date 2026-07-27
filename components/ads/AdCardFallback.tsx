@@ -2,7 +2,7 @@
 
 'use client'
 import Link from 'next/link'
-import type { AdFallback } from '@/types/ads'
+import type { AdFallback } from '@/types/ads' 
 
 type Props = {
   fallback: AdFallback

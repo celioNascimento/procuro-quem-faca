@@ -1,3 +1,5 @@
+//components/PostHogProvider.tsx
+
 'use client'
 
 import posthog from 'posthog-js'

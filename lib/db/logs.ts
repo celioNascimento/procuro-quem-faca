@@ -1,3 +1,5 @@
+//lib/db/logs.ts
+
 import { supabase } from '@/lib/supabase'
 
 export interface LogPayload {

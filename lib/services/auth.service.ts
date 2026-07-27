@@ -1,4 +1,4 @@
-// lib/services/auth.service.ts
+// lib/services/auth.service.ts  
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'

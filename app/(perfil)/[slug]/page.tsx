@@ -12,7 +12,7 @@ import PortfolioGrid from '@/components/profile/PortfolioGrid'
 import { AdCard } from '../../../components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
-import { insertLog } from '@/hooks/useLog'
+import { insertLog } from '@/lib/db/logs'
 import { useCompartilharPerfil } from '@/hooks/useCompartilharPerfil'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
 

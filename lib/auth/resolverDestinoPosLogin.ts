@@ -1,3 +1,5 @@
+//lib/auth/resolverDestinoPosLogin.ts 
+
 /**
  * Resolve para onde o usuário deve ser redirecionado após autenticar,
  * com base no papel escolhido (profiles.role) e no estado do cadastro

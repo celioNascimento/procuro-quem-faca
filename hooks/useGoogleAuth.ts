@@ -1,4 +1,4 @@
-// hooks/useGoogleAuth.ts
+// hooks/useGoogleAuth.ts 
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'

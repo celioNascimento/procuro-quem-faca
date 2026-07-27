@@ -1,3 +1,5 @@
+//components/auth/SecaoAcessoLogado.tsx
+
 'use client'
 
 import type { User } from '@supabase/supabase-js'
@@ -8,7 +10,7 @@ interface SecaoAcessoLogadoProps {
   senha: string
   confirmarSenha: string
   tentouEnviar: boolean
-  onSenhaChange: (v: string) => void
+  onSenhaChange: (v: string) => void 
   onConfirmarSenhaChange: (v: string) => void
   onLogout: () => void
   inputStyle: string

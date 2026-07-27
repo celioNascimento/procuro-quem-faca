@@ -1,5 +1,8 @@
+//app/(dashboard)/dashboard/page.tsx
+
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
@@ -7,9 +10,12 @@ import { Lock, UserCircle2, Images, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 
-export default function PerfilPage() {
-  // Abre direto em portfólio — é o que o prestador quer ver primeiro
-  const [abaAtiva, setAbaAtiva] = useState('portfolio')
+function PerfilPageContent() {
+  const searchParams = useSearchParams()
+  // Abre em portfólio por padrão — a menos que ?aba=perfil seja explicitado
+  // (usado pelo redirect de /dashboard/perfil, ver aquele arquivo)
+  const abaInicial = searchParams.get('aba') === 'perfil' ? 'perfil' : 'portfolio'
+  const [abaAtiva, setAbaAtiva] = useState(abaInicial)
   const { cadastroCompleto, validando, slug } = usePerfilStatus()
 
   useEffect(() => {
@@ -48,10 +54,10 @@ export default function PerfilPage() {
                 disabled={aba.bloqueado || validando}
                 onClick={() => setAbaAtiva(aba.id)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest transition-all duration-200 whitespace-nowrap ${abaAtiva === aba.id
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
-                    : aba.bloqueado
-                      ? 'text-slate-300 cursor-not-allowed opacity-60'
-                      : 'text-slate-500 hover:bg-slate-100'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
+                  : aba.bloqueado
+                    ? 'text-slate-300 cursor-not-allowed opacity-60'
+                    : 'text-slate-500 hover:bg-slate-100'
                   }`}
               >
                 {aba.bloqueado && !validando ? <Lock size={11} /> : aba.icon}
@@ -93,5 +99,17 @@ export default function PerfilPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function PerfilPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-64 flex items-center justify-center">
+        <div className="w-10 h-10 border-[3px] border-slate-100 border-t-blue-600 rounded-full animate-spin" />
+      </div>
+    }>
+      <PerfilPageContent />
+    </Suspense>
   )
 }

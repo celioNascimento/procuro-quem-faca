@@ -1,4 +1,4 @@
-//components/profile/PortfolioGrid.tsx
+//components/profile/PortfolioGrid.tsx 
 
 'use client'
 import { useState } from 'react'

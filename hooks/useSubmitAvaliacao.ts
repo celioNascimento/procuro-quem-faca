@@ -1,8 +1,9 @@
+//hooks/useSubmitAvaliacao.ts
+
 'use client'
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { uploadImagemPortfolio } from '@/lib/services/uploadWizard.service'
-import { inserirAvaliacao, finalizarProjeto } from '@/lib/services/avaliacao.service'
+import { inserirAvaliacao, finalizarProjeto, marcarProjetoEmDisputa } from '@/lib/services/avaliacao.service'
 
 type Status = 'idle' | 'uploading' | 'saving' | 'done' | 'error'
 
@@ -76,10 +77,7 @@ export function useSubmitAvaliacao(onComplete: () => void) {
       if (!isContestacao) {
         await finalizarProjeto(projetoId)
       } else {
-        await supabase
-          .from('portfolio_projetos')
-          .update({ status: 'em_disputa' })
-          .eq('id', projetoId)
+        await marcarProjetoEmDisputa(projetoId)
       }
 
       setStatus('done')

@@ -1,4 +1,4 @@
-//components/home/HeaderBotoes.tsx
+//components/home/HeaderBotoes.tsx 
 
 'use client'
 import Link from 'next/link'

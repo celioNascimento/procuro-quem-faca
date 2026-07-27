@@ -1,4 +1,4 @@
-//components/perfil/FotoUpload.tsx
+//components/perfil/FotoUpload.tsx 
 
 'use client'
 

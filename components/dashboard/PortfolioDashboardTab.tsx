@@ -1,3 +1,5 @@
+//components/dashboard/PortfolioDashboardTab.tsx
+
 'use client'
 
 import { usePortfolioDashboard } from '@/hooks/usePortfolioDashboard'

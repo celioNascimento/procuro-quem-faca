@@ -1,4 +1,5 @@
 // components/dashboard/EditarPerfilTab.tsx
+
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -213,7 +214,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         .single()
 
       if (error) throw error
-      onSalvar?.()
 
       if (novoAtivacaoStatus !== statusAtual) {
         form.set({ ativacao_status: novoAtivacaoStatus })

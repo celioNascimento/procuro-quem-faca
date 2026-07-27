@@ -1,4 +1,4 @@
-//hooks/useSugestoes.ts
+//hooks/useSugestoes.ts 
 
 import { useState, useEffect } from 'react'
 import { getSugestoesDestaque, getSugestoesPorBusca } from '@/lib/db/categorias'

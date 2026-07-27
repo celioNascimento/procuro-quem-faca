@@ -1,4 +1,4 @@
-//components/perfil/SecaoOQueVoceFaz.tsx
+//components/perfil/SecaoOQueVoceFaz.tsx 
 
 'use client'
 

@@ -1,3 +1,5 @@
+//lib/buscaUtils.tsx
+
 function simplificar(txt) {
   if (!txt) return '';
   return txt

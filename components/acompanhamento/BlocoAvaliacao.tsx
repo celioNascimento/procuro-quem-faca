@@ -1,3 +1,5 @@
+//components/acompanhamento/BlocoAvaliacao.tsx
+
 import { CheckCircle2, Loader2, Star } from 'lucide-react'
 
 type Props = {

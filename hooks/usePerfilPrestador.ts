@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { insertLog } from '@/hooks/useLog'
+import { insertLog } from '@/lib/db/logs'
 import type { PerfilData, ProjetoPerfil, FotoProjeto } from '@/types/perfil'
 
 interface UsePerfilPrestadorReturn {

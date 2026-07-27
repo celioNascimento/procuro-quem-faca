@@ -1,4 +1,4 @@
-//components/profile/AvaliacoesTab.tsx
+//components/profile/AvaliacoesTab.tsx 
 
 'use client'
 import { useAvaliacoes } from '@/hooks/useAvaliacoes'

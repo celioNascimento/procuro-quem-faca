@@ -1,4 +1,4 @@
-//components/profile/PerfilHero.tsx
+//components/profile/PerfilHero.tsx  
 
 'use client'
 import Link from 'next/link'

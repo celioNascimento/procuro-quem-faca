@@ -1,4 +1,4 @@
-//hooks/useServicosCliente.ts
+//hooks/useServicosCliente.ts 
 
 'use client'
 import { useState, useEffect, useRef } from 'react'
@@ -44,9 +44,9 @@ export function useServicosCliente(whatsapp: string) {
       return { label: 'Avaliar agora', dot: 'bg-blue-500', badge: 'bg-blue-600 text-white border-blue-600', urgente: true }
     if (s === 'em_execucao')
       return { label: 'Em andamento', dot: 'bg-blue-400', badge: 'bg-blue-50 text-blue-700 border-blue-200', urgente: false }
-    if ((s === 'finalizado' || s === 'concluido') && jaAvaliado)
+    if (s === 'finalizado' && jaAvaliado)
       return { label: 'Concluído', dot: 'bg-green-400', badge: 'bg-green-50 text-green-700 border-green-200', urgente: false }
-    if (s === 'finalizado' || s === 'concluido')
+    if (s === 'finalizado')
       return { label: 'Finalizado', dot: 'bg-green-400', badge: 'bg-green-50 text-green-700 border-green-200', urgente: false }
     return { label: s, dot: 'bg-slate-300', badge: 'bg-slate-50 text-slate-500 border-slate-200', urgente: false }
   }
@@ -66,7 +66,7 @@ export function useServicosCliente(whatsapp: string) {
     if (filtroStatus === 'pendente')    return st === 'pendente'
     if (filtroStatus === 'andamento')   return st === 'em_execucao' && !temFoto3
     if (filtroStatus === 'avaliar')     return st === 'em_execucao' && temFoto3
-    if (filtroStatus === 'finalizados') return st === 'finalizado' || st === 'concluido'
+    if (filtroStatus === 'finalizados') return st === 'finalizado'
     return true
   })
 

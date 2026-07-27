@@ -1,5 +1,8 @@
-import { supabase } from '@/lib/supabase'
+//lib/services/compartilharPerfil.service.ts
+
+import { insertLog } from '@/lib/db/logs'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
+
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -52,8 +55,8 @@ export function buildTextoWhatsApp(
       : ''
 
   return (
-    `Olá! Encontrei este profissional no *Procuro Quem Faça*:\n\n` +
-    `👷 *${nomePrestador}*${catTexto}${projTexto}\n\n` +
+    `Olá! Encontrei este profissional no *Procuro Quem Faça*:\n\n` +    
+    `👷 *${nomePrestador}*${catTexto}${projTexto}\n\n` +    
     `🔗 ${urlPerfil}`
   )
 }
@@ -109,14 +112,15 @@ export async function registrarCompartilhamento(
   payload: RegistroCompartilhamento
 ): Promise<void> {
   try {
-    await supabase.from('logs_eventos').insert({
-      tipo: 'COMPARTILHAR_PERFIL',
-      prestador_id: payload.prestador_id,
-      metadata: {
-        canal: payload.canal,
-        origem: payload.origem,
-      },
-    })
+           await insertLog({
+          acao: 'COMPARTILHAR_PERFIL',
+          entidadeTipo: 'prestador',
+          entidadeId: String(payload.prestador_id),
+          detalhes: {
+            canal: payload.canal,
+            origem: payload.origem,
+          },
+        })
   } catch {
     // log nunca deve quebrar o fluxo principal
   }

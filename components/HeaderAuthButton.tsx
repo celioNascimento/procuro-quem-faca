@@ -1,3 +1,5 @@
+//components/HeaderAuthButton.tsx
+
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
@@ -55,7 +57,7 @@ export function HeaderAuthButton() {
           </Link>
 
           <button
-            onClick={logout}
+            onClick={() => logout()}
             className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50 transition-all active:scale-95"
             title="Sair"
           >

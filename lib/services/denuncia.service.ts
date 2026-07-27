@@ -1,3 +1,5 @@
+//lib/services/denuncia.service.ts
+
 import { supabase } from '@/lib/supabase'
 
 export async function criarDenuncia(prestadorId: number, motivo: string): Promise<void> {

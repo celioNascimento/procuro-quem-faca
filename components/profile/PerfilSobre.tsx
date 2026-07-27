@@ -1,4 +1,4 @@
-//components/profile/PerfilSobre.tsx
+//components/profile/PerfilSobre.tsx 
 
 import type { PrestadorPerfil } from '@/types/perfil'
 

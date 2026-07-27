@@ -1,3 +1,5 @@
+//components/auth/SecaoAcessoCadastro.tsx
+
 'use client'
 
 import { SenhaInput } from './SenhaInput'

@@ -1,3 +1,5 @@
+//lib/db/acessos.ts
+
 import { supabase } from '@/lib/supabase'
 import { insertLog } from './logs'
 

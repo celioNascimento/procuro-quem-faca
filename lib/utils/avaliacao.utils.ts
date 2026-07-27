@@ -1,3 +1,5 @@
+//lib/utils/avaliacao.utils.ts
+
 import type { AvaliacaoRaw, Avaliacao, AvaliacoesStats } from '@/types/avaliacao'
 
 export { type Avaliacao, type AvaliacoesStats }

@@ -1,3 +1,5 @@
+//hooks/useSlides.ts
+
 import { useState } from 'react'
 import type { FotoProjeto } from '@/types/perfil'
 

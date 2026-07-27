@@ -3,7 +3,6 @@
 ## O problema
 
 Encontrar um prestador de serviço confiável localmente ainda depende de indicação boca-a-boca ou grupos de Facebook/WhatsApp sem histórico verificável. O cliente não tem como saber, antes de contratar:
-
 - Se o prestador realmente entrega o que promete
 - Como foi o trabalho de outros clientes
 - Se há evidência real do serviço (fotos, não só "print de conversa")

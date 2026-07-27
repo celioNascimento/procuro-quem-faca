@@ -1,4 +1,4 @@
-//components/profile/AvaliacaoCard.tsx
+//components/profile/AvaliacaoCard.tsx 
 
 'use client'
 import RatingStars from '@/components/ui/RatingStars'

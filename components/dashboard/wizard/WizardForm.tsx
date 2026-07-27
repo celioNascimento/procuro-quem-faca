@@ -1,5 +1,5 @@
-//dashboard/wizard/WizardForm.tsx
-
+//dashboard/wizard/WizardForm.tsx 
+ 
 import {
   Smartphone, Camera, X, Loader2, CheckCircle2, ChevronRight,
   Activity, AlertCircle, Link as LinkIcon, CloudCheck, RefreshCw,
@@ -80,7 +80,7 @@ export function WizardForm({ hookData }: Props) {
             <span className={`text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full border ${
               projetoStatus === 'em_execucao'
                 ? 'bg-blue-50 text-blue-600 border-blue-100 animate-pulse'
-                : projetoStatus === 'concluido'
+                : projetoStatus === 'finalizado'
                 ? 'bg-green-50 text-green-600 border-green-100'
                 : 'bg-yellow-50 text-yellow-600 border-yellow-100'
             }`}>

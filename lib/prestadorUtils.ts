@@ -1,3 +1,5 @@
+//lib/prestadorUtils.ts
+
 export function getIniciais(nome: string): string {
   if (!nome) return '?'
   const partes = nome.trim().split(/\s+/)

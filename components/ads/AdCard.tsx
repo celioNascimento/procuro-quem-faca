@@ -1,4 +1,4 @@
-//components/ads/AdCard.tsx
+//components/ads/AdCard.tsx 
 
 'use client'
 import { useEffect, useRef, useState } from 'react'

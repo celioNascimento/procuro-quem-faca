@@ -1,4 +1,4 @@
-//services/painelCliente.service.ts
+//services/painelCliente.service.ts 
 
 import { supabase } from '@/lib/supabase'
 
@@ -69,13 +69,4 @@ export async function loginComGoogle(tokenUrl: string | null) {
     : `${base}/meus-servicos`
 
   await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
-}
-
-// ⚠️ Mantido por segurança — não confirmei se LoginGate.tsx ou outro
-// componente ainda importa esta função antes de decidir removê-la.
-// auth.service.ts agora tem logoutCliente(), que faz a mesma coisa —
-// se esta função aqui não tiver nenhum uso real, ela é candidata a
-// remoção numa próxima rodada, mas prefiro confirmar antes de apagar.
-export async function logout() {
-  await supabase.auth.signOut()
 }

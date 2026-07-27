@@ -1,9 +1,10 @@
+//app/reivindicar/page.tsx
+
 'use client'
-import { useState, useEffect, Suspense } from 'react'
+
 import { useSearchParams, useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
-import type { User } from '@supabase/supabase-js'
+import { useState, Suspense } from 'react'
 
 function ReivindicarConteudo() {
   const searchParams = useSearchParams()
@@ -12,15 +13,7 @@ function ReivindicarConteudo() {
   const prestadorNome = searchParams.get('nome')
 
   const [loading, setLoading] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
 
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user || null)
-    }
-    checkSession()
-  }, [])
 
   const handleReivindicar = async () => {
     setLoading(true)

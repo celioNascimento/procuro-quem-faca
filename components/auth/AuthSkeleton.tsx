@@ -1,3 +1,5 @@
+//components/auth/AuthSkeleton.tsx
+
 'use client'
 
 export default function AuthSkeleton() {

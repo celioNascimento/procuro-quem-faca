@@ -1,4 +1,4 @@
-//components/perfil/HeaderCliente.tsx
+//components/perfil/HeaderCliente.tsx 
 
 'use client'
 import Image from 'next/image'

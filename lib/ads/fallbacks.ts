@@ -1,23 +1,26 @@
+//lib/ads/fallbacks.ts
+
 import type { AdFallback } from '@/types/ads'
 import type { SegmentoAd } from './categoria-segmento'
+import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 
-const NUMERO_WHATSAPP = '5543999739597' 
+
 const MENSAGEM = encodeURIComponent('Olá! Tenho interesse em destacar minha loja no Procuro Quem Faça.')
 
-const ROTA_CAPTACOES = () => `https://wa.me/${NUMERO_WHATSAPP}?text=${MENSAGEM}`
+const ROTA_CAPTACOES = () => `https://wa.me/${NUMERO_WHATSAPP_PQF}?text=${MENSAGEM}`
 
 const FALLBACKS_POR_SEGMENTO: Record<SegmentoAd, AdFallback[]> = {
   construcao: [{
     emoji: '📢',
     titulo: 'Destaque sua loja de materiais aqui',
-    subtitulo: 'Apareça exatamente quando clientes de Londrina buscam pedreiros.',
+    subtitulo: 'Apareça exatamente quando clientes da sua região buscam pedreiros.',
     cta: 'Anunciar agora',
     href: ROTA_CAPTACOES,
     cor: 'from-orange-700 to-orange-800',
   }],
   pintura: [{
     emoji: '📢',
-    titulo: 'Venda mais tintas em Londrina',
+    titulo: 'Venda mais tintas na sua região',
     subtitulo: 'Mostre sua loja para clientes que estão contratando pintores agora.',
     cta: 'Anunciar agora',
     href: ROTA_CAPTACOES,
@@ -26,7 +29,7 @@ const FALLBACKS_POR_SEGMENTO: Record<SegmentoAd, AdFallback[]> = {
   eletrica: [{
     emoji: '📢',
     titulo: 'Destaque sua loja de materiais elétricos',
-    subtitulo: 'Anuncie para clientes que acabaram de buscar eletricistas na região.',
+    subtitulo: 'Anuncie para clientes que acabaram de buscar eletricistas na sua região.',
     cta: 'Anunciar agora',
     href: ROTA_CAPTACOES,
     cor: 'from-yellow-500 to-yellow-600',
@@ -42,7 +45,7 @@ const FALLBACKS_POR_SEGMENTO: Record<SegmentoAd, AdFallback[]> = {
   limpeza: [{
     emoji: '📢',
     titulo: 'Fornece produtos de limpeza profissional?',
-    subtitulo: 'Exiba seus produtos no perfil das melhores diaristas de Londrina.',
+    subtitulo: 'Exiba seus produtos no perfil das melhores diaristas da sua região.',
     cta: 'Anunciar agora',
     href: ROTA_CAPTACOES,
     cor: 'from-teal-600 to-teal-700',

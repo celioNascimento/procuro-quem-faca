@@ -1,3 +1,5 @@
+//lib/mascaras.ts
+
 export function aplicarMascaraWhatsapp(v: string): string {
   if (!v) return ''
   v = v.replace(/\D/g, '')

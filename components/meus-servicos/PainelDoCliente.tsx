@@ -1,5 +1,4 @@
-// components/meus-servicos/PainelDoCliente.tsx
-
+// components/meus-servicos/PainelDoCliente.tsx 
 'use client'
 import { useState } from 'react'
 import { User, Clock, Loader2, CheckCircle2, ClipboardList, LayoutGrid } from 'lucide-react'

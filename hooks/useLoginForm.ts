@@ -1,4 +1,4 @@
-// hooks/useLoginForm.ts
+// hooks/useLoginForm.ts 
 
 import { useState, useEffect, useRef, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import { garantirRoleInicial, getPrestadorResumo } from '@/lib/services/auth.service'
 import { resolverDestinoPosLogin } from '@/lib/auth/resolverDestinoPosLogin'
+import { insertLog } from '@/lib/db/logs'
 
 // Esta tela de login é a "Área do Profissional" — qualquer conta criada
 // implicitamente por aqui (e-mail/senha sem cadastro prévio) nasce como
@@ -31,10 +32,10 @@ export function useLoginForm() {
 
   const registrarLogAuth = async (acao: string, detalhes: Record<string, any> = {}) => {
     try {
-      await supabase.from('logs_atividades').insert({
+     await insertLog({
         acao,
         detalhes: { ...detalhes, email_tentativa: email },
-        entidade_tipo: 'autenticacao'
+        entidadeTipo: 'autenticacao',
       })
     } catch { }
   }
@@ -124,7 +125,7 @@ export function useLoginForm() {
         await registrarLogAuth('RECUPERACAO_SENHA_SOLICITADA')
       }
     } catch (err: any) {
-      if (isActive.current) setMensagem('Erro: ' + (err.message || 'Falha ao processar.'))
+       if (isActive.current) setMensagem('Erro: ' + (err.message || 'Falha ao processar.'))
     } finally {
       if (isActive.current) setLoading(false)
     }

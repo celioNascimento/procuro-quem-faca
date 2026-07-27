@@ -1,3 +1,5 @@
+//app/layout.tsx
+
 import "./globals.css"
 import { Suspense } from 'react'
 import { geistSans, geistMono } from "@/lib/fonts"

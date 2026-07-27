@@ -1,4 +1,5 @@
-// src/lib/categorias.js
+// src/lib/categorias.js 
+
 export const CATEGORIAS_OFICIAIS = [
   "Técnico Ar-Condicionado", 
   "Eletricista",

@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSugestoes } from '@/hooks/useSugestoes'
-import { insertLog } from '@/hooks/useLog'
+import { insertLog } from '@/lib/db/logs'
 import SearchForm from '@/components/home/SearchForm'
 import { ArrowRight, Briefcase } from 'lucide-react'
 

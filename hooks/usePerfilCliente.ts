@@ -34,16 +34,10 @@ export function usePerfilCliente() {
     listaCidades:  dados.listaCidades,
     errorModal:    dados.errorModal,
     setErrorModal: dados.setErrorModal,
-    deleteModal:        dados.deleteModal,
-    setDeleteModal:     dados.setDeleteModal,
-    deleteConfirmText:  dados.deleteConfirmText,
-    setDeleteConfirmText: dados.setDeleteConfirmText,
-    deleting:      dados.deleting,
     aplicarMascara,
     handleChangePerfil: dados.handleChangePerfil,
     handleUploadFoto:   dados.handleUploadFoto,
     atualizar:          dados.atualizar,
-    handleDeleteAccount: dados.handleDeleteAccount,
 
     // ── Serviços ──────────────────────────────────
     servicos:          servicos.servicos,

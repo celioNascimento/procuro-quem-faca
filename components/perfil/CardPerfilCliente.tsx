@@ -1,4 +1,4 @@
-//components/perfil/CardPerfilCliente.tsx
+//components/perfil/CardPerfilCliente.tsx 
 
 'use client'
 import { Camera, Loader2, User, MapPin, Activity, Clock } from 'lucide-react'

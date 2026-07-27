@@ -33,8 +33,6 @@ procuro-quem-faca/
 
 ## Padrão arquitetural: Hook → Service → Supabase
 
-O projeto segue uma separação em camadas consistente, mais visível nos módulos mais recentes (ex: upload wizard, portfolio):
-
 ```
 Componente (UI)
      ↓
@@ -47,109 +45,117 @@ Supabase (Postgres + RLS)
 
 **Exemplo real — módulo de upload de portfólio:**
 
-- `components/portfolio/.../UploadWizard.tsx` → UI pura, recebe tudo via hook
+- `components/dashboard/wizard/UploadWizardContainer.tsx` → UI, recebe tudo via `hookData`
 - `hooks/useUploadWizard.ts` → estado (fotos, legendas, projeto atual), efeitos (sincronização de status), ações (`handleUpload`, `handleSalvarLegenda`)
-- `lib/services/uploadWizard.service.ts` → funções isoladas (`upsertFotoProjeto`, `atualizarLegendaFoto`, `uploadImagemPortfolio`), cada uma fazendo uma query/operação específica
+- `lib/services/uploadWizard.service.ts` → funções isoladas (`upsertFotoProjeto`, `atualizarLegendaFoto`, `uploadImagemPortfolio`)
 
 Essa separação existe para:
 - Permitir testar a lógica de negócio (hook) sem precisar renderizar componentes
-- Isolar chamadas ao Supabase em um único lugar por domínio, facilitando trocar client ou adicionar retry/cache depois
+- Isolar chamadas ao Supabase em um único lugar por domínio
 - Manter componentes como puramente apresentacionais
 
-**Nem todo módulo antigo segue esse padrão à risca** — alguns hooks mais antigos ainda fazem chamadas diretas ao Supabase. Ao tocar em código legado, prefira migrar para o padrão service quando fizer sentido, sem forçar refatoração completa fora de escopo.
+Componentes de página (`app/**/page.tsx`) tendem a ser wrappers finos que consomem um hook central; a lógica de estado e efeitos vive no hook; o I/O vive no service. Ver `08-glossario.md` para localizar rapidamente o hook/service correspondente a um conceito específico (ex: "avatar", "WhatsApp", "logout", "status de projeto").
+
+### Módulos com peças construídas mas não conectadas
+
+- **`lib/contexts/LocationContext.tsx` + `components/location/LocationModal.tsx`** — modal de seleção obrigatória de cidade via cookie. `LocationProvider` nunca envolve a árvore em `app/layout.tsx`. Decisão consciente de não conectar: a busca por texto livre (`"pedreiro em Londrina"`, via `usePrestadores`) já cobre a necessidade no estágio mono-região atual. Ver `08-glossario.md`, seção Localização.
+- **`components/dashboard/WizardForm.tsx`, `WizardTimeline.tsx`, `PrestadorCardHorizontal.tsx`** — peças de uma refatoração do wizard do prestador, prontas mas não integradas em `UploadWizardContainer.tsx` (que ainda tem hero/form/timeline inline).
+- **`components/profile/AvaliacoesTab.tsx`, `AvaliacaoCard.tsx`, `AvaliacoesResumo.tsx`** — conjunto de exibição de avaliações com distribuição por nota, não conectado a nenhuma tela. `calcularStats` (`lib/utils/avaliacao.utils.ts`) só marca `exibir: true` com 10+ avaliações — decisão de produto para não expor distribuição com baixo volume.
 
 ## `app/` — Rotas principais
 
 | Rota | Propósito |
 |---|---|
-| `(admin)` | Área administrativa |
+| `(admin)` | Área administrativa (inclui gestão de geografia) |
 | `(dashboard)` | Dashboard do prestador |
 | `(perfil)` | Perfil público/privado |
 | `acompanhamento` | Cliente acompanha progresso do serviço |
 | `ads` | Anúncios/banners |
 | `avaliar` | Fluxo de avaliação pós-serviço |
 | `cadastro` | Cadastro de prestador |
-| `confirmar-exclusao` | Confirmação de exclusão de conta |
+| `confirmar-exclusao` | Exclusão de conta — cliente e prestador (ver `04-autenticacao.md`) |
 | `denunciar` | Denúncia de prestador/conteúdo |
 | `login` | Autenticação |
 | `meus-servicos` | Cliente visualiza serviços contratados |
 | `painel` | Painel do prestador (perfil, configurações) |
 | `prestadores` | Listagem/busca de prestadores |
-| `projeto` | Detalhe de um projeto/serviço |
 | `recuperar-senha`, `reivindicar`, `sucesso`, `termos`, `privacidade` | Fluxos de suporte e institucional |
 
-Rotas entre parênteses — `(admin)`, `(dashboard)`, `(perfil)` — são **route groups** do Next.js: organizam código sem afetar a URL.
+Rotas entre parênteses são **route groups** do Next.js: organizam código sem afetar a URL.
 
 ## `components/` — Organização por domínio
 
-Componentes são agrupados por área de produto, não por tipo genérico:
-
 ```
 components/
-├── acompanhamento/   # Tela de acompanhamento do cliente
-├── admin/             # Área administrativa
-├── ads/               # Anúncios
-├── auth/              # Login, botões de autenticação
+├── acompanhamento/    # Tela de acompanhamento do cliente
+├── ads/               # Anúncios (lojista/fornecedor)
+├── auth/              # Login, cadastro de acesso, componentes de senha
 ├── cards/             # Cards de listagem (prestador, projeto)
-├── dashboard/         # Dashboard do prestador
+├── dashboard/         # Dashboard do prestador (inclui wizard/)
 ├── home/              # Landing page
-├── location/          # Seleção/detecção de localização
-├── meus-servicos/      # Serviços do cliente
-├── perfil/, profile/  # Perfil — ver observação abaixo
-├── shared/            # Compartilhados entre domínios (ex: ModalFotoBase)
+├── location/          # Modal de seleção de cidade (não conectado)
+├── meus-servicos/     # Painel do cliente (aceitar/gerenciar projetos)
+├── perfil/            # Área logada do cliente + seções reutilizáveis do form de prestador
+├── profile/           # Perfil público + módulo de avaliação
+├── shared/            # Compartilhados entre domínios (ModalFotoBase, TimelineVertical)
 ├── skeletons/         # Loading states
-├── ui/                # Primitivos de UI (botões, inputs genéricos)
-└── vistas/            # Views compostas
+└── ui/                # Primitivos de UI (modais, rating stars)
 ```
 
-> ✅ **Resolvido: `components/perfil/` e `components/profile/` NÃO são duplicação.** Nota anterior estava incorreta — após revisar o conteúdo completo das duas pastas, elas têm propósitos distintos: `perfil/` mistura componentes de área logada do **cliente** (`HeaderCliente`, `CardPerfilCliente`) com as seções reutilizáveis do formulário de **prestador** (`SecaoDadosPessoais`, `SecaoLocalizacao`, `SecaoOQueVoceFaz`, `SecaoTermos`, `FotoUpload`), usadas tanto no Cadastro quanto na Edição de Perfil. `profile/` é especificamente o **perfil público** e módulo de **avaliação** (`PerfilHero`, `PerfilSobre`, `PortfolioGrid`, `ProjetoModal`, `FormularioAvaliacao`, `AvaliacoesTab`). É nomenclatura inconsistente (uma pasta em português, outra em inglês) para conjuntos de responsabilidade diferentes — não candidata a fusão. Item removido do roadmap de limpeza.
+`components/perfil/` e `components/profile/` **não são duplicação**: `perfil/` mistura componentes de área logada do cliente (`HeaderCliente`, `CardPerfilCliente`) com seções reutilizáveis do form de prestador (`SecaoDadosPessoais`, `SecaoLocalizacao`, `SecaoOQueVoceFaz`, `SecaoTermos`, `FotoUpload`), usadas tanto no Cadastro quanto na Edição. `profile/` é o perfil público e módulo de avaliação (`PerfilHero`, `PortfolioGrid`, `ProjetoModal`, `FormularioAvaliacao`, `AvaliacoesTab`). Nomenclatura inconsistente (PT vs EN) mas responsabilidades distintas.
 
 ## `hooks/` — Um hook por responsabilidade
 
-Cada hook tem uma responsabilidade única e nomeada pelo domínio que orquestra:
-
-- **Autenticação/sessão:** `useAuth`, `useSession`, `useLoginForm`, `useLogout`, `useGoogleAuth`
-- **Perfil/prestador:** `usePerfilPrestador`, `usePerfilStatus`, `usePerfilUI`, `usePrestadorForm`, `usePrestadores`
+- **Autenticação/sessão:** `useAuth` (completo: session+role+prestadorStatus+sessionChecked), `useSession` (mínimo: só session), `useLoginForm`, `useLogout`, `useGoogleAuth`
+- **Perfil/prestador:** `usePerfilPrestador`, `usePerfilStatus`, `usePerfilUI`, `usePrestadorForm`, `usePrestadores`, `useCadastroPrestador`, `useSlugCheck`
 - **Cliente:** `usePerfilCliente`, `usePerfilDados`, `usePainelCliente`, `useServicosCliente`
-- **Portfólio/avaliação:** `useUploadWizard`, `usePortfolioDashboard`, `useAvaliacao` (função `useAvaliar`), `useAvaliacoes`, `useSubmitAvaliacao`, `useComentariosFoto`
-- **Suporte/UX:** `useCookieConsent`, `useLog`, `useSlides`, `useSugestoes`, `useCompartilharPerfil`, `useSlugCheck`
-- **Localização:** `useLocalizacao`, `useHeaderCliente` (geolocalização silenciosa)
+- **Portfólio/avaliação:** `useUploadWizard`, `usePortfolioDashboard`, `useAvaliar` (arquivo `useAvaliacao.ts`), `useAvaliacoes`, `useSubmitAvaliacao`, `useComentariosFoto`, `useAcompanhamento`
+- **Suporte/UX:** `useCookieConsent`, `useSlides`, `useSugestoes`, `useCompartilharPerfil`
+- **Localização:** `useLocalizacao`, `useHeaderCliente`
 - **Categorias/anúncios:** `useCategorias`, `useAdContext`
-- **Rastreamento:** `useRastreamentoAtivacao`, `useAcompanhamento`
+- **Rastreamento:** `useRastreamentoAtivacao`
+- **Exclusão de conta:** `useConfirmarExclusaoConta`
+
+Ver `08-glossario.md` para mapear um conceito a todos os hooks/componentes que o tocam.
 
 ## `lib/` — Acesso a dados e utilitários
 
 ```
 lib/
-├── ads/          # Lógica de segmentação de anúncios, fallbacks
-├── auth/          # resolverDestinoPosLogin.ts — decisão pura de destino pós-login
-├── contexts/     # React Contexts (ex: LocationContext)
-├── db/           # Funções de acesso a tabelas específicas (acessos, logs, geografia)
+├── ads/          # Segmentação de anúncios (categoria-segmento.ts, fallbacks.ts)
+├── auth/         # resolverDestinoPosLogin.ts — decisão pura de destino pós-login
+├── config/       # Contato institucional (contato.ts)
+├── contexts/     # React Contexts (LocationContext — não conectado)
+├── db/           # Acesso a tabelas de infraestrutura (logs.ts, acessos.ts, categorias.ts, geografia.ts, prestadores.ts)
 ├── scripts/      # Scripts auxiliares (ex: AdSense)
 ├── services/     # Camada de service — uma chamada Supabase por função
-└── utils/        # Funções puras (máscaras, formatação, ordenação, cookies)
+└── utils/        # Funções puras (whatsapp.ts, mascaras.ts, avaliacao.utils.ts)
 ```
 
-**`lib/db/` vs `lib/services/`** — distinção importante:
-- `db/` → acesso direto a tabelas de infraestrutura/cross-cutting (logs, cookies, geografia, acessos)
-- `services/` → operações de domínio de produto, orquestradas por hooks (auth, avaliação, cliente, portfolio, painel do cliente)
+**`lib/db/` vs `lib/services/`:**
+- `db/` → acesso direto a tabelas de infraestrutura/cross-cutting (logs, acessos, geografia, categorias de sugestão)
+- `services/` → operações de domínio de produto, orquestradas por hooks
+
+**Services existentes:** `auth.service.ts`, `avaliacao.service.ts`, `cadastroPrestador.service.ts`, `categorias.service.ts`, `cliente.service.ts`, `compartilharPerfil.service.ts`, `denuncia.service.ts`, `exclusaoConta.service.ts`, `localizacao.service.ts`, `painelCliente.service.ts`, `portfolioDashboard.service.ts` (re-exporta funções de `uploadWizard.service.ts`), `recuperacaoSenha.service.ts`, `uploadWizard.service.ts`.
 
 ## `types/` — Tipos compartilhados por domínio
 
 Um arquivo de tipos por área de produto: `ads.ts`, `avaliacao.ts`, `categorias.ts`, `localizacao.ts`, `painel.ts`, `perfil.ts`, `portfolio.ts`, `prestador.ts`.
 
+**Nota de tipagem:** `Prestador`/`PrestadorFormData` (`types/prestador.ts`) não incluem `user_id`, embora seja campo real e indexado da tabela `prestadores`. Contornado localmente em `cadastroPrestador.service.ts` com um tipo estendido (`PrestadorRow`).
+
 ## `config/`
 
-Configurações estáticas versionadas no código (não no banco), como `categorias.ts` — a taxonomia de categorias de serviço usada em toda a aplicação.
+`categorias.ts` — taxonomia de serviço + `SUGESTOES_FALLBACK` (autocomplete da busca).
 
 ## Testes
 
-- **Vitest** (`vitest.config.ts`, `tests/`) → testes unitários, principalmente na camada de hooks e services (ex: sistema de log de atividades)
+- **Vitest** (`vitest.config.ts`, `tests/`) → testes unitários, principalmente hooks e services
 - **Playwright** (`playwright.config.ts`) → testes E2E de fluxos completos
 
-## Convenções de código observadas
+## Convenções de código
 
-- Preferência por **reescrita completa de arquivo** em vez de diffs parciais, especialmente em sessões via mobile
-- Comentários `// FIX: ...` deixados no código explicando bugs corrigidos e o motivo — útil para não reintroduzir o mesmo bug
-- Nomenclatura em português para domínio de negócio (`prestadores`, `avaliacao`, `cadastro`), inglês para termos técnicos genéricos
-- Quando duas versões do mesmo componente coexistem (`.js` legado + `.tsx` ativo, ex: `FormularioAvaliacao`), a versão `.tsx` que integra hooks/services do padrão arquitetural acima é a ativa — a `.js` costuma ser um protótipo anterior com lógica inline
+- Imports internos por alias `@/...`, não relativos
+- Comentários `// FIX: ...` explicando bugs corrigidos e o motivo
+- Nomenclatura em português para domínio de negócio, inglês para termos técnicos genéricos
+- Quando duas versões do mesmo componente coexistem (`.js` legado + `.tsx` ativo), a versão `.tsx` integrada ao padrão Hook→Service é a ativa

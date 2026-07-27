@@ -1,3 +1,5 @@
+//components/dashboard/PrestadorSideCard.tsx
+
 import { UserCircle2, MapPin, Phone, Star, Wrench, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 
@@ -113,7 +115,7 @@ export function PrestadorSideCard({
       {/* ── Link: ver perfil público ── */}
       {slug && (
         <Link
-          href={`/p/${slug}`}
+          href={`/${slug}`}
           className="flex items-center gap-2 px-4 py-3 bg-slate-50 hover:bg-blue-50 border border-slate-100 hover:border-blue-200 rounded-[1.5rem] text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-500 transition-all active:scale-95 group"
         >
           <ExternalLink size={13} className="shrink-0" />
