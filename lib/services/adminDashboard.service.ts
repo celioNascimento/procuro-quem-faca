@@ -110,14 +110,3 @@ export async function getRadarRecente(): Promise<RadarItem[]> {
 
   return (data as RadarItem[]) || []
 }
-
-/**
- * Assina INSERTs em logs_atividades em tempo real. Retorna o channel
- * para que o chamador possa fazer supabase.removeChannel no cleanup.
- */
-export function subscribeLogsAtividades(onInsert: (payload: any) => void) {
-  return supabase
-    .channel('realtime_console')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs_atividades' }, onInsert)
-    .subscribe()
-}

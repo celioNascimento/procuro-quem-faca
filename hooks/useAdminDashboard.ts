@@ -9,10 +9,11 @@ import {
   getOrigemEAtivacaoStats,
   getRankingCategorias,
   getRadarRecente,
-  subscribeLogsAtividades,
   type CategoriaRanking,
   type RadarItem,
 } from '@/lib/services/adminDashboard.service'
+
+import { subscribeLogsAtividades } from '@/lib/db/logs'
 
 export interface Stats {
   cidades: number
@@ -69,7 +70,7 @@ export function useAdminDashboard() {
   useEffect(() => {
     carregarDashboard()
 
-    const canal = subscribeLogsAtividades((payload) => {
+    const canal = subscribeLogsAtividades('admin_dashboard_realtime', (payload) => {
       if (payload.new.acao === 'DENUNCIA_PERFIL') {
         setNotificacao('Alerta de Segurança')
         hapticFeedback([50, 30, 50])

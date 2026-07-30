@@ -1,3 +1,5 @@
+//app/(admin)/admin/geografia/types/geografia.ts
+
 export type Estado = {
   sigla: string
   nome: string

@@ -1,50 +1,26 @@
+// app/(admin)/admin/habilidades/page.tsx
+
 'use client'
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState } from 'react'
+import { useHabilidades } from '@/hooks/useHabilidades'
 
 export default function GestaoHabilidades() {
-  const [habilidades, setHabilidades] = useState([])
+  const { habilidades, loading, adicionarHabilidade } = useHabilidades()
   const [nome, setNome] = useState('')
   const [categoria, setCategoria] = useState('Manutenção')
-  const [loading, setLoading] = useState(true)
 
-  async function carregarDados() {
-    setLoading(true)
-    const { data } = await supabase.from('habilidades').select('*').order('nome')
-    setHabilidades(data || [])
-    setLoading(false)
-  }
-
-  useEffect(() => { carregarDados() }, [])
-
-  async function adicionarHabilidade(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!nome) return
-
-    const { error: habError } = await supabase
-      .from('habilidades')
-      .insert([{ nome, categoria }])
-
-    if (!habError) {
-      await supabase.from('logs_atividades').insert([{
-        usuario_email: 'admin@teste.com',
-        acao: 'CRIAR_HABILIDADE',
-        detalhes: { nome, categoria }
-      }])
-      setNome('')
-      carregarDados()
-    } else {
-      alert("Habilidade já cadastrada.")
-    }
+    const { ok, error } = await adicionarHabilidade(nome, categoria)
+    if (ok) setNome('')
+    else if (error) alert(error)
   }
 
-  // Estilos reutilizáveis para manter o código limpo
-  const inputStyle = "w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all text-sm";
+  const inputStyle = "w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all text-sm"
 
   return (
     <div className="min-h-screen bg-[#FDFDFE] text-slate-900 font-sans antialiased pb-20">
 
-      {/* HEADER MINIMALISTA */}
       <header className="max-w-6xl mx-auto px-8 pt-12 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl font-black uppercase tracking-tight text-slate-900 italic">
@@ -61,7 +37,6 @@ export default function GestaoHabilidades() {
 
       <main className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-        {/* LADO ESQUERDO: FORMULÁRIO (4 Colunas) */}
         <div className="lg:col-span-4 sticky top-8">
           <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100">
             <h2 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
@@ -69,7 +44,7 @@ export default function GestaoHabilidades() {
               Novo Registro
             </h2>
 
-            <form onSubmit={adicionarHabilidade} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Profissão / Skill</label>
                 <input
@@ -100,7 +75,6 @@ export default function GestaoHabilidades() {
           </div>
         </div>
 
-        {/* LADO DIREITO: GRID DE CARDS (8 Colunas) */}
         <div className="lg:col-span-8">
           <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm min-h-[500px]">
             <div className="flex items-center justify-between mb-8">
@@ -123,7 +97,6 @@ export default function GestaoHabilidades() {
                     key={h.id}
                     className="relative overflow-hidden p-5 bg-white border border-slate-100 rounded-2xl flex flex-col items-start transition-all hover:border-indigo-200 hover:shadow-md hover:-translate-y-1 group"
                   >
-                    {/* Badge de Categoria */}
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-100 transition-opacity">
                       <span className="text-[18px]">
                         {h.categoria === 'Tecnologia' && '💻'}
@@ -140,7 +113,6 @@ export default function GestaoHabilidades() {
                       {h.nome}
                     </span>
 
-                    {/* Linha decorativa de progresso fake (estética SaaS) */}
                     <div className="w-full h-1 bg-slate-50 mt-4 rounded-full overflow-hidden">
                       <div className="w-1/3 h-full bg-indigo-100 group-hover:bg-indigo-400 transition-all"></div>
                     </div>

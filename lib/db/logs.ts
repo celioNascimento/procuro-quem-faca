@@ -36,3 +36,17 @@ export async function checkLogExists(usuarioId: string, acao: string): Promise<b
 
   return !!data
 }
+
+
+ /**
+  * Assina INSERTs em logs_atividades em tempo real. Genérico — qualquer
+  * página que precise reagir a novos logs (dashboard admin, tela de logs,
+  * etc.) usa esta mesma função, cada uma com seu próprio callback e nome
+  * de canal, para não competir entre si.
+  */
+ export function subscribeLogsAtividades(channelName: string, onInsert: (payload: any) => void) {
+   return supabase
+     .channel(channelName)
+     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs_atividades' }, onInsert)
+    .subscribe()
+ }

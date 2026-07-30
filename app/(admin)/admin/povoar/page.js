@@ -1,3 +1,5 @@
+//app/(admin)/admin/povoar/page.js
+
 'use client'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
