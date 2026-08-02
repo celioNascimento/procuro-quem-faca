@@ -42,7 +42,7 @@ Ao final do serviço, o cliente é convidado a avaliar. Isso cria um histórico 
 
 ## Modelo de confiança bidirecional (planejado)
 
-Hoje apenas o cliente avalia o prestador. Uma extensão natural — em avaliação para roadmap — é permitir que o **prestador também avalie o cliente** (pagamento em dia, comunicação, ambiente de trabalho), formando um histórico de confiança nos dois sentidos. Detalhes em [`07-roadmap.md`](./07-roadmap.md).
+Hoje apenas o cliente avalia o prestador. Uma extensão natural — em avaliação para roadmap — é permitir que o **prestador também avalie o cliente** (pagamento em dia, comunicação, ambiente de trabalho), formando um histórico de confiança nos dois sentidos. Detalhes em [`13-roadmap.md`](./13-roadmap.md).
 
 ## Origem do projeto
 

@@ -75,7 +75,9 @@ ativacao_obs text
 
 **`ativacao_status`** — funil de ativação via WhatsApp, com CHECK constraint restringindo aos 7 valores: `nao_enviado` → `enviado` → `respondeu_positivo`/`respondeu_negativo`/`sem_whatsapp` → `perfil_completo` → `avaliacao_recebida`.
 
-**`origem_tipo`** — `registro_direto` (auto-cadastro), `curadoria_publica` (curadoria manual inicial), `reivindicado`, e `vitrine` (prioridade máxima na busca, sem passar pelo filtro de termo — significado exato de negócio ainda não confirmado formalmente; ver `07-roadmap.md`). Sem CHECK constraint nesta coluna — outros valores não são impedidos a nível de banco.
+**`origem_tipo`** — `registro_direto` (auto-cadastro), `curadoria_publica` (curadoria manual inicial), `reivindicado`, e `vitrine` (prioridade máxima na busca, sem passar pelo filtro de termo — significado exato de negócio ainda não confirmado formalmente; há um design em avaliação de "vitrine paga" com lance real que pretende formalizar esse valor, ver `13-roadmap.md`). Sem CHECK constraint nesta coluna — outros valores não são impedidos a nível de banco.
+
+> **Design em avaliação (não implementado):** substituir `bairro` (texto livre) por coordenadas (`latitude`/`longitude`) + `endereco_texto` (geocode) + `raio_atuacao_km`, e adicionar `vitrine_lance_atual`/`vitrine_pago_ate` para a vitrine paga. Ver `13-roadmap.md` para o desenho completo, incluindo o novo campo `portfolio_projetos.cliente_user_id` (login obrigatório no ciclo do serviço) e a extensão Postgres necessária para cálculo de distância.
 
 **Nota de tipagem:** `user_id` não está declarado em `types/prestador.ts` (`Prestador`/`PrestadorFormData`), apesar de ser coluna real e indexada. Contornado localmente em `lib/services/cadastroPrestador.service.ts`.
 
@@ -106,9 +108,9 @@ Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas
 | `portfolio_curtidas` | Curtidas de usuários autenticados em projetos (portfólio público) |
 | `projeto_logs` | Log de ações realizadas em um projeto (auditoria) |
 
-**`portfolio_projetos.status`** — valores reais em uso: `em_registro` → `pendente` → `em_execucao` → `finalizado`. `'concluido'` **não é um valor válido** — nunca gravado no banco (ver `08-glossario.md`, seção "Status de projeto", para todos os pontos de código que derivam UI a partir deste campo).
+**`portfolio_projetos.status`** — valores reais em uso: `em_registro` → `pendente` → `em_execucao` → `finalizado`. `'concluido'` **não é um valor válido** — nunca gravado no banco (ver `14-glossario.md`, seção "Status de projeto", para todos os pontos de código que derivam UI a partir deste campo).
 
-**`avaliacao_token`** — UUID único por projeto, usado pelo cliente para acessar a página de avaliação/acompanhamento sem login.
+**`avaliacao_token`** — UUID único por projeto, usado pelo cliente para acessar a página de avaliação/acompanhamento sem login. **Design em avaliação:** login (Google) passaria a ser exigido desde o primeiro acesso ao projeto (não mais opcional), com `portfolio_projetos.cliente_user_id` vinculando a conta que primeiro logar via aquele token — ver `13-roadmap.md`.
 
 ### Avaliação e confiança
 
@@ -122,7 +124,7 @@ Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas
 
 **Fluxo de contestação** (`FormularioAvaliacao.tsx`, ativo): checkbox "Reportar problema / Solicitar Garantia" grava `em_disputa: true`, `visivel: false`, nota mínima, e cria linha em `contestacoes` com descrição + fotos de evidência.
 
-**Avaliação bidirecional (prestador avalia cliente):** não implementada. Estrutura atual é unidirecional (cliente → prestador). Ver `07-roadmap.md`.
+**Avaliação bidirecional (prestador avalia cliente):** não implementada. Estrutura atual é unidirecional (cliente → prestador). Ver `13-roadmap.md`.
 
 ### View: `prestadores_ranqueados`
 
@@ -140,13 +142,13 @@ Sistema com leilão de lance (CPC) e segmentação geográfica/categórica.
 
 **Índices:** `idx_anuncios_segmentacao` (busca de anúncio elegível), `idx_anuncios_leilao` (resolução do leilão por `lance_maximo_cpc desc`).
 
-**Status de uso:** infraestrutura pronta no banco, mas o frontend (`AdCard.tsx`) sempre recebe `anuncio={null}` — o espaço funciona hoje como CTA de contato direto via WhatsApp institucional. Ver `08-glossario.md`, seção Anúncios.
+**Status de uso:** infraestrutura pronta no banco, mas o frontend (`AdCard.tsx`) sempre recebe `anuncio={null}` — o espaço funciona hoje como CTA de contato direto via WhatsApp institucional. Ver `14-glossario.md`, seção Anúncios.
 
 ### Infraestrutura / cross-cutting
 
 | Tabela | Propósito |
 |---|---|
-| `logs_atividades` | Log genérico de eventos do sistema (ação, entidade, usuário) — fonte única, ver `08-glossario.md` |
+| `logs_atividades` | Log genérico de eventos do sistema (ação, entidade, usuário) — fonte única, ver `14-glossario.md` |
 | `acessos` | Registro de visita/sessão de navegador, distinto de `logs_atividades` |
 
 **`projeto_mensagens`** — tabela associada a um chat em tempo real que **não será implementado** (decisão de produto — WhatsApp já cobre essa necessidade). Nenhum código ativo referencia essa tabela. Se existir no banco, está órfã e pode ser removida sem risco.

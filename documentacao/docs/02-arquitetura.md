@@ -1,5 +1,7 @@
 # Arquitetura — PQF
 
+> **Índice da documentação:** `01` Visão Geral · `02` Arquitetura (este arquivo) · `03` Banco de Dados · `04` Autenticação · `05` Cadastro de Prestador · `06` Dashboard do Prestador · `07` Painel do Cliente · `08` Portfólio Público · `09` Avaliação e Acompanhamento · `10` Busca e Listagem · `11` Anúncios · `12` Admin · `13` Roadmap · `14` Glossário (índice por conceito, não por arquivo).
+
 ## Stack
 
 | Camada | Tecnologia |
@@ -54,13 +56,36 @@ Essa separação existe para:
 - Isolar chamadas ao Supabase em um único lugar por domínio
 - Manter componentes como puramente apresentacionais
 
-Componentes de página (`app/**/page.tsx`) tendem a ser wrappers finos que consomem um hook central; a lógica de estado e efeitos vive no hook; o I/O vive no service. Ver `08-glossario.md` para localizar rapidamente o hook/service correspondente a um conceito específico (ex: "avatar", "WhatsApp", "logout", "status de projeto").
+Componentes de página (`app/**/page.tsx`) tendem a ser wrappers finos que consomem um hook central; a lógica de estado e efeitos vive no hook; o I/O vive no service. Ver `14-glossario.md` para localizar rapidamente o hook/service correspondente a um conceito específico (ex: "avatar", "WhatsApp", "logout", "status de projeto").
 
 ### Módulos com peças construídas mas não conectadas
 
-- **`lib/contexts/LocationContext.tsx` + `components/location/LocationModal.tsx`** — modal de seleção obrigatória de cidade via cookie. `LocationProvider` nunca envolve a árvore em `app/layout.tsx`. Decisão consciente de não conectar: a busca por texto livre (`"pedreiro em Londrina"`, via `usePrestadores`) já cobre a necessidade no estágio mono-região atual. Ver `08-glossario.md`, seção Localização.
+- **`lib/contexts/LocationContext.tsx` + `components/location/LocationModal.tsx`** — modal de seleção obrigatória de cidade via cookie. `LocationProvider` nunca envolve a árvore em `app/layout.tsx`. Decisão consciente de não conectar: a busca por texto livre (`"pedreiro em Londrina"`, via `usePrestadores`) já cobre a necessidade no estágio mono-região atual. Ver `14-glossario.md`, seção Localização.
 - **`components/dashboard/WizardForm.tsx`, `WizardTimeline.tsx`, `PrestadorCardHorizontal.tsx`** — peças de uma refatoração do wizard do prestador, prontas mas não integradas em `UploadWizardContainer.tsx` (que ainda tem hero/form/timeline inline).
 - **`components/profile/AvaliacoesTab.tsx`, `AvaliacaoCard.tsx`, `AvaliacoesResumo.tsx`** — conjunto de exibição de avaliações com distribuição por nota, não conectado a nenhuma tela. `calcularStats` (`lib/utils/avaliacao.utils.ts`) só marca `exibir: true` com 10+ avaliações — decisão de produto para não expor distribuição com baixo volume.
+
+## Área Administrativa `(admin)`
+
+Route group `app/(admin)/`, com layout próprio (`app/(admin)/layout.tsx`) independente do layout raiz. Segue o mesmo padrão Hook→Service→Supabase das demais áreas.
+
+**Proteção de acesso centralizada no `middleware.ts`:** qualquer rota `/admin/*` exige usuário autenticado + registro em `perfis_admin`, **exceto `/admin/login`**, que precisa ficar acessível sem sessão (senão ninguém sem sessão prévia conseguiria nunca alcançar a tela de login do admin). Se já há sessão de admin válida, `/admin/login` redireciona automaticamente para `/admin`. O layout (`app/(admin)/layout.tsx`) não repete essa validação — só lê dados do usuário (nome/email) para exibição, via `hooks/useAdminAuth.ts`.
+
+**Componentes de layout** (`components/admin/`): `AdminSidebar.tsx`, `AdminHeader.tsx`, `SidebarLink.tsx` — extraídos do layout, cada um com responsabilidade única.
+
+**Páginas e seus hooks/services:**
+
+| Página | Hook | Service |
+|---|---|---|
+| `/admin` (dashboard) | `useAdminDashboard` | `adminDashboard.service.ts` |
+| `/admin/login` | — (chamada direta simples) | `adminAuth.service.ts` (`loginAdmin`) |
+| `/admin/logs` | `useAdminLogs` | `adminLogs.service.ts` + `subscribeLogsAtividades` (`lib/db/logs.ts`) |
+| `/admin/habilidades` | `useHabilidades` | `habilidades.service.ts` |
+| `/admin/moderacao` | `useModeracao` | `denuncia.service.ts` (estendido) |
+| `/admin/povoar` | `usePovoar` | `povoar.service.ts` |
+| `/admin/geografia` | `useGeografia` (`app/(admin)/admin/geografia/hooks/`) | `lib/db/geografia.ts` |
+| `/admin/ativacao`, `/admin/anuncios` | não revisados ainda | — |
+
+**Subscription Realtime compartilhada:** `subscribeLogsAtividades` (canal parametrizável) vive em `lib/db/logs.ts` — é infraestrutura da tabela `logs_atividades`, não lógica de uma página específica. Reaproveitada tanto pelo dashboard admin quanto pela tela de logs, cada uma com seu próprio nome de canal.
 
 ## `app/` — Rotas principais
 
@@ -115,8 +140,9 @@ components/
 - **Categorias/anúncios:** `useCategorias`, `useAdContext`
 - **Rastreamento:** `useRastreamentoAtivacao`
 - **Exclusão de conta:** `useConfirmarExclusaoConta`
+- **Administração:** `useAdminAuth`, `useAdminDashboard`, `useAdminLogs`, `useHabilidades`, `useModeracao`, `usePovoar`, `useGeografia` (local a `app/(admin)/admin/geografia/hooks/`)
 
-Ver `08-glossario.md` para mapear um conceito a todos os hooks/componentes que o tocam.
+Ver `14-glossario.md` para mapear um conceito a todos os hooks/componentes que o tocam.
 
 ## `lib/` — Acesso a dados e utilitários
 
@@ -136,7 +162,9 @@ lib/
 - `db/` → acesso direto a tabelas de infraestrutura/cross-cutting (logs, acessos, geografia, categorias de sugestão)
 - `services/` → operações de domínio de produto, orquestradas por hooks
 
-**Services existentes:** `auth.service.ts`, `avaliacao.service.ts`, `cadastroPrestador.service.ts`, `categorias.service.ts`, `cliente.service.ts`, `compartilharPerfil.service.ts`, `denuncia.service.ts`, `exclusaoConta.service.ts`, `localizacao.service.ts`, `painelCliente.service.ts`, `portfolioDashboard.service.ts` (re-exporta funções de `uploadWizard.service.ts`), `recuperacaoSenha.service.ts`, `uploadWizard.service.ts`.
+**Services existentes:** `auth.service.ts`, `avaliacao.service.ts`, `cadastroPrestador.service.ts`, `categorias.service.ts`, `cliente.service.ts`, `compartilharPerfil.service.ts`, `denuncia.service.ts` (inclui moderação de denúncias), `exclusaoConta.service.ts`, `localizacao.service.ts`, `painelCliente.service.ts`, `portfolioDashboard.service.ts` (re-exporta funções de `uploadWizard.service.ts`), `recuperacaoSenha.service.ts`, `uploadWizard.service.ts`.
+
+**Services administrativos:** `adminAuth.service.ts`, `adminDashboard.service.ts`, `adminLogs.service.ts`, `habilidades.service.ts`, `povoar.service.ts`.
 
 ## `types/` — Tipos compartilhados por domínio
 

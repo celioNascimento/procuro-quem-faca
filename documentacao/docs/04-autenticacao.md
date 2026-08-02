@@ -170,4 +170,4 @@ lib/
 - **`perfis` (legado) vs `profiles` (ativa)** — ver `03-banco-de-dados.md`.
 - **Tensão `useAuth().role` vs `profiles.role`** — não resolvida de raiz, só o ponto de maior risco (destino pós-login) foi consolidado.
 - **`sessionChecked` deve ser preferido a `loading`** por qualquer consumidor de `useAuth` que precise de gate de sessão.
-- Arquivos `.js`/`.jsx` remanescentes sem tipagem: ver `07-roadmap.md`.
+- Arquivos `.js`/`.jsx` remanescentes sem tipagem: ver `13-roadmap.md`.

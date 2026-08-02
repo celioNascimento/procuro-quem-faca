@@ -165,6 +165,24 @@ Três dimensões independentes — não confundir:
 
 ---
 
+## Área Administrativa
+
+**Layout/acesso:** `middleware.ts` (Regra C, com exceção explícita para `/admin/login`), `app/(admin)/layout.tsx`, `hooks/useAdminAuth.ts`, `components/admin/{AdminSidebar,AdminHeader,SidebarLink}.tsx`.
+
+**Por página:** ver `12-admin.md`, para a tabela completa de hook/service por rota (`/admin`, `/admin/login`, `/admin/logs`, `/admin/moderacao`, `/admin/povoar`, `/admin/habilidades`, `/admin/geografia`).
+
+**Log de atividades no contexto admin:** todas as ações administrativas relevantes (criar habilidade, resolver/arquivar denúncia, bloquear prestador) registram via `insertLog` (`lib/db/logs.ts`) — mesma fonte única usada pelo resto do sistema, nunca uma tabela ou mecanismo à parte.
+
+## Geolocalização, login obrigatório e vitrine paga (design em avaliação)
+
+Ainda não implementado — ver `13-roadmap.md` para o desenho completo. Resumo de onde cada peça vai se conectar quando implementado:
+
+- **Localização hoje:** `lib/services/localizacao.service.ts` (estado/região/cidade, sem coordenada real), `bairro` como texto livre em `prestadores`/perfis
+- **Localização proposta:** coordenadas (`latitude`/`longitude`) + `endereco_texto` (via geocode Nominatim, já usado em `usePrestadores` para geolocalização silenciosa) + `raio_atuacao_km`
+- **Login no ciclo do serviço hoje:** `/acompanhamento/[token]` e `/avaliar/[token]` (`hooks/useAcompanhamento`, `useAvaliar`) não exigem sessão, só o token
+- **Vitrine paga proposta:** novas colunas em `prestadores` (`vitrine_lance_atual`, `vitrine_pago_ate`), independente do sistema de Anúncios (lojista/fornecedor) já existente — ver seção Anúncios acima
+- **Conecta com:** `origem_tipo: 'vitrine'` (já usado hoje para prioridade máxima na busca, sem lance real por trás)
+
 ## Recuperação e alteração de senha
 
 - **Solicitação:** `useLoginForm.ts` → `handleEsqueciSenha`
