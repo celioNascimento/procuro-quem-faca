@@ -1,19 +1,17 @@
-//components/HeaderAuthButton.tsx
-
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { LogIn, Loader2, User, AlertCircle, LogOut, LayoutDashboard } from 'lucide-react'
+import { LogIn, Loader2, User, AlertCircle, LogOut, LayoutDashboard, CheckCircle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useLogout } from '@/hooks/useLogout'
 
 export function HeaderAuthButton() {
-  const { session, loading, erroLogin, loginGoogle } = useAuth()
+  // Adicionado role e prestadorStatus
+  const { session, loading, erroLogin, loginGoogle, role, prestadorStatus } = useAuth()
   const { logout } = useLogout()
   const [aberto, setAberto] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  // Fecha o dropdown ao clicar fora
   useEffect(() => {
     function handleClickFora(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -29,13 +27,19 @@ export function HeaderAuthButton() {
   }
 
   if (session) {
+    // Lógica centralizada para destino e rótulo
+    const isPendente = role === 'prestador' && prestadorStatus === 'pendente'
+    const destinoPainel = isPendente ? '/cadastro' : '/dashboard/perfil'
+    const labelPainel = isPendente ? 'Concluir Cadastro' : 'Minha Conta'
+    const IconePainel = isPendente ? CheckCircle : LayoutDashboard
+
     return (
       <div className="relative" ref={ref}>
 
         {/* ── Desktop: dois botões lado a lado ── */}
         <div className="hidden md:flex items-center gap-2">
           <Link
-            href="/dashboard/perfil"
+            href={destinoPainel}
             className="flex items-center gap-2 p-1 pr-4 rounded-full border border-slate-100 bg-slate-50 hover:bg-blue-50 transition-all"
           >
             <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
@@ -52,7 +56,7 @@ export function HeaderAuthButton() {
               )}
             </div>
             <span className="text-[10px] font-bold uppercase tracking-tight text-slate-500 whitespace-nowrap">
-              Minha Conta
+              {labelPainel}
             </span>
           </Link>
 
@@ -88,12 +92,12 @@ export function HeaderAuthButton() {
           {aberto && (
             <div className="absolute right-0 top-11 w-44 bg-white rounded-2xl border border-slate-100 shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
               <Link
-                href="/dashboard/perfil"
+                href={destinoPainel}
                 onClick={() => setAberto(false)}
                 className="flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-slate-600 uppercase tracking-wide hover:bg-blue-50 hover:text-blue-600 transition-colors"
               >
-                <LayoutDashboard size={13} />
-                Minha Conta
+                <IconePainel size={13} />
+                {labelPainel}
               </Link>
               <div className="h-px bg-slate-100 mx-3" />
               <button
