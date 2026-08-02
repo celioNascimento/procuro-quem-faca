@@ -1,3 +1,5 @@
+//app/components/HeaderAuthButton.tsx
+
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
@@ -6,12 +8,12 @@ import { useAuth } from '@/hooks/useAuth'
 import { useLogout } from '@/hooks/useLogout'
 
 export function HeaderAuthButton() {
-  // Adicionado role e prestadorStatus
   const { session, loading, erroLogin, loginGoogle, role, prestadorStatus } = useAuth()
   const { logout } = useLogout()
   const [aberto, setAberto] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
+  // Fecha o dropdown ao clicar fora
   useEffect(() => {
     function handleClickFora(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -27,7 +29,7 @@ export function HeaderAuthButton() {
   }
 
   if (session) {
-    // Lógica centralizada para destino e rótulo
+    // Define UI baseada no status para melhor UX
     const isPendente = role === 'prestador' && prestadorStatus === 'pendente'
     const destinoPainel = isPendente ? '/cadastro' : '/dashboard/perfil'
     const labelPainel = isPendente ? 'Concluir Cadastro' : 'Minha Conta'

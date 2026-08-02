@@ -41,21 +41,35 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // REGRA A.1: Verificação de Prestador Incompleto / Pendente
+  if (user && (isDashboard || isCadastro)) {
+    const { data: prestador } = await supabase
+      .from('prestadores')
+      .select('status')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    const isPendente = !prestador || prestador.status === 'pendente'
+
+    // Se tentar acessar o Dashboard estando pendente/incompleto -> redireciona para cadastro
+    if (isDashboard && isPendente) {
+      return NextResponse.redirect(new URL('/cadastro', request.url))
+    }
+
+    // Se tentar acessar o Cadastro estando com cadastro ativo/completo -> redireciona para dashboard
+    if (isCadastro && !isPendente) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  }
+
   // REGRA B: Evitar Login Duplicado
   if (user && isLogin) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   // REGRA C: Proteção da Área Administrativa
-  // Bloqueia qualquer acesso a /admin que não venha de um usuário
-  // presente em perfis_admin. Sem usuário → redireciona para home,
-  // sem revelar que a rota existe.
   if (isAdmin) {
-    // A própria tela de login do admin precisa ficar acessível sem sessão —
-    // senão ninguém sem sessão ativa conseguiria nunca chegar até ela.
     if (isAdminLogin) {
-      // Se já há sessão de admin válida, não faz sentido ficar na tela de
-      // login — manda direto para o painel (mesmo espírito da Regra B).
       if (user) {
         const { data: adminProfile } = await supabase
           .from('perfis_admin')
@@ -82,12 +96,9 @@ export async function middleware(request: NextRequest) {
     if (!adminProfile) {
       return NextResponse.redirect(new URL('/', request.url))
     }
-
-    // Usuário validado como admin — segue com a resposta,
-    // com os cookies de sessão já atualizados acima.
   }
 
-  // REGRA D: Rotas Públicas (Home, /prestadores, etc)
+  // REGRA D: Rotas Públicas
   return response
 }
 
