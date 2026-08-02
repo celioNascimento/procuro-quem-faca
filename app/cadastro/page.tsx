@@ -1,3 +1,5 @@
+//app/cadastro/page.tsx
+
 'use client'
 
 import { Suspense } from 'react'
@@ -19,6 +21,7 @@ import { SecaoLocalizacao } from '@/components/perfil/SecaoLocalizacao'
 import { SecaoTermos } from '@/components/perfil/SecaoTermos'
 
 import { useCadastroPrestador } from '@/hooks/useCadastroPrestador'
+import { useAuth } from '@/hooks/useAuth'
 
 const inputStyleBase = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-[14px] text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400`
 
@@ -37,6 +40,8 @@ function FormularioCadastro() {
   const searchParams = useSearchParams()
   const reivindicarId = searchParams.get('reivindicar')
 
+  const { prestadorStatus } = useAuth()
+
   const {
     form, categorias, loc, slugCheck,
     mounted, loading, uploading, isRedirecting, isModalOpen, setIsModalOpen,
@@ -48,6 +53,14 @@ function FormularioCadastro() {
   } = useCadastroPrestador(reivindicarId)
 
   if (!mounted || loading || isRedirecting) return <CadastroSkeleton />
+
+  // Garante que mesmo logado, se o cadastro for pendente, tratamos como novo para forçar Termos
+  const isPendente = prestadorStatus === 'pendente' || !modoEdicao
+
+  // Validação estrita para habilitar o botão
+  const faltamTermos = isPendente && (!aceitouTermos || !aceitouPrivacidade)
+  const progressoTotal = calcularProgresso() === 100
+  const podeEnviar = progressoTotal && slugCheck.disponivel && !uploading && !faltamTermos
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-20 font-sans antialiased overflow-x-hidden">
@@ -76,9 +89,9 @@ function FormularioCadastro() {
 
       <div className="w-full px-4 pt-32 md:pt-40 max-w-5xl mx-auto">
         <CadastroCard
-          title={reivindicarId ? 'Assumir Perfil' : modoEdicao ? 'Meu Perfil' : 'Cadastro'}
+          title={reivindicarId ? 'Assumir Perfil' : (modoEdicao && !isPendente) ? 'Meu Perfil' : 'Finalizar Cadastro'}
           progresso={calcularProgresso()}
-          isReivindicando={!!reivindicarId || modoEdicao}
+          isReivindicando={!!reivindicarId || (modoEdicao && !isPendente)}
           onExcluir={() => setIsModalOpen(true)}
         >
           <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-8">
@@ -162,12 +175,15 @@ function FormularioCadastro() {
                 onToggleCidade={(nome) => form.toggleItem(nome, 'cidades_atendidas')}
               />
 
-              <SecaoTermos
-                aceitouTermos={aceitouTermos}
-                aceitouPrivacidade={aceitouPrivacidade}
-                onTermosChange={setAceitouTermos}
-                onPrivacidadeChange={setAceitouPrivacidade}
-              />
+              {/* Exibe os Termos obrigatoriamente se o perfil for novo ou estiver pendente */}
+              {isPendente && (
+                <SecaoTermos
+                  aceitouTermos={aceitouTermos}
+                  aceitouPrivacidade={aceitouPrivacidade}
+                  onTermosChange={setAceitouTermos}
+                  onPrivacidadeChange={setAceitouPrivacidade}
+                />
+              )}
 
               <div className="flex flex-col items-center">
                 {status && (
@@ -179,13 +195,13 @@ function FormularioCadastro() {
 
                 <button
                   type="submit"
-                  disabled={loading || uploading || calcularProgresso() < 100}
-                  className={`w-full py-6 rounded-[2rem] font-bold text-[13px] uppercase tracking-widest transition-all shadow-xl ${calcularProgresso() === 100 && slugCheck.disponivel && !uploading
+                  disabled={loading || uploading || !podeEnviar}
+                  className={`w-full py-6 rounded-[2rem] font-bold text-[13px] uppercase tracking-widest transition-all shadow-xl ${podeEnviar
                     ? 'bg-blue-600 text-white shadow-blue-100 hover:bg-blue-700 active:scale-95'
                     : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                     }`}
                 >
-                  {loading || uploading ? 'Sincronizando...' : (modoEdicao ? 'Salvar Alterações' : (reivindicarId ? 'Assumir Perfil' : 'Finalizar Cadastro'))}
+                  {loading || uploading ? 'Sincronizando...' : (modoEdicao && !isPendente ? 'Salvar Alterações' : (reivindicarId ? 'Assumir Perfil' : 'Finalizar Cadastro'))}
                 </button>
               </div>
 
