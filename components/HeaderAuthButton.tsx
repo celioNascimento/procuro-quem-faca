@@ -1,4 +1,4 @@
-//app/components/HeaderAuthButton.tsx
+//components/HeaderAuthButton.tsx
 
 'use client'
 import { useState, useRef, useEffect } from 'react'
@@ -13,7 +13,6 @@ export function HeaderAuthButton() {
   const [aberto, setAberto] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  // Fecha o dropdown ao clicar fora
   useEffect(() => {
     function handleClickFora(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -29,16 +28,22 @@ export function HeaderAuthButton() {
   }
 
   if (session) {
-    // Define UI baseada no status para melhor UX
-    const isPendente = role === 'prestador' && prestadorStatus === 'pendente'
-    const destinoPainel = isPendente ? '/cadastro' : '/dashboard/perfil'
-    const labelPainel = isPendente ? 'Concluir Cadastro' : 'Minha Conta'
-    const IconePainel = isPendente ? CheckCircle : LayoutDashboard
+    // Roteamento inteligente baseado no papel do usuário
+    const destinoPainel = role === 'prestador' 
+      ? (prestadorStatus === 'pendente' ? '/cadastro' : '/dashboard/perfil')
+      : '/painel/perfil' // Clientes vão para o painel do cliente
+      
+    const labelPainel = role === 'prestador'
+      ? (prestadorStatus === 'pendente' ? 'Concluir Cadastro' : 'Meu Painel')
+      : 'Minha Conta'
+      
+    const IconePainel = role === 'prestador'
+      ? (prestadorStatus === 'pendente' ? CheckCircle : LayoutDashboard)
+      : User
 
     return (
       <div className="relative" ref={ref}>
 
-        {/* ── Desktop: dois botões lado a lado ── */}
         <div className="hidden md:flex items-center gap-2">
           <Link
             href={destinoPainel}
@@ -71,7 +76,6 @@ export function HeaderAuthButton() {
           </button>
         </div>
 
-        {/* ── Mobile: avatar abre dropdown ── */}
         <div className="flex md:hidden">
           <button
             onClick={() => setAberto(v => !v)}
@@ -90,7 +94,6 @@ export function HeaderAuthButton() {
             )}
           </button>
 
-          {/* Dropdown */}
           {aberto && (
             <div className="absolute right-0 top-11 w-44 bg-white rounded-2xl border border-slate-100 shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
               <Link
@@ -144,4 +147,4 @@ export function HeaderAuthButton() {
       </span>
     </button>
   )
-}
+} 

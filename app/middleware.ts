@@ -41,24 +41,34 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // REGRA A.1: Verificação de Prestador Incompleto / Pendente
+  // REGRA A.1: Verificação Inteligente de Perfil e Status
   if (user && (isDashboard || isCadastro)) {
-    const { data: prestador } = await supabase
-      .from('prestadores')
-      .select('status')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    // Busca a intenção de role (profiles) e o status real (prestadores) em paralelo
+    const [profileRes, prestadorRes] = await Promise.all([
+      supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
+      supabase.from('prestadores').select('status').eq('user_id', user.id).maybeSingle()
+    ])
 
-    const isPendente = !prestador || prestador.status === 'pendente'
+    const intendedRole = profileRes.data?.role || 'cliente'
+    const isPendente = !prestadorRes.data || prestadorRes.data.status === 'pendente'
 
-    // Se tentar acessar o Dashboard estando pendente/incompleto -> redireciona para cadastro
-    if (isDashboard && isPendente) {
-      return NextResponse.redirect(new URL('/cadastro', request.url))
+    if (isDashboard) {
+      if (intendedRole === 'prestador' && isPendente) {
+        // Prestador incompleto tentando acessar dashboard -> forçado a terminar o cadastro
+        return NextResponse.redirect(new URL('/cadastro', request.url))
+      }
+      if (intendedRole === 'cliente') {
+        // Cliente (que não tem dashboard) bateu no dashboard -> vai para a área de cliente
+        return NextResponse.redirect(new URL('/painel/perfil', request.url))
+      }
     }
 
-    // Se tentar acessar o Cadastro estando com cadastro ativo/completo -> redireciona para dashboard
-    if (isCadastro && !isPendente) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (isCadastro) {
+      if (intendedRole === 'prestador' && !isPendente) {
+        // Prestador ATIVO não tem motivo para acessar o formulário de cadastro novo
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
+      // Se for cliente acessando o /cadastro, permitimos a passagem (ele quer virar prestador)
     }
   }
 
