@@ -1,5 +1,7 @@
+// hooks/useAuth.ts
+
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client' // Certifique-se de usar o path correto do seu client
 import type { Session } from '@supabase/supabase-js'
 
 type Role = 'prestador' | 'cliente' | null
@@ -27,7 +29,7 @@ export function useAuth() {
     return getCachedSession()
   })
   const [role, setRole] = useState<Role>(null)
-  const [prestadorStatus, setPrestadorStatus] = useState<string | null>(null) // ← novo
+  const [prestadorStatus, setPrestadorStatus] = useState<string | null>(null)
   const [roleLoading, setRoleLoading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [erroLogin, setErroLogin] = useState(false)
@@ -51,17 +53,33 @@ export function useAuth() {
       if (s?.user?.id) {
         setRoleLoading(true)
         try {
-          const { data } = await supabase
-            .from('prestadores')
-            .select('id, status') // ← status incluído
-            .eq('user_id', s.user.id)
-            .maybeSingle()
+          // Busca a intenção (profiles) e o status real (prestadores) em paralelo
+          const [profileReq, prestadorReq] = await Promise.all([
+            supabase.from('profiles').select('role').eq('id', s.user.id).maybeSingle(),
+            supabase.from('prestadores').select('id, status').eq('user_id', s.user.id).maybeSingle()
+          ])
+          
           if (!cancelado) {
-            setRole(data ? 'prestador' : 'cliente')
-            setPrestadorStatus(data?.status ?? null) // ← salva status
+            const profileRole = profileReq.data?.role
+            const prestadorData = prestadorReq.data
+            
+            // O papel final é 'prestador' se a intenção for essa OU se ele já tiver um registro ativo
+            const finalRole = profileRole === 'prestador' || prestadorData ? 'prestador' : 'cliente'
+            
+            setRole(finalRole)
+            
+            // Se for prestador mas não tiver registro na tabela (cadastro incompleto), força status 'pendente'
+            if (finalRole === 'prestador' && !prestadorData) {
+              setPrestadorStatus('pendente')
+            } else {
+              setPrestadorStatus(prestadorData?.status ?? null)
+            }
           }
         } catch {
-          if (!cancelado) setRole('cliente')
+          if (!cancelado) {
+            setRole('cliente')
+            setPrestadorStatus(null)
+          }
         } finally {
           if (!cancelado) setRoleLoading(false)
         }
@@ -82,7 +100,7 @@ export function useAuth() {
 
       if (!s) {
         setRole(null)
-        setPrestadorStatus(null) // ← limpa junto
+        setPrestadorStatus(null)
         setRoleLoading(false)
       }
     })
