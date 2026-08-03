@@ -23,7 +23,14 @@ Tem ?reivindicar=<id>?
   ↓ Não
 Tem prestador próprio? → carrega no form, modoEdicao=true
   ↓ Não → pré-preenche nome do Google, região padrão PR
-```
+
+
+**Tratamento de Cadastros Interrompidos (`isPendente`)**
+O formulário possui uma trava estrita de segurança alimentada pelo `prestadorStatus` global (via `useAuth`). 
+Mesmo que o usuário já possua uma sessão válida e caia no fluxo que o hook de cadastro interpreta como "Edição" (`modoEdicao = true`), se o status global for `'pendente'`, o sistema força o comportamento de "Novo Cadastro":
+1. Exige compulsoriamente a marcação e o aceite visual das checkboxes de **Termos de Uso** e **Política de Privacidade**.
+2. Altera o texto do botão de submissão de "Salvar Alterações" para "Finalizar Cadastro", reduzindo a ambiguidade na UX.
+
 
 **Autenticação embutida no formulário:** diferente de `/login`, o cadastro de conta acontece no mesmo formulário (`SecaoAcessoCadastro`/`SecaoAcessoLogado`, ambos usando `components/auth/SenhaInput.tsx`). É um segundo ponto de criação de conta, além de `/login`.
 

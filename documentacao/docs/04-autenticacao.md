@@ -41,9 +41,14 @@ Gravado automaticamente na criação de conta por `garantirRoleInicial` (`lib/se
 
 **Detalhe de implementação relevante:** `garantirRoleInicial` checa `!profile?.role` (não `!profile`), protegendo contra o cenário de um trigger de banco já ter criado a linha em `profiles` com role nula. O upsert encadeia `.select('role')` na mesma requisição (evita depender de uma leitura separada logo após a escrita, que não tem garantia de ver o resultado a tempo) e usa o valor em memória como fallback.
 
-### Tensão entre as duas fontes
+### Tensão entre as duas fontes (Resolvida)
 
-`useAuth().role` e `profiles.role` podem divergir momentaneamente: uma conta recém-criada tem `profiles.role` de imediato, mas `useAuth().role` só reflete isso quando o cadastro em `/cadastro` é concluído e um registro em `prestadores` é criado. O intervalo é curto (só durante o próprio fluxo de cadastro). Unificar as duas fontes exigiria migrar `useAuth` — não feito, registrado no roadmap.
+Historicamente havia uma divergência onde `useAuth().role` dependia exclusivamente da existência do registro em `prestadores`, enquanto `profiles.role` guardava a intenção do usuário no momento do login. Isso causava falhas de roteamento para cadastros interrompidos.
+
+**Solução implementada:** 
+O `useAuth` foi refatorado para ser a única fonte da verdade. Ele agora executa um `Promise.all` buscando simultaneamente `profiles.role` e `prestadores.status`.
+- Se `profiles.role` for `'prestador'`, mas a linha em `prestadores` não existir, o hook consolida: `role = 'prestador'` e `prestadorStatus = 'pendente'`.
+- Para evitar *FOUC (Flash of Unstyled Content)* e transições bruscas na UI, esses dois valores sofrem **Cache Otimista** via `localStorage` (`pqf_auth_state`), permitindo que a interface (como o `HeaderAuthButton`) renderize o estado correto de forma síncrona, enquanto o banco revalida em background.
 
 ### 3. Papel administrativo: `owner`/`moderator`/`editor`
 
@@ -119,6 +124,15 @@ Roda em todas as rotas exceto assets estáticos.
 | **A — Áreas privadas** | Sem sessão e rota é `/dashboard` ou `/cadastro` | Redireciona para `/login` |
 | **B — Evitar login duplicado** | Com sessão e rota é `/login` | Redireciona para `/dashboard` |
 | **C — Área administrativa** | Rota começa com `/admin` | Ver abaixo |
+
+### Regra A — Proteção de Áreas Privadas e Roteamento Inteligente (A.1)
+
+O `middleware.ts` atua como o porteiro central da aplicação. Para as rotas `/dashboard` e `/cadastro`, ele valida não apenas a sessão, mas a intenção (`profiles.role`) e o status real (`prestadores.status`) do usuário:
+
+- **Prestador Pendente/Incompleto:** Se tentar acessar o `/dashboard`, é interceptado e redirecionado para `/cadastro`.
+- **Prestador Ativo/Completo:** Se tentar acessar o `/cadastro`, é redirecionado para o `/dashboard` (a menos que explicitamente acesse telas de edição permitidas).
+- **Cliente:** Se um cliente tentar acessar o `/dashboard` (que é exclusivo para prestadores), é redirecionado para a sua área correta em `/painel/perfil`. Se tentar acessar `/cadastro`, a passagem é permitida (assumindo a intenção de se tornar um profissional).
+
 
 ### Regra C — Proteção de `/admin`
 
