@@ -1,12 +1,13 @@
-// hooks/useAuth.ts
+//hooks/useAuth.ts
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase/client' // Certifique-se de usar o path correto do seu client
+import { supabase } from '@/lib/supabase/client'
 import type { Session } from '@supabase/supabase-js'
 
 type Role = 'prestador' | 'cliente' | null
 
 const SESSION_KEY = 'pqf_session_cache'
+const AUTH_STATE_KEY = 'pqf_auth_state' // Novo cache para estado do perfil
 
 function getCachedSession(): Session | null {
   try {
@@ -15,6 +16,7 @@ function getCachedSession(): Session | null {
     const parsed = JSON.parse(raw)
     if (parsed?.expires_at && parsed.expires_at * 1000 < Date.now()) {
       localStorage.removeItem(SESSION_KEY)
+      localStorage.removeItem(AUTH_STATE_KEY) // Limpa o estado junto
       return null
     }
     return parsed
@@ -23,14 +25,36 @@ function getCachedSession(): Session | null {
   }
 }
 
+function getCachedAuthState() {
+  try {
+    const raw = localStorage.getItem(AUTH_STATE_KEY)
+    return raw ? JSON.parse(raw) : { role: null, prestadorStatus: null }
+  } catch {
+    return { role: null, prestadorStatus: null }
+  }
+}
+
 export function useAuth() {
   const [session, setSession] = useState<Session | null | undefined>(() => {
     if (typeof window === 'undefined') return undefined
     return getCachedSession()
   })
-  const [role, setRole] = useState<Role>(null)
-  const [prestadorStatus, setPrestadorStatus] = useState<string | null>(null)
-  const [roleLoading, setRoleLoading] = useState(false)
+  
+  // Agora inicializa o estado lendo direto do cache para evitar FOUC
+  const [role, setRole] = useState<Role>(() => {
+    if (typeof window === 'undefined') return null
+    return getCachedAuthState().role
+  })
+  
+  const [prestadorStatus, setPrestadorStatus] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    return getCachedAuthState().prestadorStatus
+  })
+  
+  const [roleLoading, setRoleLoading] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return getCachedSession() !== null
+  })
   const [loading, setLoading] = useState(false)
   const [erroLogin, setErroLogin] = useState(false)
   const [sessionChecked, setSessionChecked] = useState(false)
@@ -48,12 +72,12 @@ export function useAuth() {
         localStorage.setItem(SESSION_KEY, JSON.stringify(sessionVal))
       } else {
         localStorage.removeItem(SESSION_KEY)
+        localStorage.removeItem(AUTH_STATE_KEY)
       }
 
       if (s?.user?.id) {
         setRoleLoading(true)
         try {
-          // Busca a intenção (profiles) e o status real (prestadores) em paralelo
           const [profileReq, prestadorReq] = await Promise.all([
             supabase.from('profiles').select('role').eq('id', s.user.id).maybeSingle(),
             supabase.from('prestadores').select('id, status').eq('user_id', s.user.id).maybeSingle()
@@ -63,22 +87,20 @@ export function useAuth() {
             const profileRole = profileReq.data?.role
             const prestadorData = prestadorReq.data
             
-            // O papel final é 'prestador' se a intenção for essa OU se ele já tiver um registro ativo
             const finalRole = profileRole === 'prestador' || prestadorData ? 'prestador' : 'cliente'
+            const finalStatus = finalRole === 'prestador' && !prestadorData ? 'pendente' : (prestadorData?.status ?? null)
             
             setRole(finalRole)
+            setPrestadorStatus(finalStatus)
             
-            // Se for prestador mas não tiver registro na tabela (cadastro incompleto), força status 'pendente'
-            if (finalRole === 'prestador' && !prestadorData) {
-              setPrestadorStatus('pendente')
-            } else {
-              setPrestadorStatus(prestadorData?.status ?? null)
-            }
+            // Grava o resultado final no cache para as próximas renderizações
+            localStorage.setItem(AUTH_STATE_KEY, JSON.stringify({ role: finalRole, prestadorStatus: finalStatus }))
           }
         } catch {
           if (!cancelado) {
             setRole('cliente')
             setPrestadorStatus(null)
+            localStorage.setItem(AUTH_STATE_KEY, JSON.stringify({ role: 'cliente', prestadorStatus: null }))
           }
         } finally {
           if (!cancelado) setRoleLoading(false)
@@ -96,12 +118,14 @@ export function useAuth() {
         localStorage.setItem(SESSION_KEY, JSON.stringify(sessionVal))
       } else {
         localStorage.removeItem(SESSION_KEY)
+        localStorage.removeItem(AUTH_STATE_KEY)
       }
 
       if (!s) {
         setRole(null)
         setPrestadorStatus(null)
         setRoleLoading(false)
+        localStorage.removeItem(AUTH_STATE_KEY)
       }
     })
 

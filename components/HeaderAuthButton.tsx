@@ -23,15 +23,16 @@ export function HeaderAuthButton() {
     return () => document.removeEventListener('mousedown', handleClickFora)
   }, [])
 
-  if (session === undefined) {
+  // TRAVA DE SEGURANÇA VISUAL:
+  // Se não sabemos a sessão AINDA, ou se temos sessão mas o role ainda não foi descoberto/cacheado
+  if (session === undefined || (session && role === null)) {
     return <div className="w-9 h-9 rounded-full animate-pulse bg-slate-100" />
   }
 
   if (session) {
-    // Roteamento inteligente baseado no papel do usuário
     const destinoPainel = role === 'prestador' 
       ? (prestadorStatus === 'pendente' ? '/cadastro' : '/dashboard/perfil')
-      : '/painel/perfil' // Clientes vão para o painel do cliente
+      : '/painel/perfil'
       
     const labelPainel = role === 'prestador'
       ? (prestadorStatus === 'pendente' ? 'Concluir Cadastro' : 'Meu Painel')
@@ -147,4 +148,4 @@ export function HeaderAuthButton() {
       </span>
     </button>
   )
-} 
+}
