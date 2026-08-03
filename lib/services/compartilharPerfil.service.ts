@@ -3,7 +3,6 @@
 import { insertLog } from '@/lib/db/logs'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
 
-
 // ── Tipos ──────────────────────────────────────────────────────────────────
 
 export interface CompartilhamentoPayload {
@@ -24,8 +23,9 @@ export interface RegistroCompartilhamento {
 
 export function buildUrlPerfil(slug: string | null | undefined, prestadorId: number | string): string {
   const base = typeof window !== 'undefined' ? window.location.origin : ''
-  if (slug?.trim()) return `${base}/prestadores/${slug}`
-  return `${base}/prestadores/${String(prestadorId)}`
+  // Rota corrigida para a raiz, espelhando app/[slug]/page.tsx
+  if (slug?.trim()) return `${base}/${slug}`
+  return `${base}/${String(prestadorId)}`
 }
 
 export function buildTextoPadrao(
@@ -112,15 +112,15 @@ export async function registrarCompartilhamento(
   payload: RegistroCompartilhamento
 ): Promise<void> {
   try {
-           await insertLog({
-          acao: 'COMPARTILHAR_PERFIL',
-          entidadeTipo: 'prestador',
-          entidadeId: String(payload.prestador_id),
-          detalhes: {
-            canal: payload.canal,
-            origem: payload.origem,
-          },
-        })
+    await insertLog({
+      acao: 'COMPARTILHAR_PERFIL',
+      entidadeTipo: 'prestador',
+      entidadeId: String(payload.prestador_id),
+      detalhes: {
+        canal: payload.canal,
+        origem: payload.origem,
+      },
+    })
   } catch {
     // log nunca deve quebrar o fluxo principal
   }
