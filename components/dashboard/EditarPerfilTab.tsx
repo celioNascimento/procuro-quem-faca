@@ -112,7 +112,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
 
     if (res.ok) {
       form.set({ foto_perfil: res.url })
-      setStatus('✅ Foto atualizada!')
+      setStatus('Foto atualizada com sucesso.')
       setTimeout(() => setStatus(''), 2000)
     } else if (res.error === 'TOO_LARGE') {
       setErrorModal(prev => ({ ...prev, show: true, title: 'Arquivo muito pesado', message: `Sua imagem possui ${res.sizeMB.toFixed(1)}MB. O limite é de 10MB.` }))
@@ -153,7 +153,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
       router.push('/')
       router.refresh()
     } catch (err) {
-      setStatus('❌ Erro na exclusão')
+      setStatus('Erro: não foi possível concluir a exclusão.')
       setDeleting(false)
     }
   }
@@ -163,11 +163,11 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
     setTentouEnviar(true)
 
     if (!form.formData.foto_perfil) {
-      setStatus('❌ A foto de perfil é obrigatória.')
+      setStatus('Erro: a foto de perfil é obrigatória.')
       return
     }
     if (!slugCheck.disponivel) {
-      setStatus('❌ URL indisponível. Escolha outra.')
+      setStatus('Erro: URL indisponível. Escolha outra.')
       return
     }
 
@@ -219,11 +219,11 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         form.set({ ativacao_status: novoAtivacaoStatus })
       }
 
-      setStatus('✅ Perfil Atualizado!')
+      setStatus('Perfil atualizado com sucesso.')
       setTentouEnviar(false)
       onSalvar?.()
     } catch (err: any) {
-      setStatus(`❌ Erro: ${err.message || 'Verifique os dados'}`)
+      setStatus(`Erro: ${err.message || 'verifique os dados.'}`)
     } finally {
       setSalvando(false)
       setTimeout(() => setStatus(''), 3000)
@@ -238,7 +238,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
   )
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans antialiased">
+    <section className="pb-12 sm:pb-16" aria-labelledby="profile-settings-title">
       <ErrorModal
         show={errorModal.show}
         title={errorModal.title}
@@ -246,16 +246,15 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         onClose={() => setErrorModal(prev => ({ ...prev, show: false }))}
       />
 
-      <div className="max-w-5xl mx-auto px-2 md:px-4 pt-2 md:pt-4 space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-
-        <header className="border-b border-slate-100 pb-6 md:pb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Configurações de Perfil</h2>
-          <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest mt-2">Personalize sua vitrine profissional</p>
+      <div className="flex flex-col gap-6 animate-in fade-in duration-500 sm:gap-8">
+        <header className="flex flex-col gap-1.5">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Dados profissionais</p>
+          <h2 id="profile-settings-title" className="text-balance text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Configurações do perfil</h2>
+          <p className="text-sm font-medium leading-relaxed text-slate-500">Mantenha sua vitrine completa para transmitir confiança aos clientes.</p>
         </header>
 
-        <form onSubmit={handleSalvar} className="grid grid-cols-1 md:grid-cols-12 gap-8">
-
-          <div className="col-span-1 md:col-span-4 space-y-6">
+        <form onSubmit={handleSalvar} className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12 lg:gap-8">
+          <div className="flex flex-col gap-6 lg:sticky lg:top-48 lg:col-span-4">
             <FotoUpload
               fotoUrl={form.formData.foto_perfil}
               uploading={uploading}
@@ -265,16 +264,15 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
             />
           </div>
 
-          <div className="col-span-1 md:col-span-8 space-y-6">
-
+          <div className="flex min-w-0 flex-col gap-6 lg:col-span-8">
             {userLogado && (
-              <section className="bg-white p-6 rounded-[2rem] border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
-                <div className="text-center md:text-left">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Conta conectada</p>
-                  <p className="font-bold text-slate-700 text-sm">{userLogado.email}</p>
+              <section className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6" aria-label="Conta conectada">
+                <div className="min-w-0 text-left">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Conta conectada</p>
+                  <p className="mt-1 truncate text-sm font-bold text-slate-700">{userLogado.email}</p>
                 </div>
-                <Link href="/login" className="px-5 py-2.5 bg-slate-50 text-slate-500 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-100">
-                  Trocar Acesso
+                <Link href="/login" className="flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100">
+                  Trocar acesso
                 </Link>
               </section>
             )}
@@ -323,10 +321,15 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               onToggleCidade={(nome) => form.toggleItem(nome, 'cidades_atendidas')}
             />
 
-            <div className="space-y-4 pt-4">
+            <div className="flex flex-col gap-4 pt-2">
               {status && (
-                <div className={`w-full p-4 rounded-2xl text-[10px] font-black text-center uppercase tracking-wider animate-in fade-in ${status.startsWith('❌') ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-600'
-                  }`}>
+                <div
+                  role="status"
+                  className={`w-full rounded-2xl border p-4 text-center text-xs font-bold leading-relaxed animate-in fade-in ${status.startsWith('Erro:')
+                    ? 'border-red-100 bg-red-50 text-red-600'
+                    : 'border-blue-100 bg-blue-50 text-blue-600'
+                    }`}
+                >
                   {status}
                 </div>
               )}
@@ -334,16 +337,16 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               <button
                 type="submit"
                 disabled={salvando || uploading}
-                className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-bold uppercase tracking-[0.2em] text-[13px] shadow-2xl hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                className="flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-[11px] font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-blue-100 transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {salvando ? <><Loader2 size={18} className="animate-spin" /> Salvando...</> : 'Atualizar Meu Perfil'}
+                {salvando ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Salvando...</> : 'Atualizar meu perfil'}
               </button>
 
               <div className="text-center">
                 <button
                   type="button"
                   onClick={() => setIsModalExcluirOpen(true)}
-                  className="text-[10px] font-bold text-slate-300 uppercase tracking-widest hover:text-red-400 transition-colors py-4"
+                  className="min-h-11 rounded-xl px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
                 >
                   Excluir meu perfil permanentemente
                 </button>
@@ -361,6 +364,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         title="Deseja excluir seu perfil?"
         message="Atenção: Seu perfil profissional, fotos e histórico serão apagados para sempre. Esta ação não tem volta."
       />
-    </main>
+    </section>
   )
 }

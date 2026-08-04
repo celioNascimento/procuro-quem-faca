@@ -52,54 +52,51 @@ export function ProjetoCard({ projeto, onClick }: Props) {
   const { label, icon, cls } = getStatusConfig(projeto)
 
   return (
-    <div
+    <button
+      type="button"
       onClick={() => onClick(projeto)}
-      className="group bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg hover:border-blue-100 transition-all duration-300 cursor-pointer overflow-hidden flex"
+      className="group flex w-full overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0"
+      aria-label={`Editar projeto ${projeto.titulo}`}
     >
-      {/* Thumbnail */}
-      <div className="w-24 h-24 md:w-28 md:h-28 shrink-0 bg-slate-50 relative self-stretch">
+      <span className="relative w-24 shrink-0 self-stretch bg-slate-100 sm:w-32">
         {capa ? (
           <img
             src={capa}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            alt={projeto.titulo}
+            className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+            alt=""
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ImageOff size={20} className="text-slate-200" />
-          </div>
+          <span className="flex size-full min-h-32 items-center justify-center text-slate-300">
+            <ImageOff size={22} aria-hidden="true" />
+          </span>
         )}
 
-        {/* Contador de fotos */}
         {fotos.length > 0 && (
-          <div className="absolute bottom-1.5 right-1.5 bg-black/50 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+          <span className="absolute bottom-2 right-2 rounded-full bg-slate-900/70 px-2 py-0.5 text-[9px] font-black text-white backdrop-blur-sm">
             {fotos.length}
-          </div>
+          </span>
         )}
-      </div>
+      </span>
 
-      {/* Conteúdo */}
-      <div className="flex-1 min-w-0 p-4 flex flex-col justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${cls}`}>
-              {icon}{label}
-            </span>
-          </div>
-          <h4 className="font-black text-slate-800 text-[14px] leading-tight truncate group-hover:text-blue-600 transition-colors">
+      <span className="flex min-w-0 flex-1 flex-col justify-between gap-4 p-4 sm:p-5">
+        <span className="flex flex-col gap-2">
+          <span className={`inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${cls}`}>
+            {icon}{label}
+          </span>
+          <span className="truncate text-sm font-black leading-tight text-slate-800 transition-colors group-hover:text-blue-600 sm:text-base">
             {projeto.titulo}
-          </h4>
-        </div>
+          </span>
+        </span>
 
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-[10px] text-slate-300 font-medium">
+        <span className="flex items-center justify-between gap-3">
+          <span className="text-[10px] font-medium text-slate-400">
             {fotos.length} {fotos.length === 1 ? 'foto' : 'fotos'}
           </span>
-          <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 duration-200">
-            Editar →
+          <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">
+            Editar
           </span>
-        </div>
-      </div>
-    </div>
+        </span>
+      </span>
+    </button>
   )
 }

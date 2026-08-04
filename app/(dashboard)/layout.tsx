@@ -19,8 +19,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <DashboardHeader />
       </Suspense>
 
-      <main className="max-w-7xl mx-auto w-full px-4 md:px-8 pt-24 md:pt-36 pb-24">
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full">
+      <main className="mx-auto w-full max-w-7xl px-4 pb-20 pt-20 sm:px-6 sm:pt-24 md:pb-24 md:pt-32 lg:px-8">
+        <div className="w-full animate-in fade-in duration-500">
           {children}
         </div>
       </main>
