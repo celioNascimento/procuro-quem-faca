@@ -1,4 +1,4 @@
-//lib/services/compartilharPerfil.service.ts
+//lib/services/compartilharPerfil.service.ts 
 
 import { insertLog } from '@/lib/db/logs'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
