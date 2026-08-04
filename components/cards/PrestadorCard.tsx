@@ -30,66 +30,66 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
       onClick={() => registrarLog?.('CLIQUE_PERFIL', { nome: prestador.nome })}
       className="group relative block bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
     >
-      <div className="px-5 py-4 md:py-6 md:px-7 flex items-center gap-4 min-h-[100px] md:min-h-[110px]">
+      <div className="flex min-h-[180px] flex-col gap-4 px-5 py-5 md:min-h-[200px] md:px-7 md:py-6">
+        <div className="flex min-w-0 items-center gap-4 md:gap-5">
+          {/* Foto */}
+          <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 md:size-24">
+            {prestador.foto_perfil && !imgError ? (
+              <img
+                src={prestador.foto_perfil}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                alt={prestador.nome}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <span className="text-xl font-black text-slate-300 md:text-2xl">
+                {getIniciais(prestador.nome)}
+              </span>
+            )}
+          </div>
 
-        {/* Foto */}
-        <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-slate-50 overflow-hidden border border-slate-100 flex items-center justify-center shrink-0">
-          {prestador.foto_perfil && !imgError ? (
-            <img
-              src={prestador.foto_perfil}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              alt={prestador.nome}
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <span className="text-base font-black text-slate-300">
-              {getIniciais(prestador.nome)}
+          {/* Textos */}
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <h3 className="text-pretty text-base font-black leading-snug tracking-tight text-slate-900 md:text-lg">
+              {prestador.nome}
+            </h3>
+            <span className="text-[11px] font-black uppercase leading-none tracking-widest text-blue-600">
+              {prestador.categoria}
             </span>
-          )}
-        </div>
 
-        {/* Textos */}
-        <div className="flex-1 min-w-0 flex flex-col gap-1">
-          <h3 className="font-black text-slate-900 text-[15px] leading-snug tracking-tight line-clamp-2">
-            {prestador.nome}
-          </h3>
-          <span className="text-blue-600 text-[10px] font-black uppercase tracking-widest leading-none">
-            {prestador.categoria}
-          </span>
+            <div className="mt-0.5 flex min-h-[20px] flex-wrap gap-1">
+              {habilidades.map(hab => (
+                <span key={hab} className="rounded-full border border-slate-100 bg-slate-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+                  {hab}
+                </span>
+              ))}
+              {extras > 0 && (
+                <span className="px-1 text-[9px] font-semibold text-slate-400">+{extras}</span>
+              )}
+            </div>
 
-          {/* Sempre renderiza — reserva espaço mesmo sem habilidades */}
-          <div className="flex flex-wrap gap-1 mt-0.5 min-h-[20px]">
-            {habilidades.map(hab => (
-              <span key={hab} className="text-[8px] font-semibold text-slate-500 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
-                {hab}
-              </span>
-            ))}
-            {extras > 0 && (
-              <span className="text-[8px] font-semibold text-slate-400 px-1">+{extras}</span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-            {localizacao && (
-              <div className="flex items-center gap-1">
-                <MapPin size={9} className="shrink-0 text-slate-300" />
-                <p className="text-[10px] font-medium text-slate-400 tracking-tight">
-                  {localizacao}
-                </p>
-              </div>
-            )}
-            {isPublico && (
-              <span className="flex items-center gap-1 text-[8px] font-semibold text-slate-400 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded-full">
-                <Globe size={7} /> Perfil público
-              </span>
-            )}
+            <div className="mt-0.5 flex flex-wrap items-center gap-2">
+              {localizacao && (
+                <div className="flex items-center gap-1">
+                  <MapPin size={11} className="shrink-0 text-slate-300" />
+                  <p className="text-[11px] font-medium tracking-tight text-slate-400">
+                    {localizacao}
+                  </p>
+                </div>
+              )}
+              {isPublico && (
+                <span className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-semibold text-slate-400">
+                  <Globe size={9} /> Perfil público
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Botão direito */}
-        <div className="shrink-0 flex flex-col items-end gap-2">
-          <span className="flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded-xl font-black text-[10px] uppercase tracking-wider group-hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 whitespace-nowrap">
-            Ver perfil <ChevronRight size={10} strokeWidth={3} />
+        {/* Ações centralizadas sem disputar espaço com o nome */}
+        <div className="mt-auto flex flex-col items-center gap-2">
+          <span className="flex min-h-10 w-full items-center justify-center gap-1 rounded-xl bg-blue-600 px-4 py-2.5 text-[11px] font-black uppercase tracking-wider text-white shadow-sm shadow-blue-200 transition-all group-hover:bg-blue-700 sm:w-auto sm:min-w-36">
+            Ver perfil <ChevronRight size={12} strokeWidth={3} />
           </span>
           {isPublico && (
             <span
@@ -98,13 +98,12 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                 e.stopPropagation()
                 router.push(`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`)
               }}
-              className="text-[8px] font-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer whitespace-nowrap"
+              className="cursor-pointer text-[10px] font-semibold text-slate-400 transition-colors hover:text-blue-600"
             >
-              👋 É você?
+              Este perfil é seu?
             </span>
           )}
         </div>
-
       </div>
     </Link>
   )
