@@ -101,12 +101,16 @@ export default function PerfilDoCliente() {
         </div>
       )}
 
-      <div className="max-w-xl lg:max-w-6xl mx-auto px-5 pt-24 md:pt-36 animate-in fade-in duration-700">
-        <div className="flex flex-col lg:flex-row gap-8 relative">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-20 animate-in fade-in duration-500 sm:px-6 sm:pt-24 md:pt-32 lg:px-8">
+        <header className="mb-6 flex max-w-2xl flex-col gap-2 sm:mb-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área do cliente</p>
+          <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Acompanhe seus projetos</h1>
+          <p className="text-pretty text-sm font-medium leading-relaxed text-slate-500">Gerencie serviços contratados, avaliações pendentes e os dados da sua conta.</p>
+        </header>
 
-          {/* ── Coluna Esquerda ── */}
-          <div className="w-full lg:w-1/3 shrink-0 relative">
-            <div className="lg:sticky lg:top-36 flex flex-col gap-4">
+        <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[20rem_minmax(0,1fr)]">
+          <aside className="min-w-0 lg:sticky lg:top-32">
+            <div className="flex flex-col gap-4">
 
               <CardPerfilCliente
                 nome={perfil.full_name}
@@ -122,16 +126,16 @@ export default function PerfilDoCliente() {
               />
 
             </div>
-          </div>
+          </aside>
 
           {/* ── Coluna Direita ── */}
-          <div className="w-full lg:w-2/3 flex flex-col gap-6">
+          <div className="flex min-w-0 flex-col gap-6">
 
             {/* CTA avaliar */}
             {avaliarCount > 0 && (
               <button
                 onClick={irParaAvaliar}
-                className="w-full bg-blue-600 rounded-[2rem] p-5 flex items-center gap-4 active:scale-[0.98] transition-all shadow-xl shadow-blue-200 animate-in fade-in duration-500 text-left"
+                className="flex w-full items-center gap-4 rounded-[2rem] bg-blue-600 p-5 text-left shadow-lg shadow-blue-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-6"
               >
                 <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
                   <Star size={22} className="text-white" fill="white" />
@@ -147,24 +151,25 @@ export default function PerfilDoCliente() {
             )}
 
             {/* Abas */}
-            <div className="flex bg-slate-100/80 p-1.5 rounded-[2rem] gap-1">
-              {[{ id: 'servicos', label: 'Meus Projetos' }, { id: 'dados', label: 'Minha Conta' }].map(a => (
+            <nav className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-28" aria-label="Seções do painel">
+              {[{ id: 'servicos', label: 'Meus projetos' }, { id: 'dados', label: 'Minha conta' }].map(a => (
                 <button
                   key={a.id}
+                  type="button"
                   onClick={() => setAba(a.id)}
-                  className={`flex-1 py-3.5 rounded-[1.5rem] text-[12px] font-semibold transition-all duration-200 ${aba === a.id ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  aria-current={aba === a.id ? 'page' : undefined}
+                  className={`min-h-11 flex-1 rounded-xl px-3 py-2.5 text-[11px] font-black uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${aba === a.id ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-white hover:text-blue-600'
                     }`}
                 >
                   {a.label}
                 </button>
               ))}
-            </div>
+            </nav>
 
             {/* ── Aba: Meus Projetos ── */}
             {aba === 'servicos' ? (
-              <div className="space-y-4 pb-4">
-
-                <div ref={filtroRef} className="flex flex-wrap justify-center gap-2 pb-2">
+              <section className="flex flex-col gap-4 pb-4" aria-label="Projetos contratados">
+                <div ref={filtroRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                   {[
                     { id: 'todos', label: 'Todos' },
                     { id: 'pendente', label: 'Aceitar' },
@@ -175,9 +180,11 @@ export default function PerfilDoCliente() {
                     <button
                       key={f.id}
                       onClick={() => setFiltroStatus(f.id)}
-                      className={`px-5 py-2.5 rounded-full text-[12px] font-semibold transition-all shrink-0 border whitespace-nowrap ${filtroStatus === f.id
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                          : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                      type="button"
+                      aria-pressed={filtroStatus === f.id}
+                      className={`min-h-10 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${filtroStatus === f.id
+                          ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                          : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600'
                         }`}
                     >
                       {f.label}
@@ -186,18 +193,21 @@ export default function PerfilDoCliente() {
                 </div>
 
                 {loadingServicos ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map(i => <div key={i} className="h-[80px] bg-slate-100 rounded-[2rem] animate-pulse" />)}
+                  <div className="flex flex-col gap-3" role="status" aria-label="Carregando projetos">
+                    {[1, 2, 3].map(i => <div key={i} className="h-24 animate-pulse rounded-[1.75rem] bg-slate-100" />)}
                   </div>
                 ) : servicosFiltrados.length === 0 ? (
-                  <div className="py-20 bg-white rounded-[2.5rem] border border-slate-100 flex flex-col items-center gap-4 text-center px-10">
-                    <div className="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center border-2 border-dashed border-slate-200">
-                      <Briefcase size={24} className="text-slate-300" />
+                  <div className="flex min-h-64 flex-col items-center justify-center gap-4 rounded-[2rem] border-2 border-dashed border-slate-200 bg-white px-8 py-12 text-center">
+                    <div className="flex size-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                      <Briefcase size={24} aria-hidden="true" />
                     </div>
-                    <p className="text-[13px] font-medium text-slate-400">Nenhum projeto nesta categoria.</p>
+                    <div className="flex max-w-xs flex-col gap-1">
+                      <p className="text-sm font-black text-slate-700">Nenhum projeto nesta categoria</p>
+                      <p className="text-xs font-medium leading-relaxed text-slate-400">Quando houver uma atualização, ela aparecerá aqui.</p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="grid gap-3 xl:grid-cols-2">
                     {servicosFiltrados.map(s => {
                       const info = getStatusInfo(s)
                       const rota = getRotaDestino(s)
@@ -205,7 +215,8 @@ export default function PerfilDoCliente() {
                         <button
                           key={s.id}
                           onClick={(e) => handleNavigation(e, rota)}
-                          className={`w-full bg-white rounded-[2rem] border p-4 flex items-center gap-4 text-left transition-all active:scale-[0.98] group ${info.urgente ? 'border-blue-200 shadow-md shadow-blue-50' : 'border-slate-100 shadow-sm hover:border-slate-200 hover:shadow-md'
+                          type="button"
+                          className={`group flex min-h-28 w-full items-center gap-4 rounded-[1.75rem] border bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 ${info.urgente ? 'border-blue-200 shadow-sm shadow-blue-50' : 'border-slate-200 shadow-sm hover:border-blue-200'
                             }`}
                         >
                           <div className={`relative shrink-0 rounded-2xl p-0.5 ${info.urgente ? 'ring-2 ring-blue-400' : ''}`}>
@@ -239,13 +250,17 @@ export default function PerfilDoCliente() {
                     })}
                   </div>
                 )}
-              </div>
+              </section>
 
             ) : (
 
               /* ── Aba: Minha Conta ── */
-              <div className="space-y-4 pb-12 animate-in fade-in duration-300">
-                <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 md:p-8 space-y-5">
+              <div className="grid gap-4 pb-12 animate-in fade-in duration-300 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
+                <section className="flex flex-col gap-5 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7" aria-labelledby="account-data-title">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Dados pessoais</p>
+                    <h2 id="account-data-title" className="text-xl font-black tracking-tight text-slate-900">Informações da conta</h2>
+                  </div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Nome Completo</label>
                     <input value={perfil.full_name} onChange={e => handleChangePerfil('full_name', e.target.value)} className={inputStyle} />
@@ -310,9 +325,9 @@ export default function PerfilDoCliente() {
                   >
                     {loading ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} /> Salvar alterações</>}
                   </button>
-                </div>
+                </section>
 
-                <div className="bg-white rounded-[2.5rem] border border-red-100 shadow-sm p-6 space-y-4">
+                <section className="flex flex-col gap-4 rounded-[2rem] border border-red-100 bg-white p-5 shadow-sm sm:p-6 xl:sticky xl:top-48">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
                       <Trash2 size={14} className="text-red-500" />
@@ -333,7 +348,7 @@ export default function PerfilDoCliente() {
                       <Trash2 size={14} /> Excluir minha conta
                     </Link>
                   </div>
-                </div>
+                </section>
               </div>
             )}
           </div>
