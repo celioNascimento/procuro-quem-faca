@@ -20,11 +20,11 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
 
   if (!prestador) return null
 
-  const isPublico  = prestador.origem_tipo === 'curadoria_publica'
+  const isPublico = prestador.origem_tipo === 'curadoria_publica'
   const perfilHref = getPerfilHref(prestador.slug, prestador.id)
   const localizacao = getLocalizacao(prestador.bairro, prestador.cidades?.nome)
   const habilidades = (prestador.habilidades || []).slice(0, 2)
-  const extras      = (prestador.habilidades?.length || 0) - 2
+  const extras = (prestador.habilidades?.length || 0) - 2
 
   return (
     <Link
@@ -44,14 +44,14 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                 onError={() => setImgError(true)}
               />
             ) : (
-              <span className="text-2xl font-black text-slate-300 md:text-3xl">
+              <h3 className="text-pretty text-base font-bold leading-snug tracking-tight text-slate-900 line-clamp-2 md:text-lg">
                 {getIniciais(prestador.nome)}
-              </span>
+              </h3>
             )}
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h3 className="text-pretty text-lg font-black leading-snug tracking-tight text-slate-900 md:text-xl">
+            <h3 className="text-pretty text-base font-bold leading-snug tracking-tight text-slate-900 line-clamp-2 md:text-lg">
               {prestador.nome}
             </h3>
             <span className="text-[11px] font-black uppercase leading-none tracking-widest text-blue-600 md:text-xs">
