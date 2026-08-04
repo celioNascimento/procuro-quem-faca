@@ -49,15 +49,23 @@ Monta `https://wa.me/55<numero>` (prefixo Brasil fixo), com mensagem opcional pr
 
 ## Logout
 
-**Mecanismos existentes, cada um com consumidores próprios — não foram unificados:**
+**Mecanismo centralizado:** `useLogout().logout(opts?)` (`hooks/useLogout.ts`).
 
-| Função | Local | Usado por | Comportamento |
-|---|---|---|---|
-| `useLogout().logout(opts?)` | `hooks/useLogout.ts` | `HeaderAuthButton.tsx`, `useNovaSenha.ts` | Loga `LOGOUT_USUARIO`, limpa `pqf_session_cache`+`sessionStorage`, aceita `{ origem?, redirectTo? }` |
-| `logoutCliente()` | `lib/services/auth.service.ts` | `useHeaderCliente.ts` | `signOut()` simples, sem log nem limpeza de cache |
-| Chamada direta `supabase.auth.signOut()` | `useConfirmarExclusaoConta.ts` | — (parte do fluxo de exclusão, não um logout isolado) | Seguido de redirect fixo pós-exclusão |
+Todo o fluxo de logout de interface (tanto para prestadores quanto para clientes) foi unificado neste hook. Ele garante:
+- Registro de log de auditoria (`LOGOUT_USUARIO`)
+- Limpeza rigorosa de cache (`pqf_session_cache`, `pqf_auth_state` e `sessionStorage`)
+- Encerramento da sessão no Supabase
+- Redirecionamento configurável via parâmetro `{ origem?, redirectTo? }`
 
-`useLogout` é o mais completo (log + limpeza de cache). Os outros dois foram mantidos por decisão explícita de não forçar migração sem necessidade — se for consolidar logout num único mecanismo, esses são os 3 pontos.
+**Consumidores atuais:**
+- `HeaderAuthButton.tsx` (Header global)
+- `useHeaderCliente.ts` (Painel do cliente, força redirecionamento para `/`)
+- `useNovaSenha.ts` (Pós-recuperação)
+
+**Exceção técnica intencional:** 
+`useConfirmarExclusaoConta.ts` faz uma chamada direta a `supabase.auth.signOut()` apenas como última etapa do fluxo de destruição da conta.
+
+*Nota técnica:* A função legada `logoutCliente()` em `lib/services/auth.service.ts` foi descontinuada do roteamento de UI.
 
 ---
 
