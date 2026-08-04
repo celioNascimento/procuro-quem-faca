@@ -1,6 +1,9 @@
+//components/meus-servicos/ServicoCard.tsx
+
 'use client'
 import { Clock, User, Phone, ChevronRight, ZoomIn, Briefcase, CheckCircle2 } from 'lucide-react'
 import { Servico } from '@/types/painel'
+import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 
 interface Props {
   servico: Servico
@@ -12,9 +15,9 @@ interface Props {
 
 // Label e cor do badge da foto variam conforme o status
 const BADGE = {
-  pendente:  { texto: 'Aguardando Início',  cor: 'text-blue-600' },
-  andamento: { texto: 'Em Andamento',       cor: 'text-amber-500' },
-  concluido: { texto: 'Concluído',          cor: 'text-emerald-600' },
+  pendente: { texto: 'Aguardando Início', cor: 'text-blue-600' },
+  andamento: { texto: 'Em Andamento', cor: 'text-amber-500' },
+  concluido: { texto: 'Concluído', cor: 'text-emerald-600' },
 }
 
 export default function ServicoCard({
@@ -120,7 +123,9 @@ export default function ServicoCard({
 
           {/* Botão de telefone — sempre visível */}
           <a
-            href={`tel:${servico.prestadores?.whatsapp}`}
+            href={buildLinkWhatsapp(servico.prestadores?.whatsapp)}
+            target="_blank"
+            rel="noopener noreferrer"
             className="w-14 h-14 rounded-2xl border-2 border-slate-100 flex items-center justify-center text-slate-400 hover:text-green-600 hover:border-green-100 hover:bg-green-50 transition-all"
           >
             <Phone size={20} />

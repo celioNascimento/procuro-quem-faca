@@ -1,3 +1,5 @@
+//dashboard/wizard/WizardCompleted.tsx 
+
 import { CheckCircle2, ChevronRight, ChevronLeft, MoreHorizontal, User, Share2 } from 'lucide-react'
 import { useUploadWizard } from '@/hooks/useUploadWizard'
 

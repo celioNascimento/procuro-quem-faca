@@ -1,3 +1,5 @@
+//lib/services/uploadWizard.service.ts
+
 import { supabase } from '@/lib/supabase'
 import { FotoPortfolio, ComentarioPortfolio, ProjetoIdentificado } from '@/types/portfolio'
 

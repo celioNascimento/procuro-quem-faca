@@ -1,22 +1,24 @@
+// app/error.tsx
+
 'use client'
 import { useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { insertLog } from '@/lib/db/logs'
 
-export default function Erro400() {
+export default function Erro400({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
 
   useEffect(() => {
     // Log de Erro de Requisição (Bad Request)
     const registrarErro400 = async () => {
       try {
-        await supabase.from('logs_atividades').insert([{
+        await insertLog({
           acao: 'ERRO_400_BAD_REQUEST',
-          entidade_tipo: 'erro_tecnico',
-          detalhes: { 
+          entidadeTipo: 'erro_tecnico',
+          detalhes: {
             url: window.location.href,
             timestamp: new Date().toISOString(),
-            mensagem: 'Requisição malformada ou cabeçalhos inválidos'
-          }
-        }])
+            mensagem: 'Requisição malformada ou cabeçalhos inválidos',
+          },
+        })
       } catch (err) {
         console.warn('Falha ao registrar log de erro 400.')
       }
@@ -60,7 +62,7 @@ export default function Erro400() {
           </div>
 
           <button
-            onClick={() => window.location.href = '/'}
+            onClick={reset}
             className="block w-full py-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-blue-100 active:scale-95 bg-blue-600 text-white hover:bg-blue-700 italic text-center"
           >
             Tentar Novamente

@@ -1,3 +1,5 @@
+//components/dashboard/DashboardHeader.tsx
+
 import { Plus, CheckCircle2 } from 'lucide-react'
 
 interface Props {
@@ -9,33 +11,29 @@ interface Props {
 
 export function DashboardHeader({ totalProjetos, totalConcluidos, totalAtivos, onNovoProjeto }: Props) {
   return (
-    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[2.5rem] p-6 md:p-8 text-white relative overflow-hidden">
-      {/* Decoração geométrica */}
-      <div className="absolute -top-6 -right-6 w-32 h-32 bg-white/5 rounded-full" />
-      <div className="absolute -bottom-10 -left-4 w-40 h-40 bg-white/5 rounded-full" />
-
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <p className="text-blue-200 text-[9px] font-black uppercase tracking-[0.3em] mb-1">
-            Portfólio
-          </p>
-          <h2 className="text-2xl md:text-3xl font-black uppercase italic tracking-tight leading-none">
-            {totalProjetos === 0
-              ? 'Nenhum Projeto'
-              : `${totalProjetos} ${totalProjetos === 1 ? 'Projeto' : 'Projetos'}`}
-          </h2>
+    <section className="rounded-[2rem] bg-blue-600 p-5 text-white shadow-lg shadow-blue-100 sm:p-7" aria-labelledby="portfolio-summary-title">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-100">Seu portfólio</p>
+            <h2 id="portfolio-summary-title" className="text-balance text-2xl font-black tracking-tight sm:text-3xl">
+              {totalProjetos === 0
+                ? 'Mostre o seu melhor trabalho'
+                : `${totalProjetos} ${totalProjetos === 1 ? 'projeto publicado' : 'projetos publicados'}`}
+            </h2>
+          </div>
 
           {totalProjetos > 0 && (
-            <div className="flex items-center gap-4 mt-3">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-blue-100">
               {totalConcluidos > 0 && (
-                <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-100">
-                  <CheckCircle2 size={12} className="text-green-300" />
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 size={14} aria-hidden="true" />
                   {totalConcluidos} concluído{totalConcluidos > 1 ? 's' : ''}
                 </span>
               )}
               {totalAtivos > 0 && (
-                <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-100">
-                  <span className="w-2 h-2 rounded-full bg-blue-300 animate-pulse" />
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-white" aria-hidden="true" />
                   {totalAtivos} ativo{totalAtivos > 1 ? 's' : ''}
                 </span>
               )}
@@ -44,13 +42,14 @@ export function DashboardHeader({ totalProjetos, totalConcluidos, totalAtivos, o
         </div>
 
         <button
+          type="button"
           onClick={onNovoProjeto}
-          className="flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-blue-50 active:scale-95 transition-all shadow-lg shadow-blue-800/20 shrink-0 w-full md:w-auto"
+          className="flex min-h-12 w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-[11px] font-black uppercase tracking-widest text-blue-600 shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600 active:translate-y-0 sm:w-auto"
         >
-          <Plus size={16} strokeWidth={3} />
-          Adicionar Trabalho
+          <Plus size={17} strokeWidth={3} aria-hidden="true" />
+          Adicionar trabalho
         </button>
       </div>
-    </div>
+    </section>
   )
 }

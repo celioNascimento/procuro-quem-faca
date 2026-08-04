@@ -1,6 +1,8 @@
 // hooks/usePerfilStatus.ts
+
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { buscarPrestadorPorUserId } from '@/lib/services/cadastroPrestador.service'
 
 export function usePerfilStatus() {
   const [cadastroCompleto, setCadastroCompleto] = useState(false)
@@ -13,11 +15,7 @@ export function usePerfilStatus() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user?.id) { setValidando(false); return }
 
-      const { data: prestador } = await supabase
-        .from('prestadores')
-        .select('nome, whatsapp, categoria_id, status, slug')
-        .eq('user_id', session.user.id)
-        .maybeSingle()
+      const prestador = await buscarPrestadorPorUserId(session.user.id)
 
       const completo = !!(
         prestador?.nome?.trim() &&

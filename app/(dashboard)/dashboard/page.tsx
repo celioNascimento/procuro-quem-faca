@@ -1,15 +1,21 @@
+//app/(dashboard)/dashboard/page.tsx
+
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
-import { Lock, UserCircle2, Images, ExternalLink } from 'lucide-react'
+import { Lock, UserCircle2, Images, ExternalLink, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 
-export default function PerfilPage() {
-  // Abre direto em portfólio — é o que o prestador quer ver primeiro
-  const [abaAtiva, setAbaAtiva] = useState('portfolio')
+function PerfilPageContent() {
+  const searchParams = useSearchParams()
+  // Abre em portfólio por padrão — a menos que ?aba=perfil seja explicitado
+  // (usado pelo redirect de /dashboard/perfil, ver aquele arquivo)
+  const abaInicial = searchParams.get('aba') === 'perfil' ? 'perfil' : 'portfolio'
+  const [abaAtiva, setAbaAtiva] = useState(abaInicial)
   const { cadastroCompleto, validando, slug } = usePerfilStatus()
 
   useEffect(() => {
@@ -35,63 +41,81 @@ export default function PerfilPage() {
   ]
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen">
-      <main className="max-w-5xl mx-auto pb-8 pt-0">
+    <div className="mx-auto w-full max-w-6xl">
+      <header className="flex flex-col gap-5 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:pb-8">
+        <div className="flex max-w-2xl flex-col gap-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área profissional</p>
+          <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Gerencie sua presença profissional</h1>
+          <p className="text-pretty text-sm font-medium leading-relaxed text-slate-500">Atualize seus dados e mantenha seus melhores trabalhos prontos para novos clientes.</p>
+        </div>
 
-        {/* ── Seletor de abas ── */}
-        <div className="px-5 md:px-8 py-3 border-b border-slate-100 bg-white sticky top-16 md:top-28 z-40 overflow-hidden">
-          <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {slug && !validando && (
+          <Link
+            href={`/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm transition-colors hover:border-blue-200 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 sm:w-auto"
+          >
+            <ExternalLink size={14} aria-hidden="true" />
+            Ver perfil público
+          </Link>
+        )}
+      </header>
 
-            {abas.map(aba => (
+      <nav className="sticky top-16 z-40 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
+        <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {abas.map(aba => {
+            const ativa = abaAtiva === aba.id
+            return (
               <button
                 key={aba.id}
+                type="button"
                 disabled={aba.bloqueado || validando}
                 onClick={() => setAbaAtiva(aba.id)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest transition-all duration-200 whitespace-nowrap ${abaAtiva === aba.id
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
-                    : aba.bloqueado
-                      ? 'text-slate-300 cursor-not-allowed opacity-60'
-                      : 'text-slate-500 hover:bg-slate-100'
+                aria-current={ativa ? 'page' : undefined}
+                aria-describedby={aba.bloqueado ? `${aba.id}-locked` : undefined}
+                className={`flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${ativa
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : aba.bloqueado
+                    ? 'cursor-not-allowed bg-slate-100 text-slate-300'
+                    : 'bg-white text-slate-500 hover:bg-blue-50 hover:text-blue-600'
                   }`}
               >
-                {aba.bloqueado && !validando ? <Lock size={11} /> : aba.icon}
+                {aba.bloqueado && !validando ? <Lock size={13} aria-hidden="true" /> : aba.icon}
                 {aba.label}
                 {aba.bloqueado && !validando && (
-                  <span className="text-[8px] font-black bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                  <span id={`${aba.id}-locked`} className="rounded-md bg-white/70 px-1.5 py-0.5 text-[8px] tracking-wide text-slate-400">
                     Complete o perfil
                   </span>
                 )}
               </button>
-            ))}
+            )
+          })}
+        </div>
+      </nav>
 
-            {/* Botão "Ver meu perfil" — link externo, mesmo nível das abas */}
-            {slug && !validando && (
-              <Link
-                href={`/${slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest transition-all duration-200 whitespace-nowrap text-slate-500 hover:bg-slate-100 border border-slate-200 hover:border-blue-200 hover:text-blue-600"
-              >
-                <ExternalLink size={12} />
-                Ver meu perfil
-              </Link>
-            )}
-
+      <div className="animate-in fade-in duration-300 pt-6 sm:pt-8">
+        {validando ? (
+          <div className="flex min-h-64 flex-col items-center justify-center gap-4" role="status">
+            <Loader2 className="size-8 animate-spin text-blue-600" aria-hidden="true" />
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Verificando seu perfil</p>
           </div>
-        </div>
-
-        {/* ── Conteúdo ── */}
-        <div className="animate-in fade-in duration-300 pt-4">
-          {validando ? (
-            <div className="h-64 flex flex-col items-center justify-center gap-4">
-              <div className="w-10 h-10 border-[3px] border-slate-100 border-t-blue-600 rounded-full animate-spin" />
-              <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">Verificando...</p>
-            </div>
-          ) : (
-            abaAtiva === 'perfil' ? <EditarPerfilTab /> : <PortfolioDashboardTab />
-          )}
-        </div>
-      </main>
+        ) : (
+          abaAtiva === 'perfil' ? <EditarPerfilTab /> : <PortfolioDashboardTab />
+        )}
+      </div>
     </div>
+  )
+}
+
+export default function PerfilPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-64 items-center justify-center" role="status" aria-label="Carregando dashboard">
+        <Loader2 className="size-8 animate-spin text-blue-600" aria-hidden="true" />
+      </div>
+    }>
+      <PerfilPageContent />
+    </Suspense>
   )
 }

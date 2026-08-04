@@ -1,4 +1,6 @@
-'use client'  
+// app/login/page.tsx
+
+'use client'
 import Link from 'next/link'
 import AuthSkeleton from '@/components/auth/AuthSkeleton'
 import GoogleButton from '@/components/auth/GoogleButton'
@@ -61,8 +63,8 @@ export default function Login() {
             <span className="text-blue-600 font-semibold block md:inline mt-1 md:mt-0">Primeira vez? Sua conta será criada automaticamente.</span>
           </p>
 
-          {/* Google */}
-          <GoogleButton text="Entrar com Google" onLog={registrarLogAuth} />
+          {/* Google — tela dedicada a profissionais: conta nova nasce como prestador */}
+          <GoogleButton text="Entrar com Google" onLog={registrarLogAuth} roleDesejado="prestador" />
 
           {/* Divisor */}
           <div className="flex items-center gap-4 my-6 lg:my-8">

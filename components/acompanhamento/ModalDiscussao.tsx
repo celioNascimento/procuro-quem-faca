@@ -1,3 +1,5 @@
+//components/acompanhamento/ModalDiscussao.tsx
+
 import { X, Loader2, Send } from 'lucide-react'
 import type { FotoOrdenada, Comentario, Projeto } from '@/types/avaliacao'
 import { ModalFotoBase } from '@/components/shared/ModalFotoBase'
@@ -94,7 +96,7 @@ export function ModalDiscussao({
           <input
             value={novoComentario}
             onChange={(e) => setNovoComentario(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onEnviar()}
+            onKeyDown={(e) => e.key === 'Enter' && novoComentario.trim() && onEnviar()}
             placeholder="Tirar dúvida técnica..."
             className="w-full pl-6 pr-14 py-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none text-[13px] font-medium focus:border-blue-400 focus:bg-white transition-all shadow-inner"
           />

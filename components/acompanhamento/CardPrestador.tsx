@@ -1,5 +1,8 @@
+//components/acompanhamento/CardPrestador.tsx
+
 import { Phone, Share2, Briefcase } from 'lucide-react'
 import type { Projeto } from '@/types/avaliacao'
+import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 
 type Props = {
   projeto: Projeto
@@ -8,6 +11,9 @@ type Props = {
 
 export function CardPrestador({ projeto, onShare }: Props) {
   const prestador = projeto.prestadores
+  const linkWhatsapp = buildLinkWhatsapp(prestador?.whatsapp)
+  
+  const statusLabel = projeto.status === 'finalizado' ? 'Serviço concluído' : 'Serviço em andamento'
 
   return (
     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
@@ -29,7 +35,9 @@ export function CardPrestador({ projeto, onShare }: Props) {
             </button>
           )}
           <a
-            href={`tel:${prestador?.whatsapp}`}
+            href={linkWhatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
             className="w-9 h-9 bg-green-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-green-900/30 active:scale-95 transition-all"
           >
             <Phone size={14} fill="currentColor" />
@@ -76,7 +84,7 @@ export function CardPrestador({ projeto, onShare }: Props) {
           </div>
           <div className="min-w-0">
             <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest leading-none">
-              Serviço em andamento
+              {statusLabel}
             </p>
             <p className="text-[12px] font-bold text-slate-700 leading-snug mt-1 italic">
               {projeto.titulo}
@@ -85,7 +93,9 @@ export function CardPrestador({ projeto, onShare }: Props) {
         </div>
 
         <a
-          href={`tel:${prestador?.whatsapp}`}
+          href={linkWhatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full py-3 bg-green-50 text-green-700 rounded-2xl border border-green-100 text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all hover:bg-green-100"
         >
           <Phone size={12} fill="currentColor" />

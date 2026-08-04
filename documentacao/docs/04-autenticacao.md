@@ -2,140 +2,186 @@
 
 ## Provedores de autenticação
 
-O PQF tem **dois métodos de login em paralelo**, ambos via Supabase Auth:
+Dois métodos de login em paralelo, ambos via Supabase Auth:
 
 ### 1. Google OAuth
 
-Botão "Entrar com Google" (`GoogleButton`), fluxo padrão via `signInWithOAuth`.
+Botão "Entrar com Google" (`components/auth/GoogleButton.tsx`) — puramente apresentacional, delega a `hooks/useGoogleAuth.ts`, que aceita `roleDesejado` opcional e o embute como `?role=` na URL de callback (`app/auth/callback/route.ts`).
 
 ### 2. Email/senha com auto-criação de conta
 
-A tela de login (`app/login/page.tsx`) tem um formulário de email/senha abaixo do botão Google. O texto da UI ("Primeira vez? Sua conta será criada automaticamente") indica que **login e cadastro são a mesma ação** — não há uma tela de "criar conta" separada. Isso é tratado pelo hook `useLoginForm` (não detalhado aqui — ver `hooks/useLoginForm.ts` para a lógica exata de signIn vs signUp).
+`app/login/page.tsx` (tela "Área do Profissional") é puramente apresentacional; toda a lógica vive em `hooks/useLoginForm.ts`. O texto da UI ("Primeira vez? Sua conta será criada automaticamente") indica que login e cadastro são a mesma ação.
+
+`handleLogin`: tenta `signInWithPassword`; se falhar com credenciais inválidas, tenta `signUp` — se a conta já existir, o Supabase revela isso via `identities: []` na resposta (sem gerar sessão nem sobrescrever senha), e a UI mostra "e-mail ou senha incorretos". Se for conta nova de fato, grava `role='prestador'` via `garantirRoleInicial` e resolve o destino via `resolverDestinoPosLogin`.
+
+Se o destino calculado for `/cadastro`, `email`/`password` são salvos em `sessionStorage.pqf_prefill` antes de navegar, para que `useCadastroPrestador` já preencha os campos de acesso automaticamente.
 
 ### Recuperação de senha
 
-Fluxo de duas partes:
-1. **Solicitação** — botão "Redefinir senha" na tela de login (`handleEsqueciSenha`, em `useLoginForm`), que dispara o email de recovery do Supabase
-2. **Nova senha** — página em `app/recuperar-senha` (arquivo `NovaSenha`, atualmente `.js` — candidato à conversão para `.tsx`, ver observação abaixo)
+1. **Solicitação** — `handleEsqueciSenha` (`useLoginForm.ts`): valida existência da conta via RPC `verificar_usuario_existe`, dispara `resetPasswordForEmail`.
+2. **Definição de nova senha** — `app/recuperar-senha/page.tsx` + `hooks/useNovaSenha.ts` + `lib/services/recuperacaoSenha.service.ts`. Detecta o link via `access_token`/`type=recovery` no hash da URL ou sessão ativa (`PASSWORD_RECOVERY` event). Trata `error=access_denied` como link expirado. Após sucesso, usa `useLogout().logout({ origem: 'recuperacao_senha', redirectTo: '/login?msg=senha_alterada' })`.
 
-**Detalhes técnicos da página de nova senha:**
-- Detecta o link de recovery via `access_token`/`type=recovery` no hash da URL, ou sessão já ativa (`PASSWORD_RECOVERY` event do `onAuthStateChange`)
-- Trata `error=access_denied` na URL como link expirado/já usado
-- Após sucesso: faz `signOut()` explícito e redireciona para `/login?msg=senha_alterada` — força novo login com a senha nova em vez de manter a sessão de recovery ativa
-- Registra tentativa de acesso em `logs_atividades` com `entidade_tipo: 'recuperacao_senha'`
-- Tem validação de força de senha (fraca/boa/forte) puramente client-side, sem bloquear submissão — só orienta o usuário
-
-> ⚠️ **Este arquivo mistura duas responsabilidades no nome:** a rota é `recuperar-senha` mas o componente exportado é `NovaSenha` — nomenclatura vale revisar (o arquivo é especificamente a etapa de "definir a nova senha", não a solicitação inicial).
+Componentes de apoio: `components/auth/EyeIconButton.tsx` (toggle de visibilidade isolado), `components/auth/SenhaInput.tsx` (input + toggle embutido, usa `EyeIconButton` internamente), `components/auth/ForcaSenhaBar.tsx` (indicador visual de força, client-side, não bloqueia submissão).
 
 ## Papéis (roles)
 
-O sistema tem duas dimensões de papel, independentes:
+Três dimensões independentes:
 
-### 1. Papel de produto: `cliente` vs `prestador`
+### 1. Papel de produto (derivado): `useAuth().role`
 
-Determinado **dinamicamente** — não é um campo salvo em `auth.users`, e sim inferido pela existência de um registro na tabela `prestadores` vinculado ao `user_id`:
-
+Determinado dinamicamente pela existência de um registro em `prestadores` vinculado ao `user_id`:
 ```typescript
-const { data } = await supabase
-  .from('prestadores')
-  .select('id, status')
-  .eq('user_id', s.user.id)
-  .maybeSingle()
-
 role = data ? 'prestador' : 'cliente'
 ```
+Um `user_id` não pode ter mais de um registro em `prestadores` (índice único). Usado por `HeaderBotoes` para navegação e por `useConfirmarExclusaoConta` para decidir o fluxo de exclusão.
 
-Qualquer usuário autenticado que não tenha um registro em `prestadores` é tratado como `cliente`. Um mesmo `user_id` não pode ter mais de um registro em `prestadores` (índice único em `user_id`).
+### 2. Papel de onboarding (armazenado): `profiles.role`
 
-### 2. Papel administrativo: `owner` / `moderator` / `editor`
+Gravado automaticamente na criação de conta por `garantirRoleInicial` (`lib/services/auth.service.ts`), nunca perguntado ao usuário. Só grava se ainda não houver role — nunca sobrescreve.
 
-Independente do papel de produto. Controlado pela tabela `perfis_admin`, vinculada a `auth.users` por `user_id`. Um usuário pode ser cliente **e** admin ao mesmo tempo — são checagens separadas.
+**Detalhe de implementação relevante:** `garantirRoleInicial` checa `!profile?.role` (não `!profile`), protegendo contra o cenário de um trigger de banco já ter criado a linha em `profiles` com role nula. O upsert encadeia `.select('role')` na mesma requisição (evita depender de uma leitura separada logo após a escrita, que não tem garantia de ver o resultado a tempo) e usa o valor em memória como fallback.
 
-## `useAuth` — hook central de sessão
+### Tensão entre as duas fontes (Resolvida)
 
-Localizado em `hooks/useAuth.ts`. Responsabilidades:
+Historicamente havia uma divergência onde `useAuth().role` dependia exclusivamente da existência do registro em `prestadores`, enquanto `profiles.role` guardava a intenção do usuário no momento do login. Isso causava falhas de roteamento para cadastros interrompidos.
 
-- Expõe `session`, `role`, `prestadorStatus`, `roleLoading`, `loading`, `erroLogin`, `loginGoogle`
-- **Cache otimista de sessão** em `localStorage` (`pqf_session_cache`) — evita flash de UI deslogada no primeiro render, checando expiração do token antes de usar o cache
-- Ao detectar sessão (via `getSession()` ou `onAuthStateChange`), consulta `prestadores` para resolver `role` e `prestadorStatus` na mesma query
-- Reage a `SIGNED_OUT` limpando `role`, `prestadorStatus` e o cache
+**Solução implementada:** 
+O `useAuth` foi refatorado para ser a única fonte da verdade. Ele agora executa um `Promise.all` buscando simultaneamente `profiles.role` e `prestadores.status`.
+- Se `profiles.role` for `'prestador'`, mas a linha em `prestadores` não existir, o hook consolida: `role = 'prestador'` e `prestadorStatus = 'pendente'`.
+- Para evitar *FOUC (Flash of Unstyled Content)* e transições bruscas na UI, esses dois valores sofrem **Cache Otimista** via `localStorage` (`pqf_auth_state`), permitindo que a interface (como o `HeaderAuthButton`) renderize o estado correto de forma síncrona, enquanto o banco revalida em background.
 
-**`prestadorStatus`** é usado para distinguir prestador com cadastro completo (`ativo`) de prestador com cadastro pendente (`pendente`) — controla se o botão "Meu Painel" no header leva para `/dashboard` ou `/cadastro`.
+### 3. Papel administrativo: `owner`/`moderator`/`editor`
 
-## Fluxo de login
+Independente das duas anteriores. Tabela `perfis_admin`, vinculada por `user_id`. Um usuário pode ser cliente/prestador **e** admin ao mesmo tempo.
+
+## `useAuth` — hook central de sessão (client-side)
+
+`hooks/useAuth.ts`. Expõe `session`, `role`, `prestadorStatus`, `roleLoading`, `loading`, `erroLogin`, `loginGoogle`, `sessionChecked`.
+
+- **Cache otimista de sessão** em `localStorage` (`pqf_session_cache`) — evita flash de UI deslogada no primeiro render, checando expiração do token antes de usar.
+- Ao detectar sessão, consulta `prestadores` para resolver `role`/`prestadorStatus` na mesma query.
+- Reage a `SIGNED_OUT` limpando `role`, `prestadorStatus` e o cache.
+
+**`prestadorStatus`** distingue prestador com cadastro completo (`ativo`) de pendente (`pendente`) — controla se "Meu Painel" leva a `/dashboard` ou `/cadastro`.
+
+**`loading` vs `sessionChecked`:** `loading` é exclusivo do fluxo `loginGoogle()` (só `true` durante o clique no botão OAuth) — não indica se a checagem inicial de sessão terminou. `sessionChecked` vira `true` assim que a primeira resolução de `getSession()`/`onAuthStateChange` ocorre. Qualquer gate de acesso (redirecionar para `/login` na ausência de sessão) deve usar `sessionChecked`, não `loading`.
+
+**`useSession()`** (`hooks/useSession.ts`) é uma versão mínima — só `session`, sem resolver role nem cache. Propositalmente mais leve para telas que só precisam saber "há sessão?".
+
+## Fluxo completo de login e onboarding
+
+Duas peças centrais usadas por todo ponto de entrada:
+
+- **`lib/services/auth.service.ts`**: `getStatusOnboarding` (lê profile+prestador de usuário existente), `garantirRoleInicial`, `getPrestadorResumo`, `logoutCliente`
+- **`lib/auth/resolverDestinoPosLogin.ts`**: `resolverDestinoPosLogin(profile, prestador) → string`, único ponto de decisão
 
 ```
-Usuário clica em "Entrar com Google"
+Login via Google ──────┐
+Login via e-mail/senha ─┼──→ conta pode ser nova ou existente
+Sessão já ativa ────────┘
         ↓
-loginGoogle() → supabase.auth.signInWithOAuth({ provider: 'google', redirectTo: '/auth/callback?next=/painel/perfil' })
+Tem ?next= explícito? → redireciona direto, ignora lógica de role
+        ↓ Não
+Conta nova sendo criada agora?
+        ├─ Sim → garantirRoleInicial(role da tela de origem) + getPrestadorResumo
+        └─ Não → getStatusOnboarding
         ↓
-Google OAuth → retorna para /auth/callback
-        ↓
-Sessão criada, cookies definidos
-        ↓
-onAuthStateChange dispara no client → useAuth resolve role
+resolverDestinoPosLogin(profile, prestador):
+        ├─ role='prestador' E prestador completo (categoria_id + nome + status≠pendente) → /dashboard
+        ├─ role='cliente' → /dashboard
+        ├─ role='prestador' incompleto:
+        │     ├─ origem_tipo='curadoria_publica' → /cadastro?reivindicar=<id>
+        │     └─ senão → /cadastro
+        └─ role ausente (residual) → /dashboard
 ```
+
+`isPrestadorCompleto` usa o mesmo critério que `useAuth`/`HeaderBotoes` usam para decidir entre `/dashboard` e `/cadastro` no header — divergir reintroduziria inconsistência.
+
+**Quem atribui `role` a uma conta nova:**
+
+| Ponto de entrada | Role atribuída | Mecanismo |
+|---|---|---|
+| Botão "Área do cliente" (home) | — | Usa `?next=/painel/perfil` direto, ignora role |
+| `GoogleButton` em `/login` | `prestador` | `useGoogleAuth` passa `?role=prestador` |
+| `handleLogin`, fallback de `signUp` | `prestador` | `garantirRoleInicial` chamado após criar a conta |
+
+Não existe tela perguntando "como você quer usar o PQF" — cada ponto de entrada já sabe a resposta pelo contexto.
+
+### `app/auth/callback/route.ts`
+
+Route Handler server-side. Instancia `createServerClient` inline (exceção documentada, ver seção de Clients abaixo), com `secure: !isDev`. Lê `?role=` — se presente, usa `garantirRoleInicial`; senão, `getStatusOnboarding`.
+
+### `app/auth/link-expirado/page.tsx`
+
+Tela de erro para link de recuperação expirado/usado/corrompido. Registra `LINK_RECUPERACAO_EXPIRADO` via `insertLog` (`lib/db/logs.ts`).
 
 ## Proteção de rotas — `middleware.ts`
 
-O middleware roda em **todas as rotas** exceto assets estáticos (ver `matcher`), e aplica três regras antes de qualquer página renderizar:
+Roda em todas as rotas exceto assets estáticos.
 
 | Regra | Condição | Ação |
 |---|---|---|
 | **A — Áreas privadas** | Sem sessão e rota é `/dashboard` ou `/cadastro` | Redireciona para `/login` |
 | **B — Evitar login duplicado** | Com sessão e rota é `/login` | Redireciona para `/dashboard` |
-| **C — Área administrativa** | Rota começa com `/admin` | Ver detalhamento abaixo |
+| **C — Área administrativa** | Rota começa com `/admin` | Ver abaixo |
+
+### Regra A — Proteção de Áreas Privadas e Roteamento Inteligente (A.1)
+
+O `middleware.ts` atua como o porteiro central da aplicação. Para as rotas `/dashboard` e `/cadastro`, ele valida não apenas a sessão, mas a intenção (`profiles.role`) e o status real (`prestadores.status`) do usuário:
+
+- **Prestador Pendente/Incompleto:** Se tentar acessar o `/dashboard`, é interceptado e redirecionado para `/cadastro`.
+- **Prestador Ativo/Completo:** Se tentar acessar o `/cadastro`, é redirecionado para o `/dashboard` (a menos que explicitamente acesse telas de edição permitidas).
+- **Cliente:** Se um cliente tentar acessar o `/dashboard` (que é exclusivo para prestadores), é redirecionado para a sua área correta em `/painel/perfil`. Se tentar acessar `/cadastro`, a passagem é permitida (assumindo a intenção de se tornar um profissional).
+
 
 ### Regra C — Proteção de `/admin`
 
 ```
-Rota /admin/*
-      ↓
 Sem sessão? → redireciona para /
-      ↓
 Com sessão → consulta perfis_admin (user_id = auth.uid())
-      ↓
-Sem registro em perfis_admin? → redireciona para /
-      ↓
+Sem registro? → redireciona para /
 Com registro → segue normalmente
 ```
 
-**Decisão de design:** redirecionamento silencioso para a home (`/`), não para `/login` nem um 404 customizado — evita revelar que a rota `/admin` existe para quem não tem acesso, sem forçar fluxo de login desnecessário para quem já está autenticado como cliente/prestador comum.
+Redirecionamento silencioso para a home (não `/login` nem 404) — evita revelar que `/admin` existe.
 
-**Dependência crítica de RLS:** essa checagem só funciona se `perfis_admin` tiver uma policy de `SELECT` permitindo que o usuário leia sua própria linha:
+**Dependência crítica de RLS:** requer policy `SELECT` em `perfis_admin` permitindo o usuário ler sua própria linha. Sem essa policy, até admins legítimos seriam bloqueados. Validar com conta admin real após qualquer mudança nessa policy.
 
-```sql
-CREATE POLICY "admin_pode_ler_propria_linha"
-ON perfis_admin
-FOR SELECT
-USING (user_id = auth.uid());
-```
-
-Sem essa policy, o RLS bloqueia por padrão e **até administradores legítimos seriam redirecionados para fora** — um erro aqui quebra acesso em vez de só bloquear intrusos. Sempre validar com uma conta admin real após qualquer mudança nessa policy.
-
-**Nível de acesso por `role` dentro do admin:** o middleware hoje só verifica *existência* de registro em `perfis_admin`, não o valor de `role`. Diferenciação entre `owner`/`moderator`/`editor` (ex: só `owner` pode deletar) deve ser feita dentro das páginas/actions do admin, não no middleware.
+O middleware só verifica *existência* de registro em `perfis_admin`, não o valor de `role` — diferenciação `owner`/`moderator`/`editor` fica nas páginas/actions do admin.
 
 ## Clients Supabase — por contexto
 
-O projeto usa três formas de instanciar o client Supabase, cada uma para um contexto de execução diferente:
-
 ```
 lib/
-├── supabase.ts             ← re-export de compatibilidade (não editar diretamente)
+├── supabase.ts             ← re-export de compatibilidade
 └── supabase/
     ├── client.ts            ← browser (client components) — createBrowserClient
     └── server.ts            ← server components / route handlers — createServerClient + cookies()
 ```
 
-`middleware.ts` instancia seu próprio `createServerClient` inline (não reutiliza `lib/supabase/server.ts`), porque o middleware manipula cookies via `NextRequest`/`NextResponse`, um contrato diferente do usado em Server Components.
-
 **Regra prática:**
-- Em um `'use client'` component/hook → `import { supabase } from '@/lib/supabase'`
-- Em um Server Component ou Route Handler → `import { createClient } from '@/lib/supabase/server'` e `await createClient()`
-- Nunca importar `lib/supabase/client.ts` em código server-side, nem vice-versa
+- `'use client'` component/hook → `import { supabase } from '@/lib/supabase'`
+- Server Component/Route Handler → `import { createClient } from '@/lib/supabase/server'` + `await createClient()`
+- Exceções conhecidas: `middleware.ts` e `app/auth/callback/route.ts` instanciam `createServerClient` inline — necessidades de cookie (`NextRequest`/`NextResponse` no middleware; `cookies()` com `secure` customizado no callback) específicas demais para o helper genérico.
+
+`app/api/delete-account/route.ts` segue o padrão comum (`lib/supabase/server.ts`) para identificar o usuário logado, mais um client admin (service role) só para `supabaseAdmin.auth.admin.deleteUser`.
+
+## Exclusão de conta
+
+**Fluxo único:** `app/confirmar-exclusao/page.tsx` + `hooks/useConfirmarExclusaoConta.ts`, servindo cliente e prestador.
+
+- Usa `useAuth()` (`session`, `role`, `sessionChecked`) para decidir o caminho
+- `role === 'prestador'` → `buscarPrestadorPorUserId` (`cadastroPrestador.service.ts`) + `removerFotoPrestador`/`deletarPrestadorPorUserId` (`lib/services/exclusaoConta.service.ts`)
+- `role === 'cliente'` → `ClienteService.fetchClienteProfile` (obtém whatsapp real para anonimização) + `ClienteService.deleteClienteAccount`
+- Ambos: `insertLog('EXCLUSAO_CONTA_VOLUNTARIA')` → `POST /api/delete-account` → `signOut()`
+- Confirmação por texto ("digite EXCLUIR")
+
+**Exceção não migrada:** `components/dashboard/EditarPerfilTab.tsx` mantém `handleExcluirContaTotal` própria (funcionalmente equivalente: remove foto, deleta `prestadores`, chama `/api/delete-account`, `signOut`), sem redirecionar para `/confirmar-exclusao`. Registrado no roadmap.
 
 ## Pontos de atenção conhecidos
 
-- **RLS e sessão são a causa mais comum de "erro que não faz sentido".** Se um `update`/`insert` falha sem motivo aparente, checar primeiro se a sessão está presente (`supabase.auth.getSession()`) antes de suspeitar de lógica de negócio ou de dados.
-- **`perfis` vs `profiles`** (tabelas de perfil complementar) — duplicação a resolver, ver [`03-banco-de-dados.md`](./03-banco-de-dados.md). Nenhuma das duas está diretamente ligada à autorização, mas afeta dados de perfil carregados após login.
-- **Conversão `.js` → `.tsx` pendente:** a página de nova senha (`app/recuperar-senha`) ainda está em JavaScript puro, sem tipagem. Junto de outros arquivos `.js`/`.jsx` do projeto, é candidata à conversão gradual — ver `07-roadmap.md`.
+- **RLS e sessão são a causa mais comum de "erro que não faz sentido".** Checar `supabase.auth.getSession()` antes de suspeitar de lógica de negócio.
+- **`perfis` (legado) vs `profiles` (ativa)** — ver `03-banco-de-dados.md`.
+- **Tensão `useAuth().role` vs `profiles.role`** — não resolvida de raiz, só o ponto de maior risco (destino pós-login) foi consolidado.
+- **`sessionChecked` deve ser preferido a `loading`** por qualquer consumidor de `useAuth` que precise de gate de sessão.
+- Arquivos `.js`/`.jsx` remanescentes sem tipagem: ver `13-roadmap.md`.

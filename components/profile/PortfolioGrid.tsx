@@ -1,3 +1,5 @@
+//components/profile/PortfolioGrid.tsx 
+
 'use client'
 import { useState } from 'react'
 import { Camera, CheckCircle2 } from 'lucide-react'

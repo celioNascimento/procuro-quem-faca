@@ -1,3 +1,5 @@
+//services/painelCliente.service.ts 
+
 import { supabase } from '@/lib/supabase'
 
 const SELECT_SERVICOS = `
@@ -5,6 +7,14 @@ const SELECT_SERVICOS = `
   prestadores (nome, foto_perfil, whatsapp, categoria:categorias(nome)),
   portfolio_fotos (*)
 `
+
+// FIX: 'finalizado' é o valor real de portfolio_projetos.status (ver
+// 03-banco-de-dados.md). 'concluido' nunca existiu como valor gravado —
+// as duas queries abaixo excluíam projetos finalizados dos resultados por
+// completo, não só da classificação de UI (esse bug já foi corrigido em
+// PainelDoCliente.tsx, mas a causa raiz estava aqui: um projeto finalizado
+// nem chegava a ser buscado do banco).
+const STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado']
 
 export async function getProfile(userId: string) {
   const { data } = await supabase
@@ -20,7 +30,7 @@ export async function getServicoPorToken(token: string) {
     .from('portfolio_projetos')
     .select(SELECT_SERVICOS)
     .eq('avaliacao_token', token)
-    .in('status', ['em_registro', 'pendente', 'em_execucao', 'concluido'])
+    .in('status', STATUS_VISIVEIS)
     .maybeSingle()
   return data ? [data] : []
 }
@@ -30,7 +40,7 @@ export async function getServicosPorWhatsapp(whatsapp: string) {
     .from('portfolio_projetos')
     .select(SELECT_SERVICOS)
     .eq('cliente_whatsapp', whatsapp.replace(/\D/g, ''))
-    .in('status', ['em_registro', 'pendente', 'em_execucao', 'concluido'])
+    .in('status', STATUS_VISIVEIS)
     .order('created_at', { ascending: false })
   return data ?? []
 }
@@ -59,8 +69,4 @@ export async function loginComGoogle(tokenUrl: string | null) {
     : `${base}/meus-servicos`
 
   await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
-}
-
-export async function logout() {
-  await supabase.auth.signOut()
 }

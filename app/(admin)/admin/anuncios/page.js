@@ -1,3 +1,5 @@
+//app/(admin)/admin/anuncios/page.js
+
 'use client'
 
 import { useState, useEffect } from 'react'

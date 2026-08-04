@@ -1,3 +1,5 @@
+//types/localizacao.ts
+
 export interface Regiao {
   id: string
   nome: string

@@ -1,12 +1,21 @@
+// app/auth/callback/route.ts
+
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getStatusOnboarding, garantirRoleInicial, getPrestadorResumo } from '@/lib/services/auth.service'
+import { resolverDestinoPosLogin, type ProfileRole } from '@/lib/auth/resolverDestinoPosLogin'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next')
+  // Setado por hooks/useGoogleAuth.ts quando o botão Google é usado num
+  // contexto que já sabe qual role faz sentido (ex: tela "Área do
+  // Profissional"). Só é aplicado a contas sem profile ainda — ver
+  // garantirRoleInicial em lib/services/auth.service.ts.
+  const roleSugerida = searchParams.get('role')
   const isDev = process.env.NODE_ENV === 'development'
 
   if (code) {
@@ -33,39 +42,30 @@ export async function GET(request: NextRequest) {
     const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && session) {
-      // Se quem pediu o login já sabe pra onde quer ir (ex: botão "Área do Cliente" na Home),
-      // respeitamos esse destino direto, sem aplicar a lógica de papel (role) abaixo.
+      // Se quem pediu o login já sabe pra onde quer ir (ex: botão "Área do
+      // Cliente" na Home), respeitamos esse destino direto, sem aplicar a
+      // lógica de papel (role) abaixo.
       if (next) {
         return NextResponse.redirect(`${origin}${next}`)
       }
 
-      const user = session.user
+      // Quando há roleSugerida, garantirRoleInicial já devolve a role
+      // confirmada na mesma requisição do upsert — não refazemos a leitura
+      // de profile via getStatusOnboarding, que seria uma request separada
+      // sujeita a atraso de propagação logo após a conta ser criada.
+      let profile: ProfileRole | null
+      let prestador
 
-      const [{ data: profile }, { data: prestador }] = await Promise.all([
-        supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
-        supabase.from('prestadores').select('id, categoria_id, nome, origem_tipo').eq('user_id', user.id).maybeSingle()
-      ])
-
-      // --- LÓGICA DE REDIRECIONAMENTO CONSOLIDADA ---
-
-      // 1. Prestador Completo OU Cliente -> Dashboard
-      if (
-        (profile?.role === 'prestador' && prestador?.categoria_id && prestador?.nome) ||
-        (profile?.role === 'cliente')
-      ) {
-        return NextResponse.redirect(`${origin}/dashboard`)
+      if (roleSugerida) {
+        profile = await garantirRoleInicial(supabase, session.user.id, roleSugerida)
+        prestador = await getPrestadorResumo(supabase, session.user.id)
+      } else {
+        ;({ profile, prestador } = await getStatusOnboarding(supabase, session.user.id))
       }
 
-      // 2. Prestador Incompleto -> Cadastro
-      if (profile?.role === 'prestador') {
-        if (prestador?.origem_tipo === 'curadoria_publica') {
-          return NextResponse.redirect(`${origin}/cadastro?reivindicar=${prestador.id}`)
-        }
-        return NextResponse.redirect(`${origin}/cadastro`)
-      }
+      const destino = resolverDestinoPosLogin(profile, prestador)
 
-      // 3. Usuário novo ou sem role -> Escolha
-      return NextResponse.redirect(`${origin}/auth/escolha`)
+      return NextResponse.redirect(`${origin}${destino}`)
     }
   }
 

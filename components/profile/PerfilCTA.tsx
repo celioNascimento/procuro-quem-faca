@@ -1,5 +1,8 @@
+//components/profile/PerfilCTA.tsx 
+
 'use client'
 import { useRef, useEffect, useState } from 'react'
+import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 
 const WaIcon = () => (
     <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24">
@@ -14,9 +17,10 @@ interface Props {
 }
 
 export default function PerfilCTA({ nome, whatsapp, onClique }: Props) {
-    const waLink = whatsapp?.replace(/\D/g, '')
-        ? `https://wa.me/55${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${nome}, vi seu perfil no Procuro Quem Faça e gostaria de um orçamento.`)}`
-        : null
+    const waLink = buildLinkWhatsapp(
+        whatsapp,
+        `Olá ${nome}, vi seu perfil no Procuro Quem Faça e gostaria de um orçamento.`
+    ) ?? null
 
     const ctaRef = useRef<HTMLDivElement>(null)
     const [scrolled, setScrolled] = useState(false)

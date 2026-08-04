@@ -1,5 +1,7 @@
+//hooks/useCategorias.ts
+
 import { useState, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { fetchGrupos, fetchCategoriasPorGrupo, fetchHabilidades } from '@/lib/services/categorias.service'
 import type { Grupo, Categoria, Habilidade } from '@/types/categorias'
 
 export function useCategorias() {
@@ -8,23 +10,18 @@ export function useCategorias() {
   const [todasHabilidades, setTodasHabilidades] = useState<Habilidade[]>([])
 
   const carregarGrupos = useCallback(async () => {
-    const { data } = await supabase.from('categorias_grupos').select('*').order('nome')
-    setListaGrupos(data || [])
+   const data = await fetchGrupos()
+   setListaGrupos(data)
   }, [])
 
   const carregarCategorias = useCallback(async (grupoId: string | number) => {
-    if (!grupoId) { setListaCategorias([]); return }
-    const { data } = await supabase
-      .from('categorias')
-      .select('*')
-      .eq('grupo_id', grupoId)
-      .order('nome')
-    setListaCategorias(data || [])
+    const data = await fetchCategoriasPorGrupo(grupoId)
+    setListaCategorias(data)
   }, [])
 
   const carregarHabilidades = useCallback(async () => {
-    const { data } = await supabase.from('habilidades').select('nome, categoria').order('nome')
-    setTodasHabilidades(data || [])
+    const data = await fetchHabilidades()
+    setTodasHabilidades(data)
   }, [])
 
   return {

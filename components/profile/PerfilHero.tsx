@@ -1,3 +1,5 @@
+//components/profile/PerfilHero.tsx  
+
 'use client'
 import Link from 'next/link'
 import { MapPin, ShieldCheck, Flag, Share2, CheckCircle, Wrench, Star } from 'lucide-react'

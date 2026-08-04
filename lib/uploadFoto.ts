@@ -1,3 +1,5 @@
+//lib/uploadFoto.ts
+
 import { supabase } from '@/lib/supabase'
 
 const BUCKET = 'fotos-perfil'

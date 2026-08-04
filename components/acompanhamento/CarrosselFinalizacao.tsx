@@ -1,3 +1,5 @@
+//components/acompanhamento/CarrosselFinalizacao.tsx
+
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
 import type { FotoOrdenada, Avaliacao, Projeto } from '@/types/avaliacao'
 
@@ -29,6 +31,7 @@ export default function CarrosselFinalizacao({
           <div className="w-8 h-8 rounded-full bg-blue-600 p-[2px]">
             <img
               src={projeto.prestadores?.foto_perfil}
+              alt={projeto.prestadores?.nome}
               className="w-full h-full rounded-full object-cover border-2 border-white"
             />
           </div>

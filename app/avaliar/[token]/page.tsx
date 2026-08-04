@@ -1,11 +1,11 @@
 'use client'
 import { use } from 'react'
-import { useAvaliar }           from '../../../hooks/useAvaliacao'
-import HeaderCliente            from '@/components/perfil/HeaderCliente'
-import { CardPrestador }        from '@/components/acompanhamento/CardPrestador'
-import CarrosselFinalizacao     from '@/components/acompanhamento/CarrosselFinalizacao'
-import { BlocoAvaliacao }       from '@/components/acompanhamento/BlocoAvaliacao'
-import { RodapeSeguranca }      from '@/components/acompanhamento/RodapeSeguranca'
+import { useAvaliar } from '@/hooks/useAvaliacao'
+import HeaderCliente from '@/components/perfil/HeaderCliente'
+import { CardPrestador } from '@/components/acompanhamento/CardPrestador'
+import CarrosselFinalizacao from '@/components/acompanhamento/CarrosselFinalizacao'
+import { BlocoAvaliacao } from '@/components/acompanhamento/BlocoAvaliacao'
+import { RodapeSeguranca } from '@/components/acompanhamento/RodapeSeguranca'
 
 export default function PaginaAvaliar({
   params: paramsPromise,

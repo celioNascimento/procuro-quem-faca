@@ -1,5 +1,7 @@
+//hooks/useRastreamentoAtivacao.ts
+
 import { useEffect } from 'react'
-import { insertLog } from '@/hooks/useLog'
+import { insertLog } from '@/lib/db/logs'
 import { setCookie, getCookie } from '@/lib/cookies'
 import type { PrestadorPerfil } from '@/types/perfil'
 

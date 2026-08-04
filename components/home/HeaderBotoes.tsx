@@ -1,9 +1,11 @@
+//components/home/HeaderBotoes.tsx
+
 'use client'
 import Link from 'next/link'
 import { LogIn, User, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { insertLog } from '@/hooks/useLog'
+import { insertLog } from '@/lib/db/logs'
 
 const btnGhost   = 'flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full whitespace-nowrap bg-white/80 backdrop-blur-sm border border-slate-200/70 text-slate-500 text-[10px] md:text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md hover:bg-white hover:text-slate-700 transition-all duration-200 active:scale-95'
 const btnPrimary = 'flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full whitespace-nowrap bg-blue-600 text-white text-[10px] md:text-xs font-black uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all duration-200 active:scale-95'
@@ -75,7 +77,9 @@ export function HeaderBotoes() {
         <span className="hidden sm:inline">{role === 'prestador' ? 'Área do Cliente' : 'Minha Área'}</span>
         <span className="sm:hidden">{role === 'prestador' ? 'Cliente' : 'Área'}</span>
       </Link>
-      {role === 'prestador' && (
+      
+      {/* Se for prestador exibe o Painel/Completar. Se não for, exibe a opção de virar profissional. */}
+      {role === 'prestador' ? (
         <Link href={painelHref} className={btnPrimary}>
           <LayoutDashboard size={13} className="shrink-0" />
           <span className="hidden sm:inline">
@@ -84,6 +88,11 @@ export function HeaderBotoes() {
           <span className="sm:hidden">
             {cadastroPendente ? 'Cadastro' : 'Painel'}
           </span>
+        </Link>
+      ) : (
+        <Link href="/cadastro" className={btnPrimary}>
+          <LogIn size={13} className="shrink-0" />
+          <span className="hidden sm:inline">Sou </span>Profissional
         </Link>
       )}
     </>

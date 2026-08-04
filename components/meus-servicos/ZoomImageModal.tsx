@@ -1,3 +1,5 @@
+//components/meus-servicos/ZoomImageModal.tsx
+
 'use client'
 import { X } from 'lucide-react'
 

@@ -1,3 +1,5 @@
+//hooks/useAcompanhamento.ts
+
 'use client'
 import { useEffect, useState } from 'react'
 import {
@@ -24,6 +26,8 @@ export function useAcompanhamento(token: string) {
   const labelEtapaAtual =
     projeto?.status === 'em_execucao'
       ? temConclusao ? 'Aguardando sua avaliação' : 'Registrando etapas'
+      : projeto?.status === 'finalizado'
+      ? 'Serviço concluído'
       : 'Em andamento'
 
   useEffect(() => { setMounted(true) }, [])

@@ -1,3 +1,5 @@
+// lib/services/cliente.service.ts
+
 import { supabase } from '@/lib/supabase'
 
 export async function fetchClienteProfile(userId: string) {
@@ -17,7 +19,7 @@ export async function fetchClienteServicos(whatsapp: string) {
       avaliacoes(id)
     `)
     .eq('cliente_whatsapp', numLimpo)
-    .in('status', ['pendente', 'em_execucao', 'finalizado', 'concluido'])
+    .in('status', ['pendente', 'em_execucao', 'finalizado'])
   if (error) throw error
   return data
 }
@@ -61,17 +63,23 @@ export async function uploadClienteAvatar(userId: string, file: File, currentAva
   if (uploadError) throw uploadError
 
   const { data: { publicUrl } } = supabase.storage.from('fotos-perfil').getPublicUrl(fileName)
-  
-  const { error: dbError } = await supabase.from('profiles').update({ 
-    avatar_url: publicUrl, 
-    updated_at: new Date().toISOString() 
+
+  const { error: dbError } = await supabase.from('profiles').update({
+    avatar_url: publicUrl,
+    updated_at: new Date().toISOString()
   }).eq('id', userId)
-  
+
   if (dbError) throw dbError
 
   return publicUrl
 }
 
+// FIX: deleteClienteAccount agora só cuida da limpeza de DADOS (profiles +
+// anonimização de projetos). A chamada a /api/delete-account (que remove o
+// usuário de auth.users de verdade via service role) é feita pelo chamador
+// (usePerfilDados.handleDeleteAccount), não aqui dentro — mantém esta função
+// fazendo uma coisa só (limpar dados de domínio) e deixa a decisão de
+// "quando invalidar a sessão/conta" com quem orquestra o fluxo.
 export async function deleteClienteAccount(userId: string, whatsapp: string) {
   const numLimpo = whatsapp.replace(/\D/g, '')
   if (numLimpo) {
@@ -81,16 +89,4 @@ export async function deleteClienteAccount(userId: string, whatsapp: string) {
       .eq('cliente_whatsapp', numLimpo)
   }
   await supabase.from('profiles').delete().eq('id', userId)
-  await fetch('/api/delete-account', { method: 'POST' })
-  await supabase.auth.signOut()
-}
-
-export async function ensureGoogleAvatarProfile(userId: string, googleAvatar: string, currentAvatarUrl?: string) {
-  if (!currentAvatarUrl && googleAvatar) {
-    await supabase.from('profiles').upsert({
-      id: userId,
-      avatar_url: googleAvatar,
-      updated_at: new Date().toISOString()
-    }).then(() => {}) 
-  }
 }

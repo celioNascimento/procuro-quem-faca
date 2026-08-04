@@ -13,6 +13,7 @@ export interface AvaliacaoRaw {
   indica: boolean
   resposta_prestador: string | null
   cliente_id: string | null
+  status: string | null
   portfolio_projetos: { titulo: string }[] | null
 }
 

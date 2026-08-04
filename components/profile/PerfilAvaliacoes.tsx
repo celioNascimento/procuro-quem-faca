@@ -1,3 +1,5 @@
+//components/profile/PerfilAvaliacoes.tsx 
+
 import type { AvaliacaoPerfil } from '@/types/perfil'
 
 interface Props {

@@ -1,5 +1,7 @@
+//components/profile/FotosEvidenciaPicker.tsx 
+
 'use client'
-import { useRef } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import { MAX_ARQUIVOS } from '../../lib/uploadEvidencias'
 
 interface FotosEvidenciaPickerProps {
@@ -9,6 +11,20 @@ interface FotosEvidenciaPickerProps {
 
 export default function FotosEvidenciaPicker({ fotos, onChange }: FotosEvidenciaPickerProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Gera as URLs de preview uma única vez por arquivo, e revoga
+  // automaticamente quando a lista de fotos muda ou o componente desmonta —
+  // evita vazamento de memória de URL.createObjectURL nunca liberadas.
+  const previews = useMemo(
+    () => fotos.map(foto => URL.createObjectURL(foto)),
+    [fotos]
+  )
+
+  useEffect(() => {
+    return () => {
+      previews.forEach(url => URL.revokeObjectURL(url))
+    }
+  }, [previews])
 
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const novos = Array.from(e.target.files ?? [])
@@ -39,7 +55,7 @@ export default function FotosEvidenciaPicker({ fotos, onChange }: FotosEvidencia
           {fotos.map((foto, i) => (
             <div key={i} className="relative group">
               <img
-                src={URL.createObjectURL(foto)}
+                src={previews[i]}
                 alt={foto.name}
                 className="w-16 h-16 object-cover rounded-2xl border border-slate-100"
               />

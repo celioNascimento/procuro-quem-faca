@@ -1,3 +1,5 @@
+//dashboard/wizard/WizardTimeline.tsx
+ 
 'use client'
 
 import { useUploadWizard } from '@/hooks/useUploadWizard'

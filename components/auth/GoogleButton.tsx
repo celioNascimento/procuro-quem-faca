@@ -1,42 +1,16 @@
+// components/auth/GoogleButton.tsx 
+
 'use client'
-import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useGoogleAuth } from '@/hooks/useGoogleAuth'
 
 interface GoogleButtonProps {
   text?: string
   onLog?: (acao: string, detalhes?: Record<string, any>) => Promise<void> | void
+  roleDesejado?: 'prestador' | 'cliente'
 }
 
-export default function GoogleButton({ text = "Continuar com Google", onLog }: GoogleButtonProps) {
-  const [isRedirecting, setIsRedirecting] = useState(false)
-
-  const handleLogin = async () => {
-    try {
-      setIsRedirecting(true)
-
-      // Registra o log de tentativa se a função for fornecida
-      if (onLog) {
-        await onLog('TENTATIVA_LOGIN_GOOGLE', { platform: 'web' })
-      }
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          // IMPORTANTE: Use origin para garantir que a URL seja absoluta e sem barras extras
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
-      })
-
-      if (error) throw error
-    } catch (error: any) {
-      console.error('Erro login Google:', error.message)
-      setIsRedirecting(false)
-    }
-  }
+export default function GoogleButton({ text = "Continuar com Google", onLog, roleDesejado }: GoogleButtonProps) {
+  const { isRedirecting, handleLogin } = useGoogleAuth({ onLog, roleDesejado })
 
   return (
     <button
@@ -59,4 +33,4 @@ export default function GoogleButton({ text = "Continuar com Google", onLog }: G
       )}
     </button>
   )
-} 
+}

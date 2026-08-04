@@ -1,3 +1,5 @@
+//  app/(perfil)/[slug]/page.tsx
+
 'use client'
 import Link from 'next/link'
 import Header from '@/components/Header'
@@ -10,9 +12,9 @@ import PortfolioGrid from '@/components/profile/PortfolioGrid'
 import { AdCard } from '../../../components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
-import { insertLog } from '@/hooks/useLog'
+import { insertLog } from '@/lib/db/logs'
 import { useCompartilharPerfil } from '@/hooks/useCompartilharPerfil'
-import type { AdPage } from '@/types/ads'
+import { BadgeCheck } from 'lucide-react'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
 
 // ── Sub-componente interno — hooks chamados após os dados estarem garantidos ──
@@ -39,49 +41,47 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
       <Header href={urlRetorno} />
 
-      <div className="max-w-xl lg:max-w-6xl mx-auto pt-24 md:pt-32 pb-16 px-5">
-
-        <div className="w-full max-w-xl lg:max-w-3xl mx-auto mb-6 flex items-center justify-center animate-in fade-in duration-500">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 lg:px-8 lg:pt-32">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-center animate-in fade-in duration-500">
           <AdCard
-            page={"perfil" as AdPage}
+            page="perfil_prestador"
             categoria={prestador.categorias?.nome || prestador.categoria}
           />
         </div>
 
-        {isPublico && (
-          <Link
-            href={`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`}
-            className="flex items-center gap-4 mb-6 bg-indigo-50 border border-indigo-100 p-5 rounded-[2rem] group hover:bg-indigo-600 transition-all duration-300 active:scale-[0.98] animate-in fade-in duration-500"
-          >
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-lg shadow-sm shrink-0 group-hover:scale-110 transition-transform">
-              🤝
-            </div>
-            <div>
-              <p className="text-indigo-900 font-black uppercase text-[10px] italic group-hover:text-white transition-colors">
-                Este é o seu perfil?
-              </p>
-              <p className="text-indigo-600/70 text-[9px] font-semibold uppercase leading-tight group-hover:text-white/80 transition-colors">
-                Reivindique agora para editar suas informações.
-              </p>
-            </div>
-          </Link>
-        )}
-
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-4 relative">
-
-          <div className="w-full lg:w-1/3 shrink-0 relative">
-            <div className="lg:sticky lg:top-32 flex flex-col gap-6 animate-in fade-in duration-500">
+        <div className="mt-5 grid items-start gap-6 lg:mt-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] xl:gap-14">
+          <aside className="min-w-0 lg:sticky lg:top-28">
+            <div className="flex flex-col gap-4 animate-in fade-in duration-500 lg:gap-5">
               <PerfilHero
                 prestador={prestador}
                 projetos={projetos}
                 compartilhando={statusCompartilhamento === 'copiado'}
                 onCompartilhar={compartilhar}
               />
-            </div>
-          </div>
 
-          <div className="w-full lg:w-2/3 flex flex-col gap-6 lg:gap-8 animate-in fade-in duration-500">
-            <div className="space-y-4">
+              {isPublico && (
+                <Link
+                  href={`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`}
+                  className="group flex items-center gap-3 rounded-[1.75rem] border border-indigo-100 bg-indigo-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-600 hover:shadow-md active:translate-y-0 sm:gap-4 sm:p-5"
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm transition-transform group-hover:scale-105">
+                    <BadgeCheck size={20} aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[11px] font-black uppercase tracking-wide text-indigo-900 transition-colors group-hover:text-white">
+                      Este é o seu perfil?
+                    </span>
+                    <span className="mt-0.5 block text-[10px] font-semibold leading-relaxed text-indigo-600/75 transition-colors group-hover:text-white/80">
+                      Reivindique para editar suas informações.
+                    </span>
+                  </span>
+                </Link>
+              )}
+            </div>
+          </aside>
+
+          <div className="flex min-w-0 flex-col gap-7 animate-in fade-in duration-500 sm:gap-8 lg:gap-10">
+            <div className="flex flex-col gap-4">
               <PerfilSobre prestador={prestador} />
 
               <PerfilCTA
@@ -95,16 +95,27 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               />
             </div>
 
-            <section className="space-y-3">
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 px-1">
-                Registros de Atividade
-              </h2>
+            <section className="flex flex-col gap-3" aria-labelledby="portfolio-heading">
+              <div className="flex items-end justify-between gap-4 px-1">
+                <div className="flex flex-col gap-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-600">
+                    Portfólio
+                  </p>
+                  <h2 id="portfolio-heading" className="text-pretty text-lg font-black tracking-tight text-slate-800 sm:text-xl">
+                    Registros de atividade
+                  </h2>
+                </div>
+                {projetos.length > 0 && (
+                  <p className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                    {projetos.length} {projetos.length === 1 ? 'projeto' : 'projetos'}
+                  </p>
+                )}
+              </div>
               <PortfolioGrid projetos={projetos} />
             </section>
 
             <PerfilAvaliacoes avaliacoes={avaliacoes} />
           </div>
-
         </div>
       </div>
     </main>

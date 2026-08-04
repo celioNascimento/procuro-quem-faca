@@ -1,3 +1,5 @@
+//hooks/usePerfilDados.ts
+
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -26,9 +28,6 @@ export function usePerfilDados() {
   const [isDirty, setIsDirty] = useState(false)
   const [listaEstados, setListaEstados] = useState<any[]>([])
   const [listaCidades, setListaCidades] = useState<any[]>([])
-  const [deleteModal, setDeleteModal] = useState(false)
-  const [deleteConfirmText, setDeleteConfirmText] = useState('')
-  const [deleting, setDeleting] = useState(false)
   const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
 
   const [perfil, setPerfil] = useState({
@@ -161,18 +160,6 @@ export function usePerfilDados() {
     }
   }
 
-  const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== 'EXCLUIR' || !user) return
-    setDeleting(true)
-    try {
-      await ClienteService.deleteClienteAccount(user.id, perfil.whatsapp)
-      window.location.href = '/?conta=excluida'
-    } catch {
-      setErrorModal({ show: true, title: 'Erro ao excluir', message: 'Não foi possível excluir sua conta agora.' })
-      setDeleting(false)
-    }
-  }
-
   return {
     fileInputRef,
     user,
@@ -183,14 +170,10 @@ export function usePerfilDados() {
     showSuccess,
     listaEstados,
     listaCidades,
-    deleteModal, setDeleteModal,
-    deleteConfirmText, setDeleteConfirmText,
-    deleting,
     errorModal, setErrorModal,
     aplicarMascara,
     handleChangePerfil,
     handleUploadFoto,
     atualizar,
-    handleDeleteAccount,
   }
 }
