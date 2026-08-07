@@ -73,13 +73,14 @@ export function HeaderAuthButton() {
             </span>
           </Link>
 
-          <button
-            onClick={() => logout()}
+                    <button
+            onClick={() => logout({ origem: 'header_principal', redirectTo: '/' })}
             className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50 transition-all active:scale-95"
             title="Sair"
           >
             <LogOut size={14} />
           </button>
+          
         </div>
 
         {/* Mobile */}
@@ -112,13 +113,14 @@ export function HeaderAuthButton() {
                 {labelPainel}
               </Link>
               <div className="h-px bg-slate-100 mx-3" />
-              <button
-                onClick={() => { logout(); setAberto(false) }}
+                 <button
+                onClick={() => { logout({ origem: 'header_principal', redirectTo: '/' }); setAberto(false) }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wide hover:bg-red-50 hover:text-red-500 transition-colors"
               >
                 <LogOut size={13} />
                 Sair
               </button>
+              
             </div>
           )}
         </div>
