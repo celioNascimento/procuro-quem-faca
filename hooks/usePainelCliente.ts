@@ -9,7 +9,7 @@ import { Servico } from '@/types/painel'
 import {
   getProfile,
   getServicoPorToken,
-  getServicosPorUserId,     // ← IMPORTA A NOVA FUNÇÃO
+  getServicosPorUserId,
   getServicosPorWhatsapp,
   aceitarServico,
 } from '../lib/services/painelCliente.service'
@@ -39,21 +39,25 @@ export function usePainelCliente() {
 
       let projs: Servico[] = []
 
-      // 1. Tenta buscar pelo token específico (se o usuário clicou num link direto)
+      // 1. Tenta buscar pelo token da URL primeiro
       if (token) {
         projs = await getServicoPorToken(token)
       }
 
-      // 2. Fallback FORTE: Busca pelo ID do usuário logado (Mata o vazamento do Prestador)
+      // 2. Tenta buscar pelo ID Forte (nova coluna cliente_user_id)
       if (projs.length === 0) {
         projs = await getServicosPorUserId(user.id)
       }
 
-      // 3. Fallback FRACO: Caso a migração do banco não tenha vinculado o user.id ainda, 
-      // ou para clientes antigos (apenas se não achar NADA no passo 2)
+      // 3. Fallback: busca pelo whatsapp (para projetos antigos sem cliente_user_id)
       if (projs.length === 0) {
         const whatsapp = prof?.whatsapp || localStorage.getItem('cliente_whatsapp')
         if (whatsapp) projs = await getServicosPorWhatsapp(whatsapp)
+      }
+
+      // 4. FILTRO ANTI-ESPELHO: Remove projetos onde o usuário atual é o PRESTADOR
+      if (projs.length > 0) {
+        projs = projs.filter(p => p.prestadores?.user_id !== user.id)
       }
 
       if (projs.length > 0) setServicos(projs)
@@ -103,8 +107,10 @@ export function usePainelCliente() {
     router.push(`/acompanhamento/${servico.avaliacao_token}`)
   }
 
-  const nomeCliente = profile?.full_name || session?.user?.user_metadata?.full_name || ''
-  const avatarUrl = profile?.avatar_url || session?.user?.user_metadata?.avatar_url
+  const nomeCliente =
+    profile?.full_name || session?.user?.user_metadata?.full_name || ''
+  const avatarUrl =
+    profile?.avatar_url || session?.user?.user_metadata?.avatar_url
 
   return {
     session, profile, servicos, loading,
