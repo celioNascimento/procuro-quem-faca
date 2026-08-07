@@ -23,28 +23,33 @@ export function HeaderAuthButton() {
     return () => document.removeEventListener('mousedown', handleClickFora)
   }, [])
 
-  // TRAVA DE SEGURANÇA VISUAL:
-  // Se não sabemos a sessão AINDA, ou se temos sessão mas o role ainda não foi descoberto/cacheado
-  if (session === undefined || (session && role === null)) {
+  // TRAVA DE SEGURANÇA VISUAL (Corrigida):
+  // Apenas trava se a sessão ainda estiver carregando.
+  // Se a sessão existe, nós renderizamos a UI, usando fallback se o role for null.
+  if (session === undefined) {
     return <div className="w-9 h-9 rounded-full animate-pulse bg-slate-100" />
   }
 
   if (session) {
-    const destinoPainel = role === 'prestador' 
+    // Alinhado com o resolverDestinoPosLogin: se não tem role, tratamos visualmente como cliente
+    const safeRole = role || 'cliente'
+
+    const destinoPainel = safeRole === 'prestador' 
       ? (prestadorStatus === 'pendente' ? '/cadastro' : '/dashboard/perfil')
       : '/painel/perfil'
       
-    const labelPainel = role === 'prestador'
+    const labelPainel = safeRole === 'prestador'
       ? (prestadorStatus === 'pendente' ? 'Concluir Cadastro' : 'Meu Painel')
       : 'Minha Conta'
       
-    const IconePainel = role === 'prestador'
+    const IconePainel = safeRole === 'prestador'
       ? (prestadorStatus === 'pendente' ? CheckCircle : LayoutDashboard)
       : User
 
     return (
       <div className="relative" ref={ref}>
 
+        {/* Desktop */}
         <div className="hidden md:flex items-center gap-2">
           <Link
             href={destinoPainel}
@@ -77,6 +82,7 @@ export function HeaderAuthButton() {
           </button>
         </div>
 
+        {/* Mobile */}
         <div className="flex md:hidden">
           <button
             onClick={() => setAberto(v => !v)}
