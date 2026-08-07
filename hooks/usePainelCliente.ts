@@ -9,6 +9,7 @@ import { Servico } from '@/types/painel'
 import {
   getProfile,
   getServicoPorToken,
+  getServicosPorUserId,     // ← IMPORTA A NOVA FUNÇÃO
   getServicosPorWhatsapp,
   aceitarServico,
 } from '../lib/services/painelCliente.service'
@@ -22,14 +23,11 @@ export function usePainelCliente() {
   const [zoomImage, setZoomImage] = useState<string | null>(null)
   const [tokenUrl, setTokenUrl]   = useState<string | null>(null)
 
-  // Lê o token da URL uma única vez na montagem
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     setTokenUrl(params.get('token'))
   }, [])
 
-  // ✅ useCallback evita que buscarDados seja recriada a cada render,
-  //    prevenindo loops infinitos no useEffect abaixo
   const buscarDados = useCallback(async (
     user: { id: string },
     token: string | null,
@@ -39,10 +37,20 @@ export function usePainelCliente() {
       const prof = await getProfile(user.id)
       setProfile(prof)
 
-      // Tenta buscar pelo token da URL primeiro
-      let projs: Servico[] = token ? await getServicoPorToken(token) : []
+      let projs: Servico[] = []
 
-      // Fallback: busca pelo whatsapp do perfil ou do localStorage
+      // 1. Tenta buscar pelo token específico (se o usuário clicou num link direto)
+      if (token) {
+        projs = await getServicoPorToken(token)
+      }
+
+      // 2. Fallback FORTE: Busca pelo ID do usuário logado (Mata o vazamento do Prestador)
+      if (projs.length === 0) {
+        projs = await getServicosPorUserId(user.id)
+      }
+
+      // 3. Fallback FRACO: Caso a migração do banco não tenha vinculado o user.id ainda, 
+      // ou para clientes antigos (apenas se não achar NADA no passo 2)
       if (projs.length === 0) {
         const whatsapp = prof?.whatsapp || localStorage.getItem('cliente_whatsapp')
         if (whatsapp) projs = await getServicosPorWhatsapp(whatsapp)
@@ -57,9 +65,7 @@ export function usePainelCliente() {
     }
   }, [router])
 
-  // Inicializa sessão e assina mudanças de auth
   useEffect(() => {
-    // Aguarda tokenUrl ser lido (pode ser null legítimo ou ainda não inicializado)
     if (tokenUrl === null) return
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -78,17 +84,14 @@ export function usePainelCliente() {
     return () => subscription.unsubscribe()
   }, [tokenUrl, buscarDados])
 
-  // ✅ Atualiza o banco, espelha no estado local e navega via router (sem hard reload)
   const handleAceitar = async (servico: Servico) => {
     const nome =
       profile?.full_name ||
       session?.user?.user_metadata?.full_name ||
       servico.cliente_nome
 
-    // ✅ Apenas 2 argumentos — alinhado com a assinatura do service
     await aceitarServico(servico.id, nome)
 
-    // Atualiza o card localmente antes de navegar (feedback imediato)
     setServicos(prev =>
       prev.map(s =>
         s.id === servico.id
@@ -97,14 +100,11 @@ export function usePainelCliente() {
       )
     )
 
-    // Navegação client-side — muito mais rápida que window.location.href
     router.push(`/acompanhamento/${servico.avaliacao_token}`)
   }
 
-  const nomeCliente =
-    profile?.full_name || session?.user?.user_metadata?.full_name || ''
-  const avatarUrl =
-    profile?.avatar_url || session?.user?.user_metadata?.avatar_url
+  const nomeCliente = profile?.full_name || session?.user?.user_metadata?.full_name || ''
+  const avatarUrl = profile?.avatar_url || session?.user?.user_metadata?.avatar_url
 
   return {
     session, profile, servicos, loading,
