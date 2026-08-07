@@ -2,9 +2,10 @@
 
 import { supabase } from '@/lib/supabase'
 
+// Adicionado o user_id no retorno de prestadores para permitir o filtro
 const SELECT_SERVICOS = `
   *,
-  prestadores (nome, foto_perfil, whatsapp, categoria:categorias(nome)),
+  prestadores (id, user_id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
   portfolio_fotos (*)
 `
 
@@ -29,18 +30,17 @@ export async function getServicoPorToken(token: string) {
   return data ? [data] : []
 }
 
-// NOVO: Busca blindada pelo ID do Cliente logado
+// Nova função usando a coluna que já existe no banco
 export async function getServicosPorUserId(userId: string) {
   const { data } = await supabase
     .from('portfolio_projetos')
     .select(SELECT_SERVICOS)
-    .eq('cliente_user_id', userId) // ← Usa a âncora forte (ajuste este nome da coluna se diferir do banco)
+    .eq('cliente_user_id', userId)
     .in('status', STATUS_VISIVEIS)
     .order('created_at', { ascending: false })
   return data ?? []
 }
 
-// MANTIDA para legacy ou clientes não logados (mas evitada sempre que possível)
 export async function getServicosPorWhatsapp(whatsapp: string) {
   const { data } = await supabase
     .from('portfolio_projetos')
