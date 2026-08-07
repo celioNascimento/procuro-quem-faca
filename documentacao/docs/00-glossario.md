@@ -197,3 +197,12 @@ Ainda não implementado — ver `13-roadmap.md` para o desenho completo. Resumo 
 - **Definição de nova senha:** `app/recuperar-senha/page.tsx` + `hooks/useNovaSenha.ts` + `lib/services/recuperacaoSenha.service.ts`
 - **Troca de senha durante edição de perfil** (já logado): `components/auth/SecaoAcessoLogado.tsx` (usado tanto no Cadastro quanto no Dashboard)
 - **Componente de input de senha com toggle de visibilidade:** `components/auth/SenhaInput.tsx` (usa `EyeIconButton` internamente) — reaproveitado por `SecaoAcessoCadastro` e `SecaoAcessoLogado`. Distinto de `components/auth/EyeIconButton.tsx` (o botão isolado, usado diretamente por `NovaSenha`).
+
+- ## Efeito Espelho (Vazamento de Papéis)
+
+**Definição:** Bug arquitetural onde um usuário que atua simultaneamente como Prestador e Cliente visualizava os projetos que ele mesmo estava executando dentro do seu painel de Cliente, devido à busca baseada exclusivamente em `cliente_whatsapp`.
+
+**Solução Arquitetural (Implementada):**
+1. **Âncora Forte (BD):** Adição da coluna `cliente_user_id` em `portfolio_projetos` para vincular estritamente o cliente logado, isolando a busca via `getServicosPorUserId`.
+2. **Filtro Anti-Espelho (Frontend):** O hook `usePainelCliente.ts` implementa uma trava de segurança `projs.filter(p => p.prestadores?.user_id !== user.id)`. Isso garante que, mesmo no fallback de busca por WhatsApp (para projetos legados), o sistema exclua da UI de cliente qualquer projeto onde o usuário logado seja o prestador em execução. A query `SELECT_SERVICOS` exige a presença de `prestadores (user_id)` para este filtro funcionar.
+   
