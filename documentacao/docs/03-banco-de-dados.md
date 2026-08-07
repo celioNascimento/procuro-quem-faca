@@ -99,16 +99,19 @@ Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas
 | `categorias` | Categoria específica de serviço, vinculada a um grupo, flag `destaque` |
 
 ### Portfólio e execução de serviço
-
 | Tabela | Propósito |
 |---|---|
-| `portfolio_projetos` | Um projeto/serviço contratado — status, cliente, token de avaliação |
+| `portfolio_projetos` | Um projeto/serviço contratado — status, cliente (`cliente_whatsapp` e âncora forte `cliente_user_id`), token de avaliação |
 | `portfolio_fotos` | As 3 fotos (antes/durante/depois) de um projeto, com legenda |
 | `portfolio_comentarios` | Comentários no projeto, de cliente ou prestador (`autor_tipo`) |
 | `portfolio_curtidas` | Curtidas de usuários autenticados em projetos (portfólio público) |
 | `projeto_logs` | Log de ações realizadas em um projeto (auditoria) |
 
-**`portfolio_projetos.status`** — valores reais em uso: `em_registro` → `pendente` → `em_execucao` → `finalizado`. `'concluido'` **não é um valor válido** — nunca gravado no banco (ver `14-glossario.md`, seção "Status de projeto", para todos os pontos de código que derivam UI a partir deste campo).
+**`portfolio_projetos.status`** — valores reais em uso: `em_registro` → `pendente` → `em_execucao` → `finalizado`. 
+
+**`cliente_user_id` vs `cliente_whatsapp`:** O vínculo do cliente ao projeto foi migrado de uma âncora fraca (`cliente_whatsapp`) para uma âncora forte (`cliente_user_id` uuid). O WhatsApp é mantido apenas como dado de contato legível.
+
+ **não é um valor válido** — nunca gravado no banco (ver `14-glossario.md`, seção "Status de projeto", para todos os pontos de código que derivam UI a partir deste campo).
 
 **`avaliacao_token`** — UUID único por projeto, usado pelo cliente para acessar a página de avaliação/acompanhamento sem login. **Design em avaliação:** login (Google) passaria a ser exigido desde o primeiro acesso ao projeto (não mais opcional), com `portfolio_projetos.cliente_user_id` vinculando a conta que primeiro logar via aquele token — ver `13-roadmap.md`.
 
