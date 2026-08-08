@@ -54,16 +54,24 @@ export function useAcompanhamento(token: string) {
   }, [token, mounted])
 
   const handleShare = async () => {
+    // 🔒 SEGURANÇA: Aponta para a vitrine pública do prestador em vez do token privado
+    const slugPrestador = projeto?.prestadores?.slug
+    const urlPublica = slugPrestador 
+      ? `${window.location.origin}/${slugPrestador}`
+      : window.location.origin
+
     const shareData = {
-      title: `Serviço: ${projeto?.titulo}`,
-      text: `Acompanhe o progresso: "${projeto?.titulo}"`,
-      url: window.location.href,
+      title: `Perfil de ${projeto?.prestadores?.nome || 'Prestador'}`,
+      text: `Conheça os serviços e portfólio profissional no Procuro Quem Faça.`,
+      url: urlPublica,
     }
+
     try {
-      if (navigator.share) await navigator.share(shareData)
-      else {
-        await navigator.clipboard.writeText(window.location.href)
-        alert('Link copiado!')
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(urlPublica)
+        alert('Link do perfil público copiado com sucesso!')
       }
     } catch (err) {
       console.error(err)
