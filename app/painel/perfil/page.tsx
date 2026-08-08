@@ -46,12 +46,8 @@ export default function PerfilDoCliente() {
     <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans antialiased">
       <HeaderCliente nomeCliente={perfil.full_name} />
 
-      {/* Input de upload oculto */}
       <input type="file" ref={fileInputRef} onChange={handleUploadFoto} accept="image/*" className="hidden" />
 
-
-
-      {/* ── Modal: sair sem salvar ── */}
       {confirmLeaveModal.show && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95">
@@ -70,7 +66,6 @@ export default function PerfilDoCliente() {
         </div>
       )}
 
-      {/* ── Modal: erro ── */}
       {errorModal.show && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95">
@@ -91,7 +86,6 @@ export default function PerfilDoCliente() {
         </div>
       )}
 
-      {/* ── Toast: salvo com sucesso ── */}
       {showSuccess && (
         <div className="fixed top-20 left-0 right-0 z-[100] flex justify-center px-6 animate-in slide-in-from-top-10 duration-500">
           <div className="bg-white border border-green-100 shadow-2xl rounded-full px-6 py-3 flex items-center gap-3">
@@ -111,7 +105,6 @@ export default function PerfilDoCliente() {
         <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[20rem_minmax(0,1fr)]">
           <aside className="min-w-0 lg:sticky lg:top-32">
             <div className="flex flex-col gap-4">
-
               <CardPerfilCliente
                 nome={perfil.full_name}
                 email={perfil.email}
@@ -124,14 +117,10 @@ export default function PerfilDoCliente() {
                 uploading={uploading}
                 onUploadClick={() => !uploading && fileInputRef.current?.click()}
               />
-
             </div>
           </aside>
 
-          {/* ── Coluna Direita ── */}
           <div className="flex min-w-0 flex-col gap-6">
-
-            {/* CTA avaliar */}
             {avaliarCount > 0 && (
               <button
                 onClick={irParaAvaliar}
@@ -150,7 +139,6 @@ export default function PerfilDoCliente() {
               </button>
             )}
 
-            {/* Abas */}
             <nav className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-28" aria-label="Seções do painel">
               {[{ id: 'servicos', label: 'Meus projetos' }, { id: 'dados', label: 'Minha conta' }].map(a => (
                 <button
@@ -166,7 +154,6 @@ export default function PerfilDoCliente() {
               ))}
             </nav>
 
-            {/* ── Aba: Meus Projetos ── */}
             {aba === 'servicos' ? (
               <section className="flex flex-col gap-4 pb-4" aria-label="Projetos contratados">
                 <div ref={filtroRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -238,8 +225,12 @@ export default function PerfilDoCliente() {
                                 <span className="text-[9px] text-slate-400 truncate">{s.prestadores.categoria.nome}</span>
                               )}
                             </div>
-                            <p className="text-[14px] font-bold text-slate-800 leading-tight truncate">{s.titulo}</p>
-                            <p className="text-[12px] text-slate-500 truncate mt-0.5">{s.prestadores?.nome}</p>
+                            <p className="text-[14px] font-bold text-slate-800 leading-tight truncate">
+                              {s.titulo}
+                            </p>
+                            <p className="text-[12px] text-slate-500 truncate mt-0.5">
+                              {s.prestadores?.nome}
+                            </p>
                           </div>
                           <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all ${info.urgente ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white'
                             }`}>
@@ -253,8 +244,6 @@ export default function PerfilDoCliente() {
               </section>
 
             ) : (
-
-              /* ── Aba: Minha Conta ── */
               <div className="grid gap-4 pb-12 animate-in fade-in duration-300 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
                 <section className="flex flex-col gap-5 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7" aria-labelledby="account-data-title">
                   <div className="flex flex-col gap-1">
