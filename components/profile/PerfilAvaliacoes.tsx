@@ -1,6 +1,8 @@
 //components/profile/PerfilAvaliacoes.tsx
 
-import { User, Calendar, Wrench } from 'lucide-react'
+'use client'
+import { User, Calendar, Wrench, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import type { AvaliacaoPerfil } from '@/types/perfil'
 
 interface Props {
@@ -8,6 +10,8 @@ interface Props {
 }
 
 export default function PerfilAvaliacoes({ avaliacoes }: Props) {
+  const router = useRouter()
+
   if (avaliacoes.length === 0) return null
 
   const totalIndica = avaliacoes.filter(a => a.indica).length
@@ -45,7 +49,7 @@ export default function PerfilAvaliacoes({ avaliacoes }: Props) {
         {avaliacoes.map(av => (
           <div key={av.id} className="bg-white rounded-[2rem] p-5 sm:p-6 border border-slate-100 shadow-sm flex flex-col gap-4 transition-all hover:shadow-md">
             
-            {/* Cabeçalho do Card: Avatar, Cliente e Data */}
+            {/* Cabeçalho do Card */}
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-[1rem] flex items-center justify-center shrink-0">
@@ -70,21 +74,29 @@ export default function PerfilAvaliacoes({ avaliacoes }: Props) {
               )}
             </div>
 
-            {/* Comentário (com leve background para destacar o texto) */}
+            {/* Comentário */}
             {av.comentario && (
               <p className="text-[13px] font-medium text-slate-600 leading-relaxed italic bg-slate-50/50 p-4 rounded-[1.25rem] border border-slate-50">
                 "{av.comentario}"
               </p>
             )}
 
-            {/* Rodapé: Serviço Relacionado */}
-            {av.portfolio_projetos?.titulo && (
-              <div className="flex items-center gap-1.5 pt-1 mt-1">
-                <Wrench size={12} className="text-slate-300 shrink-0" />
-                <p className="text-[10px] font-semibold text-slate-400 truncate uppercase tracking-wider">
-                  {av.portfolio_projetos.titulo}
-                </p>
-              </div>
+            {/* Rodapé Interativo: Serviço Relacionado */}
+            {av.portfolio_projetos?.titulo && av.projeto_id && (
+              <button 
+                onClick={() => router.push(`?projeto=${av.projeto_id}`, { scroll: false })}
+                className="flex items-center justify-between pt-3 mt-1 border-t border-slate-50 group text-left w-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 rounded-lg"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-blue-50 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-blue-600 transition-colors duration-300">
+                    <Wrench size={12} className="text-blue-500 group-hover:text-white transition-colors" />
+                  </div>
+                  <p className="text-[10px] font-black text-slate-400 truncate uppercase tracking-widest group-hover:text-blue-600 transition-colors duration-300">
+                    {av.portfolio_projetos.titulo}
+                  </p>
+                </div>
+                <ArrowRight size={14} className="text-slate-200 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-300" />
+              </button>
             )}
           </div>
         ))}
