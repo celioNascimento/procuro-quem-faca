@@ -1,4 +1,4 @@
-//components/profile/ProjetoModal.tsx 
+//components/profile/ProjetoModal.tsx
 
 'use client'
 import { X, Share2, CheckCircle2, Activity, User, Camera } from 'lucide-react'
@@ -127,6 +127,43 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
             ))
           )}
         </div>
+
+        {/* ── Nova Seção: Avaliação do Cliente ── */}
+        {projeto.avaliacoes && projeto.avaliacoes.length > 0 && (
+          <div className="pt-2 border-t border-slate-50 space-y-4 animate-in fade-in duration-500">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-4 bg-blue-600 rounded-full" />
+              <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest italic">
+                Avaliação do Cliente
+              </span>
+            </div>
+            
+            {projeto.avaliacoes.map(av => (
+              <div key={av.id} className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm flex flex-col gap-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center shrink-0">
+                      <User size={14} className="text-slate-300" />
+                    </div>
+                    <p className="text-[11px] font-bold text-slate-800 tracking-tight">
+                      Cliente Verificado
+                    </p>
+                  </div>
+                  {av.indica && (
+                    <span className="flex items-center gap-1 bg-blue-600 text-white text-[9px] font-black tracking-wide px-2.5 py-1.5 rounded-xl shrink-0 shadow-sm shadow-blue-200">
+                      ✦ Indico
+                    </span>
+                  )}
+                </div>
+                {av.comentario && (
+                  <p className="text-[12px] font-medium text-slate-600 leading-relaxed italic bg-slate-50/50 p-4 rounded-xl border border-slate-50">
+                    "{av.comentario}"
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Rodapé ── */}
