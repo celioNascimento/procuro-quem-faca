@@ -1,4 +1,4 @@
-//components/profile/PerfilAvaliacoes.tsx 
+//components/profile/PerfilAvaliacoes.tsx
 
 import type { AvaliacaoPerfil } from '@/types/perfil'
 
@@ -10,6 +10,9 @@ export default function PerfilAvaliacoes({ avaliacoes }: Props) {
   if (avaliacoes.length === 0) return null
 
   const totalIndica = avaliacoes.filter(a => a.indica).length
+  
+  // A variável mediaNotas foi mantida na lógica para preservação estrutural, 
+  // mas foi removida da renderização visual conforme solicitado.
   const mediaNotas  = (avaliacoes.reduce((s, a) => s + a.nota, 0) / avaliacoes.length).toFixed(1)
 
   return (
@@ -24,29 +27,19 @@ export default function PerfilAvaliacoes({ avaliacoes }: Props) {
               ✦ {totalIndica} {totalIndica === 1 ? 'indicação' : 'indicações'}
             </span>
           )}
-          <span className="text-[10px] font-black text-slate-500">
-            ★ {mediaNotas} · {avaliacoes.length} {avaliacoes.length === 1 ? 'avaliação' : 'avaliações'}
-          </span>
         </div>
       </div>
 
       <div className="space-y-3">
         {avaliacoes.map(av => (
           <div key={av.id} className="bg-white rounded-[2rem] p-5 border border-slate-100 shadow-sm space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map(s => (
-                  <span key={s} className={`text-[13px] ${av.nota >= s ? 'text-blue-600' : 'text-slate-200'}`}>
-                    ★
-                  </span>
-                ))}
-              </div>
-              {av.indica && (
+            {av.indica && (
+              <div className="flex items-start justify-end">
                 <span className="flex items-center gap-1 bg-blue-600 text-white text-[8px] font-black tracking-wide px-2.5 py-1 rounded-full shrink-0">
                   ✦ Indico
                 </span>
-              )}
-            </div>
+              </div>
+            )}
             {av.comentario && (
               <p className="text-[12px] font-medium text-slate-600 leading-relaxed italic">
                 "{av.comentario}"
