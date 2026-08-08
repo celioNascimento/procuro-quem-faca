@@ -1,4 +1,5 @@
-// components/meus-servicos/PainelDoCliente.tsx 
+// components/meus-servicos/PainelDoCliente.tsx
+
 'use client'
 import { useState } from 'react'
 import { User, Clock, Loader2, CheckCircle2, ClipboardList, LayoutGrid } from 'lucide-react'
@@ -10,11 +11,6 @@ import ZoomImageModal from './ZoomImageModal'
 import { usePainelCliente } from '@/hooks/usePainelCliente'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
-// 'concluido' aqui é só o identificador interno do filtro de UI — não é o
-// valor de status gravado no banco. O valor real em portfolio_projetos.status
-// é 'finalizado' (ver 03-banco-de-dados.md). As duas coisas são independentes
-// de propósito: o filtro pode se chamar como quiser, desde que a comparação
-// com servico.status (mais abaixo) use o valor real do banco.
 type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido'
 
 // ── Config das linhas de filtro ────────────────────────────────────────────────
@@ -23,9 +19,9 @@ const FILTROS: {
   label: string
   sublabel: string
   icon: React.ElementType
-  cor: string        // texto + ícone quando inativo
-  corAtiva: string   // fundo quando ativo
-  corIcone: string   // cor do ícone quando ativo
+  cor: string
+  corAtiva: string
+  corIcone: string
 }[] = [
   {
     valor: 'todos',
@@ -77,10 +73,6 @@ export default function PainelDoCliente() {
   } = usePainelCliente()
 
   // ── Grupos por status ────────────────────────────────────────────────────────
-  // FIX: 'finalizado' é o valor real gravado em portfolio_projetos.status.
-  // 'concluido' nunca existiu como valor de banco — era um bug que fazia
-  // projetos finalizados caírem silenciosamente no grupo "pendentes"
-  // (fallback do getOnAceitar) e sumirem da aba "Concluídos".
   const emRegistro  = servicos.filter(s => s.status === 'em_registro')
   const pendentes   = servicos.filter(s => s.status === 'pendente')
   const emAndamento = servicos.filter(s => s.status === 'em_execucao')
@@ -95,8 +87,6 @@ export default function PainelDoCliente() {
   }
 
   // ── Serviços filtrados ────────────────────────────────────────────────────────
-  // Aqui filtroAtivo compara com o `valor` do próprio FILTROS (estado de UI),
-  // não com servico.status — não precisa mudar, já usava os arrays corrigidos acima.
   const servicosFiltrados = (() => {
     if (filtroAtivo === 'pendente')    return [...pendentes, ...emRegistro]
     if (filtroAtivo === 'em_execucao') return emAndamento
@@ -106,14 +96,14 @@ export default function PainelDoCliente() {
 
   const getModo = (status: string) => {
     if (status === 'em_execucao') return 'andamento' as const
-    if (status === 'finalizado')  return 'concluido' as const  // FIX: comparava com 'concluido', valor inexistente no banco
+    if (status === 'finalizado')  return 'concluido' as const
     return 'pendente' as const
   }
 
   const getOnAceitar = (servico: any) => {
     if (servico.status === 'em_execucao')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
-    if (servico.status === 'finalizado')  // FIX: comparava com 'concluido', valor inexistente no banco
+    if (servico.status === 'finalizado')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
     return () => handleAceitar(servico)
   }
@@ -144,30 +134,30 @@ export default function PainelDoCliente() {
           <div className="w-full lg:w-1/3 shrink-0">
             <div className="lg:sticky lg:top-36 flex flex-col gap-6">
 
-              {/* Card do prestador */}
+              {/* Card do prestador - Padrão Horizontal */}
               {prestador && (
-                <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-                  <div className="h-20 bg-gradient-to-r from-blue-600 to-blue-500" />
-                  <div className="px-8 pb-8 -mt-10 flex flex-col items-center">
-                    <div className="w-20 h-20 rounded-[1.5rem] bg-slate-100 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center">
-                      {prestador.foto_perfil ? (
-                        <img
-                          src={prestador.foto_perfil}
-                          className="w-full h-full object-cover"
-                          alt={prestador.nome}
-                        />
-                      ) : (
-                        <User size={32} className="text-slate-300" />
-                      )}
-                    </div>
-                    <h2 className="text-base font-black text-slate-800 mt-3 leading-none text-center uppercase italic tracking-tight">
+                <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 flex items-center gap-4 transition-all hover:shadow-md">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-[1.25rem] border border-slate-100 shadow-sm overflow-hidden bg-slate-50 flex items-center justify-center">
+                    {prestador.foto_perfil ? (
+                      <img
+                        src={prestador.foto_perfil}
+                        className="w-full h-full object-cover"
+                        alt={prestador.nome}
+                      />
+                    ) : (
+                      <User size={24} className="text-slate-300" />
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    {prestador.categoria?.nome && (
+                      <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.2em] truncate">
+                        {prestador.categoria.nome}
+                      </p>
+                    )}
+                    <h2 className="text-[13px] sm:text-sm font-black text-slate-900 uppercase tracking-tight truncate mt-0.5">
                       {prestador.nome}
                     </h2>
-                    {prestador.categoria?.nome && (
-                      <span className="mt-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                        {prestador.categoria.nome}
-                      </span>
-                    )}
                   </div>
                 </div>
               )}
