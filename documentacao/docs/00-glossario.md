@@ -67,6 +67,15 @@ Todo o fluxo de logout de interface (tanto para prestadores quanto para clientes
 
 *Nota técnica:* A função legada `logoutCliente()` em `lib/services/auth.service.ts` foi descontinuada do roteamento de UI.
 
+
+## Comportamento do Header e Menus Flutuantes (Dropdowns)
+
+* **Problema Relatado:** O menu suspenso de autenticação (perfil, painel e botão de logout) não respondia ao toque ou aparecia invisível em páginas públicas do ecossistema.
+* **Causa Raiz:** A presença da classe utilitária `overflow-hidden` na tag `<nav>` principal do componente `Header.tsx` agia como uma restrição de layout, cortando qualquer elemento posicionado de forma absoluta (como o menu dropdown flutuante) que ultrapassasse os limites da barra de navegação.
+* **Solução Arquitetural:** 
+  1. **Liberação de Overflow:** Remoção de `overflow-hidden` do container principal em `Header.tsx` para permitir a renderização correta de elementos flutuantes.
+  2. **Logout com Forçamento de Recarregamento:** O hook `useLogout.ts` foi blindado com checagem de rota e fallback para `window.location.reload()` / `window.location.href = '/'`, garantindo que a sessão seja encerrada e o cache visual seja limpo imediatamente em qualquer página do site.
+     
 ---
 
 ## Log de atividades
