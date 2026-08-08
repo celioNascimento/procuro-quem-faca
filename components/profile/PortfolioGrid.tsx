@@ -1,7 +1,8 @@
-//components/profile/PortfolioGrid.tsx 
+//components/profile/PortfolioGrid.tsx
 
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Camera, CheckCircle2 } from 'lucide-react'
 import ProjetoModal from './ProjetoModal'
 import type { ProjetoPerfil } from '@/types/perfil'
@@ -12,6 +13,18 @@ interface Props {
 
 export default function PortfolioGrid({ projetos }: Props) {
   const [projetoSelecionado, setProjetoSelecionado] = useState<ProjetoPerfil | null>(null)
+  const searchParams = useSearchParams()
+
+  // Lê a URL e abre o modal automaticamente se o ID do projeto existir
+  useEffect(() => {
+    const paramProjetoId = searchParams?.get('projeto')
+    if (paramProjetoId && projetos.length > 0) {
+      const projetoParaAbrir = projetos.find(p => String(p.id) === paramProjetoId)
+      if (projetoParaAbrir) {
+        setProjetoSelecionado(projetoParaAbrir)
+      }
+    }
+  }, [searchParams, projetos])
 
   if (projetos.length === 0) {
     return (
