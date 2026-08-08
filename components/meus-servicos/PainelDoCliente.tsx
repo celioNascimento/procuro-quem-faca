@@ -17,48 +17,11 @@ type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido'
 const FILTROS: {
   valor: Filtro
   label: string
-  sublabel: string
-  icon: React.ElementType
-  cor: string
-  corAtiva: string
-  corIcone: string
 }[] = [
-  {
-    valor: 'todos',
-    label: 'Todos',
-    sublabel: 'projetos',
-    icon: LayoutGrid,
-    cor: 'text-slate-400',
-    corAtiva: 'bg-slate-800',
-    corIcone: 'text-white',
-  },
-  {
-    valor: 'pendente',
-    label: 'Pendentes',
-    sublabel: 'aguardando aprovação',
-    icon: ClipboardList,
-    cor: 'text-blue-400',
-    corAtiva: 'bg-blue-600',
-    corIcone: 'text-white',
-  },
-  {
-    valor: 'em_execucao',
-    label: 'Em andamento',
-    sublabel: 'em execução',
-    icon: Loader2,
-    cor: 'text-amber-400',
-    corAtiva: 'bg-amber-500',
-    corIcone: 'text-white',
-  },
-  {
-    valor: 'concluido',
-    label: 'Concluídos',
-    sublabel: 'finalizados',
-    icon: CheckCircle2,
-    cor: 'text-emerald-500',
-    corAtiva: 'bg-emerald-600',
-    corIcone: 'text-white',
-  },
+  { valor: 'todos', label: 'Todos' },
+  { valor: 'pendente', label: 'Pendentes' },
+  { valor: 'em_execucao', label: 'Em andamento' },
+  { valor: 'concluido', label: 'Concluídos' },
 ]
 
 export default function PainelDoCliente() {
@@ -118,6 +81,7 @@ export default function PainelDoCliente() {
   if (!session) return <LoginGate tokenUrl={tokenUrl} />
 
   const prestador = servicos[0]?.prestadores
+  const hasMultipleProjects = servicos.length > 1
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-32 font-sans antialiased">
@@ -128,7 +92,7 @@ export default function PainelDoCliente() {
       )}
 
       <div className="max-w-5xl mx-auto px-5 pt-24 md:pt-36 animate-in fade-in duration-700">
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
 
           {/* ── Coluna Esquerda ── */}
           <div className="w-full lg:w-1/3 shrink-0">
@@ -162,73 +126,6 @@ export default function PainelDoCliente() {
                 </div>
               )}
 
-              {/* Card de filtros — lista vertical */}
-              <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-                <div className="px-6 pt-5 pb-3">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    Meus projetos
-                  </p>
-                </div>
-
-                <div className="flex flex-col pb-3">
-                  {FILTROS.map((filtro, i) => {
-                    const ativo = filtroAtivo === filtro.valor
-                    const count = contadores[filtro.valor]
-                    const Icon  = filtro.icon
-
-                    // Oculta linhas sem projetos (exceto "Todos")
-                    if (filtro.valor !== 'todos' && count === 0) return null
-
-                    return (
-                      <button
-                        key={filtro.valor}
-                        onClick={() => setFiltroAtivo(filtro.valor)}
-                        className={`
-                          relative flex items-center gap-3 px-6 py-3.5
-                          transition-all duration-200 text-left
-                          ${ativo ? 'bg-slate-50' : 'hover:bg-slate-50/60'}
-                        `}
-                      >
-                        {/* Indicador lateral ativo */}
-                        {ativo && (
-                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-blue-600" />
-                        )} 
-
-                        {/* Ícone */}
-                        <div className={`
-                          w-8 h-8 rounded-xl flex items-center justify-center shrink-0
-                          transition-all duration-200
-                          ${ativo ? `${filtro.corAtiva}` : 'bg-slate-100'}
-                        `}>
-                          <Icon
-                            size={14}
-                            className={ativo ? filtro.corIcone : filtro.cor}
-                          />
-                        </div>
-
-                        {/* Texto */}
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-[11px] font-black uppercase tracking-wider leading-none ${ativo ? 'text-slate-800' : 'text-slate-500'}`}>
-                            {filtro.label}
-                          </p>
-                          <p className="text-[9px] text-slate-400 font-medium mt-0.5 capitalize">
-                            {count === 1 ? '1 projeto' : `${count} projetos`}
-                          </p>
-                        </div>
-
-                        {/* Contador badge */}
-                        <span className={`
-                          text-[10px] font-black px-2 py-0.5 rounded-full
-                          ${ativo ? `${filtro.corAtiva} text-white` : 'bg-slate-100 text-slate-400'}
-                        `}>
-                          {count}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
               {/* Info "ao autorizar" — só aparece quando pendentes estão visíveis */}
               {(filtroAtivo === 'todos' || filtroAtivo === 'pendente') && totalPendentes > 0 && (
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
@@ -257,46 +154,67 @@ export default function PainelDoCliente() {
             </div>
           </div>
 
-          {/* ── Coluna Direita — cards filtrados ── */}
-          <div className="w-full lg:w-2/3 flex flex-col gap-6">
+          {/* ── Coluna Direita — Filtros e Cards ── */}
+          <div className="w-full lg:w-2/3 flex flex-col gap-4">
 
-            {/* Título da seção ativa */}
-            <div className="flex items-center gap-3">
-              {(() => {
-                const f = FILTROS.find(f => f.valor === filtroAtivo)!
-                const Icon = f.icon
-                return (
-                  <>
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${f.corAtiva}`}>
-                      <Icon size={13} className="text-white" />
-                    </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      {f.label} · {contadores[filtroAtivo]} {contadores[filtroAtivo] === 1 ? 'projeto' : 'projetos'}
-                    </p>
-                  </>
-                )
-              })()}
-            </div>
+            {/* Menu de Filtros Horizontal (SÓ aparece se houver > 1 projeto) */}
+            {hasMultipleProjects && (
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {FILTROS.map((filtro) => {
+                  const ativo = filtroAtivo === filtro.valor
+                  const count = contadores[filtro.valor]
+                  
+                  if (filtro.valor !== 'todos' && count === 0) return null
 
-            {servicosFiltrados.length > 0 ? (
-              servicosFiltrados.map(servico => (
-                <ServicoCard
-                  key={servico.id}
-                  servico={servico}
-                  onZoom={setZoomImage}
-                  onAceitar={getOnAceitar(servico)}
-                  hidePrestador
-                  modo={getModo(servico.status)}
-                />
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-24 text-slate-300">
-                <Clock size={32} className="mb-3 opacity-40" />
-                <p className="text-[11px] font-black uppercase tracking-widest">
-                  Nenhum projeto nesta categoria
-                </p>
+                  return (
+                    <button
+                      key={filtro.valor}
+                      onClick={() => setFiltroAtivo(filtro.valor)}
+                      type="button"
+                      className={`
+                        min-h-10 flex items-center gap-2 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 transition-all
+                        focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100
+                        ${ativo
+                          ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                          : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600'
+                        }
+                      `}
+                    >
+                      <span className="text-[11px] font-bold uppercase tracking-wide">
+                        {filtro.label}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black ${ativo ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             )}
+
+            {/* Lista de Projetos */}
+            <div className="flex flex-col gap-4 mt-2">
+              {servicosFiltrados.length > 0 ? (
+                servicosFiltrados.map(servico => (
+                  <ServicoCard
+                    key={servico.id}
+                    servico={servico}
+                    onZoom={setZoomImage}
+                    onAceitar={getOnAceitar(servico)}
+                    hidePrestador
+                    modo={getModo(servico.status)}
+                  />
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-24 text-slate-300 bg-white rounded-[2rem] border border-dashed border-slate-200">
+                  <Clock size={32} className="mb-3 opacity-40" />
+                  <p className="text-[11px] font-black uppercase tracking-widest">
+                    Nenhum projeto nesta categoria
+                  </p>
+                </div>
+              )}
+            </div>
+
           </div>
 
         </div>
