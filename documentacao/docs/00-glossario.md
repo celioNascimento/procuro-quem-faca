@@ -47,6 +47,14 @@ Monta `https://wa.me/55<numero>` (prefixo Brasil fixo), com mensagem opcional pr
 
 ---
 
+## Refatoração de UI/UX: Componente de Acompanhamento (CardPrestador)
+
+*   **Problema Relatado:** O card de prestador na página de acompanhamento (`/acompanhamento/[token]`) apresentava uma estética destoante do restante do site (banner grande, uso excessivo de gradientes), ocupava espaço excessivo na tela (impedindo a visualização da linha do tempo no mobile) e apresentava redundância nas ações de contato.
+*   **Solução Arquitetural:**
+    1.  **Compactação Visual:** O componente foi convertido de um card vertical "Hero" para um layout horizontal compacto, alinhando-se à identidade visual minimalista do restante do ecossistema.
+    2.  **Ganho de Área Útil:** A redução da altura do componente devolveu espaço vertical significativo (aprox. 250px) para a visualização do conteúdo principal (linha do tempo).
+    3.  **Padronização:** Adoção de paleta de cores consistente (`slate-100`, bordas sutis, avatares arredondados) e simplificação dos botões de ação (WhatsApp e Compartilhamento agrupados), removendo ruído estético e redundância de interface.
+       
 ## Logout
 
 **Mecanismo centralizado:** `useLogout().logout(opts?)` (`hooks/useLogout.ts`).
