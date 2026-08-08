@@ -117,6 +117,15 @@ Se for centralizar essa derivação, esses 6 pontos são os candidatos a converg
 
 ---
 
+## Compartilhamento Seguro e Deep Linking de Projetos
+
+* **Problema Relatado:** O botão de compartilhar dentro da área de acompanhamento do cliente utilizava a URL ativa (contendo o `token` de acesso privado). Isso expunha dados sensíveis e logs da obra para visitantes não autorizados.
+* **Solução Arquitetural (Implementada):** 
+  1. **Desacoplamento de Acesso:** O `handleShare` (no hook `useAcompanhamento.ts`) foi refatorado para nunca compartilhar o token. A URL gerada passa a apontar exclusivamente para a vitrine pública do prestador (`/[slug]`).
+  2. **Inclusão de Slug na Busca:** Atualização na query `fetchProjetoPorToken` (em `avaliacao.service.ts`) para incluir o campo `slug` de `prestadores`, garantindo a construção correta da URL pública.
+  3. **Deep Linking (UX):** A URL de compartilhamento recebe o query parameter `?projeto=[ID]`. O componente `PortfolioGrid.tsx` intercepta este parâmetro usando `useSearchParams` no Next.js e abre automaticamente o modal (`ProjetoModal`) correspondente àquele registro de atividade assim que a página pública é carregada.
+
+
 ## Localização (estados / regiões / cidades)
 
 **Service central:** `lib/services/localizacao.service.ts` — `fetchEstados`, `fetchRegioesPorEstado`, `fetchCidadesPorRegiaoOuEstado`, `getCidadesAtivasParaFiltro`, `getPrestadoresVitrinePorCidade`.
