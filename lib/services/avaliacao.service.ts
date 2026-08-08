@@ -9,7 +9,7 @@ export async function fetchProjetoPorToken(token: string) {
     .select(`
       *,
       portfolio_fotos(*),
-      prestadores(nome, foto_perfil, whatsapp, categoria:categorias(nome))
+      prestadores(nome, slug, foto_perfil, whatsapp, categoria:categorias(nome))
     `)
     .eq('avaliacao_token', token)
     .maybeSingle()                  // ← era .single(); nunca lança PGRST116
