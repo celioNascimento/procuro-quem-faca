@@ -9,8 +9,8 @@ type Props = {
   setHoverNota: (n: number) => void
   comentarioGeral: string
   setComentarioGeral: (v: string) => void
-  indica: boolean
-  setIndica: (fn: (v: boolean) => boolean) => void
+  indica: boolean | null
+  setIndica: (v: boolean) => void
   submitting: boolean
   onSubmit: () => void
 }
@@ -70,52 +70,41 @@ export function BlocoAvaliacao({
         onChange={(e) => setComentarioGeral(e.target.value)}
       />
 
-      {/* Toggle indicação */}
-      <button
-        type="button"
-        onClick={() => setIndica((v) => !v)}
-        className={`w-full flex items-center justify-between px-6 py-4 rounded-[2rem] border-2 transition-all duration-300 ${
-          indica
-            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100'
-            : 'bg-white border-slate-200 text-slate-500 hover:border-blue-200'
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <span
-            className={`text-lg leading-none transition-transform duration-300 ${
-              indica ? 'scale-125' : 'scale-100'
-            }`}
-          >
-            ✦
-          </span>
-          <div className="text-left">
-            <p
-              className={`text-[11px] font-black uppercase tracking-widest leading-none ${
-                indica ? 'text-white' : 'text-slate-700'
+      {/* Indicação — aparece somente após selecionar nota */}
+      {nota > 0 && (
+        <div className="space-y-3">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">
+            Você indicaria este profissional?
+          </p>
+          <div className="flex gap-3">
+            {/* Botão Indico */}
+            <button
+              type="button"
+              onClick={() => setIndica(true)}
+              className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[2rem] border-2 font-black uppercase text-[10px] tracking-widest transition-all duration-300 ${
+                indica === true
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100'
+                  : 'bg-white border-slate-200 text-slate-400 hover:border-blue-200'
               }`}
             >
-              {indica ? 'Eu indico este profissional' : 'Indicar este profissional?'}
-            </p>
-            <p
-              className={`text-[9px] font-medium mt-1 leading-none ${
-                indica ? 'text-blue-100' : 'text-slate-400'
+              👍 Indico
+            </button>
+
+            {/* Botão Não indico */}
+            <button
+              type="button"
+              onClick={() => setIndica(false)}
+              className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[2rem] border-2 font-black uppercase text-[10px] tracking-widest transition-all duration-300 ${
+                indica === false
+                  ? 'bg-slate-700 border-slate-700 text-white shadow-lg shadow-slate-100'
+                  : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
               }`}
             >
-              {indica
-                ? 'Sua indicação ficará visível no perfil'
-                : 'Ajuda outras pessoas a encontrá-lo'}
-            </p>
+              👎 Não indico
+            </button>
           </div>
         </div>
-
-        <div
-          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-            indica ? 'bg-white border-white' : 'border-slate-300'
-          }`}
-        >
-          {indica && <span className="text-blue-600 font-black text-[10px]">✓</span>}
-        </div>
-      </button>
+      )}
 
       {/* Botão submit */}
       <button
