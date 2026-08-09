@@ -54,7 +54,9 @@ Monta `https://wa.me/55<numero>` (prefixo Brasil fixo), com mensagem opcional pr
     1.  **Compactação Visual:** O componente foi convertido de um card vertical "Hero" para um layout horizontal compacto, alinhando-se à identidade visual minimalista do restante do ecossistema.
     2.  **Ganho de Área Útil:** A redução da altura do componente devolveu espaço vertical significativo (aprox. 250px) para a visualização do conteúdo principal (linha do tempo).
     3.  **Padronização:** Adoção de paleta de cores consistente (`slate-100`, bordas sutis, avatares arredondados) e simplificação dos botões de ação (WhatsApp e Compartilhamento agrupados), removendo ruído estético e redundância de interface.
-       
+
+---
+
 ## Logout
 
 **Mecanismo centralizado:** `useLogout().logout(opts?)` (`hooks/useLogout.ts`).
@@ -70,20 +72,21 @@ Todo o fluxo de logout de interface (tanto para prestadores quanto para clientes
 - `useHeaderCliente.ts` (Painel do cliente, força redirecionamento para `/`)
 - `useNovaSenha.ts` (Pós-recuperação)
 
-**Exceção técnica intencional:** 
+**Exceção técnica intencional:**
 `useConfirmarExclusaoConta.ts` faz uma chamada direta a `supabase.auth.signOut()` apenas como última etapa do fluxo de destruição da conta.
 
 *Nota técnica:* A função legada `logoutCliente()` em `lib/services/auth.service.ts` foi descontinuada do roteamento de UI.
 
+---
 
 ## Comportamento do Header e Menus Flutuantes (Dropdowns)
 
 * **Problema Relatado:** O menu suspenso de autenticação (perfil, painel e botão de logout) não respondia ao toque ou aparecia invisível em páginas públicas do ecossistema.
 * **Causa Raiz:** A presença da classe utilitária `overflow-hidden` na tag `<nav>` principal do componente `Header.tsx` agia como uma restrição de layout, cortando qualquer elemento posicionado de forma absoluta (como o menu dropdown flutuante) que ultrapassasse os limites da barra de navegação.
-* **Solução Arquitetural:** 
+* **Solução Arquitetural:**
   1. **Liberação de Overflow:** Remoção de `overflow-hidden` do container principal em `Header.tsx` para permitir a renderização correta de elementos flutuantes.
   2. **Logout com Forçamento de Recarregamento:** O hook `useLogout.ts` foi blindado com checagem de rota e fallback para `window.location.reload()` / `window.location.href = '/'`, garantindo que a sessão seja encerrada e o cache visual seja limpo imediatamente em qualquer página do site.
-     
+
 ---
 
 ## Log de atividades
@@ -141,9 +144,36 @@ Se for centralizar essa derivação, esses 6 pontos são os candidatos a converg
   - `components/profile/PortfolioGrid.tsx` — controle do modal 100% via URL, sem `useState`
   - `components/profile/PerfilAvaliacoes.tsx` — `router.push('?projeto=<id>')` ao clicar no rodapé do card
   - `types/perfil.ts` — `ProjetoPerfil.avaliacoes` inclui `comentario?: string | null`
-  - `types/avaliacao.ts` — `AvaliacaoPerfil` inclui `projeto_id` e `portfolio_projetos`
+  - `types/avaliacao.ts` — `AvaliacaoPerfil` inclui `projeto_id` e `portfolio_projetos`; campo `indica` tipado como `boolean | null` (não `boolean`) — `null` significa que o cliente não respondeu (avaliações legadas), `true` = indico, `false` = não indico
 
 * **Regra de ouro:** qualquer novo ponto de entrada que queira abrir um projeto no perfil público deve apenas fazer `router.push('?projeto=<id>')` — o `PortfolioGrid` já cuida do resto.
+
+---
+
+## Indicação de Profissional (`indica`)
+
+Campo `indica` em `avaliacoes` e nos tipos relacionados. Representa a opinião explícita do cliente sobre recomendar o prestador.
+
+**Tipo:** `boolean | null` em todo o sistema — nunca tratar como `boolean` simples.
+
+| Valor | Significado |
+|---|---|
+| `null` | Cliente não respondeu (avaliações legadas ou estado inicial antes de selecionar nota) |
+| `true` | Cliente indicou ativamente o profissional |
+| `false` | Cliente indicou ativamente que **não** recomenda o profissional |
+
+**Pré-seleção automática por nota** (`useAvaliar`, `hooks/useAvaliacao.ts`):
+- Nota 4–5 → pré-seleciona `true`
+- Nota 1–2 → pré-seleciona `false`
+- Nota 3 → reseta para `null` (neutro)
+
+**No submit:** `indica ?? false` — o banco nunca recebe `null`.
+
+**Pontos que consomem `indica`:**
+- `hooks/useAvaliacao.ts` — estado `boolean | null`, pré-seleção via `useEffect`, normalização no submit
+- `components/acompanhamento/BlocoAvaliacao.tsx` — dois botões "👍 Indico" / "👎 Não indico"; bloco oculto até nota > 0; prop `setIndica: (v: boolean) => void`
+- `components/profile/PerfilAvaliacoes.tsx` — badge por card (`=== true` → azul, `=== false` → slate, `=== null` → sem badge); contadores no topo da seção separados por valor
+- `types/avaliacao.ts` — `AvaliacaoPerfil.indica: boolean | null`
 
 ---
 
@@ -220,6 +250,8 @@ Três dimensões independentes — não confundir:
 
 **Log de atividades no contexto admin:** todas as ações administrativas relevantes (criar habilidade, resolver/arquivar denúncia, bloquear prestador) registram via `insertLog` (`lib/db/logs.ts`) — mesma fonte única usada pelo resto do sistema, nunca uma tabela ou mecanismo à parte.
 
+---
+
 ## Geolocalização, login obrigatório e vitrine paga (design em avaliação)
 
 Ainda não implementado — ver `13-roadmap.md` para o desenho completo. Resumo de onde cada peça vai se conectar quando implementado:
@@ -229,6 +261,8 @@ Ainda não implementado — ver `13-roadmap.md` para o desenho completo. Resumo 
 - **Login no ciclo do serviço hoje:** `/acompanhamento/[token]` e `/avaliar/[token]` (`hooks/useAcompanhamento`, `useAvaliar`) não exigem sessão, só o token
 - **Vitrine paga proposta:** novas colunas em `prestadores` (`vitrine_lance_atual`, `vitrine_pago_ate`), independente do sistema de Anúncios (lojista/fornecedor) já existente — ver seção Anúncios acima
 - **Conecta com:** `origem_tipo: 'vitrine'` (já usado hoje para prioridade máxima na busca, sem lance real por trás)
+
+---
 
 ## Recuperação e alteração de senha
 
@@ -246,4 +280,3 @@ Ainda não implementado — ver `13-roadmap.md` para o desenho completo. Resumo 
 **Solução Arquitetural (Implementada):**
 1. **Âncora Forte (BD):** Adição da coluna `cliente_user_id` em `portfolio_projetos` para vincular estritamente o cliente logado, isolando a busca via `getServicosPorUserId`.
 2. **Filtro Anti-Espelho (Frontend):** O hook `usePainelCliente.ts` implementa uma trava de segurança `projs.filter(p => p.prestadores?.user_id !== user.id)`. Isso garante que, mesmo no fallback de busca por WhatsApp (para projetos legados), o sistema exclua da UI de cliente qualquer projeto onde o usuário logado seja o prestador em execução. A query `SELECT_SERVICOS` exige a presença de `prestadores (user_id)` para este filtro funcionar.
-3. 
