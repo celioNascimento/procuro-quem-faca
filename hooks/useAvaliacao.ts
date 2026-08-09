@@ -1,4 +1,4 @@
-//hooks/useAvaliacao.ts 
+//hooks/useAvaliacao.ts
 
 'use client'
 import { useEffect, useState } from 'react'
@@ -23,7 +23,7 @@ export function useAvaliar(token: string) {
   const [nota, setNota] = useState(0)
   const [hoverNota, setHoverNota] = useState(0)
   const [comentarioGeral, setComentarioGeral] = useState('')
-  const [indica, setIndica] = useState(false)
+  const [indica, setIndica] = useState<boolean | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const avaliacaoFinalizada = avaliacaoExistente?.status === 'finalizado'
@@ -44,7 +44,7 @@ export function useAvaliar(token: string) {
         const projData = await fetchProjetoPorToken(token)
         if (!projData) { setLoading(false); return }
 
-        setProjeto(projData)  // 👈 seta o projeto ANTES de buscar avaliação
+        setProjeto(projData)
 
         const avalData = await fetchAvaliacaoPorProjeto(projData.id)
         if (avalData) setAvaliacaoExistente(avalData)
@@ -61,6 +61,13 @@ export function useAvaliar(token: string) {
     carregar()
   }, [token, mounted])
 
+  // Pré-seleciona indicação com base na nota
+  useEffect(() => {
+    if (nota >= 4) setIndica(true)
+    else if (nota > 0 && nota <= 2) setIndica(false)
+    else if (nota === 3) setIndica(null)
+  }, [nota])
+
   const nextSlide = () =>
     setCurrentSlide(prev => (prev + 1) % fotosCarrossel.length)
 
@@ -76,7 +83,7 @@ export function useAvaliar(token: string) {
         prestador_id: projeto!.prestador_id,
         nota,
         comentario: comentarioGeral,
-        indica,
+        indica: indica ?? false,
         visivel: true,
         status: 'finalizado',
       })
