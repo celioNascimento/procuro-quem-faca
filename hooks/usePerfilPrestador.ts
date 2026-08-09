@@ -62,7 +62,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
 
         const { data: avaliacoesRaw, error: avalError } = await supabase
           .from('avaliacoes')
-          .select('id, nota, comentario, indica, created_at')
+          .select('id, nota, comentario, indica, created_at, projeto_id, portfolio_projetos(titulo)')
           .eq('prestador_id', prestadorRaw.id)
           .eq('visivel', true)
           .order('created_at', { ascending: false })
