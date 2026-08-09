@@ -8,7 +8,40 @@ Complementa `02-arquitetura.md`. Ver `14-glossario.md` para localizar um conceit
 
 Reaproveita `CardPrestador`/`RodapeSeguranca` do Acompanhamento. `CarrosselFinalizacao` (3 fotos finais) + `BlocoAvaliacao` (nota/comentário/indica).
 
-**Submit** (`handleFinalizarAvaliacao`): `inserirAvaliacao` (`status: 'finalizado'`, `visivel: true`) → `finalizarProjeto` → `router.push('/sucesso')`. Se `avaliacaoExistente?.status === 'finalizado'`, oculta `BlocoAvaliacao`.
+**Submit** (`handleFinalizarAvaliacao`): `inserirAvaliacao` (`status: 'finalizado'`, `visivel: true`, `indica: indica ?? false`) → `finalizarProjeto` → `router.push('/sucesso')`. Se `avaliacaoExistente?.status === 'finalizado'`, oculta `BlocoAvaliacao`.
+
+### Campo `indica` — comportamento atual
+
+`indica` é `boolean | null` tanto no hook quanto nos tipos:
+
+- `null` — estado inicial; o bloco de indicação fica oculto até o cliente selecionar uma nota
+- `true` — cliente selecionou "Indico"
+- `false` — cliente selecionou "Não indico"
+- No submit, `null` é normalizado para `false` via `indica ?? false`
+
+**Pré-seleção automática por nota** (em `useAvaliar`, via `useEffect` que observa `nota`):
+- Nota 4–5 → pré-seleciona `true` (indico)
+- Nota 1–2 → pré-seleciona `false` (não indico)
+- Nota 3 → volta para `null` (neutro, usuário decide)
+
+### `BlocoAvaliacao.tsx` (`components/acompanhamento/`)
+
+Exibe dois botões lado a lado ("👍 Indico" / "👎 Não indico") em vez de toggle único. O bloco só aparece após o cliente selecionar uma nota (`nota > 0`). Prop `indica` é `boolean | null`; prop `setIndica` recebe `(v: boolean) => void` (o componente nunca emite `null` — só o `useEffect` de pré-seleção pode fazê-lo).
+
+**Visual:**
+- `indica === true` → botão "Indico" ativo (azul `bg-blue-600`)
+- `indica === false` → botão "Não indico" ativo (slate escuro `bg-slate-700`)
+- `indica === null` → ambos no estado neutro (borda `slate-200`)
+
+### `PerfilAvaliacoes.tsx` (`components/profile/`)
+
+Badge no cabeçalho de cada card usa comparação estrita (`=== true` / `=== false`) para não exibir badge em avaliações legadas com `indica: null`:
+- `indica === true` → badge azul "👍 Indico"
+- `indica === false` → badge slate "👎 Não indico"
+- `indica === null` → sem badge
+
+Resumo no topo da seção exibe dois contadores independentes (indicações e não-indicações), ambos só aparecem se > 0.
+
 
 ### `FormularioAvaliacao.tsx` (ativo, `components/profile/`)
 
