@@ -1,6 +1,6 @@
 //components/dashboard/ProjetoCard.tsx
 
-⁶import { ImageOff, CheckCircle2, Clock, AlertCircle, Pencil } from 'lucide-react'
+import { ImageOff, CheckCircle2, Clock, AlertCircle, Pencil } from 'lucide-react'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
 
 interface Props {
