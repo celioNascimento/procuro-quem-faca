@@ -14,9 +14,9 @@ export default function PerfilAvaliacoes({ avaliacoes }: Props) {
 
   if (avaliacoes.length === 0) return null
 
-  const totalIndica = avaliacoes.filter(a => a.indica).length
+  const totalIndica = avaliacoes.filter(a => a.indica === true).length
+  const totalNaoIndica = avaliacoes.filter(a => a.indica === false).length
 
-  // Função segura para formatar a data
   const formatarData = (dataIso?: string) => {
     if (!dataIso) return ''
     try {
@@ -36,10 +36,15 @@ export default function PerfilAvaliacoes({ avaliacoes }: Props) {
         <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600">
           Avaliações
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {totalIndica > 0 && (
             <span className="flex items-center gap-1 bg-blue-50 text-blue-600 text-[9px] font-black tracking-wide px-2.5 py-1 rounded-full border border-blue-100">
-              ✦ {totalIndica} {totalIndica === 1 ? 'indicação' : 'indicações'}
+              👍 {totalIndica} {totalIndica === 1 ? 'indicação' : 'indicações'}
+            </span>
+          )}
+          {totalNaoIndica > 0 && (
+            <span className="flex items-center gap-1 bg-slate-100 text-slate-500 text-[9px] font-black tracking-wide px-2.5 py-1 rounded-full border border-slate-200">
+              👎 {totalNaoIndica} não {totalNaoIndica === 1 ? 'indica' : 'indicam'}
             </span>
           )}
         </div>
@@ -66,10 +71,15 @@ export default function PerfilAvaliacoes({ avaliacoes }: Props) {
                   )}
                 </div>
               </div>
-              
-              {av.indica && (
+
+              {av.indica === true && (
                 <span className="flex items-center gap-1 bg-blue-600 text-white text-[9px] font-black tracking-wide px-2.5 py-1.5 rounded-xl shrink-0 shadow-sm shadow-blue-200">
-                  ✦ Indico
+                  👍 Indico
+                </span>
+              )}
+              {av.indica === false && (
+                <span className="flex items-center gap-1 bg-slate-700 text-white text-[9px] font-black tracking-wide px-2.5 py-1.5 rounded-xl shrink-0">
+                  👎 Não indico
                 </span>
               )}
             </div>
