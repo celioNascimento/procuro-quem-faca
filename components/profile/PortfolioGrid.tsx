@@ -1,8 +1,7 @@
 //components/profile/PortfolioGrid.tsx
 
 'use client'
-import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Camera, CheckCircle2 } from 'lucide-react'
 import ProjetoModal from './ProjetoModal'
 import type { ProjetoPerfil } from '@/types/perfil'
@@ -12,19 +11,21 @@ interface Props {
 }
 
 export default function PortfolioGrid({ projetos }: Props) {
-  const [projetoSelecionado, setProjetoSelecionado] = useState<ProjetoPerfil | null>(null)
   const searchParams = useSearchParams()
+  const router       = useRouter()
+  const pathname     = usePathname()
 
-  // Lê a URL e abre o modal automaticamente se o ID do projeto existir
-  useEffect(() => {
-    const paramProjetoId = searchParams?.get('projeto')
-    if (paramProjetoId && projetos.length > 0) {
-      const projetoParaAbrir = projetos.find(p => String(p.id) === paramProjetoId)
-      if (projetoParaAbrir) {
-        setProjetoSelecionado(projetoParaAbrir)
-      }
-    }
-  }, [searchParams, projetos])
+  // URL é a única fonte de verdade — sem useState para o modal
+  const projetoId     = searchParams.get('projeto')
+  const projetoAberto = projetoId
+    ? projetos.find(p => String(p.id) === projetoId) ?? null
+    : null
+
+  const abrirProjeto = (id: string | number) =>
+    router.push(`${pathname}?projeto=${id}`, { scroll: false })
+
+  const fecharModal = () =>
+    router.push(pathname, { scroll: false })
 
   if (projetos.length === 0) {
     return (
@@ -37,9 +38,9 @@ export default function PortfolioGrid({ projetos }: Props) {
   }
 
   const gridClass =
-  projetos.length === 1 ? 'grid grid-cols-2 gap-2' :  
-  projetos.length === 2 ? 'grid grid-cols-2 gap-2' :
-                          'grid grid-cols-2 sm:grid-cols-3 gap-2'
+    projetos.length === 1 ? 'grid grid-cols-2 gap-2' :
+    projetos.length === 2 ? 'grid grid-cols-2 gap-2' :
+                            'grid grid-cols-2 sm:grid-cols-3 gap-2'
 
   return (
     <>
@@ -57,7 +58,7 @@ export default function PortfolioGrid({ projetos }: Props) {
           return (
             <div
               key={projeto.id}
-              onClick={() => setProjetoSelecionado(projeto)}
+              onClick={() => abrirProjeto(projeto.id)}
               className="group relative cursor-pointer"
             >
               <div className="relative aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
@@ -113,10 +114,10 @@ export default function PortfolioGrid({ projetos }: Props) {
         })}
       </div>
 
-      {projetoSelecionado && (
+      {projetoAberto && (
         <ProjetoModal
-          projeto={projetoSelecionado}
-          onClose={() => setProjetoSelecionado(null)}
+          projeto={projetoAberto}
+          onClose={fecharModal}
         />
       )}
     </>
