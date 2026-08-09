@@ -1,3 +1,5 @@
+//components/dashboard/PrestadorSideCard.tsx
+
 import { UserCircle2, MapPin, Phone, Star, Wrench, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 
@@ -29,32 +31,32 @@ export function PrestadorSideCard({
     (media_nota !== null && media_nota !== undefined && total_avals > 0)
 
   return (
-    <div className="w-full md:w-56 shrink-0 flex flex-col gap-3">
-
-      {/* ── Card: foto + nome + slug ── */}
-      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div className="aspect-square bg-slate-50 flex items-center justify-center">
-          {foto_perfil ? (
-            <img
-              src={foto_perfil}
-              alt={nome ?? ''}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-2 text-slate-300">
-              <UserCircle2 size={48} strokeWidth={1.5} />
-            </div>
-          )}
-        </div>
-        <div className="px-4 py-4 border-t border-slate-100">
-          <p className="font-black text-[17px] text-slate-800 leading-tight tracking-tight">
-            {nome ?? '—'}
-          </p>
-          {slug && (
-            <p className="text-[11px] text-blue-400 font-bold truncate mt-1 tracking-wide">
-              @{slug}
+    <div className="flex w-full shrink-0 flex-col gap-3">
+      <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center gap-4 p-4 lg:flex-col lg:items-stretch lg:gap-0 lg:p-0">
+          <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 lg:aspect-[4/3] lg:size-auto lg:rounded-none">
+            {foto_perfil ? (
+              <img
+                src={foto_perfil}
+                alt={nome ? `Foto de ${nome}` : 'Foto do perfil'}
+                className="size-full object-cover"
+              />
+            ) : (
+              <span className="text-slate-300">
+                <UserCircle2 size={48} strokeWidth={1.5} aria-hidden="true" />
+              </span>
+            )}
+          </div>
+          <div className="min-w-0 lg:border-t lg:border-slate-100 lg:p-5">
+            <p className="truncate text-base font-black leading-tight tracking-tight text-slate-800 lg:text-lg">
+              {nome ?? 'Perfil profissional'}
             </p>
-          )}
+            {slug && (
+              <p className="mt-1 truncate text-[11px] font-bold tracking-wide text-blue-600">
+                @{slug}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -113,7 +115,7 @@ export function PrestadorSideCard({
       {/* ── Link: ver perfil público ── */}
       {slug && (
         <Link
-          href={`/p/${slug}`}
+          href={`/${slug}`}
           className="flex items-center gap-2 px-4 py-3 bg-slate-50 hover:bg-blue-50 border border-slate-100 hover:border-blue-200 rounded-[1.5rem] text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-500 transition-all active:scale-95 group"
         >
           <ExternalLink size={13} className="shrink-0" />

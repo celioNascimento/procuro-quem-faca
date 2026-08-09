@@ -1,3 +1,5 @@
+//lib/services/avaliacao.service.ts
+
 import { supabase } from '@/lib/supabase'
 import type { AvaliacaoRaw, AvaliacaoInsertPayload } from '@/types/avaliacao'
 
@@ -7,7 +9,7 @@ export async function fetchProjetoPorToken(token: string) {
     .select(`
       *,
       portfolio_fotos(*),
-      prestadores(nome, foto_perfil, whatsapp, categoria:categorias(nome))
+      prestadores(nome, slug, foto_perfil, whatsapp, categoria:categorias(nome))
     `)
     .eq('avaliacao_token', token)
     .maybeSingle()                  // ← era .single(); nunca lança PGRST116
@@ -17,20 +19,22 @@ export async function fetchProjetoPorToken(token: string) {
 }
 
 export async function fetchAvaliacaoPorProjeto(projetoId: string) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('avaliacoes')
     .select('*')
     .eq('projeto_id', projetoId)
     .maybeSingle()
+  if (error) throw error
   return data
 }
 
 export async function fetchComentariosPorProjeto(projetoId: string) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('portfolio_comentarios')
     .select('*')
     .eq('projeto_id', projetoId)
     .order('criado_at', { ascending: true })
+  if (error) throw error
   return data ?? []
 }
 
@@ -75,9 +79,11 @@ export async function fetchAvaliacoesPorPrestador(prestadorId: number): Promise<
       nota,
       comentario,
       created_at,
+      status,
       indica,
       resposta_prestador,
       cliente_id,
+      projeto_id,
       portfolio_projetos(titulo)
     `)
     .eq('prestador_id', prestadorId)
@@ -91,4 +97,12 @@ export async function fetchAvaliacoesPorPrestador(prestadorId: number): Promise<
   }
 
   return data ?? []
+}
+
+export async function marcarProjetoEmDisputa(projetoId: string) {
+  const { error } = await supabase
+    .from('portfolio_projetos')
+    .update({ status: 'em_disputa' })
+    .eq('id', projetoId)
+  if (error) throw error
 }

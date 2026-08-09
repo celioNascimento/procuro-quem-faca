@@ -1,3 +1,5 @@
+//components/perfil/SecaoOQueVoceFaz.tsx 
+
 'use client'
 
 import type { Grupo, Categoria } from '@/types/categorias'

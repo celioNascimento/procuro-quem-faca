@@ -1,3 +1,5 @@
+//components/profile/AvaliacoesTab.tsx 
+
 'use client'
 import { useAvaliacoes } from '@/hooks/useAvaliacoes'
 import AvaliacaoCard from './AvaliacaoCard'

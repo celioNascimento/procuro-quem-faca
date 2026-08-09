@@ -1,96 +1,88 @@
-import { Phone, Share2, Briefcase } from 'lucide-react'
+//components/acompanhamento/CardPrestador.tsx
+
+import { Phone, Share2 } from 'lucide-react'
 import type { Projeto } from '@/types/avaliacao'
+import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 
 type Props = {
   projeto: Projeto
-  onShare?: () => void  // opcional — só exibe o botão se fornecido
+  onShare?: () => void
 }
 
 export function CardPrestador({ projeto, onShare }: Props) {
   const prestador = projeto.prestadores
+  const linkWhatsapp = buildLinkWhatsapp(prestador?.whatsapp)
+  
+  const isConcluido = projeto.status === 'finalizado'
+  const statusLabel = isConcluido ? 'Serviço concluído' : 'Serviço em andamento'
+  const statusColor = isConcluido ? 'bg-green-500' : 'bg-blue-500'
+  const statusBg = isConcluido ? 'bg-green-50' : 'bg-blue-50'
+  const statusText = isConcluido ? 'text-green-600' : 'text-blue-600'
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-
-      {/* Banner azul */}
-      <div className="h-36 bg-gradient-to-br from-blue-700 via-blue-600 to-blue-400 relative">
-        <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-white/10 rounded-full" />
-        <div className="absolute -top-6 -left-6 w-28 h-28 bg-white/10 rounded-full" />
-        <div className="absolute bottom-4 left-6 w-10 h-10 bg-white/10 rounded-full" />
-
-        {/* Botões no canto superior direito */}
-        <div className="absolute top-4 right-4 flex gap-2">
-          {onShare && (
-            <button
-              onClick={onShare}
-              className="w-9 h-9 bg-white/20 backdrop-blur-sm text-white rounded-xl flex items-center justify-center active:scale-95 transition-all border border-white/30 hover:bg-white/30"
-            >
-              <Share2 size={14} />
-            </button>
-          )}
-          <a
-            href={`tel:${prestador?.whatsapp}`}
-            className="w-9 h-9 bg-green-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-green-900/30 active:scale-95 transition-all"
-          >
-            <Phone size={14} fill="currentColor" />
-          </a>
-        </div>
-      </div>
-
-      {/* Foto centralizada sobrepondo o banner */}
-      <div className="flex justify-center -mt-14 mb-4 relative z-10">
-        <div className="w-28 h-28 rounded-3xl bg-white overflow-hidden border-4 border-white shadow-2xl shadow-blue-200/60">
+    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 flex flex-col gap-4 transition-all hover:shadow-md">
+      
+      {/* ── Topo: Avatar e Informações ── */}
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-[1.25rem] border border-slate-100 shadow-sm overflow-hidden bg-slate-50">
           <img
-            src={prestador?.foto_perfil}
+            src={prestador?.foto_perfil || '/placeholder-avatar.png'}
             className="w-full h-full object-cover"
             alt={prestador?.nome}
           />
         </div>
-      </div>
-
-      {/* Conteúdo textual */}
-      <div className="px-5 pb-5 text-center space-y-4">
-
-        <div>
-          <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.25em]">
+        
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.2em] truncate">
             {prestador?.categoria?.nome}
           </p>
-          <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-none mt-1">
+          <h2 className="text-[13px] sm:text-sm font-black text-slate-900 uppercase tracking-tight truncate mt-0.5">
             {prestador?.nome}
           </h2>
+          <p className="text-[11px] text-slate-500 truncate mt-0.5 italic font-medium">
+            {projeto.titulo}
+          </p>
+        </div>
+      </div>
+
+      {/* ── Base: Status e Ações ── */}
+      <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-50">
+        
+        {/* Status Badge */}
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/50 ${statusBg}`}>
+          <div className="relative flex h-2 w-2 shrink-0">
+            {!isConcluido && (
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${statusColor}`} />
+            )}
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${statusColor}`} />
+          </div>
+          <span className={`text-[9px] font-black uppercase tracking-widest ${statusText}`}>
+            {statusLabel}
+          </span>
         </div>
 
-        <div className="flex items-center gap-2 px-4">
-          <div className="flex-1 h-px bg-slate-100" />
-          <div className="flex gap-1">
-            <div className="w-1 h-1 bg-blue-200 rounded-full" />
-            <div className="w-1 h-1 bg-blue-400 rounded-full" />
-            <div className="w-1 h-1 bg-blue-200 rounded-full" />
-          </div>
-          <div className="flex-1 h-px bg-slate-100" />
+        {/* Botões de Ação */}
+        <div className="flex items-center gap-2 shrink-0">
+          {onShare && (
+            <button
+              onClick={onShare}
+              className="w-10 h-10 rounded-[1rem] border border-slate-100 bg-white flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-100 hover:bg-blue-50 transition-all active:scale-95"
+              title="Compartilhar projeto"
+            >
+              <Share2 size={16} />
+            </button>
+          )}
+          <a
+            href={linkWhatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-10 h-10 rounded-[1rem] border border-green-100 bg-green-50 flex items-center justify-center text-green-600 hover:bg-green-100 transition-all active:scale-95 shadow-sm shadow-green-100"
+            title="Contato via WhatsApp"
+          >
+            <Phone size={16} fill="currentColor" />
+          </a>
         </div>
 
-        <div className="bg-slate-50 rounded-2xl px-4 py-3 flex items-start gap-3 text-left border border-slate-100">
-          <div className="w-7 h-7 bg-blue-50 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
-            <Briefcase size={13} className="text-blue-500" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest leading-none">
-              Serviço em andamento
-            </p>
-            <p className="text-[12px] font-bold text-slate-700 leading-snug mt-1 italic">
-              {projeto.titulo}
-            </p>
-          </div>
-        </div>
-
-        <a
-          href={`tel:${prestador?.whatsapp}`}
-          className="flex items-center justify-center gap-2 w-full py-3 bg-green-50 text-green-700 rounded-2xl border border-green-100 text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all hover:bg-green-100"
-        >
-          <Phone size={12} fill="currentColor" />
-          {prestador?.whatsapp}
-        </a>
       </div>
     </div>
   )

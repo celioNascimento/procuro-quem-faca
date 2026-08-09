@@ -1,3 +1,5 @@
+//app/middleware.ts
+
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -30,6 +32,7 @@ export async function middleware(request: NextRequest) {
   const isCadastro = url.pathname.startsWith('/cadastro')
   const isLogin = url.pathname === '/login'
   const isAdmin = url.pathname.startsWith('/admin')
+  const isAdminLogin = url.pathname === '/admin/login'
 
   // 2. Lógica de Redirecionamento
 
@@ -38,16 +41,58 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // REGRA A.1: Verificação Inteligente de Perfil e Status
+  if (user && (isDashboard || isCadastro)) {
+    // Busca a intenção de role (profiles) e o status real (prestadores) em paralelo
+    const [profileRes, prestadorRes] = await Promise.all([
+      supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
+      supabase.from('prestadores').select('status').eq('user_id', user.id).maybeSingle()
+    ])
+
+    const intendedRole = profileRes.data?.role || 'cliente'
+    const isPendente = !prestadorRes.data || prestadorRes.data.status === 'pendente'
+
+    if (isDashboard) {
+      if (intendedRole === 'prestador' && isPendente) {
+        // Prestador incompleto tentando acessar dashboard -> forçado a terminar o cadastro
+        return NextResponse.redirect(new URL('/cadastro', request.url))
+      }
+      if (intendedRole === 'cliente') {
+        // Cliente (que não tem dashboard) bateu no dashboard -> vai para a área de cliente
+        return NextResponse.redirect(new URL('/painel/perfil', request.url))
+      }
+    }
+
+    if (isCadastro) {
+      if (intendedRole === 'prestador' && !isPendente) {
+        // Prestador ATIVO não tem motivo para acessar o formulário de cadastro novo
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
+      // Se for cliente acessando o /cadastro, permitimos a passagem (ele quer virar prestador)
+    }
+  }
+
   // REGRA B: Evitar Login Duplicado
   if (user && isLogin) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   // REGRA C: Proteção da Área Administrativa
-  // Bloqueia qualquer acesso a /admin que não venha de um usuário
-  // presente em perfis_admin. Sem usuário → redireciona para home,
-  // sem revelar que a rota existe.
   if (isAdmin) {
+    if (isAdminLogin) {
+      if (user) {
+        const { data: adminProfile } = await supabase
+          .from('perfis_admin')
+          .select('role')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        if (adminProfile) {
+          return NextResponse.redirect(new URL('/admin', request.url))
+        }
+      }
+      return response
+    }
+
     if (!user) {
       return NextResponse.redirect(new URL('/', request.url))
     }
@@ -61,12 +106,9 @@ export async function middleware(request: NextRequest) {
     if (!adminProfile) {
       return NextResponse.redirect(new URL('/', request.url))
     }
-
-    // Usuário validado como admin — segue com a resposta,
-    // com os cookies de sessão já atualizados acima.
   }
 
-  // REGRA D: Rotas Públicas (Home, /prestadores, etc)
+  // REGRA D: Rotas Públicas
   return response
 }
 

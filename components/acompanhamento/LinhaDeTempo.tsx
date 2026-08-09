@@ -1,3 +1,5 @@
+//components/acompanhamento/LinhaDeTempo.tsx
+
 import { Camera, MessageSquare } from 'lucide-react'
 import type { FotoOrdenada, Comentario } from '@/types/avaliacao'
 import { TimelineVertical, TimelineEstado, TimelineNo } from '@/components/shared/TimelineVertical'
@@ -109,9 +111,11 @@ export function LinhaDeTempo({
           Progresso da Obra
         </h3>
         <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border ${
-          status === 'em_execucao'
-            ? 'bg-blue-50 text-blue-600 border-blue-100 animate-pulse'
-            : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+          status === 'finalizado'
+           ? 'bg-green-50 text-green-600 border-green-100'
+           : status === 'em_execucao'
+           ? 'bg-blue-50 text-blue-600 border-blue-100 animate-pulse'
+           : 'bg-yellow-50 text-yellow-600 border-yellow-100'
         }`}>
           {labelEtapaAtual}
         </span>

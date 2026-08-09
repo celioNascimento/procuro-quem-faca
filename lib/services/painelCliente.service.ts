@@ -1,10 +1,15 @@
+//services/painelCliente.service.ts
+
 import { supabase } from '@/lib/supabase'
 
+// Adicionado o user_id no retorno de prestadores para permitir o filtro
 const SELECT_SERVICOS = `
   *,
-  prestadores (nome, foto_perfil, whatsapp, categoria:categorias(nome)),
+  prestadores (id, user_id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
   portfolio_fotos (*)
 `
+
+const STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado']
 
 export async function getProfile(userId: string) {
   const { data } = await supabase
@@ -20,9 +25,20 @@ export async function getServicoPorToken(token: string) {
     .from('portfolio_projetos')
     .select(SELECT_SERVICOS)
     .eq('avaliacao_token', token)
-    .in('status', ['em_registro', 'pendente', 'em_execucao', 'concluido'])
+    .in('status', STATUS_VISIVEIS)
     .maybeSingle()
   return data ? [data] : []
+}
+
+// Nova função usando a coluna que já existe no banco
+export async function getServicosPorUserId(userId: string) {
+  const { data } = await supabase
+    .from('portfolio_projetos')
+    .select(SELECT_SERVICOS)
+    .eq('cliente_user_id', userId)
+    .in('status', STATUS_VISIVEIS)
+    .order('created_at', { ascending: false })
+  return data ?? []
 }
 
 export async function getServicosPorWhatsapp(whatsapp: string) {
@@ -30,12 +46,11 @@ export async function getServicosPorWhatsapp(whatsapp: string) {
     .from('portfolio_projetos')
     .select(SELECT_SERVICOS)
     .eq('cliente_whatsapp', whatsapp.replace(/\D/g, ''))
-    .in('status', ['em_registro', 'pendente', 'em_execucao', 'concluido'])
+    .in('status', STATUS_VISIVEIS)
     .order('created_at', { ascending: false })
   return data ?? []
 }
 
-// ✅ Apenas dois parâmetros — avaliacaoToken removido (navegação é responsabilidade do hook)
 export async function aceitarServico(
   servicoId: string,
   nomeCliente: string,
@@ -59,8 +74,4 @@ export async function loginComGoogle(tokenUrl: string | null) {
     : `${base}/meus-servicos`
 
   await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
-}
-
-export async function logout() {
-  await supabase.auth.signOut()
 }

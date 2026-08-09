@@ -1,3 +1,5 @@
+//components/LogAcesso.tsx
+
 'use client'
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'

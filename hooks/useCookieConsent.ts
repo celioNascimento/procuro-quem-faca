@@ -1,3 +1,5 @@
+//hooks/useCookieConsent.ts
+
 'use client'
 import { useEffect, useState } from 'react'
 import { insertLog, checkLogExists } from '@/lib/db/logs'

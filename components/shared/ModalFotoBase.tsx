@@ -1,3 +1,5 @@
+//components/shared/ModalFotoBase.tsx
+
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ReactNode } from 'react'
 import React from 'react'

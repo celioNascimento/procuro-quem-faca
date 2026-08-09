@@ -1,3 +1,5 @@
+//app/(admin)/admin/geografia/components/TabelaCidades.tsx
+
 'use client'
 import { useState, useMemo } from 'react'
 import type { Cidade, Regiao } from '../types/geografia'

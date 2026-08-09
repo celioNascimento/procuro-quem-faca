@@ -1,3 +1,5 @@
+//app/(admin)/admin/geografia/components/FormRegiao.tsx
+
 import { useState } from 'react'
 import type { Estado } from '../types/geografia'
 
@@ -34,7 +36,7 @@ export function FormRegiao({ estados, onSubmit }: Props) {
         <select value={siglaEfetiva} onChange={e => setEstadoSigla(e.target.value)} className={inputClass}>
           {estados.map(e => <option key={e.sigla} value={e.sigla}>{e.nome}</option>)}
         </select>
-        <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Região Metropolitana de Londrina" className={inputClass} />
+        <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Região Metropolitana" className={inputClass} />
         {erro && <p className="text-red-500 text-xs font-bold">{erro}</p>}
         <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] disabled:opacity-50">
           {loading ? 'Salvando...' : 'Salvar Região'}

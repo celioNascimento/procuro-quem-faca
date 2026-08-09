@@ -1,12 +1,15 @@
-'use client' 
+//app/page.tsx
+
+'use client'
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSugestoes } from '@/hooks/useSugestoes'
-import { insertLog } from '@/hooks/useLog'
+import { insertLog } from '@/lib/db/logs'
 import SearchForm from '@/components/home/SearchForm'
 import { ArrowRight, Briefcase } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
 
 const HeroSection = dynamic(() => import('@/components/home/HeroSection'), { ssr: false })
 
@@ -15,6 +18,33 @@ export default function Home() {
   const [busca, setBusca] = useState('')
   const [erro, setErro] = useState(false)
   const { sugestoes, carregado } = useSugestoes(busca)
+  const { session, role, prestadorStatus } = useAuth()
+
+  let hrefCTA = '/login'
+  let tituloCTA = 'É prestador de serviços?'
+  let subtituloCTA = 'Cadastre-se e apareça para quem precisa de você'
+  let acaoLogCTA = 'CLIQUE_CTA_PRESTADOR'
+
+  if (session) {
+    if (role === 'prestador') {
+      if (prestadorStatus === 'pendente') {
+        hrefCTA = '/cadastro'
+        tituloCTA = 'Cadastro em andamento'
+        subtituloCTA = 'Finalize seu perfil e apareça nas buscas'
+        acaoLogCTA = 'CLIQUE_CTA_CONTINUAR_CADASTRO'
+      } else {
+        hrefCTA = '/dashboard'
+        tituloCTA = 'Área do Profissional'
+        subtituloCTA = 'Acesse seu painel e gerencie seus serviços'
+        acaoLogCTA = 'CLIQUE_CTA_ACESSAR_PAINEL'
+      }
+    } else {
+      hrefCTA = '/cadastro'
+      tituloCTA = 'Quer oferecer serviços?'
+      subtituloCTA = 'Crie seu perfil profissional agora mesmo'
+      acaoLogCTA = 'CLIQUE_CTA_VIRAR_PRESTADOR'
+    }
+  }
 
   const temBuscaReal = busca.trim().length > 0
 
@@ -90,8 +120,8 @@ export default function Home() {
       <div className="relative z-10 flex-1 flex items-end justify-center pb-12 px-6">
         <div className="w-full max-w-3xl">
           <Link
-            href="/login"
-            onClick={() => insertLog({ acao: 'CLIQUE_CTA_PRESTADOR', entidadeTipo: 'home' })}
+            href={hrefCTA}
+            onClick={() => insertLog({ acao: acaoLogCTA, entidadeTipo: 'home' })}
             className="group flex items-center justify-between gap-3 w-full px-5 py-4 md:px-8 md:py-5 rounded-[2rem] border border-slate-200/80 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300"
           >
             <div className="flex items-center gap-3">
@@ -99,11 +129,11 @@ export default function Home() {
                 <Briefcase size={14} className="text-blue-500 group-hover:text-white transition-colors duration-300" />
               </div>
               <div className="text-left">
-                <p className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
-                  É prestador de serviços?
+                <p className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400 mb-0.5 transition-all">
+                  {tituloCTA}
                 </p>
-                <p className="text-xs md:text-sm font-bold text-slate-700">
-                  Cadastre-se e apareça para quem precisa de você
+                <p className="text-xs md:text-sm font-bold text-slate-700 transition-all">
+                  {subtituloCTA}
                 </p>
               </div>
             </div>

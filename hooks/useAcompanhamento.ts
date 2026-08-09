@@ -1,3 +1,5 @@
+//hooks/useAcompanhamento.ts
+
 'use client'
 import { useEffect, useState } from 'react'
 import {
@@ -24,6 +26,8 @@ export function useAcompanhamento(token: string) {
   const labelEtapaAtual =
     projeto?.status === 'em_execucao'
       ? temConclusao ? 'Aguardando sua avaliação' : 'Registrando etapas'
+      : projeto?.status === 'finalizado'
+      ? 'Serviço concluído'
       : 'Em andamento'
 
   useEffect(() => { setMounted(true) }, [])
@@ -49,17 +53,26 @@ export function useAcompanhamento(token: string) {
     carregar()
   }, [token, mounted])
 
+  
   const handleShare = async () => {
+    // 🔒 SEGURANÇA E UX: Aponta para a vitrine pública já focada no projeto específico
+    const slugPrestador = projeto?.prestadores?.slug
+    const urlPublica = slugPrestador 
+      ? `${window.location.origin}/${slugPrestador}?projeto=${projeto?.id}`
+      : window.location.origin
+
     const shareData = {
-      title: `Serviço: ${projeto?.titulo}`,
-      text: `Acompanhe o progresso: "${projeto?.titulo}"`,
-      url: window.location.href,
+      title: `Serviço de ${projeto?.prestadores?.nome || 'Prestador'}`,
+      text: `Confira este serviço no portfólio de ${projeto?.prestadores?.nome || 'Prestador'} no Procuro Quem Faça.`,
+      url: urlPublica,
     }
+
     try {
-      if (navigator.share) await navigator.share(shareData)
-      else {
-        await navigator.clipboard.writeText(window.location.href)
-        alert('Link copiado!')
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(urlPublica)
+        alert('Link do projeto copiado com sucesso!')
       }
     } catch (err) {
       console.error(err)

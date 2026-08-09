@@ -1,3 +1,5 @@
+//components/perfil/SecaoLocalizacao.tsx  
+
 'use client'
 
 import type { Estado, Regiao, Cidade } from '@/types/localizacao'

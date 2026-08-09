@@ -1,3 +1,5 @@
+//lib/services/portfolioDashboard.service.ts
+
 import { supabase } from '@/lib/supabase'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
 

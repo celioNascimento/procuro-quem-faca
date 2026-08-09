@@ -1,3 +1,5 @@
+// app/termos/page.tsx
+
 'use client'
 import { useRouter } from 'next/navigation'
 

@@ -1,3 +1,5 @@
+//lib/uploadEvidencias.ts
+
 import { supabase } from '@/lib/supabase'
 
 const BUCKET = 'evidencias-contestacao'

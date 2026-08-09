@@ -1,3 +1,5 @@
+// types/perfil.ts
+
 import type { Prestador } from './prestador'
 
 export interface FotoProjeto {
@@ -14,7 +16,7 @@ export interface ProjetoPerfil {
   status: 'em_execucao' | 'finalizado'
   created_at: string
   portfolio_fotos: FotoProjeto[]
-  avaliacoes: { id: string; indica: boolean }[]
+  avaliacoes: { id: string; indica: boolean; comentario?: string | null }[]
 }
 
 export interface AvaliacaoPerfil {

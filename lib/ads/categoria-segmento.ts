@@ -1,3 +1,5 @@
+//lib/ads/categoria-segmento.ts
+
 export type SegmentoAd =
   | 'construcao'
   | 'pintura'

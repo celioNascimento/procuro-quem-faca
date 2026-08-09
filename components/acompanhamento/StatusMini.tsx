@@ -1,3 +1,5 @@
+//components/acompanhamento/StatusMini.tsx
+
 import { Activity, LayoutGrid } from 'lucide-react'
 
 type Props = {

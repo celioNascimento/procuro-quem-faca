@@ -1,6 +1,8 @@
+//components/profile/AvaliacoesResumo.tsx 
+
 'use client'
 import RatingStars from '@/components/ui/RatingStars'
-import type { AvaliacoesStats } from '@/hooks/useAvaliacoes'
+import type { AvaliacoesStats } from '@/types/avaliacao'
 
 interface AvaliacoesResumoProps {
   stats: AvaliacoesStats

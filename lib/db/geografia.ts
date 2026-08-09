@@ -1,3 +1,5 @@
+//lib/db/geografia.ts
+
 import { supabase } from '@/lib/supabase'
 import type { Cidade } from '../../app/(admin)/admin/geografia/types/geografia'
 

@@ -1,3 +1,5 @@
+//config/categorias.ts
+
 export const SUGESTOES_FALLBACK = [
   'Pedreiro',
   'Eletricista',

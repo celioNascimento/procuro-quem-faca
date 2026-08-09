@@ -1,12 +1,34 @@
+//app/sucesso/page.tsx
+
 'use client'
 import Link from 'next/link'
 import { CheckCircle2, Award, Heart, Share2, ArrowRight } from 'lucide-react'
 
 export default function PaginaSucesso() {
+
+  const handleCompartilhar = async () => {
+    const texto = 'Acabei de usar o Procuro Quem Faça para avaliar um serviço! Confira você também.'
+    const url = typeof window !== 'undefined' ? window.location.origin : ''
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Procuro Quem Faça', text: texto, url })
+      } catch {
+        /* usuário cancelou o compartilhamento — silencioso */
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${texto} ${url}`)
+      } catch {
+        /* silencioso */
+      }
+    }
+  }
+
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 text-center font-sans antialiased">
       <div className="max-w-sm w-full space-y-8 animate-in fade-in zoom-in duration-700">
-        
+
         {/* ÍCONE DE SUCESSO DE ALTO IMPACTO */}
         <div className="relative inline-flex flex-col items-center justify-center">
           <div className="absolute inset-0 bg-blue-600/10 blur-[60px] rounded-full scale-150" />
@@ -29,14 +51,17 @@ export default function PaginaSucesso() {
           <p className="text-[13px] font-bold text-slate-600 italic leading-relaxed">
             Sua avaliação foi registrada com sucesso e ajuda a manter o rigor de qualidade dos nossos profissionais.
           </p>
-          
+
           <div className="flex items-center justify-center gap-4 py-2 border-y border-slate-50">
             <Heart size={18} className="text-pink-500 fill-pink-500" />
             <span className="text-[10px] font-black uppercase text-slate-800 italic">Obrigado pela preferência!</span>
           </div>
 
           {/* BOTÃO AZUL REFINADO */}
-          <button className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-100 flex items-center justify-center gap-3 active:scale-95 hover:shadow-blue-200 transition-all">
+          <button
+            onClick={handleCompartilhar}
+            className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-100 flex items-center justify-center gap-3 active:scale-95 hover:shadow-blue-200 transition-all"
+          >
             Compartilhar Resultado <Share2 size={14} />
           </button>
         </div>

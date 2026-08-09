@@ -1,3 +1,5 @@
+//components/Header.tsx
+
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -12,7 +14,7 @@ export default function Header({ href }: Props) {
   const router = useRouter()
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md font-sans border-b border-slate-100 overflow-hidden">
+    <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md font-sans border-b border-slate-100">
       <div className="max-w-5xl mx-auto px-4 h-16 md:h-28 flex items-center justify-between">
 
         {/* Esquerda — voltar */}

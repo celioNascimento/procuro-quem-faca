@@ -1,3 +1,5 @@
+//lib/db/prestadores.ts
+
 import { supabase } from '@/lib/supabase'
 
 export async function getPrestadoresAtivos(signal?: AbortSignal) {

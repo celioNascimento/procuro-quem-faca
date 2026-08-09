@@ -1,5 +1,7 @@
+//lib/services/localizacao.service.ts
+
 import { supabase } from '@/lib/supabase'
-import { Cidade } from '@/types/localizacao'
+import type { Estado, Regiao, Cidade } from '@/types/localizacao'
 import { Prestador } from '@/types/prestador'
 
 /**
@@ -50,4 +52,57 @@ export async function getPrestadoresVitrinePorCidade(cidadeId: string): Promise<
   }
 
   return data as unknown as Prestador[]
+}
+
+/**
+   * Usado pelo fluxo de Cadastro/Edição de Prestador (useLocalizacao) para
+   * popular os selects em cascata: estado → região → cidade.
+   */
+export async function fetchEstados(): Promise<Estado[]> {
+  const { data, error } = await supabase.from('estados').select('*').order('nome')
+  if (error) {
+    console.error('Erro ao buscar estados:', error)
+    return []
+  }
+  return data || []
+}
+
+export async function fetchRegioesPorEstado(siglaEstado: string): Promise<Regiao[]> {
+  if (!siglaEstado) return []
+  const { data, error } = await supabase
+    .from('regioes')
+    .select('*')
+    .eq('estado_sigla', siglaEstado)
+    .order('nome')
+  if (error) {
+    console.error('Erro ao buscar regiões:', error)
+    return []
+  }
+  return data || []
+}
+
+/**
+ * Busca cidades por região (se informada) ou, na ausência dela, por estado.
+ * Retorna [] se nem região nem estado forem fornecidos.
+ */
+export async function fetchCidadesPorRegiaoOuEstado(
+  regiaoId: string | number | null,
+  estadoSigla: string
+): Promise<Cidade[]> {
+  let query = supabase.from('cidades').select('*').eq('ativa', true).order('nome')
+
+  if (regiaoId) {
+    query = query.eq('regiao_id', regiaoId)
+  } else if (estadoSigla) {
+    query = query.eq('estado_sigla', estadoSigla)
+  } else {
+    return []
+  }
+
+  const { data, error } = await query
+  if (error) {
+    console.error('Erro ao buscar cidades:', error)
+    return []
+  }
+  return data || []
 }

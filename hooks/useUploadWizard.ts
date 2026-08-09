@@ -1,3 +1,5 @@
+//hooks/useUploadWizard.ts
+
 import { useState, useEffect, useCallback, useMemo, useRef, ChangeEvent } from 'react'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
 import { FotoPortfolio, ComentarioPortfolio, ProjetoIdentificado } from '@/types/portfolio'
@@ -392,7 +394,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     const projData = await getStatusETokenProjeto(currentId)
     const token = projData?.avaliacao_token
     const numTelefone = clienteWhatsapp.replace(/\D/g, '')
-    const linkAvaliacao = `${window.location.origin}/avaliar/${currentId}?token=${token}`
+    const linkAvaliacao = `${window.location.origin}/avaliar/${token}`
     const mensagem = `Olá${clienteNome ? `, ${clienteNome}` : ''}! 🎉\n\nO serviço *${titulo}* foi concluído com sucesso!\n\nAcesse o link abaixo para conferir as fotos do resultado final e deixar sua avaliação — ela é muito importante para nós:\n\n🔗 ${linkAvaliacao}\n\nFoi um prazer trabalhar com você!`
     const urlWhatsapp = `https://wa.me/55${numTelefone}?text=${encodeURIComponent(mensagem)}`
     window.open(urlWhatsapp, '_blank')

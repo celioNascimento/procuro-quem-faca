@@ -1,3 +1,5 @@
+//app/denunciar/[id]/page.tsx
+
 'use client'
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'

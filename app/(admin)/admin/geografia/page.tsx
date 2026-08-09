@@ -1,3 +1,5 @@
+//app/(admin)/admin/geografia/page.tsx
+
 'use client'
 import { useGeografia } from './hooks/useGeografia'
 import { FormEstado } from './components/FormEstado'

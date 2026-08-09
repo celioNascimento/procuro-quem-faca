@@ -1,3 +1,5 @@
+//components/CookieConsent.tsx
+
 'use client'
 import { useCookieConsent } from '@/hooks/useCookieConsent'
 

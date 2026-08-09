@@ -13,6 +13,7 @@ export interface AvaliacaoRaw {
   indica: boolean
   resposta_prestador: string | null
   cliente_id: string | null
+  status: string | null
   portfolio_projetos: { titulo: string }[] | null
 }
 
@@ -36,6 +37,8 @@ export interface AvaliacaoPerfil {
   comentario?: string
   indica: boolean
   created_at: string
+  projeto_id?: string                            // ← adicionar
+  portfolio_projetos?: { titulo: string } | null // ← adicionar
 }
 
 // ── Formato resumido — só o necessário para cálculo de stats ──

@@ -1,5 +1,7 @@
+//hooks/useLocalizacao.ts
+
 import { useState, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { fetchEstados, fetchRegioesPorEstado, fetchCidadesPorRegiaoOuEstado } from '@/lib/services/localizacao.service'
 import type { Estado, Regiao, Cidade } from '@/types/localizacao'
 
 export function useLocalizacao() {
@@ -9,34 +11,19 @@ export function useLocalizacao() {
   const [cidadesRegiao, setCidadesRegiao] = useState<Cidade[]>([])
 
   const carregarEstados = useCallback(async () => {
-    const { data } = await supabase.from('estados').select('*').order('nome')
-    setListaEstados(data || [])
+    const data = await fetchEstados()
+    setListaEstados(data)
   }, [])
 
   const carregarRegioes = useCallback(async (siglaEstado: string) => {
-    if (!siglaEstado) { setListaRegioes([]); return }
-    const { data } = await supabase
-      .from('regioes')
-      .select('*')
-      .eq('estado_sigla', siglaEstado)
-      .order('nome')
-    setListaRegioes(data || [])
+    const data = await fetchRegioesPorEstado(siglaEstado)
+    setListaRegioes(data)
   }, [])
 
   const carregarCidades = useCallback(async (regiaoId: string | number | null, estadoSigla: string) => {
-    let query = supabase.from('cidades').select('*').eq('ativa', true).order('nome')
-    if (regiaoId) {
-      query = query.eq('regiao_id', regiaoId)
-    } else if (estadoSigla) {
-      query = query.eq('estado_sigla', estadoSigla)
-    } else {
-      setListaCidades([])
-      setCidadesRegiao([])
-      return
-    }
-    const { data } = await query
-    setListaCidades(data || [])
-    setCidadesRegiao(data || [])
+    const data = await fetchCidadesPorRegiaoOuEstado(regiaoId, estadoSigla)
+    setListaCidades(data)
+    setCidadesRegiao(data)
   }, [])
 
   return {
