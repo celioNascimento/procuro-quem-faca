@@ -43,7 +43,10 @@ export function useCadastroPrestador(reivindicarId: string | null) {
   const inicializadoRef = useRef(false)
 
   const [mounted, setMounted] = useState(false)
+  // loading: controla exclusivamente o carregamento inicial da página (dispara o CadastroSkeleton)
   const [loading, setLoading] = useState(true)
+  // enviando: controla exclusivamente o estado do submit (botão), nunca deve re-disparar o skeleton
+  const [enviando, setEnviando] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -236,9 +239,9 @@ export function useCadastroPrestador(reivindicarId: string | null) {
     if (!slugCheck.disponivel) { setStatus('❌ Escolha uma URL diferente.'); return }
     if (!userLogado && (senha.length < 6 || senha !== confirmarSenha)) { setStatus('❌ Verifique as senhas.'); return }
     if (userLogado && (senha.length > 0 || confirmarSenha.length > 0) && (senha.length < 6 || senha !== confirmarSenha)) { setStatus('❌ Verifique a nova senha.'); return }
-    if (loading || uploading || calcularProgresso() < 100) return
+    if (enviando || uploading || calcularProgresso() < 100) return
 
-    setLoading(true)
+    setEnviando(true)
     setStatus('Sincronizando...')
 
     try {
@@ -309,7 +312,7 @@ export function useCadastroPrestador(reivindicarId: string | null) {
         setStatus('❌ Não foi possível concluir. Verifique os dados.')
       }
       setStatus('')
-      setLoading(false)
+      setEnviando(false)
     }
   }
 
@@ -320,7 +323,7 @@ export function useCadastroPrestador(reivindicarId: string | null) {
 
   return {
     form, categorias, loc, slugCheck,
-    mounted, loading, uploading, isRedirecting, isModalOpen, setIsModalOpen,
+    mounted, loading, enviando, uploading, isRedirecting, isModalOpen, setIsModalOpen,
     status, tentouEnviar, modoEdicao,
     userLogado, email, setEmail, senha, setSenha, confirmarSenha, setConfirmarSenha,
     aceitouTermos, setAceitouTermos, aceitouPrivacidade, setAceitouPrivacidade,
