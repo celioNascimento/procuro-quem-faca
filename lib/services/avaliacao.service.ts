@@ -83,6 +83,7 @@ export async function fetchAvaliacoesPorPrestador(prestadorId: number): Promise<
       indica,
       resposta_prestador,
       cliente_id,
+      projeto_id,
       portfolio_projetos(titulo)
     `)
     .eq('prestador_id', prestadorId)
