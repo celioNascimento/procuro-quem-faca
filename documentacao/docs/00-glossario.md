@@ -127,12 +127,25 @@ Se for centralizar essa derivação, esses 6 pontos são os candidatos a converg
 
 ## Compartilhamento Seguro e Deep Linking de Projetos
 
-* **Problema Relatado:** O botão de compartilhar dentro da área de acompanhamento do cliente utilizava a URL ativa (contendo o `token` de acesso privado). Isso expunha dados sensíveis e logs da obra para visitantes não autorizados.
-* **Solução Arquitetural (Implementada):** 
+* **Problema Relatado:** O botão de compartilhar dentro da área de acompanhamento do cliente utilizava a URL ativa (contendo o `token` de acesso privado). Isso expunha dados sensíveis e logs da obra para visitantes não autorizados. Além disso, o clique em avaliações no perfil público não abria o modal do projeto correspondente, e fechar e reabrir o modal travava a interface.
+
+* **Solução Arquitetural (Implementada):**
   1. **Desacoplamento de Acesso:** O `handleShare` (no hook `useAcompanhamento.ts`) foi refatorado para nunca compartilhar o token. A URL gerada passa a apontar exclusivamente para a vitrine pública do prestador (`/[slug]`).
   2. **Inclusão de Slug na Busca:** Atualização na query `fetchProjetoPorToken` (em `avaliacao.service.ts`) para incluir o campo `slug` de `prestadores`, garantindo a construção correta da URL pública.
-  3. **Deep Linking (UX):** A URL de compartilhamento recebe o query parameter `?projeto=[ID]`. O componente `PortfolioGrid.tsx` intercepta este parâmetro usando `useSearchParams` no Next.js e abre automaticamente o modal (`ProjetoModal`) correspondente àquele registro de atividade assim que a página pública é carregada.
+  3. **Deep Linking (UX):** A URL de compartilhamento recebe o query parameter `?projeto=[ID]`. O componente `PortfolioGrid.tsx` intercepta este parâmetro usando `useSearchParams` e abre automaticamente o `ProjetoModal` correspondente. O mesmo mecanismo é usado pelo clique em avaliações em `PerfilAvaliacoes.tsx` — ambos fazem `router.push('?projeto=<id>')` e o `PortfolioGrid` resolve.
+  4. **URL como fonte única de verdade (modal):** `PortfolioGrid.tsx` não usa mais `useState`/`useEffect` para controlar o modal. O projeto aberto é derivado diretamente de `searchParams.get('projeto')`, e fechar o modal faz `router.push(pathname)` limpando o parâmetro. Isso elimina a dessincronização entre estado local e URL que causava travamento ao fechar e reabrir.
+  5. **Avaliações com `comentario` no modal:** A query de `portfolio_projetos` em `usePerfilPrestador` não inclui mais o join `avaliacoes(id, indica)` — sujeito a RLS e sem `comentario`. As avaliações de cada projeto são cruzadas no frontend a partir da query pública separada (`avaliacoesRaw`), filtrando por `projeto_id`. Isso garante que `comentario` e `indica` estejam disponíveis no `ProjetoModal`.
 
+* **Arquivos envolvidos:**
+  - `hooks/usePerfilPrestador.ts` — query sem join de avaliações; cruzamento por `projeto_id` no map dos projetos
+  - `components/profile/PortfolioGrid.tsx` — controle do modal 100% via URL, sem `useState`
+  - `components/profile/PerfilAvaliacoes.tsx` — `router.push('?projeto=<id>')` ao clicar no rodapé do card
+  - `types/perfil.ts` — `ProjetoPerfil.avaliacoes` inclui `comentario?: string | null`
+  - `types/avaliacao.ts` — `AvaliacaoPerfil` inclui `projeto_id` e `portfolio_projetos`
+
+* **Regra de ouro:** qualquer novo ponto de entrada que queira abrir um projeto no perfil público deve apenas fazer `router.push('?projeto=<id>')` — o `PortfolioGrid` já cuida do resto.
+
+---
 
 ## Localização (estados / regiões / cidades)
 
@@ -224,11 +237,13 @@ Ainda não implementado — ver `13-roadmap.md` para o desenho completo. Resumo 
 - **Troca de senha durante edição de perfil** (já logado): `components/auth/SecaoAcessoLogado.tsx` (usado tanto no Cadastro quanto no Dashboard)
 - **Componente de input de senha com toggle de visibilidade:** `components/auth/SenhaInput.tsx` (usa `EyeIconButton` internamente) — reaproveitado por `SecaoAcessoCadastro` e `SecaoAcessoLogado`. Distinto de `components/auth/EyeIconButton.tsx` (o botão isolado, usado diretamente por `NovaSenha`).
 
-- ## Efeito Espelho (Vazamento de Papéis)
+---
+
+## Efeito Espelho (Vazamento de Papéis)
 
 **Definição:** Bug arquitetural onde um usuário que atua simultaneamente como Prestador e Cliente visualizava os projetos que ele mesmo estava executando dentro do seu painel de Cliente, devido à busca baseada exclusivamente em `cliente_whatsapp`.
 
 **Solução Arquitetural (Implementada):**
 1. **Âncora Forte (BD):** Adição da coluna `cliente_user_id` em `portfolio_projetos` para vincular estritamente o cliente logado, isolando a busca via `getServicosPorUserId`.
 2. **Filtro Anti-Espelho (Frontend):** O hook `usePainelCliente.ts` implementa uma trava de segurança `projs.filter(p => p.prestadores?.user_id !== user.id)`. Isso garante que, mesmo no fallback de busca por WhatsApp (para projetos legados), o sistema exclua da UI de cliente qualquer projeto onde o usuário logado seja o prestador em execução. A query `SELECT_SERVICOS` exige a presença de `prestadores (user_id)` para este filtro funcionar.
-   
+3. 
