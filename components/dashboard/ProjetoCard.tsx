@@ -1,6 +1,6 @@
-//components/dashboard/ProjetoCard.tsx 
+//components/dashboard/ProjetoCard.tsx
 
-import { ImageOff, CheckCircle2, Clock, AlertCircle, Pencil } from 'lucide-react'
+⁶import { ImageOff, CheckCircle2, Clock, AlertCircle, Pencil } from 'lucide-react'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
 
 interface Props {
@@ -47,7 +47,6 @@ function getStatusConfig(proj: Projeto) {
 
 export function ProjetoCard({ projeto, onClick }: Props) {
   const fotos = projeto.portfolio_fotos ?? []
-  // Usa a foto de maior ordem como capa (foto "depois" quando existir)
   const capa  = [...fotos].sort((a, b) => b.ordem - a.ordem)[0]?.url_foto
   const { label, icon, cls } = getStatusConfig(projeto)
 
@@ -58,11 +57,12 @@ export function ProjetoCard({ projeto, onClick }: Props) {
       className="group flex w-full overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0"
       aria-label={`Editar projeto ${projeto.titulo}`}
     >
-      <span className="relative w-24 shrink-0 self-stretch bg-slate-100 sm:w-32">
+      {/* Coluna da imagem — largura fixa, altura limitada a 9rem para não crescer com conteúdo externo */}
+      <span className="relative w-24 max-h-36 shrink-0 self-stretch bg-slate-100 sm:w-32 sm:max-h-40">
         {capa ? (
           <img
             src={capa}
-            className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
             alt=""
           />
         ) : (
