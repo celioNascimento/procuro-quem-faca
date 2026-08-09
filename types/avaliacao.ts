@@ -37,6 +37,8 @@ export interface AvaliacaoPerfil {
   comentario?: string
   indica: boolean
   created_at: string
+  projeto_id?: string                            // ← adicionar
+  portfolio_projetos?: { titulo: string } | null // ← adicionar
 }
 
 // ── Formato resumido — só o necessário para cálculo de stats ──
