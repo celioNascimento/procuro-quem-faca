@@ -25,17 +25,90 @@ import { useAuth } from '@/hooks/useAuth'
 
 const inputStyleBase = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-[14px] text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400`
 
+
 function CadastroSkeleton() {
+  const bloco = 'bg-white rounded-[2rem] border border-slate-100 shadow-sm'
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center pt-32 px-4 animate-pulse">
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="h-64 bg-white rounded-[3rem] border border-slate-100 shadow-sm col-span-1" />
-        <div className="h-[500px] bg-white rounded-[3rem] border border-slate-100 shadow-sm col-span-2" />
+    <main className="min-h-screen bg-[#F8FAFC] pb-20 font-sans antialiased overflow-x-hidden animate-pulse">
+      {/* Header fixo idêntico ao real */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 h-16 md:h-20 flex items-center px-6">
+        <div className="max-w-5xl mx-auto w-full flex justify-between items-center">
+          <div className="w-9 h-9 rounded-full bg-slate-100" />
+          <div className="h-10 md:h-12 w-32 bg-slate-100 rounded-lg" />
+          <div className="w-10" />
+        </div>
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-50">
+          <div className="h-full bg-blue-100" style={{ width: '35%' }} />
+        </div>
+      </nav>
+
+      <div className="w-full px-4 pt-32 md:pt-40 max-w-5xl mx-auto">
+        {/* Título + progresso, igual ao header do CadastroCard */}
+        <div className="mb-10 pl-2 flex justify-between items-end">
+          <div className="space-y-3">
+            <div className="h-8 w-56 bg-slate-200 rounded-lg" />
+            <div className="h-3 w-24 bg-blue-100 rounded" />
+          </div>
+        </div>
+
+        {/* Blocos empilhados, na mesma ordem do form real */}
+        <div className="flex flex-col gap-6">
+          {/* Foto */}
+          <div className={`${bloco} p-6 flex items-center gap-4`}>
+            <div className="w-20 h-20 rounded-full bg-slate-100 shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-3 w-40 bg-slate-100 rounded" />
+              <div className="h-3 w-28 bg-slate-100 rounded" />
+            </div>
+          </div>
+
+          {/* Acesso (email/senha) */}
+          <div className={`${bloco} p-6 space-y-3`}>
+            <div className="h-12 bg-slate-50 rounded-2xl" />
+            <div className="h-12 bg-slate-50 rounded-2xl" />
+          </div>
+
+          {/* O que você faz */}
+          <div className={`${bloco} p-6 space-y-3`}>
+            <div className="h-3 w-32 bg-slate-100 rounded mb-2" />
+            <div className="h-12 bg-slate-50 rounded-2xl" />
+            <div className="h-12 bg-slate-50 rounded-2xl" />
+            <div className="flex flex-wrap gap-2 pt-1">
+              <div className="h-8 w-20 bg-slate-50 rounded-full" />
+              <div className="h-8 w-24 bg-slate-50 rounded-full" />
+              <div className="h-8 w-16 bg-slate-50 rounded-full" />
+            </div>
+          </div>
+
+          {/* Dados pessoais */}
+          <div className={`${bloco} p-6 space-y-3`}>
+            <div className="h-12 bg-slate-50 rounded-2xl" />
+            <div className="h-12 bg-slate-50 rounded-2xl" />
+            <div className="h-12 bg-slate-50 rounded-2xl" />
+            <div className="h-24 bg-slate-50 rounded-2xl" />
+          </div>
+
+          {/* Localização */}
+          <div className={`${bloco} p-6 space-y-3`}>
+            <div className="h-12 bg-slate-50 rounded-2xl" />
+            <div className="h-12 bg-slate-50 rounded-2xl" />
+            <div className="h-12 bg-slate-50 rounded-2xl" />
+          </div>
+
+          {/* Termos */}
+          <div className={`${bloco} p-6 space-y-2`}>
+            <div className="h-4 w-full max-w-md bg-slate-50 rounded" />
+            <div className="h-4 w-full max-w-sm bg-slate-50 rounded" />
+          </div>
+
+          {/* Botão submit */}
+          <div className="w-full h-16 bg-slate-100 rounded-[2rem]" />
+        </div>
       </div>
-    </div>
+    </main>
   )
 }
-
 function FormularioCadastro() {
   const searchParams = useSearchParams()
   const reivindicarId = searchParams.get('reivindicar')
