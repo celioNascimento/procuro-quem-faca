@@ -11,12 +11,13 @@ import {
   uploadBannerAnuncio,
   type AnuncioComAnunciante,
   type NovoAnuncioInput,
+  type Segmentacao,
 } from '@/lib/services/adminAnuncios.service'
 
 export function useAdminAnuncios() {
   const [anuncios, setAnuncios] = useState<AnuncioComAnunciante[]>([])
   const [loading, setLoading] = useState(true)
-  const [enviando, setEnviando] = useState(false) // separado de loading — mesma lição do CadastroSkeleton (ver memória)
+  const [enviando, setEnviando] = useState(false) // separado de loading — mesma lição do CadastroSkeleton
   const [erro, setErro] = useState<string | null>(null)
 
   const carregar = useCallback(async () => {
@@ -38,7 +39,8 @@ export function useAdminAnuncios() {
 
   /**
    * Fluxo completo de cadastro: garante o anunciante (cria conta Auth se
-   * necessário) -> sobe a imagem se for arquivo -> cria o anuncio.
+   * necessário) -> sobe a imagem se for arquivo -> cria o anuncio com
+   * todas as suas linhas de segmentação.
    * Retorna a senha temporária (se um usuário novo foi criado) pra exibir 1x.
    */
   const cadastrarNovoAnuncio = useCallback(
@@ -76,7 +78,13 @@ export function useAdminAnuncios() {
   )
 
   const editarAnuncio = useCallback(
-    async (id: string, dados: Partial<NovoAnuncioInput>, imagemFile?: File | null, anuncianteId?: string) => {
+    async (
+      id: string,
+      dados: Partial<Omit<NovoAnuncioInput, 'segmentacoes' | 'anuncianteId'>>,
+      segmentacoes: Segmentacao[],
+      imagemFile?: File | null,
+      anuncianteId?: string
+    ) => {
       setEnviando(true)
       setErro(null)
       try {
@@ -84,7 +92,7 @@ export function useAdminAnuncios() {
         if (imagemFile && anuncianteId) {
           imagemUrl = await uploadBannerAnuncio(imagemFile, anuncianteId)
         }
-        await atualizarAnuncio(id, { ...dados, imagemUrl })
+        await atualizarAnuncio(id, { ...dados, imagemUrl }, segmentacoes)
         await carregar()
       } catch (e: any) {
         setErro(e.message ?? 'Erro ao editar anúncio')
@@ -110,21 +118,18 @@ export function useAdminAnuncios() {
     [carregar]
   )
 
-  const remover = useCallback(
-    async (id: string) => {
-      setEnviando(true)
-      try {
-        await excluirAnuncio(id)
-        setAnuncios((prev) => prev.filter((a) => a.id !== id))
-      } catch (e: any) {
-        setErro(e.message ?? 'Erro ao excluir anúncio')
-        throw e
-      } finally {
-        setEnviando(false)
-      }
-    },
-    []
-  )
+  const remover = useCallback(async (id: string) => {
+    setEnviando(true)
+    try {
+      await excluirAnuncio(id)
+      setAnuncios((prev) => prev.filter((a) => a.id !== id))
+    } catch (e: any) {
+      setErro(e.message ?? 'Erro ao excluir anúncio')
+      throw e
+    } finally {
+      setEnviando(false)
+    }
+  }, [])
 
   return {
     anuncios,

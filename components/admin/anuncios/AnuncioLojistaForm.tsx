@@ -4,19 +4,9 @@
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, Link as LinkIcon, X, ImageOff, AlertCircle } from 'lucide-react'
+import { SegmentacaoFields } from './SegmentacaoFields'
+import type { Segmentacao } from '@/lib/services/adminAnuncios.service'
 
-// Trocar pelas chamadas reais quando plugar (useCategorias / useLocalizacao)
-const CATEGORIAS = [
-  { id: 'cat-eletrica', nome: 'Elétrica' },
-  { id: 'cat-hidraulica', nome: 'Hidráulica' },
-  { id: 'cat-pintura', nome: 'Pintura' },
-  { id: 'cat-reformas', nome: 'Reformas' },
-]
-const CIDADES = [
-  { id: 'cid-londrina', nome: 'Londrina' },
-  { id: 'cid-cambe', nome: 'Cambé' },
-  { id: 'cid-ibipora', nome: 'Ibiporã' },
-]
 const POSICOES = [
   { value: 'topo_busca', label: 'Topo do resultado da busca' },
   { value: 'entre_cards', label: 'Entre os cards de prestadores' },
@@ -38,13 +28,24 @@ export type AnuncioLojistaFormValues = {
     linkDestino: string
     imagemUrl: string
     posicao: string
-    categoriaId: string
-    cidadeId: string
     ativo: boolean
+    segmentacoes: Segmentacao[]
   }
   imagemFile: File | null
   idExistente: string | null
   anuncianteIdExistente: string | null
+}
+
+function segmentacoesIniciais(initial: any | null): Segmentacao[] {
+  if (!initial?.anuncios_segmentacoes?.length) return []
+  return initial.anuncios_segmentacoes.map((s: any) => ({
+    id: s.id,
+    estadoSigla: s.estado_sigla,
+    regiaoId: s.regiao_id,
+    cidadeId: s.cidade_id,
+    grupoId: s.grupo_id,
+    categoriaId: s.categoria_id,
+  }))
 }
 
 function AdPreview({ imagemUrl, titulo }: { imagemUrl: string; titulo: string }) {
@@ -98,16 +99,20 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 }
 
 type Props = {
-  initial: any | null // registro de `anuncios` (com join `anunciantes`) quando em edição, null quando novo
+  initial: any | null // registro de `anuncios` (com join `anunciantes` e `anuncios_segmentacoes`) quando em edição, null quando novo
   onSave: (data: AnuncioLojistaFormValues) => void
   onCancel: () => void
   enviando: boolean
 }
 
+function segmentacaoCompleta(s: Segmentacao) {
+  return !!(s.estadoSigla && s.regiaoId && s.cidadeId && s.grupoId && s.categoriaId)
+}
+
 /**
  * Responsabilidade única: capturar e validar os dados de um anúncio de
- * lojista (cadastro ou edição). Não sabe nada sobre listagem, Supabase,
- * ou o fallback Google — isso fica em outros componentes/service.
+ * lojista (cadastro ou edição), incluindo N linhas de segmentação. Não
+ * sabe nada sobre listagem, Supabase, ou o fallback Google.
  */
 export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Props) {
   const isEdicao = !!initial
@@ -117,9 +122,8 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
   const [whatsapp, setWhatsapp] = useState(initial?.anunciantes?.whatsapp ?? '')
   const [titulo, setTitulo] = useState(initial?.titulo ?? '')
   const [linkDestino, setLinkDestino] = useState(initial?.link_destino ?? '')
-  const [categoriaId, setCategoriaId] = useState(initial?.categoria_id ?? CATEGORIAS[0].id)
-  const [cidadeId, setCidadeId] = useState(initial?.cidade_id ?? CIDADES[0].id)
   const [posicao, setPosicao] = useState(initial?.posicao ?? 'entre_cards')
+  const [segmentacoes, setSegmentacoes] = useState<Segmentacao[]>(segmentacoesIniciais(initial))
   const [imagemUrl, setImagemUrl] = useState(initial?.imagem_url ?? '')
   const [imagemFile, setImagemFile] = useState<File | null>(null)
   const [modoImagem, setModoImagem] = useState<'upload' | 'url'>('upload')
@@ -144,6 +148,15 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
     if (!razaoSocial.trim()) return setErro('Informe o nome/razão social.')
     if (!titulo.trim()) return setErro('Informe um título interno.')
     if (!imagemUrl) return setErro('Adicione uma imagem — por upload ou URL.')
+
+    const segsValidas = segmentacoes.filter(segmentacaoCompleta)
+    if (segsValidas.length === 0) {
+      return setErro('Preencha ao menos uma segmentação completa (estado, região, cidade, grupo e categoria).')
+    }
+    if (segsValidas.length !== segmentacoes.length) {
+      return setErro('Há uma segmentação incompleta — preencha todos os campos ou remova a linha.')
+    }
+
     setErro('')
 
     onSave({
@@ -153,9 +166,8 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
         linkDestino,
         imagemUrl: modoImagem === 'url' ? imagemUrl : initial?.imagem_url ?? '',
         posicao,
-        categoriaId,
-        cidadeId,
         ativo,
+        segmentacoes: segsValidas,
       },
       imagemFile: modoImagem === 'upload' ? imagemFile : null,
       idExistente: initial?.id ?? null,
@@ -199,19 +211,6 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
           <Field label="Link de destino">
             <input className={inputClass} value={linkDestino} onChange={(e) => setLinkDestino(e.target.value)} placeholder="https://wa.me/55..." />
           </Field>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Categoria">
-              <select className={inputClass} value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
-                {CATEGORIAS.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
-            </Field>
-            <Field label="Cidade">
-              <select className={inputClass} value={cidadeId} onChange={(e) => setCidadeId(e.target.value)}>
-                {CIDADES.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
-            </Field>
-          </div>
 
           <Field label="Onde aparece" hint="Uma posição por anúncio — duplique o cadastro para outro local">
             <select className={inputClass} value={posicao} onChange={(e) => setPosicao(e.target.value)}>
@@ -257,6 +256,10 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
             <p className="mt-1.5 text-[10px] text-zinc-300">Deixe os cantos livres — o selo "Publicidade" é fixo do sistema</p>
           </div>
         </div>
+      </div>
+
+      <div className="mt-5">
+        <SegmentacaoFields value={segmentacoes} onChange={setSegmentacoes} />
       </div>
 
       {erro && (
