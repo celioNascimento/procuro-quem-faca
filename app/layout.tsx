@@ -8,6 +8,7 @@ import CookieConsent from "@/components/CookieConsent"
 import LogAcesso from "@/components/LogAcesso"
 import { PostHogProvider } from "@/components/PostHogProvider"
 import { PostHogPageview } from "@/components/PostHogPageview"
+import { Analytics } from "@vercel/analytics/next"
 
 export { metadata } from "./metadata"
 
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <FooterWrapper />
           <CookieConsent />
           <LogAcesso />
+          <Analytics />
         </PostHogProvider>
       </body>
     </html>
