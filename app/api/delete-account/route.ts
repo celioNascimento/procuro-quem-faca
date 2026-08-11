@@ -1,6 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+// app/api/delete-account/route.ts
+
 import { NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST() {
   try {
@@ -13,11 +15,7 @@ export async function POST() {
     }
 
     // Cliente admin com service role — único com poder de deletar usuários auth
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,  // nunca exposta no client
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    )
+    const supabaseAdmin = getAdminClient()
 
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id)
 
