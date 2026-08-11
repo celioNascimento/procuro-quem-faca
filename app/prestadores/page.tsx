@@ -18,6 +18,16 @@ import { supabase } from '@/lib/supabase/client'
 import type { Prestador } from '@/types/prestador'
 import type { Anuncio } from '@/types/ads'
 
+// Função utilitária para embaralhar o array (Fisher-Yates Shuffle)
+function shuffleArray<T>(array: T[]): T[] {
+  const newArray = [...array]
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]]
+  }
+  return newArray
+}
+
 /* Botão de cidade reutilizado no mobile (chip) e no desktop (linha da sidebar) */
 function BotaoCidade({
   nome,
@@ -99,7 +109,9 @@ function ListaConteudo() {
         .eq('status_aprovacao', 'aprovado')
 
       if (!error && data) {
-        setAnuncios(data as Anuncio[])
+        // Embaralha os anúncios logo que chegam do banco para democratizar as impressões
+        const anunciosEmbaralhados = shuffleArray(data as Anuncio[])
+        setAnuncios(anunciosEmbaralhados)
       }
     }
     carregarAnuncios()
@@ -254,12 +266,12 @@ function ListaConteudo() {
                 <Fragment key={p.id}>
                   <PrestadorCard prestador={p} session={session} />
                   
-                  {/* Anúncio intercalado a cada 5 cards */}
-                  {(index + 1) % 5 === 0 && (
+                  {/* Anúncio intercalado a cada 4 cards, usando rodízio sequencial do array já embaralhado */}
+                  {(index + 1) % 4 === 0 && (
                     <div className="lg:col-span-2">
                       <AdCard 
                         page="prestadores" 
-                        anuncio={anunciosMeio[Math.floor(index / 5) % Math.max(anunciosMeio.length, 1)] ?? null} 
+                        anuncio={anunciosMeio[Math.floor(index / 4) % Math.max(anunciosMeio.length, 1)] ?? null} 
                         categoria={queryBusca || filtroHab || ''} 
                       />
                     </div>
