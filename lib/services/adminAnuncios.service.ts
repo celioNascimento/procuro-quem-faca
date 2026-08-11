@@ -24,6 +24,7 @@ export type AnuncioComAnunciante = {
   publico_alvo: string
   status_aprovacao: string
   anunciante_id: string
+  data_expiracao: string | null // <-- Adicionado
   created_at: string
   anunciantes: {
     id: string
@@ -47,6 +48,7 @@ export type NovoAnuncioInput = {
   imagemUrl: string
   posicao: string // 'topo_busca' | 'entre_cards' | 'topo_perfil'
   ativo: boolean
+  dataExpiracao: string | null // <-- Adicionado
   segmentacoes: Segmentacao[] // mínimo 1
 }
 
@@ -70,6 +72,7 @@ export async function criarAnuncio(input: NovoAnuncioInput) {
       posicao: input.posicao,
       tipo: 'proprio',
       status: input.ativo,
+      data_expiracao: input.dataExpiracao, // <-- Adicionado no Insert
       status_aprovacao: 'aprovado',
       publico_alvo: 'todos',
     })
@@ -110,6 +113,7 @@ export async function atualizarAnuncio(
   if (input.imagemUrl !== undefined) payload.imagem_url = input.imagemUrl
   if (input.posicao !== undefined) payload.posicao = input.posicao
   if (input.ativo !== undefined) payload.status = input.ativo
+  if (input.dataExpiracao !== undefined) payload.data_expiracao = input.dataExpiracao // <-- Adicionado no Update
 
   const { data, error } = await supabase.from('anuncios').update(payload).eq('id', id).select().single()
   if (error) throw error

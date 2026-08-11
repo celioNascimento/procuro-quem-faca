@@ -1,6 +1,8 @@
-//  app/(perfil)/[slug]/page.tsx
+// app/(perfil)/[slug]/page.tsx
 
 'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import PerfilSkeleton from '@/components/skeletons/PerfilSkeleton'
@@ -9,13 +11,15 @@ import PerfilSobre from '@/components/profile/PerfilSobre'
 import PerfilCTA from '@/components/profile/PerfilCTA'
 import PerfilAvaliacoes from '@/components/profile/PerfilAvaliacoes'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
-import { AdCard } from '../../../components/ads/AdCard'
+import { AdCard } from '@/components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
 import { insertLog } from '@/lib/db/logs'
 import { useCompartilharPerfil } from '@/hooks/useCompartilharPerfil'
 import { BadgeCheck } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
+import type { Anuncio } from '@/types/ads'
 
 // ── Sub-componente interno — hooks chamados após os dados estarem garantidos ──
 
@@ -36,6 +40,25 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
   })
 
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
+  const [anuncioTopo, setAnuncioTopo] = useState<Anuncio | null>(null)
+
+  useEffect(() => {
+    async function carregarAnuncio() {
+      const { data, error } = await supabase
+        .from('anuncios')
+        .select('*')
+        .eq('status', true)
+        .eq('status_aprovacao', 'aprovado')
+        .eq('posicao', 'topo_perfil')
+
+      if (!error && data && data.length > 0) {
+        // Faz um rodízio aleatório caso haja mais de um anúncio ativo para essa posição
+        const adAleatorio = data[Math.floor(Math.random() * data.length)]
+        setAnuncioTopo(adAleatorio as Anuncio)
+      }
+    }
+    carregarAnuncio()
+  }, [])
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
@@ -45,6 +68,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
         <div className="mx-auto flex w-full max-w-3xl items-center justify-center animate-in fade-in duration-500">
           <AdCard
             page="perfil_prestador"
+            anuncio={anuncioTopo}
             categoria={prestador.categorias?.nome || prestador.categoria}
           />
         </div>

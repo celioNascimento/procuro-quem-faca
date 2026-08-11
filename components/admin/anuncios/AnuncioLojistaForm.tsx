@@ -29,6 +29,7 @@ export type AnuncioLojistaFormValues = {
     imagemUrl: string
     posicao: string
     ativo: boolean
+    dataExpiracao: string | null
     segmentacoes: Segmentacao[]
   }
   imagemFile: File | null
@@ -99,7 +100,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 }
 
 type Props = {
-  initial: any | null // registro de `anuncios` (com join `anunciantes` e `anuncios_segmentacoes`) quando em edição, null quando novo
+  initial: any | null
   onSave: (data: AnuncioLojistaFormValues) => void
   onCancel: () => void
   enviando: boolean
@@ -109,11 +110,6 @@ function segmentacaoCompleta(s: Segmentacao) {
   return !!(s.estadoSigla && s.regiaoId && s.cidadeId && s.grupoId && s.categoriaId)
 }
 
-/**
- * Responsabilidade única: capturar e validar os dados de um anúncio de
- * lojista (cadastro ou edição), incluindo N linhas de segmentação. Não
- * sabe nada sobre listagem, Supabase, ou o fallback Google.
- */
 export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Props) {
   const isEdicao = !!initial
 
@@ -123,6 +119,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
   const [titulo, setTitulo] = useState(initial?.titulo ?? '')
   const [linkDestino, setLinkDestino] = useState(initial?.link_destino ?? '')
   const [posicao, setPosicao] = useState(initial?.posicao ?? 'entre_cards')
+  const [dataExpiracao, setDataExpiracao] = useState(initial?.data_expiracao ? new Date(initial.data_expiracao).toISOString().slice(0, 16) : '')
   const [segmentacoes, setSegmentacoes] = useState<Segmentacao[]>(segmentacoesIniciais(initial))
   const [imagemUrl, setImagemUrl] = useState(initial?.imagem_url ?? '')
   const [imagemFile, setImagemFile] = useState<File | null>(null)
@@ -167,6 +164,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
         imagemUrl: modoImagem === 'url' ? imagemUrl : initial?.imagem_url ?? '',
         posicao,
         ativo,
+        dataExpiracao: dataExpiracao ? new Date(dataExpiracao).toISOString() : null,
         segmentacoes: segsValidas,
       },
       imagemFile: modoImagem === 'upload' ? imagemFile : null,
@@ -216,6 +214,10 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
             <select className={inputClass} value={posicao} onChange={(e) => setPosicao(e.target.value)}>
               {POSICOES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
+          </Field>
+
+          <Field label="Data de validade" hint="Deixe vazio para o anúncio não expirar">
+            <input className={inputClass} type="datetime-local" value={dataExpiracao} onChange={(e) => setDataExpiracao(e.target.value)} />
           </Field>
 
           <div className="flex items-center justify-between rounded-xl bg-zinc-50 border border-zinc-100 px-4 py-3">

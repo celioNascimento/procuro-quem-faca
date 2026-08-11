@@ -23,6 +23,8 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 }
 
 function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
+  const isExpirado = anuncio.data_expiracao && new Date(anuncio.data_expiracao) < new Date()
+
   return (
     <div className="flex items-center gap-4 rounded-2xl border border-zinc-100 bg-white p-3 hover:border-zinc-200 transition-colors">
       <div className="h-14 w-28 shrink-0 overflow-hidden rounded-lg bg-zinc-50">
@@ -32,6 +34,11 @@ function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
         <p className="truncate text-[13px] font-semibold text-zinc-800">{anuncio.anunciantes?.razao_social ?? anuncio.titulo}</p>
         <p className="truncate text-[10px] text-zinc-400 uppercase tracking-wide mt-0.5">
           {anuncio.posicao} · {anuncio.cliques ?? 0} cliques · {anuncio.impressoes ?? 0} impressões
+          {anuncio.data_expiracao && (
+            <span className={isExpirado ? 'text-red-500 ml-1 font-semibold' : 'text-emerald-500 ml-1 font-semibold'}>
+              · {isExpirado ? 'Expirado' : `Válido até ${new Date(anuncio.data_expiracao).toLocaleDateString('pt-BR')}`}
+            </span>
+          )}
         </p>
       </div>
       <Toggle checked={anuncio.status} onChange={(v: boolean) => onToggleAtivo(anuncio.id, v)} />
@@ -53,12 +60,6 @@ type Props = {
   onToggleAtivo: (id: string, ativo: boolean) => void
 }
 
-/**
- * Responsabilidade única: exibir e permitir ações rápidas (editar, excluir,
- * toggle ativo) sobre os anúncios já cadastrados. Não sabe nada sobre
- * formulário, Supabase, ou criação de conta — isso fica no hook/service e
- * no AnuncioLojistaForm.
- */
 export function AnuncioLojistaLista({ anuncios, loading, onEdit, onDelete, onToggleAtivo }: Props) {
   const [confirmarExclusao, setConfirmarExclusao] = useState<string | null>(null)
 
