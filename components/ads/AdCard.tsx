@@ -48,9 +48,14 @@ export function AdCard({ page, anuncio, categoria }: Props) {
         href={anuncio.link_destino || '#'} 
         target="_blank" 
         rel="noopener noreferrer" 
-        className="block my-2 w-full overflow-hidden rounded-2xl shadow-sm hover:opacity-95 transition-opacity"
+        className="relative block my-2 w-full overflow-hidden rounded-2xl shadow-sm hover:opacity-95 transition-opacity"
       >
         <img src={anuncio.imagem_url} alt={anuncio.titulo} className="w-full h-auto object-cover" />
+        <div className="pointer-events-none absolute right-3 top-3 z-10">
+          <span className="rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
+            Publicidade
+          </span>
+        </div>
       </a>
     )
   }
