@@ -1,4 +1,4 @@
-// api/admin/anunciantes/route.ts
+//api/admin/anunciantes/route.ts
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
