@@ -1,10 +1,10 @@
-//app/prestadores/page.tsx
+// app/prestadores/page.tsx
 
 'use client'
 
 export const dynamic = 'force-dynamic'
 
-import { Fragment, Suspense } from 'react'
+import { Fragment, Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { usePrestadores } from '@/hooks/usePrestadores'
 import { useSession } from '@/hooks/useSession'
@@ -14,7 +14,9 @@ import { AdCard } from '@/components/ads/AdCard'
 import { MapPin, Filter, AlertCircle, X } from 'lucide-react'
 import { getTituloBusca } from '@/lib/prestadorUtils'
 import { ListaSkeleton } from '@/components/skeletons/ListaSkeletonPrestadores'
+import { supabase } from '@/lib/supabase/client'
 import type { Prestador } from '@/types/prestador'
+import type { Anuncio } from '@/types/ads'
 
 /* Botão de cidade reutilizado no mobile (chip) e no desktop (linha da sidebar) */
 function BotaoCidade({
@@ -85,6 +87,24 @@ function ListaConteudo() {
     usePrestadores(queryBusca, filtroHab, filtroCidNome)
   const session = useSession()
 
+  // Estado para armazenar os anúncios públicos
+  const [anuncios, setAnuncios] = useState<Anuncio[]>([])
+
+  useEffect(() => {
+    async function carregarAnuncios() {
+      const { data, error } = await supabase
+        .from('anuncios')
+        .select('*')
+        .eq('status', true)
+        .eq('status_aprovacao', 'aprovado')
+
+      if (!error && data) {
+        setAnuncios(data as Anuncio[])
+      }
+    }
+    carregarAnuncios()
+  }, [])
+
   const tituloBusca = getTituloBusca(queryBusca, filtroCidNome)
 
   const contarCidade = (nome: string) => {
@@ -97,6 +117,10 @@ function ListaConteudo() {
   }
 
   const temFiltro = Boolean(filtroCidNome)
+  
+  // Separação de anúncios por posição
+  const anunciosTopo = anuncios.filter(a => a.posicao === 'topo_busca')
+  const anunciosMeio = anuncios.filter(a => a.posicao === 'entre_cards')
 
   return (
     <>
@@ -218,16 +242,26 @@ function ListaConteudo() {
               {/* Anúncio no topo da lista (ocupa a linha inteira) */}
               {prestadoresExibidos.length > 0 && (
                 <div className="lg:col-span-2">
-                  <AdCard page="lista_topo" anuncio={null} categoria={queryBusca || filtroHab || ''} />
+                  <AdCard 
+                    page="lista_topo" 
+                    anuncio={anunciosTopo[0] ?? null} 
+                    categoria={queryBusca || filtroHab || ''} 
+                  />
                 </div>
               )}
 
               {prestadoresExibidos.map((p: Prestador, index: number) => (
                 <Fragment key={p.id}>
                   <PrestadorCard prestador={p} session={session} />
+                  
+                  {/* Anúncio intercalado a cada 5 cards */}
                   {(index + 1) % 5 === 0 && (
                     <div className="lg:col-span-2">
-                      <AdCard page="prestadores" anuncio={null} categoria={queryBusca || filtroHab || ''} />
+                      <AdCard 
+                        page="prestadores" 
+                        anuncio={anunciosMeio[Math.floor(index / 5) % Math.max(anunciosMeio.length, 1)] ?? null} 
+                        categoria={queryBusca || filtroHab || ''} 
+                      />
                     </div>
                   )}
                 </Fragment>
