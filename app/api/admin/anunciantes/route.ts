@@ -1,17 +1,7 @@
-//api/admin/anunciantes/route.ts
+// app/api/admin/anunciantes/route.ts
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-// Client com service role — só usado server-side, nunca exposto ao browser.
-// Segue o mesmo padrão de /api/delete-account (ver 14-glossario.md > Exclusão de conta).
-function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-  )
-}
+import { getAdminClient } from '@/lib/supabase/admin'
 
 function gerarSenhaTemporaria() {
   // Senha temporária legível o suficiente pra repassar por WhatsApp, mas com
