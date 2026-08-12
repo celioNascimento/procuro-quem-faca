@@ -127,18 +127,18 @@ export function SimuladorInventarioModal({ onClose }: Props) {
               </select>
             </div>
             <div>
-              <label className={labelClass}>Categoria</label>
-              <select className={inputClass} value={categoriaId} onChange={e => setCategoriaId(e.target.value)} disabled={!grupoId}>
-                <option value="">Selecione primeiro o Grupo</option>
-                {categorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
-            </div>
-            <div className="col-span-2">
                <label className={labelClass}>Grupo (Filtro auxiliar)</label>
                <select className={inputClass} value={grupoId} onChange={e => { setGrupoId(e.target.value); setCategoriaId('') }}>
                  <option value="">Selecione</option>
                  {grupos.map(g => <option key={g.id} value={g.id}>{g.nome}</option>)}
                </select>
+            </div>
+            <div className="col-span-2">
+              <label className={labelClass}>Categoria</label>
+              <select className={inputClass} value={categoriaId} onChange={e => setCategoriaId(e.target.value)} disabled={!grupoId}>
+                <option value="">Selecione primeiro o Grupo</option>
+                {categorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              </select>
             </div>
           </div>
         </div>
