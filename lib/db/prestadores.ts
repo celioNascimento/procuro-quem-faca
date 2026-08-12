@@ -1,11 +1,9 @@
-//lib/db/prestadores.ts
-
 import { supabase } from '@/lib/supabase'
 
 export async function getPrestadoresAtivos(signal?: AbortSignal) {
   const query = supabase
     .from('prestadores')
-    .select('*, cidades(id, nome, estado_sigla, regiao_id), categorias(nome)')
+    .select('*, cidades(id, nome, estado_sigla, regiao_id), categorias(id, nome)')
     .eq('status', 'ativo')
 
   if (signal) query.abortSignal(signal)

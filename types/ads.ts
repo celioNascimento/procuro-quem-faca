@@ -23,5 +23,7 @@ export type Anuncio = {
   imagem_url?: string
   link_destino?: string
   titulo?: string
-  data_expiracao?: string // <-- Adicionado
+  data_inicio?: string 
+  data_expiracao?: string
+  valor_total?: number
 }

@@ -1,6 +1,7 @@
 // types/perfil.ts
 
 import type { Prestador } from './prestador'
+export type { AvaliacaoPerfil } from './avaliacao'
 
 export interface FotoProjeto {
   id: string      
@@ -19,14 +20,6 @@ export interface ProjetoPerfil {
   avaliacoes: { id: string; indica: boolean; comentario?: string | null }[]
 }
 
-export interface AvaliacaoPerfil {
-  id: string
-  nota: number
-  comentario?: string
-  indica: boolean
-  created_at: string
-}
-
 export interface PrestadorPerfil extends Omit<Prestador, 'cidades' | 'categorias'> {
   cidades?: { nome: string; estado_sigla: string } | null
   categorias?: { nome: string } | null
@@ -36,6 +29,5 @@ export interface PrestadorPerfil extends Omit<Prestador, 'cidades' | 'categorias
 export interface PerfilData {
   prestador: PrestadorPerfil
   projetos: ProjetoPerfil[]
-  avaliacoes: AvaliacaoPerfil[]
   urlRetorno: string
 }

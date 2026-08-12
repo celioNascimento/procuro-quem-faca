@@ -5,7 +5,7 @@ import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, Link as LinkIcon, X, ImageOff, AlertCircle } from 'lucide-react'
 import { SegmentacaoFields } from './SegmentacaoFields'
-import type { Segmentacao } from '@/lib/services/adminAnuncios.service'
+import { validarSegmentacoesContraInventario, type Segmentacao } from '@/lib/services/adminAnuncios.service'
 
 const POSICOES = [
   { value: 'topo_busca', label: 'Topo do resultado da busca' },
@@ -29,7 +29,9 @@ export type AnuncioLojistaFormValues = {
     imagemUrl: string
     posicao: string
     ativo: boolean
+    dataInicio: string | null
     dataExpiracao: string | null
+    valorTotal: number
     segmentacoes: Segmentacao[]
   }
   imagemFile: File | null
@@ -46,6 +48,7 @@ function segmentacoesIniciais(initial: any | null): Segmentacao[] {
     cidadeId: s.cidade_id,
     grupoId: s.grupo_id,
     categoriaId: s.categoria_id,
+    valorCobrado: Number(s.valor_cobrado) || 0,
   }))
 }
 
@@ -119,6 +122,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
   const [titulo, setTitulo] = useState(initial?.titulo ?? '')
   const [linkDestino, setLinkDestino] = useState(initial?.link_destino ?? '')
   const [posicao, setPosicao] = useState(initial?.posicao ?? 'entre_cards')
+  const [dataInicio, setDataInicio] = useState(initial?.data_inicio ? new Date(initial.data_inicio).toISOString().slice(0, 16) : '')
   const [dataExpiracao, setDataExpiracao] = useState(initial?.data_expiracao ? new Date(initial.data_expiracao).toISOString().slice(0, 16) : '')
   const [segmentacoes, setSegmentacoes] = useState<Segmentacao[]>(segmentacoesIniciais(initial))
   const [imagemUrl, setImagemUrl] = useState(initial?.imagem_url ?? '')
@@ -126,6 +130,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
   const [modoImagem, setModoImagem] = useState<'upload' | 'url'>('upload')
   const [ativo, setAtivo] = useState(initial?.status ?? false)
   const [erro, setErro] = useState('')
+  const [validando, setValidando] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -140,7 +145,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
     setImagemUrl(URL.createObjectURL(file))
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!isEdicao && !email.trim()) return setErro('Informe o e-mail do lojista.')
     if (!razaoSocial.trim()) return setErro('Informe o nome/razão social.')
     if (!titulo.trim()) return setErro('Informe um título interno.')
@@ -155,6 +160,21 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
     }
 
     setErro('')
+    setValidando(true)
+    try {
+      const validacao = await validarSegmentacoesContraInventario(segsValidas, posicao, initial?.id ?? null)
+      if (!validacao.ok) {
+        setErro(validacao.mensagem)
+        return
+      }
+    } catch {
+      setErro('Não foi possível verificar a disponibilidade de vagas agora. Tente novamente em instantes.')
+      return
+    } finally {
+      setValidando(false)
+    }
+
+    const valorTotal = segsValidas.reduce((acc, seg) => acc + (seg.valorCobrado || 0), 0)
 
     onSave({
       lojista: { email, razaoSocial, whatsapp },
@@ -164,7 +184,9 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
         imagemUrl: modoImagem === 'url' ? imagemUrl : initial?.imagem_url ?? '',
         posicao,
         ativo,
+        dataInicio: dataInicio ? new Date(dataInicio).toISOString() : null,
         dataExpiracao: dataExpiracao ? new Date(dataExpiracao).toISOString() : null,
+        valorTotal,
         segmentacoes: segsValidas,
       },
       imagemFile: modoImagem === 'upload' ? imagemFile : null,
@@ -172,6 +194,8 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
       anuncianteIdExistente: initial?.anunciante_id ?? null,
     })
   }
+
+  const salvando = enviando || validando
 
   return (
     <motion.div
@@ -210,15 +234,28 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
             <input className={inputClass} value={linkDestino} onChange={(e) => setLinkDestino(e.target.value)} placeholder="https://wa.me/55..." />
           </Field>
 
-          <Field label="Onde aparece" hint="Uma posição por anúncio — duplique o cadastro para outro local">
+          <Field
+            label="Onde aparece"
+            hint={
+              posicao === 'entre_cards'
+                ? 'Várias vagas por praça (1 a cada 4 prestadores) — anunciantes revezam'
+                : 'Vaga única por praça — só um anunciante ativo por vez'
+            }
+          >
             <select className={inputClass} value={posicao} onChange={(e) => setPosicao(e.target.value)}>
               {POSICOES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
           </Field>
 
-          <Field label="Data de validade" hint="Deixe vazio para o anúncio não expirar">
-            <input className={inputClass} type="datetime-local" value={dataExpiracao} onChange={(e) => setDataExpiracao(e.target.value)} />
-          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Início da vigência" hint="Vazio = começa agora">
+              <input className={inputClass} type="datetime-local" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
+            </Field>
+
+            <Field label="Data de validade" hint="Vazio = não expira">
+              <input className={inputClass} type="datetime-local" value={dataExpiracao} onChange={(e) => setDataExpiracao(e.target.value)} />
+            </Field>
+          </div>
 
           <div className="flex items-center justify-between rounded-xl bg-zinc-50 border border-zinc-100 px-4 py-3">
             <div>
@@ -261,7 +298,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
       </div>
 
       <div className="mt-5">
-        <SegmentacaoFields value={segmentacoes} onChange={setSegmentacoes} />
+        <SegmentacaoFields value={segmentacoes} onChange={setSegmentacoes} posicao={posicao} anuncioIdExistente={initial?.id ?? null} />
       </div>
 
       {erro && (
@@ -272,8 +309,8 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
 
       <div className="mt-6 flex justify-end gap-2">
         <button onClick={onCancel} className="rounded-xl px-4 py-2.5 text-[12px] font-semibold text-zinc-400 hover:bg-zinc-100">Cancelar</button>
-        <button onClick={handleSubmit} disabled={enviando} className="rounded-xl bg-zinc-900 px-5 py-2.5 text-[12px] font-semibold text-white hover:bg-zinc-800 disabled:opacity-50">
-          {enviando ? 'Salvando...' : isEdicao ? 'Salvar alterações' : 'Cadastrar anúncio'}
+        <button onClick={handleSubmit} disabled={salvando} className="rounded-xl bg-zinc-900 px-5 py-2.5 text-[12px] font-semibold text-white hover:bg-zinc-800 disabled:opacity-50">
+          {validando ? 'Verificando vagas...' : enviando ? 'Salvando...' : isEdicao ? 'Salvar alterações' : 'Cadastrar anúncio'}
         </button>
       </div>
     </motion.div>

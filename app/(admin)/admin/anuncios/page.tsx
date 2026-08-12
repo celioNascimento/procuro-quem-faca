@@ -3,10 +3,10 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, AlertCircle, Megaphone, Copy, Check } from 'lucide-react'
+import { Plus, AlertCircle, Megaphone, Copy, Check, Search } from 'lucide-react'
 import { useAdminAnuncios } from '@/hooks/useAdminAnuncios'
 import { AnuncioLojistaForm, type AnuncioLojistaFormValues } from '@/components/admin/anuncios/AnuncioLojistaForm'
-import { AnuncioLojistaLista } from '@/components/admin/anuncios/AnuncioLojistaLista'
+import { SimuladorInventarioModal } from '@/components/admin/anuncios/SimuladorInventarioModal'
 
 const labelClass = 'text-[10px] font-medium text-zinc-400 uppercase tracking-widest'
 
@@ -20,7 +20,7 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
   }
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
         <p className="text-[10px] font-medium uppercase tracking-widest text-zinc-400">Conta criada para o lojista</p>
         <p className="mt-2 text-sm text-zinc-600">
@@ -40,17 +40,11 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
   )
 }
 
-/**
- * Orquestração pura — não contém regra de formulário nem de listagem.
- * Fluxo do lojista (banner próprio + conta mínima). O fallback Google
- * AdSense fica fora deste componente por ora (ver documentação de
- * anúncios) e, quando retomado, deve virar um componente irmão, sem
- * reescrever nada daqui.
- */
 export default function PainelAnunciosLojista() {
   const { anuncios, loading, enviando, erro, cadastrarNovoAnuncio, editarAnuncio, toggleAtivo, remover } = useAdminAnuncios()
   const [editando, setEditando] = useState<any>(null) // null | 'new' | anuncio
   const [senhaModal, setSenhaModal] = useState<{ senha: string; email: string } | null>(null)
+  const [simuladorAberto, setSimuladorAberto] = useState(false)
 
   async function handleSave(data: AnuncioLojistaFormValues) {
     try {
@@ -77,7 +71,7 @@ export default function PainelAnunciosLojista() {
 
   return (
     <div className="max-w-5xl mx-auto pb-24 px-4 md:px-6">
-      <header className="flex items-center justify-between pt-6 md:pt-10 pb-6 md:pb-8 border-b border-zinc-100">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-6 md:pt-10 pb-6 md:pb-8 border-b border-zinc-100">
         <div>
           <div className="flex items-center gap-1.5 mb-1">
             <Megaphone size={12} className="text-zinc-400" />
@@ -86,12 +80,20 @@ export default function PainelAnunciosLojista() {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 leading-none">Anúncios</h1>
         </div>
         {!editando && (
-          <button
-            onClick={() => setEditando('new')}
-            className="flex items-center gap-1.5 rounded-xl bg-zinc-900 px-4 py-2.5 text-[12px] font-semibold text-white hover:bg-zinc-800 transition-colors"
-          >
-            <Plus size={15} /> Novo anúncio
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSimuladorAberto(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5 text-[12px] font-bold text-blue-600 hover:bg-blue-100 transition-colors"
+            >
+              <Search size={15} /> Consultar Vagas
+            </button>
+            <button
+              onClick={() => setEditando('new')}
+              className="flex items-center gap-1.5 rounded-xl bg-zinc-900 px-4 py-2.5 text-[12px] font-semibold text-white hover:bg-zinc-800 transition-colors"
+            >
+              <Plus size={15} /> Novo anúncio
+            </button>
+          </div>
         )}
       </header>
 
@@ -148,6 +150,7 @@ export default function PainelAnunciosLojista() {
         onToggleAtivo={toggleAtivo}
       />
 
+      {simuladorAberto && <SimuladorInventarioModal onClose={() => setSimuladorAberto(false)} />}
       {senhaModal && <SenhaTemporariaModal senha={senhaModal.senha} email={senhaModal.email} onClose={() => setSenhaModal(null)} />}
     </div>
   )

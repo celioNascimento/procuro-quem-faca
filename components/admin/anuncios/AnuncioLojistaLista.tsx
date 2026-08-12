@@ -23,31 +23,71 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 }
 
 function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
-  const isExpirado = anuncio.data_expiracao && new Date(anuncio.data_expiracao) < new Date()
+  const agora = new Date()
+  const dataExpiracao = anuncio.data_expiracao ? new Date(anuncio.data_expiracao) : null
+  const dataInicio = anuncio.data_inicio ? new Date(anuncio.data_inicio) : null
+
+  const isExpirado = dataExpiracao && dataExpiracao < agora
+  const isAgendado = dataInicio && dataInicio > agora
+  
+  let statusText = 'Em exibição'
+  let statusClass = 'text-emerald-500'
+  
+  if (isExpirado) {
+    statusText = 'Expirado'
+    statusClass = 'text-red-500'
+  } else if (isAgendado) {
+    statusText = `Agendado (${dataInicio.toLocaleDateString('pt-BR')})`
+    statusClass = 'text-blue-500'
+  } else if (dataExpiracao) {
+    statusText = `Válido até ${dataExpiracao.toLocaleDateString('pt-BR')}`
+  }
+
+  const valorFormatado = anuncio.valor_total 
+    ? Number(anuncio.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    : 'R$ 0,00'
 
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-zinc-100 bg-white p-3 hover:border-zinc-200 transition-colors">
-      <div className="h-14 w-28 shrink-0 overflow-hidden rounded-lg bg-zinc-50">
-        {anuncio.imagem_url && <img src={anuncio.imagem_url} alt={anuncio.titulo} className="h-full w-full object-cover" />}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold text-zinc-800">{anuncio.anunciantes?.razao_social ?? anuncio.titulo}</p>
-        <p className="truncate text-[10px] text-zinc-400 uppercase tracking-wide mt-0.5">
-          {anuncio.posicao} · {anuncio.cliques ?? 0} cliques · {anuncio.impressoes ?? 0} impressões
-          {anuncio.data_expiracao && (
-            <span className={isExpirado ? 'text-red-500 ml-1 font-semibold' : 'text-emerald-500 ml-1 font-semibold'}>
-              · {isExpirado ? 'Expirado' : `Válido até ${new Date(anuncio.data_expiracao).toLocaleDateString('pt-BR')}`}
-            </span>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 rounded-2xl border border-zinc-100 bg-white p-3 hover:border-zinc-200 transition-colors overflow-hidden">
+      
+      {/* Esquerda / Topo (Mobile) - Imagem e Textos */}
+      <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto flex-1 min-w-0">
+        <div className="h-14 w-20 sm:w-28 shrink-0 overflow-hidden rounded-lg bg-zinc-50 relative">
+          {anuncio.imagem_url && <img src={anuncio.imagem_url} alt={anuncio.titulo} className="h-full w-full object-cover" />}
+          {isAgendado && (
+            <div className="absolute inset-0 bg-blue-900/60 flex items-center justify-center">
+              <span className="text-[9px] font-bold text-white uppercase tracking-widest">Espera</span>
+            </div>
           )}
-        </p>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold text-zinc-800">
+            {anuncio.anunciantes?.razao_social ?? anuncio.titulo}
+          </p>
+          <p className="truncate text-[10px] text-zinc-400 uppercase tracking-wide mt-0.5">
+            {anuncio.posicao} · {valorFormatado} · {anuncio.cliques ?? 0} cliques
+          </p>
+          <p className="truncate text-[10px] uppercase tracking-wide mt-0.5">
+            <span className={`${statusClass} font-semibold`}>
+              {statusText}
+            </span>
+          </p>
+        </div>
       </div>
-      <Toggle checked={anuncio.status} onChange={(v: boolean) => onToggleAtivo(anuncio.id, v)} />
-      <button onClick={() => onEdit(anuncio)} className="rounded-lg p-2 text-zinc-300 hover:bg-zinc-100 hover:text-zinc-700">
-        <Pencil size={15} />
-      </button>
-      <button onClick={() => onDelete(anuncio.id)} className="rounded-lg p-2 text-zinc-300 hover:bg-red-50 hover:text-red-500">
-        <Trash2 size={15} />
-      </button>
+
+      {/* Direita / Fundo (Mobile) - Botões de Ação */}
+      <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-zinc-50 mt-1 sm:mt-0">
+        <Toggle checked={anuncio.status} onChange={(v: boolean) => onToggleAtivo(anuncio.id, v)} />
+        <div className="flex items-center gap-1">
+          <button onClick={() => onEdit(anuncio)} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700">
+            <Pencil size={15} />
+          </button>
+          <button onClick={() => onDelete(anuncio.id)} className="rounded-lg p-2 text-zinc-400 hover:bg-red-50 hover:text-red-500">
+            <Trash2 size={15} />
+          </button>
+        </div>
+      </div>
+      
     </div>
   )
 }
@@ -63,9 +103,7 @@ type Props = {
 export function AnuncioLojistaLista({ anuncios, loading, onEdit, onDelete, onToggleAtivo }: Props) {
   const [confirmarExclusao, setConfirmarExclusao] = useState<string | null>(null)
 
-  if (loading) {
-    return <p className="mt-6 text-[11px] text-zinc-300 uppercase tracking-widest">Carregando...</p>
-  }
+  if (loading) return <p className="mt-6 text-[11px] text-zinc-300 uppercase tracking-widest">Carregando...</p>
 
   if (anuncios.length === 0) {
     return (

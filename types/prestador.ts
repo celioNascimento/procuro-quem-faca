@@ -1,4 +1,4 @@
-import { Cidade } from './localizacao';
+//types/prestador.ts
 
 export type AtivacaoStatus =
   | 'nao_enviado'
@@ -21,15 +21,22 @@ export type Prestador = {
   bairro?: string;
   bio?: string;
   cidades_atendidas?: string[];
-  cidades?: { nome: string; estado_sigla: string; regiao_id: string } | null;
-  categorias?: { nome: string } | null;
+  cidades?: { id?: string; nome: string; estado_sigla: string; regiao_id: string } | null;
+  categorias?: { id?: string; nome: string } | null;
   ativacao_status?: AtivacaoStatus;
+
+  // Colunas próprias do prestador (FK), presentes mesmo sem o join carregado.
+  // Aceita string | number pois PrestadorFormData (abaixo) redeclara esses
+  // campos como string | number — union precisa ser compatível nos dois tipos.
+  cidade_id?: string | number | null;
+  categoria_id?: string | number | null;
 
   // Computados
   cidade_nome: string;
   categoria: string;
   media_nota: number;
   total_avals: number;
+
 };
 
 // Interface usada para o formulário (input)
