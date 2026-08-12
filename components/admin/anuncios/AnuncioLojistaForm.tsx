@@ -29,7 +29,9 @@ export type AnuncioLojistaFormValues = {
     imagemUrl: string
     posicao: string
     ativo: boolean
+    dataInicio: string | null
     dataExpiracao: string | null
+    valorTotal: number
     segmentacoes: Segmentacao[]
   }
   imagemFile: File | null
@@ -46,6 +48,7 @@ function segmentacoesIniciais(initial: any | null): Segmentacao[] {
     cidadeId: s.cidade_id,
     grupoId: s.grupo_id,
     categoriaId: s.categoria_id,
+    valorCobrado: Number(s.valor_cobrado) || 0,
   }))
 }
 
@@ -100,7 +103,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 }
 
 type Props = {
-  initial: any | null
+  initial: any | null 
   onSave: (data: AnuncioLojistaFormValues) => void
   onCancel: () => void
   enviando: boolean
@@ -119,6 +122,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
   const [titulo, setTitulo] = useState(initial?.titulo ?? '')
   const [linkDestino, setLinkDestino] = useState(initial?.link_destino ?? '')
   const [posicao, setPosicao] = useState(initial?.posicao ?? 'entre_cards')
+  const [dataInicio, setDataInicio] = useState(initial?.data_inicio ? new Date(initial.data_inicio).toISOString().slice(0, 16) : '')
   const [dataExpiracao, setDataExpiracao] = useState(initial?.data_expiracao ? new Date(initial.data_expiracao).toISOString().slice(0, 16) : '')
   const [segmentacoes, setSegmentacoes] = useState<Segmentacao[]>(segmentacoesIniciais(initial))
   const [imagemUrl, setImagemUrl] = useState(initial?.imagem_url ?? '')
@@ -155,6 +159,8 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
     }
 
     setErro('')
+    
+    const valorTotal = segsValidas.reduce((acc, seg) => acc + (seg.valorCobrado || 0), 0)
 
     onSave({
       lojista: { email, razaoSocial, whatsapp },
@@ -164,7 +170,9 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
         imagemUrl: modoImagem === 'url' ? imagemUrl : initial?.imagem_url ?? '',
         posicao,
         ativo,
+        dataInicio: dataInicio ? new Date(dataInicio).toISOString() : null,
         dataExpiracao: dataExpiracao ? new Date(dataExpiracao).toISOString() : null,
+        valorTotal,
         segmentacoes: segsValidas,
       },
       imagemFile: modoImagem === 'upload' ? imagemFile : null,
@@ -216,9 +224,15 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
             </select>
           </Field>
 
-          <Field label="Data de validade" hint="Deixe vazio para o anúncio não expirar">
-            <input className={inputClass} type="datetime-local" value={dataExpiracao} onChange={(e) => setDataExpiracao(e.target.value)} />
-          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Início da vigência" hint="Vazio = começa agora">
+              <input className={inputClass} type="datetime-local" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
+            </Field>
+
+            <Field label="Data de validade" hint="Vazio = não expira">
+              <input className={inputClass} type="datetime-local" value={dataExpiracao} onChange={(e) => setDataExpiracao(e.target.value)} />
+            </Field>
+          </div>
 
           <div className="flex items-center justify-between rounded-xl bg-zinc-50 border border-zinc-100 px-4 py-3">
             <div>
