@@ -18,7 +18,6 @@ import { supabase } from '@/lib/supabase/client'
 import type { Prestador } from '@/types/prestador'
 import type { Anuncio } from '@/types/ads'
 
-// Função utilitária para embaralhar o array (Fisher-Yates Shuffle)
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array]
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -28,7 +27,6 @@ function shuffleArray<T>(array: T[]): T[] {
   return newArray
 }
 
-/* Botão de cidade reutilizado no mobile (chip) e no desktop (linha da sidebar) */
 function BotaoCidade({
   nome,
   count,
@@ -97,21 +95,21 @@ function ListaConteudo() {
     usePrestadores(queryBusca, filtroHab, filtroCidNome)
   const session = useSession()
 
-  // Estado para armazenar os anúncios públicos
   const [anuncios, setAnuncios] = useState<Anuncio[]>([])
 
   useEffect(() => {
     async function carregarAnuncios() {
+      const agora = new Date().toISOString()
       const { data, error } = await supabase
         .from('anuncios')
         .select('*')
         .eq('status', true)
         .eq('status_aprovacao', 'aprovado')
+        .or(`data_inicio.is.null,data_inicio.lte.${agora}`)
+        .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`)
 
       if (!error && data) {
-        // Embaralha os anúncios logo que chegam do banco para democratizar as impressões
-        const anunciosEmbaralhados = shuffleArray(data as Anuncio[])
-        setAnuncios(anunciosEmbaralhados)
+        setAnuncios(shuffleArray(data as Anuncio[]))
       }
     }
     carregarAnuncios()
@@ -130,13 +128,11 @@ function ListaConteudo() {
 
   const temFiltro = Boolean(filtroCidNome)
   
-  // Separação de anúncios por posição
   const anunciosTopo = anuncios.filter(a => a.posicao === 'topo_busca')
   const anunciosMeio = anuncios.filter(a => a.posicao === 'entre_cards')
 
   return (
     <>
-      {/* Barra de filtros — apenas MOBILE / tablet (scroll horizontal) */}
       {!loading && cidadesDisponiveis.length > 0 && (
         <div className="lg:hidden sticky top-16 md:top-28 z-50 bg-[#FDFDFD]/98 backdrop-blur-sm border-b border-slate-100 shadow-sm">
           <div className="max-w-6xl mx-auto px-5 md:px-6 py-2">
@@ -173,10 +169,7 @@ function ListaConteudo() {
         </div>
       )}
 
-      {/* Grid: sidebar no desktop, coluna única no mobile */}
       <div className="max-w-6xl mx-auto px-5 md:px-6 pt-6 lg:grid lg:grid-cols-[260px_1fr] lg:gap-8">
-
-        {/* Sidebar de filtros — apenas DESKTOP */}
         {!loading && cidadesDisponiveis.length > 0 && (
           <aside className="hidden lg:block">
             <div className="sticky top-32 space-y-3">
@@ -212,9 +205,7 @@ function ListaConteudo() {
           </aside>
         )}
 
-        {/* Coluna principal */}
         <div className="space-y-6 min-w-0">
-
           <div className="flex items-center justify-between border-l-4 border-blue-600 pl-4 py-1">
             <div>
               <h1 className="text-[15px] md:text-[16px] font-bold text-slate-800 leading-none text-balance">
@@ -251,7 +242,6 @@ function ListaConteudo() {
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Anúncio no topo da lista (ocupa a linha inteira) */}
               {prestadoresExibidos.length > 0 && (
                 <div className="lg:col-span-2">
                   <AdCard 
@@ -266,7 +256,6 @@ function ListaConteudo() {
                 <Fragment key={p.id}>
                   <PrestadorCard prestador={p} session={session} />
                   
-                  {/* Anúncio intercalado a cada 4 cards, usando rodízio sequencial do array já embaralhado */}
                   {(index + 1) % 4 === 0 && (
                     <div className="lg:col-span-2">
                       <AdCard 
