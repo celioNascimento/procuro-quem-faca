@@ -81,7 +81,9 @@ export function usePrestadores(queryBusca: string, filtroHab: string, filtroCidN
         const normalizados: Prestador[] = (pData || []).map(p => ({
           ...p,
           cidade_nome: p.cidades?.nome || '',
+          cidade_id: p.cidades?.id || p.cidade_id || null,
           categoria: p.categorias?.nome || 'Profissional',
+          categoria_id: p.categorias?.id || p.categoria_id || null,
           media_nota: mediaMap[p.id] ? mediaMap[p.id].soma / mediaMap[p.id].total : 0,
           total_avals: mediaMap[p.id]?.total || 0,
         }))

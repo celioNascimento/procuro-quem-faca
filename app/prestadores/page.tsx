@@ -4,7 +4,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { Fragment, Suspense, useEffect, useState } from 'react'
+import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { usePrestadores } from '@/hooks/usePrestadores'
 import { useSession } from '@/hooks/useSession'
@@ -15,6 +15,7 @@ import { MapPin, Filter, AlertCircle, X } from 'lucide-react'
 import { getTituloBusca } from '@/lib/prestadorUtils'
 import { ListaSkeleton } from '@/components/skeletons/ListaSkeletonPrestadores'
 import { supabase } from '@/lib/supabase/client'
+import { listarAnunciosAtivosPorPraca, type AnuncioComAnunciante } from '@/lib/services/adminAnuncios.service'
 import type { Prestador } from '@/types/prestador'
 import type { Anuncio } from '@/types/ads'
 
@@ -25,6 +26,26 @@ function shuffleArray<T>(array: T[]): T[] {
     [newArray[i], newArray[j]] = [newArray[j], newArray[i]]
   }
   return newArray
+}
+
+/**
+ * Round-robin embaralhado: percorre a lista de anúncios em ciclos, embaralhando
+ * a cada volta. Garante que, dentro do possível (posições >= anunciantes),
+ * todo anunciante ativo apareça pelo menos 1x antes de qualquer repetição,
+ * mantendo a ordem aleatória a cada carregamento de página.
+ */
+function criarSorteador<T>(itens: T[]) {
+  let ciclo: T[] = []
+  let ponteiro = 0
+
+  return function proximo(): T | null {
+    if (itens.length === 0) return null
+    if (ponteiro >= ciclo.length) {
+      ciclo = shuffleArray(itens)
+      ponteiro = 0
+    }
+    return ciclo[ponteiro++]
+  }
 }
 
 function BotaoCidade({
@@ -85,6 +106,73 @@ function BotaoCidade({
   )
 }
 
+/**
+ * Card "entre_cards" ancorado na praça (cidade+categoria) do prestador que
+ * fecha o grupo de 4. Busca (com cache em memória) o pool de anúncios ativos
+ * daquela praça e sorteia entre eles via round-robin embaralhado — garantindo,
+ * dentro do possível, que todo anunciante ativo apareça na página.
+ */
+function AdCardEntreCards({
+  prestadorAncora,
+  categoriaFallback,
+  cachePracaRef,
+  sorteadoresRef,
+}: {
+  prestadorAncora: Prestador
+  categoriaFallback: string
+  cachePracaRef: React.MutableRefObject<Map<string, AnuncioComAnunciante[]>>
+  sorteadoresRef: React.MutableRefObject<Map<string, () => AnuncioComAnunciante | null>>
+}) {
+  const cidadeId = prestadorAncora.cidade_id ? String(prestadorAncora.cidade_id) : null
+  const categoriaId = prestadorAncora.categoria_id ? String(prestadorAncora.categoria_id) : null
+  const chavePraca = cidadeId && categoriaId ? `${cidadeId}::${categoriaId}` : null
+
+  const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined) // undefined = carregando
+
+  useEffect(() => {
+    if (!chavePraca || !cidadeId || !categoriaId) {
+      setAnuncio(null)
+      return
+    }
+
+    let cancelado = false
+
+    async function resolver() {
+      const cache = cachePracaRef.current
+      let anunciosDaPraca = cache.get(chavePraca!)
+
+      if (!anunciosDaPraca) {
+        anunciosDaPraca = await listarAnunciosAtivosPorPraca(cidadeId!, categoriaId!, 'entre_cards')
+        cache.set(chavePraca!, anunciosDaPraca)
+      }
+
+      if (cancelado) return
+
+      let sortear = sorteadoresRef.current.get(chavePraca!)
+      if (!sortear) {
+        sortear = criarSorteador(anunciosDaPraca)
+        sorteadoresRef.current.set(chavePraca!, sortear)
+      }
+
+      setAnuncio(sortear())
+    }
+
+    resolver().catch(() => {
+      if (!cancelado) setAnuncio(null)
+    })
+
+    return () => {
+      cancelado = true
+    }
+  }, [chavePraca, cidadeId, categoriaId, cachePracaRef, sorteadoresRef])
+
+  // Enquanto resolve a praça específica, evita "pulo" de layout mostrando
+  // o fallback — ele já é leve e não depende do resultado do sorteio.
+  const anuncioParaExibir = anuncio === undefined ? null : (anuncio as unknown as Anuncio | null)
+
+  return <AdCard page="prestadores" anuncio={anuncioParaExibir} categoria={categoriaFallback} />
+}
+
 function ListaConteudo() {
   const searchParams = useSearchParams()
   const queryBusca = (searchParams.get('q') || '').trim()
@@ -95,25 +183,40 @@ function ListaConteudo() {
     usePrestadores(queryBusca, filtroHab, filtroCidNome)
   const session = useSession()
 
-  const [anuncios, setAnuncios] = useState<Anuncio[]>([])
+  const [anunciosTopo, setAnunciosTopo] = useState<Anuncio[]>([])
+
+  // Cache em memória por praça (cidade_id::categoria_id) — evita refetch a
+  // cada render/scroll enquanto o usuário permanece na mesma busca.
+  const cachePracaRef = useRef<Map<string, AnuncioComAnunciante[]>>(new Map())
+  const sorteadoresRef = useRef<Map<string, () => AnuncioComAnunciante | null>>(new Map())
 
   useEffect(() => {
-    async function carregarAnuncios() {
+    // topo_busca continua com vaga única — mantém a lógica antiga simples,
+    // buscando os anúncios "topo_busca" globais e deixando o AdCard escolher.
+    async function carregarAnunciosTopo() {
       const agora = new Date().toISOString()
       const { data, error } = await supabase
         .from('anuncios')
         .select('*')
         .eq('status', true)
         .eq('status_aprovacao', 'aprovado')
+        .eq('posicao', 'topo_busca')
         .or(`data_inicio.is.null,data_inicio.lte.${agora}`)
         .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`)
 
       if (!error && data) {
-        setAnuncios(shuffleArray(data as Anuncio[]))
+        setAnunciosTopo(shuffleArray(data as Anuncio[]))
       }
     }
-    carregarAnuncios()
+    carregarAnunciosTopo()
   }, [])
+
+  // Limpa o cache de praças quando a busca muda de fato (nova lista de
+  // prestadores), pra não acumular pools de praças que não aparecem mais.
+  useEffect(() => {
+    cachePracaRef.current = new Map()
+    sorteadoresRef.current = new Map()
+  }, [queryBusca, filtroHab, filtroCidNome])
 
   const tituloBusca = getTituloBusca(queryBusca, filtroCidNome)
 
@@ -127,9 +230,6 @@ function ListaConteudo() {
   }
 
   const temFiltro = Boolean(filtroCidNome)
-  
-  const anunciosTopo = anuncios.filter(a => a.posicao === 'topo_busca')
-  const anunciosMeio = anuncios.filter(a => a.posicao === 'entre_cards')
 
   return (
     <>
@@ -244,10 +344,10 @@ function ListaConteudo() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {prestadoresExibidos.length > 0 && (
                 <div className="lg:col-span-2">
-                  <AdCard 
-                    page="lista_topo" 
-                    anuncio={anunciosTopo[0] ?? null} 
-                    categoria={queryBusca || filtroHab || ''} 
+                  <AdCard
+                    page="lista_topo"
+                    anuncio={anunciosTopo[0] ?? null}
+                    categoria={queryBusca || filtroHab || ''}
                   />
                 </div>
               )}
@@ -255,13 +355,14 @@ function ListaConteudo() {
               {prestadoresExibidos.map((p: Prestador, index: number) => (
                 <Fragment key={p.id}>
                   <PrestadorCard prestador={p} session={session} />
-                  
+
                   {(index + 1) % 4 === 0 && (
                     <div className="lg:col-span-2">
-                      <AdCard 
-                        page="prestadores" 
-                        anuncio={anunciosMeio[Math.floor(index / 4) % Math.max(anunciosMeio.length, 1)] ?? null} 
-                        categoria={queryBusca || filtroHab || ''} 
+                      <AdCardEntreCards
+                        prestadorAncora={p}
+                        categoriaFallback={queryBusca || filtroHab || p.categoria || ''}
+                        cachePracaRef={cachePracaRef}
+                        sorteadoresRef={sorteadoresRef}
                       />
                     </div>
                   )}

@@ -2,9 +2,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, CircleCheck, CircleAlert, Loader2 } from 'lucide-react'
 import { useSegmentacaoReferencia } from '@/hooks/useSegmentacaoReferencia'
-import type { Segmentacao } from '@/lib/services/adminAnuncios.service'
+import { verificarInventarioSegmento, type Segmentacao } from '@/lib/services/adminAnuncios.service'
 
 const inputClass =
   'w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-[12px] text-zinc-800 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50 disabled:text-zinc-300'
@@ -13,21 +13,67 @@ const labelClass = 'text-[9px] font-medium text-zinc-400 uppercase tracking-wide
 
 type Opcao = { id?: string; sigla?: string; nome: string }
 
+type StatusVaga =
+  | { estado: 'idle' }
+  | { estado: 'carregando' }
+  | { estado: 'disponivel'; vagasDisponiveis: number }
+  | { estado: 'lotado' }
+  | { estado: 'erro' }
+
+function IndicadorVaga({ status }: { status: StatusVaga }) {
+  if (status.estado === 'idle') return null
+
+  if (status.estado === 'carregando') {
+    return (
+      <span className="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-zinc-400">
+        <Loader2 size={11} className="animate-spin" /> Checando vagas...
+      </span>
+    )
+  }
+
+  if (status.estado === 'lotado') {
+    return (
+      <span className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold text-red-500">
+        <CircleAlert size={11} /> Praça lotada para essa posição
+      </span>
+    )
+  }
+
+  if (status.estado === 'erro') {
+    return (
+      <span className="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-zinc-400">
+        <CircleAlert size={11} /> Não foi possível checar as vagas
+      </span>
+    )
+  }
+
+  return (
+    <span className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold text-emerald-600">
+      <CircleCheck size={11} /> {status.vagasDisponiveis} vaga(s) disponível(is)
+    </span>
+  )
+}
+
 function LinhaSegmentacao({
   valor,
   onChange,
   onRemove,
   podeRemover,
+  posicao,
+  anuncioIdExistente,
 }: {
   valor: Segmentacao
   onChange: (v: Segmentacao) => void
   onRemove: () => void
   podeRemover: boolean
+  posicao: string
+  anuncioIdExistente: string | null
 }) {
   const { estados, grupos, buscarRegioes, buscarCidades, buscarCategorias } = useSegmentacaoReferencia()
   const [regioes, setRegioes] = useState<Opcao[]>([])
   const [cidades, setCidades] = useState<Opcao[]>([])
   const [categorias, setCategorias] = useState<Opcao[]>([])
+  const [statusVaga, setStatusVaga] = useState<StatusVaga>({ estado: 'idle' })
 
   // Cascata: estado -> região (reseta região/cidade ao trocar estado)
   useEffect(() => {
@@ -55,6 +101,35 @@ function LinhaSegmentacao({
     }
     buscarCategorias(valor.grupoId).then(setCategorias)
   }, [valor.grupoId, buscarCategorias])
+
+  // Checagem de inventário em tempo real — só avisa, não bloqueia a digitação.
+  // A validação que efetivamente bloqueia o salvamento roda no submit do form.
+  useEffect(() => {
+    if (!valor.cidadeId || !valor.categoriaId || !posicao) {
+      setStatusVaga({ estado: 'idle' })
+      return
+    }
+
+    let cancelado = false
+    setStatusVaga({ estado: 'carregando' })
+
+    verificarInventarioSegmento(valor.cidadeId, valor.categoriaId, posicao, anuncioIdExistente ?? undefined)
+      .then((res) => {
+        if (cancelado) return
+        setStatusVaga(
+          res.vagasDisponiveis > 0
+            ? { estado: 'disponivel', vagasDisponiveis: res.vagasDisponiveis }
+            : { estado: 'lotado' }
+        )
+      })
+      .catch(() => {
+        if (!cancelado) setStatusVaga({ estado: 'erro' })
+      })
+
+    return () => {
+      cancelado = true
+    }
+  }, [valor.cidadeId, valor.categoriaId, posicao, anuncioIdExistente])
 
   function handleEstado(estadoSigla: string) {
     onChange({ ...valor, estadoSigla, regiaoId: '', cidadeId: '' })
@@ -124,14 +199,14 @@ function LinhaSegmentacao({
         <div className="flex items-end gap-1">
           <label className="block flex-1">
             <span className={labelClass}>Valor (R$)</span>
-            <input 
-              type="number" 
-              min="0" 
-              step="0.01" 
-              className={inputClass} 
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              className={inputClass}
               placeholder="0,00"
-              value={valor.valorCobrado || ''} 
-              onChange={(e) => onChange({ ...valor, valorCobrado: Number(e.target.value) })} 
+              value={valor.valorCobrado || ''}
+              onChange={(e) => onChange({ ...valor, valorCobrado: Number(e.target.value) })}
             />
           </label>
           {podeRemover && (
@@ -146,6 +221,7 @@ function LinhaSegmentacao({
           )}
         </div>
       </div>
+      <IndicadorVaga status={statusVaga} />
     </div>
   )
 }
@@ -155,13 +231,17 @@ const SEGMENTACAO_VAZIA: Segmentacao = { estadoSigla: '', regiaoId: '', cidadeId
 type Props = {
   value: Segmentacao[]
   onChange: (v: Segmentacao[]) => void
+  posicao: string
+  anuncioIdExistente?: string | null
 }
 
 /**
- * Responsabilidade única: gerenciar a lista de segmentações do anúncio
- * e calcular o valor cobrado total em tempo real para a UI.
+ * Responsabilidade única: gerenciar a lista de segmentações do anúncio,
+ * calcular o valor cobrado total em tempo real e sinalizar (sem bloquear)
+ * a disponibilidade de vagas por linha. O bloqueio real acontece no submit
+ * do formulário via validarSegmentacoesContraInventario.
  */
-export function SegmentacaoFields({ value, onChange }: Props) {
+export function SegmentacaoFields({ value, onChange, posicao, anuncioIdExistente = null }: Props) {
   const linhas = value.length > 0 ? value : [SEGMENTACAO_VAZIA]
 
   function atualizarLinha(index: number, nova: Segmentacao) {
@@ -213,6 +293,8 @@ export function SegmentacaoFields({ value, onChange }: Props) {
             onChange={(v) => atualizarLinha(i, v)}
             onRemove={() => removerLinha(i)}
             podeRemover={linhas.length > 1}
+            posicao={posicao}
+            anuncioIdExistente={anuncioIdExistente}
           />
         ))}
       </div>

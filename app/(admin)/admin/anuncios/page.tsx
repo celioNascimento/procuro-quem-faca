@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, AlertCircle, Megaphone, Copy, Check, Search } from 'lucide-react'
 import { useAdminAnuncios } from '@/hooks/useAdminAnuncios'
 import { AnuncioLojistaForm, type AnuncioLojistaFormValues } from '@/components/admin/anuncios/AnuncioLojistaForm'
-import { AnuncioLojistaLista } from '@/components/admin/anuncios/AnuncioLojistaLista'
 import { SimuladorInventarioModal } from '@/components/admin/anuncios/SimuladorInventarioModal'
 
 const labelClass = 'text-[10px] font-medium text-zinc-400 uppercase tracking-widest'
