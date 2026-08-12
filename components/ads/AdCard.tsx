@@ -16,12 +16,12 @@ export function AdCard({ page, anuncio, categoria }: Props) {
   const [mostrarFallback, setMostrarFallback] = useState(false)
   const { fallback, contexto } = useAdContext(page, categoria)
 
-  // 1) Verifica imediatamente se a data de expiração do anúncio já passou
-  const expirado = anuncio?.data_expiracao ? new Date(anuncio.data_expiracao) < new Date() : false
+  const agora = new Date()
+  const expirado = anuncio?.data_expiracao ? new Date(anuncio.data_expiracao) < agora : false
+  const agendado = anuncio?.data_inicio ? new Date(anuncio.data_inicio) > agora : false
 
   useEffect(() => {
-    // Se o anúncio for próprio ou estiver expirado, a verificação de render do Google não é necessária
-    if (!anuncio || expirado || anuncio.tipo === 'proprio') return
+    if (!anuncio || expirado || agendado || anuncio.tipo === 'proprio') return
 
     if (!anuncio.adsense_slot) {
       setMostrarFallback(true)
@@ -34,14 +34,12 @@ export function AdCard({ page, anuncio, categoria }: Props) {
     }, 2000)
     
     return () => clearTimeout(timer)
-  }, [anuncio, expirado])
+  }, [anuncio, expirado, agendado])
 
-  // 2) Aciona o fallback se estiver vencido ou não houver anúncio
-  if (!anuncio || expirado) {
+  if (!anuncio || expirado || agendado) {
     return <AdCardFallback fallback={fallback} contexto={contexto} />
   }
 
-  // 3) Renderiza a imagem do Lojista local (se for anúncio 'proprio')
   if (anuncio.tipo === 'proprio' && anuncio.imagem_url) {
     return (
       <a 
@@ -60,7 +58,6 @@ export function AdCard({ page, anuncio, categoria }: Props) {
     )
   }
 
-  // 4) Renderiza bloco do Google AdSense
   if (anuncio.adsense_slot && !mostrarFallback) {
     return (
       <div className="my-2 min-h-[100px] w-full" ref={adRef}>
