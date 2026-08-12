@@ -6,6 +6,8 @@ export interface Prestador {
   nome: string
   foto_perfil: string | null
   whatsapp: string
+  slug?: string | null      
+  user_id?: string | null 
   categoria: Categoria | null
 }
 

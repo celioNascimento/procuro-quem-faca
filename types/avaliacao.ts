@@ -10,7 +10,7 @@ export interface AvaliacaoRaw {
   nota: number
   comentario: string | null
   created_at: string
-  indica: boolean
+  indica: boolean | null 
   resposta_prestador: string | null
   cliente_id: string | null
   status: string | null
@@ -31,16 +31,16 @@ export interface Avaliacao {
 }
 
 // ── Formato usado no perfil público (types/perfil.ts) ──
-export interface AvaliacaoPerfil {
+export type AvaliacaoPerfil = {
   id: string
-  nota: number
-  comentario?: string
-  indica: boolean
-  created_at: string
-  projeto_id?: string                            // ← adicionar
-  portfolio_projetos?: { titulo: string } | null // ← adicionar
+  created_at?: string
+  comentario?: string | null
+  indica: boolean | null
+  projeto_id?: string | null
+  portfolio_projetos?: {
+    titulo: string
+  } | null
 }
-
 // ── Formato resumido — só o necessário para cálculo de stats ──
 export interface AvaliacaoResumo {
   nota: number
@@ -96,6 +96,7 @@ export interface Projeto {
     nome: string
     foto_perfil: string
     whatsapp: string
+    slug: string | null
     categoria: { nome: string }
   }
   [key: string]: unknown

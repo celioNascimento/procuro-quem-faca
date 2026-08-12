@@ -36,6 +36,7 @@ export type Prestador = {
   categoria: string;
   media_nota: number;
   total_avals: number;
+
 };
 
 // Interface usada para o formulário (input)

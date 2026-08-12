@@ -15,7 +15,11 @@ import { MapPin, Filter, AlertCircle, X } from 'lucide-react'
 import { getTituloBusca } from '@/lib/prestadorUtils'
 import { ListaSkeleton } from '@/components/skeletons/ListaSkeletonPrestadores'
 import { supabase } from '@/lib/supabase/client'
-import { listarAnunciosAtivosPorPraca, type AnuncioComAnunciante } from '@/lib/services/adminAnuncios.service'
+import {
+  listarAnunciosAtivosPorPraca,
+  verificarInventarioSegmento,
+  type AnuncioComAnunciante,
+} from '@/lib/services/adminAnuncios.service'
 import type { Prestador } from '@/types/prestador'
 import type { Anuncio } from '@/types/ads'
 
@@ -106,20 +110,53 @@ function BotaoCidade({
   )
 }
 
+type ChavePraca = string // `${cidadeId}::${categoriaId}`
+
+function chavePracaDe(prestador: Prestador): ChavePraca | null {
+  const cidadeId = prestador.cidade_id ? String(prestador.cidade_id) : null
+  const categoriaId = prestador.categoria_id ? String(prestador.categoria_id) : null
+  return cidadeId && categoriaId ? `${cidadeId}::${categoriaId}` : null
+}
+
+/**
+ * Decide, por praça, quais das N posições "entre_cards" daquela praça na
+ * página mostram anúncio real vs. fallback. A taxa de exibição reflete a
+ * ocupação de vendas da praça (ocupados / vagasTotais) — quanto mais vagas
+ * vendidas, mais posições mostram anúncio, reforçando escassez percebida
+ * enquanto a praça não está lotada. Garante ao menos 1 posição com anúncio
+ * real sempre que houver pelo menos 1 vaga vendida (promessa comercial ao
+ * anunciante), mesmo que a proporção arredonde pra zero.
+ */
+function calcularPosicoesComAnuncio(totalPosicoesNaPraca: number, ocupados: number, vagasTotais: number): Set<number> {
+  const indices = Array.from({ length: totalPosicoesNaPraca }, (_, i) => i)
+
+  if (ocupados <= 0 || vagasTotais <= 0 || totalPosicoesNaPraca === 0) {
+    return new Set()
+  }
+
+  const taxa = Math.min(1, ocupados / vagasTotais)
+  const quantidade = Math.min(totalPosicoesNaPraca, Math.max(1, Math.round(totalPosicoesNaPraca * taxa)))
+
+  const embaralhados = shuffleArray(indices)
+  return new Set(embaralhados.slice(0, quantidade))
+}
+
 /**
  * Card "entre_cards" ancorado na praça (cidade+categoria) do prestador que
- * fecha o grupo de 4. Busca (com cache em memória) o pool de anúncios ativos
- * daquela praça e sorteia entre eles via round-robin embaralhado — garantindo,
- * dentro do possível, que todo anunciante ativo apareça na página.
+ * fecha o grupo de 4. Só busca e sorteia um anúncio real quando `mostrarAnuncio`
+ * for true para essa posição específica (decidido previamente em ListaConteudo
+ * com base na ocupação de vendas da praça) — senão renderiza direto o fallback.
  */
 function AdCardEntreCards({
   prestadorAncora,
   categoriaFallback,
+  mostrarAnuncio,
   cachePracaRef,
   sorteadoresRef,
 }: {
   prestadorAncora: Prestador
   categoriaFallback: string
+  mostrarAnuncio: boolean
   cachePracaRef: React.MutableRefObject<Map<string, AnuncioComAnunciante[]>>
   sorteadoresRef: React.MutableRefObject<Map<string, () => AnuncioComAnunciante | null>>
 }) {
@@ -130,7 +167,7 @@ function AdCardEntreCards({
   const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined) // undefined = carregando
 
   useEffect(() => {
-    if (!chavePraca || !cidadeId || !categoriaId) {
+    if (!mostrarAnuncio || !chavePraca || !cidadeId || !categoriaId) {
       setAnuncio(null)
       return
     }
@@ -164,11 +201,16 @@ function AdCardEntreCards({
     return () => {
       cancelado = true
     }
-  }, [chavePraca, cidadeId, categoriaId, cachePracaRef, sorteadoresRef])
+  }, [mostrarAnuncio, chavePraca, cidadeId, categoriaId, cachePracaRef, sorteadoresRef])
 
-  // Enquanto resolve a praça específica, evita "pulo" de layout mostrando
-  // o fallback — ele já é leve e não depende do resultado do sorteio.
-  const anuncioParaExibir = anuncio === undefined ? null : (anuncio as unknown as Anuncio | null)
+  // Se essa posição não foi sorteada pra mostrar anúncio real, cai direto no
+  // fallback sem sequer buscar dados — reserva o espaço de venda pra escassez.
+  // AnuncioComAnunciante.tipo é `string` (constraint do banco: 'proprio'|'google'),
+  // enquanto Anuncio.tipo é a união restrita 'vip'|'proprio'|'google' — TS não
+  // aceita atribuição direta de string largo pra união estreita. Estrutura já
+  // validada como compatível contra types/ads.ts real; cast explícito abaixo.
+  const anuncioParaExibir: Anuncio | null =
+    !mostrarAnuncio || anuncio === undefined || anuncio === null ? null : (anuncio as Anuncio)
 
   return <AdCard page="prestadores" anuncio={anuncioParaExibir} categoria={categoriaFallback} />
 }
@@ -217,6 +259,62 @@ function ListaConteudo() {
     cachePracaRef.current = new Map()
     sorteadoresRef.current = new Map()
   }, [queryBusca, filtroHab, filtroCidNome])
+
+  // Agrupa as posições "entre_cards" (a cada 4 prestadores) por praça, na
+  // ordem em que aparecem na lista. Cada praça pode ter 0, 1 ou várias
+  // posições nesta página específica.
+  const posicoesPorPraca = useMemo(() => {
+    const grupos = new Map<ChavePraca, number[]>() // chave -> índices (na sequência de posições daquela praça)
+    let contador = 0
+
+    prestadoresExibidos.forEach((p, index) => {
+      if ((index + 1) % 4 !== 0) return
+      const chave = chavePracaDe(p)
+      if (!chave) return
+      const lista = grupos.get(chave) ?? []
+      lista.push(contador++)
+      grupos.set(chave, lista)
+    })
+
+    return grupos
+  }, [prestadoresExibidos])
+
+  // Para cada praça com posições nesta página, busca a ocupação de vendas
+  // (vagasTotais/ocupados) e calcula quais índices (dentro da sequência
+  // daquela praça) mostram anúncio real. Resultado: Map<chavePraca, Set<índice>>.
+  const [posicoesComAnuncioPorPraca, setPosicoesComAnuncioPorPraca] = useState<Map<ChavePraca, Set<number>>>(new Map())
+
+  useEffect(() => {
+    if (posicoesPorPraca.size === 0) {
+      setPosicoesComAnuncioPorPraca(new Map())
+      return
+    }
+
+    let cancelado = false
+
+    async function calcular() {
+      const resultado = new Map<ChavePraca, Set<number>>()
+
+      await Promise.all(
+        Array.from(posicoesPorPraca.entries()).map(async ([chave, indices]) => {
+          const [cidadeId, categoriaId] = chave.split('::')
+          try {
+            const inventario = await verificarInventarioSegmento(cidadeId, categoriaId, 'entre_cards')
+            resultado.set(chave, calcularPosicoesComAnuncio(indices.length, inventario.ocupados, inventario.vagasTotais))
+          } catch {
+            resultado.set(chave, new Set())
+          }
+        })
+      )
+
+      if (!cancelado) setPosicoesComAnuncioPorPraca(resultado)
+    }
+
+    calcular()
+    return () => {
+      cancelado = true
+    }
+  }, [posicoesPorPraca])
 
   const tituloBusca = getTituloBusca(queryBusca, filtroCidNome)
 
@@ -352,22 +450,42 @@ function ListaConteudo() {
                 </div>
               )}
 
-              {prestadoresExibidos.map((p: Prestador, index: number) => (
-                <Fragment key={p.id}>
-                  <PrestadorCard prestador={p} session={session} />
+              {(() => {
+                // Contador local de "índice dentro da praça" por chave, na
+                // mesma ordem usada em posicoesPorPraca — precisa espelhar
+                // exatamente aquele useMemo pra consultar o Set correto.
+                const contadorPorPraca = new Map<ChavePraca, number>()
 
-                  {(index + 1) % 4 === 0 && (
-                    <div className="lg:col-span-2">
-                      <AdCardEntreCards
-                        prestadorAncora={p}
-                        categoriaFallback={queryBusca || filtroHab || p.categoria || ''}
-                        cachePracaRef={cachePracaRef}
-                        sorteadoresRef={sorteadoresRef}
-                      />
-                    </div>
-                  )}
-                </Fragment>
-              ))}
+                return prestadoresExibidos.map((p: Prestador, index: number) => {
+                  const ehPosicaoDeAnuncio = (index + 1) % 4 === 0
+                  const chave = ehPosicaoDeAnuncio ? chavePracaDe(p) : null
+
+                  let mostrarAnuncio = false
+                  if (ehPosicaoDeAnuncio && chave) {
+                    const indiceNaPraca = contadorPorPraca.get(chave) ?? 0
+                    contadorPorPraca.set(chave, indiceNaPraca + 1)
+                    mostrarAnuncio = posicoesComAnuncioPorPraca.get(chave)?.has(indiceNaPraca) ?? false
+                  }
+
+                  return (
+                    <Fragment key={p.id}>
+                      <PrestadorCard prestador={p} session={session} />
+
+                      {ehPosicaoDeAnuncio && (
+                        <div className="lg:col-span-2">
+                          <AdCardEntreCards
+                            prestadorAncora={p}
+                            categoriaFallback={queryBusca || filtroHab || p.categoria || ''}
+                            mostrarAnuncio={mostrarAnuncio}
+                            cachePracaRef={cachePracaRef}
+                            sorteadoresRef={sorteadoresRef}
+                          />
+                        </div>
+                      )}
+                    </Fragment>
+                  )
+                })
+              })()}
             </div>
           )}
 
