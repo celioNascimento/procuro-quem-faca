@@ -11,6 +11,7 @@ export type Segmentacao = {
   cidadeId: string
   grupoId: string
   categoriaId: string
+  valorCobrado: number
 }
 
 export type AnuncioComAnunciante = {
@@ -24,7 +25,9 @@ export type AnuncioComAnunciante = {
   publico_alvo: string
   status_aprovacao: string
   anunciante_id: string
-  data_expiracao: string | null // <-- Adicionado
+  data_inicio: string | null
+  data_expiracao: string | null
+  valor_total: number
   created_at: string
   anunciantes: {
     id: string
@@ -38,6 +41,7 @@ export type AnuncioComAnunciante = {
     cidade_id: string
     grupo_id: string
     categoria_id: string
+    valor_cobrado: number
   }[]
 }
 
@@ -48,7 +52,9 @@ export type NovoAnuncioInput = {
   imagemUrl: string
   posicao: string // 'topo_busca' | 'entre_cards' | 'topo_perfil'
   ativo: boolean
-  dataExpiracao: string | null // <-- Adicionado
+  dataInicio: string | null
+  dataExpiracao: string | null
+  valorTotal: number
   segmentacoes: Segmentacao[] // mínimo 1
 }
 
@@ -72,7 +78,9 @@ export async function criarAnuncio(input: NovoAnuncioInput) {
       posicao: input.posicao,
       tipo: 'proprio',
       status: input.ativo,
-      data_expiracao: input.dataExpiracao, // <-- Adicionado no Insert
+      data_inicio: input.dataInicio,
+      data_expiracao: input.dataExpiracao,
+      valor_total: input.valorTotal,
       status_aprovacao: 'aprovado',
       publico_alvo: 'todos',
     })
@@ -89,6 +97,7 @@ export async function criarAnuncio(input: NovoAnuncioInput) {
       cidade_id: s.cidadeId,
       grupo_id: s.grupoId,
       categoria_id: s.categoriaId,
+      valor_cobrado: s.valorCobrado,
     }))
   )
 
@@ -113,7 +122,9 @@ export async function atualizarAnuncio(
   if (input.imagemUrl !== undefined) payload.imagem_url = input.imagemUrl
   if (input.posicao !== undefined) payload.posicao = input.posicao
   if (input.ativo !== undefined) payload.status = input.ativo
-  if (input.dataExpiracao !== undefined) payload.data_expiracao = input.dataExpiracao // <-- Adicionado no Update
+  if (input.dataInicio !== undefined) payload.data_inicio = input.dataInicio
+  if (input.dataExpiracao !== undefined) payload.data_expiracao = input.dataExpiracao
+  if (input.valorTotal !== undefined) payload.valor_total = input.valorTotal
 
   const { data, error } = await supabase.from('anuncios').update(payload).eq('id', id).select().single()
   if (error) throw error
@@ -135,6 +146,7 @@ export async function atualizarAnuncio(
         cidade_id: s.cidadeId,
         grupo_id: s.grupoId,
         categoria_id: s.categoriaId,
+        valor_cobrado: s.valorCobrado,
       }))
     )
     if (erroInsert) throw erroInsert
