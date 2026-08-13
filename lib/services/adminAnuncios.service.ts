@@ -58,8 +58,6 @@ export type NovoAnuncioInput = {
   segmentacoes: Segmentacao[]
 }
 
-// Posições com vaga fixa única por praça (cidade+categoria), independente
-// do número de prestadores. Ex: só existe "1 topo" pra vender por praça.
 const POSICOES_VAGA_FIXA = new Set(['topo_busca', 'topo_perfil'])
 
 export async function criarAnuncio(input: NovoAnuncioInput) {
@@ -232,11 +230,6 @@ export async function listarCategoriasPorGrupo(grupoId: string) {
   return data
 }
 
-/**
- * Conta quantos anúncios "próprios" ativos+aprovados já ocupam essa praça
- * (cidade+categoria+posição), com opção de excluir o próprio anúncio em edição
- * (pra não contar a vaga que ele mesmo já ocupa como "estourada").
- */
 async function contarAnunciosAtivosNaPraca(
   cidadeId: string,
   categoriaId: string,
@@ -244,40 +237,31 @@ async function contarAnunciosAtivosNaPraca(
   excluirAnuncioId?: string
 ) {
   const agora = new Date().toISOString()
-  let query = supabase
-    .from('anuncios_segmentacoes')
-    .select(`anuncios!inner(id, data_expiracao, data_inicio)`)
-    .eq('cidade_id', cidadeId)
-    .eq('categoria_id', categoriaId)
-    .eq('anuncios.status', true)
-    .eq('anuncios.status_aprovacao', 'aprovado')
-    .eq('anuncios.posicao', posicao)
-    .or(`data_inicio.is.null,data_inicio.lte.${agora}`, { foreignTable: 'anuncios' })
-    .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`, { foreignTable: 'anuncios' })
+  
+  // Consulta INVERTIDA: Busca na tabela anúncios cruzando com segmentações
+  // Evita bug do PostgREST ao cruzar filtros 'OR' em tabelas estrangeiras
+  const { data, error } = await supabase
+    .from('anuncios')
+    .select('id, anuncios_segmentacoes!inner(cidade_id, categoria_id)')
+    .eq('status', true)
+    .eq('status_aprovacao', 'aprovado')
+    .eq('posicao', posicao)
+    .or(`data_inicio.is.null,data_inicio.lte.${agora}`)
+    .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`)
+    .eq('anuncios_segmentacoes.cidade_id', cidadeId)
+    .eq('anuncios_segmentacoes.categoria_id', categoriaId)
 
-  const { data, error } = await query
   if (error) throw error
 
   const idsUnicos = new Set(
     (data ?? [])
-      .map((a: any) => a.anuncios.id as string)
+      .map((a: any) => a.id as string)
       .filter((id: string) => id !== excluirAnuncioId)
   )
 
   return idsUnicos.size
 }
 
-/**
- * Consulta em tempo real a disponibilidade de inventário para uma segmentação.
- *
- * Regra de negócio (não simétrica entre posições):
- * - topo_busca / topo_perfil: vaga fixa única por praça — não escala com o
- *   número de prestadores. Lotado assim que existir 1 anúncio ativo.
- * - entre_cards (e demais): 1 vaga a cada 4 prestadores ativos da praça.
- *
- * `excluirAnuncioId` evita que o próprio anúncio em edição conte contra si
- * mesmo como "vaga ocupada".
- */
 export async function verificarInventarioSegmento(
   cidadeId: string,
   categoriaId: string,
@@ -303,15 +287,15 @@ export async function verificarInventarioSegmento(
 
     const agora = new Date().toISOString()
     const { data: anunciosAtivos, error: erroAnuncios } = await supabase
-      .from('anuncios_segmentacoes')
-      .select(`anuncios!inner(id, data_expiracao)`)
-      .eq('cidade_id', cidadeId)
-      .eq('categoria_id', categoriaId)
-      .eq('anuncios.status', true)
-      .eq('anuncios.status_aprovacao', 'aprovado')
-      .eq('anuncios.posicao', posicao)
-      .or(`data_inicio.is.null,data_inicio.lte.${agora}`, { foreignTable: 'anuncios' })
-      .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`, { foreignTable: 'anuncios' })
+      .from('anuncios')
+      .select('id, data_expiracao, anuncios_segmentacoes!inner(cidade_id, categoria_id)')
+      .eq('status', true)
+      .eq('status_aprovacao', 'aprovado')
+      .eq('posicao', posicao)
+      .or(`data_inicio.is.null,data_inicio.lte.${agora}`)
+      .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`)
+      .eq('anuncios_segmentacoes.cidade_id', cidadeId)
+      .eq('anuncios_segmentacoes.categoria_id', categoriaId)
 
     if (erroAnuncios) throw erroAnuncios
 
@@ -319,18 +303,19 @@ export async function verificarInventarioSegmento(
 
     const idsUnicos = new Set(
       (anunciosAtivos ?? [])
-        .map((a: any) => a.anuncios.id as string)
+        .map((a: any) => a.id as string)
         .filter((id: string) => id !== excluirAnuncioId)
     )
     const ocupados = idsUnicos.size
 
-    const vagasTotais = Math.floor(prestadores / 4)
+    // CORREÇÃO: Garante ao menos 1 vaga se a praça tiver qualquer prestador
+    const vagasTotais = prestadores === 0 ? 0 : Math.max(1, Math.floor(prestadores / 4))
     const vagasDisponiveis = Math.max(0, vagasTotais - ocupados)
 
     let proximaExpiracao: string | null = null
     if (anunciosAtivos && anunciosAtivos.length > 0) {
       const datas = anunciosAtivos
-        .map((a: any) => a.anuncios.data_expiracao)
+        .map((a: any) => a.data_expiracao)
         .filter(Boolean)
         .map((d: string) => new Date(d).getTime())
 
@@ -350,22 +335,17 @@ export type ValidacaoSegmentacoes =
   | { ok: true }
   | { ok: false; mensagem: string }
 
-/**
- * Valida TODAS as linhas de segmentação de um formulário de anúncio de uma vez,
- * considerando:
- * 1) duplicatas dentro do próprio formulário (cada repetição da mesma praça
- *    consome uma vaga adicional na checagem, não é tratada como "já existe, ok");
- * 2) o inventário real do banco pra cada praça+posição;
- * 3) exclusão do próprio anúncio (em edição) do cálculo de ocupação.
- *
- * Deve ser chamada no submit do formulário, antes de gravar no banco.
- */
 export async function validarSegmentacoesContraInventario(
   segmentacoes: Segmentacao[],
   posicao: string,
-  anuncioIdExistente?: string | null
+  anuncioIdExistente?: string | null,
+  dataInicioForm?: string | null
 ): Promise<ValidacaoSegmentacoes> {
-  // Agrupa por praça (cidade+categoria) pra contar repetições dentro do form
+  // Se o anúncio for agendado pro futuro, não bloqueia a criação hoje.
+  const agora = new Date()
+  const isAgendado = dataInicioForm ? new Date(dataInicioForm) > agora : false
+  if (isAgendado) return { ok: true }
+
   const contagemNoForm = new Map<string, number>()
   for (const s of segmentacoes) {
     const chave = `${s.cidadeId}::${s.categoriaId}`
@@ -393,8 +373,8 @@ export async function validarSegmentacoesContraInventario(
         ok: false,
         mensagem:
           inventario.vagasDisponiveis === 0
-            ? `Essa praça (cidade + categoria) já está com todas as vagas ocupadas para a posição selecionada.`
-            : `Essa praça só tem ${inventario.vagasDisponiveis} vaga(s) disponível(is) para a posição selecionada, mas há ${repeticoesNoForm} segmentação(ões) repetida(s) para ela no formulário.`,
+            ? `Essa praça já está com todas as vagas ocupadas. Agende a data de início para o futuro ou altere a região.`
+            : `Essa praça só tem ${inventario.vagasDisponiveis} vaga(s) disponível(is) para a posição selecionada, mas há ${repeticoesNoForm} segmentação(ões) repetida(s) no formulário.`,
       }
     }
   }
@@ -402,11 +382,6 @@ export async function validarSegmentacoesContraInventario(
   return { ok: true }
 }
 
-/**
- * Busca anúncios "próprios" ativos, aprovados e dentro da vigência, para uma
- * praça (cidade+categoria) e posição específicas. Usada na listagem pública
- * pra sortear entre múltiplos anunciantes que compraram a mesma posição.
- */
 export async function listarAnunciosAtivosPorPraca(
   cidadeId: string,
   categoriaId: string,
@@ -414,36 +389,31 @@ export async function listarAnunciosAtivosPorPraca(
 ): Promise<AnuncioComAnunciante[]> {
   const agora = new Date().toISOString()
 
+  // Consulta INVERTIDA
   const { data, error } = await supabase
-    .from('anuncios_segmentacoes')
-    .select(`
-      anuncios!inner(
-        *,
-        anunciantes(id, razao_social, whatsapp)
-      )
-    `)
-    .eq('cidade_id', cidadeId)
-    .eq('categoria_id', categoriaId)
-    .eq('anuncios.status', true)
-    .eq('anuncios.status_aprovacao', 'aprovado')
-    .eq('anuncios.tipo', 'proprio')
-    .eq('anuncios.posicao', posicao)
-    .or(`data_inicio.is.null,data_inicio.lte.${agora}`, { foreignTable: 'anuncios' })
-    .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`, { foreignTable: 'anuncios' })
+    .from('anuncios')
+    .select('*, anunciantes(id, razao_social, whatsapp), anuncios_segmentacoes!inner(cidade_id, categoria_id)')
+    .eq('status', true)
+    .eq('status_aprovacao', 'aprovado')
+    .eq('tipo', 'proprio')
+    .eq('posicao', posicao)
+    .or(`data_inicio.is.null,data_inicio.lte.${agora}`)
+    .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`)
+    .eq('anuncios_segmentacoes.cidade_id', cidadeId)
+    .eq('anuncios_segmentacoes.categoria_id', categoriaId)
 
   if (error) {
     console.error('Erro ao listar anúncios ativos da praça:', error)
     return []
   }
 
-  // Join retorna um anuncio por linha de segmentação — dedup por id
   const vistos = new Set<string>()
   const anuncios: AnuncioComAnunciante[] = []
-  for (const row of data ?? []) {
-    const a = (row as any).anuncios
-    if (!a || vistos.has(a.id)) continue
-    vistos.add(a.id)
-    anuncios.push(a)
+  for (const a of data ?? []) {
+    if (!vistos.has(a.id)) {
+      vistos.add(a.id)
+      anuncios.push(a as AnuncioComAnunciante)
+    }
   }
 
   return anuncios
