@@ -161,8 +161,16 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
 
     setErro('')
     setValidando(true)
+    
     try {
-      const validacao = await validarSegmentacoesContraInventario(segsValidas, posicao, initial?.id ?? null)
+      const dataInicioIso = dataInicio ? new Date(dataInicio).toISOString() : null
+      const validacao = await validarSegmentacoesContraInventario(
+        segsValidas, 
+        posicao, 
+        initial?.id ?? null,
+        dataInicioIso
+      )
+      
       if (!validacao.ok) {
         setErro(validacao.mensagem)
         return
