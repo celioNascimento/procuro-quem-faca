@@ -1,6 +1,7 @@
 // lib/services/cliente.service.ts
 
 import { supabase } from '@/lib/supabase'
+import type { ClienteServico } from '@/types/clienteServicos'
 
 export async function fetchClienteProfile(userId: string) {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
@@ -8,20 +9,20 @@ export async function fetchClienteProfile(userId: string) {
   return data
 }
 
-export async function fetchClienteServicos(whatsapp: string) {
+export async function fetchClienteServicos(whatsapp: string): Promise<ClienteServico[]> {
   const numLimpo = whatsapp.replace(/\D/g, '')
   const { data, error } = await supabase
     .from('portfolio_projetos')
     .select(`
       id, titulo, status, created_at, avaliacao_token,
       portfolio_fotos(ordem),
-      prestadores!inner(nome, foto_perfil, categoria:categorias(nome)),
+      prestadores!inner(id, nome, foto_perfil, categoria:categorias(nome)),
       avaliacoes(id)
     `)
     .eq('cliente_whatsapp', numLimpo)
     .in('status', ['pendente', 'em_execucao', 'finalizado'])
   if (error) throw error
-  return data
+  return (data ?? []) as unknown as ClienteServico[]
 }
 
 export async function fetchEstados() {

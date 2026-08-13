@@ -1,15 +1,16 @@
-//hooks/useServicosCliente.ts 
+//hooks/useServicosCliente.ts
 
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import * as ClienteService from '@/lib/services/cliente.service'
+import type { ClienteServico } from '@/types/clienteServicos'
 
 export function useServicosCliente(whatsapp: string) {
   const router = useRouter()
   const filtroRef = useRef<HTMLDivElement>(null)
 
-  const [servicos, setServicos]             = useState<any[]>([])
+  const [servicos, setServicos]             = useState<ClienteServico[]>([])
   const [filtroStatus, setFiltroStatus]     = useState('todos')
   const [loadingServicos, setLoadingServicos] = useState(true)
 
@@ -21,7 +22,7 @@ export function useServicosCliente(whatsapp: string) {
       try {
         const data = await ClienteService.fetchClienteServicos(whatsapp)
         if (data) setServicos(
-          data.sort((a: any, b: any) =>
+          data.sort((a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           )
         )
@@ -33,9 +34,9 @@ export function useServicosCliente(whatsapp: string) {
     buscar()
   }, [whatsapp])
 
-  const getStatusInfo = (servico: any) => {
+  const getStatusInfo = (servico: ClienteServico) => {
     const s = servico?.status?.toLowerCase()
-    const temFoto3  = servico?.portfolio_fotos?.some((f: any) => f.ordem === 3)
+    const temFoto3  = servico?.portfolio_fotos?.some((f) => f.ordem === 3)
     const jaAvaliado = servico?.avaliacoes?.length > 0
 
     if (s === 'pendente')
@@ -51,8 +52,8 @@ export function useServicosCliente(whatsapp: string) {
     return { label: s, dot: 'bg-slate-300', badge: 'bg-slate-50 text-slate-500 border-slate-200', urgente: false }
   }
 
-  const getRotaDestino = (s: any) => {
-    const temFoto3 = s.portfolio_fotos?.some((f: any) => f.ordem === 3)
+  const getRotaDestino = (s: ClienteServico) => {
+    const temFoto3 = s.portfolio_fotos?.some((f) => f.ordem === 3)
     if (s.status === 'pendente') return `/meus-servicos?token=${s.avaliacao_token}`
     if (s.status === 'em_execucao' && !temFoto3) return `/acompanhamento/${s.avaliacao_token}`
     if (s.status === 'em_execucao' && temFoto3)  return `/avaliar/${s.avaliacao_token}`
@@ -61,8 +62,9 @@ export function useServicosCliente(whatsapp: string) {
 
   const servicosFiltrados = servicos.filter(s => {
     const st = s.status?.toLowerCase()
-    const temFoto3 = s.portfolio_fotos?.some((f: any) => f.ordem === 3)
-    if (filtroStatus === 'todos')       return true
+    const temFoto3 = s.portfolio_fotos?.some((f) => f.ordem === 3)
+    if (filtroStatus === 'todos')
+      return true
     if (filtroStatus === 'pendente')    return st === 'pendente'
     if (filtroStatus === 'andamento')   return st === 'em_execucao' && !temFoto3
     if (filtroStatus === 'avaliar')     return st === 'em_execucao' && temFoto3
@@ -71,7 +73,7 @@ export function useServicosCliente(whatsapp: string) {
   })
 
   const avaliarCount = servicos.filter(s =>
-    s.status === 'em_execucao' && s.portfolio_fotos?.some((f: any) => f.ordem === 3)
+    s.status === 'em_execucao' && s.portfolio_fotos?.some((f) => f.ordem === 3)
   ).length
 
   const ativosCount = servicos.filter(s =>
