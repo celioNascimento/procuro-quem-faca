@@ -134,18 +134,23 @@ Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas
 Agrega `prestadores` + média de `avaliacoes.nota` + contagem de projetos, filtrando `status = 'ativo'`. Existe no banco mas **o frontend não a usa** — `usePrestadores` recalcula médias em JS a partir de dados brutos.
 
 ### Anúncios
+### Anúncios
 
-Sistema com leilão de lance (CPC) e segmentação geográfica/categórica.
+Sistema com infraestrutura de banco pronta para leilão de lance (CPC) e segmentação geográfica/categórica, operando atualmente em modo **MVP Admin-Only**.
 
 | Tabela | Propósito |
 |---|---|
-| `anunciantes` | Conta do anunciante — `saldo_atual`, `total_investido`, `score_relevancia` (default 10.00), `status_conta` |
-| `anuncios` | Anúncio individual (`proprio`/`google`), `status_aprovacao`, `lance_maximo_cpc`, `orcamento_diario`/`orcamento_gasto`, segmentação geográfica/categórica, `posicao`, `prioridade` |
-| `anuncios_metricas_diarias` | Impressões, cliques, custo por anúncio/dia (`unique (anuncio_id, data_referencia)`) |
+| `anunciantes` | Conta do anunciante — `saldo_atual`, `total_investido`, `score_relevancia` (não usados no MVP). |
+| `anuncios` | Anúncio individual (tipo `proprio` para lojistas locais, `google` para AdSense). Armazena status, datas de vigência, posição e valor. |
+| `anuncios_segmentacoes` | Tabela auxiliar que vincula anúncios a praças (cidade+categoria) e valores específicos por praça. |
+| `anuncios_metricas_diarias` | Impressões, cliques, custo por anúncio/dia. |
 
 **Índices:** `idx_anuncios_segmentacao` (busca de anúncio elegível), `idx_anuncios_leilao` (resolução do leilão por `lance_maximo_cpc desc`).
 
-**Status de uso:** infraestrutura pronta no banco, mas o frontend (`AdCard.tsx`) sempre recebe `anuncio={null}` — o espaço funciona hoje como CTA de contato direto via WhatsApp institucional. Ver `14-glossario.md`, seção Anúncios.
+**Status de implementação:**
+- **Infraestrutura:** Tabelas, índices e Policies RLS implementadas.
+- **MVP Atual:** Gestão de anúncios via área administrativa (admin-only). O sistema calcula inventário em tempo real por praça (cidade+categoria) e exibe banners de lojistas locais conforme a ocupação de vagas.
+- **Frontend:** O `AdCard.tsx` agora prioriza anúncios `proprio` aprovados e ativos (respeitando a vigência). A lógica de leilão CPC e o fallback completo de AdSense (leilão em tempo real) permanecem como roadmap futuro.
 
 ### Infraestrutura / cross-cutting
 

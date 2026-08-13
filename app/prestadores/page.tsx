@@ -118,14 +118,24 @@ function chavePracaDe(prestador: Prestador): ChavePraca | null {
   return cidadeId && categoriaId ? `${cidadeId}::${categoriaId}` : null
 }
 
+// Piso mínimo de exibição assim que há pelo menos 1 anunciante ativo na
+// praça. Ajustável — ver calcularPosicoesComAnuncio.
+const PISO_TAXA_EXIBICAO = 0.65
+
 /**
  * Decide, por praça, quais das N posições "entre_cards" daquela praça na
- * página mostram anúncio real vs. fallback. A taxa de exibição reflete a
- * ocupação de vendas da praça (ocupados / vagasTotais) — quanto mais vagas
- * vendidas, mais posições mostram anúncio, reforçando escassez percebida
- * enquanto a praça não está lotada. Garante ao menos 1 posição com anúncio
- * real sempre que houver pelo menos 1 vaga vendida (promessa comercial ao
- * anunciante), mesmo que a proporção arredonde pra zero.
+ * página mostram anúncio real vs. fallback.
+ *
+ * Modelo: piso alto assim que há 1+ anunciante ativo, subindo suavemente até
+ * 100% conforme a praça se aproxima da lotação. Prioriza generosidade de
+ * exibição para quem já comprou (mais retorno percebido, menos sensação de
+ * "pago e não apareço") sobre sinalizar escassez de inventário — a decisão de
+ * bloquear novas vendas quando lotado já é feita separadamente, no cadastro.
+ *
+ * taxa = piso + (1 - piso) * (ocupados / vagasTotais)
+ *   ex. piso=0.65, 1/6 ocupado  -> ~71%
+ *   ex. piso=0.65, 3/6 ocupado  -> ~82%
+ *   ex. piso=0.65, 6/6 ocupado  -> 100%
  */
 function calcularPosicoesComAnuncio(totalPosicoesNaPraca: number, ocupados: number, vagasTotais: number): Set<number> {
   const indices = Array.from({ length: totalPosicoesNaPraca }, (_, i) => i)
@@ -134,7 +144,8 @@ function calcularPosicoesComAnuncio(totalPosicoesNaPraca: number, ocupados: numb
     return new Set()
   }
 
-  const taxa = Math.min(1, ocupados / vagasTotais)
+  const ocupacao = Math.min(1, ocupados / vagasTotais)
+  const taxa = PISO_TAXA_EXIBICAO + (1 - PISO_TAXA_EXIBICAO) * ocupacao
   const quantidade = Math.min(totalPosicoesNaPraca, Math.max(1, Math.round(totalPosicoesNaPraca * taxa)))
 
   const embaralhados = shuffleArray(indices)

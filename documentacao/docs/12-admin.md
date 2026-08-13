@@ -44,6 +44,61 @@ Complementa `02-arquitetura.md`. Ver `14-glossario.md` para localizar um conceit
 
 `app/(admin)/admin/geografia/hooks/useGeografia.ts` + `lib/db/geografia.ts`. Três formulários em cascata (`FormEstado`, `FormRegiao`, `FormCidade`) + `TabelaCidades` com filtro estado/região e vínculo de região por cidade inline. Módulo já seguia o padrão correto integralmente antes da revisão.
 
-## `/admin/ativacao`, `/admin/anuncios`
+### `/admin/anuncios`
+
+### Decisão: componentização por responsabilidade única
+
+O fluxo de lojista foi escrito em componentes separados:
+
+- **`AnuncioLojistaForm`** — só captura e valida os dados de um anúncio (cadastro ou edição), integrando o bloqueio de inventário e datas.
+- **`SegmentacaoFields`** — gerencia a adição e remoção de múltiplas segmentações geográficas (cidade + categoria) para o mesmo anúncio.
+- **`AnuncioLojistaLista`** — só exibe os anúncios já cadastrados, com toggle ativo/rascunho, editar e excluir (com confirmação). Não sabe nada sobre formulário.
+- **`page.tsx`** — orquestração pura: liga o hook aos componentes acima, sem regra de negócio própria.
+
+Essa separação permite retomar o fallback Google AdSense (`tipo: 'google'`) depois, como um componente irmão (`AnuncioGoogleForm.tsx`), reaproveitando a mesma listagem.
+
+### `app/api/admin/anunciantes/route.ts` — primeira API route do projeto
+
+Até este ponto, todo o PQF opera client-side. Criar uma conta Auth em nome de outra pessoa exige a **service role key**, que nunca pode ser exposta ao client — por isso essa é a primeira operação do projeto que precisa de uma API route server-side.
+
+**O que faz:**
+1. Recebe `email`, `razaoSocial`, `cnpjCpf`, `whatsapp`
+2. Verifica se já existe um usuário Auth com esse e-mail
+3. Se não existir, cria via `supabase.auth.admin.createUser()` com senha temporária gerada
+4. Faz `upsert` em `anunciantes` vinculado ao `user_id`
+5. Retorna a senha temporária **apenas na criação** (null se o usuário já existia).
+
+### `lib/services/adminAnuncios.service.ts`
+
+Segue o padrão de service já usado no projeto — uma função por operação Supabase. Contém também o cálculo lógico de vagas disponíveis e a validação do formulário contra o inventário (`verificarInventarioSegmento`, `validarSegmentacoesContraInventario`).
+
+### `hooks/useAdminAnuncios.ts`
+
+Estado do painel: `anuncios`, `loading`, `enviando` (mantidos **separados** para evitar bugs visuais de skeleton), `erro`. `toggleAtivo` usa atualização otimista (muda o estado local antes da resposta do banco) para resposta instantânea na UI.
+
+### `supabase/setup_anuncios_storage.sql`
+
+Cria:
+- Bucket `anuncios-banners`, **separado** do bucket de fotos de projeto.
+- Policy de leitura pública e escrita restrita ao admin.
+- Policies de RLS em `anuncios` e `anunciantes` (admin gerencia tudo).
+
+## Integração pendente (fora deste MVP)
+
+O `AdCard.tsx`/`useAdContext.ts` ainda **não foram alterados** — hoje continuam sempre em modo fallback (WhatsApp institucional). Para o anúncio cadastrado aqui realmente aparecer no site, falta:
+
+- `useAdContext` passar a consultar `anuncios` filtrando por `status = true`, `status_aprovacao = 'aprovado'`, e segmento resolvido.
+- `AdCard.tsx` ganhar um terceiro modo de exibição: anúncio próprio do lojista, renderizando `imagem_url` com o selo "Publicidade".
+
+## Roadmap — desenhado, não implementado
+
+Registrado aqui para não se perder, mas fora do escopo atual:
+
+- **Self-service do lojista:** lojista cria a própria conta e cadastra o próprio anúncio.
+- **Pagamento via Asaas:** assinatura mensal fixa (R$50/mês), webhook liberando anúncio.
+- **Painel do lojista:** tela própria para acompanhar cliques/impressões do anúncio.
+- **Leilão com slots dinâmicos por segmento:** rebaixamento de posição quando superado por lance maior; número de slots escala com prestadores; cálculo real de raio geográfico.
+
+## `/admin/ativacao`
 
 Não revisados ainda.
