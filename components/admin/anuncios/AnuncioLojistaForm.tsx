@@ -11,6 +11,7 @@ const POSICOES = [
   { value: 'topo_busca', label: 'Topo do resultado da busca' },
   { value: 'entre_cards', label: 'Entre os cards de prestadores' },
   { value: 'topo_perfil', label: 'Topo do perfil público do prestador' },
+  { value: 'dashboard_prestador', label: 'Topo da dashboard do prestador (B2B)' },
 ]
 
 const ASPECT_W = 1200
@@ -161,16 +162,18 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
 
     setErro('')
     setValidando(true)
-    
+
     try {
       const dataInicioIso = dataInicio ? new Date(dataInicio).toISOString() : null
+      const dataExpiracaoIso = dataExpiracao ? new Date(dataExpiracao).toISOString() : null
       const validacao = await validarSegmentacoesContraInventario(
-        segsValidas, 
-        posicao, 
+        segsValidas,
+        posicao,
         initial?.id ?? null,
-        dataInicioIso
+        dataInicioIso,
+        dataExpiracaoIso
       )
-      
+
       if (!validacao.ok) {
         setErro(validacao.mensagem)
         return
@@ -247,7 +250,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
             hint={
               posicao === 'entre_cards'
                 ? 'Várias vagas por praça (1 a cada 4 prestadores) — anunciantes revezam'
-                : 'Vaga única por praça — só um anunciante ativo por vez'
+                : 'Vaga única por praça — só um anunciante ativo por vez (respeitando vigência)'
             }
           >
             <select className={inputClass} value={posicao} onChange={(e) => setPosicao(e.target.value)}>

@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 
 import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
+import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
 import { Lock, UserCircle2, Images, ExternalLink, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
@@ -61,6 +62,13 @@ function PerfilPageContent() {
           </Link>
         )}
       </header>
+
+      {/* Banner B2B: lojistas (ex: loja de materiais) anunciam pro prestador
+          logado, segmentado pela praça (cidade+categoria) dele. Distinto do
+          AnunciosTab (prestador comprando destaque de perfil). */}
+      <div className="pt-6">
+        <AdCardDashboard />
+      </div>
 
       <nav className="sticky top-16 z-40 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
         <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
