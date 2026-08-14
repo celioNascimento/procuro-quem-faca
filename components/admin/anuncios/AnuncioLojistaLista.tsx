@@ -5,6 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Trash2, Pencil, Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 
+const POSICOES_LABELS: Record<string, string> = {
+  topo_busca: 'Topo da Busca',
+  entre_cards: 'Entre os Cards',
+  topo_perfil: 'Topo do Perfil',
+  dashboard_prestador: 'Painel do Prestador (B2B)',
+  dashboard_cliente: 'Painel do Cliente (B2C)',
+}
+
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
@@ -47,6 +55,8 @@ function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
     ? Number(anuncio.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
     : 'R$ 0,00'
 
+  const posicaoAmigavel = POSICOES_LABELS[anuncio.posicao] ?? anuncio.posicao
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 rounded-2xl border border-zinc-100 bg-white p-3 hover:border-zinc-200 transition-colors overflow-hidden">
       
@@ -65,7 +75,7 @@ function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
             {anuncio.anunciantes?.razao_social ?? anuncio.titulo}
           </p>
           <p className="truncate text-[10px] text-zinc-400 uppercase tracking-wide mt-0.5">
-            {anuncio.posicao} · {valorFormatado} · {anuncio.cliques ?? 0} cliques
+            {posicaoAmigavel} · {valorFormatado} · {anuncio.cliques ?? 0} cliques
           </p>
           <p className="truncate text-[10px] uppercase tracking-wide mt-0.5">
             <span className={`${statusClass} font-semibold`}>
