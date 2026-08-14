@@ -524,3 +524,16 @@ function ListaConteudo() {
     </>
   )
 }
+
+export default function PaginaPrestadores() {
+  return (
+    <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
+      <Header href="/" />
+      <div className="pt-16 md:pt-28">
+        <Suspense fallback={<ListaSkeleton />}>
+          <ListaConteudo />
+        </Suspense>
+      </div>
+    </div>
+  )
+}
