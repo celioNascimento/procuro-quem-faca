@@ -60,11 +60,11 @@ export function AdCard({ page, anuncio, categoria }: Props) {
         onClick={handleClickAnuncioProprio}
         className="relative block my-2 w-full overflow-hidden rounded-2xl shadow-sm hover:opacity-95 transition-opacity"
       >
-        {/* ALTURA CONTROLADA: Removemos h-auto e colocamos quebras responsivas */}
+        {/* ALTURA CONTROLADA: Ajustada para um formato de faixa horizontal (leaderboard) para não empurrar a lista */}
         <img 
           src={anuncio.imagem_url} 
           alt={anuncio.titulo} 
-          className="w-full object-cover object-center h-[160px] md:h-[220px] lg:h-[260px]" 
+          className="w-full object-cover object-center h-[90px] md:h-[120px] lg:h-[140px]" 
         />
         <div className="pointer-events-none absolute right-3 top-3 z-10">
           <span className="rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
