@@ -99,7 +99,7 @@ export function AdCardDashboard() {
 
   if (!anuncio || !anuncio.imagem_url) {
     return (
-      <div className="mb-6">
+      <div className="mx-auto mb-6 max-w-4xl">
         <AdCardFallback fallback={FALLBACK_INCENTIVO_PORTFOLIO} />
       </div>
     )
@@ -111,7 +111,7 @@ export function AdCardDashboard() {
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleClick}
-      className="relative mb-6 block w-full overflow-hidden rounded-2xl shadow-sm transition-opacity hover:opacity-95"
+      className="relative mx-auto mb-6 block w-full max-w-4xl overflow-hidden rounded-2xl shadow-sm transition-opacity hover:opacity-95"
     >
       <img src={anuncio.imagem_url} alt={anuncio.titulo} className="w-full object-cover object-center h-[120px] md:h-[160px] lg:h-[200px]" />
 
