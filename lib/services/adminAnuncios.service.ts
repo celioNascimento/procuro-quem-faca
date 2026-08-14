@@ -60,7 +60,7 @@ export type NovoAnuncioInput = {
 
 // Posições com vaga fixa única por praça (cidade+categoria), independente
 // do número de prestadores. Ex: só existe "1 topo" pra vender por praça.
-const POSICOES_VAGA_FIXA = new Set(['topo_busca', 'topo_perfil', 'dashboard_prestador'])
+const POSICOES_VAGA_FIXA = new Set(['topo_busca', 'topo_perfil', 'dashboard_prestador', 'dashboard_cliente'])
 
 export async function criarAnuncio(input: NovoAnuncioInput) {
   if (input.segmentacoes.length === 0) {
