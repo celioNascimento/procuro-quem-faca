@@ -78,11 +78,25 @@ export async function atualizarAnuncio(
       throw new Error('É necessária ao menos uma segmentação (estado, região, cidade, grupo e categoria).')
     }
 
-    const { error: erroDelete } = await supabase.from('anuncios_segmentacoes').delete().eq('anuncio_id', id)
-    if (erroDelete) throw erroDelete
+    // 1. Isola os IDs das segmentações que já existem para mantê-los intactos (preservando métricas)
+    const idsParaManter = novasSegmentacoes.map((s) => s.id).filter(Boolean) as string[]
 
-    const { error: erroInsert } = await supabase.from('anuncios_segmentacoes').insert(
-      novasSegmentacoes.map((s) => ({
+    // 2. Remove estritamente as segmentações que o usuário apagou no formulário
+    if (idsParaManter.length > 0) {
+      const { error: erroDelete } = await supabase
+        .from('anuncios_segmentacoes')
+        .delete()
+        .eq('anuncio_id', id)
+        .not('id', 'in', `(${idsParaManter.join(',')})`)
+      if (erroDelete) throw erroDelete
+    } else {
+      const { error: erroDelete } = await supabase.from('anuncios_segmentacoes').delete().eq('anuncio_id', id)
+      if (erroDelete) throw erroDelete
+    }
+
+    // 3. UPSERT: Atualiza as que já existem (mantendo o ID) e insere apenas as novas (evitando quebra de RLS)
+    const upsertData = novasSegmentacoes.map((s) => {
+      const base = {
         anuncio_id: id,
         estado_sigla: s.estadoSigla,
         regiao_id: s.regiaoId,
@@ -90,9 +104,12 @@ export async function atualizarAnuncio(
         grupo_id: s.grupoId,
         categoria_id: s.categoriaId,
         valor_cobrado: s.valorCobrado,
-      }))
-    )
-    if (erroInsert) throw erroInsert
+      }
+      return s.id ? { ...base, id: s.id } : base
+    })
+
+    const { error: erroUpsert } = await supabase.from('anuncios_segmentacoes').upsert(upsertData)
+    if (erroUpsert) throw erroUpsert
   }
 
   return data
