@@ -2,8 +2,6 @@
 
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { usePrestadores } from '@/hooks/usePrestadores'
