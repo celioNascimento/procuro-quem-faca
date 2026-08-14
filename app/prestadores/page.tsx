@@ -452,7 +452,7 @@ function ListaConteudo() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {prestadoresExibidos.length > 0 && (
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 mx-auto w-full max-w-3xl">
                   <AdCard
                     page="lista_topo"
                     anuncio={anunciosTopo[0] ?? null}
@@ -483,7 +483,7 @@ function ListaConteudo() {
                       <PrestadorCard prestador={p} session={session} />
 
                       {ehPosicaoDeAnuncio && (
-                        <div className="lg:col-span-2">
+                        <div className="lg:col-span-2 mx-auto w-full max-w-3xl">
                           <AdCardEntreCards
                             prestadorAncora={p}
                             categoriaFallback={queryBusca || filtroHab || p.categoria || ''}
@@ -524,18 +524,5 @@ function ListaConteudo() {
         </div>
       </div>
     </>
-  )
-}
-
-export default function PaginaPrestadores() {
-  return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
-      <Header href="/" />
-      <div className="pt-16 md:pt-28">
-        <Suspense fallback={<ListaSkeleton />}>
-          <ListaConteudo />
-        </Suspense>
-      </div>
-    </div>
   )
 }
