@@ -2,6 +2,8 @@
 
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { usePrestadores } from '@/hooks/usePrestadores'
@@ -450,7 +452,7 @@ function ListaConteudo() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {prestadoresExibidos.length > 0 && (
-                <div className="lg:col-span-2 mx-auto w-full max-w-3xl">
+                <div className="lg:col-span-2">
                   <AdCard
                     page="lista_topo"
                     anuncio={anunciosTopo[0] ?? null}
@@ -481,7 +483,7 @@ function ListaConteudo() {
                       <PrestadorCard prestador={p} session={session} />
 
                       {ehPosicaoDeAnuncio && (
-                        <div className="lg:col-span-2 mx-auto w-full max-w-3xl">
+                        <div className="lg:col-span-2">
                           <AdCardEntreCards
                             prestadorAncora={p}
                             categoriaFallback={queryBusca || filtroHab || p.categoria || ''}
