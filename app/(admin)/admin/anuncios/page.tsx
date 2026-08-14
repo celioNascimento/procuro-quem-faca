@@ -41,11 +41,14 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
   )
 }
 
+type FiltroStatus = 'todos' | 'ativos' | 'rascunhos' | 'expirados'
+
 export default function PainelAnunciosLojista() {
   const { anuncios, loading, enviando, erro, cadastrarNovoAnuncio, editarAnuncio, toggleAtivo, remover } = useAdminAnuncios()
   const [editando, setEditando] = useState<any>(null) // null | 'new' | anuncio
   const [senhaModal, setSenhaModal] = useState<{ senha: string; email: string } | null>(null)
   const [simuladorAberto, setSimuladorAberto] = useState(false)
+  const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todos')
 
   async function handleSave(data: AnuncioLojistaFormValues) {
     try {
@@ -68,7 +71,19 @@ export default function PainelAnunciosLojista() {
     }
   }
 
+  const agora = new Date()
   const ativos = anuncios.filter((a: any) => a.status).length
+  const rascunhos = anuncios.filter((a: any) => !a.status).length
+  const expirados = anuncios.filter((a: any) => a.data_expiracao && new Date(a.data_expiracao) < agora).length
+
+  // Aplicação do filtro selecionado
+  const anunciosFiltrados = anuncios.filter((a: any) => {
+    const estaExpirado = a.data_expiracao && new Date(a.data_expiracao) < agora
+    if (filtroStatus === 'ativos') return a.status && !estaExpirado
+    if (filtroStatus === 'rascunhos') return !a.status
+    if (filtroStatus === 'expirados') return estaExpirado
+    return true
+  })
 
   return (
     <div className="max-w-5xl mx-auto pb-24 px-4 md:px-6">
@@ -109,7 +124,7 @@ export default function PainelAnunciosLojista() {
         </div>
         <div className="p-4 md:p-5 rounded-2xl border border-zinc-100 bg-white">
           <p className={`${labelClass} mb-2`}>Rascunho</p>
-          <span className="text-2xl md:text-3xl font-bold text-zinc-900 leading-none">{anuncios.length - ativos}</span>
+          <span className="text-2xl md:text-3xl font-bold text-zinc-900 leading-none">{rascunhos}</span>
         </div>
         <div className="p-4 md:p-5 rounded-2xl border border-zinc-100 bg-white">
           <p className={`${labelClass} mb-2`}>Cliques totais</p>
@@ -118,6 +133,44 @@ export default function PainelAnunciosLojista() {
           </span>
         </div>
       </section>
+
+      {/* Botões de Filtro */}
+      {!editando && (
+        <div className="flex items-center gap-2 pt-6 overflow-x-auto pb-1">
+          <button
+            onClick={() => setFiltroStatus('todos')}
+            className={`rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors shrink-0 ${
+              filtroStatus === 'todos' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+            }`}
+          >
+            Todos ({anuncios.length})
+          </button>
+          <button
+            onClick={() => setFiltroStatus('ativos')}
+            className={`rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors shrink-0 ${
+              filtroStatus === 'ativos' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+            }`}
+          >
+            Ativos ({ativos})
+          </button>
+          <button
+            onClick={() => setFiltroStatus('rascunhos')}
+            className={`rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors shrink-0 ${
+              filtroStatus === 'rascunhos' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+            }`}
+          >
+            Rascunhos ({rascunhos})
+          </button>
+          <button
+            onClick={() => setFiltroStatus('expirados')}
+            className={`rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors shrink-0 ${
+              filtroStatus === 'expirados' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+            }`}
+          >
+            Expirados ({expirados})
+          </button>
+        </div>
+      )}
 
       <AnimatePresence>
         {erro && (
@@ -143,13 +196,15 @@ export default function PainelAnunciosLojista() {
         </div>
       )}
 
-      <AnuncioLojistaLista
-        anuncios={anuncios}
-        loading={loading}
-        onEdit={setEditando}
-        onDelete={remover}
-        onToggleAtivo={toggleAtivo}
-      />
+      <div className="mt-6">
+        <AnuncioLojistaLista
+          anuncios={anunciosFiltrados}
+          loading={loading}
+          onEdit={setEditando}
+          onDelete={remover}
+          onToggleAtivo={toggleAtivo}
+        />
+      </div>
 
       {simuladorAberto && <SimuladorInventarioModal onClose={() => setSimuladorAberto(false)} />}
       {senhaModal && <SenhaTemporariaModal senha={senhaModal.senha} email={senhaModal.email} onClose={() => setSenhaModal(null)} />}
