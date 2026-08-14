@@ -5,7 +5,8 @@ import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, Link as LinkIcon, X, ImageOff, AlertCircle } from 'lucide-react'
 import { SegmentacaoFields } from './SegmentacaoFields'
-import { validarSegmentacoesContraInventario, type Segmentacao } from '@/lib/services/adminAnuncios.service'
+import { validarSegmentacoesContraInventario } from '@/lib/services/adminAnuncios.service'
+import type { Segmentacao, AnuncioLojistaFormValues } from '@/types/ads'
 
 const POSICOES = [
   { value: 'topo_busca', label: 'Topo do resultado da busca' },
@@ -22,24 +23,6 @@ const inputClass =
   'w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-800 placeholder:text-zinc-300 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-100'
 
 const labelClass = 'text-[10px] font-medium text-zinc-400 uppercase tracking-widest'
-
-export type AnuncioLojistaFormValues = {
-  lojista: { email: string; razaoSocial: string; whatsapp: string }
-  anuncio: {
-    titulo: string
-    linkDestino: string
-    imagemUrl: string
-    posicao: string
-    ativo: boolean
-    dataInicio: string | null
-    dataExpiracao: string | null
-    valorTotal: number
-    segmentacoes: Segmentacao[]
-  }
-  imagemFile: File | null
-  idExistente: string | null
-  anuncianteIdExistente: string | null
-}
 
 function segmentacoesIniciais(initial: any | null): Segmentacao[] {
   if (!initial?.anuncios_segmentacoes?.length) return []
