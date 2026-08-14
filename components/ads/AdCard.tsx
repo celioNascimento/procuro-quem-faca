@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AdCardFallback } from './AdCardFallback'
 import { useAdContext } from '@/hooks/useAdContext'
+import { registrarMetricaAnuncio } from '@/lib/services/adminAnuncios.service'
 import type { AdPage, Anuncio } from '@/types/ads'
 
 type Props = {
@@ -19,6 +20,21 @@ export function AdCard({ page, anuncio, categoria }: Props) {
   const agora = new Date()
   const expirado = anuncio?.data_expiracao ? new Date(anuncio.data_expiracao) < agora : false
   const agendado = anuncio?.data_inicio ? new Date(anuncio.data_inicio) > agora : false
+
+  // Registra 1 impressão quando um anúncio próprio (venda direta, o único
+  // tipo que carrega id/segmentacao_id_ativa) é efetivamente renderizado.
+  // Fire-and-forget: dedup de 30min e validação de vigência acontecem no
+  // servidor (ver registrar_metrica_anuncio) — aqui só dispara o evento.
+  useEffect(() => {
+    if (!anuncio || expirado || agendado || anuncio.tipo !== 'proprio' || !anuncio.id) return
+    registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'impressao')
+  }, [anuncio, expirado, agendado])
+
+  function handleClickAnuncioProprio() {
+    if (!anuncio?.id) return
+    // Não bloqueia nem aguarda a navegação — o link já abre normalmente.
+    registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'clique')
+  }
 
   useEffect(() => {
     if (!anuncio || expirado || agendado || anuncio.tipo === 'proprio') return
@@ -46,6 +62,7 @@ export function AdCard({ page, anuncio, categoria }: Props) {
         href={anuncio.link_destino || '#'} 
         target="_blank" 
         rel="noopener noreferrer" 
+        onClick={handleClickAnuncioProprio}
         className="relative block my-2 w-full overflow-hidden rounded-2xl shadow-sm hover:opacity-95 transition-opacity"
       >
         <img src={anuncio.imagem_url} alt={anuncio.titulo} className="w-full h-auto object-cover" />
