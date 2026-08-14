@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import CardPerfilCliente from '@/components/perfil/CardPerfilCliente'
+import { AdCardPainelCliente } from '@/components/painel/AdCardPainelCliente'
 import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 
 export default function PerfilDoCliente() {
@@ -121,6 +122,13 @@ export default function PerfilDoCliente() {
           </aside>
 
           <div className="flex min-w-0 flex-col gap-6">
+            {/* Banner B2C: anunciantes complementares à jornada do cliente
+                (ex: seguradora, financeira, decoração), segmentados pela
+                praça (cidade+categoria) do prestador do serviço mais
+                recente. Público distinto do banner na dashboard do
+                prestador (AdCardDashboard.tsx). */}
+            <AdCardPainelCliente servicos={servicos} />
+
             {avaliarCount > 0 && (
               <button
                 onClick={irParaAvaliar}
