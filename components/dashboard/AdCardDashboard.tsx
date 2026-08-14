@@ -1,11 +1,10 @@
 // components/dashboard/AdCardDashboard.tsx
-
 'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { buscarPrestadorPorUserId } from '@/lib/services/cadastroPrestador.service'
-import { listarAnunciosAtivosPorPraca, type AnuncioComAnunciante } from '@/lib/services/adminAnuncios.service'
+import { listarAnunciosAtivosPorPraca, registrarMetricaAnuncio, type AnuncioComAnunciante } from '@/lib/services/adminAnuncios.service'
 import { AdCardFallback } from '@/components/ads/AdCardFallback'
 import type { AdFallback } from '@/types/ads'
 
@@ -39,6 +38,11 @@ const FALLBACK_INCENTIVO_PORTFOLIO: AdFallback = {
  * Sem prestador resolvido, sem segmentação completa, ou sem anúncio vendido
  * pra essa praça, cai no fallback de incentivo ao portfólio (não no fallback
  * genérico de categoria do resto do site).
+ *
+ * Não usa <AdCard> (renderiza a imagem/link diretamente — decisão de manter
+ * este componente simples e independente), então registra impressão/clique
+ * aqui mesmo, via registrarMetricaAnuncio, espelhando o que AdCard.tsx faz
+ * para anúncios próprios.
  */
 export function AdCardDashboard() {
   const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined) // undefined = carregando
@@ -77,6 +81,18 @@ export function AdCardDashboard() {
     }
   }, [])
 
+  // Registra 1 impressão assim que o anúncio real é resolvido e renderizado
+  // (dedup de 30min e validação de vigência acontecem no servidor).
+  useEffect(() => {
+    if (!anuncio?.id) return
+    registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'impressao')
+  }, [anuncio])
+
+  function handleClick() {
+    if (!anuncio?.id) return
+    registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'clique')
+  }
+
   // Enquanto resolve (undefined), não renderiza nada — evita "pulo" de
   // layout mostrando o fallback e depois trocando pelo anúncio real.
   if (anuncio === undefined) return null
@@ -94,6 +110,7 @@ export function AdCardDashboard() {
       href={anuncio.link_destino || '#'}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={handleClick}
       className="relative mb-6 block w-full overflow-hidden rounded-2xl shadow-sm transition-opacity hover:opacity-95"
     >
       <img src={anuncio.imagem_url} alt={anuncio.titulo} className="h-auto w-full object-cover" />
