@@ -1,65 +1,12 @@
 // lib/services/adminAnuncios.service.ts
 
 import { createClient } from '@/lib/supabase/client'
+import type { Segmentacao, AnuncioComAnunciante, NovoAnuncioInput, ValidacaoSegmentacoes } from '@/types/ads'
+
+export type { Segmentacao, AnuncioComAnunciante, NovoAnuncioInput, ValidacaoSegmentacoes }
 
 const supabase = createClient()
 
-export type Segmentacao = {
-  id?: string
-  estadoSigla: string
-  regiaoId: string
-  cidadeId: string
-  grupoId: string
-  categoriaId: string
-  valorCobrado: number
-}
-
-export type AnuncioComAnunciante = {
-  id: string
-  status: boolean
-  tipo: string
-  titulo: string
-  link_destino: string | null
-  imagem_url: string | null
-  posicao: string
-  publico_alvo: string
-  status_aprovacao: string
-  anunciante_id: string
-  data_inicio: string | null
-  data_expiracao: string | null
-  valor_total: number
-  created_at: string
-  anunciantes: {
-    id: string
-    razao_social: string
-    whatsapp: string | null
-  } | null
-  anuncios_segmentacoes: {
-    id: string
-    estado_sigla: string
-    regiao_id: string
-    cidade_id: string
-    grupo_id: string
-    categoria_id: string
-    valor_cobrado: number
-  }[]
-}
-
-export type NovoAnuncioInput = {
-  anuncianteId: string
-  titulo: string
-  linkDestino: string
-  imagemUrl: string
-  posicao: string
-  ativo: boolean
-  dataInicio: string | null
-  dataExpiracao: string | null
-  valorTotal: number
-  segmentacoes: Segmentacao[]
-}
-
-// Posições com vaga fixa única por praça (cidade+categoria), independente
-// do número de prestadores. Ex: só existe "1 topo" pra vender por praça.
 const POSICOES_VAGA_FIXA = new Set(['topo_busca', 'topo_perfil', 'dashboard_prestador', 'dashboard_cliente'])
 
 export async function criarAnuncio(input: NovoAnuncioInput) {
@@ -232,15 +179,6 @@ export async function listarCategoriasPorGrupo(grupoId: string) {
   return data
 }
 
-/**
- * Testa se dois períodos [inicio, fim] se sobrepõem. `fim: null` é tratado
- * como "sem data de término definida" (indeterminado) — bloqueia qualquer
- * período que comece depois do início dele, já que não há previsão de fim.
- * Início vazio/null é tratado como "começa imediatamente" (época zero).
- * Bordas que se tocam (fim de um == início do outro) NÃO contam como
- * sobreposição — permite agendar a entrada de um anúncio para o exato
- * momento em que outro expira, sem bloqueio indevido.
- */
 function periodosSeSobrepoe(
   inicioA: string | null,
   fimA: string | null,
@@ -257,18 +195,6 @@ function periodosSeSobrepoe(
 
 type AnuncioPeriodo = { id: string; data_inicio: string | null; data_expiracao: string | null }
 
-/**
- * Busca todos os anúncios "próprios" ativos+aprovados de uma praça+posição
- * (sem filtrar por vigência no SQL — isso é feito depois, via sobreposição
- * de intervalo contra o período candidato) e retorna quantos REALMENTE
- * competem pela vaga: apenas os cujo período se sobrepõe ao período
- * candidato (dataInicioCandidato/dataExpiracaoCandidato). Um anúncio
- * agendado para começar exatamente quando outro expira não conta como
- * ocupando a mesma vaga.
- *
- * `excluirAnuncioId` evita que o próprio anúncio em edição conte contra si
- * mesmo como "vaga ocupada".
- */
 async function contarAnunciosSobrepostosNaPraca(
   cidadeId: string,
   categoriaId: string,
@@ -304,26 +230,6 @@ async function contarAnunciosSobrepostosNaPraca(
   return { ocupados: anunciosSobrepostos.length, anunciosSobrepostos }
 }
 
-/**
- * Consulta em tempo real a disponibilidade de inventário para uma segmentação,
- * considerando um período candidato (dataInicio/dataExpiracao) — dois
- * anúncios só competem pela mesma vaga se seus períodos se sobrepõem. Isso
- * permite agendar a entrada de um novo anúncio para o exato momento em que
- * outro expira na mesma praça, sem bloqueio indevido.
- *
- * Sem período candidato informado (chamadas legadas, ex: indicador em tempo
- * real por linha do form), assume "a partir de agora, sem fim definido" —
- * comportamento equivalente ao "ocupado agora" de antes.
- *
- * Regra de negócio (não simétrica entre posições):
- * - topo_busca / topo_perfil / dashboard_prestador: vaga fixa única por
- *   praça — não escala com o número de prestadores. Lotado assim que
- *   existir 1 anúncio com período sobreposto.
- * - entre_cards (e demais): 1 vaga a cada 4 prestadores ativos da praça.
- *
- * `excluirAnuncioId` evita que o próprio anúncio em edição conte contra si
- * mesmo como "vaga ocupada".
- */
 export async function verificarInventarioSegmento(
   cidadeId: string,
   categoriaId: string,
@@ -388,22 +294,6 @@ export async function verificarInventarioSegmento(
   }
 }
 
-export type ValidacaoSegmentacoes =
-  | { ok: true }
-  | { ok: false; mensagem: string }
-
-/**
- * Valida TODAS as linhas de segmentação de um formulário de anúncio de uma vez,
- * considerando:
- * 1) duplicatas dentro do próprio formulário (cada repetição da mesma praça
- *    consome uma vaga adicional na checagem, não é tratada como "já existe, ok");
- * 2) o inventário real do banco pra cada praça+posição, respeitando
- *    sobreposição de período (dataInicio/dataExpiracao) — permite agendar
- *    a entrada de um anúncio para o exato momento em que outro expira;
- * 3) exclusão do próprio anúncio (em edição) do cálculo de ocupação.
- *
- * Deve ser chamada no submit do formulário, antes de gravar no banco.
- */
 export async function validarSegmentacoesContraInventario(
   segmentacoes: Segmentacao[],
   posicao: string,
@@ -411,7 +301,6 @@ export async function validarSegmentacoesContraInventario(
   dataInicio: string | null = null,
   dataExpiracao: string | null = null
 ): Promise<ValidacaoSegmentacoes> {
-  // Agrupa por praça (cidade+categoria) pra contar repetições dentro do form
   const contagemNoForm = new Map<string, number>()
   for (const s of segmentacoes) {
     const chave = `${s.cidadeId}::${s.categoriaId}`
@@ -450,11 +339,6 @@ export async function validarSegmentacoesContraInventario(
   return { ok: true }
 }
 
-/**
- * Busca anúncios "próprios" ativos, aprovados e dentro da vigência, para uma
- * praça (cidade+categoria) e posição específicas. Usada na listagem pública
- * pra sortear entre múltiplos anunciantes que compraram a mesma posição.
- */
 export async function listarAnunciosAtivosPorPraca(
   cidadeId: string,
   categoriaId: string,
@@ -484,15 +368,34 @@ export async function listarAnunciosAtivosPorPraca(
     return []
   }
 
-  // Join retorna um anuncio por linha de segmentação — dedup por id
   const vistos = new Set<string>()
   const anuncios: AnuncioComAnunciante[] = []
+  
   for (const row of data ?? []) {
     const a = (row as any).anuncios
     if (!a || vistos.has(a.id)) continue
     vistos.add(a.id)
+    
+    a.segmentacao_id_ativa = (row as any).id
+    
     anuncios.push(a)
   }
 
   return anuncios
+}
+
+export async function registrarMetricaAnuncio(
+  anuncioId: string,
+  segmentacaoId: string | undefined,
+  tipo: 'impressao' | 'clique'
+) {
+  try {
+    fetch('/api/anuncios/metricas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ anuncioId, segmentacaoId, tipo })
+    }).catch((err) => console.error('Erro silencioso ao registrar métrica:', err))
+  } catch (error) {
+    console.error('Falha ao tentar registrar a métrica do anúncio:', error)
+  }
 }
