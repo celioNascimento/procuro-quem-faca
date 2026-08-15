@@ -1,6 +1,7 @@
 // lib/services/adminAnuncios.service.ts
 
 import { createClient } from '@/lib/supabase/client'
+import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import type { Segmentacao, AnuncioComAnunciante, NovoAnuncioInput, ValidacaoSegmentacoes } from '@/types/ads'
 
 export type { Segmentacao, AnuncioComAnunciante, NovoAnuncioInput, ValidacaoSegmentacoes }
@@ -220,6 +221,9 @@ async function contarAnunciosSobrepostosNaPraca(
   dataExpiracaoCandidato: string | null,
   excluirAnuncioId?: string
 ): Promise<{ ocupados: number; anunciosSobrepostos: AnuncioPeriodo[] }> {
+  // Contagem de anúncios concorrentes na mesma praça: usa categoria_id exato,
+  // já que a segmentação do anúncio é escolhida via select estruturado no
+  // formulário (não é busca textual) — não deve seguir a lógica de busca.
   const { data, error } = await supabase
     .from('anuncios_segmentacoes')
     .select(`anuncios!inner(id, data_inicio, data_expiracao)`)
@@ -247,6 +251,44 @@ async function contarAnunciosSobrepostosNaPraca(
   return { ocupados: anunciosSobrepostos.length, anunciosSobrepostos }
 }
 
+// Conta prestadores ativos de uma praça (cidade+categoria) usando exatamente
+// a mesma lógica de match da página de busca pública (nome + categoria +
+// habilidades + cidade, ver lib/buscaUtils.tsx), para que o inventário de
+// vagas de anúncio reflita fielmente quem aparece nos resultados de busca.
+// Isso é intencionalmente mais amplo que um filtro estrito por categoria_id:
+// um prestador de outra categoria principal que liste a habilidade também
+// conta aqui, pois também aparece nos resultados dessa busca.
+async function contarPrestadoresDaPraca(cidadeId: string, categoriaId: string): Promise<number> {
+  const { data: categoria, error: erroCategoria } = await supabase
+    .from('categorias')
+    .select('nome')
+    .eq('id', categoriaId)
+    .maybeSingle()
+
+  if (erroCategoria) throw erroCategoria
+  if (!categoria?.nome) return 0
+
+  const { data: prestadores, error: erroPrestadores } = await supabase
+    .from('prestadores')
+    .select('id, nome, categoria:categorias(nome), habilidades, cidades(nome)')
+    .eq('status', 'ativo')
+    .eq('cidade_id', cidadeId)
+
+  if (erroPrestadores) throw erroPrestadores
+  if (!prestadores) return 0
+
+  // filtrarPrestadores espera p.categoria como string (não objeto aninhado)
+  // e p.cidades como objeto com .nome — normaliza pro mesmo shape usado em
+  // usePrestadores.ts antes de aplicar o filtro.
+  const normalizados = prestadores.map((p: any) => ({
+    ...p,
+    categoria: p.categoria?.nome || '',
+  }))
+
+  const termo = normalizarTermo(categoria.nome, '')
+  return filtrarPrestadores(normalizados, termo).length
+}
+
 export async function verificarInventarioSegmento(
   cidadeId: string,
   categoriaId: string,
@@ -270,14 +312,7 @@ export async function verificarInventarioSegmento(
       return { totalPrestadores: 0, vagasTotais, vagasDisponiveis, ocupados, proximaExpiracao: null }
     }
 
-    const { count: totalPrestadores, error: erroPrestadores } = await supabase
-      .from('prestadores')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'ativo')
-      .eq('cidade_id', cidadeId)
-      .eq('categoria_id', categoriaId)
-
-    if (erroPrestadores) throw erroPrestadores
+    const totalPrestadores = await contarPrestadoresDaPraca(cidadeId, categoriaId)
 
     const { ocupados, anunciosSobrepostos } = await contarAnunciosSobrepostosNaPraca(
       cidadeId,
@@ -288,8 +323,7 @@ export async function verificarInventarioSegmento(
       excluirAnuncioId
     )
 
-    const prestadores = totalPrestadores || 0
-    const vagasTotais = Math.floor(prestadores / 4)
+    const vagasTotais = Math.floor(totalPrestadores / 4)
     const vagasDisponiveis = Math.max(0, vagasTotais - ocupados)
 
     let proximaExpiracao: string | null = null
@@ -304,7 +338,7 @@ export async function verificarInventarioSegmento(
       }
     }
 
-    return { totalPrestadores: prestadores, vagasTotais, vagasDisponiveis, ocupados, proximaExpiracao }
+    return { totalPrestadores, vagasTotais, vagasDisponiveis, ocupados, proximaExpiracao }
   } catch (e) {
     console.error('Erro ao verificar inventário do segmento:', e)
     return { vagasTotais: 0, vagasDisponiveis: 0, totalPrestadores: 0, ocupados: 0, proximaExpiracao: null }
