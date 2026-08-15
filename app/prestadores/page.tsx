@@ -167,7 +167,9 @@ function AdCardEntreCards({
 }: {
   prestadorAncora: Prestador
   categoriaFallback: string
-  mostrarAnuncio: boolean
+  // undefined = inventário da praça ainda não foi calculado (mantém
+  // skeleton); true/false = decisão já tomada para essa posição.
+  mostrarAnuncio: boolean | undefined
   cachePracaRef: React.MutableRefObject<Map<string, AnuncioComAnunciante[]>>
   sorteadoresRef: React.MutableRefObject<Map<string, () => AnuncioComAnunciante | null>>
 }) {
@@ -178,6 +180,13 @@ function AdCardEntreCards({
   const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined) // undefined = carregando
 
   useEffect(() => {
+    // Inventário da praça ainda não foi calculado — não decide nada ainda,
+    // mantém undefined (skeleton) em vez de cair prematuramente em null.
+    if (mostrarAnuncio === undefined) {
+      setAnuncio(undefined)
+      return
+    }
+
     if (!mostrarAnuncio || !chavePraca || !cidadeId || !categoriaId) {
       setAnuncio(null)
       return
@@ -217,19 +226,25 @@ function AdCardEntreCards({
 
   // Segue o mesmo contrato de AdCard.tsx: undefined = ainda carregando
   // (mostra skeleton), null = confirmado sem anúncio (mostra fallback).
-  // !mostrarAnuncio é uma decisão definitiva (essa posição não sorteou
-  // anúncio nesta praça) e vai direto pra null, sem passar por "carregando".
+  // Dois pontos podem estar "carregando" aqui: o inventário da praça ainda
+  // não foi calculado (mostrarAnuncio === undefined), ou o inventário já
+  // decidiu mostrar anúncio nesta posição mas o sorteio real ainda não
+  // resolveu (anuncio === undefined). !mostrarAnuncio (decidido false) é a
+  // única decisão definitiva-negativa e vai direto pra null.
   // AnuncioComAnunciante.tipo é `string` (constraint do banco: 'proprio'|'google'),
   // enquanto Anuncio.tipo é a união restrita 'vip'|'proprio'|'google' — TS não
   // aceita atribuição direta de string largo pra união estreita. Estrutura já
   // validada como compatível contra types/ads.ts real; cast explícito abaixo.
-  const anuncioParaExibir: Anuncio | null | undefined = !mostrarAnuncio
-    ? null
-    : anuncio === undefined
+  const anuncioParaExibir: Anuncio | null | undefined =
+    mostrarAnuncio === undefined
       ? undefined
-      : anuncio === null
+      : !mostrarAnuncio
         ? null
-        : (anuncio as Anuncio)
+        : anuncio === undefined
+          ? undefined
+          : anuncio === null
+            ? null
+            : (anuncio as Anuncio)
 
   return <AdCard page="prestadores" anuncio={anuncioParaExibir} categoria={categoriaFallback} />
 }
@@ -493,11 +508,14 @@ function ListaConteudo() {
                   const ehPosicaoDeAnuncio = (index + 1) % 4 === 0
                   const chave = ehPosicaoDeAnuncio ? chavePracaDe(p) : null
 
-                  let mostrarAnuncio = false
+                  // undefined = praça ainda não teve o inventário calculado
+                  // (chave ausente do Map); true/false = já calculado.
+                  let mostrarAnuncio: boolean | undefined = false
                   if (ehPosicaoDeAnuncio && chave) {
                     const indiceNaPraca = contadorPorPraca.get(chave) ?? 0
                     contadorPorPraca.set(chave, indiceNaPraca + 1)
-                    mostrarAnuncio = posicoesComAnuncioPorPraca.get(chave)?.has(indiceNaPraca) ?? false
+                    const posicoesDaPraca = posicoesComAnuncioPorPraca.get(chave)
+                    mostrarAnuncio = posicoesDaPraca === undefined ? undefined : posicoesDaPraca.has(indiceNaPraca)
                   }
 
                   return (
