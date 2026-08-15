@@ -40,9 +40,14 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
   })
 
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
-  const [anuncioTopo, setAnuncioTopo] = useState<Anuncio | null>(null)
+  // undefined = ainda buscando o anúncio; null = buscou e não há nenhum
+  // ativo; Anuncio = achou. Ver AdCard.tsx — undefined evita que o fallback
+  // apareça brevemente antes da resposta real do Supabase chegar.
+  const [anuncioTopo, setAnuncioTopo] = useState<Anuncio | null | undefined>(undefined)
 
   useEffect(() => {
+    let cancelado = false
+
     async function carregarAnuncio() {
       const { data, error } = await supabase
         .from('anuncios')
@@ -51,13 +56,21 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
         .eq('status_aprovacao', 'aprovado')
         .eq('posicao', 'topo_perfil')
 
+      if (cancelado) return
+
       if (!error && data && data.length > 0) {
         // Faz um rodízio aleatório caso haja mais de um anúncio ativo para essa posição
         const adAleatorio = data[Math.floor(Math.random() * data.length)]
         setAnuncioTopo(adAleatorio as Anuncio)
+      } else {
+        setAnuncioTopo(null)
       }
     }
     carregarAnuncio()
+
+    return () => {
+      cancelado = true
+    }
   }, [])
 
   return (
