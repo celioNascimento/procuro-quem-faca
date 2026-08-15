@@ -3,9 +3,10 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, AlertCircle, Megaphone, Copy, Check, Search } from 'lucide-react'
+import { Plus, AlertCircle, Megaphone, Copy, Check, Search, ChevronDown } from 'lucide-react'
 import { useAdminAnuncios } from '@/hooks/useAdminAnuncios'
 import { AnuncioLojistaForm, type AnuncioLojistaFormValues } from '@/components/admin/anuncios/AnuncioLojistaForm'
+import { AnuncioClienteForm } from '@/components/admin/anuncios/AnuncioClienteForm'
 import { AnuncioLojistaLista } from '@/components/admin/anuncios/AnuncioLojistaLista'
 import { SimuladorInventarioModal } from '@/components/admin/anuncios/SimuladorInventarioModal'
 
@@ -42,13 +43,15 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
 }
 
 type FiltroStatus = 'todos' | 'ativos' | 'rascunhos' | 'expirados'
+type ModoEdicao = null | 'new_lojista' | 'new_cliente' | { id: string; posicao: string; [key: string]: any }
 
 export default function PainelAnunciosLojista() {
   const { anuncios, loading, enviando, erro, cadastrarNovoAnuncio, editarAnuncio, toggleAtivo, remover } = useAdminAnuncios()
-  const [editando, setEditando] = useState<any>(null) // null | 'new' | anuncio
+  const [editando, setEditando] = useState<ModoEdicao>(null)
   const [senhaModal, setSenhaModal] = useState<{ senha: string; email: string } | null>(null)
   const [simuladorAberto, setSimuladorAberto] = useState(false)
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todos')
+  const [menuNovoAberto, setMenuNovoAberto] = useState(false)
 
   async function handleSave(data: AnuncioLojistaFormValues) {
     try {
@@ -85,6 +88,9 @@ export default function PainelAnunciosLojista() {
     return true
   })
 
+  // Define qual formulário deve ser renderizado
+  const isFormCliente = editando === 'new_cliente' || (typeof editando === 'object' && editando?.posicao === 'dashboard_cliente')
+
   return (
     <div className="max-w-5xl mx-auto pb-24 px-4 md:px-6">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-6 md:pt-10 pb-6 md:pb-8 border-b border-zinc-100">
@@ -103,12 +109,45 @@ export default function PainelAnunciosLojista() {
             >
               <Search size={15} /> Consultar Vagas
             </button>
-            <button
-              onClick={() => setEditando('new')}
-              className="flex items-center gap-1.5 rounded-xl bg-zinc-900 px-4 py-2.5 text-[12px] font-semibold text-white hover:bg-zinc-800 transition-colors"
-            >
-              <Plus size={15} /> Novo anúncio
-            </button>
+            
+            {/* Dropdown Menu para Novo Anúncio */}
+            <div className="relative">
+              <button
+                onClick={() => setMenuNovoAberto(!menuNovoAberto)}
+                className="flex items-center gap-1.5 rounded-xl bg-zinc-900 px-4 py-2.5 text-[12px] font-semibold text-white hover:bg-zinc-800 transition-colors"
+              >
+                <Plus size={15} /> Novo anúncio <ChevronDown size={14} className={`transition-transform ${menuNovoAberto ? 'rotate-180' : ''}`} />
+              </button>
+              
+              <AnimatePresence>
+                {menuNovoAberto && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setMenuNovoAberto(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-zinc-100 bg-white p-2 shadow-xl"
+                    >
+                      <button
+                        onClick={() => { setEditando('new_lojista'); setMenuNovoAberto(false) }}
+                        className="flex w-full flex-col items-start gap-1 rounded-xl p-3 text-left hover:bg-zinc-50"
+                      >
+                        <span className="text-[13px] font-bold text-zinc-900">Anúncio em Buscas e Profissionais</span>
+                        <span className="text-[11px] text-zinc-500">Exige segmentação por categoria de serviço</span>
+                      </button>
+                      <button
+                        onClick={() => { setEditando('new_cliente'); setMenuNovoAberto(false) }}
+                        className="flex w-full flex-col items-start gap-1 rounded-xl p-3 text-left hover:bg-zinc-50"
+                      >
+                        <span className="text-[13px] font-bold text-zinc-900">Anúncio no Painel do Cliente</span>
+                        <span className="text-[11px] text-zinc-500">Segmentado apenas por cidade/região</span>
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         )}
       </header>
@@ -187,24 +226,35 @@ export default function PainelAnunciosLojista() {
 
       {editando && (
         <div className="mt-6">
-          <AnuncioLojistaForm
-            initial={editando === 'new' ? null : editando}
-            onSave={handleSave}
-            onCancel={() => setEditando(null)}
-            enviando={enviando}
-          />
+          {isFormCliente ? (
+            <AnuncioClienteForm
+              initial={typeof editando === 'object' ? editando : null}
+              onSave={handleSave}
+              onCancel={() => setEditando(null)}
+              enviando={enviando}
+            />
+          ) : (
+            <AnuncioLojistaForm
+              initial={typeof editando === 'object' ? editando : null}
+              onSave={handleSave}
+              onCancel={() => setEditando(null)}
+              enviando={enviando}
+            />
+          )}
         </div>
       )}
 
-      <div className="mt-6">
-        <AnuncioLojistaLista
-          anuncios={anunciosFiltrados}
-          loading={loading}
-          onEdit={setEditando}
-          onDelete={remover}
-          onToggleAtivo={toggleAtivo}
-        />
-      </div>
+      {!editando && (
+        <div className="mt-6">
+          <AnuncioLojistaLista
+            anuncios={anunciosFiltrados}
+            loading={loading}
+            onEdit={setEditando}
+            onDelete={remover}
+            onToggleAtivo={toggleAtivo}
+          />
+        </div>
+      )}
 
       {simuladorAberto && <SimuladorInventarioModal onClose={() => setSimuladorAberto(false)} />}
       {senhaModal && <SenhaTemporariaModal senha={senhaModal.senha} email={senhaModal.email} onClose={() => setSenhaModal(null)} />}
