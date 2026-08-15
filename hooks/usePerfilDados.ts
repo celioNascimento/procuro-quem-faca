@@ -30,6 +30,11 @@ export function usePerfilDados() {
   const [listaCidades, setListaCidades] = useState<any[]>([])
   const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
 
+  // Indica se já sabemos, com certeza, os dados do perfil (whatsapp incluso).
+  // Enquanto for `false`, qualquer hook dependente (ex: useServicosCliente)
+  // deve continuar em estado de loading, e não assumir "sem dado" por engano.
+  const [perfilCarregado, setPerfilCarregado] = useState(false)
+
   const [perfil, setPerfil] = useState({
     full_name: '', email: '', whatsapp: '', logradouro: '',
     numero: '', complemento: '', bairro: '', cidade: '', uf: '', avatar_url: '',
@@ -46,30 +51,47 @@ export function usePerfilDados() {
 
       setUser(sessionUser)
 
-      const profileData = await ClienteService.fetchClienteProfile(sessionUser.id)
-      if (cancelado) return
+      try {
+        const profileData = await ClienteService.fetchClienteProfile(sessionUser.id)
+        if (cancelado) return
 
-      const googleAvatar = sessionUser.user_metadata?.picture
-        || sessionUser.user_metadata?.avatar_url
-        || ''
-      const avatarFinal = profileData?.avatar_url || googleAvatar
+        const googleAvatar = sessionUser.user_metadata?.picture
+          || sessionUser.user_metadata?.avatar_url
+          || ''
+        const avatarFinal = profileData?.avatar_url || googleAvatar
 
-      setPerfil({
-        full_name: profileData?.full_name || sessionUser.user_metadata?.full_name || '',
-        avatar_url: avatarFinal,
-        email: sessionUser.email || '',
-        whatsapp: aplicarMascara(profileData?.whatsapp || ''),
-        logradouro: profileData?.logradouro || '',
-        numero: profileData?.numero || '',
-        complemento: profileData?.complemento || '',
-        bairro: profileData?.bairro || '',
-        cidade: profileData?.cidade || '',
-        uf: profileData?.uf || '',
-      })
+        setPerfil({
+          full_name: profileData?.full_name || sessionUser.user_metadata?.full_name || '',
+          avatar_url: avatarFinal,
+          email: sessionUser.email || '',
+          whatsapp: aplicarMascara(profileData?.whatsapp || ''),
+          logradouro: profileData?.logradouro || '',
+          numero: profileData?.numero || '',
+          complemento: profileData?.complemento || '',
+          bairro: profileData?.bairro || '',
+          cidade: profileData?.cidade || '',
+          uf: profileData?.uf || '',
+        })
 
-      // Salva foto do Google no banco se ainda não tiver avatar próprio
-      if (!profileData?.avatar_url && googleAvatar) {
-        await ClienteService.updateClienteProfile(sessionUser.id, { avatar_url: googleAvatar })
+        // Salva foto do Google no banco se ainda não tiver avatar próprio.
+        // Efeito colateral que não deve bloquear a liberação de perfilCarregado.
+        if (!profileData?.avatar_url && googleAvatar) {
+          ClienteService.updateClienteProfile(sessionUser.id, { avatar_url: googleAvatar }).catch(() => { })
+        }
+      } catch {
+        // Falha ao buscar o perfil (ex: erro de rede). Não travamos o usuário:
+        // seguimos com os dados básicos da sessão e liberamos perfilCarregado
+        // no finally, para que a UI dependente (ex: anúncio) não fique presa
+        // em loading para sempre.
+        if (!cancelado) {
+          setPerfil(prev => ({
+            ...prev,
+            email: sessionUser.email || '',
+            full_name: prev.full_name || sessionUser.user_metadata?.full_name || '',
+          }))
+        }
+      } finally {
+        if (!cancelado) setPerfilCarregado(true)
       }
     }
 
@@ -87,7 +109,10 @@ export function usePerfilDados() {
     // 3) Rede de segurança: se depois de 2s ainda não achou nenhuma sessão,
     //    aí sim consideramos que o usuário não está logado de verdade
     const timeoutSemSessao = setTimeout(() => {
-      if (!cancelado && !jaCarregou) router.push('/')
+      if (!cancelado && !jaCarregou) {
+        setPerfilCarregado(true)
+        router.push('/')
+      }
     }, 2000)
 
     ClienteService.fetchEstados()
@@ -171,6 +196,7 @@ export function usePerfilDados() {
     listaEstados,
     listaCidades,
     errorModal, setErrorModal,
+    perfilCarregado,
     aplicarMascara,
     handleChangePerfil,
     handleUploadFoto,
