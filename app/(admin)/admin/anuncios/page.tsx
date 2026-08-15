@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, AlertCircle, Megaphone, Copy, Check, Search, ChevronDown, Users } from 'lucide-react'
 import { useAdminAnuncios } from '@/hooks/useAdminAnuncios'
-import { AnuncioLojistaForm, type AnuncioLojistaFormValues } from '@/components/admin/anuncios/AnuncioLojistaForm'
+import { AnuncioLojistaForm, type AnuncioLojistaFormValues, type PreenchimentoLojista } from '@/components/admin/anuncios/AnuncioLojistaForm'
 import { AnuncioClienteForm } from '@/components/admin/anuncios/AnuncioClienteForm'
 import { AnuncioLojistaLista } from '@/components/admin/anuncios/AnuncioLojistaLista'
 import { SimuladorInventarioModal } from '@/components/admin/anuncios/SimuladorInventarioModal'
@@ -45,12 +45,20 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
 
 type FiltroStatus = 'todos' | 'ativos' | 'rascunhos' | 'expirados'
 
-// Além dos casos existentes, 'new_cliente' agora pode carregar um valor
-// inicial vindo do SimuladorClienteModal (estado/região/cidade já
-// preenchidos). Quando presente, o AnuncioClienteForm deve usar esses
-// valores como ponto de partida da primeira segmentação.
+// Formatos possíveis de "editando":
+// - 'new_lojista' / 'new_cliente': novo anúncio em branco
+// - NovoLojistaComDados / NovoClienteComDados: novo anúncio, mas com a
+//   segmentação pré-preenchida a partir do respectivo simulador
+// - { id, posicao, ... }: edição de um anúncio já existente
+type NovoLojistaComDados = { modo: 'new_lojista'; preenchimento: PreenchimentoLojista }
 type NovoClienteComDados = { modo: 'new_cliente'; preenchimento: PreenchimentoCliente }
-type ModoEdicao = null | 'new_lojista' | 'new_cliente' | NovoClienteComDados | { id: string; posicao: string; [key: string]: any }
+type ModoEdicao =
+  | null
+  | 'new_lojista'
+  | 'new_cliente'
+  | NovoLojistaComDados
+  | NovoClienteComDados
+  | { id: string; posicao: string; [key: string]: any }
 
 export default function PainelAnunciosLojista() {
   const { anuncios, loading, enviando, erro, cadastrarNovoAnuncio, editarAnuncio, toggleAtivo, remover } = useAdminAnuncios()
@@ -97,26 +105,43 @@ export default function PainelAnunciosLojista() {
     return true
   })
 
+  function ehModoObjeto(v: ModoEdicao): v is NovoLojistaComDados | NovoClienteComDados | { id: string; posicao: string; [key: string]: any } {
+    return typeof v === 'object' && v !== null
+  }
+
   // Define qual formulário deve ser renderizado
   const isFormCliente =
     editando === 'new_cliente' ||
-    (typeof editando === 'object' && editando !== null && 'modo' in editando && editando.modo === 'new_cliente') ||
-    (typeof editando === 'object' && editando !== null && 'posicao' in editando && editando.posicao === 'dashboard_cliente')
+    (ehModoObjeto(editando) && 'modo' in editando && editando.modo === 'new_cliente') ||
+    (ehModoObjeto(editando) && 'posicao' in editando && editando.posicao === 'dashboard_cliente')
 
-  // Valor inicial a repassar pro AnuncioClienteForm: cobre tanto edição de
-  // anúncio existente (objeto com id/posicao) quanto o atalho vindo do
-  // simulador (NovoClienteComDados) — o form recebe sempre `initial`, e
-  // decide internamente o que fazer com cada shape.
+  // Valor inicial pro AnuncioClienteForm: edição existente OU atalho do
+  // SimuladorClienteModal.
   const initialParaFormCliente =
-    typeof editando === 'object' && editando !== null && 'modo' in editando && editando.modo === 'new_cliente'
+    ehModoObjeto(editando) && 'modo' in editando && editando.modo === 'new_cliente'
       ? editando.preenchimento
-      : typeof editando === 'object' && editando !== null && 'posicao' in editando
+      : ehModoObjeto(editando) && 'posicao' in editando
+        ? editando
+        : null
+
+  // Valor inicial pro AnuncioLojistaForm: edição existente OU atalho do
+  // SimuladorInventarioModal. AnuncioLojistaForm distingue os dois formatos
+  // internamente (ver ehPreenchimentoDoSimulador em AnuncioLojistaForm.tsx).
+  const initialParaFormLojista =
+    ehModoObjeto(editando) && 'modo' in editando && editando.modo === 'new_lojista'
+      ? editando.preenchimento
+      : ehModoObjeto(editando) && 'posicao' in editando && editando.posicao !== 'dashboard_cliente'
         ? editando
         : null
 
   function usarDadosDoSimuladorCliente(dados: PreenchimentoCliente) {
     setSimuladorClienteAberto(false)
     setEditando({ modo: 'new_cliente', preenchimento: dados })
+  }
+
+  function usarDadosDoSimuladorLojista(dados: PreenchimentoLojista) {
+    setSimuladorAberto(false)
+    setEditando({ modo: 'new_lojista', preenchimento: dados })
   }
 
   return (
@@ -134,7 +159,7 @@ export default function PainelAnunciosLojista() {
             {/* Dropdown único "Consultar" — reúne os dois simuladores (Vagas
                 de lojista e Painel do Cliente) num só botão, evitando que
                 dois botões de texto longo disputem espaço horizontal no
-                mobile (ver AnuncioLojistaForm/SimuladorClienteModal). */}
+                mobile. */}
             <div className="relative">
               <button
                 onClick={() => setMenuConsultarAberto(!menuConsultarAberto)}
@@ -304,7 +329,7 @@ export default function PainelAnunciosLojista() {
             />
           ) : (
             <AnuncioLojistaForm
-              initial={typeof editando === 'object' && editando !== null && 'posicao' in editando ? editando : null}
+              initial={initialParaFormLojista}
               onSave={handleSave}
               onCancel={() => setEditando(null)}
               enviando={enviando}
@@ -325,7 +350,12 @@ export default function PainelAnunciosLojista() {
         </div>
       )}
 
-      {simuladorAberto && <SimuladorInventarioModal onClose={() => setSimuladorAberto(false)} />}
+      {simuladorAberto && (
+        <SimuladorInventarioModal
+          onClose={() => setSimuladorAberto(false)}
+          onUsarNoCadastro={usarDadosDoSimuladorLojista}
+        />
+      )}
       {simuladorClienteAberto && (
         <SimuladorClienteModal
           onClose={() => setSimuladorClienteAberto(false)}
