@@ -12,8 +12,7 @@ const POSICOES = [
   { value: 'topo_busca', label: 'Topo do resultado da busca' },
   { value: 'entre_cards', label: 'Entre os cards de prestadores' },
   { value: 'topo_perfil', label: 'Topo do perfil público do prestador' },
-  { value: 'dashboard_prestador', label: 'Topo da dashboard do prestador (B2B)' },
-  { value: 'dashboard_cliente', label: 'Topo da área do cliente (B2C)' },
+  { value: 'dashboard_prestador', label: 'Topo da dashboard do prestador (B2B)' }
 ]
 
 const ASPECT_W = 1200
