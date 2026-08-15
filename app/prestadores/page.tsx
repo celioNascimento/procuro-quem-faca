@@ -184,6 +184,7 @@ function AdCardEntreCards({
     }
 
     let cancelado = false
+    setAnuncio(undefined) // reseta pra "carregando" ao trocar de praça/posição
 
     async function resolver() {
       const cache = cachePracaRef.current
@@ -214,14 +215,21 @@ function AdCardEntreCards({
     }
   }, [mostrarAnuncio, chavePraca, cidadeId, categoriaId, cachePracaRef, sorteadoresRef])
 
-  // Se essa posição não foi sorteada pra mostrar anúncio real, cai direto no
-  // fallback sem sequer buscar dados — reserva o espaço de venda pra escassez.
+  // Segue o mesmo contrato de AdCard.tsx: undefined = ainda carregando
+  // (mostra skeleton), null = confirmado sem anúncio (mostra fallback).
+  // !mostrarAnuncio é uma decisão definitiva (essa posição não sorteou
+  // anúncio nesta praça) e vai direto pra null, sem passar por "carregando".
   // AnuncioComAnunciante.tipo é `string` (constraint do banco: 'proprio'|'google'),
   // enquanto Anuncio.tipo é a união restrita 'vip'|'proprio'|'google' — TS não
   // aceita atribuição direta de string largo pra união estreita. Estrutura já
   // validada como compatível contra types/ads.ts real; cast explícito abaixo.
-  const anuncioParaExibir: Anuncio | null =
-    !mostrarAnuncio || anuncio === undefined || anuncio === null ? null : (anuncio as Anuncio)
+  const anuncioParaExibir: Anuncio | null | undefined = !mostrarAnuncio
+    ? null
+    : anuncio === undefined
+      ? undefined
+      : anuncio === null
+        ? null
+        : (anuncio as Anuncio)
 
   return <AdCard page="prestadores" anuncio={anuncioParaExibir} categoria={categoriaFallback} />
 }
@@ -236,7 +244,11 @@ function ListaConteudo() {
     usePrestadores(queryBusca, filtroHab, filtroCidNome)
   const session = useSession()
 
-  const [anunciosTopo, setAnunciosTopo] = useState<Anuncio[]>([])
+  // undefined = ainda buscando topo_busca; null = buscou e não há nenhum
+  // ativo; Anuncio = achou pelo menos um (usamos o primeiro do shuffle).
+  // Mesmo contrato de AdCard.tsx — undefined evita flash de fallback antes
+  // da resposta do Supabase chegar.
+  const [anuncioTopo, setAnuncioTopo] = useState<Anuncio | null | undefined>(undefined)
 
   // Cache em memória por praça (cidade_id::categoria_id) — evita refetch a
   // cada render/scroll enquanto o usuário permanece na mesma busca.
@@ -246,6 +258,8 @@ function ListaConteudo() {
   useEffect(() => {
     // topo_busca continua com vaga única — mantém a lógica antiga simples,
     // buscando os anúncios "topo_busca" globais e deixando o AdCard escolher.
+    let cancelado = false
+
     async function carregarAnunciosTopo() {
       const agora = new Date().toISOString()
       const { data, error } = await supabase
@@ -257,11 +271,19 @@ function ListaConteudo() {
         .or(`data_inicio.is.null,data_inicio.lte.${agora}`)
         .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`)
 
-      if (!error && data) {
-        setAnunciosTopo(shuffleArray(data as Anuncio[]))
+      if (cancelado) return
+
+      if (!error && data && data.length > 0) {
+        setAnuncioTopo(shuffleArray(data as Anuncio[])[0])
+      } else {
+        setAnuncioTopo(null)
       }
     }
     carregarAnunciosTopo()
+
+    return () => {
+      cancelado = true
+    }
   }, [])
 
   // Limpa o cache de praças quando a busca muda de fato (nova lista de
@@ -455,7 +477,7 @@ function ListaConteudo() {
                 <div className="lg:col-span-2">
                   <AdCard
                     page="lista_topo"
-                    anuncio={anunciosTopo[0] ?? null}
+                    anuncio={anuncioTopo}
                     categoria={queryBusca || filtroHab || ''}
                   />
                 </div>
