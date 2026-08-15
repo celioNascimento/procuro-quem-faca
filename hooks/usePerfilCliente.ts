@@ -7,7 +7,7 @@ import { usePerfilUI } from './usePerfilUI'
 
 export function usePerfilCliente() {
   const dados    = usePerfilDados()
-  const servicos = useServicosCliente(dados.perfil.whatsapp.replace(/\D/g, ''))
+  const servicos = useServicosCliente(dados.perfil.whatsapp.replace(/\D/g, ''), dados.perfilCarregado)
   const ui       = usePerfilUI(dados.isDirty)
 
   return {
@@ -34,6 +34,7 @@ export function usePerfilCliente() {
     listaCidades:  dados.listaCidades,
     errorModal:    dados.errorModal,
     setErrorModal: dados.setErrorModal,
+    perfilCarregado: dados.perfilCarregado,
     aplicarMascara,
     handleChangePerfil: dados.handleChangePerfil,
     handleUploadFoto:   dados.handleUploadFoto,
