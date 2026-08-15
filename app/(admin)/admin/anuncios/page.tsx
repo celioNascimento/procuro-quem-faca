@@ -60,6 +60,7 @@ export default function PainelAnunciosLojista() {
   const [simuladorClienteAberto, setSimuladorClienteAberto] = useState(false)
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todos')
   const [menuNovoAberto, setMenuNovoAberto] = useState(false)
+  const [menuConsultarAberto, setMenuConsultarAberto] = useState(false)
 
   async function handleSave(data: AnuncioLojistaFormValues) {
     try {
@@ -130,19 +131,53 @@ export default function PainelAnunciosLojista() {
         </div>
         {!editando && (
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSimuladorAberto(true)}
-              className="flex items-center gap-1.5 rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5 text-[12px] font-bold text-blue-600 hover:bg-blue-100 transition-colors"
-            >
-              <Search size={15} /> Consultar Vagas
-            </button>
+            {/* Dropdown único "Consultar" — reúne os dois simuladores (Vagas
+                de lojista e Painel do Cliente) num só botão, evitando que
+                dois botões de texto longo disputem espaço horizontal no
+                mobile (ver AnuncioLojistaForm/SimuladorClienteModal). */}
+            <div className="relative">
+              <button
+                onClick={() => setMenuConsultarAberto(!menuConsultarAberto)}
+                className="flex items-center gap-1.5 rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5 text-[12px] font-bold text-blue-600 hover:bg-blue-100 transition-colors"
+              >
+                <Search size={15} /> Consultar <ChevronDown size={14} className={`transition-transform ${menuConsultarAberto ? 'rotate-180' : ''}`} />
+              </button>
 
-            <button
-              onClick={() => setSimuladorClienteAberto(true)}
-              className="flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-2.5 text-[12px] font-bold text-indigo-600 hover:bg-indigo-100 transition-colors"
-            >
-              <Users size={15} /> Consultar Painel do Cliente
-            </button>
+              <AnimatePresence>
+                {menuConsultarAberto && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setMenuConsultarAberto(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      className="absolute left-0 top-full z-50 mt-2 w-64 rounded-2xl border border-zinc-100 bg-white p-2 shadow-xl"
+                    >
+                      <button
+                        onClick={() => { setSimuladorAberto(true); setMenuConsultarAberto(false) }}
+                        className="flex w-full items-center gap-2.5 rounded-xl p-3 text-left hover:bg-zinc-50"
+                      >
+                        <div className="bg-blue-50 text-blue-600 p-1.5 rounded-lg shrink-0"><Search size={14} /></div>
+                        <div>
+                          <span className="block text-[13px] font-bold text-zinc-900">Vagas de Lojista</span>
+                          <span className="block text-[11px] text-zinc-500">Busca, perfil e painel do prestador</span>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => { setSimuladorClienteAberto(true); setMenuConsultarAberto(false) }}
+                        className="flex w-full items-center gap-2.5 rounded-xl p-3 text-left hover:bg-zinc-50"
+                      >
+                        <div className="bg-indigo-50 text-indigo-600 p-1.5 rounded-lg shrink-0"><Users size={14} /></div>
+                        <div>
+                          <span className="block text-[13px] font-bold text-zinc-900">Painel do Cliente</span>
+                          <span className="block text-[11px] text-zinc-500">Segmentado só por cidade</span>
+                        </div>
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
             
             {/* Dropdown Menu para Novo Anúncio */}
             <div className="relative">
