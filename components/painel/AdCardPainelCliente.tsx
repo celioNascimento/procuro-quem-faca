@@ -39,14 +39,23 @@ const FALLBACK_PADRAO: AdFallback = {
  * impressão/clique aqui mesmo via registrarMetricaAnuncio, espelhando
  * AdCard.tsx e AdCardDashboard.tsx.
  */
-export function AdCardPainelCliente({ servicos }: { servicos: ClienteServico[] }) {
+export function AdCardPainelCliente({ 
+  servicos, 
+  loading = false 
+}: { 
+  servicos: ClienteServico[]
+  loading?: boolean
+}) {
   const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined) // undefined = carregando
 
   useEffect(() => {
+    // Se o componente pai avisa que ainda está carregando os serviços, 
+    // abortamos a execução para não exibir o fallback prematuramente.
+    if (loading) return
+
     let cancelado = false
-    
-    // RESET: Garante que o componente fique invisível enquanto recalcula
-    // evitando que o fallback pisque na tela durante a transição de dependências.
+
+    // Garante que o estado volte para "carregando" (invisível) se a dependência mudar
     setAnuncio(undefined)
 
     async function carregar() {
@@ -117,7 +126,7 @@ export function AdCardPainelCliente({ servicos }: { servicos: ClienteServico[] }
     return () => {
       cancelado = true
     }
-  }, [servicos])
+  }, [servicos, loading])
 
   // Registra 1 impressão assim que o anúncio real é resolvido e renderizado.
   useEffect(() => {
@@ -130,9 +139,8 @@ export function AdCardPainelCliente({ servicos }: { servicos: ClienteServico[] }
     registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'clique')
   }
 
-  // Enquanto resolve (undefined), não renderiza nada — evita "pulo" de
-  // layout mostrando o fallback e depois trocando pelo anúncio real.
-  if (anuncio === undefined) return null
+  // Enquanto resolve (undefined) ou o pai está carregando, não renderiza nada
+  if (anuncio === undefined || loading) return null
 
   if (!anuncio || !anuncio.imagem_url) {
     return (
