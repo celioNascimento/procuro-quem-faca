@@ -113,11 +113,11 @@ export function AdCardPainelCliente({
   }
 
   return (
-    <div className="mb-6 w-full max-w-4xl mx-auto h-[90px] md:h-[120px] lg:h-[140px] overflow-hidden rounded-2xl shadow-sm transition-all">
+    <div className="mb-6 w-full max-w-4xl mx-auto transition-all">
       {anuncio === undefined || loading ? (
-        <div className="w-full h-full bg-zinc-50 border border-zinc-100 animate-pulse rounded-2xl" />
+        <div className="w-full h-[90px] md:h-[120px] lg:h-[140px] bg-zinc-50 border border-zinc-100 animate-pulse rounded-2xl" />
       ) : anuncio === null ? (
-        <div className="w-full h-full [&>a]:h-full [&>a]:my-0 [&>a]:rounded-2xl flex items-center">
+        <div className="w-full">
           <AdCardFallback fallback={FALLBACK_PADRAO} />
         </div>
       ) : (
@@ -126,7 +126,7 @@ export function AdCardPainelCliente({
           target="_blank"
           rel="noopener noreferrer"
           onClick={handleClick}
-          className="relative block w-full h-full overflow-hidden rounded-2xl hover:opacity-95 transition-opacity"
+          className="relative block w-full h-[90px] md:h-[120px] lg:h-[140px] overflow-hidden rounded-2xl shadow-sm hover:opacity-95 transition-opacity"
         >
           <img 
             src={anuncio.imagem_url} 
