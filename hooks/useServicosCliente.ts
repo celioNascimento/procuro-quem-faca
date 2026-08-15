@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import * as ClienteService from '@/lib/services/cliente.service'
 import type { ClienteServico } from '@/types/clienteServicos'
 
-export function useServicosCliente(whatsapp: string) {
+export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   const router = useRouter()
   const filtroRef = useRef<HTMLDivElement>(null)
 
@@ -15,24 +15,42 @@ export function useServicosCliente(whatsapp: string) {
   const [loadingServicos, setLoadingServicos] = useState(true)
 
   useEffect(() => {
-    if (!whatsapp) { setLoadingServicos(false); return }
+    // Ainda não sabemos se o cliente tem whatsapp cadastrado (perfil em
+    // carregamento). Mantemos loadingServicos=true e não decidimos nada
+    // ainda, para não gerar um estado "sem serviços" prematuro e falso.
+    if (!perfilCarregado) return
+
+    // Perfil já carregado e confirmado que não há whatsapp cadastrado:
+    // não há como buscar serviços. Este é um estado final, não um erro.
+    if (!whatsapp) {
+      setServicos([])
+      setLoadingServicos(false)
+      return
+    }
+
+    let cancelado = false
 
     async function buscar() {
       setLoadingServicos(true)
       try {
         const data = await ClienteService.fetchClienteServicos(whatsapp)
+        if (cancelado) return
         if (data) setServicos(
           data.sort((a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           )
         )
       } finally {
-        setLoadingServicos(false)
+        if (!cancelado) setLoadingServicos(false)
       }
     }
 
     buscar()
-  }, [whatsapp])
+
+    return () => {
+      cancelado = true
+    }
+  }, [whatsapp, perfilCarregado])
 
   const getStatusInfo = (servico: ClienteServico) => {
     const s = servico?.status?.toLowerCase()
