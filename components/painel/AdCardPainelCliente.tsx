@@ -80,10 +80,9 @@ export function AdCardPainelCliente({
         if (!cancelado) {
           if (anunciosDaPraca && anunciosDaPraca.length > 0) {
             const anuncioEncontrado = anunciosDaPraca[0].anuncios as any
-            anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
+info            anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
             setAnuncio(anuncioEncontrado as AnuncioComAnunciante)
           } else {
-            // Só define como null (o que ativa o fallback) APÓS confirmar que a query veio vazia
             setAnuncio(null)
           }
         }
@@ -113,35 +112,37 @@ export function AdCardPainelCliente({
     registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'clique')
   }
 
-  // Enquanto estiver resolvendo no banco, retorna null (mantém o espaço limpo sem piscar o fallback)
-  if (anuncio === undefined || loading) return null
-
-  if (anuncio === null) {
-    return (
-      <div className="mb-6 mx-auto max-w-4xl">
-        <AdCardFallback fallback={FALLBACK_PADRAO} />
-      </div>
-    )
-  }
-
   return (
-    <a
-      href={anuncio.link_destino || '#'}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={handleClick}
-      className="relative mb-6 block w-full overflow-hidden mx-auto max-w-4xl rounded-2xl shadow-sm transition-opacity hover:opacity-95"
-    >
-      <img 
-        src={anuncio.imagem_url} 
-        alt={anuncio.titulo} 
-        className="w-full object-cover object-center h-[90px] md:h-[120px] lg:h-[140px]" 
-      />
-      <div className="pointer-events-none absolute right-3 top-3 z-10">
-        <span className="rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
-          Publicidade
-        </span>
-      </div>
-    </a>
+    <div className="mb-6 w-full max-w-4xl mx-auto h-[90px] md:h-[120px] lg:h-[140px] overflow-hidden rounded-2xl shadow-sm transition-all">
+      {anuncio === undefined || loading ? (
+        // Estado de carregamento: Mantém o espaço reservado com um esqueleto leve
+        <div className="w-full h-full bg-zinc-50 border border-zinc-100 animate-pulse rounded-2xl" />
+      ) : anuncio === null ? (
+        // Estado sem anúncio: Renderiza o fallback perfeitamente encaixado na altura padrão
+        <div className="w-full h-full [&>a]:h-full [&>a]:my-0 [&>a]:rounded-2xl flex items-center">
+          <AdCardFallback fallback={FALLBACK_PADRAO} />
+        </div>
+      ) : (
+        // Estado com anúncio real: Renderiza a imagem cobrindo exatamente a mesma área
+        <a
+          href={anuncio.link_destino || '#'}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleClick}
+          className="relative block w-full h-full overflow-hidden rounded-2xl hover:opacity-95 transition-opacity"
+        >
+          <img 
+            src={anuncio.imagem_url} 
+            alt={anuncio.titulo} 
+            className="w-full h-full object-cover object-center" 
+          />
+          <div className="pointer-events-none absolute right-3 top-3 z-10">
+            <span className="rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
+              Publicidade
+            </span>
+          </div>
+        </a>
+      )}
+    </div>
   )
 }
