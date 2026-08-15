@@ -450,3 +450,107 @@ export async function registrarMetricaAnuncio(
     console.error('Falha ao tentar registrar a métrica do anúncio:', error)
   }
 }
+
+// ── ADIÇÃO em lib/services/adminAnuncios.service.ts ──────────────────────
+// Cole este bloco no final do arquivo existente (após registrarMetricaAnuncio).
+// Nenhuma função já existente foi alterada.
+
+// Verifica inventário de anúncios do Painel do Cliente (dashboard_cliente).
+// Diferente de verificarInventarioSegmento: essa posição segmenta só por
+// cidade (sem categoria — ver AdCardPainelCliente.tsx), vaga única fixa,
+// igual ao padrão de POSICOES_VAGA_FIXA mas sem exigir categoria_id.
+export async function verificarInventarioCliente(
+  cidadeId: string,
+  excluirAnuncioId?: string,
+  dataInicioCandidato: string | null = new Date().toISOString(),
+  dataExpiracaoCandidato: string | null = null
+): Promise<{ vagasTotais: number; vagasDisponiveis: number; ocupados: number; proximaExpiracao: string | null }> {
+  try {
+    const { data, error } = await supabase
+      .from('anuncios_segmentacoes')
+      .select(`anuncios!inner(id, data_inicio, data_expiracao)`)
+      .eq('cidade_id', cidadeId)
+      .eq('anuncios.status', true)
+      .eq('anuncios.status_aprovacao', 'aprovado')
+      .eq('anuncios.posicao', 'dashboard_cliente')
+
+    if (error) throw error
+
+    const vistos = new Set<string>()
+    const anunciosSobrepostos: AnuncioPeriodo[] = []
+
+    for (const row of data ?? []) {
+      const a = (row as any).anuncios as AnuncioPeriodo
+      if (!a || a.id === excluirAnuncioId || vistos.has(a.id)) continue
+      vistos.add(a.id)
+
+      if (periodosSeSobrepoe(a.data_inicio, a.data_expiracao, dataInicioCandidato, dataExpiracaoCandidato)) {
+        anunciosSobrepostos.push(a)
+      }
+    }
+
+    const ocupados = anunciosSobrepostos.length
+    const vagasTotais = 1
+    const vagasDisponiveis = Math.max(0, vagasTotais - ocupados)
+
+    let proximaExpiracao: string | null = null
+    if (anunciosSobrepostos.length > 0) {
+      const datas = anunciosSobrepostos
+        .map((a) => a.data_expiracao)
+        .filter((d): d is string => Boolean(d))
+        .map((d) => new Date(d).getTime())
+
+      if (datas.length > 0) {
+        proximaExpiracao = new Date(Math.min(...datas)).toISOString()
+      }
+    }
+
+    return { vagasTotais, vagasDisponiveis, ocupados, proximaExpiracao }
+  } catch (e) {
+    console.error('Erro ao verificar inventário do painel do cliente:', e)
+    return { vagasTotais: 0, vagasDisponiveis: 0, ocupados: 0, proximaExpiracao: null }
+  }
+}
+
+// Validação equivalente a validarSegmentacoesContraInventario, mas para o
+// fluxo do AnuncioClienteForm: segmentações só têm estadoSigla/regiaoId/
+// cidadeId (sem grupoId/categoriaId). Recebe uma lista simplificada.
+export async function validarSegmentacoesClienteContraInventario(
+  cidadesIds: string[],
+  anuncioIdExistente?: string | null,
+  dataInicio: string | null = null,
+  dataExpiracao: string | null = null
+): Promise<ValidacaoSegmentacoes> {
+  const contagemNoForm = new Map<string, number>()
+  for (const cidadeId of cidadesIds) {
+    contagemNoForm.set(cidadeId, (contagemNoForm.get(cidadeId) ?? 0) + 1)
+  }
+
+  const cidadesJaChecadas = new Set<string>()
+
+  for (const cidadeId of cidadesIds) {
+    if (cidadesJaChecadas.has(cidadeId)) continue
+    cidadesJaChecadas.add(cidadeId)
+
+    const repeticoesNoForm = contagemNoForm.get(cidadeId) ?? 1
+
+    const inventario = await verificarInventarioCliente(
+      cidadeId,
+      anuncioIdExistente ?? undefined,
+      dataInicio ?? new Date().toISOString(),
+      dataExpiracao
+    )
+
+    if (repeticoesNoForm > inventario.vagasDisponiveis) {
+      return {
+        ok: false,
+        mensagem:
+          inventario.vagasDisponiveis === 0
+            ? `Essa cidade já está com a vaga do Painel do Cliente ocupada nesse período.`
+            : `Essa cidade só tem ${inventario.vagasDisponiveis} vaga(s) disponível(is) nesse período, mas há ${repeticoesNoForm} segmentação(ões) repetida(s) para ela no formulário.`,
+      }
+    }
+  }
+
+  return { ok: true }
+}
