@@ -44,6 +44,10 @@ export function AdCardPainelCliente({ servicos }: { servicos: ClienteServico[] }
 
   useEffect(() => {
     let cancelado = false
+    
+    // RESET: Garante que o componente fique invisível enquanto recalcula
+    // evitando que o fallback pisque na tela durante a transição de dependências.
+    setAnuncio(undefined)
 
     async function carregar() {
       try {
