@@ -80,7 +80,7 @@ export function AdCardPainelCliente({
         if (!cancelado) {
           if (anunciosDaPraca && anunciosDaPraca.length > 0) {
             const anuncioEncontrado = anunciosDaPraca[0].anuncios as any
-info            anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
+            anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
             setAnuncio(anuncioEncontrado as AnuncioComAnunciante)
           } else {
             setAnuncio(null)
@@ -115,15 +115,12 @@ info            anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
   return (
     <div className="mb-6 w-full max-w-4xl mx-auto h-[90px] md:h-[120px] lg:h-[140px] overflow-hidden rounded-2xl shadow-sm transition-all">
       {anuncio === undefined || loading ? (
-        // Estado de carregamento: Mantém o espaço reservado com um esqueleto leve
         <div className="w-full h-full bg-zinc-50 border border-zinc-100 animate-pulse rounded-2xl" />
       ) : anuncio === null ? (
-        // Estado sem anúncio: Renderiza o fallback perfeitamente encaixado na altura padrão
         <div className="w-full h-full [&>a]:h-full [&>a]:my-0 [&>a]:rounded-2xl flex items-center">
           <AdCardFallback fallback={FALLBACK_PADRAO} />
         </div>
       ) : (
-        // Estado com anúncio real: Renderiza a imagem cobrindo exatamente a mesma área
         <a
           href={anuncio.link_destino || '#'}
           target="_blank"
