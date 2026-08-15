@@ -23,7 +23,33 @@ const inputClass =
 
 const labelClass = 'text-[10px] font-medium text-zinc-400 uppercase tracking-widest'
 
+// Preenchimento vindo do SimuladorInventarioModal (atalho "Usar esses dados
+// no cadastro"): cobre só posição + uma segmentação, sem id nem os demais
+// campos do anúncio (que abrem vazios, igual ao fluxo normal de "Novo").
+export type PreenchimentoLojista = {
+  posicao: string
+  estadoSigla: string
+  regiaoId: string
+  cidadeId: string
+  grupoId: string
+  categoriaId: string
+}
+
+function ehPreenchimentoDoSimulador(initial: any): initial is PreenchimentoLojista {
+  return !!initial && typeof initial === 'object' && !initial.id && 'estadoSigla' in initial
+}
+
 function segmentacoesIniciais(initial: any | null): Segmentacao[] {
+  if (ehPreenchimentoDoSimulador(initial)) {
+    return [{
+      estadoSigla: initial.estadoSigla,
+      regiaoId: initial.regiaoId,
+      cidadeId: initial.cidadeId,
+      grupoId: initial.grupoId,
+      categoriaId: initial.categoriaId,
+      valorCobrado: 0,
+    }]
+  }
   if (!initial?.anuncios_segmentacoes?.length) return []
   return initial.anuncios_segmentacoes.map((s: any) => ({
     id: s.id,
@@ -98,7 +124,9 @@ function segmentacaoCompleta(s: Segmentacao) {
 }
 
 export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Props) {
-  const isEdicao = !!initial
+  // Preenchimento do simulador não conta como "edição" — é um novo anúncio
+  // com a segmentação já sugerida, mas sem id nem dados de lojista.
+  const isEdicao = !!initial && !ehPreenchimentoDoSimulador(initial)
 
   const [email, setEmail] = useState(initial?.anunciantes?.email ?? '')
   const [razaoSocial, setRazaoSocial] = useState(initial?.anunciantes?.razao_social ?? '')
@@ -152,7 +180,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
       const validacao = await validarSegmentacoesContraInventario(
         segsValidas,
         posicao,
-        initial?.id ?? null,
+        isEdicao ? initial?.id ?? null : null,
         dataInicioIso,
         dataExpiracaoIso
       )
@@ -184,8 +212,8 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
         segmentacoes: segsValidas,
       },
       imagemFile: modoImagem === 'upload' ? imagemFile : null,
-      idExistente: initial?.id ?? null,
-      anuncianteIdExistente: initial?.anunciante_id ?? null,
+      idExistente: isEdicao ? initial?.id ?? null : null,
+      anuncianteIdExistente: isEdicao ? initial?.anunciante_id ?? null : null,
     })
   }
 
@@ -292,7 +320,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
       </div>
 
       <div className="mt-5">
-        <SegmentacaoFields value={segmentacoes} onChange={setSegmentacoes} posicao={posicao} anuncioIdExistente={initial?.id ?? null} />
+        <SegmentacaoFields value={segmentacoes} onChange={setSegmentacoes} posicao={posicao} anuncioIdExistente={isEdicao ? initial?.id ?? null : null} />
       </div>
 
       {erro && (
