@@ -8,6 +8,9 @@ import type { AdPage, Anuncio } from '@/types/ads'
 
 type Props = {
   page: AdPage
+  // undefined = ainda buscando (mostra skeleton, nunca o fallback)
+  // null = busca concluída e confirmado que não há anúncio (mostra fallback)
+  // Anuncio = anúncio encontrado
   anuncio?: Anuncio | null
   categoria?: string
 }
@@ -16,6 +19,8 @@ export function AdCard({ page, anuncio, categoria }: Props) {
   const adRef = useRef<HTMLDivElement>(null)
   const [mostrarFallback, setMostrarFallback] = useState(false)
   const { fallback, contexto } = useAdContext(page, categoria)
+
+  const carregando = anuncio === undefined
 
   const agora = new Date()
   const expirado = anuncio?.data_expiracao ? new Date(anuncio.data_expiracao) < agora : false
@@ -46,6 +51,13 @@ export function AdCard({ page, anuncio, categoria }: Props) {
     
     return () => clearTimeout(timer)
   }, [anuncio, expirado, agendado])
+
+  // Ainda buscando: nunca mostra o fallback aqui — evita o flash de
+  // "sem anúncio" antes da resposta real chegar. Reserva o mesmo espaço
+  // visual do banner pra não saltar o layout quando o resultado chegar.
+  if (carregando) {
+    return <div className="my-2 w-full h-[90px] md:h-[120px] lg:h-[140px] bg-zinc-50 border border-zinc-100 animate-pulse rounded-2xl" />
+  }
 
   if (!anuncio || expirado || agendado) {
     return <AdCardFallback fallback={fallback} contexto={contexto} />
