@@ -113,7 +113,7 @@ export function AdCardPainelCliente({
   }
 
   return (
-    <div className="mb-6 w-full max-w-4xl mx-auto transition-all">
+    <div className="w-full max-w-4xl mx-auto transition-all">
       {anuncio === undefined || loading ? (
         <div className="w-full h-[90px] md:h-[120px] lg:h-[140px] bg-zinc-50 border border-zinc-100 animate-pulse rounded-2xl" />
       ) : anuncio === null ? (
