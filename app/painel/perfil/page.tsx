@@ -127,7 +127,7 @@ export default function PerfilDoCliente() {
                 praça (cidade+categoria) do prestador do serviço mais
                 recente. Público distinto do banner na dashboard do
                 prestador (AdCardDashboard.tsx). */}
-            <AdCardPainelCliente servicos={servicos} loading={loading}/>
+            <AdCardPainelCliente servicos={servicos} loading={loadingServicos}/>
 
             {avaliarCount > 0 && (
               <button
