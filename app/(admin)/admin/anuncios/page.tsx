@@ -3,12 +3,13 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, AlertCircle, Megaphone, Copy, Check, Search, ChevronDown } from 'lucide-react'
+import { Plus, AlertCircle, Megaphone, Copy, Check, Search, ChevronDown, Users } from 'lucide-react'
 import { useAdminAnuncios } from '@/hooks/useAdminAnuncios'
 import { AnuncioLojistaForm, type AnuncioLojistaFormValues } from '@/components/admin/anuncios/AnuncioLojistaForm'
 import { AnuncioClienteForm } from '@/components/admin/anuncios/AnuncioClienteForm'
 import { AnuncioLojistaLista } from '@/components/admin/anuncios/AnuncioLojistaLista'
 import { SimuladorInventarioModal } from '@/components/admin/anuncios/SimuladorInventarioModal'
+import { SimuladorClienteModal, type PreenchimentoCliente } from '@/components/admin/anuncios/SimuladorClienteModal'
 
 const labelClass = 'text-[10px] font-medium text-zinc-400 uppercase tracking-widest'
 
@@ -43,13 +44,20 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
 }
 
 type FiltroStatus = 'todos' | 'ativos' | 'rascunhos' | 'expirados'
-type ModoEdicao = null | 'new_lojista' | 'new_cliente' | { id: string; posicao: string; [key: string]: any }
+
+// Além dos casos existentes, 'new_cliente' agora pode carregar um valor
+// inicial vindo do SimuladorClienteModal (estado/região/cidade já
+// preenchidos). Quando presente, o AnuncioClienteForm deve usar esses
+// valores como ponto de partida da primeira segmentação.
+type NovoClienteComDados = { modo: 'new_cliente'; preenchimento: PreenchimentoCliente }
+type ModoEdicao = null | 'new_lojista' | 'new_cliente' | NovoClienteComDados | { id: string; posicao: string; [key: string]: any }
 
 export default function PainelAnunciosLojista() {
   const { anuncios, loading, enviando, erro, cadastrarNovoAnuncio, editarAnuncio, toggleAtivo, remover } = useAdminAnuncios()
   const [editando, setEditando] = useState<ModoEdicao>(null)
   const [senhaModal, setSenhaModal] = useState<{ senha: string; email: string } | null>(null)
   const [simuladorAberto, setSimuladorAberto] = useState(false)
+  const [simuladorClienteAberto, setSimuladorClienteAberto] = useState(false)
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todos')
   const [menuNovoAberto, setMenuNovoAberto] = useState(false)
 
@@ -89,7 +97,26 @@ export default function PainelAnunciosLojista() {
   })
 
   // Define qual formulário deve ser renderizado
-  const isFormCliente = editando === 'new_cliente' || (typeof editando === 'object' && editando?.posicao === 'dashboard_cliente')
+  const isFormCliente =
+    editando === 'new_cliente' ||
+    (typeof editando === 'object' && editando !== null && 'modo' in editando && editando.modo === 'new_cliente') ||
+    (typeof editando === 'object' && editando !== null && 'posicao' in editando && editando.posicao === 'dashboard_cliente')
+
+  // Valor inicial a repassar pro AnuncioClienteForm: cobre tanto edição de
+  // anúncio existente (objeto com id/posicao) quanto o atalho vindo do
+  // simulador (NovoClienteComDados) — o form recebe sempre `initial`, e
+  // decide internamente o que fazer com cada shape.
+  const initialParaFormCliente =
+    typeof editando === 'object' && editando !== null && 'modo' in editando && editando.modo === 'new_cliente'
+      ? editando.preenchimento
+      : typeof editando === 'object' && editando !== null && 'posicao' in editando
+        ? editando
+        : null
+
+  function usarDadosDoSimuladorCliente(dados: PreenchimentoCliente) {
+    setSimuladorClienteAberto(false)
+    setEditando({ modo: 'new_cliente', preenchimento: dados })
+  }
 
   return (
     <div className="max-w-5xl mx-auto pb-24 px-4 md:px-6">
@@ -108,6 +135,13 @@ export default function PainelAnunciosLojista() {
               className="flex items-center gap-1.5 rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5 text-[12px] font-bold text-blue-600 hover:bg-blue-100 transition-colors"
             >
               <Search size={15} /> Consultar Vagas
+            </button>
+
+            <button
+              onClick={() => setSimuladorClienteAberto(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-2.5 text-[12px] font-bold text-indigo-600 hover:bg-indigo-100 transition-colors"
+            >
+              <Users size={15} /> Consultar Painel do Cliente
             </button>
             
             {/* Dropdown Menu para Novo Anúncio */}
@@ -228,14 +262,14 @@ export default function PainelAnunciosLojista() {
         <div className="mt-6">
           {isFormCliente ? (
             <AnuncioClienteForm
-              initial={typeof editando === 'object' ? editando : null}
+              initial={initialParaFormCliente}
               onSave={handleSave}
               onCancel={() => setEditando(null)}
               enviando={enviando}
             />
           ) : (
             <AnuncioLojistaForm
-              initial={typeof editando === 'object' ? editando : null}
+              initial={typeof editando === 'object' && editando !== null && 'posicao' in editando ? editando : null}
               onSave={handleSave}
               onCancel={() => setEditando(null)}
               enviando={enviando}
@@ -257,6 +291,12 @@ export default function PainelAnunciosLojista() {
       )}
 
       {simuladorAberto && <SimuladorInventarioModal onClose={() => setSimuladorAberto(false)} />}
+      {simuladorClienteAberto && (
+        <SimuladorClienteModal
+          onClose={() => setSimuladorClienteAberto(false)}
+          onUsarNoCadastro={usarDadosDoSimuladorCliente}
+        />
+      )}
       {senhaModal && <SenhaTemporariaModal senha={senhaModal.senha} email={senhaModal.email} onClose={() => setSenhaModal(null)} />}
     </div>
   )
