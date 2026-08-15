@@ -10,9 +10,6 @@ import type { ClienteServico } from '@/types/clienteServicos'
 
 const POSICAO = 'dashboard_cliente'
 
-// Fallback próprio deste banner — plataforma é gratuita pro cliente, então
-// sem venda pra essa praça o espaço reforça esse valor em vez de ficar
-// vazio ou usar um fallback genérico de categoria de serviço.
 const FALLBACK_PADRAO: AdFallback = {
   emoji: '🤝',
   titulo: 'Procuro Quem Faça é 100% gratuito pra você',
@@ -22,23 +19,6 @@ const FALLBACK_PADRAO: AdFallback = {
   href: () => '/painel/perfil',
 }
 
-/**
- * Banner de anúncio B2C no topo da área do cliente (app/painel/perfil) —
- * público distinto do banner da dashboard do prestador (AdCardDashboard.tsx).
- * Lá o anunciante é fornecedor de insumo pro prestador trabalhar; aqui é o
- * "próximo passo" da jornada do cliente após o serviço (ex: seguradora,
- * financeira, decoração) — decisão comercial tomada no cadastro admin, não
- * travada no código.
- *
- * Resolve a praça (cidade) a partir do PRESTADOR do serviço mais
- * recente do cliente (a lista já vem ordenada por created_at desc em
- * useServicosCliente). O select de fetchClienteServicos não traz cidade_id —
- * então uma query pontual busca essa informação para exibir o banner.
- *
- * Não usa <AdCard> (renderiza a imagem/link diretamente), então registra
- * impressão/clique aqui mesmo via registrarMetricaAnuncio, espelhando
- * AdCard.tsx e AdCardDashboard.tsx.
- */
 export function AdCardPainelCliente({ 
   servicos, 
   loading = false 
@@ -46,16 +26,12 @@ export function AdCardPainelCliente({
   servicos: ClienteServico[]
   loading?: boolean
 }) {
-  const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined) // undefined = carregando
+  const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined)
 
   useEffect(() => {
-    // Se o componente pai avisa que ainda está carregando os serviços, 
-    // abortamos a execução para não exibir o fallback prematuramente.
     if (loading) return
 
     let cancelado = false
-
-    // Garante que o estado volte para "carregando" (invisível) se a dependência mudar
     setAnuncio(undefined)
 
     async function carregar() {
@@ -67,7 +43,6 @@ export function AdCardPainelCliente({
           return
         }
 
-        // Busca apenas a cidade do prestador, já que a categoria é ignorada nesta posição B2C
         const { data: prestador, error } = await supabase
           .from('prestadores')
           .select('cidade_id')
@@ -85,7 +60,6 @@ export function AdCardPainelCliente({
 
         const agora = new Date().toISOString()
         
-        // Query focada apenas na cidade e posição (ignora a categoria_id)
         const { data: anunciosDaPraca } = await supabase
           .from('anuncios_segmentacoes')
           .select(`
@@ -103,15 +77,16 @@ export function AdCardPainelCliente({
           .or(`data_inicio.is.null,data_inicio.lte.${agora}`, { foreignTable: 'anuncios' })
           .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`, { foreignTable: 'anuncios' })
 
-        if (!anunciosDaPraca || anunciosDaPraca.length === 0) {
-          if (!cancelado) setAnuncio(null)
-          return
+        if (!cancelado) {
+          if (anunciosDaPraca && anunciosDaPraca.length > 0) {
+            const anuncioEncontrado = anunciosDaPraca[0].anuncios as any
+            anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
+            setAnuncio(anuncioEncontrado as AnuncioComAnunciante)
+          } else {
+            // Só define como null (o que ativa o fallback) APÓS confirmar que a query veio vazia
+            setAnuncio(null)
+          }
         }
-
-        const anuncioEncontrado = anunciosDaPraca[0].anuncios as any
-        anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
-
-        if (!cancelado) setAnuncio(anuncioEncontrado as AnuncioComAnunciante)
       } catch {
         if (!cancelado) setAnuncio(null)
       }
@@ -119,7 +94,7 @@ export function AdCardPainelCliente({
 
     if (servicos.length > 0) {
       carregar()
-    } else {
+    } else if (!loading) {
       setAnuncio(null)
     }
 
@@ -128,7 +103,6 @@ export function AdCardPainelCliente({
     }
   }, [servicos, loading])
 
-  // Registra 1 impressão assim que o anúncio real é resolvido e renderizado.
   useEffect(() => {
     if (!anuncio?.id) return
     registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'impressao')
@@ -139,10 +113,10 @@ export function AdCardPainelCliente({
     registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'clique')
   }
 
-  // Enquanto resolve (undefined) ou o pai está carregando, não renderiza nada
+  // Enquanto estiver resolvendo no banco, retorna null (mantém o espaço limpo sem piscar o fallback)
   if (anuncio === undefined || loading) return null
 
-  if (!anuncio || !anuncio.imagem_url) {
+  if (anuncio === null) {
     return (
       <div className="mb-6 mx-auto max-w-4xl">
         <AdCardFallback fallback={FALLBACK_PADRAO} />
