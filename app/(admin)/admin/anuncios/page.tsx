@@ -3,11 +3,12 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, AlertCircle, Megaphone, Copy, Check, Search, ChevronDown, Users } from 'lucide-react'
+import { Plus, AlertCircle, Megaphone, Copy, Check, Search, ChevronDown, Users, List, Map as MapIcon } from 'lucide-react'
 import { useAdminAnuncios } from '@/hooks/useAdminAnuncios'
 import { AnuncioLojistaForm, type AnuncioLojistaFormValues, type PreenchimentoLojista } from '@/components/admin/anuncios/AnuncioLojistaForm'
 import { AnuncioClienteForm } from '@/components/admin/anuncios/AnuncioClienteForm'
 import { AnuncioLojistaLista } from '@/components/admin/anuncios/AnuncioLojistaLista'
+import { MapaVagasPracas } from '@/components/admin/anuncios/MapaVagasPracas'
 import { SimuladorInventarioModal } from '@/components/admin/anuncios/SimuladorInventarioModal'
 import { SimuladorClienteModal, type PreenchimentoCliente } from '@/components/admin/anuncios/SimuladorClienteModal'
 
@@ -44,6 +45,7 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
 }
 
 type FiltroStatus = 'todos' | 'ativos' | 'rascunhos' | 'expirados'
+type Visualizacao = 'lista' | 'mapa'
 
 // Formatos possíveis de "editando":
 // - 'new_lojista' / 'new_cliente': novo anúncio em branco
@@ -69,6 +71,7 @@ export default function PainelAnunciosLojista() {
   const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todos')
   const [menuNovoAberto, setMenuNovoAberto] = useState(false)
   const [menuConsultarAberto, setMenuConsultarAberto] = useState(false)
+  const [visualizacao, setVisualizacao] = useState<Visualizacao>('lista')
 
   async function handleSave(data: AnuncioLojistaFormValues) {
     try {
@@ -203,7 +206,7 @@ export default function PainelAnunciosLojista() {
                 )}
               </AnimatePresence>
             </div>
-            
+
             {/* Dropdown Menu para Novo Anúncio */}
             <div className="relative">
               <button
@@ -212,7 +215,7 @@ export default function PainelAnunciosLojista() {
               >
                 <Plus size={15} /> Novo anúncio <ChevronDown size={14} className={`transition-transform ${menuNovoAberto ? 'rotate-180' : ''}`} />
               </button>
-              
+
               <AnimatePresence>
                 {menuNovoAberto && (
                   <>
@@ -267,9 +270,32 @@ export default function PainelAnunciosLojista() {
         </div>
       </section>
 
-      {/* Botões de Filtro */}
+      {/* Toggle Lista / Mapa de vagas */}
       {!editando && (
-        <div className="flex items-center gap-2 pt-6 overflow-x-auto pb-1">
+        <div className="flex items-center gap-2 pt-6">
+          <button
+            onClick={() => setVisualizacao('lista')}
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors ${
+              visualizacao === 'lista' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+            }`}
+          >
+            <List size={14} /> Lista
+          </button>
+          <button
+            onClick={() => setVisualizacao('mapa')}
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors ${
+              visualizacao === 'mapa' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+            }`}
+          >
+            <MapIcon size={14} /> Mapa de vagas
+          </button>
+        </div>
+      )}
+
+      {/* Botões de Filtro — só fazem sentido pra Lista (filtram anúncios
+          individuais); ficam ocultos no Mapa, que é organizado por praça. */}
+      {!editando && visualizacao === 'lista' && (
+        <div className="flex items-center gap-2 pt-3 overflow-x-auto pb-1">
           <button
             onClick={() => setFiltroStatus('todos')}
             className={`rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors shrink-0 ${
@@ -338,7 +364,7 @@ export default function PainelAnunciosLojista() {
         </div>
       )}
 
-      {!editando && (
+      {!editando && visualizacao === 'lista' && (
         <div className="mt-6">
           <AnuncioLojistaLista
             anuncios={anunciosFiltrados}
@@ -347,6 +373,12 @@ export default function PainelAnunciosLojista() {
             onDelete={remover}
             onToggleAtivo={toggleAtivo}
           />
+        </div>
+      )}
+
+      {!editando && visualizacao === 'mapa' && (
+        <div className="mt-6">
+          <MapaVagasPracas />
         </div>
       )}
 
