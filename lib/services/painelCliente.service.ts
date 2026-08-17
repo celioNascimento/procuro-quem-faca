@@ -11,6 +11,10 @@ const SELECT_SERVICOS = `
 
 const STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado']
 
+// Status de solicitacoes_garantia considerados "ativos" — casos já resolvidos
+// ou recusados não aparecem na aba Garantia (voltam a contar como Concluídos).
+const STATUS_GARANTIA_ATIVOS = ['aguardando_aceite_cliente', 'aberta', 'respondida']
+
 export async function getProfile(userId: string) {
   const { data } = await supabase
     .from('profiles')
@@ -48,6 +52,34 @@ export async function getServicosPorWhatsapp(whatsapp: string) {
     .eq('cliente_whatsapp', whatsapp.replace(/\D/g, ''))
     .in('status', STATUS_VISIVEIS)
     .order('created_at', { ascending: false })
+  return data ?? []
+}
+
+/**
+ * Projetos do cliente que têm um caso de garantia ATIVO agora
+ * (aguardando_aceite_cliente | aberta | respondida).
+ * Casos resolvidos/sem_resposta/recusados não aparecem aqui — o projeto
+ * volta a contar normalmente como 'Concluído'.
+ *
+ * Nota: como solicitacoes_garantia.status já filtra por "ativo", não
+ * aplicamos STATUS_VISIVEIS aqui — um projeto com garantia ativa é, por
+ * definição, um projeto finalizado (garantia só existe pós-conclusão).
+ */
+export async function getServicosComGarantiaAtiva(userId: string) {
+  const { data, error } = await supabase
+    .from('portfolio_projetos')
+    .select(`
+      ${SELECT_SERVICOS},
+      solicitacoes_garantia!inner (id, status, origem, prazo_resposta)
+    `)
+    .eq('cliente_user_id', userId)
+    .in('solicitacoes_garantia.status', STATUS_GARANTIA_ATIVOS)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Erro ao buscar serviços com garantia ativa:', error)
+    return []
+  }
   return data ?? []
 }
 
