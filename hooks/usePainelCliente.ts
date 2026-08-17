@@ -11,6 +11,7 @@ import {
   getServicoPorToken,
   getServicosPorUserId,
   getServicosPorWhatsapp,
+  getServicosComGarantiaAtiva,
   aceitarServico,
 } from '../lib/services/painelCliente.service'
 
@@ -19,6 +20,7 @@ export function usePainelCliente() {
   const [session, setSession]     = useState<Session | null>(null)
   const [profile, setProfile]     = useState<any>(null)
   const [servicos, setServicos]   = useState<Servico[]>([])
+  const [servicosGarantia, setServicosGarantia] = useState<Servico[]>([])
   const [loading, setLoading]     = useState(true)
   const [zoomImage, setZoomImage] = useState<string | null>(null)
   const [tokenUrl, setTokenUrl]   = useState<string | null>(null)
@@ -62,6 +64,13 @@ export function usePainelCliente() {
 
       if (projs.length > 0) setServicos(projs)
       else router.push('/painel/perfil')
+
+      // Busca em paralelo os casos de garantia ativos — independente de token,
+      // já que a aba Garantia é sempre relativa ao usuário logado.
+      const garantias = await getServicosComGarantiaAtiva(user.id)
+      setServicosGarantia(
+        garantias.filter(p => p.prestadores?.user_id !== user.id),
+      )
     } catch {
       router.push('/painel/perfil')
     } finally {
@@ -107,15 +116,20 @@ export function usePainelCliente() {
     router.push(`/acompanhamento/${servico.avaliacao_token}`)
   }
 
+  // Navega para a mesma tela de acompanhamento, sinalizando a seção de garantia
+  const handleVerGarantia = (servico: Servico) => {
+    router.push(`/acompanhamento/${servico.avaliacao_token}?garantia=1`)
+  }
+
   const nomeCliente =
     profile?.full_name || session?.user?.user_metadata?.full_name || ''
   const avatarUrl =
     profile?.avatar_url || session?.user?.user_metadata?.avatar_url
 
   return {
-    session, profile, servicos, loading,
+    session, profile, servicos, servicosGarantia, loading,
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente, avatarUrl,
-    handleAceitar,
+    handleAceitar, handleVerGarantia,
   }
 }
