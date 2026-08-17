@@ -15,6 +15,9 @@ export interface AvaliacaoRaw {
   cliente_id: string | null
   status: string | null
   portfolio_projetos: { titulo: string }[] | null
+  // Nota usada em ranking/média quando um caso de garantia altera o resultado.
+  // NULL = usar `nota` normalmente. `nota` nunca é sobrescrita (preserva o dado original).
+  nota_efetiva: number | null
 }
 
 // ── Formato normalizado para uso nos componentes ──
@@ -28,6 +31,7 @@ export interface Avaliacao {
   cliente_id: string | null
   status: string | null                          // 'pendente' | 'finalizado'
   portfolio_projetos: { titulo: string } | null
+  nota_efetiva: number | null
 }
 
 // ── Formato usado no perfil público (types/perfil.ts) ──
@@ -44,6 +48,7 @@ export type AvaliacaoPerfil = {
 // ── Formato resumido — só o necessário para cálculo de stats ──
 export interface AvaliacaoResumo {
   nota: number
+  nota_efetiva: number | null
 }
 
 // ── Stats calculados pelo calcularStats() ──
@@ -51,7 +56,7 @@ export interface AvaliacoesStats {
   media: number
   total: number
   totalIndica: number
-  distribuicao: Record<number, number>  // nota 1–5 → quantidade
+  distribuicao: Record<number, number>  // nota 1–5 → quantidade (nota ORIGINAL, uso interno — não exibida publicamente)
   exibir: boolean                       // true somente quando total >= 10
 }
 
