@@ -8,6 +8,7 @@ import { Phone, User, Briefcase, AlertCircle, RefreshCw, CloudCheck, X, Activity
 import { Camera, Loader2, CheckCircle2, ChevronRight, Link as LinkIcon } from 'lucide-react'
 import { WizardCompleted } from './WizardCompleted'
 import { WizardZoomModal } from './WizardZoomModal'
+import { GarantiaSecaoWizard } from './garantia/GarantiaSecaoWizard'
 import { useRef } from 'react'
 
 
@@ -32,6 +33,10 @@ const ETAPAS = [
  * - Passa hookData diretamente para WizardZoomModal e WizardCompleted
  * - O `key` no pai destrói/recria este componente ao trocar de projeto,
  *   reiniciando o hook automaticamente
+ *
+ * Quando o projeto está concluído, exibe também GarantiaSecaoWizard —
+ * a "continuação" da timeline original, com o fluxo de garantia pós-serviço.
+ * Só renderiza algo se houver um caso de garantia vinculado ao projeto.
  */
 export function UploadWizardContainer({
     prestadorId,
@@ -178,7 +183,19 @@ export function UploadWizardContainer({
             BODY
         ══════════════════════════════════════════ */}
                 {isProjetoConcluido ? (
-                    <WizardCompleted hookData={hookData} />
+                    <>
+                        <WizardCompleted hookData={hookData} />
+
+                        {/* Continuação da timeline — fluxo de garantia pós-serviço.
+                            Só aparece algo aqui se houver caso de garantia vinculado
+                            a este projeto; caso contrário, GarantiaSecaoWizard não
+                            renderiza nada. */}
+                        {projetoId && (
+                            <div className="px-5 pb-5">
+                                <GarantiaSecaoWizard projetoId={projetoId} prestadorId={prestadorId} />
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <div className="flex flex-col gap-4 p-5">
 
