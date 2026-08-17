@@ -1,7 +1,6 @@
 //components/meus-servicos/ServicoCard.tsx
-
 'use client'
-import { Clock, User, Phone, ChevronRight, ZoomIn, Briefcase, CheckCircle2 } from 'lucide-react'
+import { Clock, User, Phone, ChevronRight, ZoomIn, Briefcase, CheckCircle2, ShieldAlert } from 'lucide-react'
 import { Servico } from '@/types/painel'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 
@@ -10,7 +9,7 @@ interface Props {
   onZoom: (url: string) => void
   onAceitar: (servico: Servico) => void
   hidePrestador?: boolean
-  modo?: 'pendente' | 'andamento' | 'concluido'
+  modo?: 'pendente' | 'andamento' | 'concluido' | 'garantia'
 }
 
 // Label e cor do badge da foto variam conforme o status
@@ -18,6 +17,7 @@ const BADGE = {
   pendente: { texto: 'Aguardando Início', cor: 'text-blue-600' },
   andamento: { texto: 'Em Andamento', cor: 'text-amber-500' },
   concluido: { texto: 'Concluído', cor: 'text-emerald-600' },
+  garantia: { texto: 'Em Garantia', cor: 'text-orange-600' },
 }
 
 export default function ServicoCard({
@@ -81,10 +81,9 @@ export default function ServicoCard({
             {/* Badge de status sobre a foto */}
             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
               <p className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 ${badge.cor}`}>
-                {modo === 'concluido'
-                  ? <CheckCircle2 size={10} />
-                  : <Clock size={10} />
-                }
+                {modo === 'concluido' && <CheckCircle2 size={10} />}
+                {modo === 'garantia' && <ShieldAlert size={10} />}
+                {(modo === 'pendente' || modo === 'andamento') && <Clock size={10} />}
                 {badge.texto}
               </p>
             </div>
@@ -158,6 +157,16 @@ export default function ServicoCard({
               className="flex-1 bg-emerald-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 hover:bg-emerald-700 active:scale-[0.98] transition-all"
             >
               Ver avaliação <ChevronRight size={16} />
+            </button>
+          )}
+
+          {/* GARANTIA — Ver caso de garantia (aberto ou em andamento) */}
+          {modo === 'garantia' && (
+            <button
+              onClick={() => onAceitar(servico)}
+              className="flex-1 bg-orange-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-orange-200 hover:bg-orange-700 active:scale-[0.98] transition-all"
+            >
+              Ver Garantia <ChevronRight size={16} />
             </button>
           )}
 
