@@ -33,7 +33,9 @@ interface AbrirCasoClienteInput {
   projetoId: string;
   clienteUserId: string;
   descricaoProblema: string;
-  fotosProblema: string[];
+  // Fotos NÃO entram aqui — são anexadas depois via garantia_fotos
+  // (inserirFotoGarantia em garantiaWizard.service.ts), já que a tabela
+  // exige caso_id, que só existe após este insert retornar.
 }
 
 interface OferecerReparoPrestadorInput {
@@ -143,7 +145,6 @@ export async function abrirCasoGarantiaCliente(input: AbrirCasoClienteInput) {
       status: 'aberta',
       prazo_resposta: prazoResposta.toISOString().slice(0, 10),
       descricao_problema: input.descricaoProblema,
-      fotos_problema: input.fotosProblema,
     })
     .select()
     .single();
@@ -362,6 +363,39 @@ export async function confirmarResolucaoGarantia(
   }
 
   return caso;
+}
+
+/**
+ * Cliente indica que a resposta do prestador NÃO resolveu o problema.
+ * Reabre o caso: volta para status 'aberta' e reinicia o prazo de 5 dias
+ * úteis — o prestador precisa responder de novo, como se fosse um novo ciclo.
+ * Não altera nota_resultante nem mexe em avaliação vinculada; isso só
+ * acontece quando o caso finalmente fecha (resolvida ou sem_resposta).
+ */
+export async function reabrirCasoGarantia(casoId: string, clienteUserId: string) {
+  const prazoResposta = calcularPrazoUteis(5);
+
+  const { data, error } = await supabase
+    .from('solicitacoes_garantia')
+    .update({
+      status: 'aberta',
+      prazo_resposta: prazoResposta.toISOString().slice(0, 10),
+      // Limpa a resposta anterior — o prestador precisa registrar uma nova
+      // proposta, não deixar a antiga "pendurada" como se ainda valesse.
+      resposta_prestador_garantia: null,
+      data_resposta: null,
+    })
+    .eq('id', casoId)
+    .eq('cliente_user_id', clienteUserId)
+    .eq('status', 'respondida')
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  // TODO: notificar prestador que o caso foi reaberto
+
+  return data;
 }
 
 /**
