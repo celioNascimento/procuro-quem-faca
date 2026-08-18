@@ -1,6 +1,6 @@
 //components/dashboard/ProjetoCard.tsx
 
-import { ImageOff, CheckCircle2, Clock, AlertCircle, Pencil } from 'lucide-react'
+import { ImageOff, CheckCircle2, Clock, AlertCircle, Pencil, ShieldAlert } from 'lucide-react'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
 
 interface Props {
@@ -9,9 +9,21 @@ interface Props {
 }
 
 // ── Config visual por status ───────────────────────────────────────────────────
+// Garantia é checada ANTES dos demais status: um projeto finalizado com caso
+// de garantia ativo deve mostrar o alerta de garantia, não "Concluído" —
+// é o sinal mais urgente que o prestador precisa ver primeiro na lista.
 function getStatusConfig(proj: Projeto) {
   const jaAvaliado = proj.avaliacoes?.length > 0
   const s = proj.status
+  const garantiaAtiva = proj.solicitacoes_garantia?.some((g) =>
+    ['aguardando_aceite_cliente', 'aberta', 'respondida'].includes(g.status),
+  )
+
+  if (garantiaAtiva) return {
+    label: 'Garantia acionada',
+    icon: <ShieldAlert size={9} />,
+    cls: 'bg-orange-50 text-orange-600 border-orange-200 animate-pulse',
+  }
 
   if (s === 'em_registro') return {
     label: 'Rascunho',
