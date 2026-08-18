@@ -18,15 +18,20 @@ export async function getPrestadorPerfilDoUsuario(userId: string) {
   return data
 }
 
+// Select comum às duas queries abaixo — inclui o join com solicitacoes_garantia
+// (só os campos usados pelo badge do ProjetoCard, sem trazer descrição/fotos).
+const SELECT_PROJETO_COM_GARANTIA = `
+  id, titulo, status, created_at, prestador_id,
+  cliente_nome, cliente_whatsapp,
+  portfolio_fotos (id, url_foto, ordem),
+  avaliacoes (id),
+  solicitacoes_garantia (id, status, origem, prazo_resposta)
+`
+
 export async function getProjetosPorPrestador(prestadorId: number) {
   const { data, error } = await supabase
     .from('portfolio_projetos')
-    .select(`
-      id, titulo, status, created_at, prestador_id,
-      cliente_nome, cliente_whatsapp,
-      portfolio_fotos (id, url_foto, ordem),
-      avaliacoes (id)
-    `)
+    .select(SELECT_PROJETO_COM_GARANTIA)
     .eq('prestador_id', prestadorId)
     .order('created_at', { ascending: false })
 
@@ -37,12 +42,7 @@ export async function getProjetosPorPrestador(prestadorId: number) {
 export async function getProjetoAtualizado(projetoId: string): Promise<Projeto | null> {
   const { data, error } = await supabase
     .from('portfolio_projetos')
-    .select(`
-      id, titulo, status, created_at, prestador_id,
-      cliente_nome, cliente_whatsapp,
-      portfolio_fotos (id, url_foto, ordem),
-      avaliacoes (id)
-    `)
+    .select(SELECT_PROJETO_COM_GARANTIA)
     .eq('id', projetoId)
     .single()
 
