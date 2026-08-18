@@ -17,7 +17,7 @@
 // (esses campos pertencem ao fluxo de contestação e devem permanecer intocados).
 // -------------------------------------------------------------
 
-import { createClient } from '@/lib/supabase/server'; // ajustar path conforme padrão real do projeto
+import { supabase } from '@/lib/supabase';
 
 export type OrigemGarantia = 'cliente' | 'prestador';
 
@@ -69,7 +69,6 @@ function calcularPrazoUteis(diasUteis: number, base: Date = new Date()): Date {
  *  - hoje <= data_conclusao + prestadores.garantia_dias
  */
 export async function verificarElegibilidadeGarantia(projetoId: string) {
-  const supabase = createClient();
 
   const { data: projeto, error: projetoError } = await supabase
     .from('portfolio_projetos')
@@ -121,7 +120,6 @@ export async function verificarElegibilidadeGarantia(projetoId: string) {
  * Cliente abre um caso de garantia — fluxo padrão.
  */
 export async function abrirCasoGarantiaCliente(input: AbrirCasoClienteInput) {
-  const supabase = createClient();
 
   const elegibilidade = await verificarElegibilidadeGarantia(input.projetoId);
   if (!elegibilidade.elegivel || !elegibilidade.projeto) {
@@ -162,7 +160,6 @@ export async function abrirCasoGarantiaCliente(input: AbrirCasoClienteInput) {
  * Cria caso em status 'aguardando_aceite_cliente' — NÃO fica ativo até o cliente aceitar.
  */
 export async function oferecerReparoPrestador(input: OferecerReparoPrestadorInput) {
-  const supabase = createClient();
 
   // valida que a avaliação pertence de fato a esse prestador/projeto
   const { data: avaliacao, error: avaliacaoError } = await supabase
@@ -221,7 +218,6 @@ export async function oferecerReparoPrestador(input: OferecerReparoPrestadorInpu
  * Cliente aceita a oferta de reparo do prestador — ativa o caso e inicia o prazo.
  */
 export async function aceitarOfertaReparo(casoId: string, clienteUserId: string) {
-  const supabase = createClient();
 
   const prazoResposta = calcularPrazoUteis(5);
 
@@ -245,7 +241,6 @@ export async function aceitarOfertaReparo(casoId: string, clienteUserId: string)
  * Cliente recusa a oferta — tira o peso do prestador (não conta como sem_resposta).
  */
 export async function recusarOfertaReparo(casoId: string, clienteUserId: string) {
-  const supabase = createClient();
 
   const { data, error } = await supabase
     .from('solicitacoes_garantia')
@@ -268,7 +263,6 @@ export async function responderCasoGarantia(
   prestadorId: number,
   resposta: string,
 ) {
-  const supabase = createClient();
 
   const { data, error } = await supabase
     .from('solicitacoes_garantia')
@@ -309,7 +303,6 @@ export async function confirmarResolucaoGarantia(
   fotosResolucao: string[],
   novaNota?: number, // obrigatório quando origem='cliente'; ignorado quando origem='prestador'
 ) {
-  const supabase = createClient();
 
   const { data: casoAtual, error: casoAtualError } = await supabase
     .from('solicitacoes_garantia')
@@ -378,7 +371,6 @@ export async function confirmarResolucaoGarantia(
  * origem='prestador' (prestador ignorar a própria oferta de reparo é ainda pior).
  */
 export async function processarCasosVencidos() {
-  const supabase = createClient();
   const hoje = new Date().toISOString().slice(0, 10);
 
   const { data: vencidos, error } = await supabase
