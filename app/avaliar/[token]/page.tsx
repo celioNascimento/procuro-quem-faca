@@ -1,5 +1,9 @@
+//avaliacao/[token]/page.tsx
+
 'use client'
 import { use } from 'react'
+import { useRouter } from 'next/navigation'
+import { ShieldCheck, ChevronRight } from 'lucide-react'
 import { useAvaliar } from '@/hooks/useAvaliacao'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import { CardPrestador } from '@/components/acompanhamento/CardPrestador'
@@ -13,6 +17,7 @@ export default function PaginaAvaliar({
   params: Promise<{ token: string }>
 }) {
   const { token } = use(paramsPromise)
+  const router = useRouter()
 
   const {
     projeto, avaliacaoExistente, avaliacaoFinalizada,
@@ -59,7 +64,7 @@ export default function PaginaAvaliar({
               avaliacaoExistente={avaliacaoExistente}
             />
 
-            {!avaliacaoFinalizada && (
+            {!avaliacaoFinalizada ? (
               <BlocoAvaliacao
                 nota={nota}
                 setNota={setNota}
@@ -72,6 +77,31 @@ export default function PaginaAvaliar({
                 submitting={submitting}
                 onSubmit={handleFinalizarAvaliacao}
               />
+            ) : (
+              // Depois de avaliado, a avaliação em si já foi concluída —
+              // a próxima etapa relevante é o acompanhamento pós-serviço,
+              // onde vive a opção de acionar garantia caso algo dê errado
+              // depois. Substitui o BlocoAvaliacao (não faz sentido os dois
+              // juntos: já avaliou, não há mais nota a dar aqui).
+              <button
+                onClick={() => router.push(`/acompanhamento/${token}`)}
+                className="w-full bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 flex items-center justify-between gap-4 hover:border-blue-200 hover:shadow-md transition-all active:scale-[0.99]"
+              >
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
+                    <ShieldCheck size={18} className="text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-wide text-slate-800 leading-none mb-1">
+                      Acompanhamento e Garantia
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      Teve algum problema depois do serviço? Acesse aqui.
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight size={18} className="text-slate-300 shrink-0" />
+              </button>
             )}
 
             <div className="lg:hidden">
