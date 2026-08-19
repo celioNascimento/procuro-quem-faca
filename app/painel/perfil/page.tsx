@@ -4,7 +4,7 @@
 import Link from 'next/link'
 import {
   MapPin, ChevronRight, Briefcase, Loader2, CheckCircle2,
-  Save, AlertCircle, Star, ArrowRight, Trash2
+  Save, AlertCircle, Star, ArrowRight, Trash2, ShieldAlert
 } from 'lucide-react'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import CardPerfilCliente from '@/components/perfil/CardPerfilCliente'
@@ -36,9 +36,11 @@ export default function PerfilDoCliente() {
     atualizar,
     getStatusInfo,
     getRotaDestino,
+    getRotaGarantia,
     servicosFiltrados,
     avaliarCount,
-    ativosCount
+    ativosCount,
+    garantiaCount
   } = usePerfilCliente()
 
   const inputStyle = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-slate-800 bg-white shadow-sm placeholder-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400 text-[14px] md:text-[15px]`
@@ -122,11 +124,6 @@ export default function PerfilDoCliente() {
           </aside>
 
           <div className="flex min-w-0 flex-col gap-6">
-            {/* Banner B2C: anunciantes complementares à jornada do cliente
-                (ex: seguradora, financeira, decoração), segmentados pela
-                praça (cidade+categoria) do prestador do serviço mais
-                recente. Público distinto do banner na dashboard do
-                prestador (AdCardDashboard.tsx). */}
             <AdCardPainelCliente servicos={servicos} loading={loadingServicos}/>
 
             {avaliarCount > 0 && (
@@ -142,6 +139,24 @@ export default function PerfilDoCliente() {
                     {avaliarCount === 1 ? '1 serviço aguarda avaliação' : `${avaliarCount} serviços aguardam avaliação`}
                   </p>
                   <p className="text-blue-200 text-[11px] font-medium mt-1">Toque para avaliar e concluir</p>
+                </div>
+                <ArrowRight size={20} className="text-white/70 shrink-0" />
+              </button>
+            )}
+
+            {garantiaCount > 0 && (
+              <button
+                onClick={() => { setAba('servicos'); setFiltroStatus('garantia') }}
+                className="flex w-full items-center gap-4 rounded-[2rem] bg-orange-600 p-5 text-left shadow-lg shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-6"
+              >
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                  <ShieldAlert size={22} className="text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
+                    {garantiaCount === 1 ? '1 caso de garantia em aberto' : `${garantiaCount} casos de garantia em aberto`}
+                  </p>
+                  <p className="text-orange-200 text-[11px] font-medium mt-1">Toque para acompanhar</p>
                 </div>
                 <ArrowRight size={20} className="text-white/70 shrink-0" />
               </button>
@@ -171,16 +186,22 @@ export default function PerfilDoCliente() {
                     { id: 'andamento', label: 'Em andamento' },
                     { id: 'avaliar', label: avaliarCount > 0 ? `Avaliar (${avaliarCount})` : 'Avaliar' },
                     { id: 'finalizados', label: 'Concluídos' },
+                    ...(garantiaCount > 0 ? [{ id: 'garantia', label: `Garantia (${garantiaCount})` }] : []),
                   ].map(f => (
                     <button
                       key={f.id}
                       onClick={() => setFiltroStatus(f.id)}
                       type="button"
                       aria-pressed={filtroStatus === f.id}
-                      className={`min-h-10 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${filtroStatus === f.id
-                          ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                          : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600'
-                        }`}
+                      className={`min-h-10 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 ${
+                        filtroStatus === f.id
+                          ? f.id === 'garantia'
+                            ? 'border-orange-600 bg-orange-600 text-white shadow-sm focus-visible:ring-orange-100'
+                            : 'border-blue-600 bg-blue-600 text-white shadow-sm focus-visible:ring-blue-100'
+                          : f.id === 'garantia'
+                            ? 'border-orange-200 bg-white text-orange-500 hover:border-orange-300 focus-visible:ring-orange-100'
+                            : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600 focus-visible:ring-blue-100'
+                      }`}
                     >
                       {f.label}
                     </button>
@@ -204,8 +225,10 @@ export default function PerfilDoCliente() {
                 ) : (
                   <div className="grid gap-3 xl:grid-cols-2">
                     {servicosFiltrados.map(s => {
-                      const info = getStatusInfo(s)
-                      const rota = getRotaDestino(s)
+                      const info = filtroStatus === 'garantia'
+                        ? { label: 'Garantia', dot: 'bg-orange-400', badge: 'bg-orange-50 text-orange-700 border-orange-200', urgente: true }
+                        : getStatusInfo(s)
+                      const rota = filtroStatus === 'garantia' ? getRotaGarantia(s) : getRotaDestino(s)
                       return (
                         <button
                           key={s.id}
@@ -324,29 +347,6 @@ export default function PerfilDoCliente() {
                   >
                     {loading ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} /> Salvar alterações</>}
                   </button>
-                </section>
-
-                <section className="flex flex-col gap-4 rounded-[2rem] border border-red-100 bg-white p-5 shadow-sm sm:p-6 xl:sticky xl:top-48">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-                      <Trash2 size={14} className="text-red-500" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-widest text-red-500">Zona de Perigo</p>
-                      <p className="text-[11px] text-slate-400 font-medium mt-0.5">Ações irreversíveis</p>
-                    </div>
-                  </div>
-                  <div className="border-t border-red-50 pt-4">
-                    <p className="text-[12px] text-slate-500 leading-relaxed mb-4">
-                      Ao excluir sua conta, seus dados pessoais serão removidos permanentemente. O histórico de serviços contratados permanece anonimizado para os prestadores.
-                    </p>
-                    <Link
-                      href="/confirmar-exclusao"
-                      className="w-full py-4 border-2 border-red-200 text-red-500 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-red-50 active:scale-95 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Trash2 size={14} /> Excluir minha conta
-                    </Link>
-                  </div>
                 </section>
               </div>
             )}
