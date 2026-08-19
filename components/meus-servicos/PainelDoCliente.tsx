@@ -2,7 +2,7 @@
 
 'use client'
 import { useState } from 'react'
-import { User, Clock, Loader2, CheckCircle2, ClipboardList, LayoutGrid } from 'lucide-react'
+import { User, Clock, Loader2, CheckCircle2, ClipboardList, LayoutGrid, ShieldAlert } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import LoginGate from './LoginGate'
@@ -11,7 +11,7 @@ import ZoomImageModal from './ZoomImageModal'
 import { usePainelCliente } from '@/hooks/usePainelCliente'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
-type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido'
+type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido' | 'garantia'
 
 // ── Config das linhas de filtro ────────────────────────────────────────────────
 const FILTROS: {
@@ -22,6 +22,7 @@ const FILTROS: {
   { valor: 'pendente', label: 'Pendentes' },
   { valor: 'em_execucao', label: 'Em andamento' },
   { valor: 'concluido', label: 'Concluídos' },
+  { valor: 'garantia', label: 'Garantia' },
 ]
 
 export default function PainelDoCliente() {
@@ -29,10 +30,10 @@ export default function PainelDoCliente() {
   const [filtroAtivo, setFiltroAtivo] = useState<Filtro>('todos')
 
   const {
-    session, servicos, loading,
+    session, servicos, servicosGarantia, loading,
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente,
-    handleAceitar,
+    handleAceitar, handleVerGarantia,
   } = usePainelCliente()
 
   // ── Grupos por status ────────────────────────────────────────────────────────
@@ -42,11 +43,15 @@ export default function PainelDoCliente() {
   const concluidos  = servicos.filter(s => s.status === 'finalizado')
   const totalPendentes = pendentes.length + emRegistro.length
 
+  // "Todos" continua contando só o fluxo padrão de projetos — garantia é uma
+  // dimensão à parte (um projeto pode estar em "Concluídos" e também
+  // aparecer em "Garantia" ao mesmo tempo, não é mutuamente exclusivo).
   const contadores: Record<Filtro, number> = {
     todos:       servicos.length,
     pendente:    totalPendentes,
     em_execucao: emAndamento.length,
     concluido:   concluidos.length,
+    garantia:    servicosGarantia.length,
   }
 
   // ── Serviços filtrados ────────────────────────────────────────────────────────
@@ -54,16 +59,20 @@ export default function PainelDoCliente() {
     if (filtroAtivo === 'pendente')    return [...pendentes, ...emRegistro]
     if (filtroAtivo === 'em_execucao') return emAndamento
     if (filtroAtivo === 'concluido')   return concluidos
+    if (filtroAtivo === 'garantia')    return servicosGarantia
     return servicos
   })()
 
-  const getModo = (status: string) => {
-    if (status === 'em_execucao') return 'andamento' as const
-    if (status === 'finalizado')  return 'concluido' as const
+  const getModo = (servico: any) => {
+    if (filtroAtivo === 'garantia') return 'garantia' as const
+    if (servico.status === 'em_execucao') return 'andamento' as const
+    if (servico.status === 'finalizado')  return 'concluido' as const
     return 'pendente' as const
   }
 
   const getOnAceitar = (servico: any) => {
+    if (filtroAtivo === 'garantia')
+      return () => handleVerGarantia(servico)
     if (servico.status === 'em_execucao')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
     if (servico.status === 'finalizado')
@@ -81,7 +90,10 @@ export default function PainelDoCliente() {
   if (!session) return <LoginGate tokenUrl={tokenUrl} />
 
   const prestador = servicos[0]?.prestadores
-  const hasMultipleProjects = servicos.length > 1
+  // "Múltiplos projetos" agora também considera garantia — se o único projeto
+  // do cliente tem um caso de garantia ativo, ainda vale mostrar os filtros
+  // para que ele encontre a aba Garantia.
+  const hasMultipleProjects = servicos.length > 1 || servicosGarantia.length > 0
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-32 font-sans antialiased">
@@ -151,13 +163,29 @@ export default function PainelDoCliente() {
                 </div>
               )}
 
+              {/* Info da aba Garantia */}
+              {filtroAtivo === 'garantia' && servicosGarantia.length > 0 && (
+                <div className="bg-orange-50 rounded-[2rem] border border-orange-100 shadow-sm p-6 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert size={14} className="text-orange-500" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-orange-600">
+                      Garantia em aberto
+                    </p>
+                  </div>
+                  <p className="text-[12px] text-orange-700/80 font-medium leading-relaxed">
+                    Você tem casos de garantia em andamento. Acompanhe as respostas
+                    do prestador e confirme quando o problema for resolvido.
+                  </p>
+                </div>
+              )}
+
             </div>
           </div>
 
           {/* ── Coluna Direita — Filtros e Cards ── */}
           <div className="w-full lg:w-2/3 flex flex-col gap-4">
 
-            {/* Menu de Filtros Horizontal (SÓ aparece se houver > 1 projeto) */}
+            {/* Menu de Filtros Horizontal (SÓ aparece se houver > 1 projeto ou garantia ativa) */}
             {hasMultipleProjects && (
               <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {FILTROS.map((filtro) => {
@@ -175,8 +203,12 @@ export default function PainelDoCliente() {
                         min-h-10 flex items-center gap-2 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 transition-all
                         focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100
                         ${ativo
-                          ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                          : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600'
+                          ? filtro.valor === 'garantia'
+                            ? 'border-orange-600 bg-orange-600 text-white shadow-sm'
+                            : 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                          : filtro.valor === 'garantia'
+                            ? 'border-orange-200 bg-white text-orange-500 hover:border-orange-300'
+                            : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600'
                         }
                       `}
                     >
@@ -202,7 +234,7 @@ export default function PainelDoCliente() {
                     onZoom={setZoomImage}
                     onAceitar={getOnAceitar(servico)}
                     hidePrestador
-                    modo={getModo(servico.status)}
+                    modo={getModo(servico)}
                   />
                 ))
               ) : (
