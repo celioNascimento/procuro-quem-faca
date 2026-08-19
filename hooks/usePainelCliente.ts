@@ -62,15 +62,21 @@ export function usePainelCliente() {
         projs = projs.filter(p => p.prestadores?.user_id !== user.id)
       }
 
-      if (projs.length > 0) setServicos(projs)
-      else router.push('/painel/perfil')
+      if (projs.length > 0) {
+        setServicos(projs)
 
-      // Busca em paralelo os casos de garantia ativos — independente de token,
-      // já que a aba Garantia é sempre relativa ao usuário logado.
-      const garantias = await getServicosComGarantiaAtiva(user.id)
-      setServicosGarantia(
-        garantias.filter(p => p.prestadores?.user_id !== user.id),
-      )
+        // Busca em paralelo os casos de garantia ativos — só faz sentido
+        // quando o cliente de fato tem projetos; se não tem, já estamos
+        // saindo desta página (router.push abaixo) e essa query seria
+        // desperdiçada, ou pior, rodaria numa página que já não existe mais.
+        const garantias = await getServicosComGarantiaAtiva(user.id)
+        setServicosGarantia(
+          garantias.filter(p => p.prestadores?.user_id !== user.id),
+        )
+      } else {
+        router.push('/painel/perfil')
+        return
+      }
     } catch {
       router.push('/painel/perfil')
     } finally {
