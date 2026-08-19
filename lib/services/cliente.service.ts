@@ -25,6 +25,39 @@ export async function fetchClienteServicos(whatsapp: string): Promise<ClienteSer
   return (data ?? []) as unknown as ClienteServico[]
 }
 
+/**
+ * Casos de garantia ATIVOS vinculados aos projetos do cliente, buscados por
+ * whatsapp — consistente com fetchClienteServicos, que também usa whatsapp
+ * (não cliente_user_id) como chave de busca nesta tela.
+ *
+ * A ligação é indireta: portfolio_projetos.cliente_whatsapp identifica o
+ * cliente aqui; solicitacoes_garantia.projeto_id aponta para esses projetos.
+ * cliente_user_id em solicitacoes_garantia continua existindo e é usado nas
+ * AÇÕES de escrita (abrir, responder, confirmar — ver garantia.service.ts),
+ * onde autenticação real é obrigatória; aqui, para leitura/listagem, basta
+ * o vínculo por projeto.
+ */
+export async function fetchClienteGarantias(whatsapp: string): Promise<ClienteServico[]> {
+  const numLimpo = whatsapp.replace(/\D/g, '')
+  const { data, error } = await supabase
+    .from('portfolio_projetos')
+    .select(`
+      id, titulo, status, created_at, avaliacao_token,
+      portfolio_fotos(ordem),
+      prestadores!inner(id, nome, foto_perfil, categoria:categorias(nome)),
+      avaliacoes(id),
+      solicitacoes_garantia!inner(id, status, origem, prazo_resposta)
+    `)
+    .eq('cliente_whatsapp', numLimpo)
+    .in('solicitacoes_garantia.status', ['aguardando_aceite_cliente', 'aberta', 'respondida'])
+
+  if (error) {
+    console.error('Erro ao buscar garantias do cliente:', error.message)
+    return []
+  }
+  return (data ?? []) as unknown as ClienteServico[]
+}
+
 export async function fetchEstados() {
   const { data, error } = await supabase.from('estados').select('sigla, nome').order('nome')
   if (error) throw error
