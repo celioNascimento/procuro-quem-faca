@@ -42,13 +42,16 @@ export function usePerfilCliente() {
 
     // ── Serviços ──────────────────────────────────
     servicos:          servicos.servicos,
+    servicosGarantia:  servicos.servicosGarantia,
     filtroStatus:      servicos.filtroStatus,
     setFiltroStatus:   servicos.setFiltroStatus,
     loadingServicos:   servicos.loadingServicos,
     servicosFiltrados: servicos.servicosFiltrados,
     avaliarCount:      servicos.avaliarCount,
     ativosCount:       servicos.ativosCount,
+    garantiaCount:     servicos.garantiaCount,
     getStatusInfo:     servicos.getStatusInfo,
     getRotaDestino:    servicos.getRotaDestino,
+    getRotaGarantia:   servicos.getRotaGarantia,
   }
 }
