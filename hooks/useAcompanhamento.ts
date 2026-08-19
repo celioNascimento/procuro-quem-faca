@@ -1,11 +1,11 @@
-//hooks/useAcompanhamento.ts
-
 'use client'
 import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import {
   fetchProjetoPorToken,
   fetchComentariosPorProjeto,
   inserirComentario,
+  reivindicarProjetoParaCliente,
 } from '@/lib/services/avaliacao.service'
 import type { FotoOrdenada, Comentario, Projeto } from '@/types/avaliacao'
 
@@ -42,6 +42,20 @@ export function useAcompanhamento(token: string) {
 
         const comData = await fetchComentariosPorProjeto(projData.id)
         setComentarios(comData)
+        // Reivindicação silenciosa: se o projeto ainda não tem
+        // cliente_user_id (caso legado) e o usuário logado bate pelo
+        // whatsapp, vincula agora e atualiza o objeto em memória —
+        // sem isso, a verificação de dono em abrirCasoGarantiaCliente
+        // só passaria a funcionar na visita SEGUINTE (já que o objeto
+        // buscado acima não reflete a mudança feita depois dele).
+        const { data: userData } = await supabase.auth.getUser()
+        if (userData.user) {
+          await reivindicarProjetoParaCliente(projData.id, userData.user.id)
+          if (!projData.cliente_user_id) {
+            projData.cliente_user_id = userData.user.id
+          }
+        }
+
         setProjeto(projData)
       } catch (err) {
         console.error('Erro ao carregar projeto:', err)
