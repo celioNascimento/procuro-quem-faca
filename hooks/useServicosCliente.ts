@@ -11,6 +11,7 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   const filtroRef = useRef<HTMLDivElement>(null)
 
   const [servicos, setServicos]             = useState<ClienteServico[]>([])
+  const [servicosGarantia, setServicosGarantia] = useState<ClienteServico[]>([])
   const [filtroStatus, setFiltroStatus]     = useState('todos')
   const [loadingServicos, setLoadingServicos] = useState(true)
 
@@ -24,6 +25,7 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
     // não há como buscar serviços. Este é um estado final, não um erro.
     if (!whatsapp) {
       setServicos([])
+      setServicosGarantia([])
       setLoadingServicos(false)
       return
     }
@@ -33,13 +35,17 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
     async function buscar() {
       setLoadingServicos(true)
       try {
-        const data = await ClienteService.fetchClienteServicos(whatsapp)
+        const [data, garantias] = await Promise.all([
+          ClienteService.fetchClienteServicos(whatsapp),
+          ClienteService.fetchClienteGarantias(whatsapp),
+        ])
         if (cancelado) return
         if (data) setServicos(
           data.sort((a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           )
         )
+        setServicosGarantia(garantias)
       } finally {
         if (!cancelado) setLoadingServicos(false)
       }
@@ -78,17 +84,24 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
     return `/avaliar/${s.avaliacao_token}`
   }
 
-  const servicosFiltrados = servicos.filter(s => {
-    const st = s.status?.toLowerCase()
-    const temFoto3 = s.portfolio_fotos?.some((f) => f.ordem === 3)
-    if (filtroStatus === 'todos')
-      return true
-    if (filtroStatus === 'pendente')    return st === 'pendente'
-    if (filtroStatus === 'andamento')   return st === 'em_execucao' && !temFoto3
-    if (filtroStatus === 'avaliar')     return st === 'em_execucao' && temFoto3
-    if (filtroStatus === 'finalizados') return st === 'finalizado'
-    return true
-  })
+  // Rota específica para a aba Garantia: sempre direto pro acompanhamento,
+  // já sinalizando a seção — independente do status do projeto em si
+  // (garantia é sempre sobre um projeto já finalizado).
+  const getRotaGarantia = (s: ClienteServico) => `/acompanhamento/${s.avaliacao_token}?garantia=1`
+
+  const servicosFiltrados = filtroStatus === 'garantia'
+    ? servicosGarantia
+    : servicos.filter(s => {
+        const st = s.status?.toLowerCase()
+        const temFoto3 = s.portfolio_fotos?.some((f) => f.ordem === 3)
+        if (filtroStatus === 'todos')
+          return true
+        if (filtroStatus === 'pendente')    return st === 'pendente'
+        if (filtroStatus === 'andamento')   return st === 'em_execucao' && !temFoto3
+        if (filtroStatus === 'avaliar')     return st === 'em_execucao' && temFoto3
+        if (filtroStatus === 'finalizados') return st === 'finalizado'
+        return true
+      })
 
   const avaliarCount = servicos.filter(s =>
     s.status === 'em_execucao' && s.portfolio_fotos?.some((f) => f.ordem === 3)
@@ -97,6 +110,8 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   const ativosCount = servicos.filter(s =>
     s.status === 'pendente' || s.status === 'em_execucao'
   ).length
+
+  const garantiaCount = servicosGarantia.length
 
   const irParaAvaliar = (setAba: (v: string) => void) => {
     setAba('servicos')
@@ -109,13 +124,16 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   return {
     filtroRef,
     servicos,
+    servicosGarantia,
     filtroStatus, setFiltroStatus,
     loadingServicos,
     servicosFiltrados,
     avaliarCount,
     ativosCount,
+    garantiaCount,
     getStatusInfo,
     getRotaDestino,
+    getRotaGarantia,
     irParaAvaliar,
   }
 }
