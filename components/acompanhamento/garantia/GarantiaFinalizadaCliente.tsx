@@ -7,6 +7,7 @@
 import { CheckCircle2, XCircle, ShieldOff } from 'lucide-react'
 import type { CasoGarantia } from '@/hooks/useCasoGarantiaDoProjeto'
 import { useGarantiaWizard } from '@/hooks/useGarantiaWizard'
+import { FotoGarantia } from '@/components/dashboard/wizard/garantia/FotoGarantia'
 
 interface Props {
   caso: CasoGarantia
@@ -66,7 +67,7 @@ export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
         <div className="grid grid-cols-3 gap-2">
           {state.fotos.map((foto) => (
             <div key={foto.id} className="aspect-square rounded-xl overflow-hidden bg-slate-100">
-              <img src={foto.url_foto} className="w-full h-full object-cover" alt="" />
+              <FotoGarantia path={foto.url_foto} publica={foto.publica} className="w-full h-full object-cover" alt="" />
             </div>
           ))}
         </div>
