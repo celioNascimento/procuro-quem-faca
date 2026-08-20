@@ -16,7 +16,7 @@ const SELECT_SERVICOS = `
   solicitacoes_garantia (id, status, origem, prazo_resposta)
 `
 
-const STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado']
+const STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado', 'em_disputa]
 
 // Status de solicitacoes_garantia considerados "ativos" — casos já resolvidos
 // ou recusados não contam como garantia ativa (voltam a contar como Concluídos).
