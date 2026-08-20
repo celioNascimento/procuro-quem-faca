@@ -54,13 +54,11 @@ export async function POST(req: NextRequest) {
 
     const resultados = await Promise.all(
       fotos.map(async (foto) => {
-        // Extrai o path relativo do arquivo dentro do bucket privado
-        // a partir da URL salva em url_foto.
-        const path = extrairPathDoBucket(foto.url_foto, BUCKET_PRIVADO)
-        if (!path) {
-          console.error(`Não foi possível extrair path da foto ${foto.id}: ${foto.url_foto}`)
-          return { id: foto.id, sucesso: false }
-        }
+        // url_foto já é o PATH puro dentro do bucket privado (não uma URL
+        // completa) — desde que uploadImagemGarantia passou a retornar o
+        // path diretamente, sem chamar getPublicUrl (que não funciona em
+        // bucket privado). Não é mais necessário fazer parsing de URL aqui.
+        const path = foto.url_foto
 
         // Baixa do bucket privado
         const { data: arquivo, error: downloadError } = await supabaseAdmin.storage
