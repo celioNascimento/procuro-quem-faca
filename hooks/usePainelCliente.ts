@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Servico } from '@/types/painel'
+import { updateClienteProfile } from '@/lib/services/cliente.service'
 import {
   getProfile,
   getServicoPorToken,
@@ -24,6 +25,13 @@ export function usePainelCliente() {
   const [loading, setLoading]     = useState(true)
   const [zoomImage, setZoomImage] = useState<string | null>(null)
   const [tokenUrl, setTokenUrl]   = useState<string | null>(null)
+
+  // Confirmação de whatsapp antes do aceite — só é acionado quando
+  // profile.whatsapp ainda não bate com o cliente_whatsapp do projeto
+  // (ver policy portfolio_projetos_cliente_aceita_proprio). Guarda o
+  // serviço pendente de confirmação para retomar o aceite depois.
+  const [confirmandoWhatsapp, setConfirmandoWhatsapp] = useState<Servico | null>(null)
+  const [confirmandoErro, setConfirmandoErro] = useState<string | null>(null)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -104,12 +112,28 @@ export function usePainelCliente() {
   }, [tokenUrl, buscarDados])
 
   const handleAceitar = async (servico: Servico) => {
+    const whatsappProjeto = servico.cliente_whatsapp?.replace(/\D/g, '') ?? ''
+    const whatsappPerfil = profile?.whatsapp?.replace(/\D/g, '') ?? ''
+
+    // Se o whatsapp do perfil ainda não bate com o do projeto, a policy de
+    // update bloquearia o aceite silenciosamente (RLS nega, sem mensagem
+    // clara). Em vez de deixar isso falhar, intercepta aqui e pede
+    // confirmação explícita do número antes de prosseguir.
+    if (whatsappProjeto && whatsappPerfil !== whatsappProjeto) {
+      setConfirmandoWhatsapp(servico)
+      return
+    }
+
+    await executarAceite(servico)
+  }
+
+  const executarAceite = async (servico: Servico) => {
     const nome =
       profile?.full_name ||
       session?.user?.user_metadata?.full_name ||
       servico.cliente_nome
 
-    await aceitarServico(servico.id, nome)
+    await aceitarServico(servico.id, nome, session?.user?.id)
 
     setServicos(prev =>
       prev.map(s =>
@@ -120,6 +144,33 @@ export function usePainelCliente() {
     )
 
     router.push(`/acompanhamento/${servico.avaliacao_token}`)
+  }
+
+  /**
+   * Confirma (ou edita) o whatsapp do cliente e, se bem-sucedido, retoma o
+   * aceite do serviço que ficou pendente de confirmação. numeroConfirmado
+   * é o valor final digitado pelo cliente — pode ser igual ao do projeto
+   * (confirmação simples) ou diferente (edição).
+   */
+  const confirmarWhatsappEAceitar = async (numeroConfirmado: string) => {
+    if (!confirmandoWhatsapp || !session?.user?.id) return
+    setConfirmandoErro(null)
+    try {
+      await updateClienteProfile(session.user.id, { whatsapp: numeroConfirmado.replace(/\D/g, '') })
+      setProfile((prev: any) => ({ ...prev, whatsapp: numeroConfirmado }))
+
+      const servico = confirmandoWhatsapp
+      setConfirmandoWhatsapp(null)
+      await executarAceite(servico)
+    } catch (err) {
+      console.error('Erro ao confirmar whatsapp:', err)
+      setConfirmandoErro('Não foi possível salvar. Tente novamente.')
+    }
+  }
+
+  const cancelarConfirmacaoWhatsapp = () => {
+    setConfirmandoWhatsapp(null)
+    setConfirmandoErro(null)
   }
 
   // Navega para a mesma tela de acompanhamento, sinalizando a seção de garantia
@@ -137,5 +188,7 @@ export function usePainelCliente() {
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente, avatarUrl,
     handleAceitar, handleVerGarantia,
+    confirmandoWhatsapp, confirmandoErro,
+    confirmarWhatsappEAceitar, cancelarConfirmacaoWhatsapp,
   }
 }
