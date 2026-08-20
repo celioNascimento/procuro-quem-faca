@@ -86,20 +86,11 @@ export default function PainelDoCliente() {
   // Lookup rápido para saber, independente da aba ativa, se um projeto
   // específico tem garantia ativa — usado para sinalizar isso de forma
   // consistente em QUALQUER aba (Todos, Concluídos, etc.), não só na
-  // aba Garantia em si.
+  // aba Garantia em si. servicosGarantia agora é derivado do MESMO array
+  // que servicos (via filtrarComGarantiaAtiva em painelCliente.service.ts),
+  // então os ids sempre batem por construção — não há mais risco de
+  // dessincronia entre duas queries separadas.
   const idsComGarantiaAtiva = new Set(servicosGarantia.map(s => s.id))
-
-  // DEBUG TEMPORÁRIO — remover depois de confirmar a causa do badge de
-  // garantia não aparecendo fora da aba Garantia. Compara tipos e valores
-  // exatos entre os dois arrays de origem.
-  if (typeof window !== 'undefined') {
-    console.log('[DEBUG garantia] servicos ids:', servicos.map(s => ({ id: s.id, tipo: typeof s.id })))
-    console.log('[DEBUG garantia] servicosGarantia ids:', servicosGarantia.map(s => ({ id: s.id, tipo: typeof s.id })))
-    console.log('[DEBUG garantia] idsComGarantiaAtiva (Set):', Array.from(idsComGarantiaAtiva))
-    servicos.forEach(s => {
-      console.log(`[DEBUG garantia] servico "${s.titulo}" id=${JSON.stringify(s.id)} -> has? ${idsComGarantiaAtiva.has(s.id)}`)
-    })
-  }
 
   // ── Serviços filtrados ────────────────────────────────────────────────────────
   const servicosFiltrados = (() => {
