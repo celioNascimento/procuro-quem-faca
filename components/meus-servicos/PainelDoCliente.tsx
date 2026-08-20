@@ -83,6 +83,12 @@ export default function PainelDoCliente() {
     garantia:    servicosGarantia.length,
   }
 
+  // Lookup rápido para saber, independente da aba ativa, se um projeto
+  // específico tem garantia ativa — usado para sinalizar isso de forma
+  // consistente em QUALQUER aba (Todos, Concluídos, etc.), não só na
+  // aba Garantia em si.
+  const idsComGarantiaAtiva = new Set(servicosGarantia.map(s => s.id))
+
   // ── Serviços filtrados ────────────────────────────────────────────────────────
   const servicosFiltrados = (() => {
     if (filtroAtivo === 'pendente')    return [...pendentes, ...emRegistro]
@@ -93,14 +99,16 @@ export default function PainelDoCliente() {
   })()
 
   const getModo = (servico: any) => {
-    if (filtroAtivo === 'garantia') return 'garantia' as const
+    // Garantia ativa tem prioridade visual sobre o status normal do
+    // projeto, em QUALQUER aba — não só quando filtroAtivo === 'garantia'.
+    if (idsComGarantiaAtiva.has(servico.id)) return 'garantia' as const
     if (servico.status === 'em_execucao') return 'andamento' as const
     if (servico.status === 'finalizado')  return 'concluido' as const
     return 'pendente' as const
   }
 
   const getOnAceitar = (servico: any) => {
-    if (filtroAtivo === 'garantia')
+    if (idsComGarantiaAtiva.has(servico.id))
       return () => handleVerGarantia(servico)
     if (servico.status === 'em_execucao')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
