@@ -72,6 +72,14 @@ export default function PainelDoCliente() {
   const concluidos  = servicos.filter(s => s.status === 'finalizado')
   const totalPendentes = pendentes.length + emRegistro.length
 
+  const contadores: Record<Filtro, number> = {
+    todos:       servicos.length,
+    pendente:    totalPendentes,
+    em_execucao: emAndamento.length,
+    concluido:   concluidos.length,
+    garantia:    emGarantia.length,
+  const totalPendentes = pendentes.length + emRegistro.length
+
   // "Todos" continua contando só o fluxo padrão de projetos — garantia é uma
   // dimensão à parte (um projeto pode estar em "Concluídos" e também
   // aparecer em "Garantia" ao mesmo tempo, não é mutuamente exclusivo).
