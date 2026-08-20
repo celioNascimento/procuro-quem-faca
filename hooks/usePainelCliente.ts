@@ -1,6 +1,6 @@
 //hooks/usePainelCliente.ts
 
-        'use client'
+'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Session } from '@supabase/supabase-js'
