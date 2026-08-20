@@ -1,6 +1,6 @@
 //hooks/usePainelCliente.ts
 
-'use client'
+        'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Session } from '@supabase/supabase-js'
@@ -12,7 +12,7 @@ import {
   getServicoPorToken,
   getServicosPorUserId,
   getServicosPorWhatsapp,
-  getServicosComGarantiaAtiva,
+  filtrarComGarantiaAtiva,
   aceitarServico,
 } from '../lib/services/painelCliente.service'
 
@@ -21,10 +21,14 @@ export function usePainelCliente() {
   const [session, setSession]     = useState<Session | null>(null)
   const [profile, setProfile]     = useState<any>(null)
   const [servicos, setServicos]   = useState<Servico[]>([])
-  const [servicosGarantia, setServicosGarantia] = useState<Servico[]>([])
   const [loading, setLoading]     = useState(true)
   const [zoomImage, setZoomImage] = useState<string | null>(null)
   const [tokenUrl, setTokenUrl]   = useState<string | null>(null)
+
+  // Derivado diretamente de servicos (que já traz solicitacoes_garantia
+  // embutido via join) — não é mais estado próprio nem consulta separada.
+  // Elimina o risco de dessincronia entre dois arrays de origens diferentes.
+  const servicosGarantia = filtrarComGarantiaAtiva(servicos)
 
   // Confirmação de whatsapp antes do aceite — só é acionado quando
   // profile.whatsapp ainda não bate com o cliente_whatsapp do projeto
@@ -72,15 +76,6 @@ export function usePainelCliente() {
 
       if (projs.length > 0) {
         setServicos(projs)
-
-        // Busca em paralelo os casos de garantia ativos — só faz sentido
-        // quando o cliente de fato tem projetos; se não tem, já estamos
-        // saindo desta página (router.push abaixo) e essa query seria
-        // desperdiçada, ou pior, rodaria numa página que já não existe mais.
-        const garantias = await getServicosComGarantiaAtiva(user.id)
-        setServicosGarantia(
-          garantias.filter(p => p.prestadores?.user_id !== user.id),
-        )
       } else {
         router.push('/painel/perfil')
         return
