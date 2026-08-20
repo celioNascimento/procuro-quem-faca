@@ -86,6 +86,7 @@ export async function getServicosComGarantiaAtiva(userId: string) {
 export async function aceitarServico(
   servicoId: string,
   nomeCliente: string,
+  clienteUserId?: string,
 ) {
   const { error } = await supabase
     .from('portfolio_projetos')
@@ -93,6 +94,11 @@ export async function aceitarServico(
       status: 'em_execucao',
       aceito_at: new Date().toISOString(),
       cliente_nome: nomeCliente,
+      // Vínculo forte no exato momento em que o cliente confirma que é ele
+      // mesmo (clicou no link recebido via WhatsApp e está logado) — esta é
+      // a âncora que o "Efeito Espelho" (ver glossário) foi desenhada para
+      // usar, mas que nunca era preenchida em nenhum ponto de escrita real.
+      ...(clienteUserId ? { cliente_user_id: clienteUserId } : {}),
     })
     .eq('id', servicoId)
 
