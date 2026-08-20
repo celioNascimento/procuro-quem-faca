@@ -11,6 +11,7 @@
 
 import { Camera, Loader2 } from 'lucide-react'
 import type { useGarantiaWizard } from '@/hooks/useGarantiaWizard'
+import { FotoGarantia } from './FotoGarantia'
 
 interface Props {
   wizard: ReturnType<typeof useGarantiaWizard>
@@ -40,7 +41,7 @@ export function GarantiaCarrossel({ wizard, podeEnviar, autorTipo }: Props) {
                 onClick={() => actions.setZoomFotoId(foto.id)}
                 className="aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-100 hover:border-orange-200 transition-colors"
               >
-                <img src={foto.url_foto} className="w-full h-full object-cover" alt="" />
+                <FotoGarantia path={foto.url_foto} publica={foto.publica} className="w-full h-full object-cover" alt="" />
               </button>
             ))}
           </div>
@@ -59,7 +60,7 @@ export function GarantiaCarrossel({ wizard, podeEnviar, autorTipo }: Props) {
                 onClick={() => actions.setZoomFotoId(foto.id)}
                 className="aspect-square rounded-xl overflow-hidden bg-slate-100 border border-green-100 hover:border-green-300 transition-colors"
               >
-                <img src={foto.url_foto} className="w-full h-full object-cover" alt="" />
+                <FotoGarantia path={foto.url_foto} publica={foto.publica} className="w-full h-full object-cover" alt="" />
               </button>
             ))}
           </div>
