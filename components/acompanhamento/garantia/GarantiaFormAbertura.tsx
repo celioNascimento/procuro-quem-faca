@@ -15,6 +15,7 @@ import { useState } from 'react'
 import { AlertCircle, Camera, Loader2, Send } from 'lucide-react'
 import { abrirCasoGarantiaCliente } from '@/lib/services/garantia.service'
 import { useGarantiaWizard } from '@/hooks/useGarantiaWizard'
+import { FotoGarantia } from '@/components/dashboard/wizard/garantia/FotoGarantia'
 
 const MIN_CARACTERES_DESCRICAO = 20
 
@@ -73,7 +74,7 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, onAberto }: Pro
           <div className="grid grid-cols-3 gap-2">
             {wizard.state.fotos.map((foto) => (
               <div key={foto.id} className="aspect-square rounded-xl overflow-hidden bg-slate-100">
-                <img src={foto.url_foto} className="w-full h-full object-cover" alt="" />
+                <FotoGarantia path={foto.url_foto} publica={foto.publica} className="w-full h-full object-cover" alt="" />
               </div>
             ))}
           </div>
