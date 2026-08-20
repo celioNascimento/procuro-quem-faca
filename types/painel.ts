@@ -21,6 +21,13 @@ export interface PortfolioFoto {
   url_foto: string
 }
 
+export interface SolicitacaoGarantiaResumo {
+  id: string
+  status: string
+  origem: 'cliente' | 'prestador'
+  prazo_resposta: string | null
+}
+
 export interface Servico {
   id: string
   titulo: string
@@ -31,4 +38,9 @@ export interface Servico {
   cliente_whatsapp: string
   prestadores: Prestador | null
   portfolio_fotos: PortfolioFoto[]
+  // Trazido via left join em painelCliente.service.ts — array vazio quando
+  // o projeto não tem nenhum caso de garantia. Usado por temGarantiaAtiva/
+  // filtrarComGarantiaAtiva para derivar o status de garantia sem consulta
+  // separada.
+  solicitacoes_garantia: SolicitacaoGarantiaResumo[]
 }
