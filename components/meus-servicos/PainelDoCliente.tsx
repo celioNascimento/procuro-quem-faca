@@ -1,8 +1,8 @@
 // components/meus-servicos/PainelDoCliente.tsx
 
 'use client'
-import { useState } from 'react'
-import { User, Clock, Loader2, CheckCircle2, ClipboardList, LayoutGrid, ShieldAlert } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { User, Clock, Loader2, CheckCircle2, ClipboardList, LayoutGrid, ShieldAlert, Phone, X, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import LoginGate from './LoginGate'
@@ -34,7 +34,36 @@ export default function PainelDoCliente() {
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente,
     handleAceitar, handleVerGarantia,
+    confirmandoWhatsapp, confirmandoErro,
+    confirmarWhatsappEAceitar, cancelarConfirmacaoWhatsapp,
   } = usePainelCliente()
+
+  const [whatsappEditado, setWhatsappEditado] = useState('')
+  const [salvandoWhatsapp, setSalvandoWhatsapp] = useState(false)
+
+  // Pré-preenche com o whatsapp do projeto quando o modal de confirmação
+  // abre, dando ao cliente o valor mais provável já digitado — mas ele
+  // pode editar livremente antes de confirmar.
+  useEffect(() => {
+    if (confirmandoWhatsapp?.cliente_whatsapp) {
+      setWhatsappEditado(confirmandoWhatsapp.cliente_whatsapp)
+    }
+  }, [confirmandoWhatsapp])
+
+  const handleConfirmarWhatsapp = async () => {
+    setSalvandoWhatsapp(true)
+    try {
+      await confirmarWhatsappEAceitar(whatsappEditado)
+    } finally {
+      setSalvandoWhatsapp(false)
+      setWhatsappEditado('')
+    }
+  }
+
+  const handleCancelarWhatsapp = () => {
+    cancelarConfirmacaoWhatsapp()
+    setWhatsappEditado('')
+  }
 
   // ── Grupos por status ────────────────────────────────────────────────────────
   const emRegistro  = servicos.filter(s => s.status === 'em_registro')
@@ -101,6 +130,52 @@ export default function PainelDoCliente() {
 
       {zoomImage && (
         <ZoomImageModal url={zoomImage} onClose={() => setZoomImage(null)} />
+      )}
+
+      {confirmandoWhatsapp && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 space-y-6 animate-in zoom-in-95">
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto border border-blue-100">
+                <Phone size={28} />
+              </div>
+              <h3 className="text-xl font-black italic uppercase text-slate-800 tracking-tighter">Confirme seu WhatsApp</h3>
+              <p className="text-[12px] font-medium text-slate-500 leading-relaxed">
+                Precisamos confirmar seu número antes de autorizar o serviço.
+              </p>
+            </div>
+
+            <input
+              type="text"
+              value={whatsappEditado}
+              onChange={(e) => setWhatsappEditado(e.target.value)}
+              placeholder="(00) 00000-0000"
+              className="w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none text-center font-bold text-slate-800 bg-slate-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-[15px]"
+            />
+
+            {confirmandoErro && (
+              <p className="text-[11px] font-bold text-red-500 flex items-center justify-center gap-1.5">
+                <AlertCircle size={12} /> {confirmandoErro}
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelarWhatsapp}
+                className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold uppercase text-[11px] tracking-wide hover:bg-slate-100 transition-all active:scale-95"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarWhatsapp}
+                disabled={!whatsappEditado.trim() || salvandoWhatsapp}
+                className="flex-1 py-4 bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-2xl font-black uppercase text-[11px] tracking-wide hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+              >
+                {salvandoWhatsapp ? <Loader2 size={14} className="animate-spin" /> : 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="max-w-5xl mx-auto px-5 pt-24 md:pt-36 animate-in fade-in duration-700">
