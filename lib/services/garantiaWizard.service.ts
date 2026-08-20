@@ -160,13 +160,44 @@ export async function inserirComentarioGarantia(input: {
   return data
 }
 
+/**
+ * Faz upload no bucket privado 'garantia' e retorna o PATH do arquivo
+ * (não uma URL pronta) — bucket privado não expõe getPublicUrl utilizável;
+ * a URL de exibição é sempre resolvida sob demanda via
+ * getUrlAssinadaGarantia, nunca armazenada pronta.
+ */
 export async function uploadImagemGarantia(filePath: string, file: File): Promise<string> {
   const { error } = await supabase.storage
-    .from('garantia') // TODO: confirmar nome do bucket — pode ser o mesmo 'portfolio' já usado
+    .from('garantia')
     .upload(filePath, file)
 
   if (error) throw error
 
-  const { data } = supabase.storage.from('garantia').getPublicUrl(filePath)
-  return data.publicUrl
+  return filePath
+}
+
+/**
+ * Gera uma URL assinada temporária para exibir uma foto do bucket privado
+ * 'garantia'. Chamada sob demanda pelos componentes que renderizam fotos —
+ * nunca é armazenada, sempre resolvida na hora, para nunca expirar
+ * "guardada errada" no banco.
+ *
+ * path é o valor salvo em garantia_fotos.url_foto (nome mantido por
+ * compatibilidade com o schema já aplicado — na prática, para fotos com
+ * publica=false, esse campo contém um PATH, não uma URL completa).
+ *
+ * Para fotos já promovidas (publica=true), url_foto já é uma URL pública
+ * completa do bucket 'garantia-publico' (ver route.ts de promoção) —
+ * essas não passam por aqui, são usadas diretamente.
+ */
+export async function getUrlAssinadaGarantia(path: string, validadeSegundos = 3600): Promise<string | null> {
+  const { data, error } = await supabase.storage
+    .from('garantia')
+    .createSignedUrl(path, validadeSegundos)
+
+  if (error) {
+    console.error('Erro ao gerar URL assinada de foto de garantia:', error.message)
+    return null
+  }
+  return data.signedUrl
 }
