@@ -1,19 +1,35 @@
 //services/painelCliente.service.ts
 
-import { supabase } from '@/lib/supabase'
+ import { supabase } from '@/lib/supabase'
 
-// Adicionado o user_id no retorno de prestadores para permitir o filtro
+// Adicionado o user_id no retorno de prestadores para permitir o filtro.
+// solicitacoes_garantia é LEFT JOIN (sem !inner) — traz o array vazio []
+// quando o projeto não tem nenhum caso de garantia, em vez de excluir a
+// linha. Isso é o que permite saber, dentro do MESMO objeto de projeto,
+// se ele tem garantia ativa — sem precisar de uma segunda consulta
+// separada e comparar arrays por id depois (fonte de bugs sutis se os
+// tipos/formatos de id não baterem entre as duas queries).
 const SELECT_SERVICOS = `
   *,
   prestadores (id, user_id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
-  portfolio_fotos (*)
+  portfolio_fotos (*),
+  solicitacoes_garantia (id, status, origem, prazo_resposta)
 `
 
 const STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado']
 
 // Status de solicitacoes_garantia considerados "ativos" — casos já resolvidos
-// ou recusados não aparecem na aba Garantia (voltam a contar como Concluídos).
+// ou recusados não contam como garantia ativa (voltam a contar como Concluídos).
 const STATUS_GARANTIA_ATIVOS = ['aguardando_aceite_cliente', 'aberta', 'respondida']
+
+/**
+ * Deriva se um serviço tem garantia ativa a partir do array
+ * solicitacoes_garantia já embutido nele pelo join — não faz consulta
+ * nem comparação externa. Cada Servico carrega sua própria resposta.
+ */
+export function temGarantiaAtiva(servico: { solicitacoes_garantia?: { status: string }[] }): boolean {
+  return (servico.solicitacoes_garantia ?? []).some(g => STATUS_GARANTIA_ATIVOS.includes(g.status))
+}
 
 export async function getProfile(userId: string) {
   const { data } = await supabase
@@ -56,31 +72,15 @@ export async function getServicosPorWhatsapp(whatsapp: string) {
 }
 
 /**
- * Projetos do cliente que têm um caso de garantia ATIVO agora
- * (aguardando_aceite_cliente | aberta | respondida).
- * Casos resolvidos/sem_resposta/recusados não aparecem aqui — o projeto
- * volta a contar normalmente como 'Concluído'.
- *
- * Nota: como solicitacoes_garantia.status já filtra por "ativo", não
- * aplicamos STATUS_VISIVEIS aqui — um projeto com garantia ativa é, por
- * definição, um projeto finalizado (garantia só existe pós-conclusão).
+ * Projetos do cliente que têm um caso de garantia ATIVO agora —
+ * derivado diretamente do array já embutido nos serviços (temGarantiaAtiva),
+ * sem consulta separada. Mantida como função por conveniência de uso nos
+ * hooks, mas agora é um filtro local, não uma query própria.
  */
-export async function getServicosComGarantiaAtiva(userId: string) {
-  const { data, error } = await supabase
-    .from('portfolio_projetos')
-    .select(`
-      ${SELECT_SERVICOS},
-      solicitacoes_garantia!inner (id, status, origem, prazo_resposta)
-    `)
-    .eq('cliente_user_id', userId)
-    .in('solicitacoes_garantia.status', STATUS_GARANTIA_ATIVOS)
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Erro ao buscar serviços com garantia ativa:', error)
-    return []
-  }
-  return data ?? []
+export function filtrarComGarantiaAtiva<T extends { solicitacoes_garantia?: { status: string }[] }>(
+  servicos: T[],
+): T[] {
+  return servicos.filter(temGarantiaAtiva)
 }
 
 export async function aceitarServico(
