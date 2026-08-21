@@ -61,7 +61,7 @@ export default function ServicoCardCompacto({
     <button
       onClick={onClick}
       type="button"
-      className={`group flex min-h-[7rem] w-full items-center gap-4 rounded-[1.75rem] border bg-white p-4 text-left overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 active:translate-y-0 ${cardClass}`}
+      className={`group flex min-h-[7rem] w-full items-center gap-4 rounded-2xl border bg-white p-4 text-left overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 active:translate-y-0 ${cardClass}`}
     >
       {/* Foto do prestador com dot de status */}
       <div className={`relative shrink-0 rounded-2xl p-0.5 ${fotoRingClass}`}>
