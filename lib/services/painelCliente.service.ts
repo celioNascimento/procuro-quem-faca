@@ -1,6 +1,4 @@
-//services/painelCliente.service.ts
-
- import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 // Adicionado o user_id no retorno de prestadores para permitir o filtro.
 // solicitacoes_garantia é LEFT JOIN (sem !inner) — traz o array vazio []
@@ -16,7 +14,7 @@ const SELECT_SERVICOS = `
   solicitacoes_garantia (id, status, origem, prazo_resposta)
 `
 
-const STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado', 'em_disputa]
+const STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado', 'em_disputa']
 
 // Status de solicitacoes_garantia considerados "ativos" — casos já resolvidos
 // ou recusados não contam como garantia ativa (voltam a contar como Concluídos).
