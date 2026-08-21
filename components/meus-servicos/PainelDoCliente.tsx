@@ -2,7 +2,7 @@
 
 'use client'
 import { useState, useEffect } from 'react'
-import { User, Clock, Loader2, CheckCircle2, ClipboardList, LayoutGrid, ShieldAlert, Phone, X, AlertCircle } from 'lucide-react'
+import { User, Clock, Loader2, ShieldAlert, Phone, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import LoginGate from './LoginGate'
@@ -14,15 +14,12 @@ import { usePainelCliente } from '@/hooks/usePainelCliente'
 type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido' | 'garantia'
 
 // ── Config das linhas de filtro ────────────────────────────────────────────────
-const FILTROS: {
-  valor: Filtro
-  label: string
-}[] = [
-  { valor: 'todos', label: 'Todos' },
-  { valor: 'pendente', label: 'Pendentes' },
+const FILTROS: { valor: Filtro; label: string }[] = [
+  { valor: 'todos',       label: 'Todos'        },
+  { valor: 'pendente',    label: 'Pendentes'    },
   { valor: 'em_execucao', label: 'Em andamento' },
-  { valor: 'concluido', label: 'Concluídos' },
-  { valor: 'garantia', label: 'Garantia' },
+  { valor: 'concluido',   label: 'Concluídos'   },
+  { valor: 'garantia',    label: 'Garantia'     },
 ]
 
 export default function PainelDoCliente() {
@@ -38,8 +35,8 @@ export default function PainelDoCliente() {
     confirmarWhatsappEAceitar, cancelarConfirmacaoWhatsapp,
   } = usePainelCliente()
 
-  const [whatsappEditado, setWhatsappEditado] = useState('')
-  const [salvandoWhatsapp, setSalvandoWhatsapp] = useState(false)
+  const [whatsappEditado,   setWhatsappEditado]   = useState('')
+  const [salvandoWhatsapp,  setSalvandoWhatsapp]  = useState(false)
 
   // Pré-preenche com o whatsapp do projeto quando o modal de confirmação
   // abre, dando ao cliente o valor mais provável já digitado — mas ele
@@ -72,14 +69,6 @@ export default function PainelDoCliente() {
   const concluidos  = servicos.filter(s => s.status === 'finalizado')
   const totalPendentes = pendentes.length + emRegistro.length
 
-  const contadores: Record<Filtro, number> = {
-    todos:       servicos.length,
-    pendente:    totalPendentes,
-    em_execucao: emAndamento.length,
-    concluido:   concluidos.length,
-    garantia:    emGarantia.length,
-  const totalPendentes = pendentes.length + emRegistro.length
-
   // "Todos" continua contando só o fluxo padrão de projetos — garantia é uma
   // dimensão à parte (um projeto pode estar em "Concluídos" e também
   // aparecer em "Garantia" ao mesmo tempo, não é mutuamente exclusivo).
@@ -91,13 +80,9 @@ export default function PainelDoCliente() {
     garantia:    servicosGarantia.length,
   }
 
-  // Lookup rápido para saber, independente da aba ativa, se um projeto
-  // específico tem garantia ativa — usado para sinalizar isso de forma
-  // consistente em QUALQUER aba (Todos, Concluídos, etc.), não só na
-  // aba Garantia em si. servicosGarantia agora é derivado do MESMO array
-  // que servicos (via filtrarComGarantiaAtiva em painelCliente.service.ts),
-  // então os ids sempre batem por construção — não há mais risco de
-  // dessincronia entre duas queries separadas.
+  // Lookup rápido para saber se um projeto tem garantia ativa.
+  // servicosGarantia é derivado do MESMO array que servicos (via
+  // filtrarComGarantiaAtiva), então os ids sempre batem por construção.
   const idsComGarantiaAtiva = new Set(servicosGarantia.map(s => s.id))
 
   // ── Serviços filtrados ────────────────────────────────────────────────────────
@@ -109,17 +94,28 @@ export default function PainelDoCliente() {
     return servicos
   })()
 
+  // ── getModo ──────────────────────────────────────────────────────────────────
+  // A cor laranja (modo 'garantia') só é aplicada quando o usuário está
+  // explicitamente na aba Garantia. Em qualquer outra aba, o card reflete
+  // o status real do projeto — evitando confusão visual na aba "Todos".
   const getModo = (servico: any) => {
-    // Garantia ativa tem prioridade visual sobre o status normal do
-    // projeto, em QUALQUER aba — não só quando filtroAtivo === 'garantia'.
-    if (idsComGarantiaAtiva.has(servico.id)) return 'garantia' as const
-    if (servico.status === 'em_execucao') return 'andamento' as const
-    if (servico.status === 'finalizado')  return 'concluido' as const
+    if (filtroAtivo === 'garantia' && idsComGarantiaAtiva.has(servico.id))
+      return 'garantia' as const
+    if (servico.status === 'em_execucao') return 'andamento'  as const
+    if (servico.status === 'finalizado')  return 'concluido'  as const
     return 'pendente' as const
   }
 
+  // ── getOnAceitar ─────────────────────────────────────────────────────────────
+  // O comportamento do botão também segue a aba ativa:
+  // - Aba Garantia  → navega para seção de garantia do acompanhamento
+  // - Em execução / Finalizado → navega para acompanhamento normal
+  // - Pendente / Em registro  → dispara o fluxo de aceite
+  // Na aba "Todos", projetos com garantia ativa mantêm o comportamento
+  // condizente com seu status (ex.: finalizado → acompanhamento), sem
+  // redirecionar silenciosamente para garantia.
   const getOnAceitar = (servico: any) => {
-    if (idsComGarantiaAtiva.has(servico.id))
+    if (filtroAtivo === 'garantia' && idsComGarantiaAtiva.has(servico.id))
       return () => handleVerGarantia(servico)
     if (servico.status === 'em_execucao')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
@@ -138,9 +134,9 @@ export default function PainelDoCliente() {
   if (!session) return <LoginGate tokenUrl={tokenUrl} />
 
   const prestador = servicos[0]?.prestadores
-  // "Múltiplos projetos" agora também considera garantia — se o único projeto
-  // do cliente tem um caso de garantia ativo, ainda vale mostrar os filtros
-  // para que ele encontre a aba Garantia.
+
+  // Mostra os filtros se houver mais de um projeto OU se houver garantia ativa —
+  // para que o cliente encontre a aba Garantia mesmo com um único projeto.
   const hasMultipleProjects = servicos.length > 1 || servicosGarantia.length > 0
 
   return (
@@ -158,7 +154,9 @@ export default function PainelDoCliente() {
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto border border-blue-100">
                 <Phone size={28} />
               </div>
-              <h3 className="text-xl font-black italic uppercase text-slate-800 tracking-tighter">Confirme seu WhatsApp</h3>
+              <h3 className="text-xl font-black italic uppercase text-slate-800 tracking-tighter">
+                Confirme seu WhatsApp
+              </h3>
               <p className="text-[12px] font-medium text-slate-500 leading-relaxed">
                 Precisamos confirmar seu número antes de autorizar o serviço.
               </p>
@@ -190,7 +188,10 @@ export default function PainelDoCliente() {
                 disabled={!whatsappEditado.trim() || salvandoWhatsapp}
                 className="flex-1 py-4 bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-2xl font-black uppercase text-[11px] tracking-wide hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
               >
-                {salvandoWhatsapp ? <Loader2 size={14} className="animate-spin" /> : 'Confirmar'}
+                {salvandoWhatsapp
+                  ? <Loader2 size={14} className="animate-spin" />
+                  : 'Confirmar'
+                }
               </button>
             </div>
           </div>
@@ -204,7 +205,7 @@ export default function PainelDoCliente() {
           <div className="w-full lg:w-1/3 shrink-0">
             <div className="lg:sticky lg:top-36 flex flex-col gap-6">
 
-              {/* Card do prestador - Padrão Horizontal */}
+              {/* Card do prestador */}
               {prestador && (
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 flex items-center gap-4 transition-all hover:shadow-md">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-[1.25rem] border border-slate-100 shadow-sm overflow-hidden bg-slate-50 flex items-center justify-center">
@@ -218,7 +219,7 @@ export default function PainelDoCliente() {
                       <User size={24} className="text-slate-300" />
                     )}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
                     {prestador.categoria?.nome && (
                       <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.2em] truncate">
@@ -241,8 +242,8 @@ export default function PainelDoCliente() {
                   <div className="space-y-3">
                     {[
                       { n: '01', texto: 'Você confirma que o prestador pode iniciar o trabalho' },
-                      { n: '02', texto: 'Um token único é gerado para rastrear o projeto' },
-                      { n: '03', texto: 'Você poderá acompanhar e avaliar ao final' },
+                      { n: '02', texto: 'Um token único é gerado para rastrear o projeto'        },
+                      { n: '03', texto: 'Você poderá acompanhar e avaliar ao final'              },
                     ].map(item => (
                       <div key={item.n} className="flex items-start gap-3">
                         <span className="text-[10px] font-black text-blue-600 bg-blue-50 rounded-lg px-2 py-1 shrink-0 mt-0.5">
@@ -279,13 +280,17 @@ export default function PainelDoCliente() {
           {/* ── Coluna Direita — Filtros e Cards ── */}
           <div className="w-full lg:w-2/3 flex flex-col gap-4">
 
-            {/* Menu de Filtros Horizontal (SÓ aparece se houver > 1 projeto ou garantia ativa) */}
+            {/* Menu de Filtros Horizontal */}
             {hasMultipleProjects && (
-              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div
+                className="flex gap-2 overflow-x-auto pb-1"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
                 {FILTROS.map((filtro) => {
                   const ativo = filtroAtivo === filtro.valor
                   const count = contadores[filtro.valor]
-                  
+
+                  // Esconde abas vazias (exceto "Todos")
                   if (filtro.valor !== 'todos' && count === 0) return null
 
                   return (
@@ -342,7 +347,6 @@ export default function PainelDoCliente() {
             </div>
 
           </div>
-
         </div>
       </div>
     </main>
