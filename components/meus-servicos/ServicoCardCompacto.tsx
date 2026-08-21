@@ -19,8 +19,8 @@ interface StatusInfo {
 interface Props {
   servico: ClienteServico
   statusInfo: StatusInfo
-  // Se true, exibe badge laranja de garantia sobreposto ao badge principal
-  // e muda o chevron para laranja — sem alterar o layout geral do card.
+  // Se true, aplica estilo laranja completo ao card (borda + ring na foto +
+  // badge + chevron) — mesma linguagem visual do banner de garantia.
   temGarantiaAtiva?: boolean
   onClick: () => void
 }
@@ -31,14 +31,26 @@ export default function ServicoCardCompacto({
   temGarantiaAtiva = false,
   onClick,
 }: Props) {
-  // Quando há garantia ativa, sobrepõe o badge laranja independente do
-  // statusInfo vindo de fora — garante consistência visual em qualquer aba.
-  const badgeLabel  = temGarantiaAtiva ? 'Garantia'      : statusInfo.label
-  const badgeClass  = temGarantiaAtiva
-    ? 'bg-orange-50 text-orange-700 border-orange-200'
-    : statusInfo.badge
-  const dotClass    = temGarantiaAtiva ? 'bg-orange-400' : statusInfo.dot
-  const isUrgente   = temGarantiaAtiva || statusInfo.urgente
+  const badgeLabel = temGarantiaAtiva ? 'Garantia'                          : statusInfo.label
+  const badgeClass = temGarantiaAtiva ? 'bg-orange-50 text-orange-700 border-orange-200' : statusInfo.badge
+  const dotClass   = temGarantiaAtiva ? 'bg-orange-400'                     : statusInfo.dot
+  const isUrgente  = temGarantiaAtiva || statusInfo.urgente
+
+  // Estilos do card raiz
+  const cardClass = temGarantiaAtiva
+    ? 'border-orange-200 shadow-sm shadow-orange-50 focus-visible:ring-orange-100'
+    : isUrgente
+      ? 'border-blue-200 shadow-sm shadow-blue-50 focus-visible:ring-blue-100'
+      : 'border-slate-200 shadow-sm hover:border-blue-200 focus-visible:ring-blue-100'
+
+  // Ring na foto
+  const fotoRingClass = temGarantiaAtiva
+    ? 'ring-2 ring-orange-400'
+    : isUrgente
+      ? 'ring-2 ring-blue-400'
+      : ''
+
+  // Chevron
   const chevronClass = temGarantiaAtiva
     ? 'bg-orange-500 text-white'
     : isUrgente
@@ -49,14 +61,10 @@ export default function ServicoCardCompacto({
     <button
       onClick={onClick}
       type="button"
-      className={`group flex min-h-[7rem] w-full items-center gap-4 rounded-[1.75rem] border bg-white p-4 text-left overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 ${
-        isUrgente
-          ? 'border-blue-200 shadow-sm shadow-blue-50'
-          : 'border-slate-200 shadow-sm hover:border-blue-200'
-      }`}
+      className={`group flex min-h-[7rem] w-full items-center gap-4 rounded-[1.75rem] border bg-white p-4 text-left overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 active:translate-y-0 ${cardClass}`}
     >
       {/* Foto do prestador com dot de status */}
-      <div className={`relative shrink-0 rounded-2xl p-0.5 ${isUrgente ? 'ring-2 ring-blue-400' : ''}`}>
+      <div className={`relative shrink-0 rounded-2xl p-0.5 ${fotoRingClass}`}>
         <div className="w-14 h-14 rounded-[14px] overflow-hidden">
           <img
             src={servico.prestadores?.foto_perfil || '/placeholder-avatar.png'}
