@@ -1,13 +1,14 @@
-//app/painel/perfil/page.tsx
+// app/painel/perfil/page.tsx
 
 'use client'
 import Link from 'next/link'
 import {
-  MapPin, ChevronRight, Briefcase, Loader2, CheckCircle2,
-  Save, AlertCircle, Star, ArrowRight, Trash2, ShieldAlert
+  MapPin, Briefcase, Loader2, CheckCircle2,
+  Save, AlertCircle, Star, ArrowRight, ShieldAlert
 } from 'lucide-react'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import CardPerfilCliente from '@/components/perfil/CardPerfilCliente'
+import ServicoCardCompacto from '@/components/meus-servicos/ServicoCardCompacto'
 import { AdCardPainelCliente } from '@/components/painel/AdCardPainelCliente'
 import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 
@@ -35,12 +36,12 @@ export default function PerfilDoCliente() {
     handleUploadFoto,
     atualizar,
     getStatusInfo,
-    getRotaDestino,
-    getRotaGarantia,
+    getRota,
+    idsComGarantiaAtiva,
     servicosFiltrados,
     avaliarCount,
     ativosCount,
-    garantiaCount
+    garantiaCount,
   } = usePerfilCliente()
 
   const inputStyle = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-slate-800 bg-white shadow-sm placeholder-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400 text-[14px] md:text-[15px]`
@@ -124,7 +125,7 @@ export default function PerfilDoCliente() {
           </aside>
 
           <div className="flex min-w-0 flex-col gap-6">
-            <AdCardPainelCliente servicos={servicos} loading={loadingServicos}/>
+            <AdCardPainelCliente servicos={servicos} loading={loadingServicos} />
 
             {avaliarCount > 0 && (
               <button
@@ -162,15 +163,19 @@ export default function PerfilDoCliente() {
               </button>
             )}
 
-            <nav className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-28" aria-label="Seções do painel">
+            <nav
+              className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-28"
+              aria-label="Seções do painel"
+            >
               {[{ id: 'servicos', label: 'Meus projetos' }, { id: 'dados', label: 'Minha conta' }].map(a => (
                 <button
                   key={a.id}
                   type="button"
                   onClick={() => setAba(a.id)}
                   aria-current={aba === a.id ? 'page' : undefined}
-                  className={`min-h-11 flex-1 rounded-xl px-3 py-2.5 text-[11px] font-black uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${aba === a.id ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-white hover:text-blue-600'
-                    }`}
+                  className={`min-h-11 flex-1 rounded-xl px-3 py-2.5 text-[11px] font-black uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${
+                    aba === a.id ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-white hover:text-blue-600'
+                  }`}
                 >
                   {a.label}
                 </button>
@@ -179,13 +184,19 @@ export default function PerfilDoCliente() {
 
             {aba === 'servicos' ? (
               <section className="flex flex-col gap-4 pb-4" aria-label="Projetos contratados">
-                <div ref={filtroRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+
+                {/* ── Filtros ── */}
+                <div
+                  ref={filtroRef}
+                  className="flex gap-2 overflow-x-auto pb-1"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
                   {[
-                    { id: 'todos', label: 'Todos' },
-                    { id: 'pendente', label: 'Aceitar' },
-                    { id: 'andamento', label: 'Em andamento' },
-                    { id: 'avaliar', label: avaliarCount > 0 ? `Avaliar (${avaliarCount})` : 'Avaliar' },
-                    { id: 'finalizados', label: 'Concluídos' },
+                    { id: 'todos',       label: 'Todos'                                              },
+                    { id: 'pendente',    label: 'Aceitar'                                            },
+                    { id: 'andamento',   label: 'Em andamento'                                       },
+                    { id: 'avaliar',     label: avaliarCount > 0 ? `Avaliar (${avaliarCount})` : 'Avaliar' },
+                    { id: 'finalizados', label: 'Concluídos'                                         },
                     ...(garantiaCount > 0 ? [{ id: 'garantia', label: `Garantia (${garantiaCount})` }] : []),
                   ].map(f => (
                     <button
@@ -208,9 +219,12 @@ export default function PerfilDoCliente() {
                   ))}
                 </div>
 
+                {/* ── Lista ── */}
                 {loadingServicos ? (
                   <div className="flex flex-col gap-3" role="status" aria-label="Carregando projetos">
-                    {[1, 2, 3].map(i => <div key={i} className="h-24 animate-pulse rounded-[1.75rem] bg-slate-100" />)}
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-24 animate-pulse rounded-[1.75rem] bg-slate-100" />
+                    ))}
                   </div>
                 ) : servicosFiltrados.length === 0 ? (
                   <div className="flex min-h-64 flex-col items-center justify-center gap-4 rounded-[2rem] border-2 border-dashed border-slate-200 bg-white px-8 py-12 text-center">
@@ -224,54 +238,18 @@ export default function PerfilDoCliente() {
                   </div>
                 ) : (
                   <div className="grid gap-3 xl:grid-cols-2">
-                    {servicosFiltrados.map(s => {
-                      const info = filtroStatus === 'garantia'
-                        ? { label: 'Garantia', dot: 'bg-orange-400', badge: 'bg-orange-50 text-orange-700 border-orange-200', urgente: true }
-                        : getStatusInfo(s)
-                      const rota = filtroStatus === 'garantia' ? getRotaGarantia(s) : getRotaDestino(s)
-                      return (
-                        <button
-                          key={s.id}
-                          onClick={(e) => handleNavigation(e, rota)}
-                          type="button"
-                          className={`group flex min-h-[7rem] w-full items-center gap-4 rounded-[1.75rem] border bg-white p-4 text-left overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 ${info.urgente ? 'border-blue-200 shadow-sm shadow-blue-50' : 'border-slate-200 shadow-sm hover:border-blue-200'
-                            }`}
-                        >
-                          <div className={`relative shrink-0 rounded-2xl p-0.5 ${info.urgente ? 'ring-2 ring-blue-400' : ''}`}>
-                            <div className="w-14 h-14 rounded-[14px] overflow-hidden">
-                              <img
-                                src={s.prestadores?.foto_perfil || '/placeholder-avatar.png'}
-                                className="w-full h-full object-cover"
-                                alt={s.prestadores?.nome}
-                              />
-                            </div>
-                            <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${info.dot} ${info.urgente ? 'animate-pulse' : ''}`} />
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border tracking-wider shrink-0 ${info.badge}`}>
-                                {info.label}
-                              </span>
-                              {s.prestadores?.categoria?.nome && (
-                                <span className="text-[9px] text-slate-400 truncate">{s.prestadores.categoria.nome}</span>
-                              )}
-                            </div>
-                            <p className="text-[14px] font-bold text-slate-800 leading-tight truncate">
-                              {s.titulo}
-                            </p>
-                            <p className="text-[12px] text-slate-500 truncate mt-0.5">
-                              {s.prestadores?.nome}
-                            </p>
-                          </div>
-                          
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all ${info.urgente ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white'
-                            }`}>
-                            <ChevronRight size={16} strokeWidth={2.5} />
-                          </div>
-                        </button>
-                      )
-                    })}
+                    {servicosFiltrados.map(s => (
+                      <ServicoCardCompacto
+                        key={s.id}
+                        servico={s}
+                        statusInfo={getStatusInfo(s)}
+                        temGarantiaAtiva={idsComGarantiaAtiva.has(s.id)}
+                        onClick={() => handleNavigation(
+                          new MouseEvent('click') as any,
+                          getRota(s),
+                        )}
+                      />
+                    ))}
                   </div>
                 )}
               </section>
