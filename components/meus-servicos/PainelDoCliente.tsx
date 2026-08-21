@@ -35,12 +35,9 @@ export default function PainelDoCliente() {
     confirmarWhatsappEAceitar, cancelarConfirmacaoWhatsapp,
   } = usePainelCliente()
 
-  const [whatsappEditado,   setWhatsappEditado]   = useState('')
-  const [salvandoWhatsapp,  setSalvandoWhatsapp]  = useState(false)
+  const [whatsappEditado,  setWhatsappEditado]  = useState('')
+  const [salvandoWhatsapp, setSalvandoWhatsapp] = useState(false)
 
-  // Pré-preenche com o whatsapp do projeto quando o modal de confirmação
-  // abre, dando ao cliente o valor mais provável já digitado — mas ele
-  // pode editar livremente antes de confirmar.
   useEffect(() => {
     if (confirmandoWhatsapp?.cliente_whatsapp) {
       setWhatsappEditado(confirmandoWhatsapp.cliente_whatsapp)
@@ -69,9 +66,6 @@ export default function PainelDoCliente() {
   const concluidos  = servicos.filter(s => s.status === 'finalizado')
   const totalPendentes = pendentes.length + emRegistro.length
 
-  // "Todos" continua contando só o fluxo padrão de projetos — garantia é uma
-  // dimensão à parte (um projeto pode estar em "Concluídos" e também
-  // aparecer em "Garantia" ao mesmo tempo, não é mutuamente exclusivo).
   const contadores: Record<Filtro, number> = {
     todos:       servicos.length,
     pendente:    totalPendentes,
@@ -80,9 +74,7 @@ export default function PainelDoCliente() {
     garantia:    servicosGarantia.length,
   }
 
-  // Lookup rápido para saber se um projeto tem garantia ativa.
-  // servicosGarantia é derivado do MESMO array que servicos (via
-  // filtrarComGarantiaAtiva), então os ids sempre batem por construção.
+  // IDs com garantia ativa — derivado do mesmo array (sem dessincronia).
   const idsComGarantiaAtiva = new Set(servicosGarantia.map(s => s.id))
 
   // ── Serviços filtrados ────────────────────────────────────────────────────────
@@ -95,25 +87,21 @@ export default function PainelDoCliente() {
   })()
 
   // ── getModo ──────────────────────────────────────────────────────────────────
-  // A cor laranja (modo 'garantia') só é aplicada quando o usuário está
-  // explicitamente na aba Garantia. Em qualquer outra aba, o card reflete
-  // o status real do projeto — evitando confusão visual na aba "Todos".
+  // O modo 'garantia' (estilo laranja completo) só se aplica na aba Garantia.
+  // Em outras abas, o card usa o estilo do status real do projeto.
+  // A sinalização visual de garantia nas demais abas é feita pela prop
+  // `temGarantiaAtiva` abaixo, que exibe apenas uma tag sem mudar o card inteiro.
   const getModo = (servico: any) => {
     if (filtroAtivo === 'garantia' && idsComGarantiaAtiva.has(servico.id))
       return 'garantia' as const
-    if (servico.status === 'em_execucao') return 'andamento'  as const
-    if (servico.status === 'finalizado')  return 'concluido'  as const
+    if (servico.status === 'em_execucao') return 'andamento' as const
+    if (servico.status === 'finalizado')  return 'concluido' as const
     return 'pendente' as const
   }
 
   // ── getOnAceitar ─────────────────────────────────────────────────────────────
-  // O comportamento do botão também segue a aba ativa:
-  // - Aba Garantia  → navega para seção de garantia do acompanhamento
-  // - Em execução / Finalizado → navega para acompanhamento normal
-  // - Pendente / Em registro  → dispara o fluxo de aceite
-  // Na aba "Todos", projetos com garantia ativa mantêm o comportamento
-  // condizente com seu status (ex.: finalizado → acompanhamento), sem
-  // redirecionar silenciosamente para garantia.
+  // Na aba Garantia → navega para seção de garantia do acompanhamento.
+  // Em qualquer outra aba → comportamento padrão pelo status do projeto.
   const getOnAceitar = (servico: any) => {
     if (filtroAtivo === 'garantia' && idsComGarantiaAtiva.has(servico.id))
       return () => handleVerGarantia(servico)
@@ -134,9 +122,6 @@ export default function PainelDoCliente() {
   if (!session) return <LoginGate tokenUrl={tokenUrl} />
 
   const prestador = servicos[0]?.prestadores
-
-  // Mostra os filtros se houver mais de um projeto OU se houver garantia ativa —
-  // para que o cliente encontre a aba Garantia mesmo com um único projeto.
   const hasMultipleProjects = servicos.length > 1 || servicosGarantia.length > 0
 
   return (
@@ -205,7 +190,6 @@ export default function PainelDoCliente() {
           <div className="w-full lg:w-1/3 shrink-0">
             <div className="lg:sticky lg:top-36 flex flex-col gap-6">
 
-              {/* Card do prestador */}
               {prestador && (
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 flex items-center gap-4 transition-all hover:shadow-md">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-[1.25rem] border border-slate-100 shadow-sm overflow-hidden bg-slate-50 flex items-center justify-center">
@@ -219,7 +203,6 @@ export default function PainelDoCliente() {
                       <User size={24} className="text-slate-300" />
                     )}
                   </div>
-
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
                     {prestador.categoria?.nome && (
                       <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.2em] truncate">
@@ -233,7 +216,6 @@ export default function PainelDoCliente() {
                 </div>
               )}
 
-              {/* Info "ao autorizar" — só aparece quando pendentes estão visíveis */}
               {(filtroAtivo === 'todos' || filtroAtivo === 'pendente') && totalPendentes > 0 && (
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -258,7 +240,6 @@ export default function PainelDoCliente() {
                 </div>
               )}
 
-              {/* Info da aba Garantia */}
               {filtroAtivo === 'garantia' && servicosGarantia.length > 0 && (
                 <div className="bg-orange-50 rounded-[2rem] border border-orange-100 shadow-sm p-6 space-y-3">
                   <div className="flex items-center gap-2">
@@ -280,7 +261,6 @@ export default function PainelDoCliente() {
           {/* ── Coluna Direita — Filtros e Cards ── */}
           <div className="w-full lg:w-2/3 flex flex-col gap-4">
 
-            {/* Menu de Filtros Horizontal */}
             {hasMultipleProjects && (
               <div
                 className="flex gap-2 overflow-x-auto pb-1"
@@ -289,8 +269,6 @@ export default function PainelDoCliente() {
                 {FILTROS.map((filtro) => {
                   const ativo = filtroAtivo === filtro.valor
                   const count = contadores[filtro.valor]
-
-                  // Esconde abas vazias (exceto "Todos")
                   if (filtro.valor !== 'todos' && count === 0) return null
 
                   return (
@@ -323,7 +301,6 @@ export default function PainelDoCliente() {
               </div>
             )}
 
-            {/* Lista de Projetos */}
             <div className="flex flex-col gap-4 mt-2">
               {servicosFiltrados.length > 0 ? (
                 servicosFiltrados.map(servico => (
@@ -334,6 +311,10 @@ export default function PainelDoCliente() {
                     onAceitar={getOnAceitar(servico)}
                     hidePrestador
                     modo={getModo(servico)}
+                    // Prop independente do modo: sinaliza que este projeto tem
+                    // garantia ativa em QUALQUER aba, permitindo ao ServicoCard
+                    // exibir a tag "Garantia" sem alterar o estilo geral do card.
+                    temGarantiaAtiva={idsComGarantiaAtiva.has(servico.id)}
                   />
                 ))
               ) : (
