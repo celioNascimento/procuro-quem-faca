@@ -26,6 +26,18 @@ export interface AvaliacaoRef {
   id: string
 }
 
+// Adicionado para derivar garantia ativa localmente (via temGarantiaAtiva em
+// cliente.service.ts), eliminando a necessidade de fetchClienteGarantias separado
+// e o risco de dessincronia entre dois arrays de origens diferentes.
+// LEFT JOIN em fetchClienteServicos garante array vazio [] quando não há garantia,
+// em vez de excluir o projeto da lista.
+export interface SolicitacaoGarantiaResumo {
+  id: string
+  status: string
+  origem: 'cliente' | 'prestador'
+  prazo_resposta: string | null
+}
+
 export interface ClienteServico {
   id: string
   titulo: string
@@ -35,4 +47,6 @@ export interface ClienteServico {
   portfolio_fotos: PortfolioFotoOrdem[]
   prestadores: PrestadorServico | null
   avaliacoes: AvaliacaoRef[]
+  // Array vazio quando não há garantia (LEFT JOIN). Nunca undefined após a query.
+  solicitacoes_garantia: SolicitacaoGarantiaResumo[]
 }
