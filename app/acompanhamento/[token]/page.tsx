@@ -2,15 +2,16 @@
 
 'use client'
 import { use, useState, useEffect } from 'react'
-import { useAcompanhamento } from '@/hooks/useAcompanhamento'
-import { supabase } from '@/lib/supabase'
-import HeaderCliente        from '@/components/perfil/HeaderCliente'
-import { CardPrestador }    from '@/components/acompanhamento/CardPrestador'
-import { LinhaDeTempo }     from '@/components/acompanhamento/LinhaDeTempo'
-import { StatusMini }       from '@/components/acompanhamento/StatusMini'
-import { ModalDiscussao }   from '@/components/acompanhamento/ModalDiscussao'
-import { RodapeSeguranca }  from '@/components/acompanhamento/RodapeSeguranca'
-import { GarantiaSecaoCliente } from '@/components/acompanhamento/garantia/GarantiaSecaoCliente'
+import { useAcompanhamento }          from '@/hooks/useAcompanhamento'
+import { useCasoGarantiaDoProjeto }   from '@/hooks/useCasoGarantiaDoProjeto'
+import { supabase }                   from '@/lib/supabase'
+import HeaderCliente                  from '@/components/perfil/HeaderCliente'
+import { CardPrestador }              from '@/components/acompanhamento/CardPrestador'
+import { LinhaDeTempo }               from '@/components/acompanhamento/LinhaDeTempo'
+import { StatusMini }                 from '@/components/acompanhamento/StatusMini'
+import { ModalDiscussao }             from '@/components/acompanhamento/ModalDiscussao'
+import { RodapeSeguranca }            from '@/components/acompanhamento/RodapeSeguranca'
+import { GarantiaSecaoCliente }       from '@/components/acompanhamento/garantia/GarantiaSecaoCliente'
 
 export default function PaginaAcompanhamento({
   params: paramsPromise,
@@ -26,9 +27,16 @@ export default function PaginaAcompanhamento({
     handleShare, handleEnviarComentario,
   } = useAcompanhamento(token)
 
-  // A rota é protegida pelo middleware (ver REGRA A) — chegar aqui já
-  // implica sessão ativa. Buscamos o user_id apenas para passar adiante à
-  // seção de garantia, que precisa dele para abrir/responder casos.
+  // Lifting do caso de garantia para cá — permite repassar temGarantiaAtiva
+  // para CardPrestador, StatusMini e LinhaDeTempo sem query duplicada.
+  // projetoId só fica disponível após o projeto carregar, por isso o null
+  // inicial (useCasoGarantiaDoProjeto lida com null sem disparar query).
+  const {
+    caso: casoGarantia,
+    loading: loadingCaso,
+    recarregar: recarregarCaso,
+  } = useCasoGarantiaDoProjeto(projeto?.id ?? null)
+
   const [clienteUserId, setClienteUserId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -45,9 +53,10 @@ export default function PaginaAcompanhamento({
 
   if (!projeto) return null
 
-  // Garantia só faz sentido para projetos finalizados — antes disso, o
-  // conceito nem existe (não há "pós-serviço" ainda).
-  const projetoFinalizado = projeto.status === 'finalizado'
+  const projetoFinalizado  = projeto.status === 'finalizado'
+  // Caso ativo = status dentro de ['aguardando_aceite_cliente','aberta','respondida']
+  // — já filtrado pelo hook. loadingCaso false garante que não pisca.
+  const temGarantiaAtiva   = !loadingCaso && casoGarantia !== null
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased">
@@ -61,11 +70,14 @@ export default function PaginaAcompanhamento({
             <CardPrestador
               projeto={projeto}
               onShare={handleShare}
+              temGarantiaAtiva={temGarantiaAtiva}
             />
             {temConclusao && (
               <StatusMini
                 labelEtapaAtual={labelEtapaAtual}
                 totalFotos={fotosOrdenadas.length}
+                temGarantiaAtiva={temGarantiaAtiva}
+                statusGarantia={casoGarantia?.status}
               />
             )}
             <RodapeSeguranca />
@@ -79,16 +91,16 @@ export default function PaginaAcompanhamento({
               labelEtapaAtual={labelEtapaAtual}
               status={projeto.status}
               onFotoClick={setFotoSelecionada}
+              temGarantiaAtiva={temGarantiaAtiva}
             />
 
-            {/* Continuação da timeline — fluxo de garantia pós-serviço.
-                Só renderiza algo se o projeto estiver finalizado E houver
-                usuário identificado (sempre verdadeiro aqui, já que a rota
-                é protegida — mas aguardamos o fetch para não passar null). */}
             {projetoFinalizado && clienteUserId && (
               <GarantiaSecaoCliente
                 projetoId={projeto.id}
                 clienteUserId={clienteUserId}
+                caso={casoGarantia}
+                loadingCaso={loadingCaso}
+                recarregar={recarregarCaso}
               />
             )}
 
