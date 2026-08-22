@@ -1,55 +1,40 @@
 // hooks/useCasoGarantiaDoProjeto.ts
 //
-// Busca o caso de garantia ATIVO (ou o mais recente, se houver histórico)
-// vinculado a um projeto. Usado dentro do UploadWizardContainer para decidir
-// se a seção de garantia deve aparecer, e alimentar essa seção com os dados
-// completos do caso (diferente do resumo trazido pelo join em
-// usePortfolioDashboard, que só serve para o badge do ProjetoCard).
+// Busca o caso de garantia ativo de um projeto — compartilhado entre
+// GarantiaSecaoCliente e page.tsx (via lifting), para que a page saiba
+// se há garantia ativa sem precisar de uma segunda query independente.
 
+'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 
+const STATUS_ATIVOS = ['aguardando_aceite_cliente', 'aberta', 'respondida']
+
 export interface CasoGarantia {
   id: string
+  status: string
+  origem: 'cliente' | 'prestador'
+  descricao_problema: string
+  resposta_prestador_garantia: string | null
+  prazo_resposta: string | null
+  data_resposta: string | null
+  data_resolucao: string | null
+  nota_resultante: number | null
+  avaliacao_id: string | null
   projeto_id: string
   prestador_id: number
   cliente_user_id: string
-  origem: 'cliente' | 'prestador'
-  status:
-    | 'aguardando_aceite_cliente'
-    | 'aberta'
-    | 'respondida'
-    | 'sem_resposta'
-    | 'resolvida'
-    | 'recusada'
-  descricao_problema: string
-  resposta_prestador_garantia: string | null
-  data_resposta: string | null
-  resolucao_descricao: string | null
-  data_resolucao: string | null
-  prazo_resposta: string | null
-  nota_resultante: number | null
-  avaliacao_id: string | null
-  created_at: string
 }
 
-const STATUS_ATIVOS = ['aguardando_aceite_cliente', 'aberta', 'respondida']
-
 export function useCasoGarantiaDoProjeto(projetoId: string | null) {
-  const [caso, setCaso] = useState<CasoGarantia | null>(null)
+  const [caso,    setCaso]    = useState<CasoGarantia | null>(null)
   const [loading, setLoading] = useState(true)
 
   const carregar = useCallback(async () => {
-    if (!projetoId) {
-      setCaso(null)
-      setLoading(false)
-      return
-    }
+    if (!projetoId) { setLoading(false); return }
     setLoading(true)
     try {
-      // Prioriza caso ativo; se não houver, pega o mais recente (histórico,
-      // ex: já resolvido) para ainda assim mostrar o resultado ao prestador.
-      const { data: ativo } = await supabase
+      const { data } = await supabase
         .from('solicitacoes_garantia')
         .select('*')
         .eq('projeto_id', projetoId)
@@ -57,23 +42,8 @@ export function useCasoGarantiaDoProjeto(projetoId: string | null) {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
-
-      if (ativo) {
-        setCaso(ativo as CasoGarantia)
-        return
-      }
-
-      const { data: recente } = await supabase
-        .from('solicitacoes_garantia')
-        .select('*')
-        .eq('projeto_id', projetoId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      setCaso((recente as CasoGarantia) ?? null)
-    } catch (err) {
-      console.error('Erro ao buscar caso de garantia do projeto:', err)
+      setCaso(data ?? null)
+    } catch {
       setCaso(null)
     } finally {
       setLoading(false)
@@ -82,7 +52,5 @@ export function useCasoGarantiaDoProjeto(projetoId: string | null) {
 
   useEffect(() => { carregar() }, [carregar])
 
-  const isAtivo = !!caso && STATUS_ATIVOS.includes(caso.status)
-
-  return { caso, loading, isAtivo, recarregar: carregar }
+  return { caso, loading, recarregar: carregar }
 }
