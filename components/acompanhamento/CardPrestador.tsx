@@ -1,27 +1,36 @@
-//components/acompanhamento/CardPrestador.tsx
+// components/acompanhamento/CardPrestador.tsx
 
-import { Phone, Share2 } from 'lucide-react'
+import { Phone, Share2, ShieldAlert } from 'lucide-react'
 import type { Projeto } from '@/types/avaliacao'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 
 type Props = {
   projeto: Projeto
   onShare?: () => void
+  temGarantiaAtiva?: boolean
 }
 
-export function CardPrestador({ projeto, onShare }: Props) {
-  const prestador = projeto.prestadores
+export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Props) {
+  const prestador    = projeto.prestadores
   const linkWhatsapp = buildLinkWhatsapp(prestador?.whatsapp)
-  
+
   const isConcluido = projeto.status === 'finalizado'
-  const statusLabel = isConcluido ? 'Serviço concluído' : 'Serviço em andamento'
-  const statusColor = isConcluido ? 'bg-green-500' : 'bg-blue-500'
-  const statusBg = isConcluido ? 'bg-green-50' : 'bg-blue-50'
-  const statusText = isConcluido ? 'text-green-600' : 'text-blue-600'
+
+  // Garantia tem prioridade visual sobre "concluído" — o serviço pode estar
+  // finalizado, mas há algo pendente que o cliente precisa resolver.
+  const statusLabel = temGarantiaAtiva
+    ? 'Garantia em andamento'
+    : isConcluido
+    ? 'Serviço concluído'
+    : 'Serviço em andamento'
+
+  const statusColor = temGarantiaAtiva ? 'bg-orange-500' : isConcluido ? 'bg-green-500'  : 'bg-blue-500'
+  const statusBg    = temGarantiaAtiva ? 'bg-orange-50'  : isConcluido ? 'bg-green-50'   : 'bg-blue-50'
+  const statusText  = temGarantiaAtiva ? 'text-orange-600' : isConcluido ? 'text-green-600' : 'text-blue-600'
 
   return (
     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 flex flex-col gap-4 transition-all hover:shadow-md">
-      
+
       {/* ── Topo: Avatar e Informações ── */}
       <div className="flex items-center gap-4">
         <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-[1.25rem] border border-slate-100 shadow-sm overflow-hidden bg-slate-50">
@@ -31,7 +40,7 @@ export function CardPrestador({ projeto, onShare }: Props) {
             alt={prestador?.nome}
           />
         </div>
-        
+
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.2em] truncate">
             {prestador?.categoria?.nome}
@@ -47,15 +56,17 @@ export function CardPrestador({ projeto, onShare }: Props) {
 
       {/* ── Base: Status e Ações ── */}
       <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-50">
-        
+
         {/* Status Badge */}
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/50 ${statusBg}`}>
           <div className="relative flex h-2 w-2 shrink-0">
-            {!isConcluido && (
+            {/* Pulse só quando há algo ativo pendente (em execução ou garantia) */}
+            {(!isConcluido || temGarantiaAtiva) && (
               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${statusColor}`} />
             )}
             <span className={`relative inline-flex rounded-full h-2 w-2 ${statusColor}`} />
           </div>
+          {temGarantiaAtiva && <ShieldAlert size={11} className="text-orange-500" />}
           <span className={`text-[9px] font-black uppercase tracking-widest ${statusText}`}>
             {statusLabel}
           </span>
