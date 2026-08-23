@@ -1,31 +1,27 @@
 // components/dashboard/wizard/garantia/GarantiaSecaoWizard.tsx
 //
-// Seção de garantia exibida DENTRO do UploadWizardContainer, quando o projeto
-// está finalizado (isProjetoConcluido) — ao lado de WizardCompleted, não
-// substituindo-o. É a "timeline abaixo" da timeline original que definimos
-// no desenho do produto.
-//
-// Só renderiza algo se houver um caso de garantia para o projeto. Delega
-// para o subcomponente certo conforme o status do caso.
+// Recebe caso/loading/recarregar via props (lifting feito no
+// UploadWizardContainer) — evita query duplicada já que o container
+// precisa do caso para derivar temGarantiaAtiva e ajustar o badge de status.
 
 'use client'
 
-import { useCasoGarantiaDoProjeto } from '@/hooks/useCasoGarantiaDoProjeto'
 import { GarantiaAguardandoAceite } from './GarantiaAguardandoAceite'
-import { GarantiaAberta } from './GarantiaAberta'
-import { GarantiaRespondida } from './GarantiaRespondida'
-import { GarantiaFinalizada } from './GarantiaFinalizada'
-import { Loader2 } from 'lucide-react'
+import { GarantiaAberta }           from './GarantiaAberta'
+import { GarantiaRespondida }       from './GarantiaRespondida'
+import { GarantiaFinalizada }       from './GarantiaFinalizada'
+import { Loader2 }                  from 'lucide-react'
+import type { CasoGarantia }       from '@/hooks/useCasoGarantiaDoProjeto'
 
 interface Props {
-  projetoId: string
   prestadorId: number
+  caso: CasoGarantia | null
+  loadingCaso: boolean
+  recarregar: () => void
 }
 
-export function GarantiaSecaoWizard({ projetoId, prestadorId }: Props) {
-  const { caso, loading, recarregar } = useCasoGarantiaDoProjeto(projetoId)
-
-  if (loading) {
+export function GarantiaSecaoWizard({ prestadorId, caso, loadingCaso, recarregar }: Props) {
+  if (loadingCaso) {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 size={20} className="animate-spin text-slate-300" />
@@ -33,7 +29,6 @@ export function GarantiaSecaoWizard({ projetoId, prestadorId }: Props) {
     )
   }
 
-  // Sem caso de garantia — não renderiza nada (seção só existe quando há garantia)
   if (!caso) return null
 
   return (
