@@ -37,10 +37,11 @@ export default function PortfolioGrid({ projetos }: Props) {
     )
   }
 
-  const gridClass =
-    projetos.length === 1 ? 'grid grid-cols-2 gap-2' :
-    projetos.length === 2 ? 'grid grid-cols-2 gap-2' :
-                            'grid grid-cols-2 sm:grid-cols-3 gap-2'
+  // Sempre 3 colunas a partir de sm, independente da quantidade de
+  // projetos — prioriza consistência visual do layout sobre preencher
+  // a linha inteira quando há poucos itens (com 1-2 projetos, a última
+  // posição fica vazia, o que é esperado).
+  const gridClass = 'grid grid-cols-2 sm:grid-cols-3 gap-2'
 
   return (
     <>
