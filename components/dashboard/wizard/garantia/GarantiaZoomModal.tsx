@@ -6,6 +6,11 @@
 // Não usa ModalFotoBase porque as fotos de garantia precisam de FotoGarantia
 // (resolução de URL assinada), enquanto ModalFotoBase renderiza <img src>
 // direto. Mantém o mesmo layout visual de dois painéis.
+//
+// AUDITORIA: fotos de 'problema' são evidência enviada pelo cliente e nunca
+// podem ser substituídas por ninguém — nem pelo prestador, nem pelo cliente.
+// Fotos de 'resolucao' só podem ser substituídas pelo prestador (quem as enviou).
+// O cliente não substitui nada: ele envia fotos adicionais, não troca as existentes.
 
 'use client'
 
@@ -31,10 +36,16 @@ export function GarantiaZoomModal({ wizard, podeEnviar, autorTipo }: Props) {
   const faseFoto = foto.fase === 'problema' ? 'Foto do problema' : 'Foto da resolução'
   const temNavegacao = state.fotos.length > 1
 
-  // Ao navegar pelos slides, sincroniza zoomFotoId com a foto do slide atual
+  // Regra de auditoria:
+  // - Fotos de 'problema' são evidência imutável — ninguém substitui.
+  // - Fotos de 'resolucao' só o prestador pode substituir (é quem as enviou).
+  // - Cliente nunca substitui foto existente — só envia novas (via GarantiaCarrossel).
+  const podeSubstituir = podeEnviar
+    && foto.fase === 'resolucao'
+    && autorTipo === 'prestador'
+
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation()
-    actions.prevSlide()
     const idx = state.fotos.findIndex((f) => f.id === state.zoomFotoId)
     const prev = state.fotos[(idx - 1 + state.fotos.length) % state.fotos.length]
     if (prev) actions.setZoomFotoId(prev.id)
@@ -42,7 +53,6 @@ export function GarantiaZoomModal({ wizard, podeEnviar, autorTipo }: Props) {
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation()
-    actions.nextSlide()
     const idx = state.fotos.findIndex((f) => f.id === state.zoomFotoId)
     const next = state.fotos[(idx + 1) % state.fotos.length]
     if (next) actions.setZoomFotoId(next.id)
@@ -51,7 +61,6 @@ export function GarantiaZoomModal({ wizard, podeEnviar, autorTipo }: Props) {
   return (
     <div className="fixed inset-0 z-[200] bg-slate-900/95 flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-300">
 
-      {/* Botão fechar flutuante */}
       <button
         onClick={() => actions.setZoomFotoId(null)}
         className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors z-[210]"
@@ -72,12 +81,10 @@ export function GarantiaZoomModal({ wizard, podeEnviar, autorTipo }: Props) {
             alt={faseFoto}
           />
 
-          {/* Label da fase */}
           <div className="absolute top-6 left-6 bg-orange-600/90 px-4 py-2 rounded-full text-white text-[10px] font-black uppercase italic tracking-widest border border-orange-400/20 z-20">
             {faseFoto}
           </div>
 
-          {/* Navegação entre fotos */}
           {temNavegacao && (
             <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between items-center z-40">
               <button
@@ -126,22 +133,36 @@ export function GarantiaZoomModal({ wizard, podeEnviar, autorTipo }: Props) {
                     rows={3}
                   />
                   <div className="flex gap-2">
-                    <label className="flex-1 flex items-center justify-center gap-2 border border-slate-200 bg-white rounded-xl py-2 cursor-pointer hover:border-orange-200 transition-colors">
-                      {state.enviandoFoto
-                        ? <Loader2 size={12} className="animate-spin text-orange-400" />
-                        : <Camera size={12} className="text-slate-400" />
-                      }
-                      <span className="text-[9px] font-black uppercase text-slate-400">
-                        {state.enviandoFoto ? 'Enviando...' : 'Trocar foto'}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => actions.handleUpload(e, foto.fase)}
-                        disabled={state.enviandoFoto}
-                      />
-                    </label>
+                    {/* Trocar foto — só para fotos de resolução enviadas pelo prestador.
+                        Fotos de problema são evidência imutável do cliente. */}
+                    {podeSubstituir ? (
+                      <label className="flex-1 flex items-center justify-center gap-2 border border-slate-200 bg-white rounded-xl py-2 cursor-pointer hover:border-orange-200 transition-colors">
+                        {state.enviandoFoto
+                          ? <Loader2 size={12} className="animate-spin text-orange-400" />
+                          : <Camera size={12} className="text-slate-400" />
+                        }
+                        <span className="text-[9px] font-black uppercase text-slate-400">
+                          {state.enviandoFoto ? 'Enviando...' : 'Trocar foto'}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => actions.handleUpload(e, 'resolucao')}
+                          disabled={state.enviandoFoto}
+                        />
+                      </label>
+                    ) : (
+                      // Foto de problema — exibe aviso de imutabilidade no lugar do botão
+                      foto.fase === 'problema' && (
+                        <div className="flex-1 flex items-center gap-1.5 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                          <AlertCircle size={10} className="text-slate-300 shrink-0" />
+                          <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">
+                            Evidência protegida
+                          </span>
+                        </div>
+                      )
+                    )}
                     <button
                       onClick={actions.handleSalvarLegenda}
                       disabled={
