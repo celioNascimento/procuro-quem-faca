@@ -1,4 +1,4 @@
-//app/(dashboard)/dashboard/page.tsx
+// app/(dashboard)/dashboard/page.tsx
 
 'use client'
 import { useState, useEffect, Suspense } from 'react'
@@ -6,14 +6,12 @@ import { useSearchParams } from 'next/navigation'
 
 import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
-import { Lock, UserCircle2, Images, ExternalLink, Loader2 } from 'lucide-react'
-import Link from 'next/link'
+import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
+import { Lock, UserCircle2, Images, Loader2 } from 'lucide-react'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 
 function PerfilPageContent() {
   const searchParams = useSearchParams()
-  // Abre em portfólio por padrão — a menos que ?aba=perfil seja explicitado
-  // (usado pelo redirect de /dashboard/perfil, ver aquele arquivo)
   const abaInicial = searchParams.get('aba') === 'perfil' ? 'perfil' : 'portfolio'
   const [abaAtiva, setAbaAtiva] = useState(abaInicial)
   const { cadastroCompleto, validando, slug } = usePerfilStatus()
@@ -22,7 +20,6 @@ function PerfilPageContent() {
     if (!validando && !cadastroCompleto) setAbaAtiva('perfil')
   }, [validando, cadastroCompleto])
 
-  // ── 3 abas: Portfólio → Ver Perfil (link externo) → Dados Profissionais ──
   const abas = [
     {
       id: 'portfolio',
@@ -48,19 +45,11 @@ function PerfilPageContent() {
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Gerencie sua presença profissional</h1>
           <p className="text-pretty text-sm font-medium leading-relaxed text-slate-500">Atualize seus dados e mantenha seus melhores trabalhos prontos para novos clientes.</p>
         </div>
-
-        {slug && !validando && (
-          <Link
-            href={`/${slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm transition-colors hover:border-blue-200 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 sm:w-auto"
-          >
-            <ExternalLink size={14} aria-hidden="true" />
-            Ver perfil público
-          </Link>
-        )}
       </header>
+
+      <div className="pt-6">
+        <AdCardDashboard />
+      </div>
 
       <nav className="sticky top-16 z-40 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
         <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
