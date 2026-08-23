@@ -14,8 +14,6 @@ export async function POST(req: NextRequest) {
 
   const { casoId, prestadorId, resposta } = body
 
-  // Valida presença dos campos antes de chamar o service —
-  // evita erro críptico do Supabase por parâmetro undefined/null.
   if (!casoId || !prestadorId || !resposta?.trim()) {
     return NextResponse.json(
       { error: `Campos obrigatórios ausentes: ${[
@@ -28,15 +26,16 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // prestadorId vem como number do JSON — Number() garante que mesmo
-    // que chegue como string (ex: serialização inesperada) seja coercido
-    // corretamente para o bigint do Supabase.
     const data = await responderCasoGarantia(casoId, Number(prestadorId), resposta.trim())
     return NextResponse.json(data)
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Erro desconhecido'
-    // Log server-side para diagnóstico — aparece nos Runtime Logs do Vercel
-    console.error('[/api/garantia/responder]', { casoId, prestadorId, erro: message })
+    // Loga o objeto bruto — captura erros do Supabase que não são instâncias de Error
+    console.error('[/api/garantia/responder] erro bruto:', JSON.stringify(err, null, 2))
+    const message = err instanceof Error
+      ? err.message
+      : (typeof err === 'object' && err !== null && 'message' in err)
+        ? String((err as any).message)
+        : JSON.stringify(err)
     return NextResponse.json({ error: message }, { status: 400 })
   }
 }
