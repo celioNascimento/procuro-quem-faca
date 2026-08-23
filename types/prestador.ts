@@ -9,6 +9,11 @@ export type AtivacaoStatus =
   | 'perfil_completo'
   | 'avaliacao_recebida';
 
+// Garantia declarada pelo prestador no perfil — postura comercial, não
+// substitui a garantia legal do CDC (que se aplica sempre, independente
+// deste valor). 0 = nenhuma garantia declarada.
+export type GarantiaDias = 0 | 30 | 60 | 90;
+
 export type Prestador = {
   id: number;                // bigint no Supabase → number no TS
   slug: string | null;
@@ -24,6 +29,7 @@ export type Prestador = {
   cidades?: { id?: string; nome: string; estado_sigla: string; regiao_id: string } | null;
   categorias?: { id?: string; nome: string } | null;
   ativacao_status?: AtivacaoStatus;
+  garantia_dias?: GarantiaDias;
 
   // Colunas próprias do prestador (FK), presentes mesmo sem o join carregado.
   // Aceita string | number pois PrestadorFormData (abaixo) redeclara esses
