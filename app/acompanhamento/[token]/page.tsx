@@ -12,6 +12,7 @@ import { StatusMini }               from '@/components/acompanhamento/StatusMini
 import { ModalDiscussao }           from '@/components/acompanhamento/ModalDiscussao'
 import { RodapeSeguranca }          from '@/components/acompanhamento/RodapeSeguranca'
 import { GarantiaSecaoCliente }     from '@/components/acompanhamento/garantia/GarantiaSecaoCliente'
+import AcompanhamentoSkeleton       from '@/components/skeletons/AcompanhamentoSkeleton'
 
 export default function PaginaAcompanhamento({
   params: paramsPromise,
@@ -41,11 +42,7 @@ export default function PaginaAcompanhamento({
   }, [])
 
   if (!mounted || loading) {
-    return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center font-bold text-slate-300 uppercase tracking-widest animate-pulse">
-        Sincronizando Relatórios...
-      </div>
-    )
+    return <AcompanhamentoSkeleton />
   }
 
   if (!projeto) return null
