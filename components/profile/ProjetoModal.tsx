@@ -1,8 +1,8 @@
-//components/profile/ProjetoModal.tsx
+// components/profile/ProjetoModal.tsx
 
 'use client'
-import { X, Share2, CheckCircle2, Activity, User, Camera } from 'lucide-react'
-import type { ProjetoPerfil } from '@/types/perfil'
+import { X, Share2, CheckCircle2, Activity, User, Camera, ShieldCheck, ShieldOff, XCircle, ShieldAlert } from 'lucide-react'
+import type { ProjetoPerfil, GarantiaPublica } from '@/types/perfil'
 import { useSlides } from '@/hooks/useSlides'
 import { useComentariosFoto } from '@/hooks/useComentariosFoto'
 import { ModalFotoBase } from '@/components/shared/ModalFotoBase'
@@ -12,12 +12,98 @@ interface Props {
   onClose: () => void
 }
 
+// Configuração visual por status de garantia —
+// exibe o resultado de forma clara e honesta para o visitante.
+const CONFIG_GARANTIA: Record<string, {
+  icon: React.ElementType
+  cor: string
+  titulo: string
+  descricao: string
+}> = {
+  resolvida: {
+    icon: ShieldCheck,
+    cor: 'bg-green-50 border-green-200 text-green-700',
+    titulo: 'Garantia honrada',
+    descricao: 'O prestador retornou e resolveu o problema relatado pelo cliente.',
+  },
+  sem_resposta: {
+    icon: ShieldOff,
+    cor: 'bg-red-50 border-red-200 text-red-700',
+    titulo: 'Garantia sem resposta',
+    descricao: 'O prazo de resposta expirou sem retorno do prestador.',
+  },
+  recusada: {
+    icon: XCircle,
+    cor: 'bg-slate-50 border-slate-200 text-slate-500',
+    titulo: 'Oferta de reparo recusada',
+    descricao: 'O cliente optou por não aceitar a oferta de reparo do prestador.',
+  },
+}
+
+function GarantiaCard({ garantia }: { garantia: GarantiaPublica }) {
+  const config = CONFIG_GARANTIA[garantia.status]
+  if (!config) return null
+  const Icon = config.icon
+
+  return (
+    <div className={`rounded-2xl border p-4 space-y-3 ${config.cor}`}>
+      <div className="flex items-center gap-2">
+        <Icon size={14} className="shrink-0" />
+        <p className="text-[10px] font-black uppercase tracking-widest leading-none">
+          {config.titulo}
+        </p>
+      </div>
+      <p className="text-[11px] font-medium leading-snug opacity-80">
+        {config.descricao}
+      </p>
+
+      {/* Problema relatado */}
+      {garantia.descricao_problema && (
+        <div className="bg-white/60 rounded-xl p-3 space-y-1">
+          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
+            Problema relatado
+          </p>
+          <p className="text-[11px] font-medium leading-snug">
+            {garantia.descricao_problema}
+          </p>
+        </div>
+      )}
+
+      {/* Resposta do prestador */}
+      {garantia.resposta_prestador_garantia && (
+        <div className="bg-white/60 rounded-xl p-3 space-y-1">
+          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
+            Proposta do prestador
+          </p>
+          <p className="text-[11px] font-medium leading-snug">
+            {garantia.resposta_prestador_garantia}
+          </p>
+        </div>
+      )}
+
+      {/* Resolução */}
+      {garantia.resolucao_descricao && (
+        <div className="bg-white/60 rounded-xl p-3 space-y-1">
+          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
+            Como foi resolvido
+          </p>
+          <p className="text-[11px] font-medium leading-snug">
+            {garantia.resolucao_descricao}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ProjetoModal({ projeto, onClose }: Props) {
   const { sorted: fotos, fotoAtual, current, next, prev } = useSlides(projeto.portfolio_fotos)
   const comentarios = useComentariosFoto(fotoAtual?.id)
 
   const isConcluido = projeto.status === 'finalizado'
     || fotos.some(f => f.ordem === 3)
+
+  const garantias = projeto.solicitacoes_garantia ?? []
 
   const handleShare = async () => {
     const url   = typeof window !== 'undefined' ? window.location.href : ''
@@ -28,7 +114,6 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
     } catch { /* usuário cancelou — silencioso */ }
   }
 
-  // Sem fotos — modal simplificado sem usar ModalFotoBase
   if (!fotoAtual) {
     return (
       <div className="fixed inset-0 z-[200] bg-slate-900/95 flex items-center justify-center p-4 animate-in fade-in duration-300">
@@ -68,6 +153,18 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
             <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">
               {isConcluido ? 'Finalizado' : 'Em andamento'}
             </p>
+            {garantias.length > 0 && (
+              <span className="flex items-center gap-0.5 ml-1">
+                <ShieldAlert size={9} className={
+                  garantias[0].status === 'resolvida' ? 'text-green-500' :
+                  garantias[0].status === 'sem_resposta' ? 'text-red-400' :
+                  'text-slate-400'
+                } />
+                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                  Garantia
+                </span>
+              </span>
+            )}
           </div>
         </div>
         <button onClick={onClose} className="p-3 text-slate-300 hover:text-slate-600 transition-colors md:hidden">
@@ -97,7 +194,6 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
             <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">
               Interações da Fase
             </h4>
-            {/* Indicadores de slide */}
             <div className="flex gap-1">
               {fotos.map((_, i) => (
                 <div
@@ -128,7 +224,7 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
           )}
         </div>
 
-        {/* ── Nova Seção: Avaliação do Cliente ── */}
+        {/* Avaliação do Cliente */}
         {projeto.avaliacoes && projeto.avaliacoes.length > 0 && (
           <div className="pt-2 border-t border-slate-50 space-y-4 animate-in fade-in duration-500">
             <div className="flex items-center gap-2">
@@ -137,7 +233,7 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
                 Avaliação do Cliente
               </span>
             </div>
-            
+
             {projeto.avaliacoes.map(av => (
               <div key={av.id} className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-3">
@@ -164,6 +260,22 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
             ))}
           </div>
         )}
+
+        {/* ── Seção de Garantia — só aparece quando há resultado final ── */}
+        {garantias.length > 0 && (
+          <div className="pt-2 border-t border-slate-50 space-y-4 animate-in fade-in duration-500">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
+              <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest italic">
+                Pós-serviço
+              </span>
+            </div>
+            {garantias.map(g => (
+              <GarantiaCard key={g.id} garantia={g} />
+            ))}
+          </div>
+        )}
+
       </div>
 
       {/* ── Rodapé ── */}
