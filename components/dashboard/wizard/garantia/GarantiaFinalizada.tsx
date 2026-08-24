@@ -10,7 +10,6 @@ import { CheckCircle2, XCircle, ShieldOff, AlertTriangle } from 'lucide-react'
 import type { CasoGarantia } from '@/hooks/useCasoGarantiaDoProjeto'
 import { useGarantiaWizard } from '@/hooks/useGarantiaWizard'
 import { GarantiaCarrossel } from './GarantiaCarrossel'
-import { GarantiaComentarios } from './GarantiaComentarios'
 
 interface Props {
   caso: CasoGarantia
@@ -105,8 +104,30 @@ export function GarantiaFinalizada({ caso, prestadorId }: Props) {
         autorTipo="prestador"
       />
 
-      {/* Histórico de conversa */}
-      <GarantiaComentarios wizard={wizard} casoId={caso.id} />
+      {/* Histórico de conversa — somente leitura, sem input.
+          Exibe as mensagens trocadas durante o caso, mas não permite
+          novas mensagens após o encerramento. */}
+      {wizard.derived.comentariosGerais.length > 0 && (
+        <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">
+            Conversa
+          </p>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {wizard.derived.comentariosGerais.map((c) => (
+              <div
+                key={c.id}
+                className={`text-[11px] rounded-xl px-3 py-2 max-w-[85%] ${
+                  c.autor_tipo === 'prestador'
+                    ? 'bg-blue-600 text-white ml-auto'
+                    : 'bg-white text-slate-700 border border-slate-100'
+                }`}
+              >
+                {c.texto}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   )
