@@ -541,20 +541,21 @@ function ListaConteudo() {
           )}
 
           {!loading && !erro && prestadoresExibidos.length === 0 && (
-            <div className="py-20 text-center flex flex-col items-center gap-5">
-              <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center border border-slate-100 shadow-inner">
-                <MapPin size={32} className="text-slate-200" />
+            <div className="py-20 lg:py-28 flex flex-col items-center justify-center text-center min-h-[50vh] lg:min-h-[55vh]">
+              <div className="w-20 h-20 lg:w-28 lg:h-28 bg-slate-50 rounded-3xl lg:rounded-[2rem] flex items-center justify-center border border-slate-100 shadow-inner mb-5 lg:mb-7">
+                <MapPin size={32} className="text-slate-200 lg:hidden" />
+                <MapPin size={44} className="text-slate-200 hidden lg:block" />
               </div>
-              <div>
-                <h2 className="text-base font-bold text-slate-700 mb-1">Nenhum profissional encontrado</h2>
-                <p className="text-[13px] text-slate-400 max-w-[240px] mx-auto font-medium leading-relaxed">
+              <div className="max-w-[240px] lg:max-w-sm">
+                <h2 className="text-base lg:text-xl font-bold text-slate-700 mb-1 lg:mb-2">Nenhum profissional encontrado</h2>
+                <p className="text-[13px] lg:text-[15px] text-slate-400 font-medium leading-relaxed">
                   Tente remover os filtros ou buscar por uma categoria diferente.
                 </p>
               </div>
               {filtroCidNome && (
                 <button
                   onClick={() => toggleCidade(filtroCidNome)}
-                  className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[12px] font-bold uppercase tracking-wide hover:border-blue-400 hover:text-blue-600 transition-all active:scale-95 shadow-sm"
+                  className="mt-5 lg:mt-7 px-5 lg:px-6 py-2.5 lg:py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[12px] lg:text-[13px] font-bold uppercase tracking-wide hover:border-blue-400 hover:text-blue-600 transition-all active:scale-95 shadow-sm"
                 >
                   Remover filtro de cidade
                 </button>
