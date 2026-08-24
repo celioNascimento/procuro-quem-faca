@@ -1,13 +1,16 @@
 // components/dashboard/wizard/garantia/GarantiaFinalizada.tsx
 //
 // Estados terminais: resolvida, sem_resposta, recusada.
-// Só exibição — sem ações. Mostra o carrossel de fotos (via useGarantiaWizard,
-// somente leitura) para o prestador rever o histórico do caso.
+// Exibe o histórico completo do caso — problema, proposta, resolução,
+// fotos e conversa — para o prestador rever o que aconteceu.
 
-import { CheckCircle2, XCircle, ShieldOff } from 'lucide-react'
+'use client'
+
+import { CheckCircle2, XCircle, ShieldOff, AlertTriangle } from 'lucide-react'
 import type { CasoGarantia } from '@/hooks/useCasoGarantiaDoProjeto'
 import { useGarantiaWizard } from '@/hooks/useGarantiaWizard'
-import { FotoGarantia } from './FotoGarantia'
+import { GarantiaCarrossel } from './GarantiaCarrossel'
+import { GarantiaComentarios } from './GarantiaComentarios'
 
 interface Props {
   caso: CasoGarantia
@@ -19,58 +22,92 @@ const CONFIG_STATUS = {
     icon: CheckCircle2,
     cor: 'text-green-600 bg-green-50 border-green-200',
     titulo: 'Garantia resolvida',
+    descricao: null, // usa resolucao_descricao do caso
   },
   sem_resposta: {
     icon: ShieldOff,
     cor: 'text-red-600 bg-red-50 border-red-200',
     titulo: 'Prazo de resposta perdido',
+    descricao: 'O prazo para resposta expirou. Isso afeta sua reputação no perfil público.',
   },
   recusada: {
     icon: XCircle,
     cor: 'text-slate-500 bg-slate-50 border-slate-200',
     titulo: 'Oferta recusada pelo cliente',
+    descricao: 'O cliente optou por não aceitar a oferta de reparo.',
   },
 } as const
 
 export function GarantiaFinalizada({ caso, prestadorId }: Props) {
-  const { state, derived } = useGarantiaWizard({
+  const wizard = useGarantiaWizard({
     casoId: caso.id,
     autorTipo: 'prestador',
-    autorUserId: null, // somente leitura aqui, não faz upload
+    autorUserId: null, // somente leitura — não faz upload nem comentários
   })
 
   const config = CONFIG_STATUS[caso.status as keyof typeof CONFIG_STATUS]
   if (!config) return null
   const Icon = config.icon
 
+  const textoDescricao = config.descricao
+    ?? (caso.status === 'resolvida' ? caso.resolucao_descricao : null)
+
   return (
     <div className="space-y-4">
+
+      {/* Badge de resultado */}
       <div className={`rounded-2xl p-5 border flex items-start gap-3 ${config.cor}`}>
         <Icon size={18} className="shrink-0 mt-0.5" />
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-wide leading-none mb-1.5">
+        <div className="space-y-1">
+          <p className="text-[11px] font-black uppercase tracking-wide leading-none">
             {config.titulo}
           </p>
-          {caso.status === 'resolvida' && caso.resolucao_descricao && (
-            <p className="text-[11px] font-medium leading-snug">{caso.resolucao_descricao}</p>
-          )}
-          {caso.status === 'sem_resposta' && (
-            <p className="text-[11px] font-medium leading-snug">
-              O prazo para resposta expirou. Isso afeta sua reputação no perfil público.
+          {textoDescricao && (
+            <p className="text-[11px] font-medium leading-snug opacity-80">
+              {textoDescricao}
             </p>
           )}
         </div>
       </div>
 
-      {!state.loading && state.fotos.length > 0 && (
-        <div className="grid grid-cols-3 gap-2">
-          {state.fotos.map((foto) => (
-            <div key={foto.id} className="aspect-square rounded-xl overflow-hidden bg-slate-100">
-              <FotoGarantia path={foto.url_foto} publica={foto.publica} className="w-full h-full object-cover" alt="" />
-            </div>
-          ))}
+      {/* Problema relatado pelo cliente */}
+      <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3">
+        <AlertTriangle size={14} className="text-orange-400 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="text-[9px] font-black uppercase tracking-widest text-orange-500">
+            Problema relatado
+          </p>
+          <p className="text-[11px] font-medium text-orange-700/80 leading-snug">
+            {caso.descricao_problema}
+          </p>
+        </div>
+      </div>
+
+      {/* Proposta registrada pelo prestador */}
+      {caso.resposta_prestador_garantia && (
+        <div className="bg-white border border-slate-100 rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle2 size={12} className="text-blue-400" />
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+              Sua proposta registrada
+            </p>
+          </div>
+          <p className="text-[12px] font-medium text-slate-700 leading-snug">
+            {caso.resposta_prestador_garantia}
+          </p>
         </div>
       )}
+
+      {/* Fotos — clicáveis via GarantiaCarrossel + GarantiaZoomModal */}
+      <GarantiaCarrossel
+        wizard={wizard}
+        podeEnviar={false}
+        autorTipo="prestador"
+      />
+
+      {/* Histórico de conversa */}
+      <GarantiaComentarios wizard={wizard} casoId={caso.id} />
+
     </div>
   )
 }
