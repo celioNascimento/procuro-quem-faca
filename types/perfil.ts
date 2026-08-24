@@ -4,10 +4,23 @@ import type { Prestador } from './prestador'
 export type { AvaliacaoPerfil } from './avaliacao'
 
 export interface FotoProjeto {
-  id: string      
+  id: string
   url_foto: string
   ordem: number
   legenda?: string
+}
+
+// Resumo público de garantia — apenas o suficiente para exibir o resultado
+// na vitrine do prestador. Dados sensíveis (prazo, cliente_user_id etc.)
+// ficam fora do perfil público.
+export interface GarantiaPublica {
+  id: string
+  status: string
+  origem: 'cliente' | 'prestador'
+  descricao_problema: string
+  resposta_prestador_garantia: string | null
+  resolucao_descricao: string | null
+  nota_resultante: number | null
 }
 
 export interface ProjetoPerfil {
@@ -18,6 +31,8 @@ export interface ProjetoPerfil {
   created_at: string
   portfolio_fotos: FotoProjeto[]
   avaliacoes: { id: string; indica: boolean; comentario?: string | null }[]
+  // LEFT JOIN — array vazio quando não há garantia
+  solicitacoes_garantia: GarantiaPublica[]
 }
 
 export interface PrestadorPerfil extends Omit<Prestador, 'cidades' | 'categorias'> {
