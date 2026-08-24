@@ -11,8 +11,8 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   const router    = useRouter()
   const filtroRef = useRef<HTMLDivElement>(null)
 
-  const [servicos,       setServicos]       = useState<ClienteServico[]>([])
-  const [filtroStatus,   setFiltroStatus]   = useState('todos')
+  const [servicos,        setServicos]        = useState<ClienteServico[]>([])
+  const [filtroStatus,    setFiltroStatus]    = useState('todos')
   const [loadingServicos, setLoadingServicos] = useState(true)
 
   useEffect(() => {
@@ -28,9 +28,6 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
     async function buscar() {
       setLoadingServicos(true)
       try {
-        // Uma query só — garantias derivadas localmente via temGarantiaAtiva.
-        // Elimina o Promise.all com fetchClienteGarantias e o risco de
-        // dessincronia entre dois arrays de origens diferentes.
         const data = await ClienteService.fetchClienteServicos(whatsapp)
         if (cancelado) return
         setServicos(data)
@@ -44,9 +41,7 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   }, [whatsapp, perfilCarregado])
 
   // Derivados localmente — sem estado próprio nem query separada.
-  // servicosGarantia filtra o mesmo array que servicos, então os ids
-  // sempre batem por construção.
-  const servicosGarantia = servicos.filter(temGarantiaAtiva)
+  const servicosGarantia    = servicos.filter(temGarantiaAtiva)
   const idsComGarantiaAtiva = new Set(servicosGarantia.map(s => s.id))
 
   // ── Contadores ──────────────────────────────────────────────────────────────
@@ -64,7 +59,7 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   const servicosFiltrados = filtroStatus === 'garantia'
     ? servicosGarantia
     : servicos.filter(s => {
-        const st      = s.status?.toLowerCase()
+        const st       = s.status?.toLowerCase()
         const temFoto3 = s.portfolio_fotos?.some(f => f.ordem === 3)
         if (filtroStatus === 'todos')       return true
         if (filtroStatus === 'pendente')    return st === 'pendente'
@@ -75,10 +70,8 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
       })
 
   // ── Status visual ───────────────────────────────────────────────────────────
-  // temGarantia: independente do filtro ativo, para sinalizar a tag em
-  // qualquer aba sem alterar o label/badge principal do card.
   const getStatusInfo = (servico: ClienteServico) => {
-    const s        = servico?.status?.toLowerCase()
+    const s         = servico?.status?.toLowerCase()
     const temFoto3  = servico?.portfolio_fotos?.some(f => f.ordem === 3)
     const jaAvaliado = servico?.avaliacoes?.length > 0
 
@@ -97,24 +90,36 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
 
   // ── Rotas ───────────────────────────────────────────────────────────────────
   const getRotaDestino = (s: ClienteServico) => {
-    const temFoto3 = s.portfolio_fotos?.some(f => f.ordem === 3)
-    if (s.status === 'pendente')                       return `/meus-servicos?token=${s.avaliacao_token}`
-    if (s.status === 'em_execucao' && !temFoto3)       return `/acompanhamento/${s.avaliacao_token}`
-    if (s.status === 'em_execucao' && temFoto3)        return `/avaliar/${s.avaliacao_token}`
-    return `/avaliar/${s.avaliacao_token}`
+    const temFoto3   = s.portfolio_fotos?.some(f => f.ordem === 3)
+    const jaAvaliado = s.avaliacoes?.length > 0
+
+    if (s.status === 'pendente')
+      return `/meus-servicos?token=${s.avaliacao_token}`
+
+    if (s.status === 'em_execucao' && !temFoto3)
+      return `/acompanhamento/${s.avaliacao_token}`
+
+    if (s.status === 'em_execucao' && temFoto3)
+      return `/avaliar/${s.avaliacao_token}`
+
+    // Finalizado — se já avaliou, vai para acompanhamento (onde vive a garantia);
+    // se ainda não avaliou, vai para a página de avaliação.
+    if (s.status === 'finalizado' && jaAvaliado)
+      return `/acompanhamento/${s.avaliacao_token}`
+
+    if (s.status === 'finalizado')
+      return `/avaliar/${s.avaliacao_token}`
+
+    return `/acompanhamento/${s.avaliacao_token}`
   }
 
   const getRotaGarantia = (s: ClienteServico) =>
     `/acompanhamento/${s.avaliacao_token}?garantia=1`
 
-  // Retorna a rota correta considerando filtro ativo e garantia ativa:
-  // - Aba garantia → sempre rota de garantia
-  // - Qualquer outra aba, projeto com garantia ativa → rota de garantia
-  //   (o projeto tem algo pendente além do status normal)
-  // - Demais → rota padrão pelo status
+  // Rota unificada considerando filtro ativo e garantia ativa.
   const getRota = (s: ClienteServico) => {
-    if (filtroStatus === 'garantia') return getRotaGarantia(s)
-    if (idsComGarantiaAtiva.has(s.id)) return getRotaGarantia(s)
+    if (filtroStatus === 'garantia')       return getRotaGarantia(s)
+    if (idsComGarantiaAtiva.has(s.id))     return getRotaGarantia(s)
     return getRotaDestino(s)
   }
 
