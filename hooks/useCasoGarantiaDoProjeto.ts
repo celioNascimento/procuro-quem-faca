@@ -1,14 +1,25 @@
 // hooks/useCasoGarantiaDoProjeto.ts
 //
-// Busca o caso de garantia ativo de um projeto — compartilhado entre
-// GarantiaSecaoCliente e page.tsx (via lifting), para que a page saiba
-// se há garantia ativa sem precisar de uma segunda query independente.
+// Busca o caso de garantia de um projeto — compartilhado entre
+// GarantiaSecaoCliente, GarantiaSecaoWizard e page.tsx (via lifting).
+//
+// Inclui todos os status relevantes: ativos (em andamento) e finais
+// (resolvida, sem_resposta, recusada) — para que o cliente e o prestador
+// vejam o resultado mesmo após o encerramento do caso.
 
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 
-const STATUS_ATIVOS = ['aguardando_aceite_cliente', 'aberta', 'respondida']
+// Ativos: caso ainda em andamento — usado para derivar temGarantiaAtiva
+// nas telas de painel (CardPrestador, StatusMini, LinhaDeTempo).
+export const STATUS_GARANTIA_ATIVOS = ['aguardando_aceite_cliente', 'aberta', 'respondida']
+
+// Finais: caso encerrado — exibido para cliente e prestador como histórico.
+const STATUS_GARANTIA_FINAIS = ['resolvida', 'sem_resposta', 'recusada']
+
+// Todos os status que merecem ser carregados pelo hook.
+const STATUS_TODOS = [...STATUS_GARANTIA_ATIVOS, ...STATUS_GARANTIA_FINAIS]
 
 export interface CasoGarantia {
   id: string
@@ -38,7 +49,7 @@ export function useCasoGarantiaDoProjeto(projetoId: string | null) {
         .from('solicitacoes_garantia')
         .select('*')
         .eq('projeto_id', projetoId)
-        .in('status', STATUS_ATIVOS)
+        .in('status', STATUS_TODOS)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
@@ -52,5 +63,11 @@ export function useCasoGarantiaDoProjeto(projetoId: string | null) {
 
   useEffect(() => { carregar() }, [carregar])
 
-  return { caso, loading, recarregar: carregar }
+  // temGarantiaAtiva deriva do caso carregado — true só quando o status
+  // é ativo (em andamento), não quando já foi encerrado. Usado pelos
+  // componentes visuais (CardPrestador, StatusMini, LinhaDeTempo) para
+  // decidir se exibem o badge laranja de "em andamento".
+  const temGarantiaAtiva = caso !== null && STATUS_GARANTIA_ATIVOS.includes(caso.status)
+
+  return { caso, loading, recarregar: carregar, temGarantiaAtiva }
 }
