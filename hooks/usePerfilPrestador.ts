@@ -1,10 +1,10 @@
-//hooks/usePerfilPrestador.ts
+// hooks/usePerfilPrestador.ts
 
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { insertLog } from '@/lib/db/logs'
-import type { PerfilData, ProjetoPerfil, FotoProjeto } from '@/types/perfil'
+import type { PerfilData, ProjetoPerfil, FotoProjeto, GarantiaPublica } from '@/types/perfil'
 
 interface UsePerfilPrestadorReturn {
   data: PerfilData | null
@@ -18,6 +18,11 @@ function normalizarArray<T>(raw: T | T[] | null | undefined): T[] {
   if (typeof raw === 'object') return [raw as T]
   return []
 }
+
+// Status de garantia relevantes para exibição pública —
+// casos ainda em aberto não são exibidos (preserva privacidade do processo).
+// Só o resultado final interessa ao visitante.
+const STATUS_GARANTIA_PUBLICA = ['resolvida', 'sem_resposta', 'recusada']
 
 export function usePerfilPrestador(): UsePerfilPrestadorReturn {
   const params       = useParams()
@@ -49,7 +54,12 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
             categorias(nome),
             portfolio_projetos(
               id, titulo, descricao, status, created_at,
-              portfolio_fotos(id, url_foto, ordem, legenda)
+              portfolio_fotos(id, url_foto, ordem, legenda),
+              solicitacoes_garantia(
+                id, status, origem,
+                descricao_problema, resposta_prestador_garantia,
+                resolucao_descricao, nota_resultante
+              )
             )
           `)
           .abortSignal(controller.signal)
@@ -76,8 +86,6 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
             ...p,
             portfolio_fotos: normalizarArray<FotoProjeto>(p.portfolio_fotos)
               .filter(f => Boolean(f?.url_foto)),
-            // Cruza com avaliacoesRaw por projeto_id — evita depender do join
-            // interno (sujeito a RLS) e garante comentario disponível no modal
             avaliacoes: (avaliacoesRaw ?? [])
               .filter(av => av.projeto_id === p.id)
               .map(av => ({
@@ -85,6 +93,10 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
                 indica: av.indica,
                 comentario: av.comentario ?? null,
               })),
+            // Filtra só garantias com resultado final — casos em aberto
+            // não são relevantes para o visitante e preservam privacidade.
+            solicitacoes_garantia: normalizarArray<GarantiaPublica>(p.solicitacoes_garantia)
+              .filter(g => STATUS_GARANTIA_PUBLICA.includes(g.status)),
           }))
           .sort((a, b) => {
             if (a.status === b.status)
@@ -92,7 +104,6 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
             return a.status === 'finalizado' ? -1 : 1
           })
 
-        // ── Captura de origem (?from=) ──────────────────────────────
         const fromParam = searchParams?.get('from')
         let urlRetorno = fromParam ? decodeURIComponent(fromParam) : '/prestadores'
         if (!fromParam) {
