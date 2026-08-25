@@ -13,17 +13,36 @@ const POSICOES_LABELS: Record<string, string> = {
   dashboard_cliente: 'Painel do Cliente (B2C)',
 }
 
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({
+  checked,
+  onChange,
+  disabled,
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  disabled?: boolean
+}) {
   return (
     <button
       type="button"
-      onClick={() => onChange(!checked)}
-      className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-1 py-1 transition-all hover:border-zinc-300"
+      onClick={() => !disabled && onChange(!checked)}
+      title={disabled ? 'Anúncio expirado — edite para redefinir a validade' : undefined}
+      className={`flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-1 py-1 transition-all ${
+        disabled ? 'opacity-40 cursor-not-allowed' : 'hover:border-zinc-300'
+      }`}
     >
-      <span className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${checked ? 'bg-emerald-500 text-white' : 'bg-zinc-200 text-zinc-500'}`}>
+      <span
+        className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
+          checked ? 'bg-emerald-500 text-white' : 'bg-zinc-200 text-zinc-500'
+        }`}
+      >
         {checked ? <Eye size={12} /> : <EyeOff size={12} />}
       </span>
-      <span className={`pr-2 text-[10px] font-semibold uppercase tracking-widest ${checked ? 'text-emerald-600' : 'text-zinc-400'}`}>
+      <span
+        className={`pr-2 text-[10px] font-semibold uppercase tracking-widest ${
+          checked ? 'text-emerald-600' : 'text-zinc-400'
+        }`}
+      >
         {checked ? 'Ativo' : 'Rascunho'}
       </span>
     </button>
@@ -35,12 +54,12 @@ function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
   const dataExpiracao = anuncio.data_expiracao ? new Date(anuncio.data_expiracao) : null
   const dataInicio = anuncio.data_inicio ? new Date(anuncio.data_inicio) : null
 
-  const isExpirado = dataExpiracao && dataExpiracao < agora
-  const isAgendado = dataInicio && dataInicio > agora
-  
+  const isExpirado = dataExpiracao !== null && dataExpiracao < agora
+  const isAgendado = dataInicio !== null && dataInicio > agora
+
   let statusText = 'Em exibição'
   let statusClass = 'text-emerald-500'
-  
+
   if (isExpirado) {
     statusText = 'Expirado'
     statusClass = 'text-red-500'
@@ -51,22 +70,33 @@ function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
     statusText = `Válido até ${dataExpiracao.toLocaleDateString('pt-BR')}`
   }
 
-  const valorFormatado = anuncio.valor_total 
+  const valorFormatado = anuncio.valor_total
     ? Number(anuncio.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
     : 'R$ 0,00'
 
   const posicaoAmigavel = POSICOES_LABELS[anuncio.posicao] ?? anuncio.posicao
 
+  // O toggle só mostra "Ativo" se status=true E não estiver expirado.
+  // Se expirado, fica desabilitado independente do status no banco.
+  const toggleAtivo = anuncio.status && !isExpirado
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 rounded-2xl border border-zinc-100 bg-white p-3 hover:border-zinc-200 transition-colors overflow-hidden">
-      
+
       {/* Esquerda / Topo (Mobile) - Imagem e Textos */}
       <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto flex-1 min-w-0">
         <div className="h-14 w-20 sm:w-28 shrink-0 overflow-hidden rounded-lg bg-zinc-50 relative">
-          {anuncio.imagem_url && <img src={anuncio.imagem_url} alt={anuncio.titulo} className="h-full w-full object-cover" />}
+          {anuncio.imagem_url && (
+            <img src={anuncio.imagem_url} alt={anuncio.titulo} className="h-full w-full object-cover" />
+          )}
           {isAgendado && (
             <div className="absolute inset-0 bg-blue-900/60 flex items-center justify-center">
               <span className="text-[9px] font-bold text-white uppercase tracking-widest">Espera</span>
+            </div>
+          )}
+          {isExpirado && (
+            <div className="absolute inset-0 bg-zinc-900/50 flex items-center justify-center">
+              <span className="text-[9px] font-bold text-white uppercase tracking-widest">Expirado</span>
             </div>
           )}
         </div>
@@ -78,26 +108,34 @@ function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
             {posicaoAmigavel} · {valorFormatado} · {anuncio.cliques ?? 0} cliques
           </p>
           <p className="truncate text-[10px] uppercase tracking-wide mt-0.5">
-            <span className={`${statusClass} font-semibold`}>
-              {statusText}
-            </span>
+            <span className={`${statusClass} font-semibold`}>{statusText}</span>
           </p>
         </div>
       </div>
 
       {/* Direita / Fundo (Mobile) - Botões de Ação */}
       <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-zinc-50 mt-1 sm:mt-0">
-        <Toggle checked={anuncio.status} onChange={(v: boolean) => onToggleAtivo(anuncio.id, v)} />
+        <Toggle
+          checked={toggleAtivo}
+          disabled={isExpirado}
+          onChange={(v: boolean) => onToggleAtivo(anuncio.id, v)}
+        />
         <div className="flex items-center gap-1">
-          <button onClick={() => onEdit(anuncio)} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700">
+          <button
+            onClick={() => onEdit(anuncio)}
+            className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+          >
             <Pencil size={15} />
           </button>
-          <button onClick={() => onDelete(anuncio.id)} className="rounded-lg p-2 text-zinc-400 hover:bg-red-50 hover:text-red-500">
+          <button
+            onClick={() => onDelete(anuncio.id)}
+            className="rounded-lg p-2 text-zinc-400 hover:bg-red-50 hover:text-red-500"
+          >
             <Trash2 size={15} />
           </button>
         </div>
       </div>
-      
+
     </div>
   )
 }
@@ -119,7 +157,9 @@ export function AnuncioLojistaLista({ anuncios, loading, onEdit, onDelete, onTog
     return (
       <div className="mt-6 rounded-2xl border border-dashed border-zinc-200 bg-white p-10 text-center">
         <p className="text-[13px] font-semibold text-zinc-500">Nenhum anúncio cadastrado ainda</p>
-        <p className="mt-1 text-[11px] text-zinc-300">Cadastre o primeiro lojista pra testar como o banner aparece no site</p>
+        <p className="mt-1 text-[11px] text-zinc-300">
+          Cadastre o primeiro lojista pra testar como o banner aparece no site
+        </p>
       </div>
     )
   }
@@ -141,13 +181,27 @@ export function AnuncioLojistaLista({ anuncios, loading, onEdit, onDelete, onTog
       <AnimatePresence>
         {confirmarExclusao && (
           <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4">
-            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
+            >
               <p className="text-[13px] font-semibold text-zinc-800">Excluir este anúncio?</p>
-              <p className="mt-1 text-[11px] text-zinc-400">Essa ação não pode ser desfeita. Se quiser só pausar, use o botão de visibilidade em vez de excluir.</p>
+              <p className="mt-1 text-[11px] text-zinc-400">
+                Essa ação não pode ser desfeita. Se quiser só pausar, use o botão de visibilidade em vez de excluir.
+              </p>
               <div className="mt-4 flex justify-end gap-2">
-                <button onClick={() => setConfirmarExclusao(null)} className="rounded-xl px-3.5 py-2 text-[12px] font-semibold text-zinc-400 hover:bg-zinc-100">Cancelar</button>
                 <button
-                  onClick={() => { onDelete(confirmarExclusao); setConfirmarExclusao(null) }}
+                  onClick={() => setConfirmarExclusao(null)}
+                  className="rounded-xl px-3.5 py-2 text-[12px] font-semibold text-zinc-400 hover:bg-zinc-100"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    onDelete(confirmarExclusao)
+                    setConfirmarExclusao(null)
+                  }}
                   className="rounded-xl bg-red-500 px-3.5 py-2 text-[12px] font-semibold text-white hover:bg-red-600"
                 >
                   Excluir
