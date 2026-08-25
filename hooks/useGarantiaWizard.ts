@@ -127,8 +127,13 @@ export function useGarantiaWizard({ casoId, autorTipo, autorUserId }: UseGaranti
         fase,
       })
 
-      setFotos((prev) => [...prev, novaFoto])
-      setCurrentSlide(fotos.length) // foca na foto recém-enviada
+      // Functional update: evita "foto.length" desatualizado (stale closure)
+      // se carregar() tiver resolvido entre o clique e a resposta do upload.
+      setFotos((prev) => {
+        const atualizado = [...prev, novaFoto]
+        setCurrentSlide(atualizado.length - 1) // foca na foto recém-enviada
+        return atualizado
+      })
       setZoomFotoId(novaFoto.id)
     } catch (err) {
       console.error('Erro no upload de foto de garantia:', err)
