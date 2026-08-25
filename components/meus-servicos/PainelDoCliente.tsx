@@ -9,6 +9,7 @@ import LoginGate from './LoginGate'
 import ServicoCard from './ServicoCard'
 import ZoomImageModal from './ZoomImageModal'
 import { usePainelCliente } from '@/hooks/usePainelCliente'
+import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido' | 'garantia'
@@ -113,11 +114,7 @@ export default function PainelDoCliente() {
   }
 
   // ── Loading / Auth ────────────────────────────────────────────────────────────
-  if (loading) return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <div className="w-12 h-12 border-[3px] border-slate-100 border-t-blue-600 rounded-full animate-spin" />
-    </div>
-  )
+  if (loading) return <PainelDoClienteSkeleton />
 
   if (!session) return <LoginGate tokenUrl={tokenUrl} />
 
