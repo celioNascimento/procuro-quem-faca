@@ -1,12 +1,4 @@
 // components/acompanhamento/garantia/GarantiaRespondidaCliente.tsx
-//
-// Estado: prestador registrou uma proposta de solução formal. O cliente
-// decide aqui: confirmar que foi resolvido (dá nota nova, que passa a valer
-// como nota_efetiva da avaliação vinculada, se houver) OU dizer que ainda
-// não resolveu (reabre o caso, reinicia prazo de 5 dias úteis).
-//
-// Nota nova é OBRIGATÓRIA para confirmar — sem ela, confirmarResolucaoGarantia
-// rejeita a chamada (ver garantia.service.ts).
 
 'use client'
 
@@ -31,11 +23,11 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
     autorUserId: clienteUserId,
   })
 
-  const [modo, setModo] = useState<'decidir' | 'confirmando'>('decidir')
-  const [notaNova, setNotaNova] = useState(0)
+  const [modo, setModo]                       = useState<'decidir' | 'confirmando'>('decidir')
+  const [notaNova, setNotaNova]               = useState(0)
   const [descricaoResolucao, setDescricaoResolucao] = useState('')
-  const [processando, setProcessando] = useState(false)
-  const [erro, setErro] = useState<string | null>(null)
+  const [processando, setProcessando]         = useState(false)
+  const [erro, setErro]                       = useState<string | null>(null)
 
   const handleConfirmarResolvido = async () => {
     if (caso.origem !== 'prestador' && (notaNova < 1 || notaNova > 5)) return
@@ -54,6 +46,22 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
         fotosResolucao,
         caso.origem === 'prestador' ? undefined : notaNova,
       )
+
+      // Promove fotos de resolução do bucket privado para o público —
+      // feito após confirmar para garantir que só casos realmente resolvidos
+      // têm fotos expostas. Falha silenciosa: não bloqueia o fluxo principal,
+      // as fotos simplesmente não aparecerão no perfil público até a próxima
+      // tentativa (pode ser re-trigada manualmente pelo admin se necessário).
+      try {
+        await fetch('/api/garantia/promover-fotos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ casoId: caso.id }),
+        })
+      } catch (erroPromocao) {
+        console.error('[GarantiaRespondidaCliente] Erro ao promover fotos:', erroPromocao)
+      }
+
       onAtualizado()
     } catch (err) {
       console.error('Erro ao confirmar resolução:', err)
@@ -129,11 +137,7 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
               </p>
               <div className="flex items-center justify-center gap-2">
                 {[1, 2, 3, 4, 5].map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setNotaNova(n)}
-                    className="p-1"
-                  >
+                  <button key={n} onClick={() => setNotaNova(n)} className="p-1">
                     <Star
                       size={28}
                       className={n <= notaNova ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}
