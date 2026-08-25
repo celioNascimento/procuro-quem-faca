@@ -26,9 +26,12 @@ export interface CasoGarantia {
   status: string
   origem: 'cliente' | 'prestador'
   descricao_problema: string
+  fotos_problema: string[]
   resposta_prestador_garantia: string | null
   prazo_resposta: string | null
   data_resposta: string | null
+  resolucao_descricao: string | null
+  fotos_resolucao: string[]
   data_resolucao: string | null
   nota_resultante: number | null
   avaliacao_id: string | null
