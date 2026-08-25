@@ -93,7 +93,7 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, onAberto }: Pro
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={wizard.actions.handleUpload}
+            onChange={(e) => wizard.actions.handleUpload(e, 'problema')}
             disabled={wizard.state.enviandoFoto}
           />
         </label>
