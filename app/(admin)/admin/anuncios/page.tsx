@@ -47,11 +47,6 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
 type FiltroStatus = 'todos' | 'ativos' | 'rascunhos' | 'expirados'
 type Visualizacao = 'lista' | 'mapa'
 
-// Formatos possíveis de "editando":
-// - 'new_lojista' / 'new_cliente': novo anúncio em branco
-// - NovoLojistaComDados / NovoClienteComDados: novo anúncio, mas com a
-//   segmentação pré-preenchida a partir do respectivo simulador
-// - { id, posicao, ... }: edição de um anúncio já existente
 type NovoLojistaComDados = { modo: 'new_lojista'; preenchimento: PreenchimentoLojista }
 type NovoClienteComDados = { modo: 'new_cliente'; preenchimento: PreenchimentoCliente }
 type ModoEdicao =
@@ -95,9 +90,17 @@ export default function PainelAnunciosLojista() {
   }
 
   const agora = new Date()
-  const ativos = anuncios.filter((a: any) => a.status).length
+
+  // "Ativo" = status true E não expirado
+  const ativos = anuncios.filter(
+    (a: any) => a.status && !(a.data_expiracao && new Date(a.data_expiracao) < agora)
+  ).length
+
   const rascunhos = anuncios.filter((a: any) => !a.status).length
-  const expirados = anuncios.filter((a: any) => a.data_expiracao && new Date(a.data_expiracao) < agora).length
+
+  const expirados = anuncios.filter(
+    (a: any) => a.data_expiracao && new Date(a.data_expiracao) < agora
+  ).length
 
   // Aplicação do filtro selecionado
   const anunciosFiltrados = anuncios.filter((a: any) => {
@@ -112,14 +115,11 @@ export default function PainelAnunciosLojista() {
     return typeof v === 'object' && v !== null
   }
 
-  // Define qual formulário deve ser renderizado
   const isFormCliente =
     editando === 'new_cliente' ||
     (ehModoObjeto(editando) && 'modo' in editando && editando.modo === 'new_cliente') ||
     (ehModoObjeto(editando) && 'posicao' in editando && editando.posicao === 'dashboard_cliente')
 
-  // Valor inicial pro AnuncioClienteForm: edição existente OU atalho do
-  // SimuladorClienteModal.
   const initialParaFormCliente =
     ehModoObjeto(editando) && 'modo' in editando && editando.modo === 'new_cliente'
       ? editando.preenchimento
@@ -127,9 +127,6 @@ export default function PainelAnunciosLojista() {
         ? editando
         : null
 
-  // Valor inicial pro AnuncioLojistaForm: edição existente OU atalho do
-  // SimuladorInventarioModal. AnuncioLojistaForm distingue os dois formatos
-  // internamente (ver ehPreenchimentoDoSimulador em AnuncioLojistaForm.tsx).
   const initialParaFormLojista =
     ehModoObjeto(editando) && 'modo' in editando && editando.modo === 'new_lojista'
       ? editando.preenchimento
@@ -159,10 +156,6 @@ export default function PainelAnunciosLojista() {
         </div>
         {!editando && (
           <div className="flex items-center gap-2">
-            {/* Dropdown único "Consultar" — reúne os dois simuladores (Vagas
-                de lojista e Painel do Cliente) num só botão, evitando que
-                dois botões de texto longo disputem espaço horizontal no
-                mobile. */}
             <div className="relative">
               <button
                 onClick={() => setMenuConsultarAberto(!menuConsultarAberto)}
@@ -207,7 +200,6 @@ export default function PainelAnunciosLojista() {
               </AnimatePresence>
             </div>
 
-            {/* Dropdown Menu para Novo Anúncio */}
             <div className="relative">
               <button
                 onClick={() => setMenuNovoAberto(!menuNovoAberto)}
@@ -292,8 +284,7 @@ export default function PainelAnunciosLojista() {
         </div>
       )}
 
-      {/* Botões de Filtro — só fazem sentido pra Lista (filtram anúncios
-          individuais); ficam ocultos no Mapa, que é organizado por praça. */}
+      {/* Botões de Filtro */}
       {!editando && visualizacao === 'lista' && (
         <div className="flex items-center gap-2 pt-3 overflow-x-auto pb-1">
           <button
@@ -394,7 +385,13 @@ export default function PainelAnunciosLojista() {
           onUsarNoCadastro={usarDadosDoSimuladorCliente}
         />
       )}
-      {senhaModal && <SenhaTemporariaModal senha={senhaModal.senha} email={senhaModal.email} onClose={() => setSenhaModal(null)} />}
+      {senhaModal && (
+        <SenhaTemporariaModal
+          senha={senhaModal.senha}
+          email={senhaModal.email}
+          onClose={() => setSenhaModal(null)}
+        />
+      )}
     </div>
   )
 }
