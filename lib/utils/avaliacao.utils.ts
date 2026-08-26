@@ -9,6 +9,7 @@ const MINIMO_PARA_EXIBIR = 10
 export function normalizar(raw: AvaliacaoRaw): Avaliacao {
   return {
     ...raw,
+    indica: raw.indica ?? false, // Trata o null garantindo o tipo boolean
     portfolio_projetos: raw.portfolio_projetos?.[0] ?? null,
   }
 }
