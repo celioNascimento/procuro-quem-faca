@@ -427,6 +427,9 @@ export async function registrarMetricaAnuncio(
   segmentacaoId: string | undefined,
   tipo: 'impressao' | 'clique'
 ) {
+  // Sem segmentacaoId não há como atribuir a métrica à praça correta — descarta.
+  if (!anuncioId || !segmentacaoId) return
+
   try {
     fetch('/api/anuncios/metricas', {
       method: 'POST',
