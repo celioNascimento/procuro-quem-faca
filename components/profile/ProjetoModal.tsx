@@ -92,6 +92,29 @@ function GarantiaCard({ garantia }: { garantia: GarantiaPublica }) {
           </p>
         </div>
       )}
+
+      {/* Fotos de resolução — URL pública, usável direto em <img src> */}
+      {garantia.fotos && garantia.fotos.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
+            Fotos da resolução
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {garantia.fotos.map(foto => (
+              <div
+                key={foto.id}
+                className="aspect-square rounded-xl overflow-hidden bg-white/40"
+              >
+                <img
+                  src={foto.url_foto}
+                  alt={foto.legenda ?? 'Foto da resolução'}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -111,7 +134,7 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
     try {
       if (navigator.share) await navigator.share({ title: projeto.titulo, text: texto, url })
       else await navigator.clipboard.writeText(url)
-    } catch { /* usuário cancelou — silencioso */ }
+    } catch { /* usuário cancelou */ }
   }
 
   if (!fotoAtual) {
@@ -261,7 +284,7 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
           </div>
         )}
 
-        {/* ── Seção de Garantia — só aparece quando há resultado final ── */}
+        {/* ── Seção de Garantia — resultado final + fotos de resolução ── */}
         {garantias.length > 0 && (
           <div className="pt-2 border-t border-slate-50 space-y-4 animate-in fade-in duration-500">
             <div className="flex items-center gap-2">

@@ -167,7 +167,9 @@ function AdCardEntreCards({
 }: {
   prestadorAncora: Prestador
   categoriaFallback: string
-  mostrarAnuncio: boolean
+  // undefined = inventário da praça ainda não foi calculado (mantém
+  // skeleton); true/false = decisão já tomada para essa posição.
+  mostrarAnuncio: boolean | undefined
   cachePracaRef: React.MutableRefObject<Map<string, AnuncioComAnunciante[]>>
   sorteadoresRef: React.MutableRefObject<Map<string, () => AnuncioComAnunciante | null>>
 }) {
@@ -178,12 +180,20 @@ function AdCardEntreCards({
   const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined) // undefined = carregando
 
   useEffect(() => {
+    // Inventário da praça ainda não foi calculado — não decide nada ainda,
+    // mantém undefined (skeleton) em vez de cair prematuramente em null.
+    if (mostrarAnuncio === undefined) {
+      setAnuncio(undefined)
+      return
+    }
+
     if (!mostrarAnuncio || !chavePraca || !cidadeId || !categoriaId) {
       setAnuncio(null)
       return
     }
 
     let cancelado = false
+    setAnuncio(undefined) // reseta pra "carregando" ao trocar de praça/posição
 
     async function resolver() {
       const cache = cachePracaRef.current
@@ -214,14 +224,27 @@ function AdCardEntreCards({
     }
   }, [mostrarAnuncio, chavePraca, cidadeId, categoriaId, cachePracaRef, sorteadoresRef])
 
-  // Se essa posição não foi sorteada pra mostrar anúncio real, cai direto no
-  // fallback sem sequer buscar dados — reserva o espaço de venda pra escassez.
+  // Segue o mesmo contrato de AdCard.tsx: undefined = ainda carregando
+  // (mostra skeleton), null = confirmado sem anúncio (mostra fallback).
+  // Dois pontos podem estar "carregando" aqui: o inventário da praça ainda
+  // não foi calculado (mostrarAnuncio === undefined), ou o inventário já
+  // decidiu mostrar anúncio nesta posição mas o sorteio real ainda não
+  // resolveu (anuncio === undefined). !mostrarAnuncio (decidido false) é a
+  // única decisão definitiva-negativa e vai direto pra null.
   // AnuncioComAnunciante.tipo é `string` (constraint do banco: 'proprio'|'google'),
   // enquanto Anuncio.tipo é a união restrita 'vip'|'proprio'|'google' — TS não
   // aceita atribuição direta de string largo pra união estreita. Estrutura já
   // validada como compatível contra types/ads.ts real; cast explícito abaixo.
-  const anuncioParaExibir: Anuncio | null =
-    !mostrarAnuncio || anuncio === undefined || anuncio === null ? null : (anuncio as Anuncio)
+  const anuncioParaExibir: Anuncio | null | undefined =
+    mostrarAnuncio === undefined
+      ? undefined
+      : !mostrarAnuncio
+        ? null
+        : anuncio === undefined
+          ? undefined
+          : anuncio === null
+            ? null
+            : (anuncio as Anuncio)
 
   return <AdCard page="prestadores" anuncio={anuncioParaExibir} categoria={categoriaFallback} />
 }
@@ -236,7 +259,11 @@ function ListaConteudo() {
     usePrestadores(queryBusca, filtroHab, filtroCidNome)
   const session = useSession()
 
-  const [anunciosTopo, setAnunciosTopo] = useState<Anuncio[]>([])
+  // undefined = ainda buscando topo_busca; null = buscou e não há nenhum
+  // ativo; Anuncio = achou pelo menos um (usamos o primeiro do shuffle).
+  // Mesmo contrato de AdCard.tsx — undefined evita flash de fallback antes
+  // da resposta do Supabase chegar.
+  const [anuncioTopo, setAnuncioTopo] = useState<Anuncio | null | undefined>(undefined)
 
   // Cache em memória por praça (cidade_id::categoria_id) — evita refetch a
   // cada render/scroll enquanto o usuário permanece na mesma busca.
@@ -246,6 +273,8 @@ function ListaConteudo() {
   useEffect(() => {
     // topo_busca continua com vaga única — mantém a lógica antiga simples,
     // buscando os anúncios "topo_busca" globais e deixando o AdCard escolher.
+    let cancelado = false
+
     async function carregarAnunciosTopo() {
       const agora = new Date().toISOString()
       const { data, error } = await supabase
@@ -257,11 +286,19 @@ function ListaConteudo() {
         .or(`data_inicio.is.null,data_inicio.lte.${agora}`)
         .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`)
 
-      if (!error && data) {
-        setAnunciosTopo(shuffleArray(data as Anuncio[]))
+      if (cancelado) return
+
+      if (!error && data && data.length > 0) {
+        setAnuncioTopo(shuffleArray(data as Anuncio[])[0])
+      } else {
+        setAnuncioTopo(null)
       }
     }
     carregarAnunciosTopo()
+
+    return () => {
+      cancelado = true
+    }
   }, [])
 
   // Limpa o cache de praças quando a busca muda de fato (nova lista de
@@ -455,7 +492,7 @@ function ListaConteudo() {
                 <div className="lg:col-span-2">
                   <AdCard
                     page="lista_topo"
-                    anuncio={anunciosTopo[0] ?? null}
+                    anuncio={anuncioTopo}
                     categoria={queryBusca || filtroHab || ''}
                   />
                 </div>
@@ -471,11 +508,14 @@ function ListaConteudo() {
                   const ehPosicaoDeAnuncio = (index + 1) % 4 === 0
                   const chave = ehPosicaoDeAnuncio ? chavePracaDe(p) : null
 
-                  let mostrarAnuncio = false
+                  // undefined = praça ainda não teve o inventário calculado
+                  // (chave ausente do Map); true/false = já calculado.
+                  let mostrarAnuncio: boolean | undefined = false
                   if (ehPosicaoDeAnuncio && chave) {
                     const indiceNaPraca = contadorPorPraca.get(chave) ?? 0
                     contadorPorPraca.set(chave, indiceNaPraca + 1)
-                    mostrarAnuncio = posicoesComAnuncioPorPraca.get(chave)?.has(indiceNaPraca) ?? false
+                    const posicoesDaPraca = posicoesComAnuncioPorPraca.get(chave)
+                    mostrarAnuncio = posicoesDaPraca === undefined ? undefined : posicoesDaPraca.has(indiceNaPraca)
                   }
 
                   return (
@@ -501,20 +541,21 @@ function ListaConteudo() {
           )}
 
           {!loading && !erro && prestadoresExibidos.length === 0 && (
-            <div className="py-20 text-center flex flex-col items-center gap-5">
-              <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center border border-slate-100 shadow-inner">
-                <MapPin size={32} className="text-slate-200" />
+            <div className="py-20 lg:py-28 flex flex-col items-center justify-center text-center min-h-[50vh] lg:min-h-[55vh]">
+              <div className="w-20 h-20 lg:w-28 lg:h-28 bg-slate-50 rounded-3xl lg:rounded-[2rem] flex items-center justify-center border border-slate-100 shadow-inner mb-5 lg:mb-7">
+                <MapPin size={32} className="text-slate-200 lg:hidden" />
+                <MapPin size={44} className="text-slate-200 hidden lg:block" />
               </div>
-              <div>
-                <h2 className="text-base font-bold text-slate-700 mb-1">Nenhum profissional encontrado</h2>
-                <p className="text-[13px] text-slate-400 max-w-[240px] mx-auto font-medium leading-relaxed">
+              <div className="max-w-[240px] lg:max-w-sm">
+                <h2 className="text-base lg:text-xl font-bold text-slate-700 mb-1 lg:mb-2">Nenhum profissional encontrado</h2>
+                <p className="text-[13px] lg:text-[15px] text-slate-400 font-medium leading-relaxed">
                   Tente remover os filtros ou buscar por uma categoria diferente.
                 </p>
               </div>
               {filtroCidNome && (
                 <button
                   onClick={() => toggleCidade(filtroCidNome)}
-                  className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[12px] font-bold uppercase tracking-wide hover:border-blue-400 hover:text-blue-600 transition-all active:scale-95 shadow-sm"
+                  className="mt-5 lg:mt-7 px-5 lg:px-6 py-2.5 lg:py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[12px] lg:text-[13px] font-bold uppercase tracking-wide hover:border-blue-400 hover:text-blue-600 transition-all active:scale-95 shadow-sm"
                 >
                   Remover filtro de cidade
                 </button>

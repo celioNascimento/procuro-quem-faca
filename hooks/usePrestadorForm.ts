@@ -22,6 +22,7 @@ const FORM_INICIAL: PrestadorFormData = {
   origem_tipo: 'proprio',
   verificado: false,
   status: 'ativo',
+  garantia_dias: 0,
 }
 
 export function usePrestadorForm(idAtual?: number | null) {
@@ -44,6 +45,10 @@ export function usePrestadorForm(idAtual?: number | null) {
       slug: perfil.slug || formatarParaSlug(perfil.nome || ''),
       estado_sigla: perfil.estado_sigla || 'PR',
       whatsapp: aplicarMascaraWhatsapp(perfil.whatsapp || ''),
+      // garantia_dias já vem do spread de ...perfil acima quando presente
+      // no banco; explícito aqui só para cobrir perfis legados sem a
+      // coluna preenchida ainda (undefined → 0, "sem garantia").
+      garantia_dias: perfil.garantia_dias ?? 0,
     }))
     if (perfil.slug) setEditouSlugManualmente(true)
   }, [])

@@ -19,6 +19,7 @@ import { SecaoOQueVoceFaz } from '@/components/perfil/SecaoOQueVoceFaz'
 import { SecaoDadosPessoais } from '@/components/perfil/SecaoDadosPessoais'
 import { SecaoLocalizacao } from '@/components/perfil/SecaoLocalizacao'
 import { SecaoTermos } from '@/components/perfil/SecaoTermos'
+import { SecaoGarantia } from '@/components/perfil/SecaoGarantia'
 
 import { useCadastroPrestador } from '@/hooks/useCadastroPrestador'
 import { useAuth } from '@/hooks/useAuth'
@@ -230,6 +231,11 @@ function FormularioCadastro() {
                 onSlugChange={form.handleSlugChange}
                 onWhatsappChange={form.handleWhatsappChange}
                 onBioChange={(v) => form.set({ bio: v })}
+              />
+
+              <SecaoGarantia
+                garantiaDias={form.formData.garantia_dias}
+                onChange={(dias) => form.set({ garantia_dias: dias })}
               />
 
               <SecaoLocalizacao

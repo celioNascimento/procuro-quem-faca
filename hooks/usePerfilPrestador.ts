@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { insertLog } from '@/lib/db/logs'
-import type { PerfilData, ProjetoPerfil, FotoProjeto, GarantiaPublica } from '@/types/perfil'
+import type { PerfilData, ProjetoPerfil, FotoProjeto, GarantiaPublica, FotoGarantiaPublica } from '@/types/perfil'
 
 interface UsePerfilPrestadorReturn {
   data: PerfilData | null
@@ -28,9 +28,9 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
   const params       = useParams()
   const searchParams = useSearchParams()
 
-  const [data, setData]       = useState<PerfilData | null>(null)
+  const [data,    setData]    = useState<PerfilData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [erro, setErro]       = useState(false)
+  const [erro,    setErro]    = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -80,6 +80,46 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
 
         if (avalError) throw avalError
 
+        // Coleta IDs das garantias finalizadas para buscar fotos públicas
+        const garantiasFinalizadas = normalizarArray(prestadorRaw.portfolio_projetos)
+          .flatMap(p => normalizarArray(p.solicitacoes_garantia))
+          .filter(g => STATUS_GARANTIA_PUBLICA.includes(g.status))
+
+        const casoIds = garantiasFinalizadas.map(g => g.id)
+
+        // Busca fotos públicas de resolução de todos os casos de uma vez —
+        // uma query só em vez de N queries (uma por caso).
+        // publica=true garante que só fotos já promovidas para o bucket
+        // público aparecem aqui — fotos de problema nunca são promovidas.
+        let fotosGarantiaMap: Record<string, FotoGarantiaPublica[]> = {}
+
+        if (casoIds.length > 0) {
+          const { data: fotosRaw } = await supabase
+            .from('garantia_fotos')
+            .select('id, caso_id, url_foto, ordem, legenda, fase')
+            .in('caso_id', casoIds)
+            .eq('publica', true)
+            .eq('fase', 'resolucao')
+            .order('ordem', { ascending: true })
+            .abortSignal(controller.signal)
+
+          // Agrupa por caso_id para lookup rápido no .map() abaixo
+          fotosGarantiaMap = (fotosRaw ?? []).reduce<Record<string, FotoGarantiaPublica[]>>(
+            (acc, f) => {
+              if (!acc[f.caso_id]) acc[f.caso_id] = []
+              acc[f.caso_id].push({
+                id: f.id,
+                url_foto: f.url_foto,
+                ordem: f.ordem,
+                legenda: f.legenda,
+                fase: f.fase,
+              })
+              return acc
+            },
+            {},
+          )
+        }
+
         const projetos: ProjetoPerfil[] = normalizarArray(prestadorRaw.portfolio_projetos)
           .filter(p => ['em_execucao', 'finalizado'].includes(p.status))
           .map(p => ({
@@ -96,7 +136,12 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
             // Filtra só garantias com resultado final — casos em aberto
             // não são relevantes para o visitante e preservam privacidade.
             solicitacoes_garantia: normalizarArray<GarantiaPublica>(p.solicitacoes_garantia)
-              .filter(g => STATUS_GARANTIA_PUBLICA.includes(g.status)),
+              .filter(g => STATUS_GARANTIA_PUBLICA.includes(g.status))
+              .map(g => ({
+                ...g,
+                // Injeta fotos públicas de resolução agrupadas por caso_id
+                fotos: fotosGarantiaMap[g.id] ?? [],
+              })),
           }))
           .sort((a, b) => {
             if (a.status === b.status)
@@ -117,7 +162,6 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
             detalhes: { origem: urlRetorno },
             entidadeId: String(prestadorRaw.id),
           })
-
           if (typeof window !== 'undefined') {
             const url = new URL(window.location.href)
             url.searchParams.delete('from')

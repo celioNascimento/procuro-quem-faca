@@ -30,14 +30,37 @@ export async function middleware(request: NextRequest) {
   // 1. Definição das Rotas
   const isDashboard = url.pathname.startsWith('/dashboard')
   const isCadastro = url.pathname.startsWith('/cadastro')
+  const isAcompanhamento = url.pathname.startsWith('/acompanhamento')
+  const isAvaliar = url.pathname.startsWith('/avaliar')
   const isLogin = url.pathname === '/login'
   const isAdmin = url.pathname.startsWith('/admin')
   const isAdminLogin = url.pathname === '/admin/login'
 
   // 2. Lógica de Redirecionamento
 
-  // REGRA A: Proteção de Áreas Privadas (Dashboard e Cadastro)
-  if (!user && (isDashboard || isCadastro)) {
+  // REGRA A: Proteção de Áreas Privadas (Dashboard, Cadastro, Acompanhamento e Avaliar)
+  // Acompanhamento e Avaliar passaram a exigir login para viabilizar o fluxo
+  // de garantia (que precisa de cliente_user_id) e a transição suave entre
+  // as duas telas (Avaliar → botão "Acompanhamento e Garantia" → Acompanhamento,
+  // sem barreira de login no meio do caminho).
+  // Trade-off consciente: quem recebe o link sem nunca ter criado conta
+  // agora precisa logar antes de ver o progresso do serviço ou avaliar,
+  // mesmo sem interesse em garantia.
+  //
+  // Usa "next" (não um parâmetro novo) porque é o mesmo nome já lido por
+  // app/auth/callback/route.ts — next é aplicado ali com prioridade sobre
+  // qualquer lógica de role, então volta certinho para a página original
+  // após o OAuth. A tela /login (e-mail/senha) hoje NÃO lê next — ela é a
+  // "Área do Profissional" e sempre resolve via resolverDestinoPosLogin.
+  // Um cliente comum autenticando por e-mail/senha nesta tela cairá em
+  // /dashboard ou /cadastro, não de volta em /acompanhamento. Isso é uma
+  // limitação existente da tela de login, não introduzida por esta mudança.
+  if (!user && (isDashboard || isCadastro || isAcompanhamento || isAvaliar)) {
+    if (isAcompanhamento || isAvaliar) {
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('next', url.pathname + url.search)
+      return NextResponse.redirect(loginUrl)
+    }
     return NextResponse.redirect(new URL('/login', request.url))
   }
 

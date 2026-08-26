@@ -69,6 +69,7 @@ export function AdCardDashboard() {
         }
 
         const anunciosDaPraca = await listarAnunciosAtivosPorPraca(cidadeId, categoriaId, POSICAO)
+        
         if (!cancelado) setAnuncio(anunciosDaPraca[0] ?? null)
       } catch {
         if (!cancelado) setAnuncio(null)
@@ -84,13 +85,13 @@ export function AdCardDashboard() {
   // Registra 1 impressão assim que o anúncio real é resolvido e renderizado
   // (dedup de 30min e validação de vigência acontecem no servidor).
   useEffect(() => {
-    if (!anuncio?.id) return
-    registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'impressao')
+    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'impressao')
   }, [anuncio])
 
   function handleClick() {
-    if (!anuncio?.id) return
-    registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'clique')
+    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'clique')
   }
 
   // Enquanto resolve (undefined), não renderiza nada — evita "pulo" de
@@ -113,8 +114,11 @@ export function AdCardDashboard() {
       onClick={handleClick}
       className="relative mx-auto mb-6 block w-full max-w-4xl overflow-hidden rounded-2xl shadow-sm transition-opacity hover:opacity-95"
     >
-      <img src={anuncio.imagem_url} alt={anuncio.titulo} className="w-full object-cover object-center h-[120px] md:h-[160px] lg:h-[200px]" />
-
+      <img
+        src={anuncio.imagem_url}
+        alt={anuncio.titulo}
+        className="w-full object-cover object-center h-[120px] md:h-[160px] lg:h-[200px]"
+      />
       <div className="pointer-events-none absolute right-3 top-3 z-10">
         <span className="rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
           Publicidade

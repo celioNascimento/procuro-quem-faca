@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useSugestoes } from '@/hooks/useSugestoes'
 import { insertLog } from '@/lib/db/logs'
 import SearchForm from '@/components/home/SearchForm'
+import CTAPrestadorSkeleton from '@/components/home/CTAPrestadorSkeleton'
 import { ArrowRight, Briefcase } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -18,7 +19,7 @@ export default function Home() {
   const [busca, setBusca] = useState('')
   const [erro, setErro] = useState(false)
   const { sugestoes, carregado } = useSugestoes(busca)
-  const { session, role, prestadorStatus } = useAuth()
+  const { session, role, prestadorStatus, roleLoading } = useAuth()
 
   let hrefCTA = '/login'
   let tituloCTA = 'É prestador de serviços?'
@@ -45,6 +46,10 @@ export default function Home() {
       acaoLogCTA = 'CLIQUE_CTA_VIRAR_PRESTADOR'
     }
   }
+
+  // Só faz sentido mostrar skeleton quando HÁ sessão mas o role/status
+  // ainda não foi resolvido — sem sessão, o CTA padrão já é a resposta final.
+  const mostrarSkeletonCTA = !!session && roleLoading
 
   const temBuscaReal = busca.trim().length > 0
 
@@ -119,29 +124,33 @@ export default function Home() {
       {/* CTA para prestadores */}
       <div className="relative z-10 flex-1 flex items-end justify-center pb-12 px-6">
         <div className="w-full max-w-3xl">
-          <Link
-            href={hrefCTA}
-            onClick={() => insertLog({ acao: acaoLogCTA, entidadeTipo: 'home' })}
-            className="group flex items-center justify-between gap-3 w-full px-5 py-4 md:px-8 md:py-5 rounded-[2rem] border border-slate-200/80 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:border-blue-600 transition-all duration-300">
-                <Briefcase size={14} className="text-blue-500 group-hover:text-white transition-colors duration-300" />
+          {mostrarSkeletonCTA ? (
+            <CTAPrestadorSkeleton />
+          ) : (
+            <Link
+              href={hrefCTA}
+              onClick={() => insertLog({ acao: acaoLogCTA, entidadeTipo: 'home' })}
+              className="group flex items-center justify-between gap-3 w-full px-5 py-4 md:px-8 md:py-5 rounded-[2rem] border border-slate-200/80 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:border-blue-600 transition-all duration-300">
+                  <Briefcase size={14} className="text-blue-500 group-hover:text-white transition-colors duration-300" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400 mb-0.5 transition-all">
+                    {tituloCTA}
+                  </p>
+                  <p className="text-xs md:text-sm font-bold text-slate-700 transition-all">
+                    {subtituloCTA}
+                  </p>
+                </div>
               </div>
-              <div className="text-left">
-                <p className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400 mb-0.5 transition-all">
-                  {tituloCTA}
-                </p>
-                <p className="text-xs md:text-sm font-bold text-slate-700 transition-all">
-                  {subtituloCTA}
-                </p>
-              </div>
-            </div>
-            <ArrowRight
-              size={16}
-              className="text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300 shrink-0"
-            />
-          </Link>
+              <ArrowRight
+                size={16}
+                className="text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300 shrink-0"
+              />
+            </Link>
+          )}
         </div>
       </div>
 

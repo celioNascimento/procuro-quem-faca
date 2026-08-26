@@ -1,4 +1,4 @@
-//components/acompanhamento/LinhaDeTempo.tsx
+// components/acompanhamento/LinhaDeTempo.tsx
 
 import { Camera, MessageSquare } from 'lucide-react'
 import type { FotoOrdenada, Comentario } from '@/types/avaliacao'
@@ -16,6 +16,7 @@ type Props = {
   labelEtapaAtual: string
   status?: string
   onFotoClick: (foto: FotoOrdenada) => void
+  temGarantiaAtiva?: boolean
 }
 
 export function LinhaDeTempo({
@@ -24,13 +25,30 @@ export function LinhaDeTempo({
   labelEtapaAtual,
   status,
   onFotoClick,
+  temGarantiaAtiva = false,
 }: Props) {
   const instrucao =
     fotosOrdenadas.length === 0
       ? 'Aguardando o prestador iniciar os registros.'
       : fotosOrdenadas.length === 3
-      ? 'Todos os registros enviados. Avalie abaixo para concluir.'
+      ? temGarantiaAtiva
+        ? 'Serviço concluído. Acompanhe o caso de garantia abaixo.'
+        : 'Todos os registros enviados. Avalie abaixo para concluir.'
       : `${3 - fotosOrdenadas.length} registro${3 - fotosOrdenadas.length > 1 ? 's' : ''} pendente${3 - fotosOrdenadas.length > 1 ? 's' : ''} — toque nas fotos para discutir.`
+
+  // Em garantia, o badge principal vira neutro/cinza — o serviço está
+  // concluído e o que está ativo agora é o fluxo de garantia (seção abaixo).
+  const badgeClass = temGarantiaAtiva
+    ? 'bg-slate-50 text-slate-400 border-slate-100'
+    : status === 'finalizado'
+    ? 'bg-green-50 text-green-600 border-green-100'
+    : status === 'em_execucao'
+    ? 'bg-blue-50 text-blue-600 border-blue-100 animate-pulse'
+    : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+
+  // Label do badge também muda em garantia — "Serviço concluído" fica
+  // confuso quando há um caso de garantia ativo logo abaixo.
+  const badgeLabel = temGarantiaAtiva ? 'Registros concluídos' : labelEtapaAtual
 
   const nos: TimelineNo[] = ETAPAS.map((etapa) => {
     const foto = fotosOrdenadas.find((f) => f.ordem === etapa.ordem)
@@ -108,16 +126,10 @@ export function LinhaDeTempo({
     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-5">
       <div className="flex items-center justify-between">
         <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-          Progresso da Obra
+          {temGarantiaAtiva ? 'Registros do Serviço' : 'Progresso da Obra'}
         </h3>
-        <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border ${
-          status === 'finalizado'
-           ? 'bg-green-50 text-green-600 border-green-100'
-           : status === 'em_execucao'
-           ? 'bg-blue-50 text-blue-600 border-blue-100 animate-pulse'
-           : 'bg-yellow-50 text-yellow-600 border-yellow-100'
-        }`}>
-          {labelEtapaAtual}
+        <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border ${badgeClass}`}>
+          {badgeLabel}
         </span>
       </div>
 

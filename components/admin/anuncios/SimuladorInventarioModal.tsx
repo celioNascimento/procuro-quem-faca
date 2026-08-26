@@ -3,18 +3,20 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { X, Search, CheckCircle2, Clock, AlertCircle, TrendingUp } from 'lucide-react'
+import { X, Search, CheckCircle2, Clock, AlertCircle, TrendingUp, ArrowRight } from 'lucide-react'
 import { useSegmentacaoReferencia } from '@/hooks/useSegmentacaoReferencia'
 import { verificarInventarioSegmento } from '@/lib/services/adminAnuncios.service'
+import type { PreenchimentoLojista } from './AnuncioLojistaForm'
 
 const inputClass = 'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-800 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50 disabled:text-zinc-300'
 const labelClass = 'text-[10px] font-medium text-zinc-400 uppercase tracking-widest block mb-1.5'
 
 type Props = {
   onClose: () => void
+  onUsarNoCadastro: (dados: PreenchimentoLojista) => void
 }
 
-export function SimuladorInventarioModal({ onClose }: Props) {
+export function SimuladorInventarioModal({ onClose, onUsarNoCadastro }: Props) {
   const { estados, grupos, buscarRegioes, buscarCidades, buscarCategorias } = useSegmentacaoReferencia()
   
   const [posicao, setPosicao] = useState('entre_cards')
@@ -72,6 +74,13 @@ export function SimuladorInventarioModal({ onClose }: Props) {
     return () => { isMounted = false }
   }, [cidadeId, categoriaId, posicao])
 
+  const podeUsarNoCadastro = !!(resultado && !resultado.loading && resultado.vagasDisponiveis > 0)
+
+  function usarNoCadastro() {
+    if (!podeUsarNoCadastro) return
+    onUsarNoCadastro({ posicao, estadoSigla, regiaoId, cidadeId, grupoId, categoriaId })
+  }
+
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl overflow-hidden">
@@ -127,7 +136,7 @@ export function SimuladorInventarioModal({ onClose }: Props) {
               </select>
             </div>
             <div>
-               <label className={labelClass}>Grupo (Filtro auxiliar)</label>
+               <label className={labelClass}>Grupo</label>
                <select className={inputClass} value={grupoId} onChange={e => { setGrupoId(e.target.value); setCategoriaId('') }}>
                  <option value="">Selecione</option>
                  {grupos.map(g => <option key={g.id} value={g.id}>{g.nome}</option>)}
@@ -174,13 +183,21 @@ export function SimuladorInventarioModal({ onClose }: Props) {
                   <p className="text-[11px] text-zinc-500 mt-1">São necessários ao menos 4 prestadores para abrir 1 vaga de anúncio nesta categoria.</p>
                 </div>
               ) : resultado.vagasDisponiveis > 0 ? (
-                <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                  <div className="bg-emerald-100 text-emerald-600 p-2 rounded-xl shrink-0"><CheckCircle2 size={20} /></div>
-                  <div>
-                    <p className="text-[13px] font-bold text-emerald-700">Espaço liberado para venda!</p>
-                    <p className="text-[11px] font-medium text-emerald-600/80 mt-0.5">Existem {resultado.vagasDisponiveis} vagas livres neste momento.</p>
+                <>
+                  <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                    <div className="bg-emerald-100 text-emerald-600 p-2 rounded-xl shrink-0"><CheckCircle2 size={20} /></div>
+                    <div>
+                      <p className="text-[13px] font-bold text-emerald-700">Espaço liberado para venda!</p>
+                      <p className="text-[11px] font-medium text-emerald-600/80 mt-0.5">Existem {resultado.vagasDisponiveis} vagas livres neste momento.</p>
+                    </div>
                   </div>
-                </div>
+                  <button
+                    onClick={usarNoCadastro}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 text-[12px] font-semibold text-white hover:bg-zinc-800 transition-colors"
+                  >
+                    Usar esses dados no cadastro <ArrowRight size={14} />
+                  </button>
+                </>
               ) : (
                 <div className="flex flex-col gap-2 p-4 bg-amber-50 rounded-2xl border border-amber-100">
                   <div className="flex items-center gap-3">

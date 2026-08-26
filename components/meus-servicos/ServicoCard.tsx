@@ -1,7 +1,6 @@
 //components/meus-servicos/ServicoCard.tsx
-
 'use client'
-import { Clock, User, Phone, ChevronRight, ZoomIn, Briefcase, CheckCircle2 } from 'lucide-react'
+import { Clock, User, Phone, ChevronRight, ZoomIn, Briefcase, CheckCircle2, ShieldAlert } from 'lucide-react'
 import { Servico } from '@/types/painel'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 
@@ -10,14 +9,20 @@ interface Props {
   onZoom: (url: string) => void
   onAceitar: (servico: Servico) => void
   hidePrestador?: boolean
-  modo?: 'pendente' | 'andamento' | 'concluido'
+  modo?: 'pendente' | 'andamento' | 'concluido' | 'garantia'
+  // Sinaliza garantia ativa independente da aba/modo atual — exibe a tag
+  // laranja sobre a foto sem alterar o estilo geral do card. Quando
+  // modo === 'garantia' já aplica o estilo completo, então a tag extra
+  // só é renderizada quando modo !== 'garantia'.
+  temGarantiaAtiva?: boolean
 }
 
 // Label e cor do badge da foto variam conforme o status
 const BADGE = {
-  pendente: { texto: 'Aguardando Início', cor: 'text-blue-600' },
-  andamento: { texto: 'Em Andamento', cor: 'text-amber-500' },
-  concluido: { texto: 'Concluído', cor: 'text-emerald-600' },
+  pendente:  { texto: 'Aguardando Início', cor: 'text-blue-600'    },
+  andamento: { texto: 'Em Andamento',      cor: 'text-amber-500'   },
+  concluido: { texto: 'Concluído',         cor: 'text-emerald-600' },
+  garantia:  { texto: 'Em Garantia',       cor: 'text-orange-600'  },
 }
 
 export default function ServicoCard({
@@ -26,9 +31,15 @@ export default function ServicoCard({
   onAceitar,
   hidePrestador = false,
   modo = 'pendente',
+  temGarantiaAtiva = false,
 }: Props) {
   const fotoInicio = servico.portfolio_fotos?.find(f => f.ordem === 1)
   const badge = BADGE[modo]
+
+  // Tag de garantia aparece sobre a foto quando o projeto tem garantia ativa
+  // mas está sendo exibido fora da aba Garantia (modo !== 'garantia').
+  // Na aba Garantia o card já usa modo='garantia' com badge próprio — sem duplicar.
+  const mostrarTagGarantia = temGarantiaAtiva && modo !== 'garantia'
 
   return (
     <div className="bg-white rounded-[2.5rem] p-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-50 group">
@@ -78,16 +89,28 @@ export default function ServicoCard({
               alt="Foto do serviço"
             />
 
-            {/* Badge de status sobre a foto */}
+            {/* Badge de status sobre a foto (canto superior esquerdo) */}
             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
               <p className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 ${badge.cor}`}>
-                {modo === 'concluido'
-                  ? <CheckCircle2 size={10} />
-                  : <Clock size={10} />
-                }
+                {modo === 'concluido'  && <CheckCircle2 size={10} />}
+                {modo === 'garantia'   && <ShieldAlert  size={10} />}
+                {(modo === 'pendente' || modo === 'andamento') && <Clock size={10} />}
                 {badge.texto}
               </p>
             </div>
+
+            {/* Tag de garantia ativa — aparece quando o projeto tem garantia
+                mas está sendo exibido fora da aba Garantia (canto superior direito).
+                Permite ao cliente identificar o projeto com garantia em qualquer aba
+                sem sobrescrever o badge de status principal. */}
+            {mostrarTagGarantia && (
+              <div className="absolute top-4 right-4 bg-orange-500/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
+                <p className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white">
+                  <ShieldAlert size={10} />
+                  Garantia
+                </p>
+              </div>
+            )}
 
             {/* Overlay de zoom no hover */}
             <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -100,6 +123,16 @@ export default function ServicoCard({
           <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-300">
             <Briefcase size={32} opacity={0.5} />
             <span className="text-[10px] font-bold uppercase tracking-widest">Sem foto de capa</span>
+
+            {/* Tag de garantia mesmo sem foto de capa */}
+            {mostrarTagGarantia && (
+              <div className="absolute top-4 right-4 bg-orange-500/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
+                <p className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white">
+                  <ShieldAlert size={10} />
+                  Garantia
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -151,13 +184,32 @@ export default function ServicoCard({
             </button>
           )}
 
-          {/* CONCLUÍDO — Ver avaliação */}
+          {/* CONCLUÍDO — botão muda de cor se tiver garantia ativa,
+              sinalizando que há algo pendente além da avaliação. */}
           {modo === 'concluido' && (
             <button
               onClick={() => onAceitar(servico)}
-              className="flex-1 bg-emerald-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 hover:bg-emerald-700 active:scale-[0.98] transition-all"
+              className={`flex-1 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${
+                mostrarTagGarantia
+                  ? 'bg-orange-500 hover:bg-orange-600 shadow-lg shadow-orange-100'
+                  : 'bg-emerald-600 hover:bg-emerald-700'
+              }`}
             >
-              Ver avaliação <ChevronRight size={16} />
+              {mostrarTagGarantia ? (
+                <><ShieldAlert size={14} /> Ver Garantia <ChevronRight size={16} /></>
+              ) : (
+                <>Ver avaliação <ChevronRight size={16} /></>
+              )}
+            </button>
+          )}
+
+          {/* GARANTIA — Ver caso de garantia (aberto ou em andamento) */}
+          {modo === 'garantia' && (
+            <button
+              onClick={() => onAceitar(servico)}
+              className="flex-1 bg-orange-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-orange-200 hover:bg-orange-700 active:scale-[0.98] transition-all"
+            >
+              Ver Garantia <ChevronRight size={16} />
             </button>
           )}
 

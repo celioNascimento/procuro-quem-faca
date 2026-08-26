@@ -16,6 +16,13 @@ export type Foto = {
   ordem: number
 }
 
+export type GarantiaResumo = {
+  id: string
+  status: string
+  origem: 'cliente' | 'prestador'
+  prazo_resposta: string | null
+}
+
 export type Projeto = {
   id: string
   titulo: string
@@ -26,6 +33,9 @@ export type Projeto = {
   cliente_whatsapp: string
   portfolio_fotos: Foto[]
   avaliacoes: { id: string }[]
+  // Join com solicitacoes_garantia — usado pelo ProjetoCard para exibir o
+  // badge "Garantia acionada" quando há caso ativo. Array vazio = sem casos.
+  solicitacoes_garantia: GarantiaResumo[]
   notifCount: number
 }
 
@@ -86,6 +96,14 @@ export function usePortfolioDashboard() {
     p => ['pendente', 'em_execucao'].includes(p.status)
   ).length
 
+  // Casos de garantia ativos, agregados por todos os projetos —
+  // usado para o alerta geral do dashboard (ex: badge no header/aba).
+  const totalGarantiasAtivas = projetos.filter(p =>
+    p.solicitacoes_garantia?.some(g =>
+      ['aguardando_aceite_cliente', 'aberta', 'respondida'].includes(g.status),
+    ),
+  ).length
+
   return {
     projetos,
     loading,
@@ -95,6 +113,7 @@ export function usePortfolioDashboard() {
     projetoParaEdicao,
     totalConcluidos,
     totalAtivos,
+    totalGarantiasAtivas,
     abrirEdicao,
     abrirNovo,
     fecharWizard,

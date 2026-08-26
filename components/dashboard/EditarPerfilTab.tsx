@@ -19,6 +19,7 @@ import { FotoUpload } from '@/components/perfil/FotoUpload'
 import { SecaoOQueVoceFaz } from '@/components/perfil/SecaoOQueVoceFaz'
 import { SecaoDadosPessoais } from '@/components/perfil/SecaoDadosPessoais'
 import { SecaoLocalizacao } from '@/components/perfil/SecaoLocalizacao'
+import { SecaoGarantia } from '@/components/perfil/SecaoGarantia'
 
 // Hooks e Utils (Laboratório)
 import { usePrestadorForm } from '@/hooks/usePrestadorForm'
@@ -122,12 +123,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
     setUploading(false)
   }
 
-  // FIX: antes só removia a foto do storage e a linha em `prestadores`,
-  // sem chamar /api/delete-account — o usuário continuava existindo em
-  // auth.users, diferente do que já acontecia (corretamente) do lado do
-  // cliente em usePerfilDados.handleDeleteAccount. Alinhado agora: os dois
-  // fluxos de exclusão de conta (cliente e prestador) removem o usuário de
-  // auth.users de verdade via a mesma rota, que já usa service role.
   const handleExcluirContaTotal = async () => {
     setDeleting(true)
     setStatus('Excluindo tudo...')
@@ -301,6 +296,11 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               onSlugChange={form.handleSlugChange}
               onWhatsappChange={form.handleWhatsappChange}
               onBioChange={(v) => form.set({ bio: v })}
+            />
+
+            <SecaoGarantia
+              garantiaDias={form.formData.garantia_dias}
+              onChange={(dias) => form.set({ garantia_dias: dias })}
             />
 
             <SecaoLocalizacao
