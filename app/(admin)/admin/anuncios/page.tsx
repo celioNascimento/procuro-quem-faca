@@ -48,6 +48,12 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
 type FiltroStatus = 'todos' | 'ativos' | 'rascunhos' | 'expirados'
 type Visualizacao = 'lista' | 'mapa' | 'metricas'
 
+const TABS: { id: Visualizacao; label: string; icon: React.ReactNode }[] = [
+  { id: 'lista',    label: 'Lista',         icon: <List size={13} /> },
+  { id: 'mapa',     label: 'Mapa de vagas', icon: <MapIcon size={13} /> },
+  { id: 'metricas', label: 'Métricas',      icon: <BarChart2 size={13} /> },
+]
+
 type NovoLojistaComDados = { modo: 'new_lojista'; preenchimento: PreenchimentoLojista }
 type NovoClienteComDados = { modo: 'new_cliente'; preenchimento: PreenchimentoCliente }
 type ModoEdicao =
@@ -95,9 +101,7 @@ export default function PainelAnunciosLojista() {
   const ativos = anuncios.filter(
     (a: any) => a.status && !(a.data_expiracao && new Date(a.data_expiracao) < agora)
   ).length
-
   const rascunhos = anuncios.filter((a: any) => !a.status).length
-
   const expirados = anuncios.filter(
     (a: any) => a.data_expiracao && new Date(a.data_expiracao) < agora
   ).length
@@ -155,6 +159,7 @@ export default function PainelAnunciosLojista() {
         </div>
         {!editando && (
           <div className="flex items-center gap-2">
+            {/* Consultar */}
             <div className="relative">
               <button
                 onClick={() => setMenuConsultarAberto(!menuConsultarAberto)}
@@ -162,7 +167,6 @@ export default function PainelAnunciosLojista() {
               >
                 <Search size={15} /> Consultar <ChevronDown size={14} className={`transition-transform ${menuConsultarAberto ? 'rotate-180' : ''}`} />
               </button>
-
               <AnimatePresence>
                 {menuConsultarAberto && (
                   <>
@@ -199,6 +203,7 @@ export default function PainelAnunciosLojista() {
               </AnimatePresence>
             </div>
 
+            {/* Novo anúncio */}
             <div className="relative">
               <button
                 onClick={() => setMenuNovoAberto(!menuNovoAberto)}
@@ -206,7 +211,6 @@ export default function PainelAnunciosLojista() {
               >
                 <Plus size={15} /> Novo anúncio <ChevronDown size={14} className={`transition-transform ${menuNovoAberto ? 'rotate-180' : ''}`} />
               </button>
-
               <AnimatePresence>
                 {menuNovoAberto && (
                   <>
@@ -240,6 +244,7 @@ export default function PainelAnunciosLojista() {
         )}
       </header>
 
+      {/* Cards de resumo */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 pt-6">
         <div className="p-4 md:p-5 rounded-2xl border border-zinc-100 bg-white">
           <p className={`${labelClass} mb-2`}>Cadastrados</p>
@@ -261,71 +266,54 @@ export default function PainelAnunciosLojista() {
         </div>
       </section>
 
-      {/* Tabs de visualização */}
+      {/* Abas de navegação */}
       {!editando && (
-        <div className="flex items-center gap-2 pt-6">
-          <button
-            onClick={() => setVisualizacao('lista')}
-            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors ${
-              visualizacao === 'lista' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-            }`}
-          >
-            <List size={14} /> Lista
-          </button>
-          <button
-            onClick={() => setVisualizacao('mapa')}
-            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors ${
-              visualizacao === 'mapa' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-            }`}
-          >
-            <MapIcon size={14} /> Mapa de vagas
-          </button>
-          <button
-            onClick={() => setVisualizacao('metricas')}
-            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors ${
-              visualizacao === 'metricas' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-            }`}
-          >
-            <BarChart2 size={14} /> Métricas
-          </button>
+        <div className="mt-8 border-b border-zinc-100">
+          <nav className="flex gap-0 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {TABS.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setVisualizacao(tab.id)}
+                className={`relative flex items-center gap-1.5 px-4 py-3 text-[12px] font-semibold whitespace-nowrap transition-colors ${
+                  visualizacao === tab.id
+                    ? 'text-zinc-900'
+                    : 'text-zinc-400 hover:text-zinc-600'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+                {visualizacao === tab.id && (
+                  <motion.div
+                    layoutId="tab-indicator"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 rounded-full"
+                    transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                  />
+                )}
+              </button>
+            ))}
+          </nav>
         </div>
       )}
 
-      {/* Filtros — só na lista */}
+      {/* Filtros de status — só na aba Lista */}
       {!editando && visualizacao === 'lista' && (
-        <div className="flex items-center gap-2 pt-3 overflow-x-auto pb-1">
-          <button
-            onClick={() => setFiltroStatus('todos')}
-            className={`rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors shrink-0 ${
-              filtroStatus === 'todos' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-            }`}
-          >
-            Todos ({anuncios.length})
-          </button>
-          <button
-            onClick={() => setFiltroStatus('ativos')}
-            className={`rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors shrink-0 ${
-              filtroStatus === 'ativos' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-            }`}
-          >
-            Ativos ({ativos})
-          </button>
-          <button
-            onClick={() => setFiltroStatus('rascunhos')}
-            className={`rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors shrink-0 ${
-              filtroStatus === 'rascunhos' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-            }`}
-          >
-            Rascunhos ({rascunhos})
-          </button>
-          <button
-            onClick={() => setFiltroStatus('expirados')}
-            className={`rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors shrink-0 ${
-              filtroStatus === 'expirados' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-            }`}
-          >
-            Expirados ({expirados})
-          </button>
+        <div className="flex items-center gap-2 pt-4 overflow-x-auto pb-1">
+          {([
+            { id: 'todos',     label: `Todos (${anuncios.length})` },
+            { id: 'ativos',    label: `Ativos (${ativos})` },
+            { id: 'rascunhos', label: `Rascunhos (${rascunhos})` },
+            { id: 'expirados', label: `Expirados (${expirados})` },
+          ] as const).map(f => (
+            <button
+              key={f.id}
+              onClick={() => setFiltroStatus(f.id)}
+              className={`rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors shrink-0 ${
+                filtroStatus === f.id ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
       )}
 
@@ -342,6 +330,7 @@ export default function PainelAnunciosLojista() {
         )}
       </AnimatePresence>
 
+      {/* Formulários */}
       {editando && (
         <div className="mt-6">
           {isFormCliente ? (
@@ -362,8 +351,9 @@ export default function PainelAnunciosLojista() {
         </div>
       )}
 
+      {/* Conteúdo das abas */}
       {!editando && visualizacao === 'lista' && (
-        <div className="mt-6">
+        <div className="mt-4">
           <AnuncioLojistaLista
             anuncios={anunciosFiltrados}
             loading={loading}
@@ -384,6 +374,7 @@ export default function PainelAnunciosLojista() {
         <MetricasAnuncios />
       )}
 
+      {/* Modais */}
       {simuladorAberto && (
         <SimuladorInventarioModal
           onClose={() => setSimuladorAberto(false)}
