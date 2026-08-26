@@ -19,10 +19,10 @@ const FALLBACK_PADRAO: AdFallback = {
   href: () => '/painel/perfil',
 }
 
-export function AdCardPainelCliente({ 
-  servicos, 
-  loading = false 
-}: { 
+export function AdCardPainelCliente({
+  servicos,
+  loading = false,
+}: {
   servicos: ClienteServico[]
   loading?: boolean
 }) {
@@ -59,7 +59,7 @@ export function AdCardPainelCliente({
         }
 
         const agora = new Date().toISOString()
-        
+
         const { data: anunciosDaPraca } = await supabase
           .from('anuncios_segmentacoes')
           .select(`
@@ -80,6 +80,8 @@ export function AdCardPainelCliente({
         if (!cancelado) {
           if (anunciosDaPraca && anunciosDaPraca.length > 0) {
             const anuncioEncontrado = anunciosDaPraca[0].anuncios as any
+            // id da linha de anuncios_segmentacoes — necessário para atribuir
+            // a métrica à praça correta em registrarMetricaAnuncio.
             anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
             setAnuncio(anuncioEncontrado as AnuncioComAnunciante)
           } else {
@@ -103,13 +105,13 @@ export function AdCardPainelCliente({
   }, [servicos, loading])
 
   useEffect(() => {
-    if (!anuncio?.id) return
-    registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'impressao')
+    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'impressao')
   }, [anuncio])
 
   function handleClick() {
-    if (!anuncio?.id) return
-    registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'clique')
+    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'clique')
   }
 
   return (
@@ -128,10 +130,10 @@ export function AdCardPainelCliente({
           onClick={handleClick}
           className="relative block w-full h-[90px] md:h-[120px] lg:h-[140px] overflow-hidden rounded-2xl shadow-sm hover:opacity-95 transition-opacity"
         >
-          <img 
-            src={anuncio.imagem_url} 
-            alt={anuncio.titulo} 
-            className="w-full h-full object-cover object-center" 
+          <img
+            src={anuncio.imagem_url}
+            alt={anuncio.titulo}
+            className="w-full h-full object-cover object-center"
           />
           <div className="pointer-events-none absolute right-3 top-3 z-10">
             <span className="rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
