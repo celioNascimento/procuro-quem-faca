@@ -79,10 +79,8 @@ export async function atualizarAnuncio(
       throw new Error('É necessária ao menos uma segmentação (estado, região, cidade, grupo e categoria).')
     }
 
-    // 1. Isola os IDs das segmentações que já existem para mantê-los intactos (preservando métricas)
     const idsParaManter = novasSegmentacoes.map((s) => s.id).filter(Boolean) as string[]
 
-    // 2. Remove estritamente as segmentações que o usuário apagou no formulário
     if (idsParaManter.length > 0) {
       const { error: erroDelete } = await supabase
         .from('anuncios_segmentacoes')
@@ -95,7 +93,6 @@ export async function atualizarAnuncio(
       if (erroDelete) throw erroDelete
     }
 
-    // 3. UPSERT: Atualiza as que já existem (mantendo o ID) e insere apenas as novas (evitando quebra de RLS)
     const upsertData = novasSegmentacoes.map((s) => {
       const base = {
         anuncio_id: id,
@@ -127,9 +124,12 @@ export async function excluirAnuncio(id: string) {
   if (error) throw error
 }
 
+// Lê da view anuncios_com_metricas em vez da tabela anuncios diretamente.
+// A view expõe todas as colunas de anuncios + impressoes e cliques calculados
+// em tempo real via SUM das métricas diárias — eliminando a coluna estática.
 export async function listarAnuncios(): Promise<AnuncioComAnunciante[]> {
   const { data, error } = await supabase
-    .from('anuncios')
+    .from('anuncios_com_metricas')
     .select('*, anunciantes(id, razao_social, whatsapp), anuncios_segmentacoes(*)')
     .order('created_at', { ascending: false })
 
@@ -221,9 +221,6 @@ async function contarAnunciosSobrepostosNaPraca(
   dataExpiracaoCandidato: string | null,
   excluirAnuncioId?: string
 ): Promise<{ ocupados: number; anunciosSobrepostos: AnuncioPeriodo[] }> {
-  // Contagem de anúncios concorrentes na mesma praça: usa categoria_id exato,
-  // já que a segmentação do anúncio é escolhida via select estruturado no
-  // formulário (não é busca textual) — não deve seguir a lógica de busca.
   const { data, error } = await supabase
     .from('anuncios_segmentacoes')
     .select(`anuncios!inner(id, data_inicio, data_expiracao)`)
@@ -251,13 +248,6 @@ async function contarAnunciosSobrepostosNaPraca(
   return { ocupados: anunciosSobrepostos.length, anunciosSobrepostos }
 }
 
-// Conta prestadores ativos de uma praça (cidade+categoria) usando exatamente
-// a mesma lógica de match da página de busca pública (nome + categoria +
-// habilidades + cidade, ver lib/buscaUtils.tsx), para que o inventário de
-// vagas de anúncio reflita fielmente quem aparece nos resultados de busca.
-// Isso é intencionalmente mais amplo que um filtro estrito por categoria_id:
-// um prestador de outra categoria principal que liste a habilidade também
-// conta aqui, pois também aparece nos resultados dessa busca.
 async function contarPrestadoresDaPraca(cidadeId: string, categoriaId: string): Promise<number> {
   const { data: categoria, error: erroCategoria } = await supabase
     .from('categorias')
@@ -277,9 +267,6 @@ async function contarPrestadoresDaPraca(cidadeId: string, categoriaId: string): 
   if (erroPrestadores) throw erroPrestadores
   if (!prestadores) return 0
 
-  // filtrarPrestadores espera p.categoria como string (não objeto aninhado)
-  // e p.cidades como objeto com .nome — normaliza pro mesmo shape usado em
-  // usePrestadores.ts antes de aplicar o filtro.
   const normalizados = prestadores.map((p: any) => ({
     ...p,
     categoria: p.categoria?.nome || '',
@@ -421,14 +408,14 @@ export async function listarAnunciosAtivosPorPraca(
 
   const vistos = new Set<string>()
   const anuncios: AnuncioComAnunciante[] = []
-  
+
   for (const row of data ?? []) {
     const a = (row as any).anuncios
     if (!a || vistos.has(a.id)) continue
     vistos.add(a.id)
-    
+
     a.segmentacao_id_ativa = (row as any).id
-    
+
     anuncios.push(a)
   }
 
@@ -444,21 +431,13 @@ export async function registrarMetricaAnuncio(
     fetch('/api/anuncios/metricas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ anuncioId, segmentacaoId, tipo })
+      body: JSON.stringify({ anuncioId, segmentacaoId, tipo }),
     }).catch((err) => console.error('Erro silencioso ao registrar métrica:', err))
   } catch (error) {
     console.error('Falha ao tentar registrar a métrica do anúncio:', error)
   }
 }
 
-// ── ADIÇÃO em lib/services/adminAnuncios.service.ts ──────────────────────
-// Cole este bloco no final do arquivo existente (após registrarMetricaAnuncio).
-// Nenhuma função já existente foi alterada.
-
-// Verifica inventário de anúncios do Painel do Cliente (dashboard_cliente).
-// Diferente de verificarInventarioSegmento: essa posição segmenta só por
-// cidade (sem categoria — ver AdCardPainelCliente.tsx), vaga única fixa,
-// igual ao padrão de POSICOES_VAGA_FIXA mas sem exigir categoria_id.
 export async function verificarInventarioCliente(
   cidadeId: string,
   excluirAnuncioId?: string,
@@ -512,9 +491,6 @@ export async function verificarInventarioCliente(
   }
 }
 
-// Validação equivalente a validarSegmentacoesContraInventario, mas para o
-// fluxo do AnuncioClienteForm: segmentações só têm estadoSigla/regiaoId/
-// cidadeId (sem grupoId/categoriaId). Recebe uma lista simplificada.
 export async function validarSegmentacoesClienteContraInventario(
   cidadesIds: string[],
   anuncioIdExistente?: string | null,
