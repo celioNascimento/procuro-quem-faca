@@ -43,12 +43,16 @@ export function AdCardDashboard() {
           return
         }
 
-        // listarAnunciosAtivosPorPraca já seta segmentacao_id_ativa em cada
-        // anúncio retornado — necessário para registrarMetricaAnuncio funcionar.
         const anunciosDaPraca = await listarAnunciosAtivosPorPraca(cidadeId, categoriaId, POSICAO)
 
+        // Log temporário para diagnosticar segmentacao_id_ativa
+        console.log('[AdCardDashboard] anuncios resolvidos:', JSON.stringify(
+          anunciosDaPraca.map(a => ({ id: a.id, segmentacao_id_ativa: (a as any).segmentacao_id_ativa }))
+        ))
+
         if (!cancelado) setAnuncio(anunciosDaPraca[0] ?? null)
-      } catch {
+      } catch (err) {
+        console.error('[AdCardDashboard] erro ao carregar:', err)
         if (!cancelado) setAnuncio(null)
       }
     }
@@ -58,13 +62,14 @@ export function AdCardDashboard() {
   }, [])
 
   useEffect(() => {
-    if (!anuncio?.id || !anuncio?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'impressao')
+    console.log('[AdCardDashboard] impressao — id:', anuncio?.id, 'seg:', (anuncio as any)?.segmentacao_id_ativa)
+    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'impressao')
   }, [anuncio])
 
   function handleClick() {
-    if (!anuncio?.id || !anuncio?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, anuncio.segmentacao_id_ativa, 'clique')
+    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'clique')
   }
 
   if (anuncio === undefined) return null
