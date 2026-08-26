@@ -1,5 +1,6 @@
 // types/perfil.ts
 
+import { AvaliacaoPerfil } from './avaliacao'
 import type { Prestador } from './prestador'
 export type { AvaliacaoPerfil } from './avaliacao'
 
@@ -54,5 +55,6 @@ export interface PrestadorPerfil extends Omit<Prestador, 'cidades' | 'categorias
 export interface PerfilData {
   prestador: PrestadorPerfil
   projetos: ProjetoPerfil[]
+  avaliacoes: AvaliacaoPerfil[] // <- Adicionado aqui
   urlRetorno: string
 }
