@@ -387,6 +387,7 @@ export async function listarAnunciosAtivosPorPraca(
   const { data, error } = await supabase
     .from('anuncios_segmentacoes')
     .select(`
+      id,
       anuncios!inner(
         *,
         anunciantes(id, razao_social, whatsapp)
@@ -410,11 +411,15 @@ export async function listarAnunciosAtivosPorPraca(
   const anuncios: AnuncioComAnunciante[] = []
 
   for (const row of data ?? []) {
-    const a = (row as any).anuncios
+    const r = row as any
+    const a = r.anuncios
     if (!a || vistos.has(a.id)) continue
+    vistos.has(a.id)
     vistos.add(a.id)
 
-    a.segmentacao_id_ativa = (row as any).id
+    // r.id é o id da linha de anuncios_segmentacoes (praça exata do match).
+    // Necessário para atribuir a métrica à segmentação correta.
+    a.segmentacao_id_ativa = r.id
 
     anuncios.push(a)
   }
