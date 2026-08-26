@@ -3,12 +3,13 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, AlertCircle, Megaphone, Copy, Check, Search, ChevronDown, Users, List, Map as MapIcon } from 'lucide-react'
+import { Plus, AlertCircle, Megaphone, Copy, Check, Search, ChevronDown, Users, List, Map as MapIcon, BarChart2 } from 'lucide-react'
 import { useAdminAnuncios } from '@/hooks/useAdminAnuncios'
 import { AnuncioLojistaForm, type AnuncioLojistaFormValues, type PreenchimentoLojista } from '@/components/admin/anuncios/AnuncioLojistaForm'
 import { AnuncioClienteForm } from '@/components/admin/anuncios/AnuncioClienteForm'
 import { AnuncioLojistaLista } from '@/components/admin/anuncios/AnuncioLojistaLista'
 import { MapaVagasPracas } from '@/components/admin/anuncios/MapaVagasPracas'
+import { MetricasAnuncios } from '@/components/admin/anuncios/MetricasAnuncios'
 import { SimuladorInventarioModal } from '@/components/admin/anuncios/SimuladorInventarioModal'
 import { SimuladorClienteModal, type PreenchimentoCliente } from '@/components/admin/anuncios/SimuladorClienteModal'
 
@@ -45,7 +46,7 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
 }
 
 type FiltroStatus = 'todos' | 'ativos' | 'rascunhos' | 'expirados'
-type Visualizacao = 'lista' | 'mapa'
+type Visualizacao = 'lista' | 'mapa' | 'metricas'
 
 type NovoLojistaComDados = { modo: 'new_lojista'; preenchimento: PreenchimentoLojista }
 type NovoClienteComDados = { modo: 'new_cliente'; preenchimento: PreenchimentoCliente }
@@ -91,7 +92,6 @@ export default function PainelAnunciosLojista() {
 
   const agora = new Date()
 
-  // "Ativo" = status true E não expirado
   const ativos = anuncios.filter(
     (a: any) => a.status && !(a.data_expiracao && new Date(a.data_expiracao) < agora)
   ).length
@@ -102,7 +102,6 @@ export default function PainelAnunciosLojista() {
     (a: any) => a.data_expiracao && new Date(a.data_expiracao) < agora
   ).length
 
-  // Aplicação do filtro selecionado
   const anunciosFiltrados = anuncios.filter((a: any) => {
     const estaExpirado = a.data_expiracao && new Date(a.data_expiracao) < agora
     if (filtroStatus === 'ativos') return a.status && !estaExpirado
@@ -262,7 +261,7 @@ export default function PainelAnunciosLojista() {
         </div>
       </section>
 
-      {/* Toggle Lista / Mapa de vagas */}
+      {/* Tabs de visualização */}
       {!editando && (
         <div className="flex items-center gap-2 pt-6">
           <button
@@ -281,10 +280,18 @@ export default function PainelAnunciosLojista() {
           >
             <MapIcon size={14} /> Mapa de vagas
           </button>
+          <button
+            onClick={() => setVisualizacao('metricas')}
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[12px] font-semibold transition-colors ${
+              visualizacao === 'metricas' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+            }`}
+          >
+            <BarChart2 size={14} /> Métricas
+          </button>
         </div>
       )}
 
-      {/* Botões de Filtro */}
+      {/* Filtros — só na lista */}
       {!editando && visualizacao === 'lista' && (
         <div className="flex items-center gap-2 pt-3 overflow-x-auto pb-1">
           <button
@@ -371,6 +378,10 @@ export default function PainelAnunciosLojista() {
         <div className="mt-6">
           <MapaVagasPracas />
         </div>
+      )}
+
+      {!editando && visualizacao === 'metricas' && (
+        <MetricasAnuncios />
       )}
 
       {simuladorAberto && (
