@@ -12,6 +12,8 @@ interface Props {
   onClose: () => void
 }
 
+// Configuração visual por status de garantia —
+// exibe o resultado de forma clara e honesta para o visitante.
 const CONFIG_GARANTIA: Record<string, {
   icon: React.ElementType
   cor: string
@@ -55,6 +57,7 @@ function GarantiaCard({ garantia }: { garantia: GarantiaPublica }) {
         {config.descricao}
       </p>
 
+      {/* Problema relatado */}
       {garantia.descricao_problema && (
         <div className="bg-white/60 rounded-xl p-3 space-y-1">
           <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
@@ -66,6 +69,7 @@ function GarantiaCard({ garantia }: { garantia: GarantiaPublica }) {
         </div>
       )}
 
+      {/* Resposta do prestador */}
       {garantia.resposta_prestador_garantia && (
         <div className="bg-white/60 rounded-xl p-3 space-y-1">
           <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
@@ -77,6 +81,7 @@ function GarantiaCard({ garantia }: { garantia: GarantiaPublica }) {
         </div>
       )}
 
+      {/* Resolução */}
       {garantia.resolucao_descricao && (
         <div className="bg-white/60 rounded-xl p-3 space-y-1">
           <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
@@ -89,7 +94,7 @@ function GarantiaCard({ garantia }: { garantia: GarantiaPublica }) {
       )}
 
       {/* Fotos de resolução — URL pública, usável direto em <img src> */}
-      {garantia.fotos.length > 0 && (
+      {garantia.fotos && garantia.fotos.length > 0 && (
         <div className="space-y-2">
           <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
             Fotos da resolução
@@ -174,8 +179,8 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
             {garantias.length > 0 && (
               <span className="flex items-center gap-0.5 ml-1">
                 <ShieldAlert size={9} className={
-                  garantias[0].status === 'resolvida'     ? 'text-green-500'  :
-                  garantias[0].status === 'sem_resposta'  ? 'text-red-400'    :
+                  garantias[0].status === 'resolvida' ? 'text-green-500' :
+                  garantias[0].status === 'sem_resposta' ? 'text-red-400' :
                   'text-slate-400'
                 } />
                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
@@ -251,6 +256,7 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
                 Avaliação do Cliente
               </span>
             </div>
+
             {projeto.avaliacoes.map(av => (
               <div key={av.id} className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-3">
@@ -278,7 +284,7 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
           </div>
         )}
 
-        {/* Seção de Garantia — resultado final + fotos de resolução */}
+        {/* ── Seção de Garantia — resultado final + fotos de resolução ── */}
         {garantias.length > 0 && (
           <div className="pt-2 border-t border-slate-50 space-y-4 animate-in fade-in duration-500">
             <div className="flex items-center gap-2">

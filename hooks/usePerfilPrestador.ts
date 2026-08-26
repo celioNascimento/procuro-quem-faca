@@ -19,6 +19,9 @@ function normalizarArray<T>(raw: T | T[] | null | undefined): T[] {
   return []
 }
 
+// Status de garantia relevantes para exibição pública —
+// casos ainda em aberto não são exibidos (preserva privacidade do processo).
+// Só o resultado final interessa ao visitante.
 const STATUS_GARANTIA_PUBLICA = ['resolvida', 'sem_resposta', 'recusada']
 
 export function usePerfilPrestador(): UsePerfilPrestadorReturn {
@@ -130,6 +133,8 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
                 indica: av.indica,
                 comentario: av.comentario ?? null,
               })),
+            // Filtra só garantias com resultado final — casos em aberto
+            // não são relevantes para o visitante e preservam privacidade.
             solicitacoes_garantia: normalizarArray<GarantiaPublica>(p.solicitacoes_garantia)
               .filter(g => STATUS_GARANTIA_PUBLICA.includes(g.status))
               .map(g => ({
