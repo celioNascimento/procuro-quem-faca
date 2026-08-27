@@ -60,37 +60,36 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
           </div>
         </div>
 
-        {/* Segunda linha: detalhes e ação */}
-        <div className="mt-auto flex flex-col gap-4 border-t border-slate-100 pt-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            {habilidades.length > 0 && (
-              <div className="flex min-h-6 flex-wrap gap-1.5">
-                {habilidades.map(hab => (
-                  <span key={hab} className="rounded-full border border-slate-100 bg-slate-50 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
-                    {hab}
-                  </span>
-                ))}
-                {extras > 0 && (
-                  <span className="px-1 py-1 text-[9px] font-semibold text-slate-400">+{extras}</span>
-                )}
+        {/* Segunda linha: habilidades (linha própria) */}
+        {habilidades.length > 0 && (
+          <div className="flex min-h-6 flex-wrap gap-1.5 border-t border-slate-100 pt-4">
+            {habilidades.map(hab => (
+              <span key={hab} className="rounded-full border border-slate-100 bg-slate-50 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+                {hab}
+              </span>
+            ))}
+            {extras > 0 && (
+              <span className="px-1 py-1 text-[9px] font-semibold text-slate-400">+{extras}</span>
+            )}
+          </div>
+        )}
+
+        {/* Terceira linha: localização + ação */}
+        <div className={`mt-auto flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ${habilidades.length > 0 ? '' : 'border-t border-slate-100 pt-4'}`}>
+          <div className="flex flex-wrap items-center gap-2">
+            {localizacao && (
+              <div className="flex items-center gap-1">
+                <MapPin size={12} className="shrink-0 text-slate-300" />
+                <p className="text-[11px] font-medium tracking-tight text-slate-400">
+                  {localizacao}
+                </p>
               </div>
             )}
-
-            <div className="flex flex-wrap items-center gap-2">
-              {localizacao && (
-                <div className="flex items-center gap-1">
-                  <MapPin size={12} className="shrink-0 text-slate-300" />
-                  <p className="text-[11px] font-medium tracking-tight text-slate-400">
-                    {localizacao}
-                  </p>
-                </div>
-              )}
-              {isPublico && (
-                <span className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-semibold text-slate-400">
-                  <Globe size={9} /> Perfil público
-                </span>
-              )}
-            </div>
+            {isPublico && (
+              <span className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-semibold text-slate-400">
+                <Globe size={9} /> Perfil público
+              </span>
+            )}
           </div>
 
           <div className="flex shrink-0 flex-col items-center gap-2 sm:items-end">
@@ -111,6 +110,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
             )}
           </div>
         </div>
+
       </div>
     </Link>
   )
