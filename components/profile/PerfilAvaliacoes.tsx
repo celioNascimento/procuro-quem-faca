@@ -13,7 +13,7 @@ interface Props {
 export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }: Props) {
   if (avaliacoes.length === 0) return null
 
-  const totalIndica    = avaliacoes.filter(a => a.indica === true).length
+  const totalIndica = avaliacoes.filter(a => a.indica === true).length
   const totalNaoIndica = avaliacoes.filter(a => a.indica === false).length
 
   const formatarData = (dataIso?: string) => {
@@ -53,7 +53,7 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
             av.portfolio_projetos?.titulo ??
             projetos?.find(p => String(p.id) === String(av.projeto_id))?.titulo
 
-          const temProjeto    = !!(av.projeto_id && projetoTitulo)
+          const temProjeto = !!(av.projeto_id && projetoTitulo)
           const handleProjeto = onVerProjeto && av.projeto_id
             ? () => onVerProjeto(av.projeto_id!)
             : undefined
@@ -68,14 +68,18 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
                   <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-[1rem] overflow-hidden shrink-0 flex items-center justify-center">
-                    {av.cliente_foto
+                    // avatar:
+                    {av.cliente_foto_url
                       ? <img
-                          src={av.cliente_foto}
-                          alt={av.cliente_nome ?? 'Cliente'}
-                          className="w-full h-full object-cover"
-                        />
+                        src={av.cliente_foto_url}
+                        alt={av.cliente_nome ?? 'Cliente'}
+                        className="w-full h-full object-cover"
+                      />
                       : <User size={16} className="text-slate-300" />
                     }
+
+// nome:
+                    {av.cliente_nome ?? 'Cliente Verificado'}
                   </div>
 
                   <div>

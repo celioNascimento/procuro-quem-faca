@@ -4,8 +4,6 @@
 // Migre gradualmente os tipos espalhados para cá.
 // ─────────────────────────────────────────────────────────────
 
-// types/avaliacao.ts
-
 export interface AvaliacaoRaw {
   id: string
   nota: number
@@ -17,6 +15,8 @@ export interface AvaliacaoRaw {
   status: string | null
   portfolio_projetos: { titulo: string }[] | null
   nota_efetiva: number | null
+  cliente_nome: string | null
+  cliente_foto_url: string | null
 }
 
 export interface Avaliacao {
@@ -30,18 +30,19 @@ export interface Avaliacao {
   status: string | null
   portfolio_projetos: { titulo: string } | null
   nota_efetiva: number | null
+  cliente_nome: string | null
+  cliente_foto_url: string | null
 }
 
-// ← corrigido: portfolio_projetos é objeto | null, não array
 export type AvaliacaoPerfil = {
   id: string
   created_at?: string
   comentario?: string | null
   indica: boolean | null
   projeto_id?: string | null
-  portfolio_projetos?: { titulo: string } | null  // era array, agora objeto
+  portfolio_projetos?: { titulo: string } | null
   cliente_nome?: string | null
-  cliente_foto?: string | null
+  cliente_foto_url?: string | null
 }
 
 export interface AvaliacaoResumo {
@@ -65,6 +66,8 @@ export interface AvaliacaoInsertPayload {
   indica: boolean
   visivel: boolean
   status: string
+  cliente_nome?: string | null
+  cliente_foto_url?: string | null
 }
 
 export interface FotoOrdenada {
@@ -90,6 +93,7 @@ export interface Projeto {
   status: string
   prestador_id: string
   cliente_nome: string
+  cliente_foto_url?: string | null
   portfolio_fotos: FotoOrdenada[]
   prestadores: {
     nome: string
