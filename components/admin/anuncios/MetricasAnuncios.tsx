@@ -138,20 +138,19 @@ export function MetricasAnuncios() {
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [periodo, setPeriodo] = useState<7 | 14 | 30>(7)
-  // Expirados ocultos por padrão — poluem a leitura sem acrescentar
   const [filtro, setFiltro] = useState<FiltroMetrica>('ativos')
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
 
   useEffect(() => {
     async function carregar() {
       setLoading(true)
       setErro(null)
+      setDebugInfo(null)
       try {
         const dataInicio = new Date()
         dataInicio.setDate(dataInicio.getDate() - periodo)
         const dataInicioStr = dataInicio.toISOString().slice(0, 10)
 
-        // Busca anúncios via API route para contornar RLS do client anon
-        // e garantir acesso às métricas com service_role
         const [resAnuncios, resMetricas] = await Promise.all([
           supabase
             .from('anuncios')
@@ -163,6 +162,19 @@ export function MetricasAnuncios() {
             .gte('data_referencia', dataInicioStr)
             .order('data_referencia', { ascending: true }),
         ])
+
+        // Log de diagnóstico — remover após confirmar funcionamento
+        console.log('[MetricasAnuncios] anuncios:', resAnuncios.data?.length, '| error:', resAnuncios.error)
+        console.log('[MetricasAnuncios] metricas:', resMetricas.data?.length, '| error:', resMetricas.error)
+        console.log('[MetricasAnuncios] sample metrica:', resMetricas.data?.[0])
+
+        // Exibe diagnóstico na UI para facilitar debug sem DevTools
+        setDebugInfo(
+          `Anúncios: ${resAnuncios.data?.length ?? 0} | ` +
+          `Métricas: ${resMetricas.data?.length ?? 0} | ` +
+          `Erro anúncios: ${resAnuncios.error?.message ?? 'nenhum'} | ` +
+          `Erro métricas: ${resMetricas.error?.message ?? 'nenhum'}`
+        )
 
         if (resAnuncios.error) throw resAnuncios.error
         if (resMetricas.error) throw resMetricas.error
@@ -228,9 +240,8 @@ export function MetricasAnuncios() {
 
   return (
     <div>
-      {/* Controles: filtro e período */}
+      {/* Controles */}
       <div className="flex items-center justify-between pt-6 pb-4 gap-4 flex-wrap">
-        {/* Filtro ativos/todos */}
         <div className="flex gap-1.5">
           <button
             onClick={() => setFiltro('ativos')}
@@ -249,8 +260,6 @@ export function MetricasAnuncios() {
             Todos
           </button>
         </div>
-
-        {/* Período */}
         <div className="flex items-center gap-2">
           <Calendar size={13} className="text-zinc-400" />
           <div className="flex gap-1.5">
@@ -268,6 +277,13 @@ export function MetricasAnuncios() {
           </div>
         </div>
       </div>
+
+      {/* Info de diagnóstico — visível na UI temporariamente */}
+      {debugInfo && (
+        <div className="mb-4 rounded-xl bg-zinc-50 border border-zinc-100 px-3.5 py-2.5 text-[11px] font-mono text-zinc-500">
+          {debugInfo}
+        </div>
+      )}
 
       {/* Resumo geral */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-6">
