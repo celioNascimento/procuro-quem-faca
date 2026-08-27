@@ -1,5 +1,3 @@
-//components/cards/PrestadorCard.tsx 
-
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
@@ -23,8 +21,12 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
   const perfilHref = getPerfilHref(prestador.slug, prestador.id)
   const localizacao = getLocalizacao(prestador.bairro, prestador.cidades?.nome)
-  const habilidades = (prestador.habilidades || []).slice(0, 2)
-  const extras = (prestador.habilidades?.length || 0) - 2
+
+  // Show up to 4 skills; remainder shown as +X
+  const MAX_HABILIDADES = 4
+  const todasHabilidades = prestador.habilidades || []
+  const habilidades = todasHabilidades.slice(0, MAX_HABILIDADES)
+  const extras = todasHabilidades.length - MAX_HABILIDADES
 
   return (
     <Link
@@ -63,18 +65,28 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
         {/* Segunda linha: detalhes e ação */}
         <div className="mt-auto flex flex-col gap-4 border-t border-slate-100 pt-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            {habilidades.length > 0 && (
-              <div className="flex min-h-6 flex-wrap gap-1.5">
-                {habilidades.map(hab => (
-                  <span key={hab} className="rounded-full border border-slate-100 bg-slate-50 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
-                    {hab}
-                  </span>
-                ))}
-                {extras > 0 && (
-                  <span className="px-1 py-1 text-[9px] font-semibold text-slate-400">+{extras}</span>
-                )}
-              </div>
-            )}
+
+            {/*
+              Skills row: always rendered to keep consistent card height.
+              - min-h-6 reserves space even when empty
+              - overflow-hidden + flex-nowrap ensures tags that don't fit are clipped
+              - Up to 4 tags shown; remainder as +X counter
+            */}
+            <div className="flex min-h-6 items-center overflow-hidden flex-nowrap gap-1.5">
+              {habilidades.map(hab => (
+                <span
+                  key={hab}
+                  className="shrink-0 rounded-full border border-slate-100 bg-slate-50 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  {hab}
+                </span>
+              ))}
+              {extras > 0 && (
+                <span className="shrink-0 px-1 py-1 text-[9px] font-semibold text-slate-400">
+                  +{extras}
+                </span>
+              )}
+            </div>
 
             <div className="flex flex-wrap items-center gap-2">
               {localizacao && (
