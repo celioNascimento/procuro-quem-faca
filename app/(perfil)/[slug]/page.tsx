@@ -9,8 +9,7 @@ import PerfilSkeleton from '@/components/skeletons/PerfilSkeleton'
 import PerfilHero from '@/components/profile/PerfilHero'
 import PerfilSobre from '@/components/profile/PerfilSobre'
 import PerfilCTA from '@/components/profile/PerfilCTA'
-import PerfilAvaliacoes from '@/components/profile/PerfilAvaliacoes'
-import PortfolioGrid from '@/components/profile/PortfolioGrid'
+import PerfilTabs from '@/components/profile/PerfilTabs'   // ← substitui PortfolioGrid + PerfilAvaliacoes
 import { AdCard } from '@/components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
@@ -40,9 +39,6 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
   })
 
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
-  // undefined = ainda buscando o anúncio; null = buscou e não há nenhum
-  // ativo; Anuncio = achou. Ver AdCard.tsx — undefined evita que o fallback
-  // apareça brevemente antes da resposta real do Supabase chegar.
   const [anuncioTopo, setAnuncioTopo] = useState<Anuncio | null | undefined>(undefined)
 
   useEffect(() => {
@@ -59,7 +55,6 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
       if (cancelado) return
 
       if (!error && data && data.length > 0) {
-        // Faz um rodízio aleatório caso haja mais de um anúncio ativo para essa posição
         const adAleatorio = data[Math.floor(Math.random() * data.length)]
         setAnuncioTopo(adAleatorio as Anuncio)
       } else {
@@ -68,9 +63,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
     }
     carregarAnuncio()
 
-    return () => {
-      cancelado = true
-    }
+    return () => { cancelado = true }
   }, [])
 
   return (
@@ -120,7 +113,6 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
           <div className="flex min-w-0 flex-col gap-7 animate-in fade-in duration-500 sm:gap-8 lg:gap-10">
             <div className="flex flex-col gap-4">
               <PerfilSobre prestador={prestador} />
-
               <PerfilCTA
                 nome={prestador.nome}
                 whatsapp={prestador.whatsapp}
@@ -132,26 +124,8 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               />
             </div>
 
-            <section className="flex flex-col gap-3" aria-labelledby="portfolio-heading">
-              <div className="flex items-end justify-between gap-4 px-1">
-                <div className="flex flex-col gap-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-600">
-                    Portfólio
-                  </p>
-                  <h2 id="portfolio-heading" className="text-pretty text-lg font-black tracking-tight text-slate-800 sm:text-xl">
-                    Registros de atividade
-                  </h2>
-                </div>
-                {projetos.length > 0 && (
-                  <p className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                    {projetos.length} {projetos.length === 1 ? 'projeto' : 'projetos'}
-                  </p>
-                )}
-              </div>
-              <PortfolioGrid projetos={projetos} />
-            </section>
-
-            <PerfilAvaliacoes avaliacoes={avaliacoes} />
+            {/* Portfólio + Avaliações em abas — substitui os dois blocos separados */}
+            <PerfilTabs projetos={projetos} avaliacoes={avaliacoes} />
           </div>
         </div>
       </div>
@@ -159,7 +133,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
   )
 }
 
-// ── Componente raiz — só gerencia loading/erro ─────────────────────────────
+// ── Componente raiz — só gerencia loading/erro ──────────────────────────────
 
 export default function PerfilPublico() {
   const { data, loading, erro } = usePerfilPrestador()
