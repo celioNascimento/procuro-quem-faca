@@ -1,7 +1,7 @@
 //components/cards/PrestadorCard.tsx 
 
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useLayoutEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { MapPin, ChevronRight, Globe } from 'lucide-react'
@@ -14,17 +14,65 @@ type Props = {
   registrarLog?: (acao: string, detalhes?: Record<string, unknown>) => void
 }
 
+// Largura estimada do badge "+N" (px), reservada de antemão para não
+// precisar de uma segunda passada de medição ao decidir o corte.
+const LARGURA_BADGE_EXTRA = 40
+// Espaço entre badges (gap-1.5 = 6px)
+const GAP_BADGES = 6
+
 export default function PrestadorCard({ prestador, session, registrarLog }: Props) {
   const [imgError, setImgError] = useState(false)
   const router = useRouter()
+
+  const habilidadesTotais = prestador?.habilidades || []
+  const medidorRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [qtdVisivel, setQtdVisivel] = useState<number | null>(null)
+
+  // Mede, antes do browser pintar o frame, quantas habilidades cabem numa
+  // única linha do container real do card — evita flash visual e não
+  // depende de heurística por caractere (que falha com nomes como
+  // "Ar Condicionado" ocupando bem mais espaço que "Pedreiro").
+  useLayoutEffect(() => {
+    if (!medidorRef.current || !containerRef.current || habilidadesTotais.length === 0) {
+      setQtdVisivel(0)
+      return
+    }
+
+    const larguraDisponivel = containerRef.current.offsetWidth
+    const badges = Array.from(medidorRef.current.children) as HTMLElement[]
+
+    let larguraAcumulada = 0
+    let count = 0
+
+    for (let i = 0; i < badges.length; i++) {
+      const larguraBadge = badges[i].offsetWidth
+      const temMaisDepois = i < badges.length - 1
+      // Reserva espaço pro "+N" só se ainda houver itens depois deste
+      const reservaExtra = temMaisDepois ? LARGURA_BADGE_EXTRA + GAP_BADGES : 0
+
+      const proximaLargura = larguraAcumulada + larguraBadge + (i > 0 ? GAP_BADGES : 0)
+
+      if (proximaLargura + reservaExtra > larguraDisponivel) break
+
+      larguraAcumulada = proximaLargura
+      count++
+    }
+
+    // Garante ao menos 1 habilidade visível se houver alguma, mesmo que
+    // a primeira já estoure sozinha (evita ficar só com "+N" sem contexto)
+    setQtdVisivel(Math.max(count, habilidadesTotais.length > 0 ? 1 : 0))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [habilidadesTotais.length])
 
   if (!prestador) return null
 
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
   const perfilHref = getPerfilHref(prestador.slug, prestador.id)
   const localizacao = getLocalizacao(prestador.bairro, prestador.cidades?.nome)
-  const habilidades = (prestador.habilidades || []).slice(0, 2)
-  const extras = (prestador.habilidades?.length || 0) - 2
+
+  const habilidadesVisiveis = qtdVisivel !== null ? habilidadesTotais.slice(0, qtdVisivel) : []
+  const extras = qtdVisivel !== null ? habilidadesTotais.length - qtdVisivel : 0
 
   return (
     <Link
@@ -60,22 +108,47 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
           </div>
         </div>
 
-        {/* Segunda linha: habilidades (linha própria) */}
-        {habilidades.length > 0 && (
-          <div className="flex min-h-6 flex-wrap gap-1.5 border-t border-slate-100 pt-4">
-            {habilidades.map(hab => (
-              <span key={hab} className="rounded-full border border-slate-100 bg-slate-50 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
-                {hab}
-              </span>
-            ))}
-            {extras > 0 && (
-              <span className="px-1 py-1 text-[9px] font-semibold text-slate-400">+{extras}</span>
+        {/* Segunda linha: habilidades (linha própria, medida dinamicamente) */}
+        {habilidadesTotais.length > 0 && (
+          <div ref={containerRef} className="relative min-h-6 border-t border-slate-100 pt-4">
+            {/* Medidor invisível: todas as habilidades numa linha sem quebrar,
+                usado só para calcular larguras reais. Nunca visível ao usuário. */}
+            <div
+              ref={medidorRef}
+              className="pointer-events-none absolute left-0 top-4 flex gap-1.5 whitespace-nowrap opacity-0"
+              aria-hidden="true"
+            >
+              {habilidadesTotais.map(hab => (
+                <span
+                  key={hab}
+                  className="rounded-full border border-slate-100 bg-slate-50 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  {hab}
+                </span>
+              ))}
+            </div>
+
+            {/* Versão real, exibida — só renderiza depois de medir */}
+            {qtdVisivel !== null && (
+              <div className="flex flex-wrap gap-1.5">
+                {habilidadesVisiveis.map(hab => (
+                  <span
+                    key={hab}
+                    className="rounded-full border border-slate-100 bg-slate-50 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500"
+                  >
+                    {hab}
+                  </span>
+                ))}
+                {extras > 0 && (
+                  <span className="px-1 py-1 text-[9px] font-semibold text-slate-400">+{extras}</span>
+                )}
+              </div>
             )}
           </div>
         )}
 
         {/* Terceira linha: localização + ação */}
-        <div className={`mt-auto flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ${habilidades.length > 0 ? '' : 'border-t border-slate-100 pt-4'}`}>
+        <div className={`mt-auto flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ${habilidadesTotais.length > 0 ? '' : 'border-t border-slate-100 pt-4'}`}>
           <div className="flex flex-wrap items-center gap-2">
             {localizacao && (
               <div className="flex items-center gap-1">
@@ -110,7 +183,6 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
             )}
           </div>
         </div>
-
       </div>
     </Link>
   )
