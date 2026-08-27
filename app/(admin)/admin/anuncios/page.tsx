@@ -28,7 +28,7 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
         <p className="text-[10px] font-medium uppercase tracking-widest text-zinc-400">Conta criada para o lojista</p>
         <p className="mt-2 text-sm text-zinc-600">
-          Essa senha só aparece uma vez. Copie e envie por WhatsApp para <strong className="text-zinc-900">{email}</strong>.
+          Essa senha aparece uma vez. Envie por WhatsApp para <strong className="text-zinc-900">{email}</strong>.
         </p>
         <div className="mt-3 flex items-center gap-2 rounded-xl bg-zinc-50 border border-zinc-100 px-3 py-2.5">
           <code className="flex-1 text-sm font-mono text-zinc-800">{senha}</code>
@@ -37,7 +37,7 @@ function SenhaTemporariaModal({ senha, email, onClose }: { senha: string; email:
           </button>
         </div>
         <button onClick={onClose} className="mt-4 w-full rounded-xl bg-zinc-900 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800">
-          Entendi, já copiei
+          Entendi, ja copiei
         </button>
       </motion.div>
     </div>
@@ -85,7 +85,7 @@ export default function PainelAnunciosLojista() {
       }
       setEditando(null)
     } catch {
-      // erro já exposto via hook
+      // erro exposto via hook
     }
   }
 
@@ -132,7 +132,6 @@ export default function PainelAnunciosLojista() {
     setEditando({ modo: 'new_lojista', preenchimento: dados })
   }
 
-  // Contagem do filtro selecionado para mostrar no badge da aba
   const contadorAnuncios =
     filtroStatus === 'ativos'    ? ativos :
     filtroStatus === 'rascunhos' ? rascunhos :
@@ -142,115 +141,119 @@ export default function PainelAnunciosLojista() {
   return (
     <div className="max-w-5xl mx-auto pb-24 px-4 md:px-6">
 
-      {/* ── Header ─────────────────────────────────────────── */}
-      <header className="flex items-center justify-between gap-4 pt-6 md:pt-10 pb-5 border-b border-zinc-100">
-        <div className="flex items-center gap-2">
-          <Megaphone size={16} className="text-zinc-400 shrink-0" />
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-zinc-900 leading-none">Anúncios</h1>
-          {/* Badge de ativos — informação de status sem card separado */}
-          {!loading && ativos > 0 && (
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
-              {ativos} ativo{ativos !== 1 ? 's' : ''}
-            </span>
+      {/* Header: duas linhas no mobile, uma linha no desktop */}
+      <header className="pt-6 md:pt-10 pb-5 border-b border-zinc-100">
+        <div className="flex items-center justify-between gap-3">
+          {/* Titulo + badge */}
+          <div className="flex items-center gap-2 min-w-0">
+            <Megaphone size={15} className="text-zinc-400 shrink-0" />
+            <h1 className="text-xl font-bold tracking-tight text-zinc-900 leading-none">
+              Anuncios
+            </h1>
+            {!loading && ativos > 0 && (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 shrink-0">
+                {ativos} {ativos === 1 ? 'ativo' : 'ativos'}
+              </span>
+            )}
+          </div>
+
+          {/* Acoes — sempre visivel, compacto no mobile */}
+          {!editando && (
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Consultar */}
+              <div className="relative">
+                <button
+                  onClick={() => setMenuConsultarAberto(!menuConsultarAberto)}
+                  className="flex items-center gap-1 rounded-xl bg-zinc-100 px-3 py-2 text-[12px] font-semibold text-zinc-600 hover:bg-zinc-200 transition-colors"
+                >
+                  <Search size={14} />
+                  <span className="hidden sm:inline ml-0.5">Consultar</span>
+                  <ChevronDown size={12} className={`transition-transform ${menuConsultarAberto ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {menuConsultarAberto && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setMenuConsultarAberto(false)} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                        className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-zinc-100 bg-white p-2 shadow-xl"
+                      >
+                        <button
+                          onClick={() => { setSimuladorAberto(true); setMenuConsultarAberto(false) }}
+                          className="flex w-full items-center gap-2.5 rounded-xl p-3 text-left hover:bg-zinc-50"
+                        >
+                          <div className="bg-blue-50 text-blue-600 p-1.5 rounded-lg shrink-0"><Search size={14} /></div>
+                          <div>
+                            <span className="block text-[13px] font-bold text-zinc-900">Vagas de Lojista</span>
+                            <span className="block text-[11px] text-zinc-500">Busca, perfil e painel do prestador</span>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => { setSimuladorClienteAberto(true); setMenuConsultarAberto(false) }}
+                          className="flex w-full items-center gap-2.5 rounded-xl p-3 text-left hover:bg-zinc-50"
+                        >
+                          <div className="bg-indigo-50 text-indigo-600 p-1.5 rounded-lg shrink-0"><Users size={14} /></div>
+                          <div>
+                            <span className="block text-[13px] font-bold text-zinc-900">Painel do Cliente</span>
+                            <span className="block text-[11px] text-zinc-500">Segmentado so por cidade</span>
+                          </div>
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Novo anuncio */}
+              <div className="relative">
+                <button
+                  onClick={() => setMenuNovoAberto(!menuNovoAberto)}
+                  className="flex items-center gap-1 rounded-xl bg-zinc-900 px-3 py-2 text-[12px] font-semibold text-white hover:bg-zinc-800 transition-colors"
+                >
+                  <Plus size={14} />
+                  <span className="hidden sm:inline ml-0.5">Novo</span>
+                  <ChevronDown size={12} className={`transition-transform ${menuNovoAberto ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {menuNovoAberto && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setMenuNovoAberto(false)} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                        className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-zinc-100 bg-white p-2 shadow-xl"
+                      >
+                        <button
+                          onClick={() => { setEditando('new_lojista'); setMenuNovoAberto(false) }}
+                          className="flex w-full flex-col items-start gap-1 rounded-xl p-3 text-left hover:bg-zinc-50"
+                        >
+                          <span className="text-[13px] font-bold text-zinc-900">Buscas e Profissionais</span>
+                          <span className="text-[11px] text-zinc-500">Segmentado por categoria de servico</span>
+                        </button>
+                        <button
+                          onClick={() => { setEditando('new_cliente'); setMenuNovoAberto(false) }}
+                          className="flex w-full flex-col items-start gap-1 rounded-xl p-3 text-left hover:bg-zinc-50"
+                        >
+                          <span className="text-[13px] font-bold text-zinc-900">Painel do Cliente</span>
+                          <span className="text-[11px] text-zinc-500">Segmentado por cidade/regiao</span>
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
           )}
         </div>
-
-        {!editando && (
-          <div className="flex items-center gap-2">
-            {/* Consultar */}
-            <div className="relative">
-              <button
-                onClick={() => setMenuConsultarAberto(!menuConsultarAberto)}
-                className="flex items-center gap-1.5 rounded-xl bg-zinc-100 px-3.5 py-2 text-[12px] font-semibold text-zinc-600 hover:bg-zinc-200 transition-colors"
-              >
-                <Search size={14} />
-                <span className="hidden sm:inline">Consultar</span>
-                <ChevronDown size={13} className={`transition-transform ${menuConsultarAberto ? 'rotate-180' : ''}`} />
-              </button>
-              <AnimatePresence>
-                {menuConsultarAberto && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setMenuConsultarAberto(false)} />
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-zinc-100 bg-white p-2 shadow-xl"
-                    >
-                      <button
-                        onClick={() => { setSimuladorAberto(true); setMenuConsultarAberto(false) }}
-                        className="flex w-full items-center gap-2.5 rounded-xl p-3 text-left hover:bg-zinc-50"
-                      >
-                        <div className="bg-blue-50 text-blue-600 p-1.5 rounded-lg shrink-0"><Search size={14} /></div>
-                        <div>
-                          <span className="block text-[13px] font-bold text-zinc-900">Vagas de Lojista</span>
-                          <span className="block text-[11px] text-zinc-500">Busca, perfil e painel do prestador</span>
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => { setSimuladorClienteAberto(true); setMenuConsultarAberto(false) }}
-                        className="flex w-full items-center gap-2.5 rounded-xl p-3 text-left hover:bg-zinc-50"
-                      >
-                        <div className="bg-indigo-50 text-indigo-600 p-1.5 rounded-lg shrink-0"><Users size={14} /></div>
-                        <div>
-                          <span className="block text-[13px] font-bold text-zinc-900">Painel do Cliente</span>
-                          <span className="block text-[11px] text-zinc-500">Segmentado só por cidade</span>
-                        </div>
-                      </button>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Novo anúncio */}
-            <div className="relative">
-              <button
-                onClick={() => setMenuNovoAberto(!menuNovoAberto)}
-                className="flex items-center gap-1.5 rounded-xl bg-zinc-900 px-3.5 py-2 text-[12px] font-semibold text-white hover:bg-zinc-800 transition-colors"
-              >
-                <Plus size={14} />
-                <span className="hidden sm:inline">Novo anúncio</span>
-                <ChevronDown size={13} className={`transition-transform ${menuNovoAberto ? 'rotate-180' : ''}`} />
-              </button>
-              <AnimatePresence>
-                {menuNovoAberto && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setMenuNovoAberto(false)} />
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-zinc-100 bg-white p-2 shadow-xl"
-                    >
-                      <button
-                        onClick={() => { setEditando('new_lojista'); setMenuNovoAberto(false) }}
-                        className="flex w-full flex-col items-start gap-1 rounded-xl p-3 text-left hover:bg-zinc-50"
-                      >
-                        <span className="text-[13px] font-bold text-zinc-900">Buscas e Profissionais</span>
-                        <span className="text-[11px] text-zinc-500">Segmentado por categoria de serviço</span>
-                      </button>
-                      <button
-                        onClick={() => { setEditando('new_cliente'); setMenuNovoAberto(false) }}
-                        className="flex w-full flex-col items-start gap-1 rounded-xl p-3 text-left hover:bg-zinc-50"
-                      >
-                        <span className="text-[13px] font-bold text-zinc-900">Painel do Cliente</span>
-                        <span className="text-[11px] text-zinc-500">Segmentado por cidade/região</span>
-                      </button>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-        )}
       </header>
 
-      {/* ── Abas ───────────────────────────────────────────── */}
+      {/* Abas */}
       {!editando && (
         <div className="border-b border-zinc-100">
           <nav className="flex overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-            {/* Aba Anúncios — mostra contagem do filtro ativo */}
             <button
               onClick={() => setAba('anuncios')}
               className={`relative flex items-center gap-1.5 px-4 py-3 text-[12px] font-semibold whitespace-nowrap transition-colors ${
@@ -258,7 +261,7 @@ export default function PainelAnunciosLojista() {
               }`}
             >
               <SlidersHorizontal size={13} />
-              Anúncios
+              Anuncios
               <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
                 aba === 'anuncios' ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-50 text-zinc-400'
               }`}>
@@ -288,7 +291,7 @@ export default function PainelAnunciosLojista() {
               }`}
             >
               <BarChart2 size={13} />
-              Métricas
+              Metricas
               {aba === 'metricas' && (
                 <motion.div layoutId="tab-ind" className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 rounded-full" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />
               )}
@@ -297,7 +300,7 @@ export default function PainelAnunciosLojista() {
         </div>
       )}
 
-      {/* ── Filtros de status (só na aba Anúncios) ─────────── */}
+      {/* Filtros de status — so na aba Anuncios */}
       {!editando && aba === 'anuncios' && (
         <div className="flex items-center gap-1.5 pt-3 overflow-x-auto pb-1">
           {([
@@ -326,7 +329,7 @@ export default function PainelAnunciosLojista() {
         </div>
       )}
 
-      {/* ── Erro do hook ───────────────────────────────────── */}
+      {/* Erro do hook */}
       <AnimatePresence>
         {erro && (
           <motion.div
@@ -340,7 +343,7 @@ export default function PainelAnunciosLojista() {
         )}
       </AnimatePresence>
 
-      {/* ── Formulários ────────────────────────────────────── */}
+      {/* Formularios */}
       {editando && (
         <div className="mt-6">
           {isFormCliente ? (
@@ -361,7 +364,7 @@ export default function PainelAnunciosLojista() {
         </div>
       )}
 
-      {/* ── Conteúdo das abas ──────────────────────────────── */}
+      {/* Conteudo das abas */}
       {!editando && aba === 'anuncios' && (
         <div className="mt-4">
           <AnuncioLojistaLista
@@ -384,7 +387,7 @@ export default function PainelAnunciosLojista() {
         <MetricasAnuncios />
       )}
 
-      {/* ── Modais ─────────────────────────────────────────── */}
+      {/* Modais */}
       {simuladorAberto && (
         <SimuladorInventarioModal
           onClose={() => setSimuladorAberto(false)}
