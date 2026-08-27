@@ -36,6 +36,8 @@ const POSICOES_LABELS: Record<string, string> = {
   dashboard_cliente: 'Painel do Cliente',
 }
 
+type FiltroMetrica = 'ativos' | 'todos'
+
 function Sparkline({ dados, cor }: { dados: number[]; cor: string }) {
   if (dados.length < 2) {
     return <div className="h-8 w-20 flex items-center text-[10px] text-zinc-300">—</div>
@@ -63,7 +65,7 @@ function AnuncioMetricaCard({ anuncio }: { anuncio: AnuncioComMetricas }) {
   const isAtivo = anuncio.status && !isExpirado
 
   return (
-    <div className={`rounded-2xl border bg-white p-4 md:p-5 ${!isAtivo ? 'opacity-60' : 'border-zinc-100'}`}>
+    <div className={`rounded-2xl border bg-white p-4 md:p-5 ${!isAtivo ? 'border-zinc-100 opacity-60' : 'border-zinc-100'}`}>
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
           <p className="text-[13px] font-bold text-zinc-900 truncate">{anuncio.anunciante_nome}</p>
@@ -136,6 +138,8 @@ export function MetricasAnuncios() {
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [periodo, setPeriodo] = useState<7 | 14 | 30>(7)
+  // Expirados ocultos por padrão — poluem a leitura sem acrescentar
+  const [filtro, setFiltro] = useState<FiltroMetrica>('ativos')
 
   useEffect(() => {
     async function carregar() {
@@ -146,32 +150,31 @@ export function MetricasAnuncios() {
         dataInicio.setDate(dataInicio.getDate() - periodo)
         const dataInicioStr = dataInicio.toISOString().slice(0, 10)
 
-        // Busca anúncios com anunciante vinculado
-        const { data: anunciosData, error: erroAnuncios } = await supabase
-          .from('anuncios')
-          .select('id, titulo, posicao, status, data_expiracao, anunciantes(razao_social)')
-          .order('created_at', { ascending: false })
+        // Busca anúncios via API route para contornar RLS do client anon
+        // e garantir acesso às métricas com service_role
+        const [resAnuncios, resMetricas] = await Promise.all([
+          supabase
+            .from('anuncios')
+            .select('id, titulo, posicao, status, data_expiracao, anunciantes(razao_social)')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('anuncios_metricas_diarias')
+            .select('anuncio_id, data_referencia, impressoes, cliques')
+            .gte('data_referencia', dataInicioStr)
+            .order('data_referencia', { ascending: true }),
+        ])
 
-        if (erroAnuncios) throw erroAnuncios
+        if (resAnuncios.error) throw resAnuncios.error
+        if (resMetricas.error) throw resMetricas.error
 
-        // Busca métricas do período selecionado
-        const { data: metricasData, error: erroMetricas } = await supabase
-          .from('anuncios_metricas_diarias')
-          .select('anuncio_id, data_referencia, impressoes, cliques')
-          .gte('data_referencia', dataInicioStr)
-          .order('data_referencia', { ascending: true })
-
-        if (erroMetricas) throw erroMetricas
-
-        // Agrupa métricas diárias por anuncio_id
         const metricasPorAnuncio = new Map<string, MetricaDiaria[]>()
-        for (const m of metricasData ?? []) {
+        for (const m of resMetricas.data ?? []) {
           const lista = metricasPorAnuncio.get(m.anuncio_id) ?? []
           lista.push({ data_referencia: m.data_referencia, impressoes: m.impressoes, cliques: m.cliques })
           metricasPorAnuncio.set(m.anuncio_id, lista)
         }
 
-        const resultado: AnuncioComMetricas[] = (anunciosData ?? []).map((a: any) => {
+        const resultado: AnuncioComMetricas[] = (resAnuncios.data ?? []).map((a: any) => {
           const diarias = metricasPorAnuncio.get(a.id) ?? []
           const total_impressoes = diarias.reduce((s, m) => s + m.impressoes, 0)
           const total_cliques = diarias.reduce((s, m) => s + m.cliques, 0)
@@ -190,11 +193,10 @@ export function MetricasAnuncios() {
           }
         })
 
-        // Anúncios com dados primeiro, depois por cliques desc
         resultado.sort((a, b) => {
-          const aTemDados = a.total_cliques + a.total_impressoes
-          const bTemDados = b.total_cliques + b.total_impressoes
-          if (bTemDados !== aTemDados) return bTemDados - aTemDados
+          const aTotal = a.total_cliques + a.total_impressoes
+          const bTotal = b.total_cliques + b.total_impressoes
+          if (bTotal !== aTotal) return bTotal - aTotal
           return b.total_cliques - a.total_cliques
         })
 
@@ -209,31 +211,61 @@ export function MetricasAnuncios() {
     carregar()
   }, [periodo])
 
-  const totalImpressoes = anuncios.reduce((s, a) => s + a.total_impressoes, 0)
-  const totalCliques = anuncios.reduce((s, a) => s + a.total_cliques, 0)
+  const agora = new Date()
+
+  const anunciosFiltrados = anuncios.filter(a => {
+    if (filtro === 'ativos') {
+      const isExpirado = a.data_expiracao && new Date(a.data_expiracao) < agora
+      return a.status && !isExpirado
+    }
+    return true
+  })
+
+  const totalImpressoes = anunciosFiltrados.reduce((s, a) => s + a.total_impressoes, 0)
+  const totalCliques = anunciosFiltrados.reduce((s, a) => s + a.total_cliques, 0)
   const ctrGeral = totalImpressoes > 0 ? (totalCliques / totalImpressoes) * 100 : 0
-  const melhorAnuncio = anuncios[0]
+  const melhorAnuncio = anunciosFiltrados[0]
 
   return (
     <div>
-      {/* Seletor de período */}
-      <div className="flex items-center justify-between pt-6 pb-4">
-        <div className="flex items-center gap-1.5">
-          <Calendar size={13} className="text-zinc-400" />
-          <p className={labelClass}>Período</p>
-        </div>
+      {/* Controles: filtro e período */}
+      <div className="flex items-center justify-between pt-6 pb-4 gap-4 flex-wrap">
+        {/* Filtro ativos/todos */}
         <div className="flex gap-1.5">
-          {([7, 14, 30] as const).map(p => (
-            <button
-              key={p}
-              onClick={() => setPeriodo(p)}
-              className={`rounded-xl px-3 py-1.5 text-[11px] font-bold transition-colors ${
-                periodo === p ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
-              }`}
-            >
-              {p}d
-            </button>
-          ))}
+          <button
+            onClick={() => setFiltro('ativos')}
+            className={`rounded-xl px-3 py-1.5 text-[11px] font-bold transition-colors ${
+              filtro === 'ativos' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
+            }`}
+          >
+            Ativos
+          </button>
+          <button
+            onClick={() => setFiltro('todos')}
+            className={`rounded-xl px-3 py-1.5 text-[11px] font-bold transition-colors ${
+              filtro === 'todos' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
+            }`}
+          >
+            Todos
+          </button>
+        </div>
+
+        {/* Período */}
+        <div className="flex items-center gap-2">
+          <Calendar size={13} className="text-zinc-400" />
+          <div className="flex gap-1.5">
+            {([7, 14, 30] as const).map(p => (
+              <button
+                key={p}
+                onClick={() => setPeriodo(p)}
+                className={`rounded-xl px-3 py-1.5 text-[11px] font-bold transition-colors ${
+                  periodo === p ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
+                }`}
+              >
+                {p}d
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -287,14 +319,14 @@ export function MetricasAnuncios() {
         <div className="space-y-3">
           {[1, 2, 3].map(i => <div key={i} className="h-44 rounded-2xl bg-zinc-50 animate-pulse" />)}
         </div>
-      ) : anuncios.length === 0 ? (
+      ) : anunciosFiltrados.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-10 text-center">
-          <p className="text-[13px] font-semibold text-zinc-500">Nenhum dado ainda</p>
-          <p className="mt-1 text-[11px] text-zinc-300">As métricas aparecem assim que os anúncios começarem a ser exibidos</p>
+          <p className="text-[13px] font-semibold text-zinc-500">Nenhum anúncio ativo no momento</p>
+          <p className="mt-1 text-[11px] text-zinc-300">Mude para "Todos" para ver expirados e rascunhos</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {anuncios.map(a => <AnuncioMetricaCard key={a.id} anuncio={a} />)}
+          {anunciosFiltrados.map(a => <AnuncioMetricaCard key={a.id} anuncio={a} />)}
         </div>
       )}
     </div>
