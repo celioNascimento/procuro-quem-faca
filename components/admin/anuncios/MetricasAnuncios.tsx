@@ -137,52 +137,35 @@ export function MetricasAnuncios() {
   const [erro, setErro] = useState<string | null>(null)
   const [periodo, setPeriodo] = useState<7 | 14 | 30>(7)
   const [filtro, setFiltro] = useState<FiltroMetrica>('ativos')
-  const [debugInfo, setDebugInfo] = useState<string | null>(null)
 
   useEffect(() => {
     async function carregar() {
       setLoading(true)
       setErro(null)
-      setDebugInfo(null)
       try {
-        // Client criado dentro do efeito para garantir que a sessão do
-        // browser já foi hidratada antes da query ser disparada.
         const supabase = createClient()
 
         const dataInicio = new Date()
         dataInicio.setDate(dataInicio.getDate() - periodo)
         const dataInicioStr = dataInicio.toISOString().slice(0, 10)
 
-        const [resAnuncios, resMetricas] = await Promise.all([
+        // Anúncios: leitura direta via client (RLS permite authenticated)
+        // Métricas: via API route com service_role — client anon não tem acesso
+        const [resAnuncios, resMetricasHttp] = await Promise.all([
           supabase
             .from('anuncios')
             .select('id, titulo, posicao, status, data_expiracao, anunciantes(razao_social)')
             .order('created_at', { ascending: false }),
-          supabase
-            .from('anuncios_metricas_diarias')
-            .select('anuncio_id, data_referencia, impressoes, cliques')
-            .gte('data_referencia', dataInicioStr)
-            .order('data_referencia', { ascending: true }),
+          fetch(`/api/anuncios/metricas?dataInicio=${dataInicioStr}`),
         ])
 
-        // Log de diagnóstico — remover após confirmar funcionamento
-        console.log('[MetricasAnuncios] anuncios:', resAnuncios.data?.length, '| error:', resAnuncios.error)
-        console.log('[MetricasAnuncios] metricas:', resMetricas.data?.length, '| error:', resMetricas.error)
-        console.log('[MetricasAnuncios] sample metrica:', resMetricas.data?.[0])
+        if (resAnuncios.error) throw new Error(resAnuncios.error.message)
+        if (!resMetricasHttp.ok) throw new Error('Erro ao buscar métricas')
 
-        // Exibe diagnóstico na UI para facilitar debug sem DevTools
-        setDebugInfo(
-          `Anúncios: ${resAnuncios.data?.length ?? 0} | ` +
-          `Métricas: ${resMetricas.data?.length ?? 0} | ` +
-          `Erro anúncios: ${resAnuncios.error?.message ?? 'nenhum'} | ` +
-          `Erro métricas: ${resMetricas.error?.message ?? 'nenhum'}`
-        )
-
-        if (resAnuncios.error) throw resAnuncios.error
-        if (resMetricas.error) throw resMetricas.error
+        const { data: metricasData } = await resMetricasHttp.json()
 
         const metricasPorAnuncio = new Map<string, MetricaDiaria[]>()
-        for (const m of resMetricas.data ?? []) {
+        for (const m of metricasData ?? []) {
           const lista = metricasPorAnuncio.get(m.anuncio_id) ?? []
           lista.push({ data_referencia: m.data_referencia, impressoes: m.impressoes, cliques: m.cliques })
           metricasPorAnuncio.set(m.anuncio_id, lista)
@@ -279,13 +262,6 @@ export function MetricasAnuncios() {
           </div>
         </div>
       </div>
-
-      {/* Info de diagnóstico — visível na UI temporariamente */}
-      {debugInfo && (
-        <div className="mb-4 rounded-xl bg-zinc-50 border border-zinc-100 px-3.5 py-2.5 text-[11px] font-mono text-zinc-500">
-          {debugInfo}
-        </div>
-      )}
 
       {/* Resumo geral */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-6">
