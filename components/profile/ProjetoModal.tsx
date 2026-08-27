@@ -1,4 +1,4 @@
-// components/profile/ProjetoModal.tsx
+//components/profile/ProjetoModal.tsx
 
 'use client'
 import { X, Share2, CheckCircle2, Activity, User, Camera, ShieldCheck, ShieldOff, XCircle, ShieldAlert } from 'lucide-react'
@@ -12,8 +12,6 @@ interface Props {
   onClose: () => void
 }
 
-// Configuração visual por status de garantia —
-// exibe o resultado de forma clara e honesta para o visitante.
 const CONFIG_GARANTIA: Record<string, {
   icon: React.ElementType
   cor: string
@@ -57,54 +55,33 @@ function GarantiaCard({ garantia }: { garantia: GarantiaPublica }) {
         {config.descricao}
       </p>
 
-      {/* Problema relatado */}
       {garantia.descricao_problema && (
         <div className="bg-white/60 rounded-xl p-3 space-y-1">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
-            Problema relatado
-          </p>
-          <p className="text-[11px] font-medium leading-snug">
-            {garantia.descricao_problema}
-          </p>
+          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Problema relatado</p>
+          <p className="text-[11px] font-medium leading-snug">{garantia.descricao_problema}</p>
         </div>
       )}
 
-      {/* Resposta do prestador */}
       {garantia.resposta_prestador_garantia && (
         <div className="bg-white/60 rounded-xl p-3 space-y-1">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
-            Proposta do prestador
-          </p>
-          <p className="text-[11px] font-medium leading-snug">
-            {garantia.resposta_prestador_garantia}
-          </p>
+          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Proposta do prestador</p>
+          <p className="text-[11px] font-medium leading-snug">{garantia.resposta_prestador_garantia}</p>
         </div>
       )}
 
-      {/* Resolução */}
       {garantia.resolucao_descricao && (
         <div className="bg-white/60 rounded-xl p-3 space-y-1">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
-            Como foi resolvido
-          </p>
-          <p className="text-[11px] font-medium leading-snug">
-            {garantia.resolucao_descricao}
-          </p>
+          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Como foi resolvido</p>
+          <p className="text-[11px] font-medium leading-snug">{garantia.resolucao_descricao}</p>
         </div>
       )}
 
-      {/* Fotos de resolução — URL pública, usável direto em <img src> */}
       {garantia.fotos && garantia.fotos.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
-            Fotos da resolução
-          </p>
+          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Fotos da resolução</p>
           <div className="grid grid-cols-3 gap-2">
             {garantia.fotos.map(foto => (
-              <div
-                key={foto.id}
-                className="aspect-square rounded-xl overflow-hidden bg-white/40"
-              >
+              <div key={foto.id} className="aspect-square rounded-xl overflow-hidden bg-white/40">
                 <img
                   src={foto.url_foto}
                   alt={foto.legenda ?? 'Foto da resolução'}
@@ -123,10 +100,8 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
   const { sorted: fotos, fotoAtual, current, next, prev } = useSlides(projeto.portfolio_fotos)
   const comentarios = useComentariosFoto(fotoAtual?.id)
 
-  const isConcluido = projeto.status === 'finalizado'
-    || fotos.some(f => f.ordem === 3)
-
-  const garantias = projeto.solicitacoes_garantia ?? []
+  const isConcluido = projeto.status === 'finalizado' || fotos.some(f => f.ordem === 3)
+  const garantias   = projeto.solicitacoes_garantia ?? []
 
   const handleShare = async () => {
     const url   = typeof window !== 'undefined' ? window.location.href : ''
@@ -162,7 +137,6 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
       onClose={onClose}
       navegacao={fotos.length > 1 ? { onPrev: prev, onNext: next } : undefined}
     >
-      {/* ── Cabeçalho ── */}
       <div className="p-5 flex items-center justify-between border-b border-slate-50 shrink-0">
         <div>
           <h3 className="text-[11px] font-black text-slate-800 uppercase italic leading-none tracking-tight truncate max-w-[200px]">
@@ -179,13 +153,10 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
             {garantias.length > 0 && (
               <span className="flex items-center gap-0.5 ml-1">
                 <ShieldAlert size={9} className={
-                  garantias[0].status === 'resolvida' ? 'text-green-500' :
-                  garantias[0].status === 'sem_resposta' ? 'text-red-400' :
-                  'text-slate-400'
+                  garantias[0].status === 'resolvida'    ? 'text-green-500' :
+                  garantias[0].status === 'sem_resposta' ? 'text-red-400'   : 'text-slate-400'
                 } />
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                  Garantia
-                </span>
+                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Garantia</span>
               </span>
             )}
           </div>
@@ -195,44 +166,30 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
         </button>
       </div>
 
-      {/* ── Conteúdo rolável ── */}
       <div className="flex-1 overflow-y-auto p-6 space-y-8" style={{ scrollbarWidth: 'thin' }}>
 
-        {/* Nota técnica */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-4 bg-blue-600 rounded-full" />
-            <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest italic">
-              Nota Técnica
-            </span>
+            <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest italic">Nota Técnica</span>
           </div>
           <p className="text-[14px] text-slate-600 leading-relaxed italic pl-4 border-l-2 border-slate-100 font-medium">
             {fotoAtual.legenda || 'Acompanhamento técnico em andamento.'}
           </p>
         </div>
 
-        {/* Comentários */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-50 pb-2">
-            <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">
-              Interações da Fase
-            </h4>
+            <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Interações da Fase</h4>
             <div className="flex gap-1">
               {fotos.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-1 rounded-full transition-all duration-300 ${
-                    current === i ? 'w-4 bg-blue-600' : 'w-1 bg-slate-200'
-                  }`}
-                />
+                <div key={i} className={`h-1 rounded-full transition-all duration-300 ${current === i ? 'w-4 bg-blue-600' : 'w-1 bg-slate-200'}`} />
               ))}
             </div>
           </div>
 
           {comentarios.length === 0 ? (
-            <p className="text-[10px] text-slate-300 italic">
-              Sem registros de feedback nesta fase.
-            </p>
+            <p className="text-[10px] text-slate-300 italic">Sem registros de feedback nesta fase.</p>
           ) : (
             comentarios.map(com => (
               <div key={com.id} className="flex gap-3 animate-in fade-in slide-in-from-left-2 duration-300">
@@ -247,16 +204,12 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
           )}
         </div>
 
-        {/* Avaliação do Cliente */}
         {projeto.avaliacoes && projeto.avaliacoes.length > 0 && (
           <div className="pt-2 border-t border-slate-50 space-y-4 animate-in fade-in duration-500">
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-4 bg-blue-600 rounded-full" />
-              <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest italic">
-                Avaliação do Cliente
-              </span>
+              <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest italic">Avaliação do Cliente</span>
             </div>
-
             {projeto.avaliacoes.map(av => (
               <div key={av.id} className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-3">
@@ -264,9 +217,7 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
                     <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center shrink-0">
                       <User size={14} className="text-slate-300" />
                     </div>
-                    <p className="text-[11px] font-bold text-slate-800 tracking-tight">
-                      Cliente Verificado
-                    </p>
+                    <p className="text-[11px] font-bold text-slate-800 tracking-tight">Cliente Verificado</p>
                   </div>
                   {av.indica && (
                     <span className="flex items-center gap-1 bg-blue-600 text-white text-[9px] font-black tracking-wide px-2.5 py-1.5 rounded-xl shrink-0 shadow-sm shadow-blue-200">
@@ -284,24 +235,18 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
           </div>
         )}
 
-        {/* ── Seção de Garantia — resultado final + fotos de resolução ── */}
         {garantias.length > 0 && (
           <div className="pt-2 border-t border-slate-50 space-y-4 animate-in fade-in duration-500">
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-4 bg-orange-500 rounded-full" />
-              <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest italic">
-                Pós-serviço
-              </span>
+              <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest italic">Pós-serviço</span>
             </div>
-            {garantias.map(g => (
-              <GarantiaCard key={g.id} garantia={g} />
-            ))}
+            {garantias.map(g => <GarantiaCard key={g.id} garantia={g} />)}
           </div>
         )}
 
       </div>
 
-      {/* ── Rodapé ── */}
       <div className="p-5 px-8 border-t border-slate-50 flex items-center justify-between bg-white shrink-0">
         <button
           onClick={handleShare}

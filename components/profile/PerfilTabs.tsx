@@ -1,36 +1,42 @@
-//components/profile/PerfiTabs.tsx
 'use client'
 
 import { useState } from 'react'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Images, Star } from 'lucide-react'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
 import PerfilAvaliacoes from '@/components/profile/PerfilAvaliacoes'
+import ProjetoModal from '@/components/profile/ProjetoModal'
 import type { ProjetoPerfil, AvaliacaoPerfil } from '@/types/perfil'
 
-type Props = {
+type Tab = 'portfolio' | 'avaliacoes'
+
+interface Props {
   projetos: ProjetoPerfil[]
   avaliacoes: AvaliacaoPerfil[]
 }
 
-type Tab = 'portfolio' | 'avaliacoes'
-
 export default function PerfilTabs({ projetos, avaliacoes }: Props) {
   const [aba, setAba] = useState<Tab>('portfolio')
-  const [projetoDestaque, setProjetoDestaque] = useState<string | number | null>(null)
+  const router       = useRouter()
+  const pathname     = usePathname()
+  const searchParams = useSearchParams()
 
-  function irParaProjeto(projetoId: string | number) {
-    setAba('portfolio')
-    // Pequeno delay para o DOM da aba renderizar antes de acender o destaque
-    setTimeout(() => {
-      setProjetoDestaque(projetoId)
-      setTimeout(() => setProjetoDestaque(null), 2000)
-    }, 50)
+  const projetoId    = searchParams.get('projeto')
+  const projetoAberto = projetoId
+    ? projetos.find(p => String(p.id) === projetoId) ?? null
+    : null
+
+  function abrirModal(projetoId: string | number) {
+    router.push(`${pathname}?projeto=${projetoId}`, { scroll: false })
+  }
+
+  function fecharModal() {
+    router.push(pathname, { scroll: false })
   }
 
   return (
     <section className="flex flex-col gap-5" aria-label="Portfólio e Avaliações">
 
-      {/* Tab bar */}
       <div className="flex items-center gap-1 rounded-2xl bg-slate-100 p-1">
         <TabButton
           active={aba === 'portfolio'}
@@ -48,12 +54,12 @@ export default function PerfilTabs({ projetos, avaliacoes }: Props) {
         />
       </div>
 
-      {/* Tab content */}
       {aba === 'portfolio' && (
         <div className="animate-in fade-in duration-200">
           <PortfolioGrid
             projetos={projetos}
-            projetoDestaque={projetoDestaque}
+            onAbrirProjeto={abrirModal}
+            projetoAbertoId={projetoId}
           />
         </div>
       )}
@@ -63,22 +69,25 @@ export default function PerfilTabs({ projetos, avaliacoes }: Props) {
           <PerfilAvaliacoes
             avaliacoes={avaliacoes}
             projetos={projetos}
-            onVerProjeto={irParaProjeto}
+            onVerProjeto={abrirModal}
           />
         </div>
       )}
+
+      {/* Modal vive aqui — independente da aba ativa */}
+      {projetoAberto && (
+        <ProjetoModal
+          projeto={projetoAberto}
+          onClose={fecharModal}
+        />
+      )}
+
     </section>
   )
 }
 
-// ── Tab button ──────────────────────────────────────────────────────────────
-
 function TabButton({
-  active,
-  onClick,
-  icon,
-  label,
-  count,
+  active, onClick, icon, label, count,
 }: {
   active: boolean
   onClick: () => void
@@ -100,16 +109,13 @@ function TabButton({
       {icon}
       {label}
       {count > 0 && (
-        <span
-          className={[
-            'rounded-full px-1.5 py-0.5 text-[9px] font-black tabular-nums transition-colors',
-            active ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400',
-          ].join(' ')}
-        >
+        <span className={[
+          'rounded-full px-1.5 py-0.5 text-[9px] font-black tabular-nums transition-colors',
+          active ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400',
+        ].join(' ')}>
           {count}
         </span>
       )}
     </button>
   )
 }
-
