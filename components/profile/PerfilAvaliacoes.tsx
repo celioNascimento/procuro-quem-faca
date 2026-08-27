@@ -6,7 +6,6 @@ import type { AvaliacaoPerfil, ProjetoPerfil } from '@/types/perfil'
 
 interface Props {
   avaliacoes: AvaliacaoPerfil[]
-  /** Passado pelo PerfilTabs para permitir cross-link avaliação → portfólio */
   projetos?: ProjetoPerfil[]
   onVerProjeto?: (projetoId: string | number) => void
 }
@@ -14,20 +13,16 @@ interface Props {
 export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }: Props) {
   if (avaliacoes.length === 0) return null
 
-  const totalIndica    = avaliacoes.filter(a => a.indica === true).length
+  const totalIndica = avaliacoes.filter(a => a.indica === true).length
   const totalNaoIndica = avaliacoes.filter(a => a.indica === false).length
 
   const formatarData = (dataIso?: string) => {
     if (!dataIso) return ''
     try {
       return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
+        day: '2-digit', month: 'short', year: 'numeric',
       }).format(new Date(dataIso)).replace(' de ', '/').replace('. de ', '/')
-    } catch {
-      return ''
-    }
+    } catch { return '' }
   }
 
   return (
@@ -54,13 +49,11 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
       {/* Cards */}
       <div className="space-y-4">
         {avaliacoes.map(av => {
-          // Resolve título do projeto: prefere dado do join, cai para busca local
           const projetoTitulo =
             av.portfolio_projetos?.titulo ??
             projetos?.find(p => String(p.id) === String(av.projeto_id))?.titulo
 
-          // Decide se renderiza o rodapé de projeto e qual handler usar
-          const temProjeto  = !!(av.projeto_id && projetoTitulo)
+          const temProjeto = !!(av.projeto_id && projetoTitulo)
           const handleProjeto = onVerProjeto && av.projeto_id
             ? () => onVerProjeto(av.projeto_id!)
             : undefined
@@ -70,15 +63,28 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
               key={av.id}
               className="bg-white rounded-[2rem] p-5 sm:p-6 border border-slate-100 shadow-sm flex flex-col gap-4 transition-all hover:shadow-md"
             >
-              {/* Cabeçalho do card */}
+              {/* Cabeçalho */}
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-[1rem] flex items-center justify-center shrink-0">
-                    <User size={16} className="text-slate-300" />
+                  {/* Avatar */}
+                  <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-[1rem] overflow-hidden shrink-0 flex items-center justify-center">
+                    // avatar:
+                    {av.cliente_foto_url
+                      ? <img
+                        src={av.cliente_foto_url}
+                        alt={av.cliente_nome ?? 'Cliente'}
+                        className="w-full h-full object-cover"
+                      />
+                      : <User size={16} className="text-slate-300" />
+                    }
+
+// nome:
+                    {av.cliente_nome ?? 'Cliente Verificado'}
                   </div>
+
                   <div>
                     <p className="text-[12px] font-bold text-slate-800 tracking-tight">
-                      Cliente Verificado
+                      {av.cliente_nome ?? 'Cliente Verificado'}
                     </p>
                     {av.created_at && (
                       <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5 capitalize">
@@ -107,7 +113,7 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
                 </p>
               )}
 
-              {/* Rodapé: link para o projeto */}
+              {/* Link para o projeto */}
               {temProjeto && (
                 <button
                   type="button"

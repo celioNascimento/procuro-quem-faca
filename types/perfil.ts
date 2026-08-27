@@ -17,6 +17,7 @@ export interface FotoGarantiaPublica {
   ordem: number
   legenda: string | null
   fase: 'problema' | 'resolucao'
+  publica: boolean
 }
 
 // Resumo público de garantia — apenas o suficiente para exibir o resultado

@@ -86,6 +86,8 @@ export function useAvaliar(token: string) {
         indica: indica ?? false,
         visivel: true,
         status: 'finalizado',
+        cliente_nome: projeto!.cliente_nome ?? null,
+        cliente_foto_url: projeto!.cliente_foto_url ?? null,
       })
       await finalizarProjeto(projeto!.id)
       setProjeto(prev => prev ? { ...prev, status: 'finalizado' } : prev)
