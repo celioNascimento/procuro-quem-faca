@@ -5,8 +5,6 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TrendingUp, MousePointerClick, Eye, BarChart2, Calendar, AlertCircle } from 'lucide-react'
 
-const supabase = createClient()
-
 const labelClass = 'text-[10px] font-medium text-zinc-400 uppercase tracking-widest'
 
 type MetricaDiaria = {
@@ -147,6 +145,10 @@ export function MetricasAnuncios() {
       setErro(null)
       setDebugInfo(null)
       try {
+        // Client criado dentro do efeito para garantir que a sessão do
+        // browser já foi hidratada antes da query ser disparada.
+        const supabase = createClient()
+
         const dataInicio = new Date()
         dataInicio.setDate(dataInicio.getDate() - periodo)
         const dataInicioStr = dataInicio.toISOString().slice(0, 10)
