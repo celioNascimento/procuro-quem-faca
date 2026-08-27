@@ -4,23 +4,21 @@
 // Migre gradualmente os tipos espalhados para cá.
 // ─────────────────────────────────────────────────────────────
 
-// ── Formato bruto retornado pelo Supabase (relações como array) ──
+// types/avaliacao.ts
+
 export interface AvaliacaoRaw {
   id: string
   nota: number
   comentario: string | null
   created_at: string
-  indica: boolean | null 
+  indica: boolean | null
   resposta_prestador: string | null
   cliente_id: string | null
   status: string | null
   portfolio_projetos: { titulo: string }[] | null
-  // Nota usada em ranking/média quando um caso de garantia altera o resultado.
-  // NULL = usar `nota` normalmente. `nota` nunca é sobrescrita (preserva o dado original).
   nota_efetiva: number | null
 }
 
-// ── Formato normalizado para uso nos componentes ──
 export interface Avaliacao {
   id: string
   nota: number
@@ -29,38 +27,36 @@ export interface Avaliacao {
   indica: boolean
   resposta_prestador: string | null
   cliente_id: string | null
-  status: string | null                          // 'pendente' | 'finalizado'
+  status: string | null
   portfolio_projetos: { titulo: string } | null
   nota_efetiva: number | null
 }
 
-// ── Formato usado no perfil público (types/perfil.ts) ──
+// ← corrigido: portfolio_projetos é objeto | null, não array
 export type AvaliacaoPerfil = {
   id: string
   created_at?: string
   comentario?: string | null
   indica: boolean | null
   projeto_id?: string | null
-  portfolio_projetos?: {
-    titulo: string
-  } | null
+  portfolio_projetos?: { titulo: string } | null  // era array, agora objeto
+  cliente_nome?: string | null
+  cliente_foto?: string | null
 }
-// ── Formato resumido — só o necessário para cálculo de stats ──
+
 export interface AvaliacaoResumo {
   nota: number
   nota_efetiva: number | null
 }
 
-// ── Stats calculados pelo calcularStats() ──
 export interface AvaliacoesStats {
   media: number
   total: number
   totalIndica: number
-  distribuicao: Record<number, number>  // nota 1–5 → quantidade (nota ORIGINAL, uso interno — não exibida publicamente)
-  exibir: boolean                       // true somente quando total >= 10
+  distribuicao: Record<number, number>
+  exibir: boolean
 }
 
-// ── Payload para inserção no Supabase ──
 export interface AvaliacaoInsertPayload {
   projeto_id: string
   prestador_id: string
@@ -70,8 +66,6 @@ export interface AvaliacaoInsertPayload {
   visivel: boolean
   status: string
 }
-
-// ── Tipos do hook useAvaliacao (página de acompanhamento) ──
 
 export interface FotoOrdenada {
   id: string

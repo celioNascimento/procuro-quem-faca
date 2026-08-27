@@ -1,3 +1,5 @@
+//components/profile/PerfilTabs.tsx
+
 'use client'
 
 import { useState } from 'react'

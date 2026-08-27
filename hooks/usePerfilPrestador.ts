@@ -1,11 +1,10 @@
-// hooks/usePerfilPrestador.ts
-
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { insertLog } from '@/lib/db/logs'
 import { registrarVisitaPerfil } from '@/lib/db/visitasPerfil'
 import type { PerfilData, ProjetoPerfil, FotoProjeto, GarantiaPublica } from '@/types/perfil'
+import type { AvaliacaoPerfil } from '@/types/avaliacao'
 
 interface UsePerfilPrestadorReturn {
   data: PerfilData | null
@@ -20,18 +19,15 @@ function normalizarArray<T>(raw: T | T[] | null | undefined): T[] {
   return []
 }
 
-// Status de garantia relevantes para exibição pública —
-// casos ainda em aberto não são exibidos (preserva privacidade do processo).
-// Só o resultado final interessa ao visitante.
 const STATUS_GARANTIA_PUBLICA = ['resolvida', 'sem_resposta', 'recusada']
 
 export function usePerfilPrestador(): UsePerfilPrestadorReturn {
-  const params       = useParams()
+  const params = useParams()
   const searchParams = useSearchParams()
 
-  const [data, setData]       = useState<PerfilData | null>(null)
+  const [data, setData] = useState<PerfilData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [erro, setErro]       = useState(false)
+  const [erro, setErro] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -70,16 +66,29 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
         const { data: prestadorRaw, error: prestadorError } = await query.single()
         if (prestadorError) throw prestadorError
 
+        // select — adicionar os dois campos novos:
         const { data: avaliacoesRaw, error: avalError } = await supabase
           .from('avaliacoes')
-          .select('id, nota, comentario, indica, created_at, projeto_id, portfolio_projetos(titulo)')
+          .select('id, nota, comentario, indica, created_at, projeto_id, cliente_nome, cliente_foto_url, portfolio_projetos(titulo)')
           .eq('prestador_id', prestadorRaw.id)
           .eq('visivel', true)
           .order('created_at', { ascending: false })
           .limit(10)
           .abortSignal(controller.signal)
 
-        if (avalError) throw avalError
+        // mapeamento — substituir cliente_nome e cliente_foto por:
+        const avaliacoes: AvaliacaoPerfil[] = (avaliacoesRaw ?? []).map(av => ({
+          id: av.id,
+          comentario: av.comentario ?? null,
+          indica: av.indica,
+          created_at: av.created_at,
+          projeto_id: av.projeto_id ?? null,
+          portfolio_projetos: Array.isArray(av.portfolio_projetos)
+            ? (av.portfolio_projetos[0] ?? null)
+            : (av.portfolio_projetos ?? null),
+          cliente_nome: av.cliente_nome ?? null,
+          cliente_foto_url: av.cliente_foto_url ?? null,
+        }))
 
         const projetos: ProjetoPerfil[] = normalizarArray(prestadorRaw.portfolio_projetos)
           .filter(p => ['em_execucao', 'finalizado'].includes(p.status))
@@ -87,15 +96,13 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
             ...p,
             portfolio_fotos: normalizarArray<FotoProjeto>(p.portfolio_fotos)
               .filter(f => Boolean(f?.url_foto)),
-            avaliacoes: (avaliacoesRaw ?? [])
+            avaliacoes: avaliacoes
               .filter(av => av.projeto_id === p.id)
               .map(av => ({
                 id: av.id,
-                indica: av.indica,
+                indica: av.indica ?? false,
                 comentario: av.comentario ?? null,
               })),
-            // Filtra só garantias com resultado final — casos em aberto
-            // não são relevantes para o visitante e preservam privacidade.
             solicitacoes_garantia: normalizarArray<GarantiaPublica>(p.solicitacoes_garantia)
               .filter(g => STATUS_GARANTIA_PUBLICA.includes(g.status)),
           }))
@@ -126,17 +133,12 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
           }
         }
 
-        // Contagem geral de acesso ao perfil — dispara sempre, independente
-        // de origem (diferente do VISITA_PERFIL_VIA_BUSCA acima, que só
-        // registra quando veio da busca). Tabela própria (visitas_perfil),
-        // com dedupe de 24h por cookie — ver lib/db/visitasPerfil.ts.
-        // Fire-and-forget: não bloqueia a renderização do perfil.
         registrarVisitaPerfil(prestadorRaw.id)
 
         setData({
           prestador: prestadorRaw,
           projetos,
-          avaliacoes: avaliacoesRaw || [],
+          avaliacoes,
           urlRetorno,
         })
       } catch (err) {
