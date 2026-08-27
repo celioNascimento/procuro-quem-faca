@@ -1,45 +1,34 @@
-//components/profile/PerfilTabs.tsx
-
+//components/profile/PerfiTabs.tsx
 'use client'
 
 import { useState } from 'react'
-import { Images, Star, ChevronRight } from 'lucide-react'
+import { Images, Star } from 'lucide-react'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
 import PerfilAvaliacoes from '@/components/profile/PerfilAvaliacoes'
-import type { ProjetoPerfil } from '@/types/perfil'
-
-type Avaliacao = {
-  id: string | number
-  projeto_id?: string | number
-  // extend with the real shape from your types
-  [key: string]: unknown
-}
+import type { ProjetoPerfil, AvaliacaoPerfil } from '@/types/perfil'
 
 type Props = {
   projetos: ProjetoPerfil[]
-  avaliacoes: Avaliacao[]
+  avaliacoes: AvaliacaoPerfil[]
 }
 
 type Tab = 'portfolio' | 'avaliacoes'
 
 export default function PerfilTabs({ projetos, avaliacoes }: Props) {
   const [aba, setAba] = useState<Tab>('portfolio')
-  // When user clicks a review's project link, switch to portfolio tab
-  // and (optionally) scroll/highlight that project
   const [projetoDestaque, setProjetoDestaque] = useState<string | number | null>(null)
 
   function irParaProjeto(projetoId: string | number) {
-    setProjetoDestaque(projetoId)
     setAba('portfolio')
-    // Clear highlight after animation
-    setTimeout(() => setProjetoDestaque(null), 2000)
+    // Pequeno delay para o DOM da aba renderizar antes de acender o destaque
+    setTimeout(() => {
+      setProjetoDestaque(projetoId)
+      setTimeout(() => setProjetoDestaque(null), 2000)
+    }, 50)
   }
 
-  const totalAvaliacoes = avaliacoes.length
-  const totalProjetos = projetos.length
-
   return (
-    <section className="flex flex-col gap-0" aria-label="Portfólio e Avaliações">
+    <section className="flex flex-col gap-5" aria-label="Portfólio e Avaliações">
 
       {/* Tab bar */}
       <div className="flex items-center gap-1 rounded-2xl bg-slate-100 p-1">
@@ -48,38 +37,36 @@ export default function PerfilTabs({ projetos, avaliacoes }: Props) {
           onClick={() => setAba('portfolio')}
           icon={<Images size={13} strokeWidth={2.5} />}
           label="Portfólio"
-          count={totalProjetos}
+          count={projetos.length}
         />
         <TabButton
           active={aba === 'avaliacoes'}
           onClick={() => setAba('avaliacoes')}
           icon={<Star size={13} strokeWidth={2.5} />}
           label="Avaliações"
-          count={totalAvaliacoes}
+          count={avaliacoes.length}
         />
       </div>
 
       {/* Tab content */}
-      <div className="mt-5">
-        {aba === 'portfolio' && (
-          <div className="animate-in fade-in duration-200">
-            <PortfolioGrid
-              projetos={projetos}
-              projetoDestaque={projetoDestaque}
-            />
-          </div>
-        )}
+      {aba === 'portfolio' && (
+        <div className="animate-in fade-in duration-200">
+          <PortfolioGrid
+            projetos={projetos}
+            projetoDestaque={projetoDestaque}
+          />
+        </div>
+      )}
 
-        {aba === 'avaliacoes' && (
-          <div className="animate-in fade-in duration-200">
-            <PerfilAvaliacoes
-              avaliacoes={avaliacoes}
-              projetos={projetos}
-              onVerProjeto={irParaProjeto}
-            />
-          </div>
-        )}
-      </div>
+      {aba === 'avaliacoes' && (
+        <div className="animate-in fade-in duration-200">
+          <PerfilAvaliacoes
+            avaliacoes={avaliacoes}
+            projetos={projetos}
+            onVerProjeto={irParaProjeto}
+          />
+        </div>
+      )}
     </section>
   )
 }
@@ -125,3 +112,4 @@ function TabButton({
     </button>
   )
 }
+EOF
