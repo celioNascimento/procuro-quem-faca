@@ -131,7 +131,7 @@ export function AdCardPainelCliente({
           className="relative block w-full h-[90px] md:h-[120px] lg:h-[140px] overflow-hidden rounded-2xl shadow-sm hover:opacity-95 transition-opacity"
         >
           <img
-            src={anuncio.imagem_url}
+            src={anuncio.imagem_url ?? ''}
             alt={anuncio.titulo}
             className="w-full h-full object-cover object-center"
           />

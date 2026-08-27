@@ -6,7 +6,10 @@ import { motion } from 'framer-motion'
 import { Upload, Link as LinkIcon, X, ImageOff, AlertCircle } from 'lucide-react'
 import { SegmentacaoFields } from './SegmentacaoFields'
 import { validarSegmentacoesContraInventario } from '@/lib/services/adminAnuncios.service'
+
+// Importa Segmentacao normalmente e reexporta AnuncioLojistaFormValues para o page.tsx achar
 import type { Segmentacao, AnuncioLojistaFormValues } from '@/types/ads'
+export type { AnuncioLojistaFormValues } from '@/types/ads'
 
 const POSICOES = [
   { value: 'topo_busca', label: 'Topo do resultado da busca' },

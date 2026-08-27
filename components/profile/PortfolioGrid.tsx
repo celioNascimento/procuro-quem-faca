@@ -1,6 +1,7 @@
 //components/profile/PortfolioGrid.tsx
 
 'use client'
+import { useEffect, useRef } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Camera, CheckCircle2 } from 'lucide-react'
 import ProjetoModal from './ProjetoModal'
@@ -8,14 +9,19 @@ import type { ProjetoPerfil } from '@/types/perfil'
 
 interface Props {
   projetos: ProjetoPerfil[]
+  /** ID do projeto a destacar (vindo da aba de Avaliações via PerfilTabs) */
+  projetoDestaque?: string | number | null
 }
 
-export default function PortfolioGrid({ projetos }: Props) {
+export default function PortfolioGrid({ projetos, projetoDestaque }: Props) {
   const searchParams = useSearchParams()
   const router       = useRouter()
   const pathname     = usePathname()
 
-  // URL é a única fonte de verdade — sem useState para o modal
+  // Refs para scroll ao projeto destacado
+  const itemRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  // URL é a única fonte de verdade para o modal
   const projetoId     = searchParams.get('projeto')
   const projetoAberto = projetoId
     ? projetos.find(p => String(p.id) === projetoId) ?? null
@@ -27,6 +33,18 @@ export default function PortfolioGrid({ projetos }: Props) {
   const fecharModal = () =>
     router.push(pathname, { scroll: false })
 
+  // Quando um destaque chega do PerfilTabs, rola até o card e abre o modal
+  useEffect(() => {
+    if (!projetoDestaque) return
+    const key = String(projetoDestaque)
+    const el = itemRefs.current[key]
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+    // Abre o modal do projeto destacado
+    router.push(`${pathname}?projeto=${projetoDestaque}`, { scroll: false })
+  }, [projetoDestaque]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (projetos.length === 0) {
     return (
       <div className="bg-slate-50 border-2 border-dashed border-slate-100 rounded-[3rem] p-12 text-center">
@@ -37,16 +55,13 @@ export default function PortfolioGrid({ projetos }: Props) {
     )
   }
 
-  // Sempre 3 colunas a partir de sm, independente da quantidade de
-  // projetos — prioriza consistência visual do layout sobre preencher
-  // a linha inteira quando há poucos itens (com 1-2 projetos, a última
-  // posição fica vazia, o que é esperado).
-  const gridClass = 'grid grid-cols-2 sm:grid-cols-3 gap-2'
-
   return (
     <>
-      <div className={gridClass}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {projetos.map((projeto) => {
+          const key = String(projeto.id)
+          const isDestaque = String(projetoDestaque) === key
+
           const fotoCapa = projeto.portfolio_fotos.length > 0
             ? [...projeto.portfolio_fotos].sort((a, b) => b.ordem - a.ordem)[0].url_foto
             : '/placeholder-job.png'
@@ -58,11 +73,19 @@ export default function PortfolioGrid({ projetos }: Props) {
 
           return (
             <div
-              key={projeto.id}
+              key={key}
+              ref={el => { itemRefs.current[key] = el }}
               onClick={() => abrirProjeto(projeto.id)}
               className="group relative cursor-pointer"
             >
-              <div className="relative aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
+              <div
+                className={[
+                  'relative aspect-square bg-slate-100 rounded-xl overflow-hidden border shadow-sm hover:shadow-lg transition-all duration-300',
+                  isDestaque
+                    ? 'border-blue-400 ring-2 ring-blue-400 ring-offset-2'
+                    : 'border-slate-100',
+                ].join(' ')}
+              >
                 <img
                   src={fotoCapa}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
