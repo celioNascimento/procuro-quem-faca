@@ -47,7 +47,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
   const [status, setStatus] = useState('')
   const [tentouEnviar, setTentouEnviar] = useState(false)
   const [userLogado, setUserLogado] = useState<User | null>(null)
-  const [portfolioOb, setPortfolioOb] = useState(true) // NOVO: estado local
+  const [portfolioOb, setPortfolioOb] = useState(true) // NOVO: estado local sincronizado com DB
 
   const [isModalExcluirOpen, setIsModalExcluirOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -89,8 +89,9 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
             )
           ])
           form.carregarPerfil(perfilCarregado)
-          // NOVO: carregar configuração de portfólio
-          setPortfolioOb((perfilCarregado as any).portfolio_obrigatorio ?? true)
+          // NOVO: carregar configuração de portfólio do Supabase
+          const portfolioValue = (perfilCarregado as any).portfolio_obrigatorio
+          setPortfolioOb(typeof portfolioValue === 'boolean' ? portfolioValue : true)
         } else {
           await Promise.all([
             loc.carregarRegioes('PR'),
@@ -285,6 +286,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
                   prestadorId={form.formData.id}
                   inicial={portfolioOb}
                   onSuccess={(novoValor) => {
+                    // Atualizar estado LOCAL imediatamente após sucesso no Supabase
                     setPortfolioOb(novoValor)
                     setStatus(`Portfólio ${novoValor ? 'ativado' : 'desativado'} com sucesso!`)
                     setTimeout(() => setStatus(''), 3000)
