@@ -35,10 +35,10 @@ export function PortfolioToggle({
   }
 
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg gap-4">
+    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl gap-4">
       <div className="flex-1">
-        <h3 className="font-semibold text-lg">Portfólio Obrigatório</h3>
-        <p className="text-sm text-gray-600 mt-1">
+        <h3 className="font-semibold text-base text-slate-900">Portfólio Obrigatório</h3>
+        <p className="text-sm text-slate-600 mt-1">
           {obrigatorio
             ? 'Fotos são obrigatórias no início e fim do serviço'
             : 'Fotos são opcionais — aceite do cliente ainda é obrigatório'}
@@ -48,7 +48,7 @@ export function PortfolioToggle({
       <button
         onClick={handleToggle}
         disabled={carregando}
-        className={`px-6 py-2 rounded font-medium transition whitespace-nowrap ${
+        className={`px-6 py-2 rounded-lg font-black text-xs uppercase tracking-wide transition whitespace-nowrap ${
           obrigatorio
             ? 'bg-green-100 text-green-800 hover:bg-green-200'
             : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
