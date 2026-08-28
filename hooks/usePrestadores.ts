@@ -40,11 +40,11 @@ export function usePrestadores() {
   const [prestadoresBase, setPrestadoresBase] = useState<Prestador[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState(false)
-  const [cidadeGeo, setCidadeGeo] = useState<string | null>(null)
 
-  // Geolocalização silenciosa — só roda quando não há filtro de localização ativo
+  // Geolocalização — converte descoberta em parâmetro de URL visível
   useEffect(() => {
-    if (filtroCidade || filtroEstado || filtroRegiao) return
+    // Se o usuário já buscou um termo específico ou já existe filtro de localização, não restringimos por GPS.
+    if (filtroCidade || filtroEstado || filtroRegiao || queryBusca) return
     if (!navigator.geolocation) return
 
     navigator.geolocation.getCurrentPosition(
@@ -59,7 +59,14 @@ export function usePrestadores() {
             data.address?.city ||
             data.address?.town ||
             data.address?.municipality
-          if (nome) setCidadeGeo(nome)
+            
+          if (nome) {
+            const params = new URLSearchParams(window.location.search)
+            if (!params.has('cidade')) {
+              params.set('cidade', nome)
+              router.replace(`/prestadores?${params.toString()}`, { scroll: false })
+            }
+          }
         } catch {
           // silencioso
         }
@@ -67,7 +74,7 @@ export function usePrestadores() {
       () => {},
       { timeout: 8000 }
     )
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch principal — só refaz quando a busca textual muda
   // Filtros de localização/categoria filtram no cliente sobre prestadoresBase
@@ -135,7 +142,7 @@ export function usePrestadores() {
 
     fetchDados()
     return () => controller.abort()
-  }, [queryBusca, filtroHab])
+  }, [queryBusca, filtroHab, filtroCidade, router])
 
   // ─── Opções disponíveis em cascata ────────────────────────────────────────
   // Cada nível filtra sobre prestadoresBase respeitando os pais já selecionados,
@@ -218,7 +225,7 @@ export function usePrestadores() {
   }, [prestadoresBase, filtroGrupo])
 
   // ─── Lista final com todos os filtros aplicados ───────────────────────────
-  const cidadeEfetiva = filtroCidade || cidadeGeo || null
+  const cidadeEfetiva = filtroCidade || null
 
   const prestadoresExibidos = useMemo(() => {
     return prestadoresBase.filter(p => {
@@ -246,7 +253,6 @@ export function usePrestadores() {
     cidadesDisponiveis,
     gruposDisponiveis,
     categoriasDisponiveis,
-    cidadeGeo,
     loading,
     erro,
   }
