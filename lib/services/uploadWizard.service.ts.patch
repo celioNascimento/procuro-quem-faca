@@ -1,0 +1,39 @@
+--- a/lib/services/uploadWizard.service.ts
++++ b/lib/services/uploadWizard.service.ts
+@@ -1,6 +1,36 @@
+ // lib/services/uploadWizard.service.ts
+ import { supabase } from '@/lib/supabase'
+ 
++/**
++ * Validar requisitos para iniciar ou finalizar um serviço
++ * Se portfolio_obrigatorio = true, exigir fotos
++ * Se = false, fotos são opcionais (mas aceite do cliente é sempre obrigatório)
++ */
++export async function validarRequisitosFinalizacao(
++  projetoId: string,
++  prestadorId: number,
++  etapa: 'inicio' | 'fim',
++) {
++  // Buscar configuração do prestador
++  const { data: prestador, error: erroP } = await supabase
++    .from('prestadores')
++    .select('portfolio_obrigatorio')
++    .eq('id', prestadorId)
++    .single()
++
++  if (erroP || !prestador) throw new Error('Prestador não encontrado')
++
++  // Se portfólio obrigatório, validar existência de fotos
++  if (prestador.portfolio_obrigatorio) {
++    const { data: fotos } = await supabase
++      .from('portfolio_fotos')
++      .select('id', { count: 'exact' })
++      .eq('projeto_id', projetoId)
++
++    if (!fotos || fotos.length === 0) {
++      throw new Error(`Foto obrigatória para ${etapa === 'inicio' ? 'iniciar' : 'finalizar'} o serviço`)
++    }
++  }
++
++  return { portfolioObrigatorio: prestador.portfolio_obrigatorio, validado: true }
++}

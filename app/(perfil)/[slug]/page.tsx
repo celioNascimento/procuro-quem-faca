@@ -92,7 +92,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               {isPublico && (
                 <Link
                   href={`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`}
-                  className="group flex items-center gap-3 rounded-[1.75rem] border border-indigo-100 bg-indigo-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-600 hover:shadow-md active:translate-y-0 sm:gap-4 sm:p-5"
+                  className="group flex items-center gap-3 rounded-[1.75rem] border border-indigo-100 bg-indigo-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-[...]"
                 >
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm transition-transform group-hover:scale-105">
                     <BadgeCheck size={20} aria-hidden="true" />
@@ -124,8 +124,12 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               />
             </div>
 
-            {/* Portfólio + Avaliações em abas — substitui os dois blocos separados */}
-            <PerfilTabs projetos={projetos} avaliacoes={avaliacoes} />
+            {/* Portfólio + Avaliações em abas — passa portfolioObrigatorio */}
+            <PerfilTabs 
+              projetos={projetos} 
+              avaliacoes={avaliacoes}
+              portfolioObrigatorio={prestador.portfolio_obrigatorio}
+            />
           </div>
         </div>
       </div>

@@ -1,0 +1,69 @@
+// Integração no componente UploadWizardContainer.tsx
+// Adicione esta importação no topo do arquivo:
+import { validarRequisitosFinalizacao } from '@/lib/services/uploadWizard.service'
+
+// Então, no handler de conclusão do serviço, adicione esta validação:
+
+async function handleFinalizarServico() {
+  try {
+    setCarregando(true)
+
+    // Validar requisitos (novas fotos opcionais)
+    const { portfolioObrigatorio } = await validarRequisitosFinalizacao(
+      projetoId,
+      prestadorId,
+      'fim'
+    )
+
+    if (portfolioObrigatorio && !temFotosCarregadas()) {
+      toast.error('Fotos são obrigatórias para sua categoria. Adicione pelo menos uma foto.')
+      setCarregando(false)
+      return
+    }
+
+    // Se passou na validação, continuar com a conclusão
+    await atualizarStatusProjeto(projetoId, 'finalizado')
+    
+    toast.success('Serviço finalizado com sucesso!')
+    router.push(`/dashboard?aba=portfolio`)
+  } catch (erro) {
+    const mensagem = erro instanceof Error ? erro.message : 'Erro ao finalizar serviço'
+    toast.error(mensagem)
+    console.error('Erro:', erro)
+  } finally {
+    setCarregando(false)
+  }
+}
+
+// Padrão similar deve ser aplicado para handleIniciarServico:
+
+async function handleIniciarServico() {
+  try {
+    setCarregando(true)
+
+    // Validar requisitos (novas fotos opcionais)
+    const { portfolioObrigatorio } = await validarRequisitosFinalizacao(
+      projetoId,
+      prestadorId,
+      'inicio'
+    )
+
+    if (portfolioObrigatorio && !temFotosCarregadas()) {
+      toast.error('Fotos são obrigatórias para sua categoria. Adicione pelo menos uma foto.')
+      setCarregando(false)
+      return
+    }
+
+    // Continuar com inicialização
+    await atualizarStatusProjeto(projetoId, 'em_execucao')
+    
+    toast.success('Serviço iniciado!')
+    // redirecionar ou atualizar UI
+  } catch (erro) {
+    const mensagem = erro instanceof Error ? erro.message : 'Erro ao iniciar serviço'
+    toast.error(mensagem)
+    console.error('Erro:', erro)
+  } finally {
+    setCarregando(false)
+  }
+}

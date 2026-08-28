@@ -1,5 +1,3 @@
-//components/profile/PerfilTabs.tsx
-
 'use client'
 
 import { useState } from 'react'
@@ -15,15 +13,18 @@ type Tab = 'portfolio' | 'avaliacoes'
 interface Props {
   projetos: ProjetoPerfil[]
   avaliacoes: AvaliacaoPerfil[]
+  portfolioObrigatorio?: boolean // NEW: controlar visibilidade da aba
 }
 
-export default function PerfilTabs({ projetos, avaliacoes }: Props) {
-  const [aba, setAba] = useState<Tab>('portfolio')
-  const router       = useRouter()
-  const pathname     = usePathname()
+export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio = true }: Props) {
+  // Se portfolio desativado, começar na aba de avaliações
+  const abaPadrao = !portfolioObrigatorio && avaliacoes.length > 0 ? 'avaliacoes' : 'portfolio'
+  const [aba, setAba] = useState<Tab>(abaPadrao)
+  const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const projetoId    = searchParams.get('projeto')
+  const projetoId = searchParams.get('projeto')
   const projetoAberto = projetoId
     ? projetos.find(p => String(p.id) === projetoId) ?? null
     : null
@@ -38,15 +39,17 @@ export default function PerfilTabs({ projetos, avaliacoes }: Props) {
 
   return (
     <section className="flex flex-col gap-5" aria-label="Portfólio e Avaliações">
-
       <div className="flex items-center gap-1 rounded-2xl bg-slate-100 p-1">
-        <TabButton
-          active={aba === 'portfolio'}
-          onClick={() => setAba('portfolio')}
-          icon={<Images size={13} strokeWidth={2.5} />}
-          label="Portfólio"
-          count={projetos.length}
-        />
+        {/* Mostra aba de portfolio APENAS se portfolioObrigatorio = true */}
+        {portfolioObrigatorio && (
+          <TabButton
+            active={aba === 'portfolio'}
+            onClick={() => setAba('portfolio')}
+            icon={<Images size={13} strokeWidth={2.5} />}
+            label="Portfólio"
+            count={projetos.length}
+          />
+        )}
         <TabButton
           active={aba === 'avaliacoes'}
           onClick={() => setAba('avaliacoes')}
@@ -56,7 +59,7 @@ export default function PerfilTabs({ projetos, avaliacoes }: Props) {
         />
       </div>
 
-      {aba === 'portfolio' && (
+      {portfolioObrigatorio && aba === 'portfolio' && (
         <div className="animate-in fade-in duration-200">
           <PortfolioGrid
             projetos={projetos}
@@ -83,7 +86,6 @@ export default function PerfilTabs({ projetos, avaliacoes }: Props) {
           onClose={fecharModal}
         />
       )}
-
     </section>
   )
 }
