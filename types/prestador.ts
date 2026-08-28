@@ -1,5 +1,3 @@
-//types/prestador.ts
-
 export type AtivacaoStatus =
   | 'nao_enviado'
   | 'enviado'
@@ -26,27 +24,41 @@ export type Prestador = {
   bairro?: string;
   bio?: string;
   cidades_atendidas?: string[];
+
+  // Joins carregados via select
   cidades?: { id?: string; nome: string; estado_sigla: string; regiao_id: string } | null;
-  categorias?: { id?: string; nome: string } | null;
+  categorias?: {
+    id?: string;
+    nome: string;
+    grupo_id?: string | null;
+    categorias_grupos?: { id: string; nome: string } | null;
+  } | null;
+  regioes?: { id: string; nome: string } | null;
+
   ativacao_status?: AtivacaoStatus;
   garantia_dias?: GarantiaDias;
 
   // Colunas próprias do prestador (FK), presentes mesmo sem o join carregado.
-  // Aceita string | number pois PrestadorFormData (abaixo) redeclara esses
-  // campos como string | number — union precisa ser compatível nos dois tipos.
   cidade_id?: string | number | null;
   categoria_id?: string | number | null;
+  estado_sigla?: string;
+  regiao_id?: string | null;
+  grupo_id?: string | null;
 
-  // Computados
+  // Computados no normalizados.map() do usePrestadores
   cidade_nome: string;
   categoria: string;
   media_nota: number;
   total_avals: number;
-
+  regiao_nome?: string;   // vem de regioes.nome
+  grupo_nome?: string;    // vem de categorias.categorias_grupos.nome
 };
 
 // Interface usada para o formulário (input)
-export interface PrestadorFormData extends Omit<Prestador, 'id' | 'cidades' | 'categorias' | 'cidade_nome' | 'categoria' | 'media_nota' | 'total_avals'> {
+export interface PrestadorFormData extends Omit<
+  Prestador,
+  'id' | 'cidades' | 'categorias' | 'regioes' | 'cidade_nome' | 'categoria' | 'media_nota' | 'total_avals' | 'regiao_nome' | 'grupo_nome'
+> {
   id: number | null;
   grupo_id: string | number;
   categoria_id: string | number;
