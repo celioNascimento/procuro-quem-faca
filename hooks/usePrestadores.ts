@@ -1,9 +1,12 @@
+'use client'
 // hooks/usePrestadores.ts
+
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { getPrestadoresAtivos, getMediasAvaliacoes } from '@/lib/db/prestadores'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import { pesoOrdenacao } from '@/lib/ordenacao'
+import { useFiltrosParams } from './useFiltrosParams'
 import type { Prestador } from '@/types/prestador'
 
 function calcularMedias(medias: { prestador_id: string; nota: number }[]) {
@@ -22,25 +25,26 @@ function parsearBusca(query: string): { termo: string; cidadeExtraida: string | 
   return { termo: query, cidadeExtraida: null }
 }
 
-export function usePrestadores(
-  queryBusca: string,
-  filtroHab: string,
-  // Filtros de localização/categoria — todos opcionais
-  filtroCidNome:    string,
-  filtroEstado:     string,
-  filtroRegiao:     string,
-  filtroGrupo:      string,
-  filtroCategoria:  string,
-) {
+export function usePrestadores() {
   const router = useRouter()
+  const {
+    queryBusca,
+    filtroHab,
+    filtroCidade,
+    filtroEstado,
+    filtroRegiao,
+    filtroGrupo,
+    filtroCategoria,
+  } = useFiltrosParams()
+
   const [prestadoresBase, setPrestadoresBase] = useState<Prestador[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState(false)
   const [cidadeGeo, setCidadeGeo] = useState<string | null>(null)
 
-  // Geolocalização silenciosa — só roda quando não há nenhum filtro de localização ativo
+  // Geolocalização silenciosa — só roda quando não há filtro de localização ativo
   useEffect(() => {
-    if (filtroCidNome || filtroEstado || filtroRegiao) return
+    if (filtroCidade || filtroEstado || filtroRegiao) return
     if (!navigator.geolocation) return
 
     navigator.geolocation.getCurrentPosition(
@@ -51,17 +55,22 @@ export function usePrestadores(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
           )
           const data = await res.json()
-          const nome = data.address?.city || data.address?.town || data.address?.municipality
+          const nome =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.municipality
           if (nome) setCidadeGeo(nome)
-        } catch { /* silencioso */ }
+        } catch {
+          // silencioso
+        }
       },
       () => {},
       { timeout: 8000 }
     )
   }, [])
 
-  // Fetch principal — só depende de busca textual, não dos filtros de localização/categoria
-  // (esses filtram sobre prestadoresBase no cliente)
+  // Fetch principal — só refaz quando a busca textual muda
+  // Filtros de localização/categoria filtram no cliente sobre prestadoresBase
   useEffect(() => {
     const controller = new AbortController()
 
@@ -82,15 +91,19 @@ export function usePrestadores(
 
         const normalizados: Prestador[] = (pData || []).map(p => ({
           ...p,
-          cidade_nome:  p.cidades?.nome         || '',
-          cidade_id:    p.cidades?.id            || p.cidade_id  || null,
-          categoria:    p.categorias?.nome       || 'Profissional',
-          categoria_id: p.categorias?.id         || p.categoria_id || null,
-          // estado_sigla e regiao_id já vêm direto da coluna do prestador
-          estado_sigla: p.estado_sigla           || p.cidades?.estado_sigla || '',
-          regiao_id:    p.regiao_id              || p.cidades?.regiao_id    || null,
+          cidade_nome:  p.cidades?.nome                          || '',
+          cidade_id:    p.cidades?.id                            || p.cidade_id    || null,
+          categoria:    p.categorias?.nome                       || 'Profissional',
+          categoria_id: p.categorias?.id                         || p.categoria_id || null,
+          // estado_sigla e regiao_id vêm direto da coluna do prestador;
+          // fallback para o join com cidades caso a coluna esteja nula
+          estado_sigla: p.estado_sigla                           || p.cidades?.estado_sigla || '',
+          regiao_id:    p.regiao_id                              || p.cidades?.regiao_id    || null,
+          regiao_nome:  p.regioes?.nome                          || '',
+          grupo_id:     p.grupo_id                               || p.categorias?.grupo_id  || null,
+          grupo_nome:   p.categorias?.categorias_grupos?.nome    || '',
           media_nota:   mediaMap[p.id] ? mediaMap[p.id].soma / mediaMap[p.id].total : 0,
-          total_avals:  mediaMap[p.id]?.total    || 0,
+          total_avals:  mediaMap[p.id]?.total                    || 0,
         }))
 
         const { termo, cidadeExtraida } = parsearBusca(queryBusca)
@@ -105,7 +118,8 @@ export function usePrestadores(
           ...[...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b)),
         ])
 
-        if (cidadeExtraida && !filtroCidNome) {
+        // Se extraiu cidade da query e não tem cidade na URL, aplica via router
+        if (cidadeExtraida && !filtroCidade) {
           const params = new URLSearchParams(window.location.search)
           params.set('cidade', cidadeExtraida)
           router.replace(`/prestadores?${params.toString()}`, { scroll: false })
@@ -124,8 +138,8 @@ export function usePrestadores(
   }, [queryBusca, filtroHab])
 
   // ─── Opções disponíveis em cascata ────────────────────────────────────────
-  // Cada nível só mostra opções que existem nos prestadoresBase,
-  // respeitando os filtros pai já selecionados.
+  // Cada nível filtra sobre prestadoresBase respeitando os pais já selecionados,
+  // mostrando só opções com prestadores reais.
 
   const estadosDisponiveis = useMemo(() => {
     const map = new Map<string, number>()
@@ -158,10 +172,12 @@ export function usePrestadores(
     prestadoresBase
       .filter(p =>
         (!filtroEstado || p.estado_sigla === filtroEstado) &&
-        (!filtroRegiao || p.regiao_id   === filtroRegiao)
+        (!filtroRegiao || p.regiao_id    === filtroRegiao)
       )
       .forEach(p => {
-        if (p.cidade_nome) contagem[p.cidade_nome] = (contagem[p.cidade_nome] ?? 0) + 1
+        if (p.cidade_nome) {
+          contagem[p.cidade_nome] = (contagem[p.cidade_nome] ?? 0) + 1
+        }
         if (Array.isArray(p.cidades_atendidas)) {
           p.cidades_atendidas.forEach(c => {
             if (c?.trim()) contagem[c.trim()] = (contagem[c.trim()] ?? 0) + 1
@@ -201,33 +217,26 @@ export function usePrestadores(
       .map(([id, { nome, count }]) => ({ id, nome, count }))
   }, [prestadoresBase, filtroGrupo])
 
-  // ─── Lista final filtrada ─────────────────────────────────────────────────
-  const cidadeEfetiva = filtroCidNome || cidadeGeo || null
+  // ─── Lista final com todos os filtros aplicados ───────────────────────────
+  const cidadeEfetiva = filtroCidade || cidadeGeo || null
 
   const prestadoresExibidos = useMemo(() => {
     return prestadoresBase.filter(p => {
-      if (filtroEstado   && p.estado_sigla !== filtroEstado)   return false
-      if (filtroRegiao   && p.regiao_id    !== filtroRegiao)   return false
-      if (filtroGrupo    && p.grupo_id     !== filtroGrupo)    return false
-      if (filtroCategoria && p.categoria_id !== filtroCategoria) return false
+      if (filtroEstado    && p.estado_sigla  !== filtroEstado)    return false
+      if (filtroRegiao    && p.regiao_id     !== filtroRegiao)    return false
+      if (filtroGrupo     && p.grupo_id      !== filtroGrupo)     return false
+      if (filtroCategoria && p.categoria_id  !== filtroCategoria) return false
 
       if (cidadeEfetiva) {
         const cn = cidadeEfetiva.toLowerCase().trim()
-        const nomeBate = p.cidade_nome?.toLowerCase().trim() === cn
-        const atendeBate = p.cidades_atendidas?.some(c => c?.toLowerCase().trim() === cn)
+        const nomeBate    = p.cidade_nome?.toLowerCase().trim() === cn
+        const atendeBate  = p.cidades_atendidas?.some(c => c?.toLowerCase().trim() === cn)
         if (!nomeBate && !atendeBate) return false
       }
 
       return true
     })
-  }, [prestadoresBase, filtroEstado, filtroRegiao, filtroCidNome, filtroGrupo, filtroCategoria, cidadeEfetiva])
-
-  function toggleCidade(nomeCidade: string) {
-    const params = new URLSearchParams(window.location.search)
-    if (filtroCidNome === nomeCidade) params.delete('cidade')
-    else params.set('cidade', nomeCidade)
-    router.push(`/prestadores?${params.toString()}`)
-  }
+  }, [prestadoresBase, filtroEstado, filtroRegiao, filtroCidade, filtroGrupo, filtroCategoria, cidadeEfetiva])
 
   return {
     prestadoresBase,
@@ -240,6 +249,5 @@ export function usePrestadores(
     cidadeGeo,
     loading,
     erro,
-    toggleCidade,
   }
 }
