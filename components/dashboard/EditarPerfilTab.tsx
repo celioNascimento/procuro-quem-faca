@@ -1,3 +1,5 @@
+//components/dashboard/EditarPerfilTab.tsx
+
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -47,7 +49,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
   const [status, setStatus] = useState('')
   const [tentouEnviar, setTentouEnviar] = useState(false)
   const [userLogado, setUserLogado] = useState<User | null>(null)
-  const [portfolioOb, setPortfolioOb] = useState(true) // NOVO: estado local sincronizado com DB
+  const [portfolioOb, setPortfolioOb] = useState(true) // Estado local sincronizado com DB
 
   const [isModalExcluirOpen, setIsModalExcluirOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -89,7 +91,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
             )
           ])
           form.carregarPerfil(perfilCarregado)
-          // NOVO: carregar configuração de portfólio do Supabase
+          // Carregar configuração de portfólio do Supabase
           const portfolioValue = (perfilCarregado as any).portfolio_obrigatorio
           setPortfolioOb(typeof portfolioValue === 'boolean' ? portfolioValue : true)
         } else {
@@ -200,6 +202,12 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         user_id: userLogado?.id,
         status: 'ativo',
         ativacao_status: novoAtivacaoStatus,
+        // portfolio_obrigatorio não existe em usePrestadorForm/form.formData
+        // — precisa ser injetado explicitamente a partir do state local
+        // (portfolioOb), senão o upsert envia esse campo ausente/undefined
+        // e o Postgres reaplica o DEFAULT da coluna (true), sobrescrevendo
+        // o valor que o PortfolioToggle acabou de gravar no banco.
+        portfolio_obrigatorio: portfolioOb,
       }
 
       const finalPayload = id ? { id, ...restData } : restData;
@@ -274,7 +282,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               </section>
             )}
 
-            {/* NOVO: Seção de configuração de portfólio */}
+            {/* Seção de configuração de portfólio */}
             {form.formData.id && (
               <section className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-label="Configuração de portfólio">
                 <div className="flex flex-col gap-1.5">
