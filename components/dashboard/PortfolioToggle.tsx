@@ -21,14 +21,25 @@ export function PortfolioToggle({
   const handleToggle = async () => {
     setCarregando(true)
     setErro(null)
+    
     try {
+      console.log('🔄 Toggling portfólio...', { prestadorId, obrigatorio })
       const novoValor = !obrigatorio
+      
+      // Atualizar no Supabase
       await updatePortfolioObrigatorio(prestadorId, novoValor)
+      
+      // Atualizar estado LOCAL
+      console.log('✅ Atualização bem-sucedida, atualizando estado local')
       setObrigatorio(novoValor)
+      
+      // Chamar callback pai para sincronizar state global
       onSuccess?.(novoValor)
+      
     } catch (erro) {
-      console.error('Erro ao atualizar portfolio:', erro)
-      setErro('Erro ao atualizar configuração')
+      console.error('❌ Erro ao atualizar portfólio:', erro)
+      const mensagem = erro instanceof Error ? erro.message : 'Erro ao atualizar configuração'
+      setErro(mensagem)
     } finally {
       setCarregando(false)
     }
@@ -43,7 +54,7 @@ export function PortfolioToggle({
             ? 'Fotos são obrigatórias no início e fim do serviço'
             : 'Fotos são opcionais — aceite do cliente ainda é obrigatório'}
         </p>
-        {erro && <p className="text-sm text-red-600 mt-2">{erro}</p>}
+        {erro && <p className="text-sm text-red-600 mt-2 font-medium">⚠️ {erro}</p>}
       </div>
       <button
         onClick={handleToggle}
