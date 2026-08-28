@@ -1,36 +1,50 @@
-// hooks/useFiltrosPrestadores.ts
 'use client'
+// hooks/useFiltrosPrestadores.ts
+// Encapsula toda a lógica de escrita de filtros na URL.
+// Lê os parâmetros via useFiltrosParams (fonte única).
 
 import { useRouter } from 'next/navigation'
-import { useSearchParams } from 'next/navigation'
+import { useFiltrosParams } from './useFiltrosParams'
 
 export function useFiltrosPrestadores() {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const {
+    filtroEstado,
+    filtroRegiao,
+    filtroCidade,
+    filtroGrupo,
+    filtroCategoria,
+  } = useFiltrosParams()
 
-  const filtroEstado  = searchParams.get('estado')  || ''
-  const filtroRegiao  = searchParams.get('regiao')  || ''
-  const filtroCidade  = searchParams.get('cidade')  || ''
-  const filtroGrupo   = searchParams.get('grupo')   || ''
-  const filtroCategoria = searchParams.get('categoria') || ''
-
-  const totalAtivos = [filtroEstado, filtroRegiao, filtroCidade, filtroGrupo, filtroCategoria]
-    .filter(Boolean).length
+  const totalAtivos = [
+    filtroEstado,
+    filtroRegiao,
+    filtroCidade,
+    filtroGrupo,
+    filtroCategoria,
+  ].filter(Boolean).length
 
   function aplicar(chave: string, valor: string) {
     const params = new URLSearchParams(window.location.search)
 
+    // Toggle: mesmo valor remove, valor diferente substitui
     if (params.get(chave) === valor) {
-      // mesmo valor → toggle (remove)
       params.delete(chave)
     } else {
       params.set(chave, valor)
     }
 
-    // Cascata: limpa os filhos quando o pai muda
-    if (chave === 'estado') { params.delete('regiao'); params.delete('cidade') }
-    if (chave === 'regiao') { params.delete('cidade') }
-    if (chave === 'grupo')  { params.delete('categoria') }
+    // Cascata: limpa filhos quando o pai muda
+    if (chave === 'estado') {
+      params.delete('regiao')
+      params.delete('cidade')
+    }
+    if (chave === 'regiao') {
+      params.delete('cidade')
+    }
+    if (chave === 'grupo') {
+      params.delete('categoria')
+    }
 
     router.push(`/prestadores?${params.toString()}`, { scroll: false })
   }
@@ -49,8 +63,8 @@ export function useFiltrosPrestadores() {
     filtroEstado,
     filtroRegiao,
     filtroCidade,
-    filtroCategoria,
     filtroGrupo,
+    filtroCategoria,
     totalAtivos,
     aplicar,
     limparFiltros,
