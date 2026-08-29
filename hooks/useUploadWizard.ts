@@ -13,6 +13,7 @@ import {
   marcarProjetoConcluido,
   atualizarStatusProjeto,
   atualizarTituloProjeto,
+  atualizarDadosClienteProjeto,
   upsertFotoProjeto,
   atualizarLegendaFoto,
   getStatusETokenProjeto,
@@ -70,6 +71,15 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
   const [salvandoLegenda, setSalvandoLegenda] = useState<boolean>(false)
   const [projetosEncontrados, setProjetosEncontrados] = useState<ProjetoIdentificado[]>([])
   const [statusTitulo, setStatusTitulo] = useState<string>('ocioso')
+  // Edição inline de whatsapp/nome/título após o projeto já criado, mas
+  // ainda pendente. Existe porque um erro de digitação no whatsapp torna
+  // o projeto invisível no painel do cliente (o vínculo depende do
+  // telefone bater exatamente), sem erro nenhum visível ao prestador.
+  const [editandoDadosCliente, setEditandoDadosCliente] = useState<boolean>(false)
+  const [salvandoDadosCliente, setSalvandoDadosCliente] = useState<boolean>(false)
+  const [erroDadosCliente, setErroDadosCliente] = useState<string | null>(null)
+  // Snapshot para permitir cancelar sem perder o que estava salvo antes.
+  const snapshotDadosClienteRef = useRef({ whatsapp: '', nome: '', titulo: '' })
   // Espelha portfolio_projetos.sem_fotos assim que o projeto existe (criado
   // ou carregado).
   const [semFotos, setSemFotos] = useState<boolean>(projeto?.sem_fotos ?? false)
@@ -460,6 +470,46 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     }
   }
 
+  /**
+   * Abre o modo de edição inline de whatsapp/nome/título. Só deve ser
+   * chamada com isProjetoPendente=true — a UI já restringe a exibição do
+   * botão, mas a função em si não valida isso (validação real está no
+   * service, via .eq('status', 'pendente')).
+   */
+  const iniciarEdicaoDadosCliente = () => {
+    snapshotDadosClienteRef.current = { whatsapp: clienteWhatsapp, nome: clienteNome, titulo }
+    setErroDadosCliente(null)
+    setEditandoDadosCliente(true)
+  }
+
+  const cancelarEdicaoDadosCliente = () => {
+    const snap = snapshotDadosClienteRef.current
+    setClienteWhatsapp(maskPhone(snap.whatsapp))
+    setClienteNome(snap.nome)
+    setTitulo(snap.titulo)
+    setErroDadosCliente(null)
+    setEditandoDadosCliente(false)
+  }
+
+  const salvarDadosCliente = async () => {
+    if (!projetoId || !isPhoneValid || !isTitleValid) return
+    setSalvandoDadosCliente(true)
+    setErroDadosCliente(null)
+    try {
+      await atualizarDadosClienteProjeto(projetoId, {
+        cliente_whatsapp: phoneDigitado,
+        cliente_nome: clienteNome.trim() || 'Cliente',
+        titulo: titulo.trim(),
+      })
+      setEditandoDadosCliente(false)
+    } catch (err) {
+      console.error('Erro ao salvar dados do cliente:', err)
+      setErroDadosCliente('Não foi possível salvar. Tente novamente.')
+    } finally {
+      setSalvandoDadosCliente(false)
+    }
+  }
+
   const gerarLinkAceite = async () => {
     setLinkGerado(true)
     if (projetoId) {
@@ -519,7 +569,8 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       projetoId, projetoStatus, titulo, clienteWhatsapp, clienteNome, linkGerado,
       fotosUrls, fotosData, zoomEtapa, comentariosZoom, comentariosSlideAtual,
       currentSlide, legendaEdit, salvandoLegenda, projetosEncontrados, statusTitulo,
-      prestadorInfo, marcandoConcluido, marcadoConcluidoAt
+      prestadorInfo, marcandoConcluido, marcadoConcluidoAt,
+      editandoDadosCliente, salvandoDadosCliente, erroDadosCliente,
     },
     derived: {
       hasLegendaSalva, isProjetoConcluido, isProjetoPendente, isSelfNumber,
@@ -550,6 +601,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       handleShare, handleUpload, handleSalvarLegenda, handleAtualizarTitulo,
       gerarLinkAceite, gerarLinkConclusao, selecionarProjeto, nextSlide, prevSlide, handleZoomClose,
       iniciarServicoSemFoto, marcarComoConcluido, escolherFluxo,
+      iniciarEdicaoDadosCliente, cancelarEdicaoDadosCliente, salvarDadosCliente,
     }
   }
 }
