@@ -19,6 +19,7 @@ import { SecaoDadosPessoais } from '@/components/perfil/SecaoDadosPessoais'
 import { SecaoLocalizacao } from '@/components/perfil/SecaoLocalizacao'
 import { SecaoGarantia } from '@/components/perfil/SecaoGarantia'
 import { PortfolioToggle } from '@/components/dashboard/PortfolioToggle'
+import EditarPerfilSkeleton from '@/components/skeletons/EditarPerfilSkeleton'
 
 // Hooks e Utils (Laboratório)
 import { usePrestadorForm } from '@/hooks/usePrestadorForm'
@@ -234,11 +235,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
   }
 
   // ── Renderização ─────────────────────────────────────────────────────────
-  if (loading) return (
-    <div className="p-20 text-center animate-pulse font-bold text-slate-300 uppercase tracking-widest">
-      Sincronizando perfil...
-    </div>
-  )
+  if (loading) return <EditarPerfilSkeleton />
 
   return (
     <section className="pb-12 sm:pb-16" aria-labelledby="profile-settings-title">
