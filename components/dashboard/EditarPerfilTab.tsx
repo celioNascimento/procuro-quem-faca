@@ -1,5 +1,3 @@
-//components/dashboard/EditarPerfilTab.tsx
-
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -287,8 +285,8 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               <section className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-label="Configuração de portfólio">
                 <div className="flex flex-col gap-1.5">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Portfólio</p>
-                  <h3 className="text-sm font-black text-slate-900">Configurar obrigatoriedade de fotos</h3>
-                  <p className="text-[13px] font-medium leading-relaxed text-slate-500">Escolha se fotos são obrigatórias no início e fim dos seus serviços.</p>
+                  <h3 className="text-sm font-black text-slate-900">Fotos por padrão</h3>
+                  <p className="text-[13px] font-medium leading-relaxed text-slate-500">Defina se novos serviços já nascem pedindo fotos. Você pode dispensar em projetos específicos a qualquer momento.</p>
                 </div>
                 <PortfolioToggle
                   prestadorId={form.formData.id}
@@ -296,7 +294,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
                   onSuccess={(novoValor) => {
                     // Atualizar estado LOCAL imediatamente após sucesso no Supabase
                     setPortfolioOb(novoValor)
-                    setStatus(`Portfólio ${novoValor ? 'ativado' : 'desativado'} com sucesso!`)
+                    setStatus(`Configuração de fotos ${novoValor ? 'ativada' : 'desativada'} com sucesso!`)
                     setTimeout(() => setStatus(''), 3000)
                   }}
                 />
