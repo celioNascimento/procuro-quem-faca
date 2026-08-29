@@ -34,7 +34,7 @@ export function UploadWizardContainer({
 }: UploadWizardContainerProps) {
   const hookData = useUploadWizard(prestadorId, projetoExistente)
 
-  const { isProjetoConcluido, isSelfNumber, isPhoneValid, isTitleValid, isProjetoPendente, hasLegendaSalva, semFotos, podeGerarLinkAvaliacao } = hookData.derived
+  const { isProjetoConcluido, isSelfNumber, isPhoneValid, isTitleValid, isProjetoPendente, hasLegendaSalva, semFotos, podeGerarLinkAvaliacao, mostrarEscolhaFluxo } = hookData.derived
   const {
     zoomEtapa, clienteWhatsapp, clienteNome, titulo,
     aguardandoAvaliacao, erroUpload, projetoId, projetosEncontrados,
@@ -44,20 +44,21 @@ export function UploadWizardContainer({
   const {
     setErroUpload, setClienteWhatsapp, setClienteNome, setTitulo,
     handleAtualizarTitulo, selecionarProjeto, setZoomEtapa, handleUpload,
-    gerarLinkAceite, gerarLinkConclusao, iniciarServicoSemFoto, marcarComoConcluido,
+    gerarLinkAceite, gerarLinkConclusao, iniciarServicoSemFoto, marcarComoConcluido, escolherFluxo,
   } = hookData.actions
 
   // Lifting do caso de garantia — permite ajustar o badge de status no hero
   // sem query duplicada (GarantiaSecaoWizard consome os mesmos dados via props).
-  // No fluxo sem_fotos a garantia fica desativada (decisão de produto), então
-  // nem buscamos o caso — evita uma query desnecessária.
+  // Elegibilidade de garantia é resolvida por garantia_dias (verificarElegibilidadeGarantia),
+  // não por sem_fotos — um projeto sem fotos pode acionar garantia normalmente
+  // se o prestador tiver garantia_dias > 0.
   const {
     caso: casoGarantia,
     loading: loadingCaso,
     recarregar: recarregarCaso,
-  } = useCasoGarantiaDoProjeto(!semFotos && isProjetoConcluido ? (projetoId ?? null) : null)
+  } = useCasoGarantiaDoProjeto(isProjetoConcluido ? (projetoId ?? null) : null)
 
-  const temGarantiaAtiva = !semFotos && isProjetoConcluido && !loadingCaso && casoGarantia !== null
+  const temGarantiaAtiva = isProjetoConcluido && !loadingCaso && casoGarantia !== null
 
   // Badge de status no hero: garantia tem prioridade visual sobre "finalizado"
   const badgeStatus = temGarantiaAtiva
@@ -191,8 +192,8 @@ export function UploadWizardContainer({
           <>
             <WizardCompleted hookData={hookData} />
 
-            {/* Garantia desativada no fluxo sem_fotos — decisão de produto */}
-            {!semFotos && projetoId && (
+            {/* Garantia elegível por garantia_dias, independente de sem_fotos */}
+            {projetoId && (
               <div className="px-5 pb-5">
                 <GarantiaSecaoWizard
                   prestadorId={prestadorId}
@@ -203,6 +204,44 @@ export function UploadWizardContainer({
               </div>
             )}
           </>
+        ) : mostrarEscolhaFluxo ? (
+          /* ────────────────────────────────────────────────────────────
+             CARD DE ESCOLHA — só aparece quando portfolio_obrigatorio=true
+             e ainda não há projeto criado. Prestador escolhe se este
+             serviço específico segue o fluxo com fotos (padrão) ou sem
+             fotos (exceção pontual, mesma jornada do fluxo automático).
+          ──────────────────────────────────────────────────────────── */
+          <div className="flex flex-col gap-4 p-5">
+            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Como registrar este serviço?</h3>
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  onClick={() => escolherFluxo(false)}
+                  className="flex flex-col items-start gap-2.5 p-4 rounded-2xl border-2 border-blue-200 bg-blue-50/40 text-left transition-all active:scale-[0.98] hover:border-blue-300"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center">
+                    <Camera size={16} className="text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black text-slate-800 uppercase italic leading-none">Com fotos</p>
+                    <p className="text-[9px] text-slate-400 font-medium mt-1">Antes, durante e depois</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => escolherFluxo(true)}
+                  className="flex flex-col items-start gap-2.5 p-4 rounded-2xl border border-slate-200 bg-white text-left transition-all active:scale-[0.98] hover:border-slate-300"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
+                    <Activity size={16} className="text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black text-slate-800 uppercase italic leading-none">Sem fotos</p>
+                    <p className="text-[9px] text-slate-400 font-medium mt-1">Só aceite e avaliação</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
         ) : semFotos ? (
           /* ────────────────────────────────────────────────────────────
              FLUXO SEM FOTO — card de status simples, sem timeline.
