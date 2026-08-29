@@ -138,6 +138,27 @@ export async function atualizarTituloProjeto(projetoId: string, titulo: string) 
   if (error) throw error
 }
 
+/**
+ * Corrige whatsapp/nome/título de um projeto já criado, mas ainda não
+ * aceito pelo cliente. Existe porque o vínculo cliente-projeto depende de
+ * cliente_whatsapp bater exatamente com o telefone do cliente — um erro de
+ * digitação torna o projeto invisível no painel do cliente, sem erro
+ * algum visível para o prestador. Só deve ser chamada com status='pendente'
+ * (a UI já restringe isso, mas o guard aqui é defensivo).
+ */
+export async function atualizarDadosClienteProjeto(
+  projetoId: string,
+  dados: { cliente_whatsapp: string; cliente_nome: string; titulo: string },
+) {
+  const { error } = await supabase
+    .from('portfolio_projetos')
+    .update(dados)
+    .eq('id', projetoId)
+    .eq('status', 'pendente')
+
+  if (error) throw error
+}
+
 export async function upsertFotoProjeto(payload: {
   projeto_id: string
   url_foto: string
