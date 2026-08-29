@@ -71,12 +71,15 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
   const [projetosEncontrados, setProjetosEncontrados] = useState<ProjetoIdentificado[]>([])
   const [statusTitulo, setStatusTitulo] = useState<string>('ocioso')
   // Espelha portfolio_projetos.sem_fotos assim que o projeto existe (criado
-  // ou carregado). Antes de existir projeto, cai no valor do prestador
-  // (prestadorInfo.portfolioObrigatorio) — é o que decide se o botão
-  // "Iniciar serviço" (sem foto) ou a timeline de fotos aparece no wizard.
+  // ou carregado).
   const [semFotos, setSemFotos] = useState<boolean>(projeto?.sem_fotos ?? false)
   const [marcandoConcluido, setMarcandoConcluido] = useState<boolean>(false)
   const [marcadoConcluidoAt, setMarcadoConcluidoAt] = useState<string | null>(projeto?.marcado_concluido_at ?? null)
+  // Escolha manual do prestador, feita no card "Como registrar este
+  // serviço?" — só existe ANTES de haver projeto e quando
+  // portfolio_obrigatorio=true (senão o fluxo já é automaticamente sem
+  // foto). null = ainda não escolheu; o card fica visível até escolher.
+  const [escolhaSemFotos, setEscolhaSemFotos] = useState<boolean | null>(null)
 
   // ── FIX 1: fotosCarrossel estabilizado com useMemo ───────────────────────
   // Antes: era recalculado a cada render, gerando nova referência de array que
@@ -370,6 +373,15 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
    * fotos (criar o projeto), mas aqui é um clique explícito do prestador
    * ("Iniciar serviço"), disparado só depois de whatsapp+nome+título válidos.
    */
+  /**
+   * Registra a escolha manual do prestador no card "Como registrar este
+   * serviço?" — só é chamada quando portfolio_obrigatorio=true (a escolha
+   * automática, quando false, nunca passa por aqui).
+   */
+  const escolherFluxo = (semFoto: boolean) => {
+    setEscolhaSemFotos(semFoto)
+  }
+
   const iniciarServicoSemFoto = async () => {
     if (!isPhoneValid || !isTitleValid || projetoId) return
     try {
@@ -513,9 +525,22 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       hasLegendaSalva, isProjetoConcluido, isProjetoPendente, isSelfNumber,
       isPhoneValid, isTitleValid, canCloseZoom, fotosCarrossel, fotoAtual,
       // semFotos: true quando o PROJETO atual está travado no fluxo sem foto.
-      // Antes de existir projeto, reflete a config atual do prestador — é o
-      // que decide, no wizard, se mostra "Iniciar serviço" ou a timeline.
-      semFotos: projetoId ? semFotos : !prestadorInfo.portfolioObrigatorio,
+      // Com projeto criado, usa o valor travado (sem_fotos). Sem projeto:
+      //  - se portfolio_obrigatorio=false, é sempre sem foto (automático,
+      //    sem escolha do prestador)
+      //  - se portfolio_obrigatorio=true, depende da escolha manual feita
+      //    no card "Como registrar este serviço?" (escolhaSemFotos)
+      semFotos: projetoId
+        ? semFotos
+        : !prestadorInfo.portfolioObrigatorio
+          ? true
+          : escolhaSemFotos === true,
+      // Card de escolha visível: só antes de existir projeto, só quando o
+      // prestador tem portfolio_obrigatorio=true (senão a escolha já é
+      // automática), só enquanto ele ainda não escolheu, e só depois que
+      // os dados do cliente (whatsapp/nome/título) já são válidos — evita
+      // escolher o fluxo antes de saber para quem é o serviço.
+      mostrarEscolhaFluxo: !projetoId && prestadorInfo.portfolioObrigatorio && escolhaSemFotos === null && isPhoneValid && isTitleValid,
       podeGerarLinkAvaliacao,
     },
     actions: {
@@ -524,7 +549,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       setClienteNome, setTitulo, setZoomEtapa, setLegendaEdit,
       handleShare, handleUpload, handleSalvarLegenda, handleAtualizarTitulo,
       gerarLinkAceite, gerarLinkConclusao, selecionarProjeto, nextSlide, prevSlide, handleZoomClose,
-      iniciarServicoSemFoto, marcarComoConcluido,
+      iniciarServicoSemFoto, marcarComoConcluido, escolherFluxo,
     }
   }
 }
