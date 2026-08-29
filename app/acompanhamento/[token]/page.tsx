@@ -8,6 +8,7 @@ import { supabase }                 from '@/lib/supabase'
 import HeaderCliente                from '@/components/perfil/HeaderCliente'
 import { CardPrestador }            from '@/components/acompanhamento/CardPrestador'
 import { LinhaDeTempo }             from '@/components/acompanhamento/LinhaDeTempo'
+import { LinhaDeTempoSemFotos }     from '@/components/acompanhamento/LinhaDeTempoSemFotos'
 import { StatusMini }               from '@/components/acompanhamento/StatusMini'
 import { ModalDiscussao }           from '@/components/acompanhamento/ModalDiscussao'
 import { RodapeSeguranca }          from '@/components/acompanhamento/RodapeSeguranca'
@@ -28,12 +29,18 @@ export default function PaginaAcompanhamento({
     handleShare, handleEnviarComentario,
   } = useAcompanhamento(token)
 
+  // Fluxo sem_fotos: travado na criação do projeto (ver migration
+  // portfolio_projetos.sem_fotos). Quando true, a página usa a timeline
+  // simplificada e desativa a seção de garantia (decisão de produto —
+  // garantia depende de evidência fotográfica para abertura de caso).
+  const semFotos = projeto?.sem_fotos ?? false
+
   const {
     caso: casoGarantia,
     loading: loadingCaso,
     recarregar: recarregarCaso,
     temGarantiaAtiva,          // derivado pelo hook — ativo só para status em andamento
-  } = useCasoGarantiaDoProjeto(projeto?.id ?? null)
+  } = useCasoGarantiaDoProjeto(!semFotos ? (projeto?.id ?? null) : null)
 
   const [clienteUserId, setClienteUserId] = useState<string | null>(null)
 
@@ -60,9 +67,9 @@ export default function PaginaAcompanhamento({
             <CardPrestador
               projeto={projeto}
               onShare={handleShare}
-              temGarantiaAtiva={temGarantiaAtiva}
+              temGarantiaAtiva={!semFotos && temGarantiaAtiva}
             />
-            {temConclusao && (
+            {!semFotos && temConclusao && (
               <StatusMini
                 labelEtapaAtual={labelEtapaAtual}
                 totalFotos={fotosOrdenadas.length}
@@ -74,16 +81,25 @@ export default function PaginaAcompanhamento({
           </aside>
 
           <div className="flex-1 min-w-0 space-y-5">
-            <LinhaDeTempo
-              fotosOrdenadas={fotosOrdenadas}
-              comentarios={comentarios}
-              labelEtapaAtual={labelEtapaAtual}
-              status={projeto.status}
-              onFotoClick={setFotoSelecionada}
-              temGarantiaAtiva={temGarantiaAtiva}
-            />
+            {semFotos ? (
+              <LinhaDeTempoSemFotos
+                status={projeto.status}
+                aceitoEm={projeto.aceito_at ?? null}
+                marcadoConcluidoEm={projeto.marcado_concluido_at ?? null}
+              />
+            ) : (
+              <LinhaDeTempo
+                fotosOrdenadas={fotosOrdenadas}
+                comentarios={comentarios}
+                labelEtapaAtual={labelEtapaAtual}
+                status={projeto.status}
+                onFotoClick={setFotoSelecionada}
+                temGarantiaAtiva={temGarantiaAtiva}
+              />
+            )}
 
-            {projetoFinalizado && clienteUserId && (
+            {/* Garantia desativada no fluxo sem_fotos — decisão de produto */}
+            {!semFotos && projetoFinalizado && clienteUserId && (
               <GarantiaSecaoCliente
                 projetoId={projeto.id}
                 clienteUserId={clienteUserId}
