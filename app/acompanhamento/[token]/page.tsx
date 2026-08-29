@@ -40,7 +40,7 @@ export default function PaginaAcompanhamento({
     loading: loadingCaso,
     recarregar: recarregarCaso,
     temGarantiaAtiva,          // derivado pelo hook — ativo só para status em andamento
-  } = useCasoGarantiaDoProjeto(!semFotos ? (projeto?.id ?? null) : null)
+  } = useCasoGarantiaDoProjeto(projeto?.id ?? null)
 
   const [clienteUserId, setClienteUserId] = useState<string | null>(null)
 
@@ -67,9 +67,9 @@ export default function PaginaAcompanhamento({
             <CardPrestador
               projeto={projeto}
               onShare={handleShare}
-              temGarantiaAtiva={!semFotos && temGarantiaAtiva}
+              temGarantiaAtiva={temGarantiaAtiva}
             />
-            {!semFotos && temConclusao && (
+            {temConclusao && (
               <StatusMini
                 labelEtapaAtual={labelEtapaAtual}
                 totalFotos={fotosOrdenadas.length}
@@ -98,8 +98,9 @@ export default function PaginaAcompanhamento({
               />
             )}
 
-            {/* Garantia desativada no fluxo sem_fotos — decisão de produto */}
-            {!semFotos && projetoFinalizado && clienteUserId && (
+            {/* Garantia elegível por garantia_dias (verificarElegibilidadeGarantia),
+                independente de sem_fotos */}
+            {projetoFinalizado && clienteUserId && (
               <GarantiaSecaoCliente
                 projetoId={projeto.id}
                 clienteUserId={clienteUserId}
