@@ -68,6 +68,7 @@ export {
   marcarProjetoConcluido,
   atualizarStatusProjeto,
   atualizarTituloProjeto,
+  atualizarDadosClienteProjeto,
   upsertFotoProjeto,
   atualizarLegendaFoto,
   getStatusETokenProjeto,
