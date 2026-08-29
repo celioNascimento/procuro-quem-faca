@@ -102,5 +102,14 @@ export interface Projeto {
     slug: string | null
     categoria: { nome: string }
   }
+  // Fluxo sem foto obrigatória — travado na criação do projeto (ver
+  // migration portfolio_projetos.sem_fotos). Quando true, prestador e
+  // cliente seguem uma jornada sem etapas de foto (aceite → marcar
+  // concluído → avaliação), e a garantia fica desativada.
+  sem_fotos?: boolean
+  aceito_at?: string | null
+  // Preenchido quando o prestador marca o serviço como concluído no
+  // fluxo sem_fotos (equivalente à foto 3 + legenda no fluxo com fotos).
+  marcado_concluido_at?: string | null
   [key: string]: unknown
 }
