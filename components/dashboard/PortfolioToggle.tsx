@@ -21,45 +21,34 @@ export function PortfolioToggle({
   const handleToggle = async () => {
     setCarregando(true)
     setErro(null)
-    
     try {
-      console.log('🔄 Toggling portfólio...', { prestadorId, obrigatorio })
       const novoValor = !obrigatorio
-      
-      // Atualizar no Supabase
       await updatePortfolioObrigatorio(prestadorId, novoValor)
-      
-      // Atualizar estado LOCAL
-      console.log('✅ Atualização bem-sucedida, atualizando estado local')
       setObrigatorio(novoValor)
-      
-      // Chamar callback pai para sincronizar state global
       onSuccess?.(novoValor)
-      
     } catch (erro) {
-      console.error('❌ Erro ao atualizar portfólio:', erro)
-      const mensagem = erro instanceof Error ? erro.message : 'Erro ao atualizar configuração'
-      setErro(mensagem)
+      console.error('Erro ao atualizar portfolio:', erro)
+      setErro('Erro ao atualizar configuração')
     } finally {
       setCarregando(false)
     }
   }
 
   return (
-    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-2xl gap-4">
+    <div className="flex items-center justify-between p-4 border rounded-lg gap-4">
       <div className="flex-1">
-        <h3 className="font-semibold text-base text-slate-900">Portfólio Obrigatório</h3>
-        <p className="text-sm text-slate-600 mt-1">
+        <h3 className="font-semibold text-lg">Fotos por padrão</h3>
+        <p className="text-sm text-gray-600 mt-1">
           {obrigatorio
-            ? 'Fotos são obrigatórias no início e fim do serviço'
-            : 'Fotos são opcionais — aceite do cliente ainda é obrigatório'}
+            ? 'Todo novo serviço pede fotos, mas você pode dispensar em projetos específicos.'
+            : 'Nenhum serviço pede fotos — aceite e avaliação continuam funcionando normalmente.'}
         </p>
-        {erro && <p className="text-sm text-red-600 mt-2 font-medium">⚠️ {erro}</p>}
+        {erro && <p className="text-sm text-red-600 mt-2">{erro}</p>}
       </div>
       <button
         onClick={handleToggle}
         disabled={carregando}
-        className={`px-6 py-2 rounded-lg font-black text-xs uppercase tracking-wide transition whitespace-nowrap ${
+        className={`px-6 py-2 rounded font-medium transition whitespace-nowrap ${
           obrigatorio
             ? 'bg-green-100 text-green-800 hover:bg-green-200'
             : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
