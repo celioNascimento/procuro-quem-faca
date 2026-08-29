@@ -34,27 +34,30 @@ export function UploadWizardContainer({
 }: UploadWizardContainerProps) {
   const hookData = useUploadWizard(prestadorId, projetoExistente)
 
-  const { isProjetoConcluido, isSelfNumber, isPhoneValid, isTitleValid, isProjetoPendente, hasLegendaSalva } = hookData.derived
+  const { isProjetoConcluido, isSelfNumber, isPhoneValid, isTitleValid, isProjetoPendente, hasLegendaSalva, semFotos, podeGerarLinkAvaliacao } = hookData.derived
   const {
     zoomEtapa, clienteWhatsapp, clienteNome, titulo,
     aguardandoAvaliacao, erroUpload, projetoId, projetosEncontrados,
     statusTitulo, fotosUrls, loadingEtapa, linkGerado, projetoStatus,
+    marcandoConcluido, marcadoConcluidoAt,
   } = hookData.state
   const {
     setErroUpload, setClienteWhatsapp, setClienteNome, setTitulo,
     handleAtualizarTitulo, selecionarProjeto, setZoomEtapa, handleUpload,
-    gerarLinkAceite, gerarLinkConclusao,
+    gerarLinkAceite, gerarLinkConclusao, iniciarServicoSemFoto, marcarComoConcluido,
   } = hookData.actions
 
   // Lifting do caso de garantia — permite ajustar o badge de status no hero
   // sem query duplicada (GarantiaSecaoWizard consome os mesmos dados via props).
+  // No fluxo sem_fotos a garantia fica desativada (decisão de produto), então
+  // nem buscamos o caso — evita uma query desnecessária.
   const {
     caso: casoGarantia,
     loading: loadingCaso,
     recarregar: recarregarCaso,
-  } = useCasoGarantiaDoProjeto(isProjetoConcluido ? (projetoId ?? null) : null)
+  } = useCasoGarantiaDoProjeto(!semFotos && isProjetoConcluido ? (projetoId ?? null) : null)
 
-  const temGarantiaAtiva = isProjetoConcluido && !loadingCaso && casoGarantia !== null
+  const temGarantiaAtiva = !semFotos && isProjetoConcluido && !loadingCaso && casoGarantia !== null
 
   // Badge de status no hero: garantia tem prioridade visual sobre "finalizado"
   const badgeStatus = temGarantiaAtiva
@@ -72,7 +75,7 @@ export function UploadWizardContainer({
       <div className="bg-[#F8FAFC] rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden w-full font-sans animate-in fade-in duration-500">
 
         {/* ══════════════════════════════════════════
-            HERO AZUL
+            HERO AZUL — idêntico nos dois fluxos
         ══════════════════════════════════════════ */}
         <div className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 px-6 pt-6 pb-7 overflow-hidden">
           <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-white/10" />
@@ -188,7 +191,8 @@ export function UploadWizardContainer({
           <>
             <WizardCompleted hookData={hookData} />
 
-            {projetoId && (
+            {/* Garantia desativada no fluxo sem_fotos — decisão de produto */}
+            {!semFotos && projetoId && (
               <div className="px-5 pb-5">
                 <GarantiaSecaoWizard
                   prestadorId={prestadorId}
@@ -199,6 +203,138 @@ export function UploadWizardContainer({
               </div>
             )}
           </>
+        ) : semFotos ? (
+          /* ────────────────────────────────────────────────────────────
+             FLUXO SEM FOTO — card de status simples, sem timeline.
+             Espelha os 3 estados do fluxo com fotos (pendente → em
+             execução → aguardando avaliação), mas cada um resolvido com
+             1 ação do prestador em vez de upload de foto.
+          ──────────────────────────────────────────────────────────── */
+          <div className="flex flex-col gap-4 p-5">
+
+            {erroUpload && (
+              <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl animate-in fade-in duration-300">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-[11px] font-black uppercase tracking-wide leading-none mb-1">Ops</p>
+                  <p className="text-[11px] font-medium leading-snug">{erroUpload}</p>
+                </div>
+                <button onClick={() => setErroUpload(null)} className="text-red-400 hover:text-red-600 shrink-0">
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* Projetos encontrados — mesma lógica do fluxo com foto */}
+            {projetosEncontrados.length > 0 && !projetoId && (
+              <div className="bg-slate-50 p-5 rounded-2xl border border-dashed border-slate-200 animate-in slide-in-from-top-4">
+                <p className="text-[9px] font-black uppercase italic text-slate-400 mb-3 tracking-widest text-center">Projetos identificados</p>
+                <div className="space-y-2">
+                  {projetosEncontrados.map(p => (
+                    <button key={p.id} onClick={() => selecionarProjeto(p)}
+                      className="w-full bg-white p-4 rounded-xl border border-slate-100 flex items-center justify-between hover:border-blue-200 hover:shadow-md transition-all group">
+                      <div className="text-left">
+                        <p className="text-[10px] font-black text-slate-800 uppercase italic leading-none">{p.titulo}</p>
+                        <p className="text-[8px] font-bold text-slate-400 uppercase mt-0.5">Status: {p.status}</p>
+                      </div>
+                      <div className="flex items-center gap-1 text-blue-500 font-black text-[9px] uppercase italic opacity-0 group-hover:opacity-100 transition-opacity">
+                        Visualizar <ChevronRight size={12} />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Card de status */}
+            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status do Serviço</h3>
+              </div>
+
+              {!projetoId ? (
+                /* Estado 1: ainda não iniciado — botão cria o projeto */
+                <div className="flex flex-col items-center gap-4 py-6 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center">
+                    <LinkIcon size={22} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-black text-slate-700 uppercase tracking-wide">Pronto para iniciar</p>
+                    <p className="text-[11px] text-slate-400 font-medium mt-1 max-w-xs">
+                      Preencha os dados do cliente acima para liberar o início do serviço.
+                    </p>
+                  </div>
+                  <button
+                    onClick={iniciarServicoSemFoto}
+                    disabled={!isPhoneValid || !isTitleValid}
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-[11px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all active:scale-95 shadow-md shadow-blue-100 disabled:shadow-none"
+                  >
+                    Iniciar serviço
+                  </button>
+                </div>
+              ) : isProjetoPendente ? (
+                /* Estado 2: projeto criado, aguardando aceite do cliente */
+                <div className="flex flex-col items-center gap-4 py-6 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center">
+                    <Activity size={22} className="text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-black text-slate-700 uppercase tracking-wide">Aguardando aceite do cliente</p>
+                    <p className="text-[11px] text-slate-400 font-medium mt-1 max-w-xs">
+                      Envie o link de aceite para <span className="font-black">{clienteNome || 'o cliente'}</span> confirmar o início.
+                    </p>
+                  </div>
+                  <button
+                    onClick={gerarLinkAceite}
+                    className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-[11px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all active:scale-95 shadow-md shadow-green-200"
+                  >
+                    <LinkIcon size={14} />
+                    Enviar aceite
+                  </button>
+                </div>
+              ) : (
+                /* Estado 3: em execução — botão marca concluído, depois libera avaliação */
+                <div className="flex flex-col items-center gap-4 py-6 text-center">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${marcadoConcluidoAt ? 'bg-green-50' : 'bg-blue-50'}`}>
+                    {marcadoConcluidoAt
+                      ? <CheckCircle2 size={22} className="text-green-500" />
+                      : <Activity size={22} className="text-blue-400 animate-pulse" />}
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-black text-slate-700 uppercase tracking-wide">
+                      {marcadoConcluidoAt ? 'Serviço concluído' : 'Serviço em execução'}
+                    </p>
+                    <p className="text-[11px] text-slate-400 font-medium mt-1 max-w-xs">
+                      {marcadoConcluidoAt
+                        ? 'Envie o link para o cliente avaliar o serviço.'
+                        : 'Quando terminar, marque o serviço como concluído.'}
+                    </p>
+                  </div>
+
+                  {!marcadoConcluidoAt ? (
+                    <button
+                      onClick={marcarComoConcluido}
+                      disabled={marcandoConcluido}
+                      className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-[11px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all active:scale-95 shadow-md shadow-blue-100"
+                    >
+                      {marcandoConcluido
+                        ? <><Loader2 size={14} className="animate-spin" /> Marcando...</>
+                        : <><CheckCircle2 size={14} /> Marcar como concluído</>}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={gerarLinkConclusao}
+                      className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-[11px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all active:scale-95 shadow-md shadow-green-200"
+                    >
+                      <LinkIcon size={14} />
+                      Enviar avaliação
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+          </div>
         ) : (
           <div className="flex flex-col gap-4 p-5">
 
@@ -300,7 +436,7 @@ export function UploadWizardContainer({
                               <span className="text-[9px] font-black uppercase italic">Enviar aceite</span>
                             </button>
                           )}
-                          {etapa.ordem === 3 && concluida && hasLegendaSalva(3) && aguardandoAvaliacao && !isProjetoConcluido && (
+                          {etapa.ordem === 3 && concluida && podeGerarLinkAvaliacao && aguardandoAvaliacao && !isProjetoConcluido && (
                             <button onClick={gerarLinkConclusao} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl shadow-md shadow-blue-100 transition-all active:scale-95">
                               <LinkIcon size={11} />
                               <span className="text-[9px] font-black uppercase italic">Enviar avaliação</span>
