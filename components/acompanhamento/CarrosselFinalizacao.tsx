@@ -1,6 +1,6 @@
 //components/acompanhamento/CarrosselFinalizacao.tsx
 
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Star, CheckCircle2 } from 'lucide-react'
 import type { FotoOrdenada, Avaliacao, Projeto } from '@/types/avaliacao'
 
 type Props = {
@@ -21,10 +21,13 @@ export default function CarrosselFinalizacao({
   avaliacaoExistente,
 }: Props) {
   const fotoAtual = fotosCarrossel[currentSlide]
+  // Fluxo sem_fotos (ou, defensivamente, qualquer projeto sem fotos
+  // registradas): sem imagem para exibir no carrossel.
+  const semFoto = fotosCarrossel.length === 0
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-5">
-      {/* Card de foto */}
+      {/* Card de foto — ou card de conclusão, quando não há fotos */}
       <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl border border-slate-100">
         {/* Cabeçalho do card */}
         <div className="p-5 border-b border-slate-50 flex items-center gap-3">
@@ -40,37 +43,48 @@ export default function CarrosselFinalizacao({
           </p>
         </div>
 
-        {/* Imagem */}
-        <div className="relative aspect-square bg-slate-50">
-          <img
-            src={fotoAtual?.url_foto}
-            className="w-full h-full object-contain"
-            alt={fotoAtual?.label}
-          />
-
-          {/* Badge de fase */}
-          <div className="absolute top-5 right-5 bg-black/60 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/20">
-            {fotoAtual?.label}
+        {semFoto ? (
+          /* Sem fotos: card de conclusão simples no lugar da imagem */
+          <div className="aspect-square bg-slate-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-center">
+              <CheckCircle2 size={28} className="text-green-500" />
+            </div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
+              Serviço concluído
+            </p>
           </div>
+        ) : (
+          <div className="relative aspect-square bg-slate-50">
+            <img
+              src={fotoAtual?.url_foto}
+              className="w-full h-full object-contain"
+              alt={fotoAtual?.label}
+            />
 
-          {/* Controles de navegação */}
-          {fotosCarrossel.length > 1 && (
-            <>
-              <button
-                onClick={onPrev}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 p-3 rounded-full text-slate-900 shadow-xl active:scale-90 transition-all border border-slate-100"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                onClick={onNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 p-3 rounded-full text-slate-900 shadow-xl active:scale-90 transition-all border border-slate-100"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </>
-          )}
-        </div>
+            {/* Badge de fase */}
+            <div className="absolute top-5 right-5 bg-black/60 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/20">
+              {fotoAtual?.label}
+            </div>
+
+            {/* Controles de navegação */}
+            {fotosCarrossel.length > 1 && (
+              <>
+                <button
+                  onClick={onPrev}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 p-3 rounded-full text-slate-900 shadow-xl active:scale-90 transition-all border border-slate-100"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  onClick={onNext}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 p-3 rounded-full text-slate-900 shadow-xl active:scale-90 transition-all border border-slate-100"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Rodapé do card */}
         <div className="p-6 text-center bg-white">
