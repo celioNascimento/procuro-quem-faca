@@ -43,4 +43,8 @@ export interface Servico {
   // filtrarComGarantiaAtiva para derivar o status de garantia sem consulta
   // separada.
   solicitacoes_garantia: SolicitacaoGarantiaResumo[]
+  // Fluxo sem foto obrigatória — travado na criação do projeto (ver
+  // migration portfolio_projetos.sem_fotos). Quando true, o ServicoCard
+  // não mostra o bloco de foto de capa (nunca vai existir).
+  sem_fotos?: boolean
 }
