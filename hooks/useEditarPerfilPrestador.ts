@@ -1,6 +1,12 @@
-import { useState, useCallback } from 'react'
+//hooks/useEditarPerfilPrestador.ts
+
+import { useState, useCallback, useEffect } from 'react'
 import { Prestador } from '@/types/prestador'
-import { updatePortfolioObrigatorio, atualizarPerfilPrestador } from '@/lib/services/prestadorPerfil.service'
+import {
+  updatePortfolioObrigatorio,
+  atualizarPerfilPrestador,
+  getPrestador, // ← já existe no service
+} from '@/lib/services/prestadorPerfil.service'
 
 interface UseEditarPerfilPrestadorProps {
   prestadorId: number
@@ -13,7 +19,34 @@ export function useEditarPerfilPrestador({
 }: UseEditarPerfilPrestadorProps) {
   const [prestador, setPrestador] = useState<Prestador | null>(prestadorInicial ?? null)
   const [carregando, setCarregando] = useState(false)
+  const [carregandoInicial, setCarregandoInicial] = useState(!prestadorInicial)
   const [erro, setErro] = useState<string | null>(null)
+
+  // Busca o prestador real do banco sempre que o componente monta
+  // (ou o prestadorId muda), em vez de depender só de prestadorInicial.
+  useEffect(() => {
+    if (!prestadorId) return
+
+    let cancelado = false
+    setCarregandoInicial(true)
+    setErro(null)
+
+    getPrestador(prestadorId)
+      .then(data => {
+        if (!cancelado) setPrestador(data)
+      })
+      .catch(err => {
+        if (!cancelado) {
+          const mensagem = err instanceof Error ? err.message : 'Erro ao carregar perfil'
+          setErro(mensagem)
+        }
+      })
+      .finally(() => {
+        if (!cancelado) setCarregandoInicial(false)
+      })
+
+    return () => { cancelado = true }
+  }, [prestadorId])
 
   const handleTogglePortfolio = useCallback(
     async (novoValor: boolean) => {
@@ -60,6 +93,7 @@ export function useEditarPerfilPrestador({
   return {
     prestador,
     carregando,
+    carregandoInicial, // ← novo: usar pra mostrar loading no componente
     erro,
     handleTogglePortfolio,
     handleAtualizarPerfil,

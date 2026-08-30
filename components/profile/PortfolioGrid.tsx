@@ -12,7 +12,12 @@ interface Props {
 }
 
 export default function PortfolioGrid({ projetos, projetoAbertoId, onAbrirProjeto }: Props) {
-  if (projetos.length === 0) {
+  // Projetos sem_fotos pertencem ao fluxo de avaliação/lista do cliente,
+  // nunca têm portfolio_fotos e não devem aparecer nesta grade visual —
+  // sem esse filtro, caem no placeholder de imagem quebrada.
+  const projetosComFoto = projetos.filter(p => !p.sem_fotos)
+
+  if (projetosComFoto.length === 0) {
     return (
       <div className="bg-slate-50 border-2 border-dashed border-slate-100 rounded-[3rem] p-12 text-center">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 italic">
@@ -24,7 +29,7 @@ export default function PortfolioGrid({ projetos, projetoAbertoId, onAbrirProjet
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-      {projetos.map((projeto) => {
+      {projetosComFoto.map((projeto) => {
         const key = String(projeto.id)
         const isDestaque = projetoAbertoId === key
 

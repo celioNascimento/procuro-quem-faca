@@ -37,6 +37,13 @@ export type Projeto = {
   // badge "Garantia acionada" quando há caso ativo. Array vazio = sem casos.
   solicitacoes_garantia: GarantiaResumo[]
   notifCount: number
+  // Fluxo sem foto obrigatória — travado na criação do projeto a partir de
+  // prestadores.portfolio_obrigatorio. Não muda retroativamente se o
+  // prestador alterar a configuração depois de criar o projeto.
+  sem_fotos: boolean
+  // Preenchido quando o prestador marca o serviço como concluído no fluxo
+  // sem_fotos (equivalente à foto 3 + legenda no fluxo com fotos).
+  marcado_concluido_at: string | null
 }
 
 export function usePortfolioDashboard() {

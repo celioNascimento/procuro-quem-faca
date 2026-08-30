@@ -1,4 +1,3 @@
-// types/clienteServicos.ts
 //
 // Tipo específico para o formato retornado por fetchClienteServicos
 // (lib/services/cliente.service.ts), consumido por useServicosCliente e
@@ -49,4 +48,9 @@ export interface ClienteServico {
   avaliacoes: AvaliacaoRef[]
   // Array vazio quando não há garantia (LEFT JOIN). Nunca undefined após a query.
   solicitacoes_garantia: SolicitacaoGarantiaResumo[]
+  // Fluxo sem foto obrigatória — travado na criação do projeto (ver migration
+  // portfolio_projetos.sem_fotos). Quando true, "pronto para avaliar" é
+  // derivado de marcado_concluido_at em vez de portfolio_fotos.some(ordem===3).
+  sem_fotos?: boolean
+  marcado_concluido_at?: string | null
 }

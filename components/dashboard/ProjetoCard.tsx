@@ -1,6 +1,6 @@
 //components/dashboard/ProjetoCard.tsx
 
-import { ImageOff, CheckCircle2, Clock, AlertCircle, Pencil, ShieldAlert } from 'lucide-react'
+import { ImageOff, CheckCircle2, Clock, AlertCircle, Pencil, ShieldAlert, MessageCircle } from 'lucide-react'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
 
 interface Props {
@@ -61,6 +61,7 @@ export function ProjetoCard({ projeto, onClick }: Props) {
   const fotos = projeto.portfolio_fotos ?? []
   const capa  = [...fotos].sort((a, b) => b.ordem - a.ordem)[0]?.url_foto
   const { label, icon, cls } = getStatusConfig(projeto)
+  const semFotos = projeto.sem_fotos
 
   return (
     <button
@@ -69,14 +70,20 @@ export function ProjetoCard({ projeto, onClick }: Props) {
       className="group flex w-full overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0"
       aria-label={`Editar projeto ${projeto.titulo}`}
     >
-      {/* Coluna da imagem — largura fixa, altura limitada a 9rem para não crescer com conteúdo externo */}
-      <span className="relative w-24 max-h-36 shrink-0 self-stretch bg-slate-100 sm:w-32 sm:max-h-40">
+      {/* Coluna da imagem — largura fixa, altura limitada a 9rem para não crescer com conteúdo externo.
+          Projetos sem_fotos usam fundo azul claro neutro (mesma família do restante da UI) em vez do
+          cinza + ícone de "imagem quebrada", que sugeriria erro/pendência em vez de comportamento esperado. */}
+      <span className={`relative w-24 max-h-36 shrink-0 self-stretch sm:w-32 sm:max-h-40 ${semFotos ? 'bg-blue-50' : 'bg-slate-100'}`}>
         {capa ? (
           <img
             src={capa}
             className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
             alt=""
           />
+        ) : semFotos ? (
+          <span className="flex size-full items-center justify-center text-blue-300">
+            <MessageCircle size={22} aria-hidden="true" />
+          </span>
         ) : (
           <span className="flex size-full min-h-32 items-center justify-center text-slate-300">
             <ImageOff size={22} aria-hidden="true" />
@@ -102,7 +109,9 @@ export function ProjetoCard({ projeto, onClick }: Props) {
 
         <span className="flex items-center justify-between gap-3">
           <span className="text-[10px] font-medium text-slate-400">
-            {fotos.length} {fotos.length === 1 ? 'foto' : 'fotos'}
+            {semFotos
+              ? 'Sem registro fotográfico'
+              : `${fotos.length} ${fotos.length === 1 ? 'foto' : 'fotos'}`}
           </span>
           <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">
             Editar

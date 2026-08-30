@@ -20,9 +20,12 @@ export async function getPrestadorPerfilDoUsuario(userId: string) {
 
 // Select comum às duas queries abaixo — inclui o join com solicitacoes_garantia
 // (só os campos usados pelo badge do ProjetoCard, sem trazer descrição/fotos).
+// sem_fotos e marcado_concluido_at adicionados: ProjetoCard usa sem_fotos para
+// decidir o visual (badge "Sem registro fotográfico" em vez de contagem de fotos).
 const SELECT_PROJETO_COM_GARANTIA = `
   id, titulo, status, created_at, prestador_id,
   cliente_nome, cliente_whatsapp,
+  sem_fotos, marcado_concluido_at,
   portfolio_fotos (id, url_foto, ordem),
   avaliacoes (id),
   solicitacoes_garantia (id, status, origem, prazo_resposta)
@@ -61,8 +64,11 @@ export {
   getComentariosDaFoto,
   buscarProjetosPorTelefone,
   criarNovoProjeto,
+  iniciarProjetoSemFoto,
+  marcarProjetoConcluido,
   atualizarStatusProjeto,
   atualizarTituloProjeto,
+  atualizarDadosClienteProjeto,
   upsertFotoProjeto,
   atualizarLegendaFoto,
   getStatusETokenProjeto,

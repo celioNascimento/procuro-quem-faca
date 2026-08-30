@@ -49,11 +49,13 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
       {/* Cards */}
       <div className="space-y-4">
         {avaliacoes.map(av => {
-          const projetoTitulo =
-            av.portfolio_projetos?.titulo ??
-            projetos?.find(p => String(p.id) === String(av.projeto_id))?.titulo
+          const projeto = projetos?.find(p => String(p.id) === String(av.projeto_id))
+          const projetoTitulo = av.portfolio_projetos?.titulo ?? projeto?.titulo
 
           const temProjeto = !!(av.projeto_id && projetoTitulo)
+          // Projetos sem_fotos não têm fotos para mostrar no ProjetoModal —
+          // o link vira texto estático em vez de botão clicável.
+          const projetoClicavel = temProjeto && !projeto?.sem_fotos
           const handleProjeto = onVerProjeto && av.projeto_id
             ? () => onVerProjeto(av.projeto_id!)
             : undefined
@@ -68,7 +70,6 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
                   <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-[1rem] overflow-hidden shrink-0 flex items-center justify-center">
-                    // avatar:
                     {av.cliente_foto_url
                       ? <img
                         src={av.cliente_foto_url}
@@ -77,9 +78,6 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
                       />
                       : <User size={16} className="text-slate-300" />
                     }
-
-// nome:
-                    {av.cliente_nome ?? 'Cliente Verificado'}
                   </div>
 
                   <div>
@@ -113,23 +111,36 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
                 </p>
               )}
 
-              {/* Link para o projeto */}
+              {/* Link para o projeto — clicável só quando o projeto tem
+                  fotos (abre o ProjetoModal). Em sem_fotos, vira referência
+                  textual simples, sem seta nem hover. */}
               {temProjeto && (
-                <button
-                  type="button"
-                  onClick={handleProjeto}
-                  className="flex items-center justify-between pt-3 mt-1 border-t border-slate-50 group text-left w-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 rounded-lg"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-blue-50 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-blue-600 transition-colors duration-300">
-                      <Wrench size={12} className="text-blue-500 group-hover:text-white transition-colors" />
+                projetoClicavel ? (
+                  <button
+                    type="button"
+                    onClick={handleProjeto}
+                    className="flex items-center justify-between pt-3 mt-1 border-t border-slate-50 group text-left w-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 rounded-lg"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-blue-50 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-blue-600 transition-colors duration-300">
+                        <Wrench size={12} className="text-blue-500 group-hover:text-white transition-colors" />
+                      </div>
+                      <p className="text-[10px] font-black text-slate-400 truncate uppercase tracking-widest group-hover:text-blue-600 transition-colors duration-300">
+                        {projetoTitulo}
+                      </p>
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 truncate uppercase tracking-widest group-hover:text-blue-600 transition-colors duration-300">
+                    <ArrowRight size={14} className="text-slate-200 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-300" />
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 pt-3 mt-1 border-t border-slate-50">
+                    <div className="w-6 h-6 bg-slate-50 rounded-lg flex items-center justify-center shrink-0">
+                      <Wrench size={12} className="text-slate-300" />
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 truncate uppercase tracking-widest">
                       {projetoTitulo}
                     </p>
                   </div>
-                  <ArrowRight size={14} className="text-slate-200 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-300" />
-                </button>
+                )
               )}
             </div>
           )

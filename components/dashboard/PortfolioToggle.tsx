@@ -37,11 +37,11 @@ export function PortfolioToggle({
   return (
     <div className="flex items-center justify-between p-4 border rounded-lg gap-4">
       <div className="flex-1">
-        <h3 className="font-semibold text-lg">Portfólio Obrigatório</h3>
+        <h3 className="font-semibold text-lg">Fotos por padrão</h3>
         <p className="text-sm text-gray-600 mt-1">
           {obrigatorio
-            ? 'Fotos são obrigatórias no início e fim do serviço'
-            : 'Fotos são opcionais — aceite do cliente ainda é obrigatório'}
+            ? 'Todo novo serviço pede fotos, mas você pode dispensar em projetos específicos.'
+            : 'Nenhum serviço pede fotos — aceite e avaliação continuam funcionando normalmente.'}
         </p>
         {erro && <p className="text-sm text-red-600 mt-2">{erro}</p>}
       </div>

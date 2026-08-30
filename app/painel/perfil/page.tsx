@@ -47,7 +47,7 @@ export default function PerfilDoCliente() {
   const inputStyle = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-slate-800 bg-white shadow-sm placeholder-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400 text-[14px] md:text-[15px]`
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] pb-24 font-sans antialiased">
+    <main className="min-h-screen bg-[#F8FAFC] pb-12 font-sans antialiased">
       <HeaderCliente nomeCliente={perfil.full_name} />
 
       <input type="file" ref={fileInputRef} onChange={handleUploadFoto} accept="image/*" className="hidden" />
@@ -99,7 +99,7 @@ export default function PerfilDoCliente() {
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-20 animate-in fade-in duration-500 sm:px-6 sm:pt-24 md:pt-32 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-10 pt-16 animate-in fade-in duration-500 sm:px-6 sm:pt-20 md:pt-28 lg:px-8">
         <header className="mb-6 flex max-w-2xl flex-col gap-2 sm:mb-8">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área do cliente</p>
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Acompanhe seus projetos</h1>
@@ -255,7 +255,7 @@ export default function PerfilDoCliente() {
               </section>
 
             ) : (
-              <div className="grid gap-4 pb-12 animate-in fade-in duration-300 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
+              <div className="grid gap-4 pb-8 animate-in fade-in duration-300 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
                 <section className="flex flex-col gap-5 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7" aria-labelledby="account-data-title">
                   <div className="flex flex-col gap-1">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Dados pessoais</p>

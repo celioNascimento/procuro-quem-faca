@@ -8,12 +8,28 @@ export async function updatePortfolioObrigatorio(
   prestadorId: number,
   obrigatorio: boolean,
 ) {
-  const { error } = await supabase
+  console.log(`🎯 Iniciando atualização: prestadorId=${prestadorId}, portfolio_obrigatorio=${obrigatorio}`)
+  
+  const { data, error } = await supabase
     .from('prestadores')
     .update({ portfolio_obrigatorio: obrigatorio })
     .eq('id', prestadorId)
+    .select('id, portfolio_obrigatorio')
 
-  if (error) throw error
+  console.log('📤 Resposta do Supabase:', { data, error })
+
+  if (error) {
+    console.error('❌ Erro ao atualizar:', error)
+    throw new Error(`Falha ao atualizar portfólio: ${error.message}`)
+  }
+  
+  if (!data || data.length === 0) {
+    console.warn('⚠️ Nenhuma linha foi atualizada. Verifique se o prestadorId existe:', prestadorId)
+    throw new Error('Nenhuma linha foi atualizada. Prestador não encontrado.')
+  }
+  
+  console.log('✅ Atualização bem-sucedida:', data[0])
+  return data[0]
 }
 
 /**

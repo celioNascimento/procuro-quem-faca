@@ -9,8 +9,11 @@ import {
   getComentariosDaFoto,
   buscarProjetosPorTelefone,
   criarNovoProjeto,
+  iniciarProjetoSemFoto,
+  marcarProjetoConcluido,
   atualizarStatusProjeto,
   atualizarTituloProjeto,
+  atualizarDadosClienteProjeto,
   upsertFotoProjeto,
   atualizarLegendaFoto,
   getStatusETokenProjeto,
@@ -49,7 +52,11 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     nome: '',
     foto: null as string | null,
     whatsapp: '',
-    slug: '' as string | null
+    slug: '' as string | null,
+    // portfolio_obrigatorio: define se este prestador opera no fluxo com
+    // fotos (true/default) ou sem fotos (false). Default true até carregar,
+    // para não "piscar" o fluxo sem foto antes do fetch completar.
+    portfolioObrigatorio: true,
   })
   const [clienteWhatsapp, setClienteWhatsapp] = useState<string>(() => maskPhone(projeto?.cliente_whatsapp))
   const [clienteNome, setClienteNome] = useState<string>(projeto?.cliente_nome || '')
@@ -64,6 +71,25 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
   const [salvandoLegenda, setSalvandoLegenda] = useState<boolean>(false)
   const [projetosEncontrados, setProjetosEncontrados] = useState<ProjetoIdentificado[]>([])
   const [statusTitulo, setStatusTitulo] = useState<string>('ocioso')
+  // Edição inline de whatsapp/nome/título após o projeto já criado, mas
+  // ainda pendente. Existe porque um erro de digitação no whatsapp torna
+  // o projeto invisível no painel do cliente (o vínculo depende do
+  // telefone bater exatamente), sem erro nenhum visível ao prestador.
+  const [editandoDadosCliente, setEditandoDadosCliente] = useState<boolean>(false)
+  const [salvandoDadosCliente, setSalvandoDadosCliente] = useState<boolean>(false)
+  const [erroDadosCliente, setErroDadosCliente] = useState<string | null>(null)
+  // Snapshot para permitir cancelar sem perder o que estava salvo antes.
+  const snapshotDadosClienteRef = useRef({ whatsapp: '', nome: '', titulo: '' })
+  // Espelha portfolio_projetos.sem_fotos assim que o projeto existe (criado
+  // ou carregado).
+  const [semFotos, setSemFotos] = useState<boolean>(projeto?.sem_fotos ?? false)
+  const [marcandoConcluido, setMarcandoConcluido] = useState<boolean>(false)
+  const [marcadoConcluidoAt, setMarcadoConcluidoAt] = useState<string | null>(projeto?.marcado_concluido_at ?? null)
+  // Escolha manual do prestador, feita no card "Como registrar este
+  // serviço?" — só existe ANTES de haver projeto e quando
+  // portfolio_obrigatorio=true (senão o fluxo já é automaticamente sem
+  // foto). null = ainda não escolheu; o card fica visível até escolher.
+  const [escolhaSemFotos, setEscolhaSemFotos] = useState<boolean | null>(null)
 
   // ── FIX 1: fotosCarrossel estabilizado com useMemo ───────────────────────
   // Antes: era recalculado a cada render, gerando nova referência de array que
@@ -91,6 +117,13 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
 
   const canCloseZoom = isProjetoConcluido || comentariosZoom.length > 0 || hasLegendaSalva(zoomEtapa)
 
+  // No fluxo sem_fotos, o link de avaliação é liberado quando o prestador
+  // marca o serviço como concluído — equivalente a hasLegendaSalva(3) no
+  // fluxo com fotos, que é o que hoje libera o botão "Enviar avaliação".
+  const podeGerarLinkAvaliacao = semFotos
+    ? !!marcadoConcluidoAt
+    : hasLegendaSalva(3)
+
   // ── Efeitos ──────────────────────────────────────────────────────────────
   useEffect(() => {
     setErroUpload(null)
@@ -110,7 +143,8 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
           nome: data.nome,
           foto: renderAvatar(data.foto_perfil),
           whatsapp: data.whatsapp || '',
-          slug: data.slug || null
+          slug: data.slug || null,
+          portfolioObrigatorio: data.portfolio_obrigatorio ?? true,
         })
       }
     } catch (err) {
@@ -206,6 +240,8 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       setTitulo(projeto.titulo || '')
       setClienteWhatsapp(maskPhone(projeto.cliente_whatsapp))
       setClienteNome(projeto.cliente_nome || '')
+      setSemFotos(projeto.sem_fotos ?? false)
+      setMarcadoConcluidoAt(projeto.marcado_concluido_at ?? null)
       carregarProgresso(projeto.id)
     }
   }, [projetoExistente, carregarProgresso, carregarDadosBase])
@@ -227,7 +263,16 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
         const data = await getStatusETokenProjeto(idSincronizado)
         if (data) {
           if (data.status !== projetoStatusRef.current) setProjetoStatus(data.status)
-          if (data.status === 'em_execucao') {
+          setSemFotos(data.sem_fotos ?? false)
+          setMarcadoConcluidoAt(data.marcado_concluido_at ?? null)
+
+          if (data.sem_fotos) {
+            // Fluxo sem foto: aguardandoAvaliacao segue marcado_concluido_at
+            // em vez de "tem foto 3".
+            if (data.status === 'em_execucao' && data.marcado_concluido_at) {
+              setAguardandoAvaliacao(true)
+            }
+          } else if (data.status === 'em_execucao') {
             const fotos = await getFotosDoProjeto(idSincronizado)
             const temFoto3 = fotos?.some(f => f.ordem === 3)
             if (temFoto3) setAguardandoAvaliacao(true)
@@ -331,6 +376,61 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     }
   }
 
+  /**
+   * Cria o projeto no fluxo SEM foto obrigatória.
+   *
+   * Equivalente ao que o upload da foto 1 faz implicitamente no fluxo com
+   * fotos (criar o projeto), mas aqui é um clique explícito do prestador
+   * ("Iniciar serviço"), disparado só depois de whatsapp+nome+título válidos.
+   */
+  /**
+   * Registra a escolha manual do prestador no card "Como registrar este
+   * serviço?" — só é chamada quando portfolio_obrigatorio=true (a escolha
+   * automática, quando false, nunca passa por aqui).
+   */
+  const escolherFluxo = (semFoto: boolean) => {
+    setEscolhaSemFotos(semFoto)
+  }
+
+  const iniciarServicoSemFoto = async () => {
+    if (!isPhoneValid || !isTitleValid || projetoId) return
+    try {
+      const novoProjeto = await iniciarProjetoSemFoto({
+        prestador_id: Number(prestadorId),
+        titulo,
+        cliente_whatsapp: phoneDigitado,
+        cliente_nome: clienteNome.trim() || 'Cliente',
+      })
+      setProjetoId(novoProjeto.id)
+      setProjetoStatus(novoProjeto.status)
+      setSemFotos(true)
+      setLinkGerado(true) // reaproveita linkGerado — já libera a UI de "Enviar aceite"
+    } catch (err) {
+      console.error('Erro ao iniciar serviço sem foto:', err)
+      setErroUpload('Não foi possível iniciar o serviço. Tente novamente.')
+    }
+  }
+
+  /**
+   * Marca o serviço (fluxo sem_fotos) como concluído pelo prestador.
+   * Libera o link de avaliação (gerarLinkConclusao), sem mudar o status —
+   * o status só vira 'finalizado' quando o cliente avalia.
+   */
+  const marcarComoConcluido = async () => {
+    if (!projetoId || marcandoConcluido) return
+    setMarcandoConcluido(true)
+    try {
+      await marcarProjetoConcluido(projetoId)
+      setMarcadoConcluidoAt(new Date().toISOString())
+      setAguardandoAvaliacao(true)
+    } catch (err) {
+      console.error('Erro ao marcar como concluído:', err)
+      setErroUpload('Não foi possível marcar o serviço como concluído. Tente novamente.')
+    } finally {
+      setMarcandoConcluido(false)
+    }
+  }
+
   const handleSalvarLegenda = async () => {
     const etapaAlvo = zoomEtapa
     const fotoAlvo = etapaAlvo ? fotosData[etapaAlvo] : null
@@ -367,6 +467,46 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       setStatusTitulo('ocioso')
       setErroTitulo('Erro ao salvar título.')
       setTimeout(() => setErroTitulo(null), 3000)
+    }
+  }
+
+  /**
+   * Abre o modo de edição inline de whatsapp/nome/título. Só deve ser
+   * chamada com isProjetoPendente=true — a UI já restringe a exibição do
+   * botão, mas a função em si não valida isso (validação real está no
+   * service, via .eq('status', 'pendente')).
+   */
+  const iniciarEdicaoDadosCliente = () => {
+    snapshotDadosClienteRef.current = { whatsapp: clienteWhatsapp, nome: clienteNome, titulo }
+    setErroDadosCliente(null)
+    setEditandoDadosCliente(true)
+  }
+
+  const cancelarEdicaoDadosCliente = () => {
+    const snap = snapshotDadosClienteRef.current
+    setClienteWhatsapp(maskPhone(snap.whatsapp))
+    setClienteNome(snap.nome)
+    setTitulo(snap.titulo)
+    setErroDadosCliente(null)
+    setEditandoDadosCliente(false)
+  }
+
+  const salvarDadosCliente = async () => {
+    if (!projetoId || !isPhoneValid || !isTitleValid) return
+    setSalvandoDadosCliente(true)
+    setErroDadosCliente(null)
+    try {
+      await atualizarDadosClienteProjeto(projetoId, {
+        cliente_whatsapp: phoneDigitado,
+        cliente_nome: clienteNome.trim() || 'Cliente',
+        titulo: titulo.trim(),
+      })
+      setEditandoDadosCliente(false)
+    } catch (err) {
+      console.error('Erro ao salvar dados do cliente:', err)
+      setErroDadosCliente('Não foi possível salvar. Tente novamente.')
+    } finally {
+      setSalvandoDadosCliente(false)
     }
   }
 
@@ -429,18 +569,39 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       projetoId, projetoStatus, titulo, clienteWhatsapp, clienteNome, linkGerado,
       fotosUrls, fotosData, zoomEtapa, comentariosZoom, comentariosSlideAtual,
       currentSlide, legendaEdit, salvandoLegenda, projetosEncontrados, statusTitulo,
-      prestadorInfo
+      prestadorInfo, marcandoConcluido, marcadoConcluidoAt,
+      editandoDadosCliente, salvandoDadosCliente, erroDadosCliente,
     },
     derived: {
       hasLegendaSalva, isProjetoConcluido, isProjetoPendente, isSelfNumber,
-      isPhoneValid, isTitleValid, canCloseZoom, fotosCarrossel, fotoAtual
+      isPhoneValid, isTitleValid, canCloseZoom, fotosCarrossel, fotoAtual,
+      // semFotos: true quando o PROJETO atual está travado no fluxo sem foto.
+      // Com projeto criado, usa o valor travado (sem_fotos). Sem projeto:
+      //  - se portfolio_obrigatorio=false, é sempre sem foto (automático,
+      //    sem escolha do prestador)
+      //  - se portfolio_obrigatorio=true, depende da escolha manual feita
+      //    no card "Como registrar este serviço?" (escolhaSemFotos)
+      semFotos: projetoId
+        ? semFotos
+        : !prestadorInfo.portfolioObrigatorio
+          ? true
+          : escolhaSemFotos === true,
+      // Card de escolha visível: só antes de existir projeto, só quando o
+      // prestador tem portfolio_obrigatorio=true (senão a escolha já é
+      // automática), só enquanto ele ainda não escolheu, e só depois que
+      // os dados do cliente (whatsapp/nome/título) já são válidos — evita
+      // escolher o fluxo antes de saber para quem é o serviço.
+      mostrarEscolhaFluxo: !projetoId && prestadorInfo.portfolioObrigatorio && escolhaSemFotos === null && isPhoneValid && isTitleValid,
+      podeGerarLinkAvaliacao,
     },
     actions: {
       setErroUpload, setErroLegenda,
       setClienteWhatsapp: (v: string | null) => setClienteWhatsapp(maskPhone(v)),
       setClienteNome, setTitulo, setZoomEtapa, setLegendaEdit,
       handleShare, handleUpload, handleSalvarLegenda, handleAtualizarTitulo,
-      gerarLinkAceite, gerarLinkConclusao, selecionarProjeto, nextSlide, prevSlide, handleZoomClose
+      gerarLinkAceite, gerarLinkConclusao, selecionarProjeto, nextSlide, prevSlide, handleZoomClose,
+      iniciarServicoSemFoto, marcarComoConcluido, escolherFluxo,
+      iniciarEdicaoDadosCliente, cancelarEdicaoDadosCliente, salvarDadosCliente,
     }
   }
 }

@@ -45,6 +45,10 @@ export interface ProjetoPerfil {
   avaliacoes: { id: string; indica: boolean; comentario?: string | null }[]
   // LEFT JOIN — array vazio quando não há garantia
   solicitacoes_garantia: GarantiaPublica[]
+  // Fluxo sem foto obrigatória — travado na criação do projeto (ver
+  // migration portfolio_projetos.sem_fotos). Quando true, o card de
+  // avaliação não abre o ProjetoModal (não há fotos para mostrar).
+  sem_fotos?: boolean
 }
 
 export interface PrestadorPerfil extends Omit<Prestador, 'cidades' | 'categorias'> {
