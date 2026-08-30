@@ -301,7 +301,7 @@ export function UploadWizardContainer({
              execução → aguardando avaliação), mas cada um resolvido com
              1 ação do prestador em vez de upload de foto.
           ──────────────────────────────────────────────────────────── */
-          <div className="flex flex-col gap-4 p-5">
+          <div className="flex flex-col gap-3 p-5 pb-6">
 
             {erroUpload && (
               <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl animate-in fade-in duration-300">
@@ -338,7 +338,7 @@ export function UploadWizardContainer({
             )}
 
             {/* Card de status */}
-            <div className="bg-white rounded-[1.75rem] border border-slate-100 shadow-sm p-5 space-y-4">
+            <div className="bg-white rounded-[1.75rem] border border-slate-100 shadow-sm p-4 sm:p-5 space-y-3">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status do Serviço</p>
 
               {!projetoId ? (
