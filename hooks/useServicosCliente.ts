@@ -7,6 +7,23 @@ import * as ClienteService from '@/lib/services/cliente.service'
 import { temGarantiaAtiva } from '@/lib/services/cliente.service'
 import type { ClienteServico } from '@/types/clienteServicos'
 
+/**
+ * Deriva se um serviço em execução já está pronto para o cliente avaliar.
+ *
+ * Fluxo com fotos: equivalente a ter a foto 3 (etapa "Depois") enviada.
+ * Fluxo sem_fotos: equivalente ao prestador ter clicado em "Marcar como
+ * concluído" (marcado_concluido_at preenchido) — não há foto 3 para checar,
+ * já que portfolio_fotos é sempre vazio nesse fluxo.
+ *
+ * Centralizada aqui porque a mesma checagem era repetida em 4 lugares
+ * deste hook usando só a condição do fluxo com fotos, o que fazia
+ * projetos sem_fotos nunca aparecerem como prontos para avaliar.
+ */
+function estaProntoParaAvaliar(s: ClienteServico): boolean {
+  if (s.sem_fotos) return !!s.marcado_concluido_at
+  return s.portfolio_fotos?.some(f => f.ordem === 3) ?? false
+}
+
 export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   const router    = useRouter()
   const filtroRef = useRef<HTMLDivElement>(null)
@@ -46,7 +63,7 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
 
   // ── Contadores ──────────────────────────────────────────────────────────────
   const avaliarCount = servicos.filter(s =>
-    s.status === 'em_execucao' && s.portfolio_fotos?.some(f => f.ordem === 3)
+    s.status === 'em_execucao' && estaProntoParaAvaliar(s)
   ).length
 
   const ativosCount = servicos.filter(s =>
@@ -60,24 +77,24 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
     ? servicosGarantia
     : servicos.filter(s => {
         const st       = s.status?.toLowerCase()
-        const temFoto3 = s.portfolio_fotos?.some(f => f.ordem === 3)
+        const pronto   = estaProntoParaAvaliar(s)
         if (filtroStatus === 'todos')       return true
         if (filtroStatus === 'pendente')    return st === 'pendente'
-        if (filtroStatus === 'andamento')   return st === 'em_execucao' && !temFoto3
-        if (filtroStatus === 'avaliar')     return st === 'em_execucao' && temFoto3
+        if (filtroStatus === 'andamento')   return st === 'em_execucao' && !pronto
+        if (filtroStatus === 'avaliar')     return st === 'em_execucao' && pronto
         if (filtroStatus === 'finalizados') return st === 'finalizado'
         return true
       })
 
   // ── Status visual ───────────────────────────────────────────────────────────
   const getStatusInfo = (servico: ClienteServico) => {
-    const s         = servico?.status?.toLowerCase()
-    const temFoto3  = servico?.portfolio_fotos?.some(f => f.ordem === 3)
+    const s          = servico?.status?.toLowerCase()
+    const pronto      = estaProntoParaAvaliar(servico)
     const jaAvaliado = servico?.avaliacoes?.length > 0
 
     if (s === 'pendente')
       return { label: 'Aguardando aceite', dot: 'bg-amber-400',  badge: 'bg-amber-50 text-amber-700 border-amber-200',   urgente: false }
-    if (s === 'em_execucao' && temFoto3)
+    if (s === 'em_execucao' && pronto)
       return { label: 'Avaliar agora',     dot: 'bg-blue-500',   badge: 'bg-blue-600 text-white border-blue-600',         urgente: true  }
     if (s === 'em_execucao')
       return { label: 'Em andamento',      dot: 'bg-blue-400',   badge: 'bg-blue-50 text-blue-700 border-blue-200',       urgente: false }
@@ -90,16 +107,16 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
 
   // ── Rotas ───────────────────────────────────────────────────────────────────
   const getRotaDestino = (s: ClienteServico) => {
-    const temFoto3   = s.portfolio_fotos?.some(f => f.ordem === 3)
+    const pronto      = estaProntoParaAvaliar(s)
     const jaAvaliado = s.avaliacoes?.length > 0
 
     if (s.status === 'pendente')
       return `/meus-servicos?token=${s.avaliacao_token}`
 
-    if (s.status === 'em_execucao' && !temFoto3)
+    if (s.status === 'em_execucao' && !pronto)
       return `/acompanhamento/${s.avaliacao_token}`
 
-    if (s.status === 'em_execucao' && temFoto3)
+    if (s.status === 'em_execucao' && pronto)
       return `/avaliar/${s.avaliacao_token}`
 
     // Finalizado — se já avaliou, vai para acompanhamento (onde vive a garantia);
