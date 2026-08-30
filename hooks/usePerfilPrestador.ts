@@ -52,7 +52,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
             cidades(nome, estado_sigla),
             categorias(nome),
             portfolio_projetos(
-              id, titulo, descricao, status, created_at,
+              id, titulo, descricao, status, created_at, sem_fotos,
               portfolio_fotos(id, url_foto, ordem, legenda),
               solicitacoes_garantia(
                 id, status, origem,
@@ -98,6 +98,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
           .filter(p => ['em_execucao', 'finalizado'].includes(p.status))
           .map(p => ({
             ...p,
+            sem_fotos: p.sem_fotos ?? false,
             portfolio_fotos: normalizarArray<FotoProjeto>(p.portfolio_fotos)
               .filter(f => Boolean(f?.url_foto)),
             avaliacoes: avaliacoes
