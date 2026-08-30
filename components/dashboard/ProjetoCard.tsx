@@ -81,7 +81,7 @@ export function ProjetoCard({ projeto, onClick }: Props) {
             alt=""
           />
         ) : semFotos ? (
-          <span className="flex size-full min-h-32 items-center justify-center text-blue-300">
+          <span className="flex size-full items-center justify-center text-blue-300">
             <MessageCircle size={22} aria-hidden="true" />
           </span>
         ) : (
