@@ -95,8 +95,8 @@ export function UploadWizardContainer({
 
           {/* Badge de status — garantia sobrepõe "finalizado" */}
           {projetoStatus && (
-            <div className="flex items-center justify-between mb-4">
-              <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${badgeStatus.style}`}>
+            <div className={`flex items-start justify-between gap-3 mb-4 flex-wrap ${onVoltar ? 'pt-9' : ''}`}>
+              <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border flex items-center gap-1.5 shrink-0 ${badgeStatus.style}`}>
                 {temGarantiaAtiva && <ShieldAlert size={10} />}
                 {badgeStatus.label}
               </span>
@@ -107,7 +107,7 @@ export function UploadWizardContainer({
               {isProjetoPendente && !editandoDadosCliente && (
                 <button
                   onClick={iniciarEdicaoDadosCliente}
-                  className="flex items-center gap-1 bg-white/15 hover:bg-white/25 text-white/80 hover:text-white px-2.5 py-1 rounded-full border border-white/20 transition-all active:scale-95"
+                  className="flex items-center gap-1 bg-white/15 hover:bg-white/25 text-white/80 hover:text-white px-2.5 py-1 rounded-full border border-white/20 transition-all active:scale-95 shrink-0"
                 >
                   <Pencil size={9} />
                   <span className="text-[8px] font-black uppercase tracking-widest">Editar dados</span>
