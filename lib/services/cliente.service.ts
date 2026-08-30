@@ -1,5 +1,3 @@
-// lib/services/cliente.service.ts
-
 import { supabase } from '@/lib/supabase'
 import type { ClienteServico } from '@/types/clienteServicos'
 
@@ -10,8 +8,11 @@ export const STATUS_GARANTIA_ATIVOS = ['aguardando_aceite_cliente', 'aberta', 'r
 // LEFT JOIN em solicitacoes_garantia: traz array vazio quando não há garantia,
 // em vez de excluir a linha. Elimina a necessidade de fetchClienteGarantias
 // separado e o risco de dessincronia entre dois arrays de origens diferentes.
+// sem_fotos e marcado_concluido_at adicionados: necessários para useServicosCliente
+// derivar corretamente "pronto para avaliar" em projetos do fluxo sem foto,
+// onde portfolio_fotos.some(ordem===3) nunca é verdadeiro (não há fotos).
 const SELECT_CLIENTE_SERVICOS = `
-  id, titulo, status, created_at, avaliacao_token,
+  id, titulo, status, created_at, avaliacao_token, sem_fotos, marcado_concluido_at,
   portfolio_fotos(ordem),
   prestadores!inner(id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
   avaliacoes(id),
