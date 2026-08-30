@@ -1,6 +1,6 @@
 //components/acompanhamento/CarrosselFinalizacao.tsx
 
-import { ChevronLeft, ChevronRight, Star, CheckCircle2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
 import type { FotoOrdenada, Avaliacao, Projeto } from '@/types/avaliacao'
 
 type Props = {
@@ -43,17 +43,7 @@ export default function CarrosselFinalizacao({
           </p>
         </div>
 
-        {semFoto ? (
-          /* Sem fotos: card de conclusão simples no lugar da imagem */
-          <div className="aspect-square bg-slate-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-center">
-              <CheckCircle2 size={28} className="text-green-500" />
-            </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
-              Serviço concluído
-            </p>
-          </div>
-        ) : (
+        {!semFoto && (
           <div className="relative aspect-square bg-slate-50">
             <img
               src={fotoAtual?.url_foto}
