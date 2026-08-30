@@ -5,7 +5,7 @@
 import { Projeto } from '@/hooks/usePortfolioDashboard'
 import { useUploadWizard } from '@/hooks/useUploadWizard'
 import { useCasoGarantiaDoProjeto } from '@/hooks/useCasoGarantiaDoProjeto'
-import { Phone, User, Briefcase, AlertCircle, RefreshCw, CloudCheck, X, Activity, ShieldAlert } from 'lucide-react'
+import { Phone, User, Briefcase, AlertCircle, RefreshCw, CloudCheck, X, Activity, ShieldAlert, Pencil, Check } from 'lucide-react'
 import { Camera, Loader2, CheckCircle2, ChevronRight, Link as LinkIcon } from 'lucide-react'
 import { WizardCompleted } from './WizardCompleted'
 import { WizardZoomModal } from './WizardZoomModal'
@@ -40,11 +40,13 @@ export function UploadWizardContainer({
     aguardandoAvaliacao, erroUpload, projetoId, projetosEncontrados,
     statusTitulo, fotosUrls, loadingEtapa, linkGerado, projetoStatus,
     marcandoConcluido, marcadoConcluidoAt,
+    editandoDadosCliente, salvandoDadosCliente, erroDadosCliente,
   } = hookData.state
   const {
     setErroUpload, setClienteWhatsapp, setClienteNome, setTitulo,
     handleAtualizarTitulo, selecionarProjeto, setZoomEtapa, handleUpload,
     gerarLinkAceite, gerarLinkConclusao, iniciarServicoSemFoto, marcarComoConcluido, escolherFluxo,
+    iniciarEdicaoDadosCliente, cancelarEdicaoDadosCliente, salvarDadosCliente,
   } = hookData.actions
 
   // Lifting do caso de garantia — permite ajustar o badge de status no hero
@@ -93,11 +95,24 @@ export function UploadWizardContainer({
 
           {/* Badge de status — garantia sobrepõe "finalizado" */}
           {projetoStatus && (
-            <div className="flex justify-start mb-4">
+            <div className="flex items-center justify-between mb-4">
               <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${badgeStatus.style}`}>
                 {temGarantiaAtiva && <ShieldAlert size={10} />}
                 {badgeStatus.label}
               </span>
+              {/* Editar dados do cliente — só disponível enquanto pendente,
+                  porque o vínculo cliente-projeto depende do whatsapp bater
+                  exatamente; um erro de digitação torna o projeto invisível
+                  no painel do cliente sem nenhum erro visível aqui. */}
+              {isProjetoPendente && !editandoDadosCliente && (
+                <button
+                  onClick={iniciarEdicaoDadosCliente}
+                  className="flex items-center gap-1 bg-white/15 hover:bg-white/25 text-white/80 hover:text-white px-2.5 py-1 rounded-full border border-white/20 transition-all active:scale-95"
+                >
+                  <Pencil size={9} />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Editar dados</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -113,7 +128,7 @@ export function UploadWizardContainer({
                     {isSelfNumber ? 'Número inválido' : 'WhatsApp do cliente'}
                   </span>
                 </div>
-                {!projetoId ? (
+                {!projetoId || editandoDadosCliente ? (
                   <input
                     type="text"
                     placeholder="(00) 00000-0000"
@@ -137,7 +152,7 @@ export function UploadWizardContainer({
                   <User size={9} className="text-white/60 shrink-0" />
                   <span className="text-[8px] font-black uppercase tracking-widest text-white/60">Nome do cliente</span>
                 </div>
-                {!projetoId ? (
+                {!projetoId || editandoDadosCliente ? (
                   <input
                     type="text"
                     placeholder="Nome do cliente"
@@ -159,7 +174,7 @@ export function UploadWizardContainer({
                   <Briefcase size={9} className="text-white/60" />
                   <span className="text-[8px] font-black uppercase tracking-widest text-white/60">Título do serviço</span>
                 </div>
-                {projetoId && statusTitulo !== 'ocioso' && (
+                {projetoId && !editandoDadosCliente && statusTitulo !== 'ocioso' && (
                   <div className="flex items-center gap-1">
                     {statusTitulo === 'salvando' && <RefreshCw size={8} className="animate-spin text-white/60" />}
                     {statusTitulo === 'salvo'    && <CloudCheck size={9} className="text-green-300" />}
@@ -176,12 +191,49 @@ export function UploadWizardContainer({
                   onChange={e => setTitulo(e.target.value)}
                   onBlur={handleAtualizarTitulo}
                 />
+              ) : editandoDadosCliente ? (
+                <input
+                  type="text"
+                  placeholder="Ex: Instalação, pintura, formatação..."
+                  className="bg-transparent text-white text-[12px] font-black italic uppercase placeholder:text-white/30 outline-none w-full"
+                  value={titulo}
+                  onChange={e => setTitulo(e.target.value)}
+                />
               ) : (
                 <span className={`text-[12px] font-black italic uppercase block truncate ${titulo ? 'text-white' : 'text-white/30'}`}>
                   {titulo || 'Sem título'}
                 </span>
               )}
             </div>
+
+            {/* Ações de edição — salvar/cancelar, só visíveis em modo edição */}
+            {editandoDadosCliente && (
+              <div className="flex flex-col gap-1.5">
+                {erroDadosCliente && (
+                  <p className="text-[9px] font-bold text-red-200 flex items-center gap-1">
+                    <AlertCircle size={9} /> {erroDadosCliente}
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={cancelarEdicaoDadosCliente}
+                    disabled={salvandoDadosCliente}
+                    className="flex-1 bg-white/10 hover:bg-white/20 text-white/80 text-[9px] font-black uppercase tracking-widest px-3 py-2 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={salvarDadosCliente}
+                    disabled={salvandoDadosCliente || !isPhoneValid || !isTitleValid}
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-white text-blue-600 text-[9px] font-black uppercase tracking-widest px-3 py-2 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    {salvandoDadosCliente
+                      ? <><Loader2 size={11} className="animate-spin" /> Salvando...</>
+                      : <><Check size={11} /> Confirmar</>}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -286,90 +338,100 @@ export function UploadWizardContainer({
             )}
 
             {/* Card de status */}
-            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status do Serviço</h3>
-              </div>
+            <div className="bg-white rounded-[1.75rem] border border-slate-100 shadow-sm p-5 space-y-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Status do Serviço</p>
 
               {!projetoId ? (
                 /* Estado 1: ainda não iniciado — botão cria o projeto */
-                <div className="flex flex-col items-center gap-4 py-6 text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center">
-                    <LinkIcon size={22} className="text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-black text-slate-700 uppercase tracking-wide">Pronto para iniciar</p>
-                    <p className="text-[11px] text-slate-400 font-medium mt-1 max-w-xs">
-                      Preencha os dados do cliente acima para liberar o início do serviço.
-                    </p>
+                <>
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                      <LinkIcon size={16} className="text-blue-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-bold text-slate-800">Pronto para iniciar</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Preencha os dados do cliente acima para liberar o início.
+                      </p>
+                    </div>
                   </div>
                   <button
                     onClick={iniciarServicoSemFoto}
                     disabled={!isPhoneValid || !isTitleValid}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-[11px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all active:scale-95 shadow-md shadow-blue-100 disabled:shadow-none"
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 text-white text-[11px] font-bold px-5 py-2.5 rounded-xl transition-all active:scale-[0.98]"
                   >
                     Iniciar serviço
                   </button>
-                </div>
+                </>
               ) : isProjetoPendente ? (
                 /* Estado 2: projeto criado, aguardando aceite do cliente */
-                <div className="flex flex-col items-center gap-4 py-6 text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center">
-                    <Activity size={22} className="text-amber-400" />
+                <>
+                  <div className="flex items-start gap-3 pb-4 border-b border-slate-50">
+                    <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                      <Activity size={16} className="text-amber-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-bold text-slate-800">Aguardando aceite do cliente</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {clienteNome || 'O cliente'} ainda não confirmou o início.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[12px] font-black text-slate-700 uppercase tracking-wide">Aguardando aceite do cliente</p>
-                    <p className="text-[11px] text-slate-400 font-medium mt-1 max-w-xs">
-                      Envie o link de aceite para <span className="font-black">{clienteNome || 'o cliente'}</span> confirmar o início.
-                    </p>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[11px] text-slate-500">Envie o link de aceite.</p>
+                    <button
+                      onClick={gerarLinkAceite}
+                      className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-[11px] font-bold px-3.5 py-2 rounded-xl transition-all active:scale-[0.98] shrink-0"
+                    >
+                      <LinkIcon size={13} />
+                      Enviar aceite
+                    </button>
                   </div>
-                  <button
-                    onClick={gerarLinkAceite}
-                    className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-[11px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all active:scale-95 shadow-md shadow-green-200"
-                  >
-                    <LinkIcon size={14} />
-                    Enviar aceite
-                  </button>
-                </div>
+                </>
               ) : (
                 /* Estado 3: em execução — botão marca concluído, depois libera avaliação */
-                <div className="flex flex-col items-center gap-4 py-6 text-center">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${marcadoConcluidoAt ? 'bg-green-50' : 'bg-blue-50'}`}>
-                    {marcadoConcluidoAt
-                      ? <CheckCircle2 size={22} className="text-green-500" />
-                      : <Activity size={22} className="text-blue-400 animate-pulse" />}
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-black text-slate-700 uppercase tracking-wide">
-                      {marcadoConcluidoAt ? 'Serviço concluído' : 'Serviço em execução'}
-                    </p>
-                    <p className="text-[11px] text-slate-400 font-medium mt-1 max-w-xs">
+                <>
+                  <div className="flex items-start gap-3 pb-4 border-b border-slate-50">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${marcadoConcluidoAt ? 'bg-green-50' : 'bg-blue-50'}`}>
                       {marcadoConcluidoAt
-                        ? 'Envie o link para o cliente avaliar o serviço.'
-                        : 'Quando terminar, marque o serviço como concluído.'}
-                    </p>
+                        ? <CheckCircle2 size={16} className="text-green-500" />
+                        : <Activity size={16} className="text-blue-500 animate-pulse" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-bold text-slate-800">
+                        {marcadoConcluidoAt ? 'Serviço concluído' : 'Serviço em execução'}
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {marcadoConcluidoAt
+                          ? `Marcado como concluído em ${new Date(marcadoConcluidoAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}`
+                          : 'Quando terminar, marque como concluído.'}
+                      </p>
+                    </div>
                   </div>
 
                   {!marcadoConcluidoAt ? (
                     <button
                       onClick={marcarComoConcluido}
                       disabled={marcandoConcluido}
-                      className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-[11px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all active:scale-95 shadow-md shadow-blue-100"
+                      className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-[11px] font-bold px-5 py-2.5 rounded-xl transition-all active:scale-[0.98]"
                     >
                       {marcandoConcluido
-                        ? <><Loader2 size={14} className="animate-spin" /> Marcando...</>
-                        : <><CheckCircle2 size={14} /> Marcar como concluído</>}
+                        ? <><Loader2 size={13} className="animate-spin" /> Marcando...</>
+                        : <><CheckCircle2 size={13} /> Marcar como concluído</>}
                     </button>
                   ) : (
-                    <button
-                      onClick={gerarLinkConclusao}
-                      className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-[11px] font-black uppercase tracking-widest px-6 py-4 rounded-2xl transition-all active:scale-95 shadow-md shadow-green-200"
-                    >
-                      <LinkIcon size={14} />
-                      Enviar avaliação
-                    </button>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[11px] text-slate-500">Envie o link para o cliente avaliar.</p>
+                      <button
+                        onClick={gerarLinkConclusao}
+                        className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-[11px] font-bold px-3.5 py-2 rounded-xl transition-all active:scale-[0.98] shrink-0"
+                      >
+                        <LinkIcon size={13} />
+                        Enviar avaliação
+                      </button>
+                    </div>
                   )}
-                </div>
+                </>
               )}
             </div>
 
