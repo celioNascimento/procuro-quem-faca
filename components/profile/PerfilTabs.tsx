@@ -17,6 +17,10 @@ interface Props {
 }
 
 export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio = true }: Props) {
+  // Contagem da aba Portfólio exclui projetos sem_fotos — eles nunca
+  // aparecem na grade (ver PortfolioGrid), então não devem inflar o badge.
+  const projetosComFoto = projetos.filter(p => !p.sem_fotos)
+
   // Se portfolio desativado, começar na aba de avaliações
   const abaPadrao = !portfolioObrigatorio && avaliacoes.length > 0 ? 'avaliacoes' : 'portfolio'
   const [aba, setAba] = useState<Tab>(abaPadrao)
@@ -47,7 +51,7 @@ export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio 
             onClick={() => setAba('portfolio')}
             icon={<Images size={13} strokeWidth={2.5} />}
             label="Portfólio"
-            count={projetos.length}
+            count={projetosComFoto.length}
           />
         )}
         <TabButton
