@@ -2,6 +2,8 @@
 
 'use client'
 import { use, useState, useEffect } from 'react'
+import Link                         from 'next/link'
+import { Star, ArrowRight }         from 'lucide-react'
 import { useAcompanhamento }        from '@/hooks/useAcompanhamento'
 import { useCasoGarantiaDoProjeto } from '@/hooks/useCasoGarantiaDoProjeto'
 import { supabase }                 from '@/lib/supabase'
@@ -35,6 +37,16 @@ export default function PaginaAcompanhamento({
   // garantia depende de evidência fotográfica para abertura de caso).
   const semFotos = projeto?.sem_fotos ?? false
 
+  // "Pronto para avaliar" — mesma regra usada em useServicosCliente.ts
+  // (estaProntoParaAvaliar): fluxo com fotos depende da foto 3 enviada,
+  // fluxo sem_fotos depende do prestador ter marcado como concluído.
+  // Antes, essa condição só liberava o link de avaliação enviado pelo
+  // prestador via WhatsApp; agora também libera um botão direto aqui,
+  // sem tirar a opção do prestador continuar enviando o link manualmente.
+  const podeAvaliar = semFotos
+    ? !!projeto?.marcado_concluido_at
+    : fotosOrdenadas.some(f => f.ordem === 3)
+
   const {
     caso: casoGarantia,
     loading: loadingCaso,
@@ -55,6 +67,10 @@ export default function PaginaAcompanhamento({
   if (!projeto) return null
 
   const projetoFinalizado = projeto.status === 'finalizado'
+  // Botão só aparece enquanto ainda não foi avaliado (status='em_execucao')
+  // — depois de finalizado, a avaliação já foi feita e o botão some,
+  // mesmo comportamento do link de WhatsApp que já existia.
+  const mostrarBotaoAvaliar = podeAvaliar && projeto.status === 'em_execucao'
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased">
@@ -98,6 +114,27 @@ export default function PaginaAcompanhamento({
               />
             )}
 
+            {/* Botão direto para avaliar — não depende mais só do link
+                enviado pelo prestador via WhatsApp (que continua existindo
+                como alternativa). Mesma condição nos dois fluxos. */}
+            {mostrarBotaoAvaliar && (
+              <Link
+                href={`/avaliar/${projeto.avaliacao_token}`}
+                className="flex w-full items-center gap-4 rounded-[2rem] bg-blue-600 p-5 text-left shadow-lg shadow-blue-100 transition-transform hover:-translate-y-0.5 active:translate-y-0 animate-in fade-in duration-500 sm:p-6"
+              >
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                  <Star size={22} className="text-white" fill="white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
+                    Serviço concluído
+                  </p>
+                  <p className="text-blue-200 text-[11px] font-medium mt-1">Toque para avaliar e concluir</p>
+                </div>
+                <ArrowRight size={20} className="text-white/70 shrink-0" />
+              </Link>
+            )}
+
             {/* Garantia elegível por garantia_dias (verificarElegibilidadeGarantia),
                 independente de sem_fotos */}
             {projetoFinalizado && clienteUserId && (
@@ -133,3 +170,4 @@ export default function PaginaAcompanhamento({
     </div>
   )
 }
+
