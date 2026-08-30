@@ -1,7 +1,8 @@
 //dashboard/wizard/WizardCompleted.tsx 
 
-import { CheckCircle2, ChevronRight, ChevronLeft, MoreHorizontal, User, Share2 } from 'lucide-react'
+import { CheckCircle2, ChevronRight, ChevronLeft, MoreHorizontal, User, Share2, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { useUploadWizard } from '@/hooks/useUploadWizard'
+import { useAvaliacaoDoProjeto } from '@/hooks/useAvaliacaoDoProjeto'
 
 interface Props {
   hookData: ReturnType<typeof useUploadWizard>
@@ -12,6 +13,10 @@ export function WizardCompleted({ hookData }: Props) {
   const { titulo, projetoId, fotosData, comentariosSlideAtual, currentSlide } = hookData.state
   const { fotosCarrossel, fotoAtual, semFotos } = hookData.derived
   const { prevSlide, nextSlide, handleShare } = hookData.actions
+
+  // Só busca avaliação no fluxo sem_fotos — no fluxo com fotos o feedback
+  // do cliente já aparece via comentariosSlideAtual (comentários por foto).
+  const { avaliacao, loading: loadingAvaliacao } = useAvaliacaoDoProjeto(semFotos ? projetoId : null)
 
   return (
     <div className="flex flex-col w-full">
@@ -29,18 +34,45 @@ export function WizardCompleted({ hookData }: Props) {
       </div>
 
       {semFotos ? (
-        /* Fluxo sem foto: sem carrossel de imagem — card de status simples
-           no lugar do bloco escuro de fotos+legenda+comentários. */
-        <div className="flex flex-col items-center justify-center gap-4 py-14 px-6 bg-slate-50 border-b border-slate-100">
-          <div className="w-16 h-16 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-center">
-            <CheckCircle2 size={28} className="text-green-500" />
+        /* Fluxo sem foto: sem carrossel de imagem — mostra o feedback real
+           do cliente (comentário + indicação) no lugar do bloco de fotos,
+           já que não há nenhum outro conteúdo do cliente pra exibir aqui. */
+        <div className="flex flex-col gap-4 py-8 px-6 bg-slate-50 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-center shrink-0">
+              <CheckCircle2 size={22} className="text-green-500" />
+            </div>
+            <div>
+              <p className="text-[12px] font-black text-slate-700 uppercase tracking-wide">Serviço avaliado</p>
+              <p className="text-[10px] text-slate-400 font-medium">Feedback do cliente</p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-[12px] font-black text-slate-700 uppercase tracking-wide">Serviço concluído e avaliado</p>
-            <p className="text-[11px] text-slate-400 font-medium mt-1">
-              Este projeto foi realizado no fluxo sem registro fotográfico.
-            </p>
-          </div>
+
+          {loadingAvaliacao ? (
+            <div className="h-16 rounded-2xl bg-slate-100 animate-pulse" />
+          ) : avaliacao ? (
+            <div className="space-y-3">
+              {avaliacao.indica !== null && (
+                <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide px-2.5 py-1.5 rounded-xl ${
+                  avaliacao.indica
+                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
+                    : 'bg-slate-700 text-white'
+                }`}>
+                  {avaliacao.indica ? <ThumbsUp size={11} /> : <ThumbsDown size={11} />}
+                  {avaliacao.indica ? 'Indica' : 'Não indica'}
+                </span>
+              )}
+              {avaliacao.comentario ? (
+                <p className="text-[13px] font-medium text-slate-600 leading-relaxed italic bg-white p-4 rounded-2xl border border-slate-100">
+                  "{avaliacao.comentario}"
+                </p>
+              ) : (
+                <p className="text-[11px] text-slate-400 italic">Cliente não deixou comentário.</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-[11px] text-slate-400 italic">Avaliação ainda não encontrada.</p>
+          )}
         </div>
       ) : (
         <div className="relative bg-slate-900 flex items-center justify-center min-h-[350px] overflow-hidden group">
