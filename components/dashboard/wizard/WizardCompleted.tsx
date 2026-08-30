@@ -35,33 +35,26 @@ export function WizardCompleted({ hookData }: Props) {
 
       {semFotos ? (
         /* Fluxo sem foto: sem carrossel de imagem — mostra o feedback real
-           do cliente (comentário + indicação) no lugar do bloco de fotos,
-           já que não há nenhum outro conteúdo do cliente pra exibir aqui. */
-        <div className="flex flex-col gap-4 py-8 px-6 bg-slate-50 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-center shrink-0">
-              <CheckCircle2 size={22} className="text-green-500" />
-            </div>
-            <div>
-              <p className="text-[12px] font-black text-slate-700 uppercase tracking-wide">Serviço avaliado</p>
-              <p className="text-[10px] text-slate-400 font-medium">Feedback do cliente</p>
-            </div>
-          </div>
-
+           do cliente (comentário + indicação) direto abaixo do header,
+           sem repetir ícone/título de "concluído" que já está no header. */
+        <div className="px-6 py-5 bg-slate-50 border-b border-slate-100">
           {loadingAvaliacao ? (
             <div className="h-16 rounded-2xl bg-slate-100 animate-pulse" />
           ) : avaliacao ? (
             <div className="space-y-3">
-              {avaliacao.indica !== null && (
-                <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide px-2.5 py-1.5 rounded-xl ${
-                  avaliacao.indica
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
-                    : 'bg-slate-700 text-white'
-                }`}>
-                  {avaliacao.indica ? <ThumbsUp size={11} /> : <ThumbsDown size={11} />}
-                  {avaliacao.indica ? 'Indica' : 'Não indica'}
-                </span>
-              )}
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Feedback do cliente</p>
+                {avaliacao.indica !== null && (
+                  <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full ${
+                    avaliacao.indica
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-slate-700 text-white'
+                  }`}>
+                    {avaliacao.indica ? <ThumbsUp size={10} /> : <ThumbsDown size={10} />}
+                    {avaliacao.indica ? 'Indica' : 'Não indica'}
+                  </span>
+                )}
+              </div>
               {avaliacao.comentario ? (
                 <p className="text-[13px] font-medium text-slate-600 leading-relaxed italic bg-white p-4 rounded-2xl border border-slate-100">
                   "{avaliacao.comentario}"
