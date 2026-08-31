@@ -78,35 +78,37 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
 
         </div>
 
-        {/* Chips */}
+        {/* Chips — largura igual em linha única (flex-1), em vez de
+            flex-wrap: evita que o último chip fique sozinho numa segunda
+            linha com espaço vazio ao lado quando a quantidade é ímpar. */}
         {(categoria || totalFinalizados > 0 || totalEmAndamento > 0 || stats.exibir) && (
-          <div className="flex flex-wrap gap-1.5 px-4 py-3 border-t border-slate-100">
+          <div className="flex gap-1.5 px-4 py-3 border-t border-slate-100">
 
             {categoria && (
-              <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-600 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-100">
+              <span className="flex-1 inline-flex items-center justify-center gap-1 bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full border border-blue-100 min-w-0">
                 <Wrench size={10} className="shrink-0" />
-                {categoria}
+                <span className="truncate">{categoria}</span>
               </span>
             )}
 
             {totalFinalizados > 0 && (
-              <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full border border-green-100">
+              <span className="flex-1 inline-flex items-center justify-center gap-1 bg-green-50 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full border border-green-100 min-w-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
-                {totalFinalizados} concluído{totalFinalizados > 1 ? 's' : ''}
+                <span className="truncate">{totalFinalizados} concluído{totalFinalizados > 1 ? 's' : ''}</span>
               </span>
             )}
 
             {totalEmAndamento > 0 && (
-              <span className="inline-flex items-center gap-1 bg-slate-50 text-slate-500 text-[10px] font-bold px-2.5 py-1 rounded-full border border-slate-200">
+              <span className="flex-1 inline-flex items-center justify-center gap-1 bg-slate-50 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-full border border-slate-200 min-w-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
-                {totalEmAndamento} em andamento
+                <span className="truncate">{totalEmAndamento} em andamento</span>
               </span>
             )}
 
             {stats.exibir && (
-              <span className="inline-flex items-center gap-1 bg-slate-50 text-slate-500 text-[10px] font-bold px-2.5 py-1 rounded-full border border-slate-200">
+              <span className="flex-1 inline-flex items-center justify-center gap-1 bg-slate-50 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-full border border-slate-200 min-w-0">
                 <Star size={10} className="text-yellow-400 fill-yellow-400 shrink-0" />
-                {stats.media} · {stats.total} avaliações
+                <span className="truncate">{stats.media} · {stats.total} avaliações</span>
               </span>
             )}
 
