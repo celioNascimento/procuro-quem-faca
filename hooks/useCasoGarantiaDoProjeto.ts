@@ -1,7 +1,7 @@
 // hooks/useCasoGarantiaDoProjeto.ts
 //
-// Busca o caso de garantia de um projeto — compartilhado entre
-// GarantiaSecaoCliente, GarantiaSecaoWizard e page.tsx (via lifting).
+// Busca o caso de garantia (ou reclamação) de um projeto — compartilhado
+// entre GarantiaSecaoCliente, GarantiaSecaoWizard e page.tsx (via lifting).
 //
 // Inclui todos os status relevantes: ativos (em andamento) e finais
 // (resolvida, sem_resposta, recusada) — para que o cliente e o prestador
@@ -25,6 +25,11 @@ export interface CasoGarantia {
   id: string
   status: string
   origem: 'cliente' | 'prestador'
+  // 'garantia': prestador tem garantia_dias > 0. 'reclamacao': prestador
+  // sem garantia formal (garantia_dias = 0), prazo fixo de 15 dias.
+  // Mesma máquina de estados nos dois — usado só para decidir a
+  // linguagem exibida nas telas (título, textos de prazo/elegibilidade).
+  tipo: 'garantia' | 'reclamacao'
   descricao_problema: string
   fotos_problema: string[]
   resposta_prestador_garantia: string | null
