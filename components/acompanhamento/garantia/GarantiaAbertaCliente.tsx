@@ -4,6 +4,10 @@
 // Cliente só acompanha aqui — pode continuar a conversa e ver as fotos que
 // já anexou (ou anexar mais, se lembrar de algo), mas não há ação de
 // "fechar" o caso do lado dele nesta etapa.
+//
+// Sem texto condicional por tipo aqui — a mensagem já é genérica o
+// suficiente ("aguardando resposta do prestador") para servir tanto
+// garantia quanto reclamação sem soar deslocada.
 
 'use client'
 
