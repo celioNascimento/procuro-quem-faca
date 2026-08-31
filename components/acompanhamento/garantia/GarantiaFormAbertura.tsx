@@ -1,9 +1,11 @@
 // components/acompanhamento/garantia/GarantiaFormAbertura.tsx
 //
-// Formulário para o cliente abrir um novo caso de garantia. Exige descrição
-// do problema + ao menos uma foto (evidência), reaproveitando o padrão de
-// upload já usado em useGarantiaWizard (fase='problema', automática para
-// autorTipo='cliente').
+// Formulário para o cliente abrir um novo caso de garantia OU reclamação
+// (tipo decidido por verificarElegibilidadeGarantia, recebido via prop —
+// o cliente não escolhe, é uma consequência de garantia_dias do prestador).
+// Exige descrição do problema + ao menos uma foto (evidência), reaproveitando
+// o padrão de upload já usado em useGarantiaWizard (fase='problema',
+// automática para autorTipo='cliente').
 //
 // Upload de foto só é possível DEPOIS que o caso existe (garantia_fotos.caso_id
 // é not null) — então o fluxo aqui é: 1) criar o caso com abrirCasoGarantiaCliente,
@@ -22,14 +24,17 @@ const MIN_CARACTERES_DESCRICAO = 20
 interface Props {
   projetoId: string
   clienteUserId: string
+  tipo: 'garantia' | 'reclamacao'
   onAberto: () => void
 }
 
-export function GarantiaFormAbertura({ projetoId, clienteUserId, onAberto }: Props) {
+export function GarantiaFormAbertura({ projetoId, clienteUserId, tipo, onAberto }: Props) {
   const [descricao, setDescricao] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [casoIdRecemCriado, setCasoIdRecemCriado] = useState<string | null>(null)
+
+  const ehReclamacao = tipo === 'reclamacao'
 
   // Só existe uma vez que o caso foi criado — habilita o upload de fotos
   // do problema antes do cliente finalizar a abertura.
@@ -53,7 +58,7 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, onAberto }: Pro
       })
       setCasoIdRecemCriado(caso.id)
     } catch (err) {
-      console.error('Erro ao abrir caso de garantia:', err)
+      console.error('Erro ao abrir caso:', err)
       setErro('Não foi possível abrir o caso. Tente novamente.')
     } finally {
       setEnviando(false)
@@ -66,7 +71,8 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, onAberto }: Pro
       <div className="space-y-4">
         <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
           <p className="text-[11px] font-bold text-green-700">
-            Caso aberto. Anexe fotos do problema para o prestador entender melhor.
+            {ehReclamacao ? 'Reclamação registrada.' : 'Caso aberto.'} Anexe fotos do
+            problema para o prestador entender melhor.
           </p>
         </div>
 
@@ -112,8 +118,8 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, onAberto }: Pro
   return (
     <div className="space-y-3">
       <p className="text-[11px] text-slate-500 leading-snug">
-        Teve algum problema com este serviço? Descreva o que aconteceu — o prestador
-        terá 5 dias úteis para responder.
+        Teve algum problema com este serviço? Descreva o que aconteceu — o
+        prestador terá 5 dias úteis para responder.
       </p>
       <textarea
         value={descricao}
@@ -132,7 +138,7 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, onAberto }: Pro
           className="flex items-center gap-2 bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all active:scale-95"
         >
           {enviando ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-          Abrir garantia
+          {ehReclamacao ? 'Enviar reclamação' : 'Abrir garantia'}
         </button>
       </div>
       {erro && (
