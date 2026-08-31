@@ -14,26 +14,32 @@ interface Props {
   clienteUserId: string
 }
 
-const CONFIG_STATUS = {
-  resolvida: {
-    icon: CheckCircle2,
-    cor: 'text-green-600 bg-green-50 border-green-200',
-    titulo: 'Garantia resolvida',
-    descricao: null,
-  },
-  sem_resposta: {
-    icon: ShieldOff,
-    cor: 'text-red-600 bg-red-50 border-red-200',
-    titulo: 'O prestador não respondeu a tempo',
-    descricao: 'O caso foi encerrado automaticamente. Isso ficou registrado no perfil público do prestador.',
-  },
-  recusada: {
-    icon: XCircle,
-    cor: 'text-slate-500 bg-slate-50 border-slate-200',
-    titulo: 'Você recusou a oferta de reparo',
-    descricao: null,
-  },
-} as const
+// Config por status, parametrizada por tipo — a estrutura (ícone, cor)
+// não muda entre garantia e reclamação, só o texto exibido.
+function configPorStatus(status: string, ehReclamacao: boolean) {
+  const config = {
+    resolvida: {
+      icon: CheckCircle2,
+      cor: 'text-green-600 bg-green-50 border-green-200',
+      titulo: ehReclamacao ? 'Reclamação resolvida' : 'Garantia resolvida',
+      descricao: null as string | null, // usa resolucao_descricao do caso
+    },
+    sem_resposta: {
+      icon: ShieldOff,
+      cor: 'text-red-600 bg-red-50 border-red-200',
+      titulo: 'O prestador não respondeu a tempo',
+      descricao: 'O caso foi encerrado automaticamente. Isso ficou registrado no perfil público do prestador.',
+    },
+    recusada: {
+      icon: XCircle,
+      cor: 'text-slate-500 bg-slate-50 border-slate-200',
+      titulo: 'Você recusou a oferta de reparo',
+      descricao: null,
+    },
+  } as const
+
+  return config[status as keyof typeof config]
+}
 
 export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
   const wizard = useGarantiaWizard({
@@ -42,7 +48,8 @@ export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
     autorUserId: clienteUserId,
   })
 
-  const config = CONFIG_STATUS[caso.status as keyof typeof CONFIG_STATUS]
+  const ehReclamacao = caso.tipo === 'reclamacao'
+  const config = configPorStatus(caso.status, ehReclamacao)
   if (!config) return null
   const Icon = config.icon
 
