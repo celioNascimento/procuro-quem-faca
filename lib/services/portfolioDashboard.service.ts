@@ -28,7 +28,7 @@ const SELECT_PROJETO_COM_GARANTIA = `
   sem_fotos, marcado_concluido_at,
   portfolio_fotos (id, url_foto, ordem),
   avaliacoes (id),
-  solicitacoes_garantia (id, status, origem, prazo_resposta)
+  solicitacoes_garantia (id, status, origem, tipo, prazo_resposta)
 `
 
 export async function getProjetosPorPrestador(prestadorId: number) {
