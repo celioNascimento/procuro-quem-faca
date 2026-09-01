@@ -19,39 +19,44 @@ interface StatusInfo {
 interface Props {
   servico: ClienteServico
   statusInfo: StatusInfo
-  // Se true, aplica estilo laranja completo ao card (borda + ring na foto +
-  // badge + chevron) — mesma linguagem visual do banner de garantia.
-  temGarantiaAtiva?: boolean
+  // Tipo do caso ativo (garantia formal ou reclamação), ou null/undefined
+  // quando não há caso ativo. Aplica estilo laranja completo ao card
+  // (borda + ring na foto + badge + chevron) — mesma linguagem visual do
+  // banner de garantia/reclamação, com o texto do badge variando por tipo.
+  tipoGarantiaAtiva?: 'garantia' | 'reclamacao' | null
   onClick: () => void
 }
 
 export default function ServicoCardCompacto({
   servico,
   statusInfo,
-  temGarantiaAtiva = false,
+  tipoGarantiaAtiva = null,
   onClick,
 }: Props) {
-  const badgeLabel = temGarantiaAtiva ? 'Garantia'                          : statusInfo.label
-  const badgeClass = temGarantiaAtiva ? 'bg-orange-50 text-orange-700 border-orange-200' : statusInfo.badge
-  const dotClass   = temGarantiaAtiva ? 'bg-orange-400'                     : statusInfo.dot
-  const isUrgente  = temGarantiaAtiva || statusInfo.urgente
+  const temCasoAtivo = tipoGarantiaAtiva !== null
+  const ehReclamacao = tipoGarantiaAtiva === 'reclamacao'
+
+  const badgeLabel = temCasoAtivo ? (ehReclamacao ? 'Reclamação' : 'Garantia') : statusInfo.label
+  const badgeClass = temCasoAtivo ? 'bg-orange-50 text-orange-700 border-orange-200' : statusInfo.badge
+  const dotClass   = temCasoAtivo ? 'bg-orange-400'                     : statusInfo.dot
+  const isUrgente  = temCasoAtivo || statusInfo.urgente
 
   // Estilos do card raiz
-  const cardClass = temGarantiaAtiva
+  const cardClass = temCasoAtivo
     ? 'border-orange-200 shadow-sm shadow-orange-50 focus-visible:ring-orange-100'
     : isUrgente
       ? 'border-blue-200 shadow-sm shadow-blue-50 focus-visible:ring-blue-100'
       : 'border-slate-200 shadow-sm hover:border-blue-200 focus-visible:ring-blue-100'
 
   // Ring na foto
-  const fotoRingClass = temGarantiaAtiva
+  const fotoRingClass = temCasoAtivo
     ? 'ring-2 ring-orange-400'
     : isUrgente
       ? 'ring-2 ring-blue-400'
       : ''
 
   // Chevron
-  const chevronClass = temGarantiaAtiva
+  const chevronClass = temCasoAtivo
     ? 'bg-orange-500 text-white'
     : isUrgente
       ? 'bg-blue-600 text-white'
@@ -81,7 +86,7 @@ export default function ServicoCardCompacto({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border tracking-wider shrink-0 flex items-center gap-1 ${badgeClass}`}>
-            {temGarantiaAtiva && <ShieldAlert size={8} />}
+            {temCasoAtivo && <ShieldAlert size={8} />}
             {badgeLabel}
           </span>
           {servico.prestadores?.categoria?.nome && (
