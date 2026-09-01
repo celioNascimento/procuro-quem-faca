@@ -10,19 +10,21 @@ interface Props {
   onAceitar: (servico: Servico) => void
   hidePrestador?: boolean
   modo?: 'pendente' | 'andamento' | 'concluido' | 'garantia'
-  // Sinaliza garantia ativa independente da aba/modo atual — exibe a tag
-  // laranja sobre a foto sem alterar o estilo geral do card. Quando
-  // modo === 'garantia' já aplica o estilo completo, então a tag extra
-  // só é renderizada quando modo !== 'garantia'.
-  temGarantiaAtiva?: boolean
+  // Tipo do caso ativo (garantia formal ou reclamação sem garantia),
+  // ou null quando não há caso ativo. Substitui o antigo booleano
+  // temGarantiaAtiva — carrega o tipo direto, evitando uma segunda prop.
+  // Quando modo === 'garantia' o card já aplica o estilo completo próprio,
+  // então a tag extra só é renderizada quando modo !== 'garantia'.
+  tipoGarantiaAtiva?: 'garantia' | 'reclamacao' | null
 }
 
-// Label e cor do badge da foto variam conforme o status
-const BADGE = {
+// Label e cor do badge da foto variam conforme o status. 'garantia' não
+// tem texto fixo pré-definido — é calculado dentro do componente porque
+// depende de ehReclamacao (só disponível após saber tipoGarantiaAtiva).
+const BADGE_BASE = {
   pendente:  { texto: 'Aguardando Início', cor: 'text-blue-600'    },
   andamento: { texto: 'Em Andamento',      cor: 'text-amber-500'   },
   concluido: { texto: 'Concluído',         cor: 'text-emerald-600' },
-  garantia:  { texto: 'Em Garantia',       cor: 'text-orange-600'  },
 }
 
 export default function ServicoCard({
@@ -31,19 +33,24 @@ export default function ServicoCard({
   onAceitar,
   hidePrestador = false,
   modo = 'pendente',
-  temGarantiaAtiva = false,
+  tipoGarantiaAtiva = null,
 }: Props) {
   const fotoInicio = servico.portfolio_fotos?.find(f => f.ordem === 1)
-  const badge = BADGE[modo]
   // Projeto sem_fotos nunca terá fotoInicio — em vez de mostrar o bloco
   // "Sem foto de capa" (que sugere pendência), omite o espaço de imagem
   // por completo, deixando o card mais compacto.
   const semFotos = servico.sem_fotos ?? false
 
-  // Tag de garantia aparece sobre a foto quando o projeto tem garantia ativa
-  // mas está sendo exibido fora da aba Garantia (modo !== 'garantia').
+  // Tag aparece sobre a foto quando o projeto tem caso ativo (garantia ou
+  // reclamação) mas está sendo exibido fora da aba Garantia (modo !== 'garantia').
   // Na aba Garantia o card já usa modo='garantia' com badge próprio — sem duplicar.
-  const mostrarTagGarantia = temGarantiaAtiva && modo !== 'garantia'
+  const mostrarTagGarantia = tipoGarantiaAtiva !== null && modo !== 'garantia'
+  const ehReclamacao = tipoGarantiaAtiva === 'reclamacao'
+  const labelTag = ehReclamacao ? 'Reclamação' : 'Garantia'
+
+  const badge = modo === 'garantia'
+    ? { texto: ehReclamacao ? 'Em Reclamação' : 'Em Garantia', cor: 'text-orange-600' }
+    : BADGE_BASE[modo]
 
   return (
     <div className="bg-white rounded-[2.5rem] p-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-50 group">
@@ -112,7 +119,7 @@ export default function ServicoCard({
                 <div className="absolute top-4 right-4 bg-orange-500/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
                   <p className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white">
                     <ShieldAlert size={10} />
-                    Garantia
+                    {labelTag}
                   </p>
                 </div>
               )}
@@ -129,12 +136,12 @@ export default function ServicoCard({
               <Briefcase size={32} opacity={0.5} />
               <span className="text-[10px] font-bold uppercase tracking-widest">Sem foto de capa</span>
 
-              {/* Tag de garantia mesmo sem foto de capa */}
+              {/* Tag de garantia/reclamação mesmo sem foto de capa */}
               {mostrarTagGarantia && (
                 <div className="absolute top-4 right-4 bg-orange-500/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
                   <p className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white">
                     <ShieldAlert size={10} />
-                    Garantia
+                    {labelTag}
                   </p>
                 </div>
               )}
@@ -156,7 +163,7 @@ export default function ServicoCard({
           {mostrarTagGarantia && (
             <span className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-100 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-orange-600">
               <ShieldAlert size={10} />
-              Garantia
+              {labelTag}
             </span>
           )}
         </div>
@@ -209,7 +216,7 @@ export default function ServicoCard({
             </button>
           )}
 
-          {/* CONCLUÍDO — botão muda de cor se tiver garantia ativa,
+          {/* CONCLUÍDO — botão muda de cor se tiver caso ativo,
               sinalizando que há algo pendente além da avaliação. */}
           {modo === 'concluido' && (
             <button
@@ -221,20 +228,21 @@ export default function ServicoCard({
               }`}
             >
               {mostrarTagGarantia ? (
-                <><ShieldAlert size={14} /> Ver Garantia <ChevronRight size={16} /></>
+                <><ShieldAlert size={14} /> Ver {labelTag} <ChevronRight size={16} /></>
               ) : (
                 <>Ver avaliação <ChevronRight size={16} /></>
               )}
             </button>
           )}
 
-          {/* GARANTIA — Ver caso de garantia (aberto ou em andamento) */}
+          {/* GARANTIA — Ver caso ativo (aberto ou em andamento), seja
+              garantia formal ou reclamação */}
           {modo === 'garantia' && (
             <button
               onClick={() => onAceitar(servico)}
               className="flex-1 bg-orange-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-orange-200 hover:bg-orange-700 active:scale-[0.98] transition-all"
             >
-              Ver Garantia <ChevronRight size={16} />
+              Ver {ehReclamacao ? 'Reclamação' : 'Garantia'} <ChevronRight size={16} />
             </button>
           )}
 
