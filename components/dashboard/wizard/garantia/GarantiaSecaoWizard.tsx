@@ -31,11 +31,13 @@ export function GarantiaSecaoWizard({ prestadorId, caso, loadingCaso, recarregar
 
   if (!caso) return null
 
+  const ehReclamacao = caso.tipo === 'reclamacao'
+
   return (
     <div className="mt-4 pt-4 border-t-2 border-dashed border-orange-100">
       <div className="flex items-center gap-2 mb-4 px-1">
         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">
-          Garantia
+          {ehReclamacao ? 'Reclamação' : 'Garantia'}
         </span>
         <span className="text-[9px] font-medium text-slate-400">
           Continuação deste projeto

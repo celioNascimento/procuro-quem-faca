@@ -46,6 +46,7 @@ export function GarantiaAberta({ caso, prestadorId, onAtualizado }: Props) {
   const [erroProposta, setErroProposta] = useState<string | null>(null)
 
   const propostaValida = proposta.trim().length >= MIN_CARACTERES_PROPOSTA
+  const ehReclamacao = caso.tipo === 'reclamacao'
 
   const prazoFormatado = caso.prazo_resposta
     ? new Date(caso.prazo_resposta).toLocaleDateString('pt-BR')
@@ -88,7 +89,7 @@ export function GarantiaAberta({ caso, prestadorId, onAtualizado }: Props) {
           <AlertTriangle size={18} className="text-orange-500 shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-[11px] font-black uppercase tracking-wide text-orange-700 leading-none mb-1.5">
-              Cliente acionou a garantia
+              {ehReclamacao ? 'Cliente relatou um problema' : 'Cliente acionou a garantia'}
             </p>
             {prazoFormatado && (
               <p className="text-[10px] font-bold text-orange-600 mb-2">

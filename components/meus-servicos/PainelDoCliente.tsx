@@ -2,7 +2,7 @@
 
 'use client'
 import { useState, useEffect } from 'react'
-import { User, Clock, Loader2, ShieldAlert, Phone, AlertCircle } from 'lucide-react'
+import { User, Clock, Loader2, ShieldAlert, MessageCircleWarning, Phone, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import LoginGate from './LoginGate'
@@ -12,7 +12,7 @@ import { usePainelCliente } from '@/hooks/usePainelCliente'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
-type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido' | 'garantia'
+type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido' | 'garantia' | 'reclamacao'
 
 // ── Config das linhas de filtro ────────────────────────────────────────────────
 const FILTROS: { valor: Filtro; label: string }[] = [
@@ -21,6 +21,7 @@ const FILTROS: { valor: Filtro; label: string }[] = [
   { valor: 'em_execucao', label: 'Em andamento' },
   { valor: 'concluido',   label: 'Concluídos'   },
   { valor: 'garantia',    label: 'Garantia'     },
+  { valor: 'reclamacao',  label: 'Reclamação'   },
 ]
 
 export default function PainelDoCliente() {
@@ -28,7 +29,7 @@ export default function PainelDoCliente() {
   const [filtroAtivo, setFiltroAtivo] = useState<Filtro>('todos')
 
   const {
-    session, servicos, servicosGarantia, loading,
+    session, servicos, servicosGarantia, servicosReclamacao, loading,
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente,
     handleAceitar, handleVerGarantia,
@@ -73,10 +74,15 @@ export default function PainelDoCliente() {
     em_execucao: emAndamento.length,
     concluido:   concluidos.length,
     garantia:    servicosGarantia.length,
+    reclamacao:  servicosReclamacao.length,
   }
 
-  // IDs com garantia ativa — derivado do mesmo array (sem dessincronia).
+  // IDs com caso ativo — derivado dos mesmos arrays (sem dessincronia).
+  // Um projeto nunca aparece nos dois conjuntos ao mesmo tempo (ver
+  // painelCliente.service.ts), mas mantemos os Sets separados porque o
+  // ServicoCard precisa saber QUAL tipo, não só "tem caso ativo".
   const idsComGarantiaAtiva = new Set(servicosGarantia.map(s => s.id))
+  const idsComReclamacaoAtiva = new Set(servicosReclamacao.map(s => s.id))
 
   // ── Serviços filtrados ────────────────────────────────────────────────────────
   const servicosFiltrados = (() => {
@@ -84,16 +90,27 @@ export default function PainelDoCliente() {
     if (filtroAtivo === 'em_execucao') return emAndamento
     if (filtroAtivo === 'concluido')   return concluidos
     if (filtroAtivo === 'garantia')    return servicosGarantia
+    if (filtroAtivo === 'reclamacao')  return servicosReclamacao
     return servicos
   })()
 
+  // ── tipoGarantiaAtivaDoServico ───────────────────────────────────────────────
+  // Retorna o tipo do caso ativo deste serviço (ou null), usado pelo
+  // ServicoCard para decidir texto/estilo da tag "Garantia"/"Reclamação".
+  const tipoGarantiaAtivaDoServico = (servico: { id: string }): 'garantia' | 'reclamacao' | null => {
+    if (idsComGarantiaAtiva.has(servico.id)) return 'garantia'
+    if (idsComReclamacaoAtiva.has(servico.id)) return 'reclamacao'
+    return null
+  }
+
   // ── getModo ──────────────────────────────────────────────────────────────────
-  // O modo 'garantia' (estilo laranja completo) só se aplica na aba Garantia.
-  // Em outras abas, o card usa o estilo do status real do projeto.
-  // A sinalização visual de garantia nas demais abas é feita pela prop
-  // `temGarantiaAtiva` abaixo, que exibe apenas uma tag sem mudar o card inteiro.
+  // O modo 'garantia' (estilo laranja completo) só se aplica nas abas
+  // Garantia/Reclamação. Em outras abas, o card usa o estilo do status
+  // real do projeto. A sinalização visual nas demais abas é feita pela
+  // prop tipoGarantiaAtiva abaixo, que exibe apenas uma tag sem mudar o
+  // card inteiro.
   const getModo = (servico: any) => {
-    if (filtroAtivo === 'garantia' && idsComGarantiaAtiva.has(servico.id))
+    if ((filtroAtivo === 'garantia' || filtroAtivo === 'reclamacao') && tipoGarantiaAtivaDoServico(servico))
       return 'garantia' as const
     if (servico.status === 'em_execucao') return 'andamento' as const
     if (servico.status === 'finalizado')  return 'concluido' as const
@@ -101,10 +118,11 @@ export default function PainelDoCliente() {
   }
 
   // ── getOnAceitar ─────────────────────────────────────────────────────────────
-  // Na aba Garantia → navega para seção de garantia do acompanhamento.
+  // Nas abas Garantia/Reclamação → navega para seção de garantia/reclamação
+  // do acompanhamento (mesma rota, a seção decide o tipo sozinha).
   // Em qualquer outra aba → comportamento padrão pelo status do projeto.
   const getOnAceitar = (servico: any) => {
-    if (filtroAtivo === 'garantia' && idsComGarantiaAtiva.has(servico.id))
+    if ((filtroAtivo === 'garantia' || filtroAtivo === 'reclamacao') && tipoGarantiaAtivaDoServico(servico))
       return () => handleVerGarantia(servico)
     if (servico.status === 'em_execucao')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
@@ -119,7 +137,7 @@ export default function PainelDoCliente() {
   if (!session) return <LoginGate tokenUrl={tokenUrl} />
 
   const prestador = servicos[0]?.prestadores
-  const hasMultipleProjects = servicos.length > 1 || servicosGarantia.length > 0
+  const hasMultipleProjects = servicos.length > 1 || servicosGarantia.length > 0 || servicosReclamacao.length > 0
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-32 font-sans antialiased">
@@ -252,6 +270,21 @@ export default function PainelDoCliente() {
                 </div>
               )}
 
+              {filtroAtivo === 'reclamacao' && servicosReclamacao.length > 0 && (
+                <div className="bg-orange-50 rounded-[2rem] border border-orange-100 shadow-sm p-6 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <MessageCircleWarning size={14} className="text-orange-500" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-orange-600">
+                      Reclamação em aberto
+                    </p>
+                  </div>
+                  <p className="text-[12px] text-orange-700/80 font-medium leading-relaxed">
+                    Você tem reclamações em andamento. Acompanhe as respostas
+                    do prestador e confirme quando o problema for resolvido.
+                  </p>
+                </div>
+              )}
+
             </div>
           </div>
 
@@ -266,6 +299,7 @@ export default function PainelDoCliente() {
                 {FILTROS.map((filtro) => {
                   const ativo = filtroAtivo === filtro.valor
                   const count = contadores[filtro.valor]
+                  const ehCasoAtivo = filtro.valor === 'garantia' || filtro.valor === 'reclamacao'
                   if (filtro.valor !== 'todos' && count === 0) return null
 
                   return (
@@ -277,10 +311,10 @@ export default function PainelDoCliente() {
                         min-h-10 flex items-center gap-2 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 transition-all
                         focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100
                         ${ativo
-                          ? filtro.valor === 'garantia'
+                          ? ehCasoAtivo
                             ? 'border-orange-600 bg-orange-600 text-white shadow-sm'
                             : 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                          : filtro.valor === 'garantia'
+                          : ehCasoAtivo
                             ? 'border-orange-200 bg-white text-orange-500 hover:border-orange-300'
                             : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600'
                         }
@@ -308,10 +342,11 @@ export default function PainelDoCliente() {
                     onAceitar={getOnAceitar(servico)}
                     hidePrestador
                     modo={getModo(servico)}
-                    // Prop independente do modo: sinaliza que este projeto tem
-                    // garantia ativa em QUALQUER aba, permitindo ao ServicoCard
-                    // exibir a tag "Garantia" sem alterar o estilo geral do card.
-                    temGarantiaAtiva={idsComGarantiaAtiva.has(servico.id)}
+                    // Prop independente do modo: sinaliza o TIPO do caso
+                    // ativo deste projeto (garantia ou reclamação) em
+                    // QUALQUER aba, permitindo ao ServicoCard exibir a
+                    // tag certa sem alterar o estilo geral do card.
+                    tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(servico)}
                   />
                 ))
               ) : (

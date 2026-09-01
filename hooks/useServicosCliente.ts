@@ -4,7 +4,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import * as ClienteService from '@/lib/services/cliente.service'
-import { temGarantiaAtiva } from '@/lib/services/cliente.service'
 import type { ClienteServico } from '@/types/clienteServicos'
 
 /**
@@ -58,8 +57,18 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   }, [whatsapp, perfilCarregado])
 
   // Derivados localmente — sem estado próprio nem query separada.
-  const servicosGarantia    = servicos.filter(temGarantiaAtiva)
+  // Separados por tipo: garantia (formal, garantia_dias > 0) e reclamação
+  // (prestador sem garantia_dias) viram filtros distintos na lista, mesmo
+  // usando a mesma máquina de estados por baixo (ver garantia.service.ts).
+  const casoAtivoDoServico = (s: ClienteServico) =>
+    (s.solicitacoes_garantia ?? []).find(g =>
+      ['aguardando_aceite_cliente', 'aberta', 'respondida'].includes(g.status),
+    )
+
+  const servicosGarantia = servicos.filter(s => casoAtivoDoServico(s)?.tipo === 'garantia')
+  const servicosReclamacao = servicos.filter(s => casoAtivoDoServico(s)?.tipo === 'reclamacao')
   const idsComGarantiaAtiva = new Set(servicosGarantia.map(s => s.id))
+  const idsComReclamacaoAtiva = new Set(servicosReclamacao.map(s => s.id))
 
   // ── Contadores ──────────────────────────────────────────────────────────────
   const avaliarCount = servicos.filter(s =>
@@ -71,10 +80,13 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   ).length
 
   const garantiaCount = servicosGarantia.length
+  const reclamacaoCount = servicosReclamacao.length
 
   // ── Filtro de lista ─────────────────────────────────────────────────────────
   const servicosFiltrados = filtroStatus === 'garantia'
     ? servicosGarantia
+    : filtroStatus === 'reclamacao'
+    ? servicosReclamacao
     : servicos.filter(s => {
         const st       = s.status?.toLowerCase()
         const pronto   = estaProntoParaAvaliar(s)
@@ -133,10 +145,12 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   const getRotaGarantia = (s: ClienteServico) =>
     `/acompanhamento/${s.avaliacao_token}?garantia=1`
 
-  // Rota unificada considerando filtro ativo e garantia ativa.
+  // Rota unificada considerando filtro ativo e caso ativo (garantia OU
+  // reclamação — ambos abrem a mesma seção via ?garantia=1, que já lida
+  // com os dois tipos internamente).
   const getRota = (s: ClienteServico) => {
-    if (filtroStatus === 'garantia')       return getRotaGarantia(s)
-    if (idsComGarantiaAtiva.has(s.id))     return getRotaGarantia(s)
+    if (filtroStatus === 'garantia' || filtroStatus === 'reclamacao') return getRotaGarantia(s)
+    if (idsComGarantiaAtiva.has(s.id) || idsComReclamacaoAtiva.has(s.id)) return getRotaGarantia(s)
     return getRotaDestino(s)
   }
 
@@ -152,13 +166,16 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
     filtroRef,
     servicos,
     servicosGarantia,
+    servicosReclamacao,
     idsComGarantiaAtiva,
+    idsComReclamacaoAtiva,
     filtroStatus, setFiltroStatus,
     loadingServicos,
     servicosFiltrados,
     avaliarCount,
     ativosCount,
     garantiaCount,
+    reclamacaoCount,
     getStatusInfo,
     getRotaDestino,
     getRotaGarantia,

@@ -7,26 +7,45 @@ import { supabase } from '@/lib/supabase'
 // se ele tem garantia ativa — sem precisar de uma segunda consulta
 // separada e comparar arrays por id depois (fonte de bugs sutis se os
 // tipos/formatos de id não baterem entre as duas queries).
+// tipo adicionado: distingue garantia formal de reclamação — mesma
+// máquina de estados, prazos e linguagem diferentes (ver garantia.service.ts).
 const SELECT_SERVICOS = `
   *,
   prestadores (id, user_id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
   portfolio_fotos (*),
-  solicitacoes_garantia (id, status, origem, prazo_resposta)
+  solicitacoes_garantia (id, status, origem, tipo, prazo_resposta)
 `
 
 const STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado', 'em_disputa']
 
 // Status de solicitacoes_garantia considerados "ativos" — casos já resolvidos
-// ou recusados não contam como garantia ativa (voltam a contar como Concluídos).
+// ou recusados não contam como ativos (voltam a contar como Concluídos).
 const STATUS_GARANTIA_ATIVOS = ['aguardando_aceite_cliente', 'aberta', 'respondida']
 
 /**
- * Deriva se um serviço tem garantia ativa a partir do array
- * solicitacoes_garantia já embutido nele pelo join — não faz consulta
- * nem comparação externa. Cada Servico carrega sua própria resposta.
+ * Deriva se um serviço tem GARANTIA FORMAL ativa (tipo='garantia') a
+ * partir do array solicitacoes_garantia já embutido nele pelo join — não
+ * faz consulta nem comparação externa. Cada Servico carrega sua própria
+ * resposta. Reclamações (tipo='reclamacao') NÃO contam aqui — usar
+ * temReclamacaoAtiva para essas.
  */
-export function temGarantiaAtiva(servico: { solicitacoes_garantia?: { status: string }[] }): boolean {
-  return (servico.solicitacoes_garantia ?? []).some(g => STATUS_GARANTIA_ATIVOS.includes(g.status))
+export function temGarantiaAtiva(servico: { solicitacoes_garantia?: { status: string; tipo?: string }[] }): boolean {
+  return (servico.solicitacoes_garantia ?? []).some(g =>
+    STATUS_GARANTIA_ATIVOS.includes(g.status) && g.tipo !== 'reclamacao'
+  )
+}
+
+/**
+ * Deriva se um serviço tem RECLAMAÇÃO ativa (tipo='reclamacao') — mesmo
+ * padrão de temGarantiaAtiva, complementar. Um serviço nunca tem os dois
+ * tipos ativos ao mesmo tempo (garantia_dias do prestador decide um ou
+ * outro no momento da abertura do caso), mas as duas funções ficam
+ * separadas para deixar essa premissa explícita, não implícita.
+ */
+export function temReclamacaoAtiva(servico: { solicitacoes_garantia?: { status: string; tipo?: string }[] }): boolean {
+  return (servico.solicitacoes_garantia ?? []).some(g =>
+    STATUS_GARANTIA_ATIVOS.includes(g.status) && g.tipo === 'reclamacao'
+  )
 }
 
 export async function getProfile(userId: string) {
@@ -70,15 +89,24 @@ export async function getServicosPorWhatsapp(whatsapp: string) {
 }
 
 /**
- * Projetos do cliente que têm um caso de garantia ATIVO agora —
- * derivado diretamente do array já embutido nos serviços (temGarantiaAtiva),
- * sem consulta separada. Mantida como função por conveniência de uso nos
- * hooks, mas agora é um filtro local, não uma query própria.
+ * Projetos do cliente que têm GARANTIA FORMAL ativa agora — derivado
+ * diretamente do array já embutido nos serviços (temGarantiaAtiva), sem
+ * consulta separada.
  */
-export function filtrarComGarantiaAtiva<T extends { solicitacoes_garantia?: { status: string }[] }>(
+export function filtrarComGarantiaAtiva<T extends { solicitacoes_garantia?: { status: string; tipo?: string }[] }>(
   servicos: T[],
 ): T[] {
   return servicos.filter(temGarantiaAtiva)
+}
+
+/**
+ * Projetos do cliente que têm RECLAMAÇÃO ativa agora — mesmo padrão de
+ * filtrarComGarantiaAtiva, complementar.
+ */
+export function filtrarComReclamacaoAtiva<T extends { solicitacoes_garantia?: { status: string; tipo?: string }[] }>(
+  servicos: T[],
+): T[] {
+  return servicos.filter(temReclamacaoAtiva)
 }
 
 export async function aceitarServico(

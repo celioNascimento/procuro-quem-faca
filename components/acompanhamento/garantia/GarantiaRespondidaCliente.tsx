@@ -1,4 +1,9 @@
 // components/acompanhamento/garantia/GarantiaRespondidaCliente.tsx
+//
+// Sem texto condicional por tipo aqui — o único texto que varia é por
+// origem ('prestador' vs 'cliente'), já tratado abaixo, e origem='prestador'
+// nunca ocorre em tipo='reclamacao' (ver garantia.service.ts), então o
+// branch de nota fixa/neutra nunca é acionado em reclamações.
 
 'use client'
 

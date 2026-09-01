@@ -3,11 +3,18 @@
 // Fluxo de Garantia — PQF
 // -------------------------------------------------------------
 // origem='cliente': cliente relata problema dentro da janela de garantia
-//   do prestador (portfolio_projetos.data_conclusao + prestadores.garantia_dias).
+//   do prestador (portfolio_projetos.data_conclusao + prestadores.garantia_dias)
+//   OU, quando o prestador não oferece garantia formal (garantia_dias = 0),
+//   dentro de uma janela fixa de reclamação (DIAS_RECLAMACAO, 15 dias
+//   corridos). O campo solicitacoes_garantia.tipo ('garantia'|'reclamacao')
+//   registra qual dos dois caminhos originou o caso — mesma máquina de
+//   estados, só muda o prazo de elegibilidade e a linguagem exibida.
 //   status: aberta -> respondida -> resolvida
 //                   -> sem_resposta (prazo de 5 dias úteis estourado, via cron)
 //
 // origem='prestador': prestador reage a avaliação negativa oferecendo reparo.
+//   Só existe no fluxo 'garantia' — reclamação nunca tem essa origem, já
+//   que por definição o prestador não oferece garantia formal nesse caso.
 //   status: aguardando_aceite_cliente -> (cliente aceita) -> aberta -> ...
 //                                     -> (cliente recusa) -> recusada
 //   Limite: 1 oferta por avaliação (constraint uq_solicitacoes_garantia_oferta_unica_por_avaliacao).
@@ -21,6 +28,8 @@ import { supabase } from '@/lib/supabase';
 
 export type OrigemGarantia = 'cliente' | 'prestador';
 
+export type TipoGarantia = 'garantia' | 'reclamacao';
+
 export type StatusGarantia =
   | 'aguardando_aceite_cliente'
   | 'aberta'
@@ -28,6 +37,14 @@ export type StatusGarantia =
   | 'sem_resposta'
   | 'resolvida'
   | 'recusada';
+
+// Janela fixa para o cliente abrir uma reclamação quando o prestador não
+// oferece garantia formal (garantia_dias = 0). Dias corridos, contados a
+// partir de portfolio_projetos.data_conclusao — mais curta que a maioria
+// das garantias configuráveis, pensada para problemas notados logo após
+// o serviço (ex: 15 dias é generoso para maioria dos serviços, mas não
+// carrega o sistema com reclamações de meses atrás).
+const DIAS_RECLAMACAO = 15;
 
 interface AbrirCasoClienteInput {
   projetoId: string;
@@ -64,11 +81,15 @@ function calcularPrazoUteis(diasUteis: number, base: Date = new Date()): Date {
 }
 
 /**
- * Verifica se um projeto ainda está dentro da janela de garantia do prestador.
- * Elegibilidade requer:
- *  - portfolio_projetos.status === 'finalizado' (setado quando cliente conclui avaliação)
+ * Verifica se um projeto ainda está dentro da janela de garantia OU
+ * reclamação do prestador. Elegibilidade requer:
+ *  - portfolio_projetos.status === 'finalizado'
  *  - data_conclusao preenchida
- *  - hoje <= data_conclusao + prestadores.garantia_dias
+ *  - hoje <= data_conclusao + janela (garantia_dias se > 0, senão
+ *    DIAS_RECLAMACAO fixo)
+ *
+ * O 'tipo' retornado ('garantia' ou 'reclamacao') é decidido aqui, a
+ * partir de garantia_dias do prestador — não é uma escolha do cliente.
  */
 export async function verificarElegibilidadeGarantia(projetoId: string) {
 
@@ -100,18 +121,19 @@ export async function verificarElegibilidadeGarantia(projetoId: string) {
     return { elegivel: false, motivo: 'prestador_nao_encontrado' as const };
   }
 
-  if (!prestador.garantia_dias || prestador.garantia_dias === 0) {
-    return { elegivel: false, motivo: 'prestador_sem_garantia' as const };
-  }
+  const temGarantiaFormal = !!prestador.garantia_dias && prestador.garantia_dias > 0;
+  const tipo: TipoGarantia = temGarantiaFormal ? 'garantia' : 'reclamacao';
+  const janelaDias = temGarantiaFormal ? prestador.garantia_dias! : DIAS_RECLAMACAO;
 
   const dataLimite = new Date(projeto.data_conclusao);
-  dataLimite.setDate(dataLimite.getDate() + prestador.garantia_dias);
+  dataLimite.setDate(dataLimite.getDate() + janelaDias);
 
   const dentroDoPrazo = new Date() <= dataLimite;
 
   return {
     elegivel: dentroDoPrazo,
     motivo: dentroDoPrazo ? ('ok' as const) : ('fora_do_prazo' as const),
+    tipo,
     projeto,
     prestador,
     dataLimite,
@@ -119,18 +141,21 @@ export async function verificarElegibilidadeGarantia(projetoId: string) {
 }
 
 /**
- * Cliente abre um caso de garantia — fluxo padrão.
+ * Cliente abre um caso de garantia ou reclamação — fluxo padrão.
+ * O tipo é decidido por verificarElegibilidadeGarantia, não recebido
+ * como parâmetro — evita que o cliente (ou um bug de UI) force o tipo
+ * errado no insert.
  */
 export async function abrirCasoGarantiaCliente(input: AbrirCasoClienteInput) {
 
   const elegibilidade = await verificarElegibilidadeGarantia(input.projetoId);
-  if (!elegibilidade.elegivel || !elegibilidade.projeto) {
+  if (!elegibilidade.elegivel || !elegibilidade.projeto || !elegibilidade.tipo) {
     throw new Error(`Projeto não elegível para garantia: ${elegibilidade.motivo}`);
   }
 
   // Confere que o solicitante é de fato o cliente do projeto
   if (elegibilidade.projeto.cliente_user_id !== input.clienteUserId) {
-    throw new Error('Apenas o cliente vinculado a este projeto pode abrir garantia.');
+    throw new Error('Apenas o cliente vinculado a este projeto pode abrir este caso.');
   }
 
   const prazoResposta = calcularPrazoUteis(5);
@@ -142,6 +167,7 @@ export async function abrirCasoGarantiaCliente(input: AbrirCasoClienteInput) {
       prestador_id: elegibilidade.projeto.prestador_id,
       cliente_user_id: input.clienteUserId,
       origem: 'cliente',
+      tipo: elegibilidade.tipo,
       status: 'aberta',
       prazo_resposta: prazoResposta.toISOString().slice(0, 10),
       descricao_problema: input.descricaoProblema,
@@ -159,6 +185,10 @@ export async function abrirCasoGarantiaCliente(input: AbrirCasoClienteInput) {
 /**
  * Prestador oferece reparo em reação a avaliação negativa.
  * Cria caso em status 'aguardando_aceite_cliente' — NÃO fica ativo até o cliente aceitar.
+ *
+ * Sempre tipo='garantia': esta origem só existe quando o prestador tem
+ * garantia formal configurada (é o próprio prestador oferecendo reparo
+ * dentro do compromisso que ele assumiu) — reclamação nunca passa por aqui.
  */
 export async function oferecerReparoPrestador(input: OferecerReparoPrestadorInput) {
 
@@ -202,6 +232,7 @@ export async function oferecerReparoPrestador(input: OferecerReparoPrestadorInpu
       cliente_user_id: input.clienteUserId,
       avaliacao_id: input.avaliacaoId,
       origem: 'prestador',
+      tipo: 'garantia',
       status: 'aguardando_aceite_cliente',
       descricao_problema: input.descricaoProblema,
     })
@@ -290,10 +321,12 @@ const NOTA_AUTOMATICA_SEM_RESPOSTA = 1;
  *
  * Regras de nota_efetiva/nota_resultante:
  *  - origem='cliente': cliente informa uma nota nova (novaNota), que passa
- *    a valer como nota_efetiva da avaliação vinculada, se houver.
+ *    a valer como nota_efetiva da avaliação vinculada, se houver. Vale
+ *    tanto para tipo='garantia' quanto tipo='reclamacao'.
  *  - origem='prestador': nota é sempre NOTA_NEUTRA_REPARO_PRESTADOR (3),
  *    nunca a critério do prestador — não pode "comprar" 5 estrelas
- *    resolvendo o próprio erro.
+ *    resolvendo o próprio erro. Só ocorre em tipo='garantia' (reclamação
+ *    nunca tem origem='prestador').
  *
  * avaliacoes.nota NUNCA é sobrescrita — só nota_efetiva muda.
  */
@@ -312,7 +345,7 @@ export async function confirmarResolucaoGarantia(
     .eq('cliente_user_id', clienteUserId)
     .single();
 
-  if (casoAtualError || !casoAtual) throw new Error('Caso de garantia não encontrado.');
+  if (casoAtualError || !casoAtual) throw new Error('Caso não encontrado.');
   if (casoAtual.status !== 'respondida') {
     throw new Error('Só é possível confirmar resolução de um caso que já foi respondido.');
   }
@@ -402,7 +435,9 @@ export async function reabrirCasoGarantia(casoId: string, clienteUserId: string)
  * Job de cron — marca como 'sem_resposta' casos abertos cujo prazo estourou.
  * Aplica nota_resultante = 1 automaticamente e, se houver avaliação vinculada,
  * atualiza nota_efetiva também. Isso vale tanto para origem='cliente' quanto
- * origem='prestador' (prestador ignorar a própria oferta de reparo é ainda pior).
+ * origem='prestador' (prestador ignorar a própria oferta de reparo é ainda pior),
+ * e para ambos os tipos (garantia e reclamacao) — o prazo de resposta do
+ * prestador (5 dias úteis) é o mesmo independente do tipo do caso.
  */
 export async function processarCasosVencidos() {
   const hoje = new Date().toISOString().slice(0, 10);

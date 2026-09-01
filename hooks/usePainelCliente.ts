@@ -13,6 +13,7 @@ import {
   getServicosPorUserId,
   getServicosPorWhatsapp,
   filtrarComGarantiaAtiva,
+  filtrarComReclamacaoAtiva,
   aceitarServico,
 } from '../lib/services/painelCliente.service'
 
@@ -25,10 +26,13 @@ export function usePainelCliente() {
   const [zoomImage, setZoomImage] = useState<string | null>(null)
   const [tokenUrl, setTokenUrl]   = useState<string | null>(null)
 
-  // Derivado diretamente de servicos (que já traz solicitacoes_garantia
-  // embutido via join) — não é mais estado próprio nem consulta separada.
-  // Elimina o risco de dessincronia entre dois arrays de origens diferentes.
+  // Derivados diretamente de servicos (que já traz solicitacoes_garantia
+  // embutido via join) — não são estado próprio nem consulta separada.
+  // Elimina o risco de dessincronia entre arrays de origens diferentes.
+  // Separados por tipo: garantia formal e reclamação viram filtros
+  // distintos na UI, mesmo usando a mesma máquina de estados por baixo.
   const servicosGarantia = filtrarComGarantiaAtiva(servicos)
+  const servicosReclamacao = filtrarComReclamacaoAtiva(servicos)
 
   // Confirmação de whatsapp antes do aceite — só é acionado quando
   // profile.whatsapp ainda não bate com o cliente_whatsapp do projeto
@@ -168,7 +172,9 @@ export function usePainelCliente() {
     setConfirmandoErro(null)
   }
 
-  // Navega para a mesma tela de acompanhamento, sinalizando a seção de garantia
+  // Navega para a mesma tela de acompanhamento, sinalizando a seção de
+  // garantia/reclamação — a própria seção decide qual dos dois exibir
+  // com base no tipo do caso, então não precisa de rota diferente aqui.
   const handleVerGarantia = (servico: Servico) => {
     router.push(`/acompanhamento/${servico.avaliacao_token}?garantia=1`)
   }
@@ -179,7 +185,7 @@ export function usePainelCliente() {
     profile?.avatar_url || session?.user?.user_metadata?.avatar_url
 
   return {
-    session, profile, servicos, servicosGarantia, loading,
+    session, profile, servicos, servicosGarantia, servicosReclamacao, loading,
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente, avatarUrl,
     handleAceitar, handleVerGarantia,

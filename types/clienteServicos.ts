@@ -34,6 +34,9 @@ export interface SolicitacaoGarantiaResumo {
   id: string
   status: string
   origem: 'cliente' | 'prestador'
+  // 'garantia' | 'reclamacao' — ver comentário em CasoGarantia
+  // (hooks/useCasoGarantiaDoProjeto.ts) para o significado completo.
+  tipo: 'garantia' | 'reclamacao'
   prazo_resposta: string | null
 }
 
