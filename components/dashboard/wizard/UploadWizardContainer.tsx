@@ -62,9 +62,10 @@ export function UploadWizardContainer({
 
   const temGarantiaAtiva = isProjetoConcluido && !loadingCaso && casoGarantia !== null
 
-  // Badge de status no hero: garantia tem prioridade visual sobre "finalizado"
+  // Badge de status no hero: garantia/reclamação tem prioridade visual
+  // sobre "finalizado"
   const badgeStatus = temGarantiaAtiva
-    ? { label: 'Garantia acionada', style: 'bg-orange-400/30 text-white border-orange-300/30' }
+    ? { label: casoGarantia?.tipo === 'reclamacao' ? 'Reclamação recebida' : 'Garantia acionada', style: 'bg-orange-400/30 text-white border-orange-300/30' }
     : projetoStatus === 'em_execucao'
     ? { label: projetoStatus.replace('_', ' '), style: 'bg-white/20 text-white border-white/30 animate-pulse' }
     : projetoStatus === 'finalizado'
