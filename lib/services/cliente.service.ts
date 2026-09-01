@@ -16,7 +16,7 @@ const SELECT_CLIENTE_SERVICOS = `
   portfolio_fotos(ordem),
   prestadores!inner(id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
   avaliacoes(id),
-  solicitacoes_garantia(id, status, origem, prazo_resposta)
+  solicitacoes_garantia(id, status, origem, tipo, prazo_resposta)
 `
 
 export async function fetchClienteProfile(userId: string) {
