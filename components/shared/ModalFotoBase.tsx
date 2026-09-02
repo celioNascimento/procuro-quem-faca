@@ -15,10 +15,11 @@ interface Props {
   onClose?: () => void
   navegacao?: Navegacao
   compact?: boolean
-  children: ReactNode
+  imageOnly?: boolean
+  children?: ReactNode
 }
 
-export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, compact = false, children }: Props) {
+export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, compact = false, imageOnly = false, children }: Props) {
   return (
     <div className="fixed inset-0 z-[200] bg-slate-900/95 flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-300">
 
@@ -31,12 +32,12 @@ export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, compact
         </button>
       )}
 
-      <div className={`flex flex-col md:flex-row bg-white rounded-[3rem] overflow-hidden w-full max-w-5xl shadow-2xl ${compact ? 'h-auto max-h-[90vh]' : 'h-full max-h-[90vh]'}`}>
+      <div className={`${imageOnly ? 'relative h-full w-full' : `flex flex-col md:flex-row bg-white rounded-[3rem] overflow-hidden w-full max-w-5xl shadow-2xl ${compact ? 'h-auto max-h-[90vh]' : 'h-full max-h-[90vh]'}`}`}>
 
         {/* ── Painel esquerdo: foto ── */}
         {/* FIX: shrink-0 + max-h limitada em mobile, para não consumir todo o espaço vertical
             disponível e sobrar altura insuficiente para o painel direito (children) */}
-        <div className={`flex-[1.5] md:flex-[1.5] shrink-0 ${compact ? 'max-h-[72vh]' : 'max-h-[35vh]'} md:max-h-none md:h-full bg-slate-900 flex items-center justify-center relative overflow-hidden`}>
+        <div className={`flex-[1.5] md:flex-[1.5] shrink-0 ${imageOnly ? 'h-full max-h-full w-full' : compact ? 'max-h-[72vh]' : 'max-h-[35vh]'} md:max-h-none md:h-full bg-slate-900 flex items-center justify-center relative overflow-hidden`}>
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950 opacity-80" />
           <img
             src={fotoUrl}
@@ -69,9 +70,11 @@ export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, compact
         {/* FIX: min-h-0 é essencial — sem isso, um flex item não consegue encolher
             abaixo do tamanho do seu conteúdo, e o overflow-y-auto interno do filho
             (WizardZoomModal) nunca entra em ação, cortando o conteúdo */}
-        <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden border-l border-slate-50">
-          {children}
-        </div>
+        {!imageOnly && (
+          <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden border-l border-slate-50">
+            {children}
+          </div>
+        )}
 
       </div>
     </div>

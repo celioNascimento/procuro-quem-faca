@@ -54,22 +54,12 @@ export function SessaoFotos({ sessao }: SessaoFotosProps) {
           fotoUrl={fotos[fotoSelecionada]}
           ordemLabel={`Foto ${fotoSelecionada + 1} de ${fotos.length}`}
           onClose={() => setFotoSelecionada(null)}
-          compact
+          imageOnly
           navegacao={fotos.length > 1 ? {
             onPrev: () => setFotoSelecionada((fotoSelecionada - 1 + fotos.length) % fotos.length),
             onNext: () => setFotoSelecionada((fotoSelecionada + 1) % fotos.length),
           } : undefined}
-        >
-          <div className="flex items-center justify-between border-b border-slate-100 p-5">
-            <div>
-              <h3 className="text-sm font-black uppercase italic tracking-tight text-slate-900">{sessao.titulo}</h3>
-              <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Foto ampliada</p>
-            </div>
-            <button type="button" onClick={() => setFotoSelecionada(null)} className="rounded-xl p-3 text-slate-300 transition-colors hover:bg-slate-50 hover:text-slate-700 md:hidden" aria-label="Fechar visualização">
-              <span className="text-xs font-black uppercase">Fechar</span>
-            </button>
-          </div>
-        </ModalFotoBase>
+        />
       )}
     </section>
   )
