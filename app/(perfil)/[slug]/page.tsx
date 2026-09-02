@@ -8,6 +8,7 @@ import Header from '@/components/Header'
 import PerfilSkeleton from '@/components/skeletons/PerfilSkeleton'
 import PerfilHero from '@/components/profile/PerfilHero'
 import PerfilSobre from '@/components/profile/PerfilSobre'
+import PerfilGaleria from '@/components/profile/PerfilGaleria'
 import PerfilCTA from '@/components/profile/PerfilCTA'
 import PerfilTabs from '@/components/profile/PerfilTabs'   // ← substitui PortfolioGrid + PerfilAvaliacoes
 import { SessaoFotos } from '@/components/profile/SessaoFotos'
@@ -116,7 +117,11 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
             <div className="flex flex-col gap-4">
               <PerfilEspecialidades prestador={prestador} />
               <PerfilSobre prestador={prestador} />
+              
+              {/* Features combinadas da branch feature/portfolio-optional e da main */}
+              <PerfilGaleria projetos={projetos} titulo={prestador.portfolio_titulo} />
               <SessaoFotos sessao={prestador.sessao_fotos} />
+              
               <PerfilCTA
                 nome={prestador.nome}
                 whatsapp={prestador.whatsapp}

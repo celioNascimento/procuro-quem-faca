@@ -39,8 +39,9 @@ export interface Prestador {
   ativacao_obs: string | null
   garantia_dias: number
   portfolio_obrigatorio: boolean
-  sessao_fotos_titulo: string | null
-  sessao_fotos_urls: string[] | null
+  portfolio_titulo?: string | null
+  sessao_fotos_titulo?: string | null
+  sessao_fotos_urls?: string[] | null
 }
 
 export type PrestadorFormData = Partial<Prestador> & {

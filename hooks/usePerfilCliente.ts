@@ -44,19 +44,22 @@ export function usePerfilCliente() {
     atualizar:          dados.atualizar,
 
     // ── Serviços ──────────────────────────────────
-    servicos:             servicos.servicos,
-    servicosGarantia:     servicos.servicosGarantia,
-    idsComGarantiaAtiva:  servicos.idsComGarantiaAtiva,   // novo — para tag no card
-    filtroStatus:         servicos.filtroStatus,
-    setFiltroStatus:      servicos.setFiltroStatus,
-    loadingServicos:      servicos.loadingServicos,
-    servicosFiltrados:    servicos.servicosFiltrados,
-    avaliarCount:         servicos.avaliarCount,
-    ativosCount:          servicos.ativosCount,
-    garantiaCount:        servicos.garantiaCount,
-    getStatusInfo:        servicos.getStatusInfo,
-    getRotaDestino:       servicos.getRotaDestino,
-    getRotaGarantia:      servicos.getRotaGarantia,
-    getRota:              servicos.getRota,               // novo — rota unificada
+    servicos:                servicos.servicos,
+    servicosGarantia:        servicos.servicosGarantia,
+    servicosReclamacao:      servicos.servicosReclamacao,      // novo — filtro Reclamação
+    idsComGarantiaAtiva:     servicos.idsComGarantiaAtiva,      // para tag no card
+    idsComReclamacaoAtiva:   servicos.idsComReclamacaoAtiva,    // novo — para tag no card
+    filtroStatus:            servicos.filtroStatus,
+    setFiltroStatus:         servicos.setFiltroStatus,
+    loadingServicos:         servicos.loadingServicos,
+    servicosFiltrados:       servicos.servicosFiltrados,
+    avaliarCount:            servicos.avaliarCount,
+    ativosCount:             servicos.ativosCount,
+    garantiaCount:           servicos.garantiaCount,
+    reclamacaoCount:         servicos.reclamacaoCount,         // novo
+    getStatusInfo:           servicos.getStatusInfo,
+    getRotaDestino:          servicos.getRotaDestino,
+    getRotaGarantia:         servicos.getRotaGarantia,
+    getRota:                 servicos.getRota,                 // rota unificada
   }
 }
