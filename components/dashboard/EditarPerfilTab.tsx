@@ -305,7 +305,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
                 <div className="flex flex-col gap-1.5">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Portfólio</p>
                   <h3 className="text-sm font-black text-slate-900">Fotos por padrão</h3>
-                  <p className="text-[13px] font-medium leading-relaxed text-slate-500">Defina se novos serviços já nascem pedindo fotos. Você pode dispensar em projetos específicos a qualquer momento.</p>
+                  <p className="text-[13px] font-medium leading-relaxed text-slate-500">Escolha como as fotos dos seus serviços entram no portfólio. Ative para pedir fotos em todo novo serviço e criar projetos com elas; desative para decidir caso a caso.</p>
                 </div>
                 <PortfolioToggle
                   prestadorId={form.formData.id}

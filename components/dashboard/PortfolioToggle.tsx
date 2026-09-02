@@ -40,8 +40,8 @@ export function PortfolioToggle({
         <h3 className="font-semibold text-lg">Fotos por padrão</h3>
         <p className="text-sm text-gray-600 mt-1">
           {obrigatorio
-            ? 'Todo novo serviço pede fotos, mas você pode dispensar em projetos específicos.'
-            : 'Nenhum serviço pede fotos — aceite e avaliação continuam funcionando normalmente.'}
+            ? 'Ativado: todo novo serviço pede fotos. Depois, você pode usar essas imagens para criar um projeto no seu portfólio ou dispensá-las naquele serviço.'
+            : 'Desativado: os serviços não pedem fotos automaticamente. Você decide em cada serviço se quer enviar imagens e criar um projeto no portfólio.'}
         </p>
         {erro && <p className="text-sm text-red-600 mt-2">{erro}</p>}
       </div>

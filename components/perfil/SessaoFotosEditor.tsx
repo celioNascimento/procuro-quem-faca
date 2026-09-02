@@ -22,7 +22,7 @@ export function SessaoFotosEditor({ titulo, fotos, uploading, onTituloChange, on
       <div className="flex flex-col gap-1.5">
         <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Sua vitrine</p>
         <h3 id="sessao-fotos-editor-titulo" className="text-lg font-black text-slate-900">Crie uma sessão de fotos</h3>
-        <p className="text-sm font-medium leading-relaxed text-slate-500">Mostre seu espaço, ferramentas ou resultados. Escolha o nome que combina com o seu trabalho.</p>
+        <p className="text-sm font-medium leading-relaxed text-slate-500">Envie fotos de um serviço para mostrar seu trabalho. Essas imagens podem aparecer na sua vitrine e virar um projeto do seu portfólio.</p>
       </div>
       <label className="flex flex-col gap-2 text-xs font-black text-slate-600">
         Nome da sessão
