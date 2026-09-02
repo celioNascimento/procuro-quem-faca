@@ -19,6 +19,7 @@ import { SecaoDadosPessoais } from '@/components/perfil/SecaoDadosPessoais'
 import { SecaoLocalizacao } from '@/components/perfil/SecaoLocalizacao'
 import { SecaoGarantia } from '@/components/perfil/SecaoGarantia'
 import { PortfolioToggle } from '@/components/dashboard/PortfolioToggle'
+import SessaoFotosEditor from '@/components/perfil/SessaoFotosEditor'
 import EditarPerfilSkeleton from '@/components/skeletons/EditarPerfilSkeleton'
 
 // Hooks e Utils (Laboratório)
@@ -49,6 +50,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
   const [tentouEnviar, setTentouEnviar] = useState(false)
   const [userLogado, setUserLogado] = useState<User | null>(null)
   const [portfolioOb, setPortfolioOb] = useState(true) // Estado local sincronizado com DB
+  const [uploadingSessao, setUploadingSessao] = useState(false)
 
   const [isModalExcluirOpen, setIsModalExcluirOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -124,6 +126,24 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
       setErrorModal(prev => ({ ...prev, show: true, title: 'Erro no Upload', message: 'Não conseguimos processar sua imagem. Tente novamente ou use outro arquivo.' }))
     }
     setUploading(false)
+  }
+
+  const handleAdicionarFotosSessao = async (files: File[]) => {
+    if (!userLogado || !files.length) return
+    const atuais = form.formData.sessao_fotos_urls || []
+    if (atuais.length >= 5) return
+    setUploadingSessao(true)
+    try {
+      const novas: string[] = []
+      for (const file of files.slice(0, 5 - atuais.length)) {
+        const result = await fazerUploadFoto(file, `${userLogado.id}-sessao`)
+        if (result.ok) novas.push(result.url)
+      }
+      form.set({ sessao_fotos_urls: [...atuais, ...novas].slice(0, 5) })
+      if (novas.length) setStatus('Fotos adicionadas. Salve o perfil para publicar.')
+    } finally {
+      setUploadingSessao(false)
+    }
   }
 
   const handleExcluirContaTotal = async () => {
@@ -207,6 +227,8 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         // e o Postgres reaplica o DEFAULT da coluna (true), sobrescrevendo
         // o valor que o PortfolioToggle acabou de gravar no banco.
         portfolio_obrigatorio: portfolioOb,
+        sessao_fotos_titulo: (form.formData.sessao_fotos_titulo || '').trim().slice(0, 60) || null,
+        sessao_fotos_urls: (form.formData.sessao_fotos_urls || []).slice(0, 5),
       }
 
       const finalPayload = id ? { id, ...restData } : restData;
@@ -297,6 +319,15 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
                 />
               </section>
             )}
+
+            <SessaoFotosEditor
+              titulo={form.formData.sessao_fotos_titulo || ''}
+              fotos={form.formData.sessao_fotos_urls || []}
+              uploading={uploadingSessao}
+              onTituloChange={(titulo) => form.set({ sessao_fotos_titulo: titulo })}
+              onAdicionar={handleAdicionarFotosSessao}
+              onRemover={(index) => form.set({ sessao_fotos_urls: (form.formData.sessao_fotos_urls || []).filter((_, itemIndex) => itemIndex !== index) })}
+            />
 
             <SecaoOQueVoceFaz
               grupoId={form.formData.grupo_id}

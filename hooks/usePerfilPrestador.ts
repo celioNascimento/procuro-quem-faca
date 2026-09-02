@@ -94,6 +94,10 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
           cliente_foto_url: av.cliente_foto_url ?? null,
         }))
 
+        prestadorRaw.sessao_fotos = prestadorRaw.sessao_fotos_titulo && Array.isArray(prestadorRaw.sessao_fotos_urls)
+          ? { titulo: prestadorRaw.sessao_fotos_titulo, fotos: prestadorRaw.sessao_fotos_urls.slice(0, 5) }
+          : null
+
         const projetos: ProjetoPerfil[] = normalizarArray(prestadorRaw.portfolio_projetos)
           .filter(p => ['em_execucao', 'finalizado'].includes(p.status))
           .map(p => ({

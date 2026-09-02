@@ -23,6 +23,8 @@ const FORM_INICIAL: PrestadorFormData = {
   verificado: false,
   status: 'ativo',
   garantia_dias: 0,
+  sessao_fotos_titulo: '',
+  sessao_fotos_urls: [],
 }
 
 export function usePrestadorForm(idAtual?: number | null) {
@@ -49,6 +51,8 @@ export function usePrestadorForm(idAtual?: number | null) {
       // no banco; explícito aqui só para cobrir perfis legados sem a
       // coluna preenchida ainda (undefined → 0, "sem garantia").
       garantia_dias: perfil.garantia_dias ?? 0,
+      sessao_fotos_titulo: perfil.sessao_fotos_titulo || '',
+      sessao_fotos_urls: (perfil.sessao_fotos_urls || []).slice(0, 5),
     }))
     if (perfil.slug) setEditouSlugManualmente(true)
   }, [])
