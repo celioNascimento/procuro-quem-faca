@@ -136,7 +136,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
     try {
       const novas: string[] = []
       for (const file of files.slice(0, 5 - atuais.length)) {
-        const result = await fazerUploadFoto(file, `${userLogado.id}-sessao`)
+        const result = await fazerUploadFoto(file, `${userLogado.id}/sessao`, undefined, 'portfolios')
         if (result.ok) novas.push(result.url)
       }
       form.set({ sessao_fotos_urls: [...atuais, ...novas].slice(0, 5) })
