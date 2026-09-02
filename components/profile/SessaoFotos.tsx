@@ -50,9 +50,9 @@ export function SessaoFotos({ sessao }: SessaoFotosProps) {
 
       {fotoSelecionada !== null && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-slate-950/95 p-4 pt-20" role="dialog" aria-modal="true" aria-label="Visualização da foto" onClick={() => setFotoSelecionada(null)}>
-          <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-slate-950/90 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] text-white shadow-lg">
-            <p className="text-sm font-semibold">Foto ampliada</p>
-            <button type="button" onClick={() => setFotoSelecionada(null)} className="flex h-12 items-center gap-2 rounded-full bg-white px-5 text-sm font-black text-slate-950 shadow-xl ring-4 ring-white/20" aria-label="Fechar visualização"><X size={20} aria-hidden="true" /> Fechar</button>
+          <div className="fixed inset-0 z-[9999] pointer-events-none">
+            <button type="button" onClick={() => setFotoSelecionada(null)} className="pointer-events-auto fixed right-4 top-4 flex h-14 items-center gap-2 rounded-full bg-white px-5 text-base font-black text-slate-950 shadow-2xl ring-4 ring-blue-500/40" aria-label="Fechar visualização"><X size={22} aria-hidden="true" /> FECHAR</button>
+            <p className="sr-only">Foto ampliada. Use o botão FECHAR no canto superior direito para voltar ao perfil.</p>
           </div>
           <span className="sr-only">Para sair, toque no botão Fechar no alto da tela, toque fora da foto ou pressione Escape.</span>
           <button type="button" onClick={(event) => { event.stopPropagation(); setFotoSelecionada((fotoSelecionada - 1 + fotos.length) % fotos.length) }} className="absolute left-3 top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white" aria-label="Foto anterior"><ChevronLeft /></button>
