@@ -55,6 +55,7 @@ export interface PrestadorPerfil extends Omit<Prestador, 'cidades' | 'categorias
   cidades?: { nome: string; estado_sigla: string } | null
   categorias?: { nome: string } | null
   portfolio_projetos?: ProjetoPerfil[]
+  sessao_fotos?: { titulo: string; fotos: string[] } | null
 }
 
 export interface PerfilData {

@@ -15,8 +15,8 @@ export interface AvaliacaoRaw {
   status: string | null
   portfolio_projetos: { titulo: string }[] | null
   nota_efetiva: number | null
-  cliente_nome: string | null
-  cliente_foto_url: string | null
+  cliente_nome?: string | null
+  cliente_foto_url?: string | null
 }
 
 export interface Avaliacao {

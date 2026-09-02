@@ -48,10 +48,17 @@ export async function upsertPrestador(payload: Record<string, unknown>) {
 }
 
 export async function criarContaEmail(email: string, senha: string, nome: string) {
+  const redirectTo = typeof window !== 'undefined'
+    ? process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ?? `${window.location.origin}/auth/callback`
+    : undefined
+
   return supabase.auth.signUp({
     email,
     password: senha,
-    options: { data: { nome } },
+    options: {
+      emailRedirectTo: redirectTo,
+      data: { nome },
+    },
   })
 }
 
