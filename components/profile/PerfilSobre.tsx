@@ -47,7 +47,7 @@ export default function PerfilSobre({ prestador }: Props) {
             {prestador.habilidades.map(hab => (
               <span
                 key={hab}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-100 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-wide shadow-sm"
+                className="px-2.5 py-1 bg-slate-50 border border-slate-100 text-slate-600 rounded-full text-[9px] font-bold uppercase tracking-wide shadow-sm"
               >
                 {hab}
               </span>
