@@ -116,26 +116,30 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
           </aside>
 
           <div className="flex min-w-0 flex-col gap-7 animate-in fade-in duration-500 sm:gap-8 lg:gap-10">
+
+            {/* 1. Quem é e o que faz */}
             <div className="flex flex-col gap-4">
               <PerfilEspecialidades prestador={prestador} />
               <PerfilSobre prestador={prestador} />
-              <PerfilCTA
-                nome={prestador.nome}
-                whatsapp={prestador.whatsapp}
-                onClique={() =>
-                  insertLog({
-                    acao: 'CLIQUE_WHATSAPP_ORCAMENTO',
-                    detalhes: { nome_prestador: prestador.nome },
-                    entidadeId: String(prestador.id),
-                  })
-                }
-              />
             </div>
 
-            {/* Carrossel de fotos avulsas — seção independente do portfólio */}
+            {/* 2. Estrutura e local de trabalho — convence antes do CTA */}
             <SessaoFotos sessao={prestador.sessao_fotos} />
 
-            {/* Portfólio + Avaliações em abas — única fonte de verdade para o portfólio */}
+            {/* 3. CTA — após apresentação completa */}
+            <PerfilCTA
+              nome={prestador.nome}
+              whatsapp={prestador.whatsapp}
+              onClique={() =>
+                insertLog({
+                  acao: 'CLIQUE_WHATSAPP_ORCAMENTO',
+                  detalhes: { nome_prestador: prestador.nome },
+                  entidadeId: String(prestador.id),
+                })
+              }
+            />
+
+            {/* 4. Portfólio + Avaliações em abas — única fonte de verdade para o portfólio */}
             <PerfilTabs
               projetos={projetos}
               avaliacoes={avaliacoes}
