@@ -50,7 +50,7 @@ export default function PortfolioDashboardTab() {
             {perfilPrestador?.slug && (
               <Link
                 href={`/${perfilPrestador.slug}`}
-                className="flex min-h-12 items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold uppercase tracking-[0.08em] text-white shadow-md shadow-blue-100 transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0"
+                className="flex min-h-12 items-center justify-center gap-3 rounded-2xl border-2 border-blue-600 bg-white px-5 py-3 text-sm font-bold uppercase tracking-[0.08em] text-blue-600 shadow-sm shadow-blue-100 transition-all hover:-translate-y-0.5 hover:bg-blue-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0"
               >
                 <ExternalLink size={18} aria-hidden="true" />
                 Ver meu perfil público
