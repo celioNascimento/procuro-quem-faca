@@ -2,9 +2,8 @@
 
 'use client'
 import Link from 'next/link'
-import { MapPin, ShieldCheck, Flag, Share2, CheckCircle, Wrench, Star } from 'lucide-react'
+import { MapPin, ShieldCheck, Flag, Share2, CheckCircle, Wrench } from 'lucide-react'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
-import { useAvaliacoes } from '@/hooks/useAvaliacoes'
 
 interface Props {
   prestador: PrestadorPerfil
@@ -19,11 +18,8 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
     .join(', ')
 
   const totalFinalizados = projetos.filter(p => p.status === 'finalizado').length
-  const totalEmAndamento = projetos.filter(p => p.status === 'em_execucao').length
   const slug             = prestador.slug
   const categoria        = prestador.categorias?.nome || prestador.categoria
-
-  const { stats } = useAvaliacoes(prestador.id)
 
   return (
     <section className="flex flex-col gap-3">
@@ -32,21 +28,21 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
 
         {/* Banner com avatar + nome lado a lado */}
-        <div className="w-full bg-gradient-to-br from-blue-50 to-slate-100 px-5 py-5 flex items-center gap-4">
+        <div className="w-full bg-slate-50 px-5 py-5 flex items-center gap-4">
 
           {/* Avatar */}
           <div className="relative shrink-0">
-            <div className="w-28 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
+            <div className="w-32 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
               {prestador.foto_perfil ? (
                 <img
                   src={prestador.foto_perfil}
-                  className="w-full h-full object-cover"
-                  alt={prestador.nome}
+                  className="w-full h-full object-contain"
+                  alt={`Logo de ${prestador.nome}`}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-slate-100">
                   <span className="text-slate-300 font-black text-[8px] uppercase tracking-widest text-center px-1">
-                    Sem Foto
+                    Sem Logo
                   </span>
                 </div>
               )}
@@ -78,40 +74,19 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
 
         </div>
 
-        {/* Chips — largura igual em linha única (flex-1), em vez de
-            flex-wrap: evita que o último chip fique sozinho numa segunda
-            linha com espaço vazio ao lado quando a quantidade é ímpar. */}
-        {(categoria || totalFinalizados > 0 || totalEmAndamento > 0 || stats.exibir) && (
-          <div className="flex gap-1.5 px-4 py-3 border-t border-slate-100">
-
+        {(categoria || totalFinalizados > 0) && (
+          <div className="flex items-center justify-between gap-4 px-5 py-3 border-t border-slate-100 text-[11px]">
             {categoria && (
-              <span className="flex-1 inline-flex items-center justify-center gap-1 bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-full border border-blue-100 min-w-0">
-                <Wrench size={10} className="shrink-0" />
+              <span className="inline-flex items-center gap-1.5 text-blue-600 font-bold uppercase tracking-wide min-w-0">
+                <Wrench size={13} className="shrink-0" />
                 <span className="truncate">{categoria}</span>
               </span>
             )}
-
             {totalFinalizados > 0 && (
-              <span className="flex-1 inline-flex items-center justify-center gap-1 bg-green-50 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full border border-green-100 min-w-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
-                <span className="truncate">{totalFinalizados} concluído{totalFinalizados > 1 ? 's' : ''}</span>
+              <span className="text-slate-500 font-semibold whitespace-nowrap">
+                {totalFinalizados} serviço{totalFinalizados > 1 ? 's' : ''} concluído{totalFinalizados > 1 ? 's' : ''}
               </span>
             )}
-
-            {totalEmAndamento > 0 && (
-              <span className="flex-1 inline-flex items-center justify-center gap-1 bg-slate-50 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-full border border-slate-200 min-w-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
-                <span className="truncate">{totalEmAndamento} em andamento</span>
-              </span>
-            )}
-
-            {stats.exibir && (
-              <span className="flex-1 inline-flex items-center justify-center gap-1 bg-slate-50 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-full border border-slate-200 min-w-0">
-                <Star size={10} className="text-yellow-400 fill-yellow-400 shrink-0" />
-                <span className="truncate">{stats.media} · {stats.total} avaliações</span>
-              </span>
-            )}
-
           </div>
         )}
       </div>

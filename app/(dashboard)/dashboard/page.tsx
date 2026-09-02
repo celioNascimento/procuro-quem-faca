@@ -43,7 +43,6 @@ function PerfilPageContent() {
         <div className="flex max-w-2xl flex-col gap-2">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área profissional</p>
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Gerencie sua presença profissional</h1>
-          <p className="text-pretty text-sm font-medium leading-relaxed text-slate-500">Atualize seus dados e mantenha seus melhores trabalhos prontos para novos clientes.</p>
         </div>
       </header>
 

@@ -272,7 +272,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         <header className="flex flex-col gap-1.5">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Dados profissionais</p>
           <h2 id="profile-settings-title" className="text-balance text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Configurações do perfil</h2>
-          <p className="text-sm font-medium leading-relaxed text-slate-500">Mantenha sua vitrine completa para transmitir confiança aos clientes.</p>
         </header>
 
         <form onSubmit={handleSalvar} className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12 lg:gap-8">

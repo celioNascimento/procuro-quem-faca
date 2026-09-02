@@ -39,7 +39,7 @@ export function PrestadorSideCard({
               <img
                 src={foto_perfil}
                 alt={nome ? `Foto de ${nome}` : 'Foto do perfil'}
-                className="size-full object-cover"
+                className="size-full object-contain p-2"
               />
             ) : (
               <span className="text-slate-300">

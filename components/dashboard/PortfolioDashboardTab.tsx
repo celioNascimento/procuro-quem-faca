@@ -3,10 +3,11 @@
 'use client'
 
 import { usePortfolioDashboard } from '@/hooks/usePortfolioDashboard'
+import Link from 'next/link'
+import { ExternalLink } from 'lucide-react'
 import { DashboardHeader } from './DashboardHeader'
 import { EstadoVazio } from './EstadoVazio'
 import { ProjetoCard } from './ProjetoCard'
-import { PrestadorSideCard } from './PrestadorSideCard'
 import { UploadWizardContainer } from './wizard/UploadWizardContainer'
 
 export default function PortfolioDashboardTab() {
@@ -32,23 +33,8 @@ export default function PortfolioDashboardTab() {
 
   return (
     <div className="pb-12 sm:pb-16">
-      <div className="grid items-start gap-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-8 xl:grid-cols-[18rem_minmax(0,1fr)] xl:gap-10">
-        <aside className="min-w-0 lg:sticky lg:top-48">
-          <PrestadorSideCard
-            nome={perfilPrestador?.nome}
-            slug={perfilPrestador?.slug}
-            foto_perfil={perfilPrestador?.foto_perfil}
-            categoria={perfilPrestador?.categoria}
-            subcategoria={perfilPrestador?.categorias?.nome}
-            cidade_nome={perfilPrestador?.cidade_nome}
-            whatsapp={perfilPrestador?.whatsapp}
-            media_nota={perfilPrestador?.media_nota}
-            total_avals={perfilPrestador?.total_avals}
-          />
-        </aside>
-
-        <div className="min-w-0">
-          {showWizard && meuPrestadorId !== null ? (
+      <div className="min-w-0">
+        {showWizard && meuPrestadorId !== null ? (
             <div className="animate-in fade-in duration-300">
               <UploadWizardContainer
                 key={projetoParaEdicao?.id || 'novo'}
@@ -59,9 +45,18 @@ export default function PortfolioDashboardTab() {
                 isEdicao={!!projetoParaEdicao}
               />
             </div>
-          ) : (
-            <div className="flex flex-col gap-6">
-              <DashboardHeader
+        ) : (
+          <div className="flex flex-col gap-6">
+            {perfilPrestador?.slug && (
+              <Link
+                href={`/${perfilPrestador.slug}`}
+                className="flex min-h-12 items-center justify-center gap-3 rounded-2xl border-2 border-blue-600 bg-white px-5 py-3 text-sm font-bold uppercase tracking-[0.08em] text-blue-600 shadow-sm shadow-blue-100 transition-all hover:-translate-y-0.5 hover:bg-blue-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0"
+              >
+                <ExternalLink size={18} aria-hidden="true" />
+                Ver meu perfil público
+              </Link>
+            )}
+            <DashboardHeader
                 totalProjetos={projetos.length}
                 totalConcluidos={totalConcluidos}
                 totalAtivos={totalAtivos}
@@ -87,7 +82,6 @@ export default function PortfolioDashboardTab() {
               )}
             </div>
           )}
-        </div>
       </div>
     </div>
   )
