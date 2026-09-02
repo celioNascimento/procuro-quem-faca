@@ -1,4 +1,4 @@
-//components/profile/PerfilSobre.tsx 
+// components/profile/PerfilSobre.tsx 
 
 import { ShieldCheck } from 'lucide-react'
 import type { PrestadorPerfil } from '@/types/perfil'
@@ -16,7 +16,7 @@ export default function PerfilSobre({ prestador }: Props) {
         <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-3">
           Sobre o Profissional
         </h2>
-        <p className="text-slate-600 text-[14px] leading-relaxed">
+        <p className="text-slate-600 text-[14px] leading-relaxed whitespace-pre-wrap">
           {prestador.bio || 'Informações coletadas via curadoria pública. Este profissional ainda não personalizou sua biografia.'}
         </p>
 
@@ -44,10 +44,10 @@ export default function PerfilSobre({ prestador }: Props) {
             Especialidades
           </h2>
           <div className="flex flex-wrap gap-2">
-            {prestador.habilidades.map(hab => (
+            {(prestador.habilidades ?? []).map(hab => (
               <span
                 key={hab}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-100 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-wide shadow-sm"
+                className="px-2.5 py-1 bg-slate-50 border border-slate-100 text-slate-600 rounded-full text-[9px] font-bold uppercase tracking-wide shadow-sm"
               >
                 {hab}
               </span>

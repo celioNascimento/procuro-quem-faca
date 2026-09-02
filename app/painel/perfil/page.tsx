@@ -4,7 +4,7 @@
 import Link from 'next/link'
 import {
   MapPin, Briefcase, Loader2, CheckCircle2,
-  Save, AlertCircle, Star, ArrowRight, ShieldAlert
+  Save, AlertCircle, Star, ArrowRight, ShieldAlert, MessageCircleWarning
 } from 'lucide-react'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import CardPerfilCliente from '@/components/perfil/CardPerfilCliente'
@@ -38,10 +38,12 @@ export default function PerfilDoCliente() {
     getStatusInfo,
     getRota,
     idsComGarantiaAtiva,
+    idsComReclamacaoAtiva,
     servicosFiltrados,
     avaliarCount,
     ativosCount,
     garantiaCount,
+    reclamacaoCount,
   } = usePerfilCliente()
 
   const inputStyle = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-slate-800 bg-white shadow-sm placeholder-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400 text-[14px] md:text-[15px]`
@@ -163,6 +165,24 @@ export default function PerfilDoCliente() {
               </button>
             )}
 
+            {reclamacaoCount > 0 && (
+              <button
+                onClick={() => { setAba('servicos'); setFiltroStatus('reclamacao') }}
+                className="flex w-full items-center gap-4 rounded-[2rem] bg-orange-600 p-5 text-left shadow-lg shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-6"
+              >
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                  <MessageCircleWarning size={22} className="text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
+                    {reclamacaoCount === 1 ? '1 reclamação em aberto' : `${reclamacaoCount} reclamações em aberto`}
+                  </p>
+                  <p className="text-orange-200 text-[11px] font-medium mt-1">Toque para acompanhar</p>
+                </div>
+                <ArrowRight size={20} className="text-white/70 shrink-0" />
+              </button>
+            )}
+
             <nav
               className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-28"
               aria-label="Seções do painel"
@@ -198,7 +218,10 @@ export default function PerfilDoCliente() {
                     { id: 'avaliar',     label: avaliarCount > 0 ? `Avaliar (${avaliarCount})` : 'Avaliar' },
                     { id: 'finalizados', label: 'Concluídos'                                         },
                     ...(garantiaCount > 0 ? [{ id: 'garantia', label: `Garantia (${garantiaCount})` }] : []),
-                  ].map(f => (
+                    ...(reclamacaoCount > 0 ? [{ id: 'reclamacao', label: `Reclamação (${reclamacaoCount})` }] : []),
+                  ].map(f => {
+                    const ehCasoAtivo = f.id === 'garantia' || f.id === 'reclamacao'
+                    return (
                     <button
                       key={f.id}
                       onClick={() => setFiltroStatus(f.id)}
@@ -206,17 +229,18 @@ export default function PerfilDoCliente() {
                       aria-pressed={filtroStatus === f.id}
                       className={`min-h-10 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 ${
                         filtroStatus === f.id
-                          ? f.id === 'garantia'
+                          ? ehCasoAtivo
                             ? 'border-orange-600 bg-orange-600 text-white shadow-sm focus-visible:ring-orange-100'
                             : 'border-blue-600 bg-blue-600 text-white shadow-sm focus-visible:ring-blue-100'
-                          : f.id === 'garantia'
+                          : ehCasoAtivo
                             ? 'border-orange-200 bg-white text-orange-500 hover:border-orange-300 focus-visible:ring-orange-100'
                             : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600 focus-visible:ring-blue-100'
                       }`}
                     >
                       {f.label}
                     </button>
-                  ))}
+                    )
+                  })}
                 </div>
 
                 {/* ── Lista ── */}
@@ -243,7 +267,11 @@ export default function PerfilDoCliente() {
                         key={s.id}
                         servico={s}
                         statusInfo={getStatusInfo(s)}
-                        temGarantiaAtiva={idsComGarantiaAtiva.has(s.id)}
+                        tipoGarantiaAtiva={
+                          idsComGarantiaAtiva.has(s.id) ? 'garantia'
+                          : idsComReclamacaoAtiva.has(s.id) ? 'reclamacao'
+                          : null
+                        }
                         onClick={() => handleNavigation(
                           new MouseEvent('click') as any,
                           getRota(s),
