@@ -14,11 +14,11 @@ export default function PerfilEspecialidades({ prestador }: Props) {
       <h2 id="especialidades-titulo" className="mb-5 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">
         Especialidades
       </h2>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         {habilidades.map((habilidade) => (
           <span
             key={habilidade}
-            className="rounded-full border border-slate-100 bg-white px-4 py-2 text-[13px] font-medium uppercase tracking-normal text-slate-500 shadow-sm transition-colors hover:border-blue-100 hover:bg-blue-50/40 hover:text-blue-600"
+            className="rounded-full border border-slate-100 bg-slate-50/50 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-500 shadow-sm transition-colors hover:border-blue-100 hover:bg-blue-50/40 hover:text-blue-600"
           >
             {habilidade}
           </span>
