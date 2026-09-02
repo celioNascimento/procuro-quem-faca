@@ -40,8 +40,8 @@ export function PortfolioToggle({
         <h3 className="font-semibold text-lg">Fotos por padrão</h3>
         <p className="text-sm text-gray-600 mt-1">
           {obrigatorio
-            ? 'Ativado: todo novo serviço pede fotos. Depois, você pode usar essas imagens para criar um projeto no seu portfólio ou dispensá-las naquele serviço.'
-            : 'Desativado: os serviços não pedem fotos automaticamente. Você decide em cada serviço se quer enviar imagens e criar um projeto no portfólio.'}
+            ? 'Ativado: ao criar um serviço, a opção de registro com fotos já vem selecionada. Você ainda pode trocar para sem fotos em cada serviço.'
+            : 'Desativado: ao criar um serviço, a opção sem fotos já vem selecionada. Você ainda pode escolher o registro com fotos quando quiser.'}
         </p>
         {erro && <p className="text-sm text-red-600 mt-2">{erro}</p>}
       </div>
