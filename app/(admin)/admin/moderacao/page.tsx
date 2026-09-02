@@ -17,15 +17,21 @@ export default function ModeracaoPage() {
   const [motivoBloqueio, setMotivoBloqueio] = useState<Record<string, string>>({})
 
   return (
-    <div className="max-w-4xl mx-auto px-4 md:px-6 py-10">
-      <header className="mb-8">
-        <h1 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter">
-          Moderação<span className="text-red-600 not-italic">.</span>
-        </h1>
-        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Denúncias de prestadores</p>
+    <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+      <header className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
+        <div>
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Central de segurança</p>
+          <h1 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900 sm:text-3xl">
+            Moderação<span className="not-italic text-red-600">.</span>
+          </h1>
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Denúncias de prestadores</p>
+        </div>
+        <span className="hidden rounded-full bg-slate-100 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 sm:inline-flex">
+          {denuncias.length} {denuncias.length === 1 ? 'registro' : 'registros'}
+        </span>
       </header>
 
-      <div className="flex gap-2 mb-6">
+      <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
         {FILTROS.map(f => (
           <button
             key={f.valor}
@@ -119,6 +125,6 @@ export default function ModeracaoPage() {
           ))}
         </div>
       )}
-    </div>
+    </main>
   )
 }
