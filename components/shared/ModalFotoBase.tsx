@@ -14,10 +14,11 @@ interface Props {
   ordemLabel: string
   onClose?: () => void
   navegacao?: Navegacao
+  compact?: boolean
   children: ReactNode
 }
 
-export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, children }: Props) {
+export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, compact = false, children }: Props) {
   return (
     <div className="fixed inset-0 z-[200] bg-slate-900/95 flex items-center justify-center p-2 md:p-8 animate-in fade-in duration-300">
 
@@ -30,12 +31,12 @@ export function ModalFotoBase({ fotoUrl, ordemLabel, onClose, navegacao, childre
         </button>
       )}
 
-      <div className="flex flex-col md:flex-row bg-white rounded-[3rem] overflow-hidden w-full max-w-5xl h-full max-h-[90vh] shadow-2xl">
+      <div className={`flex flex-col md:flex-row bg-white rounded-[3rem] overflow-hidden w-full max-w-5xl shadow-2xl ${compact ? 'h-auto max-h-[90vh]' : 'h-full max-h-[90vh]'}`}>
 
         {/* ── Painel esquerdo: foto ── */}
         {/* FIX: shrink-0 + max-h limitada em mobile, para não consumir todo o espaço vertical
             disponível e sobrar altura insuficiente para o painel direito (children) */}
-        <div className="flex-[1.5] md:flex-[1.5] shrink-0 max-h-[35vh] md:max-h-none md:h-full bg-slate-900 flex items-center justify-center relative overflow-hidden">
+        <div className={`flex-[1.5] md:flex-[1.5] shrink-0 ${compact ? 'max-h-[72vh]' : 'max-h-[35vh]'} md:max-h-none md:h-full bg-slate-900 flex items-center justify-center relative overflow-hidden`}>
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950 opacity-80" />
           <img
             src={fotoUrl}

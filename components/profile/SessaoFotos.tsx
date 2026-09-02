@@ -54,6 +54,7 @@ export function SessaoFotos({ sessao }: SessaoFotosProps) {
           fotoUrl={fotos[fotoSelecionada]}
           ordemLabel={`Foto ${fotoSelecionada + 1} de ${fotos.length}`}
           onClose={() => setFotoSelecionada(null)}
+          compact
           navegacao={fotos.length > 1 ? {
             onPrev: () => setFotoSelecionada((fotoSelecionada - 1 + fotos.length) % fotos.length),
             onNext: () => setFotoSelecionada((fotoSelecionada + 1) % fotos.length),
