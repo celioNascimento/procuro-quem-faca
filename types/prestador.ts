@@ -29,4 +29,5 @@ export interface Prestador {
   ativacao_obs: string | null
   garantia_dias: number
   portfolio_obrigatorio: boolean // ← NEW FIELD
+  portfolio_titulo?: string | null
 }

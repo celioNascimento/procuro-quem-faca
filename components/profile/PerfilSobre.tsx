@@ -44,7 +44,7 @@ export default function PerfilSobre({ prestador }: Props) {
             Especialidades
           </h2>
           <div className="flex flex-wrap gap-2">
-            {prestador.habilidades.map(hab => (
+            {(prestador.habilidades ?? []).map(hab => (
               <span
                 key={hab}
                 className="px-2.5 py-1 bg-slate-50 border border-slate-100 text-slate-600 rounded-full text-[9px] font-bold uppercase tracking-wide shadow-sm"
