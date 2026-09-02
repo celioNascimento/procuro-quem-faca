@@ -16,19 +16,6 @@ export default function PerfilSobre({ prestador }: Props) {
         <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-3">
           Sobre o Profissional
         </h2>
-        {(prestador.habilidades?.length ?? 0) > 0 && (
-          <div className="mb-5 flex flex-wrap gap-2">
-            {prestador.habilidades.map(hab => (
-              <span
-                key={hab}
-                className="rounded-full border border-slate-100 bg-slate-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-600 shadow-sm"
-              >
-                {hab}
-              </span>
-            ))}
-          </div>
-        )}
-
         <p className="text-slate-600 text-[14px] leading-relaxed">
           {prestador.bio || 'Informações coletadas via curadoria pública. Este profissional ainda não personalizou sua biografia.'}
         </p>

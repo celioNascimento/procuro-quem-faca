@@ -11,6 +11,7 @@ import PerfilSobre from '@/components/profile/PerfilSobre'
 import PerfilCTA from '@/components/profile/PerfilCTA'
 import PerfilTabs from '@/components/profile/PerfilTabs'   // ← substitui PortfolioGrid + PerfilAvaliacoes
 import { SessaoFotos } from '@/components/profile/SessaoFotos'
+import PerfilEspecialidades from '@/components/profile/PerfilEspecialidades'
 import { AdCard } from '@/components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
@@ -113,6 +114,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
 
           <div className="flex min-w-0 flex-col gap-7 animate-in fade-in duration-500 sm:gap-8 lg:gap-10">
             <div className="flex flex-col gap-4">
+              <PerfilEspecialidades prestador={prestador} />
               <PerfilSobre prestador={prestador} />
               <SessaoFotos sessao={prestador.sessao_fotos} />
               <PerfilCTA
