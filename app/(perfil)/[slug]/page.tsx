@@ -114,6 +114,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
           <div className="flex min-w-0 flex-col gap-7 animate-in fade-in duration-500 sm:gap-8 lg:gap-10">
             <div className="flex flex-col gap-4">
               <PerfilSobre prestador={prestador} />
+              <SessaoFotos sessao={prestador.sessao_fotos} />
               <PerfilCTA
                 nome={prestador.nome}
                 whatsapp={prestador.whatsapp}
@@ -131,7 +132,6 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               avaliacoes={avaliacoes}
               portfolioObrigatorio={prestador.portfolio_obrigatorio}
             />
-            <SessaoFotos sessao={prestador.sessao_fotos} />
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Camera, ChevronLeft, ChevronRight, X } from 'lucide-react'
 
@@ -16,6 +16,15 @@ interface SessaoFotosProps {
 export function SessaoFotos({ sessao }: SessaoFotosProps) {
   const [fotoSelecionada, setFotoSelecionada] = useState<number | null>(null)
 
+  useEffect(() => {
+    if (fotoSelecionada === null) return
+    const fecharComEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFotoSelecionada(null)
+    }
+    document.addEventListener('keydown', fecharComEscape)
+    return () => document.removeEventListener('keydown', fecharComEscape)
+  }, [fotoSelecionada])
+
   if (!sessao?.titulo || sessao.fotos.length === 0) return null
 
   const fotos = sessao.fotos.slice(0, 5)
@@ -27,8 +36,7 @@ export function SessaoFotos({ sessao }: SessaoFotosProps) {
           <Camera size={21} aria-hidden="true" />
         </span>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Galeria</p>
-          <h2 id="sessao-fotos-titulo" className="mt-1 text-xl font-black tracking-tight text-slate-900 sm:text-2xl">{sessao.titulo}</h2>
+          <h2 id="sessao-fotos-titulo" className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">{sessao.titulo}</h2>
         </div>
       </div>
 
@@ -41,11 +49,12 @@ export function SessaoFotos({ sessao }: SessaoFotosProps) {
       </div>
 
       {fotoSelecionada !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4" role="dialog" aria-modal="true" aria-label="Visualização da foto">
-          <button type="button" onClick={() => setFotoSelecionada(null)} className="absolute right-4 top-4 flex size-11 items-center justify-center rounded-full bg-white/10 text-white" aria-label="Fechar"><X size={22} /></button>
-          <button type="button" onClick={() => setFotoSelecionada((fotoSelecionada - 1 + fotos.length) % fotos.length)} className="absolute left-3 flex size-11 items-center justify-center rounded-full bg-white/10 text-white" aria-label="Foto anterior"><ChevronLeft /></button>
-          <div className="relative h-[75vh] w-full max-w-4xl"><Image src={fotos[fotoSelecionada]} alt={`${sessao.titulo} — foto ampliada`} fill className="object-contain" sizes="100vw" /></div>
-          <button type="button" onClick={() => setFotoSelecionada((fotoSelecionada + 1) % fotos.length)} className="absolute right-3 flex size-11 items-center justify-center rounded-full bg-white/10 text-white" aria-label="Próxima foto"><ChevronRight /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4" role="dialog" aria-modal="true" aria-label="Visualização da foto" onClick={() => setFotoSelecionada(null)}>
+          <span className="sr-only">Pressione Escape para fechar a visualização</span>
+          <button type="button" onClick={() => setFotoSelecionada(null)} className="absolute right-4 top-4 z-10 flex h-11 items-center gap-2 rounded-full bg-white px-4 text-sm font-bold text-slate-900 shadow-lg" aria-label="Fechar visualização"><X size={18} aria-hidden="true" /> Fechar</button>
+          <button type="button" onClick={(event) => { event.stopPropagation(); setFotoSelecionada((fotoSelecionada - 1 + fotos.length) % fotos.length) }} className="absolute left-3 flex size-11 items-center justify-center rounded-full bg-white/10 text-white" aria-label="Foto anterior"><ChevronLeft /></button>
+          <div className="relative h-[75vh] w-full max-w-4xl" onClick={(event) => event.stopPropagation()}><Image src={fotos[fotoSelecionada]} alt={`${sessao.titulo} — foto ampliada`} fill className="object-contain" sizes="100vw" /></div>
+          <button type="button" onClick={(event) => { event.stopPropagation(); setFotoSelecionada((fotoSelecionada + 1) % fotos.length) }} className="absolute right-3 flex size-11 items-center justify-center rounded-full bg-white/10 text-white" aria-label="Próxima foto"><ChevronRight /></button>
         </div>
       )}
     </section>
