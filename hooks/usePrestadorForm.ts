@@ -23,6 +23,7 @@ const FORM_INICIAL: PrestadorFormData = {
   verificado: false,
   status: 'ativo',
   garantia_dias: 0,
+  portfolio_obrigatorio: true,
   sessao_fotos_titulo: '',
   sessao_fotos_urls: [],
 }
