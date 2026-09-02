@@ -1,3 +1,5 @@
+export type GarantiaDias = number
+
 export interface Prestador {
   id: number
   created_at: string
@@ -23,6 +25,14 @@ export interface Prestador {
   verificado: boolean | null
   grupo_id: string | null
   categoria_id: string | null
+  categoria?: string | null
+  categorias?: string | null
+  cidades?: { nome: string; estado_sigla: string } | null
+  cidade_nome?: string | null
+  regiao_nome?: string | null
+  grupo_nome?: string | null
+  media_nota?: number | null
+  total_avals?: number | null
   ativacao_status: string
   ativacao_enviado_em: string | null
   ativacao_respondeu_em: string | null
@@ -30,7 +40,6 @@ export interface Prestador {
   garantia_dias: number
   portfolio_obrigatorio: boolean
   sessao_fotos_titulo: string | null
-  sessao_fotos_urls: string[] | null
   sessao_fotos_urls: string[] | null
 }
 
