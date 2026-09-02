@@ -577,21 +577,14 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       isPhoneValid, isTitleValid, canCloseZoom, fotosCarrossel, fotoAtual,
       // semFotos: true quando o PROJETO atual está travado no fluxo sem foto.
       // Com projeto criado, usa o valor travado (sem_fotos). Sem projeto:
-      //  - se portfolio_obrigatorio=false, é sempre sem foto (automático,
-      //    sem escolha do prestador)
-      //  - se portfolio_obrigatorio=true, depende da escolha manual feita
-      //    no card "Como registrar este serviço?" (escolhaSemFotos)
-      semFotos: projetoId
-        ? semFotos
-        : !prestadorInfo.portfolioObrigatorio
-          ? true
-          : escolhaSemFotos === true,
-      // Card de escolha visível: só antes de existir projeto, só quando o
-      // prestador tem portfolio_obrigatorio=true (senão a escolha já é
-      // automática), só enquanto ele ainda não escolheu, e só depois que
-      // os dados do cliente (whatsapp/nome/título) já são válidos — evita
-      // escolher o fluxo antes de saber para quem é o serviço.
-      mostrarEscolhaFluxo: !projetoId && prestadorInfo.portfolioObrigatorio && escolhaSemFotos === null && isPhoneValid && isTitleValid,
+  // Sem projeto, a preferência do perfil só define a opção inicial.
+  // O prestador ainda escolhe o fluxo para cada serviço.
+  semFotos: projetoId
+  ? semFotos
+  : escolhaSemFotos === true,
+  // Cada serviço permite escolher com ou sem registro fotográfico.
+  // A preferência do perfil orienta o padrão visual, mas não bloqueia a escolha.
+  mostrarEscolhaFluxo: !projetoId && escolhaSemFotos === null && isPhoneValid && isTitleValid,
       podeGerarLinkAvaliacao,
     },
     actions: {

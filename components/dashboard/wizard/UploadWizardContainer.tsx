@@ -270,7 +270,7 @@ export function UploadWizardContainer({
               <div className="grid grid-cols-2 gap-2.5">
                 <button
                   onClick={() => escolherFluxo(false)}
-                  className="flex flex-col items-start gap-2.5 p-4 rounded-2xl border-2 border-blue-200 bg-blue-50/40 text-left transition-all active:scale-[0.98] hover:border-blue-300"
+                  className={`flex flex-col items-start gap-2.5 p-4 rounded-2xl border-2 text-left transition-all active:scale-[0.98] hover:border-blue-300 ${hookData.state.prestadorInfo.portfolioObrigatorio ? 'border-blue-200 bg-blue-50/40' : 'border-slate-200 bg-white'}`}
                 >
                   <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center">
                     <Camera size={16} className="text-blue-500" />
@@ -282,7 +282,7 @@ export function UploadWizardContainer({
                 </button>
                 <button
                   onClick={() => escolherFluxo(true)}
-                  className="flex flex-col items-start gap-2.5 p-4 rounded-2xl border border-slate-200 bg-white text-left transition-all active:scale-[0.98] hover:border-slate-300"
+                  className={`flex flex-col items-start gap-2.5 p-4 rounded-2xl border-2 text-left transition-all active:scale-[0.98] hover:border-slate-300 ${!hookData.state.prestadorInfo.portfolioObrigatorio ? 'border-blue-200 bg-blue-50/40' : 'border-slate-200 bg-white'}`}
                 >
                   <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center">
                     <Activity size={16} className="text-slate-400" />
