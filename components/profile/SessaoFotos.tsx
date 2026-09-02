@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Camera, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { Camera } from 'lucide-react'
+import { ModalFotoBase } from '@/components/shared/ModalFotoBase'
 
 export interface SessaoFotosData {
   titulo: string
@@ -49,16 +50,25 @@ export function SessaoFotos({ sessao }: SessaoFotosProps) {
       </div>
 
       {fotoSelecionada !== null && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-slate-950/95 p-4 pt-20" role="dialog" aria-modal="true" aria-label="Visualização da foto" onClick={() => setFotoSelecionada(null)}>
-          <div className="fixed inset-0 z-[9999] pointer-events-none">
-            <button type="button" onClick={() => setFotoSelecionada(null)} className="pointer-events-auto fixed right-4 top-4 flex h-14 items-center gap-2 rounded-full bg-white px-5 text-base font-black text-slate-950 shadow-2xl ring-4 ring-blue-500/40" aria-label="Fechar visualização"><X size={22} aria-hidden="true" /> FECHAR</button>
-            <p className="sr-only">Foto ampliada. Use o botão FECHAR no canto superior direito para voltar ao perfil.</p>
+        <ModalFotoBase
+          fotoUrl={fotos[fotoSelecionada]}
+          ordemLabel={`Foto ${fotoSelecionada + 1} de ${fotos.length}`}
+          onClose={() => setFotoSelecionada(null)}
+          navegacao={fotos.length > 1 ? {
+            onPrev: () => setFotoSelecionada((fotoSelecionada - 1 + fotos.length) % fotos.length),
+            onNext: () => setFotoSelecionada((fotoSelecionada + 1) % fotos.length),
+          } : undefined}
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 p-5">
+            <div>
+              <h3 className="text-sm font-black uppercase italic tracking-tight text-slate-900">{sessao.titulo}</h3>
+              <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Foto ampliada</p>
+            </div>
+            <button type="button" onClick={() => setFotoSelecionada(null)} className="rounded-xl p-3 text-slate-300 transition-colors hover:bg-slate-50 hover:text-slate-700 md:hidden" aria-label="Fechar visualização">
+              <span className="text-xs font-black uppercase">Fechar</span>
+            </button>
           </div>
-          <span className="sr-only">Para sair, toque no botão Fechar no alto da tela, toque fora da foto ou pressione Escape.</span>
-          <button type="button" onClick={(event) => { event.stopPropagation(); setFotoSelecionada((fotoSelecionada - 1 + fotos.length) % fotos.length) }} className="absolute left-3 top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white" aria-label="Foto anterior"><ChevronLeft /></button>
-          <div className="relative h-[calc(100vh-9rem)] w-full max-w-4xl" onClick={(event) => event.stopPropagation()}><Image src={fotos[fotoSelecionada]} alt={`${sessao.titulo} — foto ampliada`} fill className="object-contain" sizes="100vw" /></div>
-          <button type="button" onClick={(event) => { event.stopPropagation(); setFotoSelecionada((fotoSelecionada + 1) % fotos.length) }} className="absolute right-3 top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white" aria-label="Próxima foto"><ChevronRight /></button>
-        </div>
+        </ModalFotoBase>
       )}
     </section>
   )
