@@ -49,12 +49,12 @@ export function SessaoFotos({ sessao }: SessaoFotosProps) {
       </div>
 
       {fotoSelecionada !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4" role="dialog" aria-modal="true" aria-label="Visualização da foto" onClick={() => setFotoSelecionada(null)}>
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-slate-950/95 p-4 pt-20" role="dialog" aria-modal="true" aria-label="Visualização da foto" onClick={() => setFotoSelecionada(null)}>
           <span className="sr-only">Pressione Escape para fechar a visualização</span>
-          <button type="button" onClick={() => setFotoSelecionada(null)} className="absolute right-4 top-4 z-10 flex h-11 items-center gap-2 rounded-full bg-white px-4 text-sm font-bold text-slate-900 shadow-lg" aria-label="Fechar visualização"><X size={18} aria-hidden="true" /> Fechar</button>
-          <button type="button" onClick={(event) => { event.stopPropagation(); setFotoSelecionada((fotoSelecionada - 1 + fotos.length) % fotos.length) }} className="absolute left-3 flex size-11 items-center justify-center rounded-full bg-white/10 text-white" aria-label="Foto anterior"><ChevronLeft /></button>
-          <div className="relative h-[75vh] w-full max-w-4xl" onClick={(event) => event.stopPropagation()}><Image src={fotos[fotoSelecionada]} alt={`${sessao.titulo} — foto ampliada`} fill className="object-contain" sizes="100vw" /></div>
-          <button type="button" onClick={(event) => { event.stopPropagation(); setFotoSelecionada((fotoSelecionada + 1) % fotos.length) }} className="absolute right-3 flex size-11 items-center justify-center rounded-full bg-white/10 text-white" aria-label="Próxima foto"><ChevronRight /></button>
+          <button type="button" onClick={() => setFotoSelecionada(null)} className="absolute right-4 top-4 z-20 flex h-11 items-center gap-2 rounded-full bg-white px-4 text-sm font-bold text-slate-900 shadow-lg" aria-label="Fechar visualização"><X size={18} aria-hidden="true" /> Fechar</button>
+          <button type="button" onClick={(event) => { event.stopPropagation(); setFotoSelecionada((fotoSelecionada - 1 + fotos.length) % fotos.length) }} className="absolute left-3 top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white" aria-label="Foto anterior"><ChevronLeft /></button>
+          <div className="relative h-[calc(100vh-9rem)] w-full max-w-4xl" onClick={(event) => event.stopPropagation()}><Image src={fotos[fotoSelecionada]} alt={`${sessao.titulo} — foto ampliada`} fill className="object-contain" sizes="100vw" /></div>
+          <button type="button" onClick={(event) => { event.stopPropagation(); setFotoSelecionada((fotoSelecionada + 1) % fotos.length) }} className="absolute right-3 top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white" aria-label="Próxima foto"><ChevronRight /></button>
         </div>
       )}
     </section>
