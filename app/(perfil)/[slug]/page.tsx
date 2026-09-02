@@ -11,6 +11,7 @@ import PerfilSobre from '@/components/profile/PerfilSobre'
 import PerfilCTA from '@/components/profile/PerfilCTA'
 import PerfilTabs from '@/components/profile/PerfilTabs'
 import PerfilEspecialidades from '@/components/profile/PerfilEspecialidades'
+import { SessaoFotos } from '@/components/profile/SessaoFotos'
 import { AdCard } from '@/components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
@@ -130,6 +131,9 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
                 }
               />
             </div>
+
+            {/* Carrossel de fotos avulsas — seção independente do portfólio */}
+            <SessaoFotos sessao={prestador.sessao_fotos} />
 
             {/* Portfólio + Avaliações em abas — única fonte de verdade para o portfólio */}
             <PerfilTabs
