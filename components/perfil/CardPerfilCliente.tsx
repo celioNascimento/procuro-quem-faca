@@ -35,7 +35,7 @@ export default function CardPerfilCliente({
       <div className="flex items-center gap-4 bg-blue-50 p-4 lg:flex-col lg:items-stretch lg:gap-0 lg:p-0">
         <button
           type="button"
-          className="group relative size-20 shrink-0 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 lg:aspect-[4/3] lg:size-auto lg:rounded-none lg:border-0"
+          className="group relative size-20 shrink-0 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-sm focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 lg:aspect-[4/3] lg:h-auto lg:w-full lg:rounded-2xl lg:border-0"
           onClick={onUploadClick}
           aria-label="Alterar foto do perfil"
           disabled={uploading}
@@ -47,7 +47,7 @@ export default function CardPerfilCliente({
           ) : avatarUrl ? (
             <img
               src={avatarUrl}
-              className="size-full object-cover"
+              className="size-full object-contain p-2"
               alt={nome ? `Foto de ${nome}` : 'Foto do perfil'}
               onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
             />

@@ -43,7 +43,7 @@ export function FotoUpload({
       <div
         onClick={() => !uploading && inputRef.current?.click()}
         className={`
-          relative w-40 h-40 md:w-48 md:h-48 rounded-[3.5rem] bg-slate-50
+          relative w-full max-w-sm aspect-[4/3] rounded-[2.5rem] bg-white
           border-4 border-white shadow-xl flex items-center justify-center
           overflow-hidden group transition-all cursor-pointer
           ${fotoComErro ? 'ring-4 ring-red-200' : 'hover:scale-[1.02]'}
@@ -52,7 +52,7 @@ export function FotoUpload({
         {uploading ? (
           <Loader2 className="animate-spin text-blue-500" size={32} />
         ) : fotoUrl ? (
-          <img src={fotoUrl} alt="Preview" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+          <img src={fotoUrl} alt="Preview" className="w-full h-full object-contain p-3 transition-transform group-hover:scale-[1.02]" />
         ) : (
           variant === 'dashboard'
             ? <User size={48} className={fotoComErro ? 'text-red-200' : 'text-slate-200'} />
