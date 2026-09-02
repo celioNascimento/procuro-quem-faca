@@ -18,7 +18,7 @@ export default function PerfilEspecialidades({ prestador }: Props) {
         {habilidades.map((habilidade) => (
           <span
             key={habilidade}
-            className="rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700"
+            className="rounded-full border border-slate-100 bg-slate-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-600 shadow-sm"
           >
             {habilidade}
           </span>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Camera, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { ModalFotoBase } from '@/components/shared/ModalFotoBase'
 
 export interface SessaoFotosData {
@@ -33,16 +33,11 @@ export function SessaoFotos({ sessao }: SessaoFotosProps) {
 
   return (
     <section className="overflow-hidden rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm sm:p-7" aria-labelledby="sessao-fotos-titulo">
-      <div className="flex items-start gap-3">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-          <Camera size={21} aria-hidden="true" />
-        </span>
-        <div>
-          <h2 id="sessao-fotos-titulo" className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">{sessao.titulo}</h2>
-        </div>
-      </div>
+      <h2 id="sessao-fotos-titulo" className="text-[10px] font-black uppercase tracking-widest text-blue-600">
+        {sessao.titulo}
+      </h2>
 
-      <div className="relative mt-6">
+      <div className="relative mt-5">
         <button type="button" onClick={() => setFotoAtual((fotoAtual - 1 + fotos.length) % fotos.length)} className="absolute left-2 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/75 text-white shadow-lg transition hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200" aria-label="Foto anterior">
           <ChevronLeft size={22} aria-hidden="true" />
         </button>
