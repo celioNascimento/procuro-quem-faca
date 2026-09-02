@@ -10,6 +10,7 @@ import PerfilHero from '@/components/profile/PerfilHero'
 import PerfilSobre from '@/components/profile/PerfilSobre'
 import PerfilCTA from '@/components/profile/PerfilCTA'
 import PerfilTabs from '@/components/profile/PerfilTabs'   // ← substitui PortfolioGrid + PerfilAvaliacoes
+import { SessaoFotos } from '@/components/profile/SessaoFotos'
 import { AdCard } from '@/components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
@@ -130,6 +131,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               avaliacoes={avaliacoes}
               portfolioObrigatorio={prestador.portfolio_obrigatorio}
             />
+            <SessaoFotos sessao={prestador.sessao_fotos} />
           </div>
         </div>
       </div>
