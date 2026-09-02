@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Camera } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ModalFotoBase } from '@/components/shared/ModalFotoBase'
 
 export interface SessaoFotosData {
@@ -16,6 +16,7 @@ interface SessaoFotosProps {
 
 export function SessaoFotos({ sessao }: SessaoFotosProps) {
   const [fotoSelecionada, setFotoSelecionada] = useState<number | null>(null)
+  const [fotoAtual, setFotoAtual] = useState(0)
 
   useEffect(() => {
     if (fotoSelecionada === null) return
@@ -41,12 +42,17 @@ export function SessaoFotos({ sessao }: SessaoFotosProps) {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {fotos.map((foto, index) => (
-          <button key={`${foto}-${index}`} type="button" onClick={() => setFotoSelecionada(index)} className={`relative overflow-hidden rounded-2xl bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${index === 0 ? 'col-span-2 row-span-2 aspect-square sm:col-span-2' : 'aspect-square'}`} aria-label={`Ampliar foto ${index + 1}`}>
-            <Image src={foto} alt={`${sessao.titulo} — foto ${index + 1}`} fill className="object-cover transition-transform duration-300 hover:scale-105" sizes="(max-width: 640px) 50vw, 33vw" />
-          </button>
-        ))}
+      <div className="relative mt-6">
+        <button type="button" onClick={() => setFotoAtual((fotoAtual - 1 + fotos.length) % fotos.length)} className="absolute left-2 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/75 text-white shadow-lg transition hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200" aria-label="Foto anterior">
+          <ChevronLeft size={22} aria-hidden="true" />
+        </button>
+        <button type="button" onClick={() => setFotoSelecionada(fotoAtual)} className="relative block aspect-[16/9] w-full overflow-hidden rounded-2xl bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200" aria-label={`Ampliar foto ${fotoAtual + 1}`}>
+          <Image src={fotos[fotoAtual]} alt={`${sessao.titulo} — foto ${fotoAtual + 1}`} fill className="object-cover transition-transform duration-300 hover:scale-105" sizes="(max-width: 640px) 100vw, 720px" />
+        </button>
+        <button type="button" onClick={() => setFotoAtual((fotoAtual + 1) % fotos.length)} className="absolute right-2 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900/75 text-white shadow-lg transition hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200" aria-label="Próxima foto">
+          <ChevronRight size={22} aria-hidden="true" />
+        </button>
+        <p className="mt-3 text-center text-xs font-semibold text-slate-400">{fotoAtual + 1} de {fotos.length}</p>
       </div>
 
       {fotoSelecionada !== null && (
