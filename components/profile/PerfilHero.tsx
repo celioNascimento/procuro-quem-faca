@@ -32,7 +32,7 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
 
           {/* Avatar */}
           <div className="relative shrink-0">
-            <div className="w-28 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
+            <div className="w-32 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
               {prestador.foto_perfil ? (
                 <img
                   src={prestador.foto_perfil}
