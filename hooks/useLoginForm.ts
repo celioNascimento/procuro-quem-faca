@@ -14,6 +14,11 @@ import { insertLog } from '@/lib/db/logs'
 // esse valor precisa deixar de ser fixo e virar parâmetro do hook.
 const ROLE_PADRAO_DESTA_TELA = 'prestador'
 
+function getAuthRedirectUrl() {
+  if (typeof window === 'undefined') return undefined
+  return process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ?? `${window.location.origin}/auth/callback`
+}
+
 export function useLoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -148,9 +153,15 @@ export function useLoginForm() {
         return
       }
 
-      const credenciaisInvalidas = error?.status === 400 || error?.message?.toLowerCase().includes('invalid')
+      const mensagemErro = error?.message?.toLowerCase() ?? ''
+      if (mensagemErro.includes('email not confirmed') || mensagemErro.includes('email_not_confirmed')) {
+        setMensagem('Erro: Confirme seu e-mail antes de entrar.')
+        return
+      }
+
+      const credenciaisInvalidas = error?.status === 400 || mensagemErro.includes('invalid')
       if (!credenciaisInvalidas) {
-        setMensagem('Erro: ' + (error?.message || 'Falha ao autenticar.'))
+        setMensagem('Erro: Não foi possível conectar ao serviço de autenticação.')
         return
       }
 
@@ -159,7 +170,14 @@ export function useLoginForm() {
       // de e-mails). Por isso tentamos criar a conta — se ela já existir,
       // o próprio signUp revela isso via `identities: []` na resposta,
       // sem gerar sessão nem sobrescrever a senha existente.
-      const { data: novaConta, error: signUpError } = await supabase.auth.signUp({ email, password })
+      const { data: novaConta, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: getAuthRedirectUrl(),
+          data: { role: ROLE_PADRAO_DESTA_TELA },
+        },
+      })
       if (!isActive.current) return
 
       if (signUpError) {

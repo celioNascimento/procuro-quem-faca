@@ -24,6 +24,7 @@ interface Props {
   // (borda + ring na foto + badge + chevron) — mesma linguagem visual do
   // banner de garantia/reclamação, com o texto do badge variando por tipo.
   tipoGarantiaAtiva?: 'garantia' | 'reclamacao' | null
+  temGarantiaAtiva?: boolean
   onClick: () => void
 }
 
@@ -31,9 +32,10 @@ export default function ServicoCardCompacto({
   servico,
   statusInfo,
   tipoGarantiaAtiva = null,
+  temGarantiaAtiva = false,
   onClick,
 }: Props) {
-  const temCasoAtivo = tipoGarantiaAtiva !== null
+  const temCasoAtivo = tipoGarantiaAtiva !== null || temGarantiaAtiva
   const ehReclamacao = tipoGarantiaAtiva === 'reclamacao'
 
   const badgeLabel = temCasoAtivo ? (ehReclamacao ? 'Reclamação' : 'Garantia') : statusInfo.label

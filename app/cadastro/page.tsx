@@ -20,6 +20,7 @@ import { SecaoDadosPessoais } from '@/components/perfil/SecaoDadosPessoais'
 import { SecaoLocalizacao } from '@/components/perfil/SecaoLocalizacao'
 import { SecaoTermos } from '@/components/perfil/SecaoTermos'
 import { SecaoGarantia } from '@/components/perfil/SecaoGarantia'
+import { PreferenciaFotos } from '@/components/perfil/PreferenciaFotos'
 
 import { useCadastroPrestador } from '@/hooks/useCadastroPrestador'
 import { useAuth } from '@/hooks/useAuth'
@@ -236,6 +237,12 @@ function FormularioCadastro() {
               <SecaoGarantia
                 garantiaDias={form.formData.garantia_dias}
                 onChange={(dias) => form.set({ garantia_dias: dias })}
+              />
+
+              <PreferenciaFotos
+                valor={form.formData.portfolio_obrigatorio ?? true}
+                onChange={(valor) => form.set({ portfolio_obrigatorio: valor })}
+                modo="cadastro"
               />
 
               <SecaoLocalizacao
