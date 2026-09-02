@@ -87,7 +87,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
             {prestador.foto_perfil && !imgError ? (
               <img
                 src={prestador.foto_perfil}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:scale-[1.02]"
                 alt={prestador.nome}
                 onError={() => setImgError(true)}
               />
