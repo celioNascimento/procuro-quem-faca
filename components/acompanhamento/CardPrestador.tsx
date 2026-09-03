@@ -36,7 +36,7 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
         <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-[1.25rem] border border-slate-100 shadow-sm overflow-hidden bg-slate-50">
           <img
             src={prestador?.foto_perfil || '/placeholder-avatar.png'}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain p-1"
             alt={prestador?.nome}
           />
         </div>
