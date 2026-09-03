@@ -48,8 +48,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           />
         )}
 
-        <main className={`flex-1 overflow-y-auto scroll-smooth ${mostrarSidebar ? 'p-4 md:p-6 lg:p-10' : ''}`}>
-          <div className="max-w-7xl mx-auto">{children}</div>
+        <main className={`min-w-0 w-full flex-1 overflow-x-hidden overflow-y-auto scroll-smooth ${mostrarSidebar ? 'p-4 md:p-6 lg:p-10' : ''}`}>
+          <div className="mx-auto w-full min-w-0 max-w-7xl">{children}</div>
         </main>
       </div>
     </div>

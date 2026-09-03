@@ -5,6 +5,7 @@ export async function getPrestadoresAtivos(signal?: AbortSignal) {
     .from('prestadores')
     .select('*, cidades(id, nome, estado_sigla, regiao_id), categorias(id, nome, grupo_id, categorias_grupos(id, nome)), regioes(id, nome)')
     .eq('status', 'ativo')
+    .or('bloqueado.is.null,bloqueado.eq.false')
 
   if (signal) query.abortSignal(signal)
 

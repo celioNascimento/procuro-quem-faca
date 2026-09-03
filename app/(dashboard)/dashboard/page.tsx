@@ -7,14 +7,17 @@ import { useSearchParams } from 'next/navigation'
 import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
 import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
-import { Lock, UserCircle2, Images, Loader2 } from 'lucide-react'
+import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send } from 'lucide-react'
+import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 
 function PerfilPageContent() {
   const searchParams = useSearchParams()
   const abaInicial = searchParams.get('aba') === 'perfil' ? 'perfil' : 'portfolio'
   const [abaAtiva, setAbaAtiva] = useState(abaInicial)
-  const { cadastroCompleto, validando, slug } = usePerfilStatus()
+  const [mensagemSuporte, setMensagemSuporte] = useState('')
+  const { cadastroCompleto, validando, slug, bloqueado, motivoBloqueio } = usePerfilStatus()
+  const linkSuporte = `https://wa.me/${NUMERO_WHATSAPP_PQF}?text=${encodeURIComponent(`Olá, equipe Procuro Quem Faça. Meu perfil ${slug ? `(${slug}) ` : ''}foi bloqueado e gostaria de solicitar esclarecimentos.\n\n${mensagemSuporte.trim()}`)}`
 
   useEffect(() => {
     if (!validando && !cadastroCompleto) setAbaAtiva('perfil')
@@ -45,6 +48,39 @@ function PerfilPageContent() {
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Gerencie sua presença profissional</h1>
         </div>
       </header>
+
+      {bloqueado && (
+        <section className="mt-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-950" role="alert" aria-labelledby="perfil-bloqueado-titulo">
+          <ShieldAlert className="mt-0.5 size-5 shrink-0 text-red-600" aria-hidden="true" />
+          <div className="min-w-0 space-y-1">
+            <h2 id="perfil-bloqueado-titulo" className="text-sm font-black uppercase tracking-wide text-red-700">Seu perfil está bloqueado</h2>
+            <p className="text-sm leading-6 text-red-900">Seu perfil foi temporariamente retirado da busca e os clientes não conseguem iniciar contato por ele.</p>
+            {motivoBloqueio && <p className="text-sm leading-6 text-red-800"><strong>Motivo informado pela moderação:</strong> {motivoBloqueio}</p>}
+            <p className="pt-1 text-xs leading-5 text-red-800">Revise o motivo acima e entre em contato com a equipe de suporte caso precise de esclarecimentos.</p>
+            <div className="mt-4 rounded-2xl border border-red-200 bg-white/75 p-3">
+              <label htmlFor="mensagem-suporte" className="mb-2 block text-xs font-bold text-red-900">Fale com a equipe sobre este bloqueio</label>
+              <textarea
+                id="mensagem-suporte"
+                value={mensagemSuporte}
+                onChange={(event) => setMensagemSuporte(event.target.value)}
+                placeholder="Escreva sua dúvida ou contestação..."
+                rows={3}
+                className="w-full resize-none rounded-xl border border-red-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-red-200"
+              />
+              <a
+                href={linkSuporte}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-xs font-black uppercase tracking-wide text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200"
+              >
+                <MessageCircle className="size-4" aria-hidden="true" />
+                <span>Enviar mensagem ao suporte</span>
+                <Send className="size-3.5" aria-hidden="true" />
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="pt-6">
         <AdCardDashboard />

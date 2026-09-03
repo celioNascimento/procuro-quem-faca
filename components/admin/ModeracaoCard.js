@@ -36,11 +36,11 @@ export default function ModeracaoCard({
   }
 
   return (
-    <div className={`bg-white rounded-[2rem] p-4 sm:p-6 shadow-sm border-2 transition-all ${
+    <article className={`w-full min-w-0 overflow-hidden bg-white rounded-[2rem] p-4 sm:p-6 shadow-sm border-2 transition-all ${
       p.status === 'bloqueado' ? 'border-red-100 bg-red-50/10' : 
       temDenunciaAberta ? 'border-amber-200 bg-amber-50/10' : 'border-white'
     }`}>
-      <div className="flex flex-col lg:flex-row items-center lg:items-center gap-5">
+      <div className="flex min-w-0 flex-col items-stretch gap-5 lg:flex-row lg:items-center">
         
         <div className="flex lg:block items-center justify-between w-full lg:w-auto">
           {/* Avatar Redondo com Iniciais como Fallback */}
@@ -69,7 +69,7 @@ export default function ModeracaoCard({
           </div>
         </div>
 
-        <div className="flex-1 w-full text-center lg:text-left">
+        <div className="min-w-0 flex-1 w-full text-left">
           <div className="hidden lg:flex items-center gap-3 mb-2">
             <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight leading-none">{p.nome || 'SEM NOME'}</h3>
             <span className={`px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest ${statusEstilo.bg} ${statusEstilo.text}`}>
@@ -143,6 +143,6 @@ export default function ModeracaoCard({
           </button>
         )}
       </div>
-    </div>
+    </article>
   )
 }

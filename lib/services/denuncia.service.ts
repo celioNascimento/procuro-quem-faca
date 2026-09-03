@@ -3,26 +3,34 @@
 import { supabase } from '@/lib/supabase'
 
 export async function criarDenuncia(prestadorId: number, motivo: string): Promise<void> {
-  // 1. Cria a Denúncia
+  if (!Number.isInteger(prestadorId) || prestadorId <= 0) {
+    throw new Error('Prestador inválido')
+  }
+
+  const motivoNormalizado = motivo.trim()
+  if (!motivoNormalizado) throw new Error('O motivo da denúncia é obrigatório')
+
+  // A denúncia é o registro principal. O retorno confirma que o INSERT foi aceito.
   const { error: denunciaError } = await supabase
     .from('denuncias')
     .insert({
       prestador_id: prestadorId,
-      motivo: motivo,
-      status: 'aberta'
+      motivo: motivoNormalizado,
+      status: 'aberta',
     })
 
   if (denunciaError) throw denunciaError
 
-  // 2. Log de Auditoria
+  // O log é auxiliar: uma falha na tabela de logs não pode mascarar
+  // uma denúncia que já foi gravada nem fazer o usuário reenviar duplicado.
   const { error: logError } = await supabase.from('logs_atividades').insert({
     acao: 'DENUNCIA_PERFIL',
     entidade_tipo: 'prestador',
     entidade_id: prestadorId,
-    detalhes: { motivo, timestamp: new Date().toISOString() }
+    detalhes: { motivo: motivoNormalizado, timestamp: new Date().toISOString() },
   })
 
-  if (logError) throw logError
+  if (logError) console.error('[v0] Denúncia criada, mas o log falhou:', logError)
 }
 
   export interface DenunciaComPrestador {
@@ -56,6 +64,14 @@ export async function criarDenuncia(prestadorId: number, motivo: string): Promis
     const { error } = await supabase
       .from('prestadores')
       .update({ bloqueado: true, motivo_bloqueio: motivo })
+      .eq('id', prestadorId)
+    if (error) throw error
+  }
+
+  export async function desbloquearPrestador(prestadorId: number): Promise<void> {
+    const { error } = await supabase
+      .from('prestadores')
+      .update({ bloqueado: false, motivo_bloqueio: null, status: 'ativo' })
       .eq('id', prestadorId)
     if (error) throw error
   }
