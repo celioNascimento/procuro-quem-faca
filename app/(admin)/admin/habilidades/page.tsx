@@ -1,135 +1,53 @@
-// app/(admin)/admin/habilidades/page.tsx
-
 'use client'
+
 import { useState } from 'react'
+import { FolderPlus, Layers3, Plus, RefreshCw, Sparkles, Star } from 'lucide-react'
 import { useHabilidades } from '@/hooks/useHabilidades'
 
-export default function GestaoHabilidades() {
-  const { habilidades, loading, adicionarHabilidade } = useHabilidades()
-  const [nome, setNome] = useState('')
-  const [categoria, setCategoria] = useState('Manutenção')
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <label className="flex flex-col gap-2 text-xs font-semibold text-muted-foreground"><span>{label}</span>{children}</label>
+}
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const { ok, error } = await adicionarHabilidade(nome, categoria)
-    if (ok) setNome('')
-    else if (error) alert(error)
+const inputClass = 'h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10'
+
+export default function GestaoHabilidades() {
+  const { grupos, categorias, loading, saving, error, adicionarGrupo, adicionarCategoria, recarregar } = useHabilidades()
+  const [grupoNome, setGrupoNome] = useState('')
+  const [grupoIcone, setGrupoIcone] = useState('')
+  const [grupoOrdem, setGrupoOrdem] = useState('0')
+  const [categoriaNome, setCategoriaNome] = useState('')
+  const [categoriaGrupo, setCategoriaGrupo] = useState('')
+  const [destaque, setDestaque] = useState(false)
+  const [feedback, setFeedback] = useState<string | null>(null)
+
+  async function submitGrupo(event: React.FormEvent) {
+    event.preventDefault(); setFeedback(null)
+    const result = await adicionarGrupo(grupoNome, grupoIcone, Number(grupoOrdem) || 0)
+    if (result.ok) { setGrupoNome(''); setGrupoIcone(''); setGrupoOrdem('0'); setFeedback('Grupo cadastrado com sucesso.') }
+    else setFeedback(result.error)
   }
 
-  const inputStyle = "w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all text-sm"
+  async function submitCategoria(event: React.FormEvent) {
+    event.preventDefault(); setFeedback(null)
+    const result = await adicionarCategoria(categoriaNome, categoriaGrupo, destaque)
+    if (result.ok) { setCategoriaNome(''); setDestaque(false); setFeedback('Categoria cadastrada com sucesso.') }
+    else setFeedback(result.error)
+  }
 
-  return (
-    <div className="min-h-screen bg-[#FDFDFE] text-slate-900 font-sans antialiased pb-20">
+  return <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-8 lg:px-12">
+    <header className="mx-auto flex max-w-7xl flex-col gap-6 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex items-start gap-4"><div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20"><Layers3 /></div><div><p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Painel administrativo</p><h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Catálogo de habilidades</h1><p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Organize os serviços em grupos e categorias para manter a experiência de busca simples e consistente.</p></div></div>
+      <button onClick={recarregar} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold transition hover:bg-muted" type="button"><RefreshCw data-icon="inline-start" /> Atualizar</button>
+    </header>
 
-      <header className="max-w-6xl mx-auto px-8 pt-12 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-black uppercase tracking-tight text-slate-900 italic">
-            Skills<span className="text-indigo-600 not-italic">.Hub</span>
-          </h1>
-          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.4em] mt-1 flex items-center gap-2">
-            <span className="w-4 h-[2px] bg-indigo-600"></span> Catálogo de Serviços Oficiais
-          </p>
-        </div>
-        <div className="bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ativos: {habilidades.length}</span>
-        </div>
-      </header>
+    <section className="mx-auto mt-8 grid max-w-7xl gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="flex flex-col gap-6">
+        <form onSubmit={submitGrupo} className="rounded-3xl border border-border bg-card p-6 shadow-sm"><div className="mb-6 flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><FolderPlus /></div><div><h2 className="font-bold">Novo grupo</h2><p className="text-xs text-muted-foreground">Ex.: Manutenção, Beleza</p></div></div><div className="flex flex-col gap-4"><Field label="Nome do grupo"><input required value={grupoNome} onChange={e => setGrupoNome(e.target.value)} className={inputClass} placeholder="Nome do grupo" /></Field><div className="grid grid-cols-2 gap-3"><Field label="Ícone (opcional)"><input value={grupoIcone} onChange={e => setGrupoIcone(e.target.value)} className={inputClass} placeholder="chave" /></Field><Field label="Ordem"><input type="number" value={grupoOrdem} onChange={e => setGrupoOrdem(e.target.value)} className={inputClass} /></Field></div><button disabled={saving} className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"><Plus data-icon="inline-start" /> Cadastrar grupo</button></div></form>
+        <form onSubmit={submitCategoria} className="rounded-3xl border border-border bg-card p-6 shadow-sm"><div className="mb-6 flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-xl bg-accent text-accent-foreground"><Sparkles /></div><div><h2 className="font-bold">Nova categoria</h2><p className="text-xs text-muted-foreground">Vincule ao grupo certo</p></div></div><div className="flex flex-col gap-4"><Field label="Nome da categoria"><input required value={categoriaNome} onChange={e => setCategoriaNome(e.target.value)} className={inputClass} placeholder="Ex.: Instalação elétrica" /></Field><Field label="Grupo"><select required value={categoriaGrupo} onChange={e => setCategoriaGrupo(e.target.value)} className={inputClass}><option value="">Selecione um grupo</option>{grupos.map(grupo => <option key={grupo.id} value={String(grupo.id)}>{grupo.nome}</option>)}</select></Field><label className="flex items-center gap-3 text-sm font-semibold"><input type="checkbox" checked={destaque} onChange={e => setDestaque(e.target.checked)} className="size-4 accent-primary" /><Star data-icon="inline-start" className="text-primary" /> Marcar como destaque</label><button disabled={saving || grupos.length === 0} className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-foreground px-4 text-sm font-bold text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"><Plus data-icon="inline-start" /> Cadastrar categoria</button></div></form>
+        {feedback && <p role="status" className="rounded-xl border border-border bg-muted px-4 py-3 text-sm font-medium">{feedback}</p>}
+      </div>
 
-      <main className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-
-        <div className="lg:col-span-4 sticky top-8">
-          <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100">
-            <h2 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-              <span className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></span>
-              Novo Registro
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Profissão / Skill</label>
-                <input
-                  value={nome} onChange={e => setNome(e.target.value)}
-                  placeholder="Ex: Eletricista"
-                  className={inputStyle}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Categoria de Grupo</label>
-                <select
-                  value={categoria} onChange={e => setCategoria(e.target.value)}
-                  className={inputStyle}
-                >
-                  <option value="Manutenção">🔧 Manutenção</option>
-                  <option value="Construção">🏗️ Construção</option>
-                  <option value="Beleza">✨ Beleza</option>
-                  <option value="Tecnologia">💻 Tecnologia</option>
-                </select>
-              </div>
-
-              <button className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-200 active:scale-95 transition-all flex items-center justify-center gap-2 group">
-                Salvar Habilidade
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <div className="lg:col-span-8">
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm min-h-[500px]">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Habilidades no Ar</h2>
-              <div className="flex gap-1">
-                <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-                <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                <div className="w-12 h-12 bg-slate-100 rounded-full mb-4"></div>
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Sincronizando Cloud...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {habilidades.map(h => (
-                  <div
-                    key={h.id}
-                    className="relative overflow-hidden p-5 bg-white border border-slate-100 rounded-2xl flex flex-col items-start transition-all hover:border-indigo-200 hover:shadow-md hover:-translate-y-1 group"
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-100 transition-opacity">
-                      <span className="text-[18px]">
-                        {h.categoria === 'Tecnologia' && '💻'}
-                        {h.categoria === 'Manutenção' && '🔧'}
-                        {h.categoria === 'Construção' && '🏗️'}
-                        {h.categoria === 'Beleza' && '✨'}
-                      </span>
-                    </div>
-
-                    <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1 mb-2 bg-indigo-50 px-2 py-0.5 rounded">
-                      {h.categoria}
-                    </span>
-                    <span className="text-[13px] font-black text-slate-800 uppercase tracking-tight italic">
-                      {h.nome}
-                    </span>
-
-                    <div className="w-full h-1 bg-slate-50 mt-4 rounded-full overflow-hidden">
-                      <div className="w-1/3 h-full bg-indigo-100 group-hover:bg-indigo-400 transition-all"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {!loading && habilidades.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 text-slate-300 border-2 border-dashed border-slate-100 rounded-[2rem]">
-                <p className="font-black uppercase text-[10px] tracking-widest">O catálogo está vazio</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-      </main>
-    </div>
-  )
+      <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8"><div className="mb-7 flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Estrutura atual</p><h2 className="mt-2 text-2xl font-bold">Grupos e categorias</h2></div><div className="text-right text-xs text-muted-foreground"><strong className="block text-2xl text-foreground">{categorias.length}</strong> categorias</div></div>{loading ? <div className="flex min-h-80 items-center justify-center text-sm text-muted-foreground">Carregando catálogo...</div> : error ? <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">{error}</div> : grupos.length === 0 ? <div className="flex min-h-80 flex-col items-center justify-center rounded-2xl border border-dashed border-border text-center"><Layers3 className="mb-3 text-muted-foreground" /><p className="font-semibold">Nenhum grupo cadastrado</p><p className="mt-1 text-sm text-muted-foreground">Comece criando o primeiro grupo ao lado.</p></div> : <div className="flex flex-col gap-3">{grupos.map(grupo => { const items = categorias.filter(categoria => String(categoria.grupo_id) === String(grupo.id)); return <article key={grupo.id} className="rounded-2xl border border-border p-5 transition hover:border-primary/40"><div className="flex items-center justify-between gap-4"><div className="flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-xl bg-muted text-lg">{grupo.icone || '•'}</div><div><h3 className="font-bold">{grupo.nome}</h3><p className="text-xs text-muted-foreground">{items.length} {items.length === 1 ? 'categoria' : 'categorias'}</p></div></div><span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">Ordem {grupo.ordem ?? 0}</span></div>{items.length > 0 && <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">{items.map(item => <span key={item.id} className="inline-flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm font-medium">{item.nome}{item.destaque && <Star className="text-primary" data-icon="inline-end" />}</span>)}</div>}</article> })}</div>}</div>
+    </section>
+  </main>
 }
