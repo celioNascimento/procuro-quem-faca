@@ -33,10 +33,10 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
 
       {/* ── Topo: Avatar e Informações ── */}
       <div className="flex items-center gap-4">
-        <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-[1.25rem] border border-slate-100 shadow-sm overflow-hidden bg-slate-50">
+        <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 md:size-28">
           <img
             src={prestador?.foto_perfil || '/placeholder-avatar.png'}
-            className="w-full h-full object-contain p-1"
+            className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:scale-[1.02]"
             alt={prestador?.nome}
           />
         </div>
