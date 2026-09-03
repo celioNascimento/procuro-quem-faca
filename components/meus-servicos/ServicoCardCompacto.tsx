@@ -75,7 +75,7 @@ export default function ServicoCardCompacto({
         <div className="w-14 h-14 rounded-[14px] overflow-hidden">
           <img
             src={servico.prestadores?.foto_perfil || '/placeholder-avatar.png'}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain p-1"
             alt={servico.prestadores?.nome ?? 'Prestador'}
           />
         </div>
