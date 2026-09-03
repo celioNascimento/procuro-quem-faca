@@ -11,6 +11,7 @@ import CardPerfilCliente from '@/components/perfil/CardPerfilCliente'
 import ServicoCardCompacto from '@/components/meus-servicos/ServicoCardCompacto'
 import { AdCardPainelCliente } from '@/components/painel/AdCardPainelCliente'
 import { usePerfilCliente } from '@/hooks/usePerfilCliente'
+import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 
 export default function PerfilDoCliente() {
   const {
@@ -20,6 +21,7 @@ export default function PerfilDoCliente() {
     aba, setAba,
     filtroStatus, setFiltroStatus,
     loading,
+    perfilCarregado,
     uploading,
     loadingServicos,
     showSuccess,
@@ -45,6 +47,10 @@ export default function PerfilDoCliente() {
     garantiaCount,
     reclamacaoCount,
   } = usePerfilCliente()
+
+  if (loading || !perfilCarregado || loadingServicos) {
+    return <PainelDoClienteSkeleton />
+  }
 
   const inputStyle = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-slate-800 bg-white shadow-sm placeholder-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400 text-[14px] md:text-[15px]`
 
