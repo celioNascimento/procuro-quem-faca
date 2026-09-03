@@ -2,7 +2,9 @@
 
 'use client'
 
+import { MessageCircle } from 'lucide-react'
 import type { Grupo, Categoria } from '@/types/categorias'
+import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 
 interface SecaoOQueVoceFazProps {
   grupoId: string | number
@@ -56,6 +58,18 @@ export function SecaoOQueVoceFaz({
           {listaCategorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
         </select>
       </div>
+
+      <a
+        href={`https://wa.me/${NUMERO_WHATSAPP_PQF}?text=${encodeURIComponent(
+          'Olá! Estou cadastrando meu perfil de prestador e não encontrei a categoria que descreve meu trabalho. Gostaria de sugerir uma nova categoria.'
+        )}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-100"
+      >
+        <MessageCircle data-icon="inline-start" aria-hidden="true" />
+        Não encontrou sua categoria? Sugira uma nova pelo WhatsApp
+      </a>
 
       {categoriaId && habilidadesExtras.length > 0 && (
         <div className="pt-2">
