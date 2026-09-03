@@ -68,6 +68,9 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
 
         const { data: prestadorRaw, error: prestadorError } = await query.single()
         if (prestadorError) throw prestadorError
+        if (prestadorRaw.bloqueado === true) {
+          throw new Error('PERFIL_BLOQUEADO')
+        }
 
         const { data: avaliacoesRaw, error: avalError } = await supabase
           .from('avaliacoes')

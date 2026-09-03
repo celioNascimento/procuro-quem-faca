@@ -7,6 +7,7 @@ import {
   fetchDenuncias,
   atualizarStatusDenuncia,
   bloquearPrestadorDenunciado,
+  desbloquearPrestador,
   type DenunciaComPrestador,
 } from '@/lib/services/denuncia.service'
 import { insertLog } from '@/lib/db/logs'
@@ -72,5 +73,16 @@ export function useModeracao() {
     }
   }, [carregar])
 
-  return { denuncias, loading, filtro, setFiltro, processando, arquivar, resolverSemBloqueio, resolverComBloqueio }
+  const desbloquear = useCallback(async (denunciaId: string, prestadorId: number) => {
+    setProcessando(denunciaId)
+    try {
+      await desbloquearPrestador(prestadorId)
+      await insertLog({ acao: 'PRESTADOR_DESBLOQUEADO', entidadeTipo: 'prestador', entidadeId: String(prestadorId) })
+      await carregar()
+    } finally {
+      setProcessando(null)
+    }
+  }, [carregar])
+
+  return { denuncias, loading, filtro, setFiltro, processando, arquivar, resolverSemBloqueio, resolverComBloqueio, desbloquear }
 }

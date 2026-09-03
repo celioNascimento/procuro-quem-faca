@@ -67,3 +67,11 @@ export async function criarDenuncia(prestadorId: number, motivo: string): Promis
       .eq('id', prestadorId)
     if (error) throw error
   }
+
+  export async function desbloquearPrestador(prestadorId: number): Promise<void> {
+    const { error } = await supabase
+      .from('prestadores')
+      .update({ bloqueado: false, motivo_bloqueio: null, status: 'ativo' })
+      .eq('id', prestadorId)
+    if (error) throw error
+  }

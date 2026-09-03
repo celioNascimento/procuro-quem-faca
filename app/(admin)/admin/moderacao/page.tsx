@@ -13,7 +13,7 @@ const FILTROS = [
 ] as const
 
 export default function ModeracaoPage() {
-  const { denuncias, loading, filtro, setFiltro, processando, arquivar, resolverSemBloqueio, resolverComBloqueio } = useModeracao()
+  const { denuncias, loading, filtro, setFiltro, processando, arquivar, resolverSemBloqueio, resolverComBloqueio, desbloquear } = useModeracao()
   const [motivoBloqueio, setMotivoBloqueio] = useState<Record<string, string>>({})
 
   return (
@@ -101,7 +101,15 @@ export default function ModeracaoPage() {
                     <Archive size={12} /> Arquivar
                   </button>
 
-                  {!d.prestadores?.bloqueado && (
+                  {d.prestadores?.bloqueado ? (
+                    <button
+                      onClick={() => desbloquear(d.id, d.prestador_id)}
+                      disabled={processando === d.id}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 text-[10px] font-black uppercase text-red-600 transition-all hover:bg-red-100 disabled:opacity-50 sm:w-auto"
+                    >
+                      {processando === d.id ? <Loader2 size={12} className="animate-spin" /> : <ShieldOff size={12} />} Desbloquear perfil
+                    </button>
+                  ) : (
                     <div className="flex min-w-0 w-full flex-col items-stretch gap-2 sm:flex-1 sm:flex-row sm:items-center">
                       <input
                         type="text"
