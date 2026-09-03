@@ -105,7 +105,6 @@ export default function PerfilDoCliente() {
         <header className="mb-6 flex max-w-2xl flex-col gap-2 sm:mb-8">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área do cliente</p>
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Acompanhe seus projetos</h1>
-          <p className="text-pretty text-sm font-medium leading-relaxed text-slate-500">Gerencie serviços contratados, avaliações pendentes e os dados da sua conta.</p>
         </header>
 
         <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[20rem_minmax(0,1fr)]">
