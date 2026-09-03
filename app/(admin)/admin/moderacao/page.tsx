@@ -84,24 +84,28 @@ export default function ModeracaoPage() {
 
               <p className="text-sm text-slate-600 mb-4">{d.motivo}</p>
 
-              {d.status === 'aberta' && (
+              {(d.status === 'aberta' || d.prestadores?.bloqueado) && (
                 <div className="flex min-w-0 flex-col items-stretch gap-2 border-t border-slate-50 pt-3 sm:flex-row sm:flex-wrap sm:items-center">
-                  <button
-                    onClick={() => resolverSemBloqueio(d.id)}
-                    disabled={processando === d.id}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase bg-green-50 text-green-600 hover:bg-green-100 transition-all disabled:opacity-50"
-                  >
-                    <CheckCircle2 size={12} /> Resolver
-                  </button>
-                  <button
-                    onClick={() => arquivar(d.id)}
-                    disabled={processando === d.id}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all disabled:opacity-50"
-                  >
-                    <Archive size={12} /> Arquivar
-                  </button>
+                  {d.status === 'aberta' && (
+                    <>
+                      <button
+                        onClick={() => resolverSemBloqueio(d.id)}
+                        disabled={processando === d.id}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase bg-green-50 text-green-600 hover:bg-green-100 transition-all disabled:opacity-50"
+                      >
+                        <CheckCircle2 size={12} /> Resolver
+                      </button>
+                      <button
+                        onClick={() => arquivar(d.id)}
+                        disabled={processando === d.id}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all disabled:opacity-50"
+                      >
+                        <Archive size={12} /> Arquivar
+                      </button>
+                    </>
+                  )}
 
-                  {d.prestadores?.bloqueado ? (
+                  {d.prestadores?.bloqueado && d.prestador_id ? (
                     <button
                       onClick={() => desbloquear(d.id, d.prestador_id)}
                       disabled={processando === d.id}
@@ -109,7 +113,7 @@ export default function ModeracaoPage() {
                     >
                       {processando === d.id ? <Loader2 size={12} className="animate-spin" /> : <ShieldOff size={12} />} Desbloquear perfil
                     </button>
-                  ) : (
+                  ) : d.status === 'aberta' ? (
                     <div className="flex min-w-0 w-full flex-col items-stretch gap-2 sm:flex-1 sm:flex-row sm:items-center">
                       <input
                         type="text"
@@ -126,7 +130,7 @@ export default function ModeracaoPage() {
                         {processando === d.id ? <Loader2 size={12} className="animate-spin" /> : <ShieldOff size={12} />} Bloquear
                       </button>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               )}
             </div>
