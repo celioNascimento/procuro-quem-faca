@@ -130,11 +130,11 @@ export default function PerfilDoCliente() {
             <AdCardPainelCliente servicos={servicos} loading={loadingServicos} />
 
             {(avaliarCount > 0 || garantiaCount > 0 || reclamacaoCount > 0) && (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0">
             {avaliarCount > 0 && (
               <button
                 onClick={irParaAvaliar}
-                className="group flex min-h-24 w-full items-center gap-3 rounded-2xl bg-blue-600 p-4 text-left shadow-md shadow-blue-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
+                className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-blue-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-blue-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
               >
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
                   <Star size={22} className="text-white" fill="white" />
@@ -152,7 +152,7 @@ export default function PerfilDoCliente() {
             {garantiaCount > 0 && (
               <button
                 onClick={() => { setAba('servicos'); setFiltroStatus('garantia') }}
-                className="group flex min-h-24 w-full items-center gap-3 rounded-2xl bg-orange-600 p-4 text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
+                className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
               >
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
                   <ShieldAlert size={22} className="text-white" />
@@ -170,7 +170,7 @@ export default function PerfilDoCliente() {
             {reclamacaoCount > 0 && (
               <button
                 onClick={() => { setAba('servicos'); setFiltroStatus('reclamacao') }}
-                className="group flex min-h-24 w-full items-center gap-3 rounded-2xl bg-orange-600 p-4 text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
+                className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
               >
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
                   <MessageCircleWarning size={22} className="text-white" />
@@ -187,6 +187,10 @@ export default function PerfilDoCliente() {
 
               </div>
             )}
+
+            <p className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 sm:hidden">
+              Deslize para ver mais alertas
+            </p>
 
             <nav
               className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-28"
