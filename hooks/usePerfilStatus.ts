@@ -8,6 +8,8 @@ export function usePerfilStatus() {
   const [cadastroCompleto, setCadastroCompleto] = useState(false)
   const [validando, setValidando] = useState(true)
   const [slug, setSlug] = useState<string | null>(null)
+  const [bloqueado, setBloqueado] = useState(false)
+  const [motivoBloqueio, setMotivoBloqueio] = useState<string | null>(null)
 
   const verificar = useCallback(async () => {
     try {
@@ -24,6 +26,8 @@ export function usePerfilStatus() {
       )
       setCadastroCompleto(completo)
       setSlug(prestador?.slug || null)
+      setBloqueado(prestador?.bloqueado === true || prestador?.status === 'bloqueado')
+      setMotivoBloqueio(prestador?.motivo_bloqueio || null)
     } catch {
       setCadastroCompleto(false)
     } finally {
@@ -35,5 +39,5 @@ export function usePerfilStatus() {
     verificar()
   }, [verificar])
 
-  return { cadastroCompleto, validando, slug, revalidar: verificar }
+  return { cadastroCompleto, validando, slug, bloqueado, motivoBloqueio, revalidar: verificar }
 }

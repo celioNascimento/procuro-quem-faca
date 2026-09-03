@@ -7,14 +7,14 @@ import { useSearchParams } from 'next/navigation'
 import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
 import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
-import { Lock, UserCircle2, Images, Loader2 } from 'lucide-react'
+import { Lock, UserCircle2, Images, Loader2, ShieldAlert } from 'lucide-react'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 
 function PerfilPageContent() {
   const searchParams = useSearchParams()
   const abaInicial = searchParams.get('aba') === 'perfil' ? 'perfil' : 'portfolio'
   const [abaAtiva, setAbaAtiva] = useState(abaInicial)
-  const { cadastroCompleto, validando, slug } = usePerfilStatus()
+  const { cadastroCompleto, validando, slug, bloqueado, motivoBloqueio } = usePerfilStatus()
 
   useEffect(() => {
     if (!validando && !cadastroCompleto) setAbaAtiva('perfil')
@@ -45,6 +45,18 @@ function PerfilPageContent() {
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Gerencie sua presença profissional</h1>
         </div>
       </header>
+
+      {bloqueado && (
+        <section className="mt-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-950" role="alert" aria-labelledby="perfil-bloqueado-titulo">
+          <ShieldAlert className="mt-0.5 size-5 shrink-0 text-red-600" aria-hidden="true" />
+          <div className="min-w-0 space-y-1">
+            <h2 id="perfil-bloqueado-titulo" className="text-sm font-black uppercase tracking-wide text-red-700">Seu perfil está bloqueado</h2>
+            <p className="text-sm leading-6 text-red-900">Seu perfil foi temporariamente retirado da busca e os clientes não conseguem iniciar contato por ele.</p>
+            {motivoBloqueio && <p className="text-sm leading-6 text-red-800"><strong>Motivo informado pela moderação:</strong> {motivoBloqueio}</p>}
+            <p className="pt-1 text-xs leading-5 text-red-800">Revise o motivo acima e entre em contato com a equipe de suporte caso precise de esclarecimentos.</p>
+          </div>
+        </section>
+      )}
 
       <div className="pt-6">
         <AdCardDashboard />
