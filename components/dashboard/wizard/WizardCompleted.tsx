@@ -39,7 +39,23 @@ export function WizardCompleted({ hookData, prestadorId }: Props) {
       motivos,
     })
     if (error) {
-      setErroEnvio(error.code === '23505' ? 'Este cliente já foi avaliado neste serviço.' : 'Não foi possível enviar agora.')
+      console.error('[v0] Falha ao salvar avaliação do cliente:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      })
+
+      const mensagem =
+        error.code === '23505'
+          ? 'Este cliente já foi avaliado neste serviço.'
+          : error.code === '42501'
+            ? 'Você não tem permissão para avaliar este projeto. Verifique se o cliente está vinculado e se o serviço foi concluído.'
+            : error.code === '42P01'
+              ? 'A função de avaliações ainda não está disponível neste ambiente.'
+              : 'Não foi possível enviar agora. Tente novamente.'
+
+      setErroEnvio(mensagem)
       return
     }
     setEnviada(true)
