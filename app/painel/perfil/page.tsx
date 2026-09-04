@@ -11,6 +11,7 @@ import CardPerfilCliente from '@/components/perfil/CardPerfilCliente'
 import ServicoCardCompacto from '@/components/meus-servicos/ServicoCardCompacto'
 import { AdCardPainelCliente } from '@/components/painel/AdCardPainelCliente'
 import { usePerfilCliente } from '@/hooks/usePerfilCliente'
+import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 
 export default function PerfilDoCliente() {
   const {
@@ -20,6 +21,7 @@ export default function PerfilDoCliente() {
     aba, setAba,
     filtroStatus, setFiltroStatus,
     loading,
+    perfilCarregado,
     uploading,
     loadingServicos,
     showSuccess,
@@ -45,6 +47,10 @@ export default function PerfilDoCliente() {
     garantiaCount,
     reclamacaoCount,
   } = usePerfilCliente()
+
+  if (loading || !perfilCarregado || loadingServicos) {
+    return <PainelDoClienteSkeleton />
+  }
 
   const inputStyle = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-slate-800 bg-white shadow-sm placeholder-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400 text-[14px] md:text-[15px]`
 
@@ -128,12 +134,14 @@ export default function PerfilDoCliente() {
           <div className="flex min-w-0 flex-col gap-6">
             <AdCardPainelCliente servicos={servicos} loading={loadingServicos} />
 
+            {(avaliarCount > 0 || garantiaCount > 0 || reclamacaoCount > 0) && (
+              <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0">
             {avaliarCount > 0 && (
               <button
                 onClick={irParaAvaliar}
-                className="flex w-full items-center gap-4 rounded-[2rem] bg-blue-600 p-5 text-left shadow-lg shadow-blue-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-6"
+                className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-blue-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-blue-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
               >
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
                   <Star size={22} className="text-white" fill="white" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -142,16 +150,16 @@ export default function PerfilDoCliente() {
                   </p>
                   <p className="text-blue-200 text-[11px] font-medium mt-1">Toque para avaliar e concluir</p>
                 </div>
-                <ArrowRight size={20} className="text-white/70 shrink-0" />
+                <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
               </button>
             )}
 
             {garantiaCount > 0 && (
               <button
                 onClick={() => { setAba('servicos'); setFiltroStatus('garantia') }}
-                className="flex w-full items-center gap-4 rounded-[2rem] bg-orange-600 p-5 text-left shadow-lg shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-6"
+                className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
               >
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
                   <ShieldAlert size={22} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -160,16 +168,16 @@ export default function PerfilDoCliente() {
                   </p>
                   <p className="text-orange-200 text-[11px] font-medium mt-1">Toque para acompanhar</p>
                 </div>
-                <ArrowRight size={20} className="text-white/70 shrink-0" />
+                <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
               </button>
             )}
 
             {reclamacaoCount > 0 && (
               <button
                 onClick={() => { setAba('servicos'); setFiltroStatus('reclamacao') }}
-                className="flex w-full items-center gap-4 rounded-[2rem] bg-orange-600 p-5 text-left shadow-lg shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-6"
+                className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
               >
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
                   <MessageCircleWarning size={22} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -178,9 +186,16 @@ export default function PerfilDoCliente() {
                   </p>
                   <p className="text-orange-200 text-[11px] font-medium mt-1">Toque para acompanhar</p>
                 </div>
-                <ArrowRight size={20} className="text-white/70 shrink-0" />
+                <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
               </button>
             )}
+
+              </div>
+            )}
+
+            <p className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 sm:hidden">
+              Deslize para ver mais alertas
+            </p>
 
             <nav
               className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-28"
