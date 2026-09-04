@@ -243,7 +243,7 @@ export function UploadWizardContainer({
         ══════════════════════════════════════════ */}
         {isProjetoConcluido ? (
           <>
-            <WizardCompleted hookData={hookData} />
+            <WizardCompleted hookData={hookData} prestadorId={prestadorId} />
 
             {/* Garantia elegível por garantia_dias, independente de sem_fotos */}
             {projetoId && (

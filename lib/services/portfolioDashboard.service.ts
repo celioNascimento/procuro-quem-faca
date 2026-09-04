@@ -24,7 +24,7 @@ export async function getPrestadorPerfilDoUsuario(userId: string) {
 // decidir o visual (badge "Sem registro fotográfico" em vez de contagem de fotos).
 const SELECT_PROJETO_COM_GARANTIA = `
   id, titulo, status, created_at, prestador_id,
-  cliente_nome, cliente_whatsapp,
+  cliente_nome, cliente_user_id, cliente_whatsapp,
   sem_fotos, marcado_concluido_at,
   portfolio_fotos (id, url_foto, ordem),
   avaliacoes (id),
