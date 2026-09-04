@@ -6,8 +6,9 @@ import { useSearchParams } from 'next/navigation'
 
 import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
+import AvaliacoesDashboardTab from '@/components/dashboard/AvaliacoesDashboardTab'
 import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
-import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send } from 'lucide-react'
+import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Star } from 'lucide-react'
 import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 
@@ -16,7 +17,7 @@ function PerfilPageContent() {
   const abaInicial = searchParams.get('aba') === 'perfil' ? 'perfil' : 'portfolio'
   const [abaAtiva, setAbaAtiva] = useState(abaInicial)
   const [mensagemSuporte, setMensagemSuporte] = useState('')
-  const { cadastroCompleto, validando, slug, bloqueado, motivoBloqueio } = usePerfilStatus()
+  const { cadastroCompleto, validando, slug, prestadorId, bloqueado, motivoBloqueio } = usePerfilStatus()
   const linkSuporte = `https://wa.me/${NUMERO_WHATSAPP_PQF}?text=${encodeURIComponent(`Olá, equipe Procuro Quem Faça. Meu perfil ${slug ? `(${slug}) ` : ''}foi bloqueado e gostaria de solicitar esclarecimentos.\n\n${mensagemSuporte.trim()}`)}`
 
   useEffect(() => {
@@ -28,6 +29,13 @@ function PerfilPageContent() {
       id: 'portfolio',
       label: 'Meus Projetos',
       icon: <Images size={14} />,
+      bloqueado: !cadastroCompleto,
+      externo: false,
+    },
+    {
+      id: 'avaliacoes',
+      label: 'Avaliações',
+      icon: <Star size={14} />,
       bloqueado: !cadastroCompleto,
       externo: false,
     },
@@ -125,7 +133,7 @@ function PerfilPageContent() {
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Verificando seu perfil</p>
           </div>
         ) : (
-          abaAtiva === 'perfil' ? <EditarPerfilTab /> : <PortfolioDashboardTab />
+          abaAtiva === 'perfil' ? <EditarPerfilTab /> : abaAtiva === 'avaliacoes' ? <AvaliacoesDashboardTab prestadorId={prestadorId} /> : <PortfolioDashboardTab />
         )}
       </div>
     </div>
