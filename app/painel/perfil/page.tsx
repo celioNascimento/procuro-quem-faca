@@ -226,11 +226,11 @@ export default function PerfilDoCliente() {
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {[
-                    { id: 'todos',       label: 'Todos'                                              },
-                    { id: 'pendente',    label: 'Aceitar'                                            },
-                    { id: 'andamento',   label: 'Em andamento'                                       },
-                    { id: 'avaliar',     label: avaliarCount > 0 ? `Avaliar (${avaliarCount})` : 'Avaliar' },
-                    { id: 'finalizados', label: 'Concluídos'                                         },
+{ id: 'todos',       label: `Todos (${servicos.length})` },
+  { id: 'pendente',    label: `Aceitar (${servicos.filter(s => s.status === 'em_registro').length})` },
+  { id: 'andamento',   label: `Em andamento (${servicos.filter(s => s.status === 'em_execucao').length})` },
+  { id: 'avaliar',     label: `Avaliar (${avaliarCount})` },
+  { id: 'finalizados', label: `Concluídos (${servicos.filter(s => s.status === 'finalizado').length})` },
                     ...(garantiaCount > 0 ? [{ id: 'garantia', label: `Garantia (${garantiaCount})` }] : []),
                     ...(reclamacaoCount > 0 ? [{ id: 'reclamacao', label: `Reclamação (${reclamacaoCount})` }] : []),
                   ].map(f => {
