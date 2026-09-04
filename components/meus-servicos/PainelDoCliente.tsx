@@ -42,7 +42,14 @@ export default function PainelDoCliente() {
   const [salvandoWhatsapp, setSalvandoWhatsapp] = useState(false)
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    window.history.scrollRestoration = 'manual'
+    const irParaTopo = () => window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    irParaTopo()
+    const frame = requestAnimationFrame(() => {
+      irParaTopo()
+      requestAnimationFrame(irParaTopo)
+    })
+    return () => cancelAnimationFrame(frame)
   }, [])
 
   useEffect(() => {
