@@ -95,9 +95,18 @@ export function WizardCompleted({ hookData, prestadorId }: Props) {
           )}
         </div>
       ) : (
-        <div className="relative bg-slate-900 flex items-center justify-center min-h-[350px] overflow-hidden group">
-          <img src={fotoAtual.url || undefined} className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-40 scale-125" aria-hidden="true" />
-          <img src={fotoAtual.url || undefined} className="relative z-10 max-w-full max-h-full object-contain shadow-2xl" alt="Registro final" />
+        <div className="relative flex aspect-[4/3] min-h-[350px] max-h-[560px] shrink-0 items-center justify-center overflow-hidden bg-slate-900 group">
+          {fotoAtual.url ? (
+            <>
+              <img src={fotoAtual.url} width={1200} height={900} loading="eager" decoding="async" className="absolute inset-0 h-full w-full object-cover blur-3xl opacity-40 scale-125" aria-hidden="true" />
+              <img src={fotoAtual.url} width={1200} height={900} loading="eager" decoding="async" className="relative z-10 max-h-full max-w-full object-contain shadow-2xl" alt="Registro final" />
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-3 text-white/50" role="status" aria-label="Carregando imagens do projeto">
+              <div className="size-8 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Carregando registros</span>
+            </div>
+          )}
           <div className="absolute top-6 right-6 bg-black/60 backdrop-blur-xl text-white px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-white/20 z-30">
             Fase 0{fotoAtual.etapa}
           </div>
