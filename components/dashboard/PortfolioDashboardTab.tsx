@@ -35,7 +35,7 @@ export default function PortfolioDashboardTab() {
     <div className="pb-12 sm:pb-16">
       <div className="min-w-0">
         {showWizard && meuPrestadorId !== null ? (
-            <div className="animate-in fade-in duration-300">
+            <div className="min-h-[32rem] animate-in fade-in duration-150">
               <UploadWizardContainer
                 key={projetoParaEdicao?.id || 'novo'}
                 prestadorId={meuPrestadorId}

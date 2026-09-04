@@ -81,10 +81,19 @@ export function usePortfolioDashboard() {
 
   useEffect(() => { carregarDados() }, [carregarDados])
 
-  const abrirEdicao = async (projeto: Projeto) => {
-    const atualizado = await getProjetoAtualizado(projeto.id)
-    setProjetoParaEdicao(atualizado ?? projeto)
+  const abrirEdicao = (projeto: Projeto) => {
+    // Abre imediatamente com os dados já presentes no card; detalhes extras
+    // são atualizados em segundo plano sem bloquear o toque.
+    setProjetoParaEdicao(projeto)
     setShowWizard(true)
+
+    void getProjetoAtualizado(projeto.id)
+      .then((atualizado) => {
+        if (atualizado) setProjetoParaEdicao(atualizado)
+      })
+      .catch((err) => {
+        console.error('[v0] Erro ao atualizar projeto em segundo plano:', err)
+      })
   }
 
   const abrirNovo = () => {
