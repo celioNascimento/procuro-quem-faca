@@ -24,6 +24,10 @@ export default function PaginaAcompanhamento({
 }) {
   const { token } = use(paramsPromise)
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [token])
+
   const {
     projeto, comentarios, fotosOrdenadas, temConclusao, labelEtapaAtual,
     loading, mounted, fotoSelecionada, setFotoSelecionada,

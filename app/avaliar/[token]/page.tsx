@@ -1,7 +1,7 @@
 //avaliacao/[token]/page.tsx
 
 'use client'
-import { use } from 'react'
+import { use, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck, ChevronRight } from 'lucide-react'
 import { useAvaliar } from '@/hooks/useAvaliacao'
@@ -18,6 +18,10 @@ export default function PaginaAvaliar({
 }) {
   const { token } = use(paramsPromise)
   const router = useRouter()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [token])
 
   const {
     projeto, avaliacaoExistente, avaliacaoFinalizada,

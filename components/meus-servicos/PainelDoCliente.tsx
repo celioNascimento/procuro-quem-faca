@@ -10,6 +10,7 @@ import ServicoCard from './ServicoCard'
 import ZoomImageModal from './ZoomImageModal'
 import { usePainelCliente } from '@/hooks/usePainelCliente'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
+import { AdCardPainelCliente } from '@/components/painel/AdCardPainelCliente'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido' | 'garantia' | 'reclamacao'
@@ -39,6 +40,10 @@ export default function PainelDoCliente() {
 
   const [whatsappEditado,  setWhatsappEditado]  = useState('')
   const [salvandoWhatsapp, setSalvandoWhatsapp] = useState(false)
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [])
 
   useEffect(() => {
     if (confirmandoWhatsapp?.cliente_whatsapp) {
@@ -198,8 +203,9 @@ export default function PainelDoCliente() {
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto px-5 pt-24 md:pt-36 animate-in fade-in duration-700">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+      <div className="mx-auto max-w-5xl px-5 pt-24 md:pt-36 animate-in fade-in duration-700">
+        <AdCardPainelCliente servicos={servicos as any} loading={loading} />
+        <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:gap-8">
 
           {/* ── Coluna Esquerda ── */}
           <div className="w-full lg:w-1/3 shrink-0">
