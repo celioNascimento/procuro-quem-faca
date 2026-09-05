@@ -38,8 +38,8 @@ export function useAdminDashboard() {
   const [stats, setStats] = useState<Stats>(STATS_INICIAL)
   const [radar, setRadar] = useState<RadarItem[]>([])
   const [refreshing, setRefreshing] = useState(false)
-  const [notificacao, setNotificacao] = useState<string | null>(null)
-
+  const [notificacao, setNotificacao] = useState<string | null>(null  )
+  const hapticFeedback = useHaptic()
 
   const carregarDashboard = useCallback(async (isRefresh = false) => {
     if (isRefresh) { setRefreshing(true); hapticFeedback(15) }
