@@ -1,8 +1,9 @@
-//dashboard/wizard/WizardCompleted.tsx 
+//dashboard/wizard/WizardCompleted.tsx
 
 import { CheckCircle2, ChevronRight, ChevronLeft, MoreHorizontal, User, Share2, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { useUploadWizard } from '@/hooks/useUploadWizard'
 import { useAvaliacaoDoProjeto } from '@/hooks/useAvaliacaoDoProjeto'
+import { useAvaliacaoClienteDoProjeto } from '@/hooks/useAvaliacaoClienteDoProjeto'
 import { supabase } from '@/lib/supabase'
 import { AvaliacaoClienteRapida } from '../AvaliacoesDashboardTab'
 import { useState } from 'react'
@@ -21,7 +22,13 @@ export function WizardCompleted({ hookData, prestadorId }: Props) {
   // Só busca avaliação no fluxo sem_fotos — no fluxo com fotos o feedback
   // do cliente já aparece via comentariosSlideAtual (comentários por foto).
   const { avaliacao, loading: loadingAvaliacao } = useAvaliacaoDoProjeto(semFotos ? projetoId : null)
-  const [enviada, setEnviada] = useState(false)
+
+  // Avaliação que o PRESTADOR fez sobre o CLIENTE (tabela avaliacoes_clientes).
+  // Buscada do banco em vez de guardada em estado local, para persistir
+  // corretamente ao sair e voltar da tela.
+  const { avaliacao: avaliacaoCliente, loading: loadingAvaliacaoCliente, refetch: refetchAvaliacaoCliente } = useAvaliacaoClienteDoProjeto(projetoId)
+  const jaAvaliouCliente = !!avaliacaoCliente
+
   const [erroEnvio, setErroEnvio] = useState<string | null>(null)
 
   const enviarAvaliacaoCliente = async (nota: number, motivos: string[]) => {
@@ -58,7 +65,9 @@ export function WizardCompleted({ hookData, prestadorId }: Props) {
       setErroEnvio(mensagem)
       return
     }
-    setEnviada(true)
+    // Atualiza a partir do banco em vez de estado local — mantém a UI
+    // consistente com o que está realmente persistido.
+    await refetchAvaliacaoCliente()
   }
 
   return (
@@ -136,15 +145,27 @@ export function WizardCompleted({ hookData, prestadorId }: Props) {
       )}
 
       <div className="flex flex-col bg-white border-t border-slate-50 overflow-hidden">
-        {!enviada ? (
-          <div className="border-b border-slate-100 bg-slate-50 p-5">
-            <AvaliacaoClienteRapida onSubmit={enviarAvaliacaoCliente} />
-            {!hookData.state.clienteUserId && <p className="mt-3 text-center text-[11px] font-bold text-amber-700">Este projeto antigo ainda não está vinculado a uma conta de cliente.</p>}
-            {erroEnvio && <p role="alert" className="mt-3 text-center text-xs font-bold text-red-600">{erroEnvio}</p>}
-          </div>
-        ) : enviada ? (
-          <div className="border-b border-green-100 bg-green-50 p-5 text-center text-sm font-black text-green-700">Avaliação do cliente registrada.</div>
-        ) : null}
+        <div className="border-b border-slate-100 bg-slate-50 p-5">
+          {loadingAvaliacaoCliente ? (
+            <div className="h-40 rounded-3xl bg-slate-100 animate-pulse" />
+          ) : jaAvaliouCliente ? (
+            <>
+              <AvaliacaoClienteRapida
+                onSubmit={enviarAvaliacaoCliente}
+                somenteLeitura
+                notaInicial={avaliacaoCliente!.nota}
+                motivosIniciais={avaliacaoCliente!.motivos}
+              />
+              <p className="mt-3 text-center text-xs font-bold text-green-700">Avaliação do cliente registrada.</p>
+            </>
+          ) : (
+            <>
+              <AvaliacaoClienteRapida onSubmit={enviarAvaliacaoCliente} />
+              {!hookData.state.clienteUserId && <p className="mt-3 text-center text-[11px] font-bold text-amber-700">Este projeto antigo ainda não está vinculado a uma conta de cliente.</p>}
+              {erroEnvio && <p role="alert" className="mt-3 text-center text-xs font-bold text-red-600">{erroEnvio}</p>}
+            </>
+          )}
+        </div>
         {!semFotos && (
           <div className="p-6 space-y-6">
             <div className="space-y-3">
