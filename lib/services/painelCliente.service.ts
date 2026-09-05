@@ -13,7 +13,8 @@ const SELECT_SERVICOS = `
   *,
   prestadores (id, user_id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
   portfolio_fotos (*),
-  solicitacoes_garantia (id, status, origem, tipo, prazo_resposta)
+  solicitacoes_garantia (id, status, origem, tipo, prazo_resposta),
+  avaliacoes_clientes (id, nota, motivos, created_at)
 `
 
 const STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado', 'em_disputa']
