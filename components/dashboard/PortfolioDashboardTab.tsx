@@ -1,7 +1,6 @@
-//components/dashboard/PortfolioDashboardTab.tsx
-
 'use client'
 
+import { useEffect } from 'react'
 import { usePortfolioDashboard } from '@/hooks/usePortfolioDashboard'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
@@ -16,6 +15,12 @@ export default function PortfolioDashboardTab() {
     showWizard, projetoParaEdicao, totalConcluidos, totalAtivos,
     abrirEdicao, abrirNovo, fecharWizard,
   } = usePortfolioDashboard()
+
+  useEffect(() => {
+    if (showWizard) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [showWizard])
 
   if (loading) {
     return (
@@ -35,16 +40,16 @@ export default function PortfolioDashboardTab() {
     <div className="pb-12 sm:pb-16">
       <div className="min-w-0">
         {showWizard && meuPrestadorId !== null ? (
-            <div className="min-h-[32rem] animate-in fade-in duration-150">
-              <UploadWizardContainer
-                key={projetoParaEdicao?.id || 'novo'}
-                prestadorId={meuPrestadorId}
-                projetoExistente={projetoParaEdicao}
-                onComplete={fecharWizard}
-                onVoltar={fecharWizard}
-                isEdicao={!!projetoParaEdicao}
-              />
-            </div>
+          <div className="min-h-[32rem] animate-in fade-in duration-150">
+            <UploadWizardContainer
+              key={projetoParaEdicao?.id || 'novo'}
+              prestadorId={meuPrestadorId}
+              projetoExistente={projetoParaEdicao}
+              onComplete={fecharWizard}
+              onVoltar={fecharWizard}
+              isEdicao={!!projetoParaEdicao}
+            />
+          </div>
         ) : (
           <div className="flex flex-col gap-6">
             {perfilPrestador?.slug && (
@@ -57,31 +62,31 @@ export default function PortfolioDashboardTab() {
               </Link>
             )}
             <DashboardHeader
-                totalProjetos={projetos.length}
-                totalConcluidos={totalConcluidos}
-                totalAtivos={totalAtivos}
-                onNovoProjeto={abrirNovo}
-              />
-              {projetos.length === 0 && <EstadoVazio onNovoProjeto={abrirNovo} />}
-              {projetos.length > 0 && (
-                <div className="grid gap-4 xl:grid-cols-2">
-                  {projetos.map(proj => (
-                    <ProjetoCard key={proj.id} projeto={proj} onClick={abrirEdicao} />
-                  ))}
-                  {projetos.length % 2 !== 0 && (
-                    <button
-                      type="button"
-                      onClick={abrirNovo}
-                      className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-[1.75rem] border-2 border-dashed border-slate-200 bg-white text-slate-400 transition-colors hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
-                    >
-                      <span className="text-2xl font-black leading-none" aria-hidden="true">+</span>
-                      <span className="text-[10px] font-black uppercase tracking-widest">Novo projeto</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+              totalProjetos={projetos.length}
+              totalConcluidos={totalConcluidos}
+              totalAtivos={totalAtivos}
+              onNovoProjeto={abrirNovo}
+            />
+            {projetos.length === 0 && <EstadoVazio onNovoProjeto={abrirNovo} />}
+            {projetos.length > 0 && (
+              <div className="grid gap-4 xl:grid-cols-2">
+                {projetos.map(proj => (
+                  <ProjetoCard key={proj.id} projeto={proj} onClick={abrirEdicao} />
+                ))}
+                {projetos.length % 2 !== 0 && (
+                  <button
+                    type="button"
+                    onClick={abrirNovo}
+                    className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-[1.75rem] border-2 border-dashed border-slate-200 bg-white text-slate-400 transition-colors hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
+                  >
+                    <span className="text-2xl font-black leading-none" aria-hidden="true">+</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Novo projeto</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
