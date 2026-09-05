@@ -2,11 +2,8 @@ import { supabase } from '@/lib/supabase'
 
 export async function getSugestoesDestaque() {
   return supabase
-    .from('categorias')
-    .select('nome, prestadores(count)')
-    .eq('prestadores.status', 'aprovado')
-    .eq('prestadores.bloqueado', false)
-    .order('prestadores_count', { ascending: false })
+    .from('categorias_por_popularidade')
+    .select('nome')
     .limit(8)
 }
 
