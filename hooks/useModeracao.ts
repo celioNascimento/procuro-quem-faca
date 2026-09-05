@@ -1,5 +1,4 @@
-//hooks/useModeracao.ts
-
+// hooks/useModeracao.ts
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
@@ -19,6 +18,7 @@ export function useModeracao() {
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState<FiltroStatus>('aberta')
   const [processando, setProcessando] = useState<string | null>(null)
+  const [motivoBloqueio, setMotivoBloqueio] = useState<Record<string, string>>({})
 
   const carregar = useCallback(async () => {
     setLoading(true)
@@ -33,6 +33,10 @@ export function useModeracao() {
   }, [filtro])
 
   useEffect(() => { carregar() }, [carregar])
+
+  const atualizarMotivo = useCallback((denunciaId: string, valor: string) => {
+    setMotivoBloqueio(prev => ({ ...prev, [denunciaId]: valor }))
+  }, [])
 
   const arquivar = useCallback(async (denunciaId: string) => {
     setProcessando(denunciaId)
@@ -77,12 +81,28 @@ export function useModeracao() {
     setProcessando(denunciaId)
     try {
       await desbloquearPrestador(prestadorId)
-      await insertLog({ acao: 'PRESTADOR_DESBLOQUEADO', entidadeTipo: 'prestador', entidadeId: String(prestadorId) })
+      await insertLog({
+        acao: 'PRESTADOR_DESBLOQUEADO',
+        entidadeTipo: 'prestador',
+        entidadeId: String(prestadorId),
+      })
       await carregar()
     } finally {
       setProcessando(null)
     }
   }, [carregar])
 
-  return { denuncias, loading, filtro, setFiltro, processando, arquivar, resolverSemBloqueio, resolverComBloqueio, desbloquear }
+  return {
+    denuncias,
+    loading,
+    filtro,
+    setFiltro,
+    processando,
+    arquivar,
+    resolverSemBloqueio,
+    resolverComBloqueio,
+    desbloquear,
+    motivoBloqueio,
+    atualizarMotivo,
+  }
 }
