@@ -1,6 +1,7 @@
 // app/painel/perfil/page.tsx
 
 'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import {
   MapPin, Briefcase, Loader2, CheckCircle2,
@@ -10,6 +11,7 @@ import HeaderCliente from '@/components/perfil/HeaderCliente'
 import CardPerfilCliente from '@/components/perfil/CardPerfilCliente'
 import ServicoCardCompacto from '@/components/meus-servicos/ServicoCardCompacto'
 import { AdCardPainelCliente } from '@/components/painel/AdCardPainelCliente'
+import { CardResumoAvaliacoesCliente } from '@/components/painel/CardResumoAvaliacoesCliente'
 import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 
@@ -47,6 +49,12 @@ export default function PerfilDoCliente() {
     garantiaCount,
     reclamacaoCount,
   } = usePerfilCliente()
+
+  // Controla se o card de resumo de avaliações recebidas tem conteúdo.
+  // O próprio card decide isso internamente (via useAvaliacoesRecebidasCliente)
+  // e avisa aqui — a condição do carrossel abaixo não precisa conhecer a
+  // regra interna (total > 0) nem refazer a query.
+  const [temAvaliacoesRecebidas, setTemAvaliacoesRecebidas] = useState(false)
 
   if (loading || !perfilCarregado || loadingServicos) {
     return <PainelDoClienteSkeleton />
@@ -134,7 +142,7 @@ export default function PerfilDoCliente() {
           <div className="flex min-w-0 flex-col gap-6">
             <AdCardPainelCliente servicos={servicos} loading={loadingServicos} />
 
-            {(avaliarCount > 0 || garantiaCount > 0 || reclamacaoCount > 0) && (
+            {(avaliarCount > 0 || garantiaCount > 0 || reclamacaoCount > 0 || temAvaliacoesRecebidas) && (
               <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0">
             {avaliarCount > 0 && (
               <button
@@ -189,6 +197,15 @@ export default function PerfilDoCliente() {
                 <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
               </button>
             )}
+
+            {/* Resumo das avaliações recebidas pelo cliente (feitas pelos
+                prestadores). Sempre montado — ele mesmo decide se tem
+                conteúdo via onVisibilidadeChange, respeitando o double-blind
+                já garantido pela RLS de avaliacoes_clientes. */}
+            <CardResumoAvaliacoesCliente
+              onVisibilidadeChange={setTemAvaliacoesRecebidas}
+              onClick={() => setAba('servicos')}
+            />
 
               </div>
             )}
