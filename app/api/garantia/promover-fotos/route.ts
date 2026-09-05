@@ -19,20 +19,14 @@
 // funcionar.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-// Client com service role — só existe neste contexto server-side,
-// nunca deve ser importado por código que roda no browser.
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!, // ⚠️ confirmar nome exato da env var no projeto
-)
+import { getAdminClient } from '@/lib/supabase/admin'
 
 const BUCKET_PRIVADO = 'garantia'
 const BUCKET_PUBLICO = 'garantia-publico'
 
 export async function POST(req: NextRequest) {
   try {
+    const supabaseAdmin = getAdminClient()
     const { casoId } = await req.json()
 
     if (!casoId) {
