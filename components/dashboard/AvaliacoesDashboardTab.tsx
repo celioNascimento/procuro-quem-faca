@@ -38,10 +38,71 @@ export default function AvaliacoesDashboardTab({ prestadorId }: { prestadorId: n
   </section>
 }
 
-export function AvaliacaoClienteRapida({ onSubmit }: { onSubmit: (nota: number, motivos: string[]) => Promise<void> }) {
-  const [nota, setNota] = useState(0)
-  const [motivos, setMotivos] = useState<string[]>([])
+
+export function AvaliacaoClienteRapida({
+  onSubmit,
+  somenteLeitura = false,
+  notaInicial = 0,
+  motivosIniciais = [],
+}: {
+  onSubmit: (nota: number, motivos: string[]) => Promise<void>
+  somenteLeitura?: boolean
+  notaInicial?: number
+  motivosIniciais?: string[]
+}) {
+  const [nota, setNota] = useState(notaInicial)
+  const [motivos, setMotivos] = useState<string[]>(motivosIniciais)
   const opcoes = ['Comunicação', 'Pontualidade', 'Respeito', 'Pagamento combinado', 'Organização', 'Recomendaria este cliente']
-  const alternar = (motivo: string) => setMotivos((atual: string[]) => atual.includes(motivo) ? atual.filter((item) => item !== motivo) : atual.length < 3 ? [...atual, motivo] : atual)
-  return <div className="flex flex-col gap-5 rounded-3xl border border-slate-200 bg-white p-6"><h3 className="text-lg font-black text-slate-900">Como foi atender este cliente?</h3><div className="flex gap-2">{[1,2,3,4,5].map((item) => <button key={item} type="button" aria-label={`${item} estrelas`} onClick={() => setNota(item)} className="rounded-lg p-1 text-2xl text-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">{item <= nota ? '★' : '☆'}</button>)}</div><p className="text-xs font-bold uppercase tracking-wide text-slate-400">Escolha até 3 pontos positivos</p><div className="flex flex-wrap gap-2">{opcoes.map((motivo) => <button key={motivo} type="button" aria-pressed={motivos.includes(motivo)} onClick={() => alternar(motivo)} className={`rounded-full border px-3 py-2 text-xs font-bold transition-colors ${motivos.includes(motivo) ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 text-slate-600 hover:border-blue-300'}`}>{motivo}</button>)}</div><button type="button" disabled={!nota} onClick={() => onSubmit(nota, motivos)} className="min-h-11 rounded-xl bg-blue-600 px-4 py-3 text-xs font-black uppercase tracking-wide text-white disabled:cursor-not-allowed disabled:opacity-40">Enviar avaliação</button></div>
+  const alternar = (motivo: string) => {
+    if (somenteLeitura) return
+    setMotivos((atual: string[]) => atual.includes(motivo) ? atual.filter((item) => item !== motivo) : atual.length < 3 ? [...atual, motivo] : atual)
+  }
+  return (
+    <div className="flex flex-col gap-5 rounded-3xl border border-slate-200 bg-white p-6">
+      <h3 className="text-lg font-black text-slate-900">
+        {somenteLeitura ? 'Sua avaliação sobre este cliente' : 'Como foi atender este cliente?'}
+      </h3>
+      <div className="flex gap-2">
+        {[1, 2, 3, 4, 5].map((item) => (
+          <button
+            key={item}
+            type="button"
+            aria-label={`${item} estrelas`}
+            disabled={somenteLeitura}
+            onClick={() => !somenteLeitura && setNota(item)}
+            className={`rounded-lg p-1 text-2xl text-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${somenteLeitura ? 'cursor-default' : ''}`}
+          >
+            {item <= nota ? '★' : '☆'}
+          </button>
+        ))}
+      </div>
+      <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+        {somenteLeitura ? 'Pontos positivos selecionados' : 'Escolha até 3 pontos positivos'}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {opcoes.map((motivo) => (
+          <button
+            key={motivo}
+            type="button"
+            aria-pressed={motivos.includes(motivo)}
+            disabled={somenteLeitura}
+            onClick={() => alternar(motivo)}
+            className={`rounded-full border px-3 py-2 text-xs font-bold transition-colors ${motivos.includes(motivo) ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 text-slate-600 hover:border-blue-300'} ${somenteLeitura ? 'cursor-default opacity-80' : ''}`}
+          >
+            {motivo}
+          </button>
+        ))}
+      </div>
+      {!somenteLeitura && (
+        <button
+          type="button"
+          disabled={!nota}
+          onClick={() => onSubmit(nota, motivos)}
+          className="min-h-11 rounded-xl bg-blue-600 px-4 py-3 text-xs font-black uppercase tracking-wide text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Enviar avaliação
+        </button>
+      )}
+    </div>
+  )
 }
