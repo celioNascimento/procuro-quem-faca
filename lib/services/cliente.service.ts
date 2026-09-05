@@ -16,6 +16,7 @@ const SELECT_CLIENTE_SERVICOS = `
   portfolio_fotos(ordem),
   prestadores!inner(id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
   avaliacoes(id),
+  avaliacoes_clientes(id, nota, motivos, created_at),
   solicitacoes_garantia(id, status, origem, tipo, prazo_resposta)
 `
 

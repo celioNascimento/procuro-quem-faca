@@ -25,6 +25,13 @@ export interface AvaliacaoRef {
   id: string
 }
 
+export interface AvaliacaoCliente {
+  id: string
+  nota: number
+  motivos: string[]
+  created_at: string
+}
+
 // Adicionado para derivar garantia ativa localmente (via temGarantiaAtiva em
 // cliente.service.ts), eliminando a necessidade de fetchClienteGarantias separado
 // e o risco de dessincronia entre dois arrays de origens diferentes.

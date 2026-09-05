@@ -146,6 +146,32 @@ export default function PaginaAcompanhamento({
               </Link>
             )}
 
+            {projetoFinalizado && projeto.avaliacoes_clientes?.[0] && (
+              <section className="rounded-[2rem] border border-blue-100 bg-blue-50/70 p-6" aria-labelledby="feedback-salvo">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Seu feedback</p>
+                    <h2 id="feedback-salvo" className="mt-1 text-lg font-black uppercase italic tracking-tight text-slate-800">Avaliação registrada</h2>
+                  </div>
+                  <div className="flex items-center gap-1 rounded-full bg-white px-3 py-2 text-blue-600 shadow-sm" aria-label={`Nota ${projeto.avaliacoes_clientes[0].nota} de 5`}>
+                    {Array.from({ length: 5 }, (_, index) => (
+                      <Star key={index} size={14} fill={index < projeto.avaliacoes_clientes![0].nota ? 'currentColor' : 'none'} />
+                    ))}
+                  </div>
+                </div>
+                {projeto.avaliacoes_clientes[0].motivos?.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {projeto.avaliacoes_clientes[0].motivos.map((motivo) => (
+                      <span key={motivo} className="rounded-full border border-blue-100 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-600">{motivo}</span>
+                    ))}
+                  </div>
+                )}
+                <p className="mt-4 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                  Registrada em {new Date(projeto.avaliacoes_clientes[0].created_at).toLocaleDateString('pt-BR')}
+                </p>
+              </section>
+            )}
+
             {/* Garantia elegível por garantia_dias (verificarElegibilidadeGarantia),
                 independente de sem_fotos */}
             {projetoFinalizado && clienteUserId && (
