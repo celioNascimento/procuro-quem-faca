@@ -14,6 +14,7 @@ import {
 } from '@/lib/services/adminDashboard.service'
 
 import { subscribeLogsAtividades } from '@/lib/db/logs'
+import { useHaptic } from '@/hooks/useHaptic'
 
 export interface Stats {
   cidades: number
@@ -39,9 +40,6 @@ export function useAdminDashboard() {
   const [refreshing, setRefreshing] = useState(false)
   const [notificacao, setNotificacao] = useState<string | null>(null)
 
-  const hapticFeedback = useCallback((intensity: number | number[] = 10) => {
-    if (typeof window !== 'undefined' && navigator.vibrate) navigator.vibrate(intensity)
-  }, [])
 
   const carregarDashboard = useCallback(async (isRefresh = false) => {
     if (isRefresh) { setRefreshing(true); hapticFeedback(15) }
