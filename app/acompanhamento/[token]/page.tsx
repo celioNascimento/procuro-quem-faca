@@ -147,13 +147,13 @@ export default function PaginaAcompanhamento({
             )}
 
             {projetoFinalizado && projeto.avaliacoes_clientes?.[0] && (
-              <section className="rounded-[2rem] border border-blue-100 bg-blue-50/70 p-6" aria-labelledby="feedback-salvo">
+              <section className="rounded-[2rem] border border-emerald-100 bg-emerald-50/70 p-6" aria-labelledby="feedback-prestador">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Seu feedback</p>
-                    <h2 id="feedback-salvo" className="mt-1 text-lg font-black uppercase italic tracking-tight text-slate-800">Avaliação registrada</h2>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700">Feedback do prestador</p>
+                    <h2 id="feedback-prestador" className="mt-1 text-lg font-black uppercase italic tracking-tight text-slate-800">Avaliação sobre o cliente</h2>
                   </div>
-                  <div className="flex items-center gap-1 rounded-full bg-white px-3 py-2 text-blue-600 shadow-sm" aria-label={`Nota ${projeto.avaliacoes_clientes[0].nota} de 5`}>
+                  <div className="flex items-center gap-1 rounded-full bg-white px-3 py-2 text-emerald-700 shadow-sm" aria-label={`Nota ${projeto.avaliacoes_clientes[0].nota} de 5`}>
                     {Array.from({ length: 5 }, (_, index) => (
                       <Star key={index} size={14} fill={index < projeto.avaliacoes_clientes![0].nota ? 'currentColor' : 'none'} />
                     ))}
@@ -162,7 +162,7 @@ export default function PaginaAcompanhamento({
                 {projeto.avaliacoes_clientes[0].motivos?.length > 0 && (
                   <div className="mt-4 flex flex-wrap gap-2">
                     {projeto.avaliacoes_clientes[0].motivos.map((motivo) => (
-                      <span key={motivo} className="rounded-full border border-blue-100 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-600">{motivo}</span>
+                      <span key={motivo} className="rounded-full border border-emerald-100 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-600">{motivo}</span>
                     ))}
                   </div>
                 )}

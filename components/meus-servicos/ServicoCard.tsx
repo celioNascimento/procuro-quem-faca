@@ -169,25 +169,6 @@ export default function ServicoCard({
         </div>
       )}
 
-      {/* ── Feedback do prestador ── */}
-      {servico.avaliacoes_clientes?.[0] && (
-        <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
-              Feedback do prestador
-            </p>
-            <span className="text-sm font-black text-emerald-700">
-              {servico.avaliacoes_clientes[0].nota}/5
-            </span>
-          </div>
-          {servico.avaliacoes_clientes[0].motivos?.length > 0 && (
-            <p className="mt-1 text-[11px] font-medium leading-relaxed text-emerald-800/80">
-              {servico.avaliacoes_clientes[0].motivos.join(' · ')}
-            </p>
-          )}
-        </div>
-      )}
-
       {/* ── Informações e ações ── */}
       <div className="mt-5 px-2 space-y-5">
         <div>
