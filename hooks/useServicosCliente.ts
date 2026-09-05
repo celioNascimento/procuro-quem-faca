@@ -121,6 +121,7 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   const getRotaDestino = (s: ClienteServico) => {
     const pronto      = estaProntoParaAvaliar(s)
     const jaAvaliado = s.avaliacoes?.length > 0
+    const temAvaliacaoDoPrestador = s.avaliacoes_clientes?.length > 0
 
     if (s.status === 'pendente')
       return `/meus-servicos?token=${s.avaliacao_token}`
@@ -131,9 +132,9 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
     if (s.status === 'em_execucao' && pronto)
       return `/avaliar/${s.avaliacao_token}`
 
-    // Finalizado — se já avaliou, vai para acompanhamento (onde vive a garantia);
-    // se ainda não avaliou, vai para a página de avaliação.
-    if (s.status === 'finalizado' && jaAvaliado)
+    // Finalizado — se o prestador já avaliou o cliente, o clique deve abrir
+    // o acompanhamento para exibir esse feedback no detalhe do projeto.
+    if (s.status === 'finalizado' && (jaAvaliado || temAvaliacaoDoPrestador))
       return `/acompanhamento/${s.avaliacao_token}`
 
     if (s.status === 'finalizado')

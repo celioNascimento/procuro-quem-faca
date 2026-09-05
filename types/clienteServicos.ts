@@ -56,6 +56,9 @@ export interface ClienteServico {
   portfolio_fotos: PortfolioFotoOrdem[]
   prestadores: PrestadorServico | null
   avaliacoes: AvaliacaoRef[]
+  // Avaliação feita pelo prestador sobre este cliente, carregada por projeto.
+  // Array vazio quando ainda não existe avaliação.
+  avaliacoes_clientes: AvaliacaoCliente[]
   // Array vazio quando não há garantia (LEFT JOIN). Nunca undefined após a query.
   solicitacoes_garantia: SolicitacaoGarantiaResumo[]
   // Fluxo sem foto obrigatória — travado na criação do projeto (ver migration
