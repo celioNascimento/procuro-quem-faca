@@ -24,6 +24,17 @@ export default function PaginaAcompanhamento({
 }) {
   const { token } = use(paramsPromise)
 
+  useEffect(() => {
+    window.history.scrollRestoration = 'manual'
+    const irParaTopo = () => window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    irParaTopo()
+    const frame = requestAnimationFrame(() => {
+      irParaTopo()
+      requestAnimationFrame(irParaTopo)
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [token])
+
   const {
     projeto, comentarios, fotosOrdenadas, temConclusao, labelEtapaAtual,
     loading, mounted, fotoSelecionada, setFotoSelecionada,
@@ -133,6 +144,32 @@ export default function PaginaAcompanhamento({
                 </div>
                 <ArrowRight size={20} className="text-white/70 shrink-0" />
               </Link>
+            )}
+
+            {projeto.avaliacoes_clientes?.[0] && (
+              <section className="rounded-[2rem] border border-emerald-100 bg-emerald-50/70 p-6" aria-labelledby="feedback-prestador">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700">Feedback do prestador</p>
+                    <h2 id="feedback-prestador" className="mt-1 text-lg font-black uppercase italic tracking-tight text-slate-800">Avaliação sobre o cliente</h2>
+                  </div>
+                  <div className="flex items-center gap-1 rounded-full bg-white px-3 py-2 text-emerald-700 shadow-sm" aria-label={`Nota ${projeto.avaliacoes_clientes[0].nota} de 5`}>
+                    {Array.from({ length: 5 }, (_, index) => (
+                      <Star key={index} size={14} fill={index < projeto.avaliacoes_clientes![0].nota ? 'currentColor' : 'none'} />
+                    ))}
+                  </div>
+                </div>
+                {projeto.avaliacoes_clientes[0].motivos?.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {projeto.avaliacoes_clientes[0].motivos.map((motivo) => (
+                      <span key={motivo} className="rounded-full border border-emerald-100 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-600">{motivo}</span>
+                    ))}
+                  </div>
+                )}
+                <p className="mt-4 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                  Registrada em {new Date(projeto.avaliacoes_clientes[0].created_at).toLocaleDateString('pt-BR')}
+                </p>
+              </section>
             )}
 
             {/* Garantia elegível por garantia_dias (verificarElegibilidadeGarantia),

@@ -33,6 +33,7 @@ export type Projeto = {
   created_at: string
   prestador_id: number
   cliente_nome: string | null
+  cliente_user_id: string | null
   cliente_whatsapp: string
   portfolio_fotos: Foto[]
   avaliacoes: { id: string }[]

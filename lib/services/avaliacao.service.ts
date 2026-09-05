@@ -9,7 +9,8 @@ export async function fetchProjetoPorToken(token: string) {
     .select(`
       *,
       portfolio_fotos(*),
-      prestadores(id, nome, slug, foto_perfil, whatsapp, garantia_dias, categoria:categorias(nome))
+      prestadores(id, nome, slug, foto_perfil, whatsapp, garantia_dias, categoria:categorias(nome)),
+      avaliacoes_clientes(id, nota, motivos, created_at)
     `)
     .eq('avaliacao_token', token)
     .maybeSingle()                  // ← era .single(); nunca lança PGRST116
@@ -62,6 +63,17 @@ export async function fetchAvaliacaoPorProjeto(projetoId: string) {
     .select('*')
     .eq('projeto_id', projetoId)
     .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function fetchAvaliacaoClientePorProjeto(projetoId: string) {
+  const { data, error } = await supabase
+    .from('avaliacoes_clientes')
+    .select('id, nota, motivos, created_at')
+    .eq('projeto_id', projetoId)
+    .maybeSingle()
+
   if (error) throw error
   return data
 }

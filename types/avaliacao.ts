@@ -111,5 +111,11 @@ export interface Projeto {
   // Preenchido quando o prestador marca o serviço como concluído no
   // fluxo sem_fotos (equivalente à foto 3 + legenda no fluxo com fotos).
   marcado_concluido_at?: string | null
+  avaliacoes_clientes?: {
+    id: string
+    nota: number
+    motivos: string[]
+    created_at: string
+  }[]
   [key: string]: unknown
 }

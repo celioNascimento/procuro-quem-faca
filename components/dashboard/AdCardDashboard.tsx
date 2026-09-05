@@ -94,9 +94,11 @@ export function AdCardDashboard() {
     registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'clique')
   }
 
-  // Enquanto resolve (undefined), não renderiza nada — evita "pulo" de
-  // layout mostrando o fallback e depois trocando pelo anúncio real.
-  if (anuncio === undefined) return null
+  // Reserva o espaço enquanto a segmentação é resolvida. Renderizar null aqui
+  // fazia o conteúdo subir e depois saltar quando o anúncio chegava.
+  if (anuncio === undefined) {
+    return <div className="mx-auto mb-6 h-[120px] w-full max-w-4xl animate-pulse rounded-2xl border border-slate-100 bg-slate-50 md:h-[160px] lg:h-[200px]" aria-label="Carregando publicidade" />
+  }
 
   if (!anuncio || !anuncio.imagem_url) {
     return (

@@ -60,6 +60,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
   })
   const [clienteWhatsapp, setClienteWhatsapp] = useState<string>(() => maskPhone(projeto?.cliente_whatsapp))
   const [clienteNome, setClienteNome] = useState<string>(projeto?.cliente_nome || '')
+  const [clienteUserId, setClienteUserId] = useState<string | null>(projeto?.cliente_user_id ?? null)
   const [linkGerado, setLinkGerado] = useState<boolean>(!!projeto)
   const [fotosUrls, setFotosUrls] = useState<Record<number, string | null>>({ 1: null, 2: null, 3: null })
   const [fotosData, setFotosData] = useState<Record<number, FotoPortfolio | null>>({ 1: null, 2: null, 3: null })
@@ -240,6 +241,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       setTitulo(projeto.titulo || '')
       setClienteWhatsapp(maskPhone(projeto.cliente_whatsapp))
       setClienteNome(projeto.cliente_nome || '')
+      setClienteUserId(projeto.cliente_user_id ?? null)
       setSemFotos(projeto.sem_fotos ?? false)
       setMarcadoConcluidoAt(projeto.marcado_concluido_at ?? null)
       carregarProgresso(projeto.id)
@@ -566,7 +568,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
   return {
     state: {
       loadingEtapa, erroUpload, erroLegenda, erroTitulo, aguardandoAvaliacao,
-      projetoId, projetoStatus, titulo, clienteWhatsapp, clienteNome, linkGerado,
+      projetoId, projetoStatus, titulo, clienteWhatsapp, clienteNome, clienteUserId, linkGerado,
       fotosUrls, fotosData, zoomEtapa, comentariosZoom, comentariosSlideAtual,
       currentSlide, legendaEdit, salvandoLegenda, projetosEncontrados, statusTitulo,
       prestadorInfo, marcandoConcluido, marcadoConcluidoAt,

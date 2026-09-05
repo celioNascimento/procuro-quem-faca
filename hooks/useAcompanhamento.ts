@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   fetchProjetoPorToken,
+  fetchAvaliacaoClientePorProjeto,
   fetchComentariosPorProjeto,
   inserirComentario,
   reivindicarProjetoParaCliente,
@@ -55,6 +56,11 @@ export function useAcompanhamento(token: string) {
             projData.cliente_user_id = userData.user.id
           }
         }
+
+        // Busca a avaliação depois da reivindicação para que clientes de
+        // projetos legados também consigam enxergar o feedback salvo.
+        const avaliacaoCliente = await fetchAvaliacaoClientePorProjeto(projData.id)
+        projData.avaliacoes_clientes = avaliacaoCliente ? [avaliacaoCliente] : []
 
         setProjeto(projData)
       } catch (err) {

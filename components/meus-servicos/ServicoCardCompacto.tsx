@@ -6,7 +6,7 @@
 // Toda decisão de "o que mostrar" e "para onde ir" vem de fora via props.
 
 'use client'
-import { ChevronRight, ShieldAlert } from 'lucide-react'
+import { ChevronRight, ShieldAlert, Star } from 'lucide-react'
 import type { ClienteServico } from '@/types/clienteServicos'
 
 interface StatusInfo {
@@ -103,6 +103,16 @@ export default function ServicoCardCompacto({
         <p className="text-[12px] text-slate-500 truncate mt-0.5">
           {servico.prestadores?.nome}
         </p>
+        {servico.avaliacoes_clientes?.[0] && (
+          <div className="mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-blue-700">
+            <span className="flex items-center gap-0.5" aria-label={`Nota ${servico.avaliacoes_clientes[0].nota} de 5`}>
+              {Array.from({ length: 5 }, (_, index) => (
+                <Star key={index} size={11} fill={index < servico.avaliacoes_clientes![0].nota ? 'currentColor' : 'none'} />
+              ))}
+            </span>
+            <span>Seu feedback foi salvo</span>
+          </div>
+        )}
       </div>
 
       {/* Chevron */}
