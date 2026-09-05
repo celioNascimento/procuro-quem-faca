@@ -146,7 +146,7 @@ export default function PaginaAcompanhamento({
               </Link>
             )}
 
-            {projetoFinalizado && projeto.avaliacoes_clientes?.[0] && (
+            {projeto.avaliacoes_clientes?.[0] && (
               <section className="rounded-[2rem] border border-emerald-100 bg-emerald-50/70 p-6" aria-labelledby="feedback-prestador">
                 <div className="flex items-center justify-between gap-4">
                   <div>

@@ -67,6 +67,17 @@ export async function fetchAvaliacaoPorProjeto(projetoId: string) {
   return data
 }
 
+export async function fetchAvaliacaoClientePorProjeto(projetoId: string) {
+  const { data, error } = await supabase
+    .from('avaliacoes_clientes')
+    .select('id, nota, motivos, created_at')
+    .eq('projeto_id', projetoId)
+    .maybeSingle()
+
+  if (error) throw error
+  return data
+}
+
 export async function fetchComentariosPorProjeto(projetoId: string) {
   const { data, error } = await supabase
     .from('portfolio_comentarios')
