@@ -94,7 +94,7 @@ Explicar o diferencial do PQF (registro fotográfico + avaliação vinculada a p
 ## Pendências técnicas
 
 - [ ] Migrar `EditarPerfilTab.tsx` (Dashboard do Prestador) para usar `/confirmar-exclusao` — última implementação divergente do fluxo de exclusão de conta (ver `00-glossario.md`, seção Exclusão de conta)
-- [ ] Mapear/decidir sobre `LocationModal`/`LocationContext` — construído mas não conectado (modal obrigatório de seleção de cidade). Decisão atual: manter desconectado até haver clareza de que múltiplas regiões justificam essa fricção
+- [ ] Integrar `LocationModal` ao layout global — `LocationProvider` já está ativo em `app/layout.tsx` e persiste `pqf_cidade` por 30 dias, mas o componente visual do modal ainda não é renderizado
 - [ ] Finalizar refatoração do wizard do prestador — integrar `WizardForm.tsx`/`WizardTimeline.tsx`/`PrestadorCardHorizontal.tsx` em `UploadWizardContainer.tsx` (hoje ainda com hero/form/timeline inline)
 - [ ] Confirmar se `avaliacoes` tem constraint de unicidade por `projeto_id` (parece ser 1 por projeto pela UI, sem constraint explícita confirmada no schema)
 - [ ] Documentar formalmente o significado de negócio de `origem_tipo: 'vitrine'`

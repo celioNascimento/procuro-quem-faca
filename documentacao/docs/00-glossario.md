@@ -183,9 +183,11 @@ Campo `indica` em `avaliacoes` e nos tipos relacionados. Representa a opinião e
 
 **Consumido por:** `hooks/useLocalizacao.ts` (cascata estado→região→cidade, usado no Cadastro/Edição de Prestador).
 
-**Módulo separado e não conectado:** `lib/contexts/LocationContext.tsx` + `components/location/LocationModal.tsx` — modal de seleção obrigatória de cidade via cookie (`pqf_cidade`), desenhado para bloquear navegação até o usuário escolher uma cidade. Nunca foi plugado no layout (`LocationProvider` não envolve a árvore em `app/layout.tsx`). Decisão: manter não conectado por ora — a busca por texto livre (`"pedreiro em Londrina"`, resolvida em `usePrestadores`) já cobre a necessidade no estágio atual do produto.
+**Contexto global de localização:** `lib/contexts/LocationContext.tsx` é montado por `LocationProvider` em `app/layout.tsx`. Ele lê o cookie `pqf_cidade`, expõe `cidadeAtual`/`loading` e permite salvar uma cidade por 30 dias. O componente visual `components/location/LocationModal.tsx` existe, mas ainda não é renderizado pelo layout; portanto a escolha obrigatória não está ativa como fluxo global.
 
-**Geolocalização silenciosa** (distinta do modal acima): `hooks/usePrestadores.ts`, via Nominatim/OpenStreetMap, só roda se não houver `?cidade=` na URL.
+**Busca:** `hooks/usePrestadores.ts` consome `useLocation()` para considerar a cidade salva como âncora antes de tentar geolocalização. A listagem carrega a base de prestadores uma vez por mudança da busca e aplica filtros de localização/categoria no cliente. A query textual no formato `"termo em cidade"` continua sendo convertida em `?cidade=`.
+
+**Geolocalização silenciosa:** também em `hooks/usePrestadores.ts`, via Nominatim/OpenStreetMap, só roda quando não há cidade no contexto, filtros de localização nem query textual.
 
 ---
 
