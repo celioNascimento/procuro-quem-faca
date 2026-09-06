@@ -7,6 +7,7 @@ import { getPrestadoresAtivos, getMediasAvaliacoes } from '@/lib/db/prestadores'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import { pesoOrdenacao } from '@/lib/ordenacao'
 import { useFiltrosParams } from './useFiltrosParams'
+import { useLocation } from '@/lib/contexts/LocationContext'
 import type { Prestador } from '@/types/prestador'
 
 function calcularMedias(medias: { prestador_id: string; nota: number }[]) {
@@ -25,23 +26,6 @@ function parsearBusca(query: string): { termo: string; cidadeExtraida: string | 
   return { termo: query, cidadeExtraida: null }
 }
 
-/** Lê a cidade salva pelo LocationModal no cookie `pqf_cidade`. */
-function lerCidadeCookie(): string | null {
-  if (typeof document === 'undefined') return null
-  const raw = document.cookie
-    .split('; ')
-    .find(r => r.startsWith('pqf_cidade='))
-  if (!raw) return null
-  try {
-    const valor = decodeURIComponent(raw.split('=')[1])
-    // O cookie pode ser JSON { id, nome } ou string simples
-    const parsed = JSON.parse(valor)
-    return parsed?.nome ?? null
-  } catch {
-    return raw.split('=')[1] ? decodeURIComponent(raw.split('=')[1]) : null
-  }
-}
-
 export function usePrestadores() {
   const router = useRouter()
   const {
@@ -53,17 +37,16 @@ export function usePrestadores() {
     filtroGrupo,
     filtroCategoria,
   } = useFiltrosParams()
-
-  const cidadeCookie = lerCidadeCookie()
+  const { cidadeAtual, loading: locationLoading } = useLocation()
 
   const [prestadoresBase, setPrestadoresBase] = useState<Prestador[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState(false)
 
   // Geolocalização silenciosa — só ativa quando não há nenhuma âncora de cidade:
-  // nem na URL, nem na query textual, nem no cookie do usuário.
+  // nem na URL, nem na query textual, nem no contexto do usuário.
   useEffect(() => {
-    if (filtroCidade || filtroEstado || filtroRegiao || queryBusca || cidadeCookie) return
+    if (locationLoading || cidadeAtual || filtroCidade || filtroEstado || filtroRegiao || queryBusca) return
     if (!navigator.geolocation) return
 
     navigator.geolocation.getCurrentPosition(
@@ -93,7 +76,7 @@ export function usePrestadores() {
       () => {},
       { timeout: 8000 }
     )
-  }, [cidadeCookie, filtroCidade, filtroEstado, filtroRegiao, queryBusca, router])
+  }, [cidadeAtual, locationLoading, filtroCidade, filtroEstado, filtroRegiao, queryBusca, router])
 
   // Fetch principal — só refaz quando a busca textual muda.
   // Filtros de localização/categoria filtram no cliente sobre prestadoresBase.
@@ -240,9 +223,9 @@ export function usePrestadores() {
   }, [prestadoresBase, filtroGrupo])
 
   // ─── Lista final com todos os filtros aplicados ───────────────────────────
-  // Ordem de prioridade: URL > query textual ("em X") > cookie do usuário
+  // Ordem de prioridade: URL > query textual ("em X") > contexto do usuário
   const cidadeDaBusca = queryBusca.match(/^(.+?)\s+em\s+(.+)$/i)?.[2]?.trim() || null
-  const cidadeEfetiva = filtroCidade || cidadeDaBusca || cidadeCookie || null
+  const cidadeEfetiva = filtroCidade || cidadeDaBusca || (!locationLoading ? cidadeAtual?.nome : null) || null
 
   const prestadoresExibidos = useMemo(() => {
     return prestadoresBase.filter(p => {
