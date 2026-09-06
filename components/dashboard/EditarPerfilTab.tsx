@@ -361,8 +361,8 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
 
             <SecaoLocalizacao
               estadoSigla={form.formData.estado_sigla}
-              regiaoId={form.formData.regiao_id}
-              cidadeId={form.formData.cidade_id}
+              regiaoId={form.formData.regiao_id ?? ''}
+              cidadeId={form.formData.cidade_id ?? ''}
               bairro={form.formData.bairro || ''}
               cidadesAtendidas={form.formData.cidades_atendidas || []}
               listaEstados={loc.listaEstados}

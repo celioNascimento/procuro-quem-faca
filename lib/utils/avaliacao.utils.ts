@@ -11,6 +11,8 @@ export function normalizar(raw: AvaliacaoRaw): Avaliacao {
     ...raw,
     indica: raw.indica ?? false, // Trata o null garantindo o tipo boolean
     portfolio_projetos: raw.portfolio_projetos?.[0] ?? null,
+    cliente_nome: raw.cliente_nome ?? null,
+    cliente_foto_url: raw.cliente_foto_url ?? null,
   }
 }
 

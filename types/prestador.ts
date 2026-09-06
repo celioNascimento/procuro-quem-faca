@@ -44,7 +44,7 @@ export interface Prestador {
   sessao_fotos_urls?: string[] | null
 }
 
-export type PrestadorFormData = Partial<Prestador> & {
+export type PrestadorFormData = Omit<Partial<Prestador>, 'id'> & {
   id: number | null
   nome: string
   whatsapp: string

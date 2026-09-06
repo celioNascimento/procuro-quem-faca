@@ -11,6 +11,7 @@ export function useAdminLogs() {
   const [logs, setLogs] = useState<LogAtividade[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
 
   const [busca, setBusca] = useState('')
   const [dataInicio, setDataInicio] = useState('')
@@ -21,10 +22,12 @@ export function useAdminLogs() {
     setLoading(true)
     setRefreshing(true)
     try {
+      setErro(null)
       const data = await fetchLogsRecentes(1000)
       setLogs(data)
     } catch (err) {
-      console.error('Erro ao carregar logs:', err)
+      console.error('[v0] Erro ao carregar logs:', err)
+      setErro('Não foi possível carregar os logs. Verifique sua sessão e tente novamente.')
     } finally {
       setLoading(false)
       setTimeout(() => setRefreshing(false), 600)
@@ -35,7 +38,8 @@ export function useAdminLogs() {
     carregarLogs()
 
     const canal = subscribeLogsAtividades('admin_logs_realtime', (payload) => {
-      setLogs(prev => [payload.new, ...prev])
+      const novoLog = payload.new as LogAtividade
+      setLogs(prev => prev.some(log => log.id === novoLog.id) ? prev : [novoLog, ...prev])
     })
 
     return () => { supabase.removeChannel(canal) }
@@ -73,15 +77,16 @@ export function useAdminLogs() {
     if (logsFiltrados.length === 0) return
 
     const headers = ['Data', 'Hora', 'Evento', 'Usuario', 'Detalhes']
+    const escaparCSV = (valor: unknown) => `"${String(valor ?? '').replace(/"/g, '""')}"`
     const rows = logsFiltrados.map(log => [
       new Date(log.created_at).toLocaleDateString('pt-BR'),
       new Date(log.created_at).toLocaleTimeString('pt-BR'),
       log.acao,
       log.usuario_email || 'Anonimo',
-      JSON.stringify(log.detalhes).replace(/"/g, "'"),
+      JSON.stringify(log.detalhes ?? {}),
     ])
 
-    const csvContent = [headers, ...rows].map(e => e.join(',')).join('\n')
+    const csvContent = [headers, ...rows].map(row => row.map(escaparCSV).join(',')).join('\n')
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -97,7 +102,7 @@ export function useAdminLogs() {
   }, [])
 
   return {
-    loading, refreshing, logsFiltrados, dadosGrafico,
+    loading, refreshing, erro, logsFiltrados, dadosGrafico,
     busca, setBusca, dataInicio, setDataInicio, tipoFiltro, setTipoFiltro,
     periodoGrafico, setPeriodoGrafico,
     carregarLogs, exportarCSV, resetarFiltros,

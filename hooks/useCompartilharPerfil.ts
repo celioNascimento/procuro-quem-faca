@@ -59,8 +59,8 @@ export function useCompartilharPerfil({
     if (status === 'compartilhando') return
     setStatus('compartilhando')
 
-    const texto = buildTextoPadrao(prestador.nome, categoria, totalFinalizados)
-    const resultado = await compartilharViaNative(prestador.nome, texto, urlPerfil)
+    const texto = buildTextoPadrao(prestador.nome || '', categoria || undefined, totalFinalizados)
+    const resultado = await compartilharViaNative(prestador.nome || '', texto, urlPerfil)
 
     if (resultado === 'clipboard') {
       setStatus('copiado')
@@ -83,7 +83,7 @@ export function useCompartilharPerfil({
 
   const compartilharWhatsApp = useCallback(
     (numeroDestinatario?: string | null) => {
-      const mensagem = buildTextoWhatsApp(prestador.nome, categoria, totalFinalizados, urlPerfil)
+      const mensagem = buildTextoWhatsApp(prestador.nome || '', categoria || undefined, totalFinalizados, urlPerfil)
       compartilharViaWhatsApp(numeroDestinatario, mensagem)
       void registrarCompartilhamento({ prestador_id: prestador.id, canal: 'whatsapp', origem })
     },

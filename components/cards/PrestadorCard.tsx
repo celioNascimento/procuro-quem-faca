@@ -68,8 +68,8 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
   if (!prestador) return null
 
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
-  const perfilHref = getPerfilHref(prestador.slug, prestador.id)
-  const localizacao = getLocalizacao(prestador.bairro, prestador.cidades?.nome)
+  const perfilHref = getPerfilHref(prestador.slug, prestador.id ?? '')
+  const localizacao = getLocalizacao(prestador.bairro ?? undefined, prestador.cidades?.nome)
 
   const habilidadesVisiveis = qtdVisivel !== null ? habilidadesTotais.slice(0, qtdVisivel) : []
   const extras = qtdVisivel !== null ? habilidadesTotais.length - qtdVisivel : 0
@@ -86,14 +86,14 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
           <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 md:size-28">
             {prestador.foto_perfil && !imgError ? (
               <img
-                src={prestador.foto_perfil}
+                src={prestador.foto_perfil ?? undefined}
                 className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:scale-[1.02]"
-                alt={prestador.nome}
+                alt={prestador.nome || 'Prestador'}
                 onError={() => setImgError(true)}
               />
             ) : (
               <h3 className="text-pretty text-base font-bold leading-snug tracking-tight text-slate-900 line-clamp-2 md:text-lg">
-                {getIniciais(prestador.nome)}
+                {getIniciais(prestador.nome || '')}
               </h3>
             )}
           </div>
@@ -174,7 +174,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                 onClick={e => {
                   e.preventDefault()
                   e.stopPropagation()
-                  router.push(`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`)
+                  router.push(`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome || '')}`)
                 }}
                 className="cursor-pointer text-[10px] font-semibold text-slate-400 transition-colors hover:text-blue-600"
               >

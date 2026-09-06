@@ -62,71 +62,58 @@ export function useAuth() {
   useEffect(() => {
     let cancelado = false
 
-    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
+    const limparAuthState = () => {
+      setRole(null)
+      setPrestadorStatus(null)
+      setRoleLoading(false)
+      localStorage.removeItem(SESSION_KEY)
+      localStorage.removeItem(AUTH_STATE_KEY)
+    }
+
+    const resolverAuthState = async (s: Session | null) => {
       if (cancelado) return
-      const sessionVal = s ?? null
-      setSession(sessionVal)
-      setSessionChecked(true)
+      setRoleLoading(Boolean(s?.user?.id))
 
-      if (sessionVal) {
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionVal))
-      } else {
-        localStorage.removeItem(SESSION_KEY)
-        localStorage.removeItem(AUTH_STATE_KEY)
+      if (!s?.user?.id) {
+        limparAuthState()
+        return
       }
 
-      if (s?.user?.id) {
-        setRoleLoading(true)
-        try {
-          const [profileReq, prestadorReq] = await Promise.all([
-            supabase.from('profiles').select('role').eq('id', s.user.id).maybeSingle(),
-            supabase.from('prestadores').select('id, status').eq('user_id', s.user.id).maybeSingle()
-          ])
-          
-          if (!cancelado) {
-            const profileRole = profileReq.data?.role
-            const prestadorData = prestadorReq.data
-            
-            const finalRole = profileRole === 'prestador' || prestadorData ? 'prestador' : 'cliente'
-            const finalStatus = finalRole === 'prestador' && !prestadorData ? 'pendente' : (prestadorData?.status ?? null)
-            
-            setRole(finalRole)
-            setPrestadorStatus(finalStatus)
-            
-            // Grava o resultado final no cache para as próximas renderizações
-            localStorage.setItem(AUTH_STATE_KEY, JSON.stringify({ role: finalRole, prestadorStatus: finalStatus }))
-          }
-        } catch {
-          if (!cancelado) {
-            setRole('cliente')
-            setPrestadorStatus(null)
-            localStorage.setItem(AUTH_STATE_KEY, JSON.stringify({ role: 'cliente', prestadorStatus: null }))
-          }
-        } finally {
-          if (!cancelado) setRoleLoading(false)
-        }
-      }
-    })
+      try {
+        const [profileReq, prestadorReq] = await Promise.all([
+          supabase.from('profiles').select('role').eq('id', s.user.id).maybeSingle(),
+          supabase.from('prestadores').select('id, status').eq('user_id', s.user.id).maybeSingle(),
+        ])
+        if (cancelado) return
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
-      if (cancelado) return
-      const sessionVal = s ?? null
-      setSession(sessionVal)
-      setSessionChecked(true)
-
-      if (sessionVal) {
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionVal))
-      } else {
-        localStorage.removeItem(SESSION_KEY)
-        localStorage.removeItem(AUTH_STATE_KEY)
-      }
-
-      if (!s) {
-        setRole(null)
+        const prestadorData = prestadorReq.data
+        const finalRole: Role = profileReq.data?.role === 'prestador' || prestadorData ? 'prestador' : 'cliente'
+        const finalStatus = finalRole === 'prestador' && !prestadorData ? 'pendente' : (prestadorData?.status ?? null)
+        setRole(finalRole)
+        setPrestadorStatus(finalStatus)
+        localStorage.setItem(AUTH_STATE_KEY, JSON.stringify({ role: finalRole, prestadorStatus: finalStatus }))
+      } catch {
+        if (cancelado) return
+        setRole('cliente')
         setPrestadorStatus(null)
-        setRoleLoading(false)
-        localStorage.removeItem(AUTH_STATE_KEY)
+        localStorage.setItem(AUTH_STATE_KEY, JSON.stringify({ role: 'cliente', prestadorStatus: null }))
+      } finally {
+        if (!cancelado) setRoleLoading(false)
       }
+    }
+
+    const aplicarSessao = (s: Session | null) => {
+      if (cancelado) return
+      setSession(s)
+      setSessionChecked(true)
+      if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s))
+      void resolverAuthState(s)
+    }
+
+    supabase.auth.getSession().then(({ data: { session: s } }) => aplicarSessao(s ?? null))
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      aplicarSessao(s ?? null)
     })
 
     return () => { cancelado = true; subscription.unsubscribe() }
