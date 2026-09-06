@@ -11,6 +11,7 @@ import SearchForm from '@/components/home/SearchForm'
 import CTAPrestadorSkeleton from '@/components/home/CTAPrestadorSkeleton'
 import { ArrowRight, Briefcase } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useLocation } from '@/lib/contexts/LocationContext'
 
 const HeroSection = dynamic(() => import('@/components/home/HeroSection'), { ssr: false })
 
@@ -19,6 +20,7 @@ export default function Home() {
   const [busca, setBusca] = useState('')
   const [erro, setErro] = useState(false)
   const { sugestoes, carregado } = useSugestoes(busca)
+  const { cidadeAtual } = useLocation()
   const { session, role, prestadorStatus, roleLoading } = useAuth()
 
   let hrefCTA = '/login'
@@ -64,7 +66,10 @@ export default function Home() {
     setErro(false)
     if (termoManual) setBusca(termoManual)
     insertLog({ acao: 'BUSCA_REALIZADA', detalhes: { termo: termoFinal }, entidadeTipo: 'busca' })
-    router.push(`/prestadores?q=${encodeURIComponent(termoFinal)}`)
+
+    const params = new URLSearchParams({ q: termoFinal })
+    if (cidadeAtual?.nome) params.set('cidade', cidadeAtual.nome)
+    router.push(`/prestadores?${params.toString()}`)
   }
 
   return (
