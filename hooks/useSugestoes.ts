@@ -1,40 +1,37 @@
 // hooks/useSugestoes.ts
 
 import { useState, useEffect } from 'react'
-import { getSugestoesDestaque, getSugestoesPorBusca } from '@/lib/db/categorias'
+import { getSugestoesPorBusca } from '@/lib/db/categorias'
 import { SUGESTOES_FALLBACK } from '@/config/categorias'
 
 const MAX_SUGESTOES = 8
 
 export function useSugestoes(busca: string) {
-  const [sugestoes, setSugestoes] = useState<string[]>([])
-  const [carregado, setCarregado] = useState(false)
+  // Inicia já com o fallback visível — sem tela em branco
+  const [sugestoes, setSugestoes] = useState<string[]>(SUGESTOES_FALLBACK)
+  const [carregado, setCarregado] = useState(true)
 
   useEffect(() => {
+    // Sem busca digitada, não vale sobrecarregar o banco —
+    // o fallback já cobre bem o estado inicial.
+    if (!busca.trim()) return
+
     let cancelado = false
 
     const buscarSugestoes = async () => {
       try {
-        const { data } = busca.trim()
-          ? await getSugestoesPorBusca(busca)
-          : await getSugestoesDestaque()
-
+        const { data } = await getSugestoesPorBusca(busca)
         if (cancelado) return
-
         if (data && data.length > 0) {
           setSugestoes(data.slice(0, MAX_SUGESTOES).map(i => i.nome))
-        } else {
-          setSugestoes(SUGESTOES_FALLBACK)
         }
+        // Se não achou nada, mantém o fallback já visível
       } catch {
-        if (!cancelado) setSugestoes(SUGESTOES_FALLBACK)
-      } finally {
-        if (!cancelado) setCarregado(true)
+        // silencioso — fallback já está na tela
       }
     }
 
-    const delay = busca.trim() ? 300 : 0
-    const timer = setTimeout(buscarSugestoes, delay)
+    const timer = setTimeout(buscarSugestoes, 300)
     return () => {
       clearTimeout(timer)
       cancelado = true
