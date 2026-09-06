@@ -1,6 +1,6 @@
 # Cadastro de Prestador — PQF
 
-Complementa `02-arquitetura.md`. Para localizar um conceito específico (ex: "avatar", "WhatsApp", "status de projeto") em todos os módulos que o tocam, ver `14-glossario.md`.
+Complementa `02-arquitetura.md`. Para localizar um conceito específico (ex: "avatar", "WhatsApp", "status de projeto") em todos os módulos que o tocam, ver `00-glossario.md`.
 
 **Rota:** `app/cadastro/page.tsx` (JSX puro) + `hooks/useCadastroPrestador.ts` + `lib/services/cadastroPrestador.service.ts`
 

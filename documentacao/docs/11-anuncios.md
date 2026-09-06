@@ -1,6 +1,6 @@
 # Anúncios — MVP Admin-Only (Lojista/Fornecedor)
 
-> Complementa `02-arquitetura.md`, `03-banco-de-dados.md` e `11-anuncios.md`. Ver `14-glossario.md` para a distinção entre os dois sistemas de anúncio (lojista/fornecedor vs. destaque de perfil do prestador).
+> Complementa `02-arquitetura.md`, `03-banco-de-dados.md` e `11-anuncios.md`. Ver `00-glossario.md` para a distinção entre os dois sistemas de anúncio (lojista/fornecedor vs. destaque de perfil do prestador).
 
 ## Status
 
