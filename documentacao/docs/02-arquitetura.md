@@ -152,14 +152,14 @@ lib/
 ├── auth/         # resolverDestinoPosLogin.ts — decisão pura de destino pós-login
 ├── config/       # Contato institucional (contato.ts)
 ├── contexts/     # React Contexts (LocationContext — não conectado)
-├── db/           # Acesso a tabelas de infraestrutura (logs.ts, acessos.ts, categorias.ts, geografia.ts, prestadores.ts)
+├── db/           # Acesso a tabelas de infraestrutura (logs.ts, categorias.ts, geografia.ts, prestadores.ts)
 ├── scripts/      # Scripts auxiliares (ex: AdSense)
 ├── services/     # Camada de service — uma chamada Supabase por função
 └── utils/        # Funções puras (whatsapp.ts, mascaras.ts, avaliacao.utils.ts)
 ```
 
 **`lib/db/` vs `lib/services/`:**
-- `db/` → acesso direto a tabelas de infraestrutura/cross-cutting (logs, acessos, geografia, categorias de sugestão)
+- `db/` → acesso direto a tabelas de infraestrutura/cross-cutting (logs, geografia e categorias de sugestão). A tabela `acessos` não foi confirmada no schema atual e não deve ser tratada como dependência ativa.
 - `services/` → operações de domínio de produto, orquestradas por hooks
 
 **Services existentes:** `auth.service.ts`, `avaliacao.service.ts`, `cadastroPrestador.service.ts`, `categorias.service.ts`, `cliente.service.ts`, `compartilharPerfil.service.ts`, `denuncia.service.ts` (inclui moderação de denúncias), `exclusaoConta.service.ts`, `localizacao.service.ts`, `painelCliente.service.ts`, `portfolioDashboard.service.ts` (re-exporta funções de `uploadWizard.service.ts`), `recuperacaoSenha.service.ts`, `uploadWizard.service.ts`.

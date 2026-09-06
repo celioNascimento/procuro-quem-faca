@@ -41,12 +41,12 @@ Gravado automaticamente na criação de conta por `garantirRoleInicial` (`lib/se
 
 **Detalhe de implementação relevante:** `garantirRoleInicial` checa `!profile?.role` (não `!profile`), protegendo contra o cenário de um trigger de banco já ter criado a linha em `profiles` com role nula. O upsert encadeia `.select('role')` na mesma requisição (evita depender de uma leitura separada logo após a escrita, que não tem garantia de ver o resultado a tempo) e usa o valor em memória como fallback.
 
-### Tensão entre as duas fontes (Resolvida)
+### Consolidação entre as duas fontes
 
 Historicamente havia uma divergência onde `useAuth().role` dependia exclusivamente da existência do registro em `prestadores`, enquanto `profiles.role` guardava a intenção do usuário no momento do login. Isso causava falhas de roteamento para cadastros interrompidos.
 
 **Solução implementada:** 
-O `useAuth` foi refatorado para ser a única fonte da verdade. Ele agora executa um `Promise.all` buscando simultaneamente `profiles.role` e `prestadores.status`.
+O `useAuth` consolida o estado de sessão, `profiles.role` e `prestadores.status`. Ele executa um `Promise.all` buscando simultaneamente `profiles.role` e `prestadores.status`.
 - Se `profiles.role` for `'prestador'`, mas a linha em `prestadores` não existir, o hook consolida: `role = 'prestador'` e `prestadorStatus = 'pendente'`.
 - Para evitar *FOUC (Flash of Unstyled Content)* e transições bruscas na UI, esses dois valores sofrem **Cache Otimista** via `localStorage` (`pqf_auth_state`), permitindo que a interface (como o `HeaderAuthButton`) renderize o estado correto de forma síncrona, enquanto o banco revalida em background.
 
@@ -182,6 +182,6 @@ lib/
 
 - **RLS e sessão são a causa mais comum de "erro que não faz sentido".** Checar `supabase.auth.getSession()` antes de suspeitar de lógica de negócio.
 - **`perfis` (legado) vs `profiles` (ativa)** — ver `03-banco-de-dados.md`.
-- **Tensão `useAuth().role` vs `profiles.role`** — não resolvida de raiz, só o ponto de maior risco (destino pós-login) foi consolidado.
+- **`useAuth().role` vs `profiles.role`** — a resolução de sessão consolida as duas fontes com `prestadores.status`; `profiles.role` preserva a intenção de onboarding e `prestadores` representa o registro profissional real.
 - **`sessionChecked` deve ser preferido a `loading`** por qualquer consumidor de `useAuth` que precise de gate de sessão.
 - Arquivos `.js`/`.jsx` remanescentes sem tipagem: ver `13-roadmap.md`.

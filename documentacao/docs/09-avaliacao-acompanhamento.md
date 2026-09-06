@@ -45,9 +45,9 @@ Resumo no topo da seção exibe dois contadores independentes (indicações e n�
 
 ### `FormularioAvaliacao.tsx` (ativo, `components/profile/`)
 
-Delega a `useSubmitAvaliacao` (`lib/services/avaliacao.service.ts` + `uploadWizard.service.ts` para upload). Checkbox "Reportar problema/Solicitar Garantia" ativa modo contestação: oculta estrelas, ativa `FotosEvidenciaPicker` (upload múltiplo, `MAX_ARQUIVOS`, preview com `useMemo`+`revokeObjectURL` para evitar vazamento de memória). Submit grava `nota:1`, `em_disputa:true`, `visivel:false`, cria linha em `contestacoes` + `marcarProjetoEmDisputa`.
+Delega a `useSubmitAvaliacao` (`lib/services/avaliacao.service.ts` + `uploadWizard.service.ts` para upload). O fluxo antigo de checkbox "Reportar problema/Solicitar Garantia" ainda contém referências a contestação (`contestacoes`) e precisa ser migrado para `solicitacoes_garantia`. A tabela `contestacoes` está desativada; novos casos devem usar a máquina de estados de garantia/reclamação documentada em `03-banco-de-dados.md`, sem sobrescrever a nota original.
 
-Este fluxo de contestação é distinto do fluxo linear pós-serviço (`useAvaliar`) — ponto de renderização real ainda não totalmente mapeado.
+A solicitação de garantia/reclamação deve ser tratada pelo fluxo `solicitacoes_garantia` (`garantia.service.ts`/`garantiaWizard.service.ts`), distinto do fluxo linear pós-serviço (`useAvaliar`). O legado de `contestacoes` permanece desativado.
 
 ### `AvaliacoesTab`/`AvaliacaoCard`/`AvaliacoesResumo`
 
