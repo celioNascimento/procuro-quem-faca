@@ -80,7 +80,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
           <AdCard
             page="perfil_prestador"
             anuncio={anuncioTopo}
-            categoria={prestador.categorias?.nome || prestador.categoria}
+            categoria={prestador.categorias?.nome || prestador.categoria || undefined}
           />
         </div>
 
@@ -96,7 +96,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
 
               {isPublico && (
                 <Link
-                  href={`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome)}`}
+                  href={`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome || '')}`}
                   className="group flex items-center gap-3 rounded-[1.75rem] border border-indigo-100 bg-indigo-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-[...]"
                 >
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm transition-transform group-hover:scale-105">
@@ -128,8 +128,8 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
 
             {/* 3. CTA — após apresentação completa */}
             <PerfilCTA
-              nome={prestador.nome}
-              whatsapp={prestador.whatsapp}
+              nome={prestador.nome || ''}
+              whatsapp={prestador.whatsapp || ''}
               onClique={() =>
                 insertLog({
                   acao: 'CLIQUE_WHATSAPP_ORCAMENTO',
