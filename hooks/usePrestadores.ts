@@ -7,6 +7,7 @@ import { getPrestadoresAtivos, getMediasAvaliacoes } from '@/lib/db/prestadores'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import { pesoOrdenacao } from '@/lib/ordenacao'
 import { useFiltrosParams } from './useFiltrosParams'
+import { useLocation } from '@/lib/contexts/LocationContext'
 import type { Prestador } from '@/types/prestador'
 
 function calcularMedias(medias: { prestador_id: string; nota: number }[]) {
@@ -36,6 +37,7 @@ export function usePrestadores() {
     filtroGrupo,
     filtroCategoria,
   } = useFiltrosParams()
+  const { cidadeAtual, loading: locationLoading } = useLocation()
 
   const [prestadoresBase, setPrestadoresBase] = useState<Prestador[]>([])
   const [loading, setLoading] = useState(true)
@@ -44,7 +46,7 @@ export function usePrestadores() {
   // Geolocalização — converte descoberta em parâmetro de URL visível
   useEffect(() => {
     // Se o usuário já buscou um termo específico ou já existe filtro de localização, não restringimos por GPS.
-    if (filtroCidade || filtroEstado || filtroRegiao || queryBusca) return
+    if (locationLoading || cidadeAtual || filtroCidade || filtroEstado || filtroRegiao || queryBusca) return
     if (!navigator.geolocation) return
 
     navigator.geolocation.getCurrentPosition(
@@ -74,7 +76,7 @@ export function usePrestadores() {
       () => {},
       { timeout: 8000 }
     )
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cidadeAtual, locationLoading, filtroCidade, filtroEstado, filtroRegiao, queryBusca, router])
 
   // Fetch principal — só refaz quando a busca textual muda
   // Filtros de localização/categoria filtram no cliente sobre prestadoresBase
@@ -225,7 +227,8 @@ export function usePrestadores() {
   }, [prestadoresBase, filtroGrupo])
 
   // ─── Lista final com todos os filtros aplicados ───────────────────────────
-  const cidadeEfetiva = filtroCidade || null
+  const cidadeDaBusca = queryBusca.match(/^(.+?)\s+em\s+(.+)$/i)?.[2]?.trim() || null
+  const cidadeEfetiva = filtroCidade || cidadeDaBusca || (!locationLoading ? cidadeAtual?.nome : null) || null
 
   const prestadoresExibidos = useMemo(() => {
     return prestadoresBase.filter(p => {
