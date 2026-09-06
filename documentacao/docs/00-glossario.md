@@ -95,7 +95,7 @@ Todo o fluxo de logout de interface (tanto para prestadores quanto para clientes
 
 Todo registro de evento no sistema passa por aqui — não existe mais nenhuma tabela paralela de log de eventos de produto (`logs_eventos` foi descontinuada em favor desta).
 
-**Distinto de:** `lib/db/acessos.ts` → `insertAcesso`, tabela `acessos` — registra visita/sessão de navegador (um por sessão), não eventos de negócio. Usado só por `components/LogAcesso.tsx` (montado uma vez no layout raiz).
+**Distinto de:** `visitas_perfil` e `cliques` — são eventos de interação do produto. A tabela `acessos` e o módulo `lib/db/acessos.ts` não foram confirmados no schema atual; não tratar como dependência ativa até nova verificação.
 
 ---
 
@@ -197,7 +197,7 @@ Campo `indica` em `avaliacoes` e nos tipos relacionados. Representa a opinião e
 
 2. **Destaque de perfil do prestador** — `components/dashboard/AnunciosTab.tsx`, também direciona ao WhatsApp institucional, mas com mensagem própria (prestador interessado em destaque, não lojista). Conceitualmente relacionado a `prestadores.origem_tipo = 'vitrine'` (prioridade máxima na busca), mas não há hoje um fluxo de contratação real conectando os dois — é uma pendência de design, registrada no roadmap.
 
-**Backend de leilão CPC** (`anunciantes`, `anuncios`, `anuncios_metricas_diarias`) — schema pronto no banco, sem "encanamento" real no frontend ainda (ver `03-banco-de-dados.md`).
+**Infraestrutura de anúncios** (`anunciantes`, `anuncios`, `anuncios_segmentacoes`, `anuncios_metricas_diarias`, `anuncios_eventos_sessao`, `transacoes_carteira`) — schema, índices e RLS estão presentes; rastreamento CPC em tempo real, carteira e leilão ainda não foram confirmados como ativos no frontend (ver `03-banco-de-dados.md`).
 
 ---
 
@@ -205,7 +205,7 @@ Campo `indica` em `avaliacoes` e nos tipos relacionados. Representa a opinião e
 
 Três dimensões independentes — não confundir:
 
-1. **`useAuth().role`** (derivado) — `'prestador'` se existir registro em `prestadores` vinculado ao `user_id`, senão `'cliente'`. Fonte: `hooks/useAuth.ts`.
+1. **`useAuth().role`** (consolidado) — combina `profiles.role` com a existência/status do registro em `prestadores`; prestador pendente continua sendo reconhecido como prestador durante o onboarding. Fonte: `hooks/useAuth.ts`.
 2. **`profiles.role`** (armazenado) — gravado na criação da conta por `garantirRoleInicial` (`lib/services/auth.service.ts`), nunca perguntado ao usuário.
 3. **`perfis_admin`** (independente) — `owner`/`moderator`/`editor`, checado só por existência de registro no `middleware.ts` para proteger `/admin`.
 

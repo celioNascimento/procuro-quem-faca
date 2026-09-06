@@ -11,8 +11,9 @@ Complementa `02-arquitetura.md`. Ver `00-glossario.md` para localizar um conceit
 **Roteamento contextual** (`getRotaDestino`):
 ```
 status='pendente' → /meus-servicos?token=...
-status='em_execucao' sem foto 3 → /acompanhamento/[token]
-status='em_execucao' com foto 3 → /avaliar/[token]
+status='em_execucao' em fluxo com fotos e sem etapa final concluída → /acompanhamento/[token]
+status='em_execucao' no fluxo sem fotos após `marcado_concluido_at` → /avaliar/[token]
+status='em_execucao' com etapa final de fotos concluída → /avaliar/[token]
 default → /avaliar/[token]
 ```
 
