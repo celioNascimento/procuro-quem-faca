@@ -165,7 +165,7 @@ id uuid, projeto_id uuid unique, prestador_id bigint,
 cliente_user_id uuid, nota integer (1–5, CHECK),
 motivos text[], created_at timestamptz
 ```
-RLS implementa acesso **double-blind**: o prestador só vê as avaliações que ele mesmo fez; o cliente só vê a avaliação recebida depois de 14 dias **ou** depois que sua própria avaliação sobre o prestador (`avaliacoes.status = 'finalizado'`) for registrada — o que ocorrer primeiro.
+RLS implementa acesso por vínculo: o prestador pode consultar as avaliações de clientes associadas aos seus prestadores, e o cliente pode consultar a própria avaliação recebida. A migration atual não implementa janela de 14 dias nem liberação condicionada ao status `finalizado` da avaliação do prestador; esse comportamento não deve ser tratado como garantia de privacidade double-blind no banco.
 
 **Sistema de garantia (`solicitacoes_garantia`) — em produção:**
 ```sql
