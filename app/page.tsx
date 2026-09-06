@@ -1,6 +1,6 @@
-//app/page.tsx
-
 'use client'
+// app/page.tsx
+
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
@@ -49,10 +49,7 @@ export default function Home() {
     }
   }
 
-  // Só faz sentido mostrar skeleton quando HÁ sessão mas o role/status
-  // ainda não foi resolvido — sem sessão, o CTA padrão já é a resposta final.
   const mostrarSkeletonCTA = !!session && roleLoading
-
   const temBuscaReal = busca.trim().length > 0
 
   function dispararBusca(e: React.FormEvent | null, termoManual?: string) {
