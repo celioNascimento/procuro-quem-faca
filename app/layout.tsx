@@ -1,5 +1,3 @@
-//app/layout.tsx
-
 import "./globals.css"
 import { Suspense } from 'react'
 import { geistSans, geistMono } from "@/lib/fonts"
@@ -10,6 +8,7 @@ import { PostHogProvider } from "@/components/PostHogProvider"
 import { PostHogPageview } from "@/components/PostHogPageview"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { LocationProvider } from "@/lib/contexts/LocationContext"
 
 export { metadata } from "./metadata"
 
@@ -22,14 +21,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <PostHogPageview />
           </Suspense>
 
-          <div className="flex-grow flex flex-col">
-            {children}
-          </div>
+          <LocationProvider>
+            <div className="flex-grow flex flex-col">
+              {children}
+            </div>
 
-          <FooterWrapper />
-          <CookieConsent />
-          <LogAcesso />
-          <Analytics /> 
+            <FooterWrapper />
+            <CookieConsent />
+            <LogAcesso />
+          </LocationProvider>
+
+          <Analytics />
           <SpeedInsights />
         </PostHogProvider>
       </body>
