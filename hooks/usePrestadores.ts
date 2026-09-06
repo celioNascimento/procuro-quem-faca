@@ -7,7 +7,6 @@ import { getPrestadoresAtivos, getMediasAvaliacoes } from '@/lib/db/prestadores'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import { pesoOrdenacao } from '@/lib/ordenacao'
 import { useFiltrosParams } from './useFiltrosParams'
-import { useLocation } from '@/lib/contexts/LocationContext'
 import type { Prestador } from '@/types/prestador'
 
 function calcularMedias(medias: { prestador_id: string; nota: number }[]) {
@@ -26,6 +25,23 @@ function parsearBusca(query: string): { termo: string; cidadeExtraida: string | 
   return { termo: query, cidadeExtraida: null }
 }
 
+/** Lê a cidade salva pelo LocationModal no cookie `pqf_cidade`. */
+function lerCidadeCookie(): string | null {
+  if (typeof document === 'undefined') return null
+  const raw = document.cookie
+    .split('; ')
+    .find(r => r.startsWith('pqf_cidade='))
+  if (!raw) return null
+  try {
+    const valor = decodeURIComponent(raw.split('=')[1])
+    // O cookie pode ser JSON { id, nome } ou string simples
+    const parsed = JSON.parse(valor)
+    return parsed?.nome ?? null
+  } catch {
+    return raw.split('=')[1] ? decodeURIComponent(raw.split('=')[1]) : null
+  }
+}
+
 export function usePrestadores() {
   const router = useRouter()
   const {
@@ -37,16 +53,17 @@ export function usePrestadores() {
     filtroGrupo,
     filtroCategoria,
   } = useFiltrosParams()
-  const { cidadeAtual, loading: locationLoading } = useLocation()
+
+  const cidadeCookie = lerCidadeCookie()
 
   const [prestadoresBase, setPrestadoresBase] = useState<Prestador[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState(false)
 
-  // Geolocalização — converte descoberta em parâmetro de URL visível
+  // Geolocalização silenciosa — só ativa quando não há nenhuma âncora de cidade:
+  // nem na URL, nem na query textual, nem no cookie do usuário.
   useEffect(() => {
-    // Se o usuário já buscou um termo específico ou já existe filtro de localização, não restringimos por GPS.
-    if (locationLoading || cidadeAtual || filtroCidade || filtroEstado || filtroRegiao || queryBusca) return
+    if (filtroCidade || filtroEstado || filtroRegiao || queryBusca || cidadeCookie) return
     if (!navigator.geolocation) return
 
     navigator.geolocation.getCurrentPosition(
@@ -61,7 +78,7 @@ export function usePrestadores() {
             data.address?.city ||
             data.address?.town ||
             data.address?.municipality
-            
+
           if (nome) {
             const params = new URLSearchParams(window.location.search)
             if (!params.has('cidade')) {
@@ -76,10 +93,10 @@ export function usePrestadores() {
       () => {},
       { timeout: 8000 }
     )
-  }, [cidadeAtual, locationLoading, filtroCidade, filtroEstado, filtroRegiao, queryBusca, router])
+  }, [cidadeCookie, filtroCidade, filtroEstado, filtroRegiao, queryBusca, router])
 
-  // Fetch principal — só refaz quando a busca textual muda
-  // Filtros de localização/categoria filtram no cliente sobre prestadoresBase
+  // Fetch principal — só refaz quando a busca textual muda.
+  // Filtros de localização/categoria filtram no cliente sobre prestadoresBase.
   useEffect(() => {
     const controller = new AbortController()
 
@@ -104,8 +121,6 @@ export function usePrestadores() {
           cidade_id:    p.cidades?.id                            || p.cidade_id    || null,
           categoria:    p.categorias?.nome                       || 'Profissional',
           categoria_id: p.categorias?.id                         || p.categoria_id || null,
-          // estado_sigla e regiao_id vêm direto da coluna do prestador;
-          // fallback para o join com cidades caso a coluna esteja nula
           estado_sigla: p.estado_sigla                           || p.cidades?.estado_sigla || '',
           regiao_id:    p.regiao_id                              || p.cidades?.regiao_id    || null,
           regiao_nome:  p.regioes?.nome                          || '',
@@ -147,8 +162,6 @@ export function usePrestadores() {
   }, [queryBusca, filtroHab, filtroCidade, router])
 
   // ─── Opções disponíveis em cascata ────────────────────────────────────────
-  // Cada nível filtra sobre prestadoresBase respeitando os pais já selecionados,
-  // mostrando só opções com prestadores reais.
 
   const estadosDisponiveis = useMemo(() => {
     const map = new Map<string, number>()
@@ -227,8 +240,9 @@ export function usePrestadores() {
   }, [prestadoresBase, filtroGrupo])
 
   // ─── Lista final com todos os filtros aplicados ───────────────────────────
+  // Ordem de prioridade: URL > query textual ("em X") > cookie do usuário
   const cidadeDaBusca = queryBusca.match(/^(.+?)\s+em\s+(.+)$/i)?.[2]?.trim() || null
-  const cidadeEfetiva = filtroCidade || cidadeDaBusca || (!locationLoading ? cidadeAtual?.nome : null) || null
+  const cidadeEfetiva = filtroCidade || cidadeDaBusca || cidadeCookie || null
 
   const prestadoresExibidos = useMemo(() => {
     return prestadoresBase.filter(p => {
@@ -239,8 +253,8 @@ export function usePrestadores() {
 
       if (cidadeEfetiva) {
         const cn = cidadeEfetiva.toLowerCase().trim()
-        const nomeBate    = p.cidade_nome?.toLowerCase().trim() === cn
-        const atendeBate  = p.cidades_atendidas?.some(c => c?.toLowerCase().trim() === cn)
+        const nomeBate   = p.cidade_nome?.toLowerCase().trim() === cn
+        const atendeBate = p.cidades_atendidas?.some(c => c?.toLowerCase().trim() === cn)
         if (!nomeBate && !atendeBate) return false
       }
 
