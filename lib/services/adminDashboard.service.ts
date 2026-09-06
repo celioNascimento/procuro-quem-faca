@@ -33,12 +33,17 @@ export interface AtivacaoStats {
 }
 
 export async function getContadoresGerais(): Promise<ContadoresGerais> {
-  const [cidades, anuncios, prestadores, logs] = await Promise.all([
+  const resultados = await Promise.all([
     supabase.from('cidades').select('*', { count: 'exact', head: true }),
     supabase.from('anuncios').select('*', { count: 'exact', head: true }),
     supabase.from('prestadores').select('*', { count: 'exact', head: true }),
     supabase.from('logs_atividades').select('*', { count: 'exact', head: true }),
   ])
+
+  const erro = resultados.find(resultado => resultado.error)?.error
+  if (erro) throw erro
+
+  const [cidades, anuncios, prestadores, logs] = resultados
 
   return {
     cidades: cidades.count || 0,
@@ -49,9 +54,11 @@ export async function getContadoresGerais(): Promise<ContadoresGerais> {
 }
 
 export async function getOrigemEAtivacaoStats(): Promise<{ origem: OrigemStats; ativacao: AtivacaoStats }> {
-  const { data: pDataAll } = await supabase
+  const { data: pDataAll, error } = await supabase
     .from('prestadores')
     .select('origem_tipo, user_id, ativacao_status')
+
+  if (error) throw error
 
   const origem: OrigemStats = {
     curadoria: pDataAll?.filter(p => p.origem_tipo === 'curadoria_publica' && !p.user_id).length || 0,
@@ -79,12 +86,13 @@ export async function getOrigemEAtivacaoStats(): Promise<{ origem: OrigemStats; 
  * gravação desse log é uma pendência registrada no roadmap.
  */
 export async function getRankingCategorias(): Promise<CategoriaRanking[]> {
-  const { data: logCats } = await supabase
-    .from('logs_atividades')
-    .select('entidade_id')
-    .eq('acao', 'FILTRO_CATEGORIA')
+  const [{ data: logCats, error: logsError }, { data: catNames, error: categoriasError }] = await Promise.all([
+    supabase.from('logs_atividades').select('entidade_id').eq('acao', 'FILTRO_CATEGORIA'),
+    supabase.from('categorias').select('id, nome'),
+  ])
 
-  const { data: catNames } = await supabase.from('categorias').select('id, nome')
+  if (logsError) throw logsError
+  if (categoriasError) throw categoriasError
 
   const counts = logCats?.reduce((acc: Record<string, number>, log) => {
     if (log.entidade_id) acc[log.entidade_id] = (acc[log.entidade_id] || 0) + 1
@@ -101,12 +109,13 @@ export async function getRankingCategorias(): Promise<CategoriaRanking[]> {
 }
 
 export async function getRadarRecente(): Promise<RadarItem[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('logs_atividades')
     .select('acao, detalhes, created_at')
-    .in('acao', ['CLIQUE_WHATSAPP', 'BUSCA_SEM_SUCESSO', 'DENUNCIA_PERFIL'])
+    .in('acao', ['CLIQUE_WHATSAPP', 'BUSCA_SEM_SUCESSO', 'DENUNCIA_PERFIL', 'FILTRO_CATEGORIA'])
     .order('created_at', { ascending: false })
     .limit(8)
 
+  if (error) throw error
   return (data as RadarItem[]) || []
 }

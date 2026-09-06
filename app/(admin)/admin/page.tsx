@@ -7,7 +7,7 @@ import { AlertCircle, TrendingUp, Zap, ArrowUpRight } from 'lucide-react'
 import { useAdminDashboard } from '@/hooks/useAdminDashboard'
 
 export default function AdminDashboard() {
-  const { stats, radar, refreshing, notificacao, pctAtivacao, carregarDashboard } = useAdminDashboard()
+  const { stats, radar, refreshing, notificacao, erro, pctAtivacao, carregarDashboard } = useAdminDashboard()
 
   return (
     <div className="max-w-5xl mx-auto pb-24 px-4 md:px-6">
@@ -48,6 +48,13 @@ export default function AdminDashboard() {
           <Zap size={16} className={refreshing ? 'text-blue-600' : 'text-zinc-400'} />
         </button>
       </header>
+
+      {erro && (
+        <div role="alert" className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-xs text-red-700">
+          <span>{erro}</span>
+          <button onClick={() => carregarDashboard(true)} className="font-bold underline">Tentar novamente</button>
+        </div>
+      )}
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 pt-6">
         <StatCard label="Curadoria" valor={stats.curadoria} sub="perfis frios" />

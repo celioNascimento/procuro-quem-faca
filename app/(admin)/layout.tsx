@@ -3,7 +3,8 @@
 'use client'
 
 import '../globals.css'
-import { useState, useEffect } from 'react'
+  import { useEffect, useState } from 'react'
+
 import { usePathname } from 'next/navigation'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
@@ -11,15 +12,9 @@ import { AdminHeader } from '@/components/admin/AdminHeader'
 import '../globals.css'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const { userEmail, userName, handleLogout } = useAdminAuth()
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0)
-    return () => clearTimeout(timer)
-  }, [])
 
   useEffect(() => {
     setIsMobileMenuOpen(false)
@@ -27,8 +22,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isLoginPage = pathname === '/admin/login'
   const mostrarSidebar = !!userEmail && !isLoginPage
-
-  if (!mounted) return null
 
   return (
     <div className="h-screen bg-[#F8FAFC] flex font-sans text-slate-900 overflow-hidden">

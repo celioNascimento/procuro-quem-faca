@@ -38,12 +38,14 @@ export function useAdminDashboard() {
   const [stats, setStats] = useState<Stats>(STATS_INICIAL)
   const [radar, setRadar] = useState<RadarItem[]>([])
   const [refreshing, setRefreshing] = useState(false)
-  const [notificacao, setNotificacao] = useState<string | null>(null  )
+  const [notificacao, setNotificacao] = useState<string | null>(null)
+  const [erro, setErro] = useState<string | null>(null)
   const hapticFeedback = useHaptic()
 
   const carregarDashboard = useCallback(async (isRefresh = false) => {
     if (isRefresh) { setRefreshing(true); hapticFeedback(15) }
     try {
+      setErro(null)
       const [contadores, { origem, ativacao }, topCategorias, radarRecente] = await Promise.all([
         getContadoresGerais(),
         getOrigemEAtivacaoStats(),
@@ -59,7 +61,8 @@ export function useAdminDashboard() {
       })
       setRadar(radarRecente)
     } catch (err) {
-      console.error('Erro ao carregar dashboard admin:', err)
+      console.error('[v0] Erro ao carregar dashboard admin:', err)
+      setErro('Não foi possível atualizar os dados do painel.')
     } finally {
       setRefreshing(false)
     }
@@ -84,5 +87,5 @@ export function useAdminDashboard() {
     ? Math.round((stats.ativacao.enviados / stats.ativacao.total) * 100)
     : 0
 
-  return { stats, radar, refreshing, notificacao, pctAtivacao, carregarDashboard }
+  return { stats, radar, refreshing, notificacao, erro, pctAtivacao, carregarDashboard }
 }
