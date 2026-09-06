@@ -93,7 +93,7 @@ Explicar o diferencial do PQF (registro fotográfico + avaliação vinculada a p
 
 ## Pendências técnicas
 
-- [ ] Migrar `EditarPerfilTab.tsx` (Dashboard do Prestador) para usar `/confirmar-exclusao` — última implementação divergente do fluxo de exclusão de conta (ver `14-glossario.md`, seção Exclusão de conta)
+- [ ] Migrar `EditarPerfilTab.tsx` (Dashboard do Prestador) para usar `/confirmar-exclusao` — última implementação divergente do fluxo de exclusão de conta (ver `00-glossario.md`, seção Exclusão de conta)
 - [ ] Mapear/decidir sobre `LocationModal`/`LocationContext` — construído mas não conectado (modal obrigatório de seleção de cidade). Decisão atual: manter desconectado até haver clareza de que múltiplas regiões justificam essa fricção
 - [ ] Finalizar refatoração do wizard do prestador — integrar `WizardForm.tsx`/`WizardTimeline.tsx`/`PrestadorCardHorizontal.tsx` em `UploadWizardContainer.tsx` (hoje ainda com hero/form/timeline inline)
 - [ ] Confirmar se `avaliacoes` tem constraint de unicidade por `projeto_id` (parece ser 1 por projeto pela UI, sem constraint explícita confirmada no schema)
@@ -108,8 +108,8 @@ Explicar o diferencial do PQF (registro fotográfico + avaliação vinculada a p
 - [ ] Conversão gradual de arquivos `.js`/`.jsx` remanescentes para `.ts`/`.tsx` — grande parte da área `(admin)` já convertida; verificar o que ainda resta em `ativacao`/`anuncios`
 - [ ] Avaliar se os handlers sem tipagem em `FormEstado.tsx`/`FormRegiao.tsx`/`FormCidade.tsx` (`/admin/geografia`) merecem tipagem explícita (funcional hoje, só inconsistente com o resto do projeto)
 - [ ] Personalizar `app/sucesso/page.tsx` com dados do projeto/prestador avaliado (hoje texto genérico)
-- [ ] Extrair componente `<Avatar>` compartilhado se o visual de avatar for unificado entre cliente/prestador/futuros anunciantes (ver `14-glossario.md`, seção Avatar, para os 6 pontos hoje independentes)
-- [ ] Se for centralizar a derivação de rótulo/cor a partir de `portfolio_projetos.status`, ver `14-glossario.md` para os 6 pontos hoje implementados independentemente
+- [ ] Extrair componente `<Avatar>` compartilhado se o visual de avatar for unificado entre cliente/prestador/futuros anunciantes (ver `00-glossario.md`, seção Avatar, para os 6 pontos hoje independentes)
+- [ ] Se for centralizar a derivação de rótulo/cor a partir de `portfolio_projetos.status`, ver `00-glossario.md` para os 6 pontos hoje implementados independentemente
 - [ ] Testes automatizados (Vitest) cobrindo fluxos críticos (upload, legenda, autenticação) além dos já existentes
 - [ ] Documentar módulo de gestão de geografia (`app/(admin)/admin/geografia`, `lib/db/geografia.ts`) — não mapeado em detalhe ainda
 - [ ] Confirmar `AnunciosTab.tsx` está de fato renderizado em algum ponto do dashboard (não localizado em revisão anterior)

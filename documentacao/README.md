@@ -1,59 +1,60 @@
-    # Procuro Quem Faça (PQF)
+# Procuro Quem Faça (PQF)
 
-    **Marketplace de prestadores de serviço para Londrina, PR.**
+Marketplace de prestadores de serviço para Londrina, PR.
 
-    🔗 [procuroquemfaca.com.br](https://procuroquemfaca.com.br)
+O PQF conecta clientes a profissionais locais e constrói confiança com portfólios fotográficos, acompanhamento do serviço e avaliações vinculadas a projetos reais.
 
-    ---
+## Documentação
 
-    ## O que é
+| Documento | Conteúdo |
+|---|---|
+| [00 — Glossário](./docs/00-glossario.md) | Conceitos e pontos de entrada no código |
+| [01 — Visão geral](./docs/01-visao-geral.md) | Problema, solução e público |
+| [02 — Arquitetura](./docs/02-arquitetura.md) | Stack, estrutura e padrões |
+| [03 — Banco de dados](./docs/03-banco-de-dados.md) | Modelo Supabase/Postgres e RLS |
+| [04 — Autenticação](./docs/04-autenticacao.md) | Login, onboarding e proteção de rotas |
+| [05–10](./docs/05-cadastro-prestador.md) | Cadastro, dashboards, portfólio, avaliação e busca |
+| [11 — Anúncios](./docs/11-anuncios.md) | MVP de anúncios administrados |
+| [12 — Admin](./docs/12-admin.md) | Área administrativa e permissões |
+| [13 — Roadmap](./docs/13-roadmap.md) | Próximas evoluções |
 
-    O PQF conecta clientes que precisam de um serviço (elétrica, pintura, montagem, limpeza, etc.) a prestadores locais confiáveis em Londrina. O diferencial é a **confiança construída por avaliação real** — cada serviço concluído gera um registro fotográfico do antes/durante/depois, compartilhado com o cliente, que pode avaliar o trabalho ao final.
+## Stack atual
 
-    Com o tempo, isso forma uma base de prestadores com histórico verificável — não apenas "nota", mas evidência visual do trabalho entregue.
+- Next.js 15.5.12 com App Router e TypeScript
+- React 19, Tailwind CSS 4 e componentes próprios
+- Supabase: Postgres, Auth, Storage, RLS e Realtime
+- Vitest, Testing Library e Playwright
+- PostHog, Vercel Analytics e Speed Insights
+- Deploy na Vercel
 
-    ## Para quem é este documento
+## Início rápido
 
-    - **Devs contribuindo no projeto** → veja [`docs/02-arquitetura.md`](./docs/02-arquitetura.md)
-    - **Apresentação / visão de produto** → veja [`docs/01-visao-geral.md`](./docs/01-visao-geral.md)
-    - **Deploy e ambientes** → veja [`docs/06-deploy.md`](./docs/06-deploy.md)
+```bash
+git clone <repo-url>
+cd procuro-quem-faca
+npm install
+# configure as variáveis NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY
+npm run dev
+```
 
-    ## Stack
+Comandos disponíveis:
 
-    - **Framework:** Next.js (App Router)
-    - **Banco de dados / Auth:** Supabase (Postgres + RLS + Auth via Google OAuth)
-    - **Deploy:** Vercel
-    - **Estilo:** Tailwind CSS
+```bash
+npm run dev       # desenvolvimento
+npm run build     # build de produção
+npm run lint      # ESLint
+npm run test:run  # testes unitários
+```
 
-    ## Estrutura da documentação
+Abra [http://localhost:3000](http://localhost:3000).
 
-    | Arquivo | Conteúdo |
-    |---|---|
-    | [`01-visao-geral.md`](./docs/01-visao-geral.md) | Problema, solução, público-alvo |
-    | [`02-arquitetura.md`](./docs/02-arquitetura.md) | Stack, estrutura de pastas, padrões de código |
-    | [`03-banco-de-dados.md`](./docs/03-banco-de-dados.md) | Tabelas, relações, políticas RLS |
-    | [`04-autenticacao.md`](./docs/04-autenticacao.md) | Fluxo de login, roles, `useAuth` |
-    | [`05-modulos.md`](./docs/05-modulos.md) | Prestadores, portfólio, busca, wizard de upload |
-    | [`06-deploy.md`](./docs/06-deploy.md) | Branches, Vercel, variáveis de ambiente |
-    | [`07-roadmap.md`](./docs/07-roadmap.md) | Funcionalidades planejadas |
+> A documentação é mantida em português e deve refletir o código ativo, distinguindo funcionalidades implementadas de itens planejados.
 
-    ## Início rápido (dev local)
+## Links
 
-    ```bash
-    git clone <repo-url>
-    cd procuro-quem-faca
-    npm install
-    cp .env.example .env.local  # preencher com credenciais do Supabase
-    npm run dev
-    ```
+- Site: [procuroquemfaca.com.br](https://procuroquemfaca.com.br)
+- Deploy: consulte as configurações da Vercel do projeto e o arquivo `package.json`.
 
-    Abra [http://localhost:3000](http://localhost:3000).
+---
 
-    ## Branches
-
-    - `main` → produção
-    - `laboratorio-anuncios` → ambiente de teste com dados/serviços reais (preview idêntico a produção)
-
-    ---
-
-    *Documentação viva — atualizar conforme o produto evolui.*
+Última revisão: setembro de 2026.

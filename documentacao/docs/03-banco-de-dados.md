@@ -111,7 +111,7 @@ Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas
 
 **`cliente_user_id` vs `cliente_whatsapp`:** O vínculo do cliente ao projeto foi migrado de uma âncora fraca (`cliente_whatsapp`) para uma âncora forte (`cliente_user_id` uuid). O WhatsApp é mantido apenas como dado de contato legível.
 
- **não é um valor válido** — nunca gravado no banco (ver `14-glossario.md`, seção "Status de projeto", para todos os pontos de código que derivam UI a partir deste campo).
+O valor `em_andamento` não é válido — nunca é gravado no banco. A UI deriva seus rótulos diretamente de `portfolio_projetos.status`.
 
 **`avaliacao_token`** — UUID único por projeto, usado pelo cliente para acessar a página de avaliação/acompanhamento sem login. **Design em avaliação:** login (Google) passaria a ser exigido desde o primeiro acesso ao projeto (não mais opcional), com `portfolio_projetos.cliente_user_id` vinculando a conta que primeiro logar via aquele token — ver `13-roadmap.md`.
 
@@ -134,7 +134,6 @@ Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas
 Agrega `prestadores` + média de `avaliacoes.nota` + contagem de projetos, filtrando `status = 'ativo'`. Existe no banco mas **o frontend não a usa** — `usePrestadores` recalcula médias em JS a partir de dados brutos.
 
 ### Anúncios
-### Anúncios
 
 Sistema com infraestrutura de banco pronta para leilão de lance (CPC) e segmentação geográfica/categórica, operando atualmente em modo **MVP Admin-Only**.
 
@@ -156,7 +155,7 @@ Sistema com infraestrutura de banco pronta para leilão de lance (CPC) e segment
 
 | Tabela | Propósito |
 |---|---|
-| `logs_atividades` | Log genérico de eventos do sistema (ação, entidade, usuário) — fonte única, ver `14-glossario.md` |
+| `logs_atividades` | Log genérico de eventos do sistema (ação, entidade, usuário) — fonte única, ver `00-glossario.md` |
 | `acessos` | Registro de visita/sessão de navegador, distinto de `logs_atividades` |
 
 **`projeto_mensagens`** — tabela associada a um chat em tempo real que **não será implementado** (decisão de produto — WhatsApp já cobre essa necessidade). Nenhum código ativo referencia essa tabela. Se existir no banco, está órfã e pode ser removida sem risco.

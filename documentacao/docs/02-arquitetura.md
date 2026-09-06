@@ -6,7 +6,7 @@
 
 | Camada | Tecnologia |
 |---|---|
-| Framework | Next.js (App Router) |
+| Framework | Next.js 15.5.12 (App Router) |
 | Linguagem | TypeScript |
 | Banco de dados | Supabase (Postgres) |
 | Autenticação | Supabase Auth (Google OAuth) |
@@ -56,11 +56,11 @@ Essa separação existe para:
 - Isolar chamadas ao Supabase em um único lugar por domínio
 - Manter componentes como puramente apresentacionais
 
-Componentes de página (`app/**/page.tsx`) tendem a ser wrappers finos que consomem um hook central; a lógica de estado e efeitos vive no hook; o I/O vive no service. Ver `14-glossario.md` para localizar rapidamente o hook/service correspondente a um conceito específico (ex: "avatar", "WhatsApp", "logout", "status de projeto").
+Componentes de página (`app/**/page.tsx`) tendem a ser wrappers finos que consomem um hook central; a lógica de estado e efeitos vive no hook; o I/O vive no service. Ver `00-glossario.md` para localizar rapidamente o hook/service correspondente a um conceito específico (ex: "avatar", "WhatsApp", "logout", "status de projeto").
 
 ### Módulos com peças construídas mas não conectadas
 
-- **`lib/contexts/LocationContext.tsx` + `components/location/LocationModal.tsx`** — modal de seleção obrigatória de cidade via cookie. `LocationProvider` nunca envolve a árvore em `app/layout.tsx`. Decisão consciente de não conectar: a busca por texto livre (`"pedreiro em Londrina"`, via `usePrestadores`) já cobre a necessidade no estágio mono-região atual. Ver `14-glossario.md`, seção Localização.
+- **`lib/contexts/LocationContext.tsx` + `components/location/LocationModal.tsx`** — modal de seleção obrigatória de cidade via cookie. `LocationProvider` nunca envolve a árvore em `app/layout.tsx`. Decisão consciente de não conectar: a busca por texto livre (`"pedreiro em Londrina"`, via `usePrestadores`) já cobre a necessidade no estágio mono-região atual. Ver `00-glossario.md`, seção Localização.
 - **`components/dashboard/WizardForm.tsx`, `WizardTimeline.tsx`, `PrestadorCardHorizontal.tsx`** — peças de uma refatoração do wizard do prestador, prontas mas não integradas em `UploadWizardContainer.tsx` (que ainda tem hero/form/timeline inline).
 - **`components/profile/AvaliacoesTab.tsx`, `AvaliacaoCard.tsx`, `AvaliacoesResumo.tsx`** — conjunto de exibição de avaliações com distribuição por nota, não conectado a nenhuma tela. `calcularStats` (`lib/utils/avaliacao.utils.ts`) só marca `exibir: true` com 10+ avaliações — decisão de produto para não expor distribuição com baixo volume.
 
@@ -142,7 +142,7 @@ components/
 - **Exclusão de conta:** `useConfirmarExclusaoConta`
 - **Administração:** `useAdminAuth`, `useAdminDashboard`, `useAdminLogs`, `useHabilidades`, `useModeracao`, `usePovoar`, `useGeografia` (local a `app/(admin)/admin/geografia/hooks/`)
 
-Ver `14-glossario.md` para mapear um conceito a todos os hooks/componentes que o tocam.
+Ver `00-glossario.md` para mapear um conceito a todos os hooks/componentes que o tocam.
 
 ## `lib/` — Acesso a dados e utilitários
 

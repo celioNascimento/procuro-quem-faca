@@ -1,6 +1,6 @@
 # Área Administrativa — PQF
 
-Complementa `02-arquitetura.md`. Ver `14-glossario.md` para localizar um conceito específico em todos os módulos que o tocam.
+Complementa `02-arquitetura.md`. Ver `00-glossario.md` para localizar um conceito específico em todos os módulos que o tocam.
 
 **Layout:** `app/(admin)/layout.tsx` — sidebar (`components/admin/AdminSidebar.tsx`) + header (`components/admin/AdminHeader.tsx`), dados de usuário via `hooks/useAdminAuth.ts` (só leitura para exibição; acesso já validado pelo middleware antes da página renderizar).
 
