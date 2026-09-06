@@ -1,11 +1,13 @@
-//hooks/useSugestoes.ts 
+// hooks/useSugestoes.ts
 
 import { useState, useEffect } from 'react'
 import { getSugestoesDestaque, getSugestoesPorBusca } from '@/lib/db/categorias'
 import { SUGESTOES_FALLBACK } from '@/config/categorias'
 
+const MAX_SUGESTOES = 8
+
 export function useSugestoes(busca: string) {
-  const [sugestoes, setSugestoes] = useState<string[]>([]) // ← vazio, sem fallback inicial
+  const [sugestoes, setSugestoes] = useState<string[]>([])
   const [carregado, setCarregado] = useState(false)
 
   useEffect(() => {
@@ -20,18 +22,19 @@ export function useSugestoes(busca: string) {
         if (cancelado) return
 
         if (data && data.length > 0) {
-          setSugestoes(data.map(i => i.nome))
+          setSugestoes(data.slice(0, MAX_SUGESTOES).map(i => i.nome))
         } else {
-          setSugestoes(SUGESTOES_FALLBACK) // fallback só se banco retornar vazio
+          setSugestoes(SUGESTOES_FALLBACK)
         }
       } catch {
-        if (!cancelado) setSugestoes(SUGESTOES_FALLBACK) // fallback só em erro
+        if (!cancelado) setSugestoes(SUGESTOES_FALLBACK)
       } finally {
         if (!cancelado) setCarregado(true)
       }
     }
 
-    const timer = setTimeout(buscarSugestoes, busca.trim() ? 300 : 0) // sem debounce no carregamento inicial
+    const delay = busca.trim() ? 300 : 0
+    const timer = setTimeout(buscarSugestoes, delay)
     return () => {
       clearTimeout(timer)
       cancelado = true
