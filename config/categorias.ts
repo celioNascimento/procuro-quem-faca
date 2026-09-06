@@ -5,7 +5,7 @@
 export const SUGESTOES_FALLBACK = [
   'Pedreiro',
   'Eletricista',
-  'Encanador',
+  'Manicure',
   'Personal Trainer',
   'Diarista',
 ]
