@@ -122,7 +122,7 @@ export function usePrestadores() {
           total_avals:  mediaMap[p.id]?.total                    || 0,
         }))
 
-        const { termo, cidadeExtraida } = parsearBusca(queryBusca)
+        const { termo } = parsearBusca(queryBusca)
         const termoNorm = normalizarTermo(termo, filtroHab)
 
         const vitrines = normalizados.filter(p => p.origem_tipo === 'vitrine')
@@ -134,12 +134,6 @@ export function usePrestadores() {
           ...[...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b)),
         ])
 
-        // Se extraiu cidade da query e não tem cidade na URL, aplica via router
-        if (cidadeExtraida && !filtroCidade) {
-          const params = new URLSearchParams(window.location.search)
-          params.set('cidade', cidadeExtraida)
-          router.replace(`/prestadores?${params.toString()}`, { scroll: false })
-        }
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return
         console.error('[usePrestadores]', err)
@@ -151,7 +145,7 @@ export function usePrestadores() {
 
     fetchDados()
     return () => controller.abort()
-  }, [queryBusca, filtroHab, filtroCidade, router])
+  }, [queryBusca, filtroHab])
 
   // ─── Opções disponíveis em cascata ────────────────────────────────────────
 
@@ -191,11 +185,6 @@ export function usePrestadores() {
       .forEach(p => {
         if (p.cidade_nome) {
           contagem[p.cidade_nome] = (contagem[p.cidade_nome] ?? 0) + 1
-        }
-        if (Array.isArray(p.cidades_atendidas)) {
-          p.cidades_atendidas.forEach(c => {
-            if (c?.trim()) contagem[c.trim()] = (contagem[c.trim()] ?? 0) + 1
-          })
         }
       })
     return Object.entries(contagem)
@@ -250,7 +239,7 @@ export function usePrestadores() {
 
       return true
     })
-  }, [prestadoresBase, filtroEstado, filtroRegiao, filtroCidade, filtroGrupo, filtroCategoria, cidadeEfetiva])
+  }, [prestadoresBase, filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria, cidadeEfetivaNormalizada])
 
   return {
     prestadoresBase,
