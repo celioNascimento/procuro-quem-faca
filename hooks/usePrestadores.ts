@@ -20,6 +20,15 @@ function calcularMedias(medias: { prestador_id: string; nota: number }[]) {
   return map
 }
 
+function normalizarCidade(valor: string | null | undefined): string {
+  return (valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+-\s+[a-z]{2}$/i, '')
+    .trim()
+}
+
 function parsearBusca(query: string): { termo: string; cidadeExtraida: string | null } {
   const match = query.match(/^(.+?)\s+em\s+(.+)$/i)
   if (match) return { termo: match[1].trim(), cidadeExtraida: match[2].trim() }
@@ -113,7 +122,7 @@ export function usePrestadores() {
           total_avals:  mediaMap[p.id]?.total                    || 0,
         }))
 
-        const { termo, cidadeExtraida } = parsearBusca(queryBusca)
+        const { termo } = parsearBusca(queryBusca)
         const termoNorm = normalizarTermo(termo, filtroHab)
 
         const vitrines = normalizados.filter(p => p.origem_tipo === 'vitrine')
@@ -125,12 +134,6 @@ export function usePrestadores() {
           ...[...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b)),
         ])
 
-        // Se extraiu cidade da query e não tem cidade na URL, aplica via router
-        if (cidadeExtraida && !filtroCidade) {
-          const params = new URLSearchParams(window.location.search)
-          params.set('cidade', cidadeExtraida)
-          router.replace(`/prestadores?${params.toString()}`, { scroll: false })
-        }
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return
         console.error('[usePrestadores]', err)
@@ -142,7 +145,7 @@ export function usePrestadores() {
 
     fetchDados()
     return () => controller.abort()
-  }, [queryBusca, filtroHab, filtroCidade, router])
+  }, [queryBusca, filtroHab])
 
   // ─── Opções disponíveis em cascata ────────────────────────────────────────
 
@@ -183,11 +186,6 @@ export function usePrestadores() {
         if (p.cidade_nome) {
           contagem[p.cidade_nome] = (contagem[p.cidade_nome] ?? 0) + 1
         }
-        if (Array.isArray(p.cidades_atendidas)) {
-          p.cidades_atendidas.forEach(c => {
-            if (c?.trim()) contagem[c.trim()] = (contagem[c.trim()] ?? 0) + 1
-          })
-        }
       })
     return Object.entries(contagem)
       .sort((a, b) => b[1] - a[1])
@@ -226,6 +224,7 @@ export function usePrestadores() {
   // Ordem de prioridade: URL > query textual ("em X") > contexto do usuário
   const cidadeDaBusca = queryBusca.match(/^(.+?)\s+em\s+(.+)$/i)?.[2]?.trim() || null
   const cidadeEfetiva = filtroCidade || cidadeDaBusca || (!locationLoading ? cidadeAtual?.nome : null) || null
+  const cidadeEfetivaNormalizada = normalizarCidade(cidadeEfetiva)
 
   const prestadoresExibidos = useMemo(() => {
     return prestadoresBase.filter(p => {
@@ -234,16 +233,13 @@ export function usePrestadores() {
       if (filtroGrupo     && p.grupo_id      !== filtroGrupo)     return false
       if (filtroCategoria && p.categoria_id  !== filtroCategoria) return false
 
-      if (cidadeEfetiva) {
-        const cn = cidadeEfetiva.toLowerCase().trim()
-        const nomeBate   = p.cidade_nome?.toLowerCase().trim() === cn
-        const atendeBate = p.cidades_atendidas?.some(c => c?.toLowerCase().trim() === cn)
-        if (!nomeBate && !atendeBate) return false
+      if (cidadeEfetivaNormalizada && normalizarCidade(p.cidade_nome) !== cidadeEfetivaNormalizada) {
+        return false
       }
 
       return true
     })
-  }, [prestadoresBase, filtroEstado, filtroRegiao, filtroCidade, filtroGrupo, filtroCategoria, cidadeEfetiva])
+  }, [prestadoresBase, filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria, cidadeEfetivaNormalizada])
 
   return {
     prestadoresBase,

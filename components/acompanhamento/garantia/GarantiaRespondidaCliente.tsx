@@ -93,6 +93,17 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
 
   return (
     <div className="space-y-4">
+      <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4">
+        <p className="text-[9px] font-black uppercase tracking-widest text-orange-500 mb-2">
+          Problema relatado
+        </p>
+        <p className="text-[11px] font-medium text-orange-700/80 leading-snug">
+          {caso.descricao_problema}
+        </p>
+      </div>
+
+      <GarantiaCarrossel wizard={wizard} podeEnviar={false} autorTipo="cliente" fase="problema" />
+
       {caso.resposta_prestador_garantia && (
         <div className="bg-white border border-slate-100 rounded-2xl p-4">
           <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
@@ -104,7 +115,7 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
         </div>
       )}
 
-      <GarantiaCarrossel wizard={wizard} podeEnviar autorTipo="cliente" />
+      <GarantiaCarrossel wizard={wizard} podeEnviar autorTipo="cliente" fase="resolucao" />
       <GarantiaComentarios wizard={wizard} casoId={caso.id} />
 
       {modo === 'decidir' && (

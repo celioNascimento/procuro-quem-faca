@@ -15,6 +15,7 @@ import { StatusMini }               from '@/components/acompanhamento/StatusMini
 import { ModalDiscussao }           from '@/components/acompanhamento/ModalDiscussao'
 import { RodapeSeguranca }          from '@/components/acompanhamento/RodapeSeguranca'
 import { GarantiaSecaoCliente }     from '@/components/acompanhamento/garantia/GarantiaSecaoCliente'
+import { AdCardPainelCliente }      from '@/components/painel/AdCardPainelCliente'
 import AcompanhamentoSkeleton       from '@/components/skeletons/AcompanhamentoSkeleton'
 
 export default function PaginaAcompanhamento({
@@ -108,6 +109,11 @@ export default function PaginaAcompanhamento({
           </aside>
 
           <div className="flex-1 min-w-0 space-y-5">
+            <AdCardPainelCliente
+              servicos={[]}
+              prestadorId={projeto.prestador_id}
+            />
+
             {semFotos ? (
               <LinhaDeTempoSemFotos
                 status={projeto.status}

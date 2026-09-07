@@ -59,21 +59,6 @@ export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
   return (
     <div className="space-y-4">
 
-      {/* Badge de resultado */}
-      <div className={`rounded-2xl p-5 border flex items-start gap-3 ${config.cor}`}>
-        <Icon size={18} className="shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="text-[11px] font-black uppercase tracking-wide leading-none">
-            {config.titulo}
-          </p>
-          {textoDescricao && (
-            <p className="text-[11px] font-medium leading-snug opacity-80">
-              {textoDescricao}
-            </p>
-          )}
-        </div>
-      </div>
-
       {/* Problema que você relatou */}
       <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3">
         <AlertTriangle size={14} className="text-orange-400 shrink-0 mt-0.5" />
@@ -86,6 +71,13 @@ export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
           </p>
         </div>
       </div>
+
+      <GarantiaCarrossel
+        wizard={wizard}
+        podeEnviar={false}
+        autorTipo="cliente"
+        fase="problema"
+      />
 
       {/* Proposta registrada pelo prestador */}
       {caso.resposta_prestador_garantia && (
@@ -102,11 +94,11 @@ export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
         </div>
       )}
 
-      {/* Fotos — clicáveis via GarantiaCarrossel + GarantiaZoomModal */}
       <GarantiaCarrossel
         wizard={wizard}
         podeEnviar={false}
         autorTipo="cliente"
+        fase="resolucao"
       />
 
       {/* Histórico de conversa — somente leitura */}
@@ -131,6 +123,21 @@ export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
           </div>
         </div>
       )}
+
+      {/* Avaliação e resultado ficam por último */}
+      <div className={`rounded-2xl p-5 border flex items-start gap-3 ${config.cor}`}>
+        <Icon size={18} className="shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="text-[11px] font-black uppercase tracking-wide leading-none">
+            {config.titulo}
+          </p>
+          {textoDescricao && (
+            <p className="text-[11px] font-medium leading-snug opacity-80">
+              {textoDescricao}
+            </p>
+          )}
+        </div>
+      </div>
 
     </div>
   )

@@ -21,9 +21,11 @@ const FALLBACK_PADRAO: AdFallback = {
 
 export function AdCardPainelCliente({
   servicos,
+  prestadorId,
   loading = false,
 }: {
   servicos: ClienteServico[]
+  prestadorId?: string | number | null
   loading?: boolean
 }) {
   const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined)
@@ -37,8 +39,8 @@ export function AdCardPainelCliente({
     async function carregar() {
       try {
         const servicoRecente = servicos[0]
-        const prestadorId = servicoRecente?.prestadores?.id
-        if (!prestadorId) {
+        const prestadorIdParaBusca = prestadorId ?? servicoRecente?.prestadores?.id
+        if (!prestadorIdParaBusca) {
           if (!cancelado) setAnuncio(null)
           return
         }
@@ -46,7 +48,7 @@ export function AdCardPainelCliente({
         const { data: prestador, error } = await supabase
           .from('prestadores')
           .select('cidade_id')
-          .eq('id', prestadorId)
+          .eq('id', prestadorIdParaBusca)
           .maybeSingle()
 
         if (error) throw error
@@ -102,7 +104,7 @@ export function AdCardPainelCliente({
     return () => {
       cancelado = true
     }
-  }, [servicos, loading])
+  }, [servicos, prestadorId, loading])
 
   useEffect(() => {
     if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
