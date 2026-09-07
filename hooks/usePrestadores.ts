@@ -244,12 +244,8 @@ export function usePrestadores() {
       if (filtroGrupo     && p.grupo_id      !== filtroGrupo)     return false
       if (filtroCategoria && p.categoria_id  !== filtroCategoria) return false
 
-      if (cidadeEfetivaNormalizada) {
-        const nomeBate = normalizarCidade(p.cidade_nome) === cidadeEfetivaNormalizada
-        const atendeBate = p.cidades_atendidas?.some(
-          cidade => normalizarCidade(cidade) === cidadeEfetivaNormalizada
-        )
-        if (!nomeBate && !atendeBate) return false
+      if (cidadeEfetivaNormalizada && normalizarCidade(p.cidade_nome) !== cidadeEfetivaNormalizada) {
+        return false
       }
 
       return true
