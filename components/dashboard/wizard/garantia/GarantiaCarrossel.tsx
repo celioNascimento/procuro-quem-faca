@@ -15,13 +15,14 @@ interface Props {
   wizard: ReturnType<typeof useGarantiaWizard>
   podeEnviar: boolean
   autorTipo: 'cliente' | 'prestador'
+  fase?: 'problema' | 'resolucao' | 'todas'
 }
 
-export function GarantiaCarrossel({ wizard, podeEnviar, autorTipo }: Props) {
+export function GarantiaCarrossel({ wizard, podeEnviar, autorTipo, fase = 'todas' }: Props) {
   const { state, actions } = wizard
 
-  const fotosProblema  = state.fotos.filter((f) => f.fase === 'problema')
-  const fotosResolucao = state.fotos.filter((f) => f.fase === 'resolucao')
+  const fotosProblema  = fase === 'resolucao' ? [] : state.fotos.filter((f) => f.fase === 'problema')
+  const fotosResolucao = fase === 'problema' ? [] : state.fotos.filter((f) => f.fase === 'resolucao')
 
   const labelUpload = autorTipo === 'cliente'
     ? 'Anexar foto do problema'
