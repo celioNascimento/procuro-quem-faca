@@ -90,7 +90,7 @@ function PerfilPageContent() {
         </section>
       )}
 
-      <div className="pt-6">
+      <div className="pt-3">
         <AdCardDashboard />
       </div>
 

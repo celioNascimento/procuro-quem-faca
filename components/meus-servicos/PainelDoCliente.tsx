@@ -212,7 +212,7 @@ export default function PainelDoCliente() {
 
       <div className="mx-auto max-w-5xl px-5 pt-24 md:pt-36 animate-in fade-in duration-700">
         <AdCardPainelCliente servicos={servicos as any} loading={loading} />
-        <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:gap-8">
+        <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:gap-6">
 
           {/* ── Coluna Esquerda ── */}
           <div className="w-full lg:w-1/3 shrink-0">

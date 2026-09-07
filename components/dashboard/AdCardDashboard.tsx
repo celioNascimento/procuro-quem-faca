@@ -97,7 +97,7 @@ export function AdCardDashboard() {
   // Reserva o espaço enquanto a segmentação é resolvida. Renderizar null aqui
   // fazia o conteúdo subir e depois saltar quando o anúncio chegava.
   if (anuncio === undefined) {
-    return <div className="mx-auto mb-6 h-[120px] w-full max-w-4xl animate-pulse rounded-2xl border border-slate-100 bg-slate-50 md:h-[160px] lg:h-[200px]" aria-label="Carregando publicidade" />
+    return <div className="mx-auto mb-3 h-[120px] w-full max-w-4xl animate-pulse rounded-2xl border border-slate-100 bg-slate-50 md:h-[160px] lg:h-[200px]" aria-label="Carregando publicidade" />
   }
 
   if (!anuncio || !anuncio.imagem_url) {
@@ -114,7 +114,7 @@ export function AdCardDashboard() {
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleClick}
-      className="relative mx-auto mb-6 block w-full max-w-4xl overflow-hidden rounded-2xl shadow-sm transition-opacity hover:opacity-95"
+      className="relative mx-auto mb-3 block w-full max-w-4xl overflow-hidden rounded-2xl shadow-sm transition-opacity hover:opacity-95"
     >
       <img
         src={anuncio.imagem_url}

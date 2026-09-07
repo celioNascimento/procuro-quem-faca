@@ -56,7 +56,7 @@ export function AdCard({ page, anuncio, categoria }: Props) {
   // "sem anúncio" antes da resposta real chegar. Reserva o mesmo espaço
   // visual do banner pra não saltar o layout quando o resultado chegar.
   if (carregando) {
-    return <div className="my-2 w-full h-[90px] md:h-[120px] lg:h-[140px] bg-zinc-50 border border-zinc-100 animate-pulse rounded-2xl" />
+    return <div className="my-1 w-full h-[90px] md:h-[120px] lg:h-[140px] bg-zinc-50 border border-zinc-100 animate-pulse rounded-2xl" />
   }
 
   if (!anuncio || expirado || agendado) {
