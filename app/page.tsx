@@ -65,7 +65,10 @@ export default function Home() {
     insertLog({ acao: 'BUSCA_REALIZADA', detalhes: { termo: termoFinal }, entidadeTipo: 'busca' })
 
     const params = new URLSearchParams({ q: termoFinal })
-    if (cidadeAtual?.nome) params.set('cidade', cidadeAtual.nome)
+    // Uma cidade escrita na busca tem prioridade sobre a cidade salva do usuário.
+    // Ex.: “massoterapia em Maringá” não deve ser sobrescrita por Londrina.
+    const cidadeInformada = termoFinal.match(/^.+?\s+em\s+.+$/i)
+    if (!cidadeInformada && cidadeAtual?.nome) params.set('cidade', cidadeAtual.nome)
     router.push(`/prestadores?${params.toString()}`)
   }
 

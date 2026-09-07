@@ -20,6 +20,15 @@ function calcularMedias(medias: { prestador_id: string; nota: number }[]) {
   return map
 }
 
+function normalizarCidade(valor: string | null | undefined): string {
+  return (valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+-\s+[a-z]{2}$/i, '')
+    .trim()
+}
+
 function parsearBusca(query: string): { termo: string; cidadeExtraida: string | null } {
   const match = query.match(/^(.+?)\s+em\s+(.+)$/i)
   if (match) return { termo: match[1].trim(), cidadeExtraida: match[2].trim() }
@@ -226,6 +235,7 @@ export function usePrestadores() {
   // Ordem de prioridade: URL > query textual ("em X") > contexto do usuário
   const cidadeDaBusca = queryBusca.match(/^(.+?)\s+em\s+(.+)$/i)?.[2]?.trim() || null
   const cidadeEfetiva = filtroCidade || cidadeDaBusca || (!locationLoading ? cidadeAtual?.nome : null) || null
+  const cidadeEfetivaNormalizada = normalizarCidade(cidadeEfetiva)
 
   const prestadoresExibidos = useMemo(() => {
     return prestadoresBase.filter(p => {
@@ -234,10 +244,11 @@ export function usePrestadores() {
       if (filtroGrupo     && p.grupo_id      !== filtroGrupo)     return false
       if (filtroCategoria && p.categoria_id  !== filtroCategoria) return false
 
-      if (cidadeEfetiva) {
-        const cn = cidadeEfetiva.toLowerCase().trim()
-        const nomeBate   = p.cidade_nome?.toLowerCase().trim() === cn
-        const atendeBate = p.cidades_atendidas?.some(c => c?.toLowerCase().trim() === cn)
+      if (cidadeEfetivaNormalizada) {
+        const nomeBate = normalizarCidade(p.cidade_nome) === cidadeEfetivaNormalizada
+        const atendeBate = p.cidades_atendidas?.some(
+          cidade => normalizarCidade(cidade) === cidadeEfetivaNormalizada
+        )
         if (!nomeBate && !atendeBate) return false
       }
 
