@@ -121,7 +121,26 @@ export function useLoginForm() {
 
     try {
       const { data: usuarioExiste, error: rpcError } = await supabase.rpc('verificar_usuario_existe', { email_busca: email })
-      if (rpcError || !usuarioExiste) { setMensagem('Erro: Esta conta não foi encontrada.'); setLoading(false); return }
+
+      // Falha técnica ou rate limit (RPC agora lança exceção após 5
+      // tentativas/15min para o mesmo e-mail — ver rls_garantia.sql /
+      // rate_limit_verificar_email no banco). Não revela se a conta existe.
+      if (rpcError) {
+        setMensagem('Erro: Não foi possível processar agora. Tente novamente em instantes.')
+        setLoading(false)
+        return
+      }
+
+      // IMPORTANTE: mensagem idêntica ao caminho de sucesso abaixo.
+      // Antes, este branch mostrava "Esta conta não foi encontrada", o que
+      // permitia descobrir se um e-mail tem conta no PQF (enumeração de
+      // usuários) só testando o formulário de recuperação de senha.
+      // Nunca diferenciar "não existe" de "existe, e-mail enviado" aqui.
+      if (!usuarioExiste) {
+        setMensagem('Sucesso: Se este e-mail estiver cadastrado, você receberá um link.')
+        setLoading(false)
+        return
+      }
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/recuperar-senha` })
       if (isActive.current) {
