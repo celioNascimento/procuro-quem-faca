@@ -14,11 +14,11 @@ function Badge({ children, tone = 'neutral' }: { children: React.ReactNode; tone
 
 function PrestadorRow({ item, onSelect }: { item: AdminPrestador; onSelect: () => void }) {
   const tone = item.etapa === 'ativo' ? 'green' : item.etapa === 'publico' ? 'neutral' : item.etapa === 'cadastro' ? 'amber' : 'blue'
-  return <button onClick={onSelect} className="group grid w-full grid-cols-[minmax(0,1.5fr)_minmax(120px,1fr)_110px_32px] items-center gap-4 border-b border-slate-100 px-5 py-4 text-left transition-colors hover:bg-slate-50">
-    <div className="min-w-0"><p className="truncate text-sm font-bold text-slate-800">{item.nome || 'Prestador sem nome'}</p><p className="mt-1 truncate text-xs text-slate-400">{item.categoria || 'Categoria não informada'} · {item.cidade || 'Local não informado'}</p></div>
-    <div><Badge tone={tone}>{item.etapaLabel}</Badge><p className="mt-1 text-[10px] text-slate-400">{formatOrigem(item.origem_tipo)}</p></div>
+  return <button onClick={onSelect} className="group grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 border-b border-slate-100 px-5 py-4 text-left transition-colors hover:bg-slate-50 md:grid-cols-[minmax(0,1.5fr)_minmax(120px,1fr)_110px_32px] md:items-center md:gap-4">
+    <div className="min-w-0"><p className="truncate text-sm font-bold text-slate-800">{item.nome || 'Prestador sem nome'}</p><p className="mt-1 truncate text-xs text-slate-400">{item.categoria || 'Categoria não informada'}{item.cidade ? ` · ${item.cidade}` : ''}</p></div>
+    <ChevronRight className="row-span-2 text-slate-300 transition-transform group-hover:translate-x-1 md:order-4 md:row-span-1" />
+    <div className="min-w-0"><Badge tone={tone}>{item.etapaLabel}</Badge><p className="mt-1 text-[10px] text-slate-400">{formatOrigem(item.origem_tipo)}</p></div>
     <div><p className="text-xs font-semibold text-slate-600">{item.completude}% completo</p><p className="mt-1 text-[10px] text-slate-400">Atualizado {formatDate(item.updated_at)}</p></div>
-    <ChevronRight className="text-slate-300 transition-transform group-hover:translate-x-1" />
   </button>
 }
 
