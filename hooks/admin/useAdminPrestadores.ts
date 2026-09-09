@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { AdminPrestador, AdminPrestadoresFilters, AdminPrestadoresResponse, PrestadorTab } from '@/types/adminPrestadores'
 
-const initialFilters: AdminPrestadoresFilters = { busca: '', origem: '', cidade: '' }
+const initialFilters: AdminPrestadoresFilters = { busca: '', origem: '', cidade: '', categoria: '', grupoCategoria: '' }
 
 export function useAdminPrestadores() {
   const [tab, setTab] = useState<PrestadorTab>('todos')
@@ -16,7 +16,7 @@ export function useAdminPrestadores() {
   const load = useCallback(async () => {
     setLoading(true); setError(null)
     try {
-      const params = new URLSearchParams({ tab, busca: filters.busca, origem: filters.origem, cidade: filters.cidade })
+      const params = new URLSearchParams({ tab, busca: filters.busca, origem: filters.origem, cidade: filters.cidade, categoria: filters.categoria, grupoCategoria: filters.grupoCategoria })
       const response = await fetch(`/api/admin/prestadores?${params}`)
       if (!response.ok) throw new Error('Falha ao carregar prestadores')
       setData(await response.json())

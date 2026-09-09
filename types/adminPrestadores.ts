@@ -10,6 +10,9 @@ export interface AdminPrestador {
   cidade: string | null
   estado_sigla: string | null
   categoria: string | null
+  categoria_id: string | null
+  grupoCategoria: string | null
+  grupo_id: string | null
   origem_tipo: string | null
   user_id: string | null
   status: string | null
@@ -32,6 +35,8 @@ export interface AdminPrestadoresFilters {
   busca: string
   origem: string
   cidade: string
+  categoria: string
+  grupoCategoria: string
 }
 
 export function getPrestadorStage(row: { user_id?: string | null; origem_tipo?: string | null; ativacao_status?: string | null; status?: string | null }): PrestadorStage {
@@ -57,11 +62,13 @@ export function getProximaAcao(etapa: PrestadorStage) {
 export function normalizeAdminPrestador(row: Record<string, unknown>): AdminPrestador {
   const value = (key: string) => row[key]
   const text = (key: string) => typeof value(key) === 'string' ? value(key) as string : null
+  const categoriaRelation = row.categorias as { id?: string; nome?: string; grupo_id?: string; categorias_grupos?: { id?: string; nome?: string } | null } | null
+  const cidadeRelation = row.cidades as { nome?: string; estado_sigla?: string } | null
   const etapa = getPrestadorStage({ user_id: text('user_id'), origem_tipo: text('origem_tipo'), ativacao_status: text('ativacao_status'), status: text('status') })
   const completude = getCompletude(row)
   return {
-    id: Number(value('id')), nome: text('nome'), slug: text('slug'), whatsapp: text('whatsapp'), email: text('email'),
-    cidade: text('cidade'), estado_sigla: text('estado_sigla'), categoria: text('categoria'), origem_tipo: text('origem_tipo'),
+    id: Number(value('id')), nome: text('nome') ?? text('nome_fantasia') ?? text('razao_social'), slug: text('slug'), whatsapp: text('whatsapp'), email: text('email'),
+    cidade: cidadeRelation?.nome ?? text('cidade'), estado_sigla: cidadeRelation?.estado_sigla ?? text('estado_sigla'), categoria: categoriaRelation?.nome ?? text('categoria'), categoria_id: text('categoria_id') ?? categoriaRelation?.id ?? null, grupoCategoria: categoriaRelation?.categorias_grupos?.nome ?? null, grupo_id: text('grupo_id') ?? categoriaRelation?.grupo_id ?? null, origem_tipo: text('origem_tipo'),
     user_id: text('user_id'), status: text('status'), ativacao_status: text('ativacao_status'),
     created_at: text('created_at'), updated_at: text('updated_at'), completude, etapa,
     etapaLabel: getEtapaLabel(etapa), contatoStatus: value('ativacao_enviado_em') ? 'contatado' : text('whatsapp') ? 'pendente' : 'sem_contato',
