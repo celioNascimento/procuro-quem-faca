@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     template: "%s | Procuro Quem Faça"
   },
   description: "A plataforma mais rápida para encontrar eletricistas, encanadores e especialistas. Contato direto via WhatsApp.",
+  verification: {
+    google: 'Yuj6x1rLeZizyKn-m2pUCCv0J5lo-PycdgnUGKYjdRU',
+  },
   openGraph: {
     title: "Procuro Quem Faça | Encontre Profissionais",
     description: "Eletricistas, encanadores e especialistas a um clique de distância. Contato direto via WhatsApp.",
