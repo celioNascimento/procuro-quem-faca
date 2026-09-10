@@ -48,6 +48,7 @@ export function AdminSidebar({ isMobileMenuOpen, onCloseMobileMenu, onLogout }: 
             label="Ativação"
             icon={<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.14 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.05 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16z" />}
           />
+          <SidebarLink href="/admin/prestadores" label="Prestadores" icon={<><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a6 6 0 0 0-4-5.65" /></>} />
           <SidebarLink href="/admin/povoar" label="Povoar Base" icon={<path d="M12 4v16m8-8H4" />} />
           <SidebarLink href="/admin/anuncios" label="Anúncios" icon={<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />} />
 
