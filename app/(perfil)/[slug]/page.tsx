@@ -27,7 +27,7 @@ async function buscarPerfil(slug: string): Promise<PerfilSeo | null> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('prestadores')
-    .select('nome, slug, bio, categoria, foto_perfil, status, estado_sigla, categorias(nome), cidades(nome)')
+    .select('nome, slug, bio, foto_perfil, status, estado_sigla, categorias(nome), cidades(nome)')
     .eq('slug', slug)
     .eq('status', 'ativo')
     .maybeSingle()
@@ -41,7 +41,7 @@ async function buscarPerfil(slug: string): Promise<PerfilSeo | null> {
     nome: data.nome,
     slug: data.slug,
     bio: data.bio,
-    categoria: categoriaRelacionada?.nome ?? data.categoria ?? null,
+    categoria: categoriaRelacionada?.nome ?? null,
     cidade: cidadeRelacionada?.nome ?? null,
     estado: data.estado_sigla ?? null,
     fotoPerfil: data.foto_perfil,
