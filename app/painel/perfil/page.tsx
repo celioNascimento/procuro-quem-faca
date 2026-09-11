@@ -244,7 +244,7 @@ export default function PerfilDoCliente() {
                 >
                   {[
 { id: 'todos',       label: `Todos (${servicos.length})` },
-  { id: 'pendente',    label: `Aceitar (${servicos.filter(s => s.status === 'em_registro').length})` },
+  { id: 'pendente',    label: `Aceitar (${servicos.filter(s => s.status?.toLowerCase() === 'pendente').length})` },
   { id: 'andamento',   label: `Em andamento (${servicos.filter(s => s.status === 'em_execucao').length})` },
   { id: 'avaliar',     label: `Avaliar (${avaliarCount})` },
   { id: 'finalizados', label: `Concluídos (${servicos.filter(s => s.status === 'finalizado').length})` },
