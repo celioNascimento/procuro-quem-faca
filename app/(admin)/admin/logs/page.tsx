@@ -74,7 +74,7 @@ export default function AdminLogs() {
           </div>
         </div>
         <div className="h-[250px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={250} minHeight={250} initialDimension={{ width: 600, height: 250 }}>
             <BarChart data={dadosGrafico}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#94a3b8' }} dy={10} />

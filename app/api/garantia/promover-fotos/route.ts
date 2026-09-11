@@ -21,13 +21,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Client com service role — só existe neste contexto server-side,
-// nunca deve ser importado por código que roda no browser.
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!, // ⚠️ confirmar nome exato da env var no projeto
-)
-
 const BUCKET_PRIVADO = 'garantia'
 const BUCKET_PUBLICO = 'garantia-publico'
 
@@ -38,6 +31,18 @@ export async function POST(req: NextRequest) {
     if (!casoId) {
       return NextResponse.json({ error: 'casoId é obrigatório' }, { status: 400 })
     }
+
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error('[promover-fotos] Configuração Supabase administrativa ausente')
+      return NextResponse.json({ error: 'Serviço temporariamente indisponível' }, { status: 503 })
+    }
+
+    // Client com service role — criado apenas quando a rota é chamada,
+    // nunca durante a geração de páginas no build.
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
 
     // Busca só as fotos de resolução ainda não promovidas
     const { data: fotos, error: fotosError } = await supabaseAdmin
