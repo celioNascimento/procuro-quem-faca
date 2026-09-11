@@ -29,6 +29,10 @@ function normalizarCidade(valor: string | null | undefined): string {
     .trim()
 }
 
+function normalizarId(valor: string | number | null | undefined): string {
+  return valor == null ? '' : String(valor)
+}
+
 function parsearBusca(query: string): { termo: string; cidadeExtraida: string | null } {
   const match = query.match(/^(.+?)\s+em\s+(.+)$/i)
   if (match) return { termo: match[1].trim(), cidadeExtraida: match[2].trim() }
@@ -107,20 +111,29 @@ export function usePrestadores() {
 
         const mediaMap = calcularMedias(medias || [])
 
-        const normalizados: Prestador[] = (pData || []).map(p => ({
-          ...p,
-          cidade_nome:  p.cidades?.nome                          || '',
-          cidade_id:    p.cidades?.id                            || p.cidade_id    || null,
-          categoria:    p.categorias?.nome                       || 'Profissional',
-          categoria_id: p.categorias?.id                         || p.categoria_id || null,
-          estado_sigla: p.estado_sigla                           || p.cidades?.estado_sigla || '',
-          regiao_id:    p.regiao_id                              || p.cidades?.regiao_id    || null,
-          regiao_nome:  p.regioes?.nome                          || '',
-          grupo_id:     p.grupo_id                               || p.categorias?.grupo_id  || null,
-          grupo_nome:   p.categorias?.categorias_grupos?.nome    || '',
-          media_nota:   mediaMap[p.id] ? mediaMap[p.id].soma / mediaMap[p.id].total : 0,
-          total_avals:  mediaMap[p.id]?.total                    || 0,
-        }))
+        const normalizados: Prestador[] = (pData || []).map(p => {
+          const cidadeRelacionada = Array.isArray(p.cidades) ? p.cidades[0] : p.cidades
+          const categoriaRelacionada = Array.isArray(p.categorias) ? p.categorias[0] : p.categorias
+          const regiaoRelacionada = Array.isArray(p.regioes) ? p.regioes[0] : p.regioes
+          const grupoRelacionado = Array.isArray(categoriaRelacionada?.categorias_grupos)
+            ? categoriaRelacionada.categorias_grupos[0]
+            : categoriaRelacionada?.categorias_grupos
+
+          return {
+            ...p,
+            cidade_nome:   cidadeRelacionada?.nome                  || '',
+            cidade_id:     normalizarId(cidadeRelacionada?.id           || p.cidade_id),
+            categoria:     categoriaRelacionada?.nome               || 'Profissional',
+            categoria_id:  normalizarId(categoriaRelacionada?.id         || p.categoria_id),
+            estado_sigla:  p.estado_sigla                          || cidadeRelacionada?.estado_sigla || '',
+            regiao_id:     normalizarId(p.regiao_id                    || cidadeRelacionada?.regiao_id),
+            regiao_nome:   regiaoRelacionada?.nome                    || '',
+            grupo_id:      normalizarId(p.grupo_id                     || categoriaRelacionada?.grupo_id || grupoRelacionado?.id),
+            grupo_nome:    grupoRelacionado?.nome                    || '',
+            media_nota:    mediaMap[p.id] ? mediaMap[p.id].soma / mediaMap[p.id].total : 0,
+            total_avals:   mediaMap[p.id]?.total                    || 0,
+          }
+        })
 
         const { termo } = parsearBusca(queryBusca)
         const termoNorm = normalizarTermo(termo, filtroHab)
@@ -134,10 +147,12 @@ export function usePrestadores() {
           ...[...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b)),
         ])
 
-      } catch (err) {
-        if (err instanceof DOMException && err.name === 'AbortError') return
-        console.error('[usePrestadores]', err)
-        setErro(true)
+  } catch (err) {
+    const foiAbortado = controller.signal.aborted || (err as { name?: string })?.name === 'AbortError'
+    if (foiAbortado) return
+    console.error('[usePrestadores]', err)
+    setErro(true)
+
       } finally {
         if (!controller.signal.aborted) setLoading(false)
       }
