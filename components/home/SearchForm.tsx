@@ -28,6 +28,7 @@ export default function SearchForm({ busca, setBusca, onSubmit, temErro }: Props
 
         <input
           ref={inputRef}
+          autoFocus
           type="text"
           placeholder={temErro ? 'Digite algo para buscar...' : 'Ex: pedreiro em Londrina'}
           value={busca || ''}

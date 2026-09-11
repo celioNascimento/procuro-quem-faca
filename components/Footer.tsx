@@ -24,6 +24,12 @@ export default function Footer() {
           >
             Termos
           </Link>
+          <Link 
+            href="/quem-somos" 
+            className="text-slate-400 hover:text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] transition-colors"
+          >
+            Quem somos
+          </Link>
           
           {/* Fale Conosco via E-mail */}
           <a 
