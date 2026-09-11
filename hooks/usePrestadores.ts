@@ -94,7 +94,7 @@ export function usePrestadores() {
   // Fetch principal — só refaz quando a busca textual muda.
   // Filtros de localização/categoria filtram no cliente sobre prestadoresBase.
   useEffect(() => {
-    const controller = new AbortController()
+    let ativo = true
 
     async function fetchDados() {
       setLoading(true)
@@ -102,10 +102,15 @@ export function usePrestadores() {
       setPrestadoresBase([])
 
       try {
+        // O catálogo é público e stateless; não cancelamos o fetch manualmente.
+        // Alguns navegadores, incluindo o Brave com Shields ativos, reportam o
+        // cancelamento como erro de rede e deixavam a tela presa em "erro".
         const [{ data: pData, error: pError }, { data: medias }] = await Promise.all([
-          getPrestadoresAtivos(controller.signal),
-          getMediasAvaliacoes(controller.signal),
+          getPrestadoresAtivos(),
+          getMediasAvaliacoes(),
         ])
+
+        if (!ativo) return
 
         if (pError) throw pError
 
@@ -147,19 +152,23 @@ export function usePrestadores() {
           ...[...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b)),
         ])
 
-  } catch (err) {
-    const foiAbortado = controller.signal.aborted || (err as { name?: string })?.name === 'AbortError'
-    if (foiAbortado) return
-    console.error('[usePrestadores]', err)
-    setErro(true)
-
+      } catch (err) {
+        if (!ativo) return
+        const erroAbort = err as { name?: string; message?: string }
+        const foiAbortado = erroAbort?.name === 'AbortError' || erroAbort?.message?.includes('aborted')
+        if (foiAbortado) return
+        console.error('[usePrestadores]', err)
+        setErro(true)
       } finally {
-        if (!controller.signal.aborted) setLoading(false)
+        if (ativo) setLoading(false)
       }
     }
 
     fetchDados()
-    return () => controller.abort()
+    return () => {
+      ativo = false
+    }
+
   }, [queryBusca, filtroHab])
 
   // ─── Opções disponíveis em cascata ────────────────────────────────────────
