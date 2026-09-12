@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
               cookiesToSet.forEach(({ name, value, options }) => {
                 cookieStore.set(name, value, { ...options, secure: !isDev, path: '/' })
               })
-            } catch (error: any) {
-              console.warn('Aviso cookies:', error.message)
+            } catch (error: unknown) {
+              console.warn('Aviso cookies:', error instanceof Error ? error.message : 'Não foi possível atualizar os cookies')
             }
           },
         },
