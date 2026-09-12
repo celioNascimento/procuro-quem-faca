@@ -3,6 +3,7 @@
 'use client'
 
 import { useAdminLogs } from '@/hooks/useAdminLogs'
+import type { LogAtividade } from '@/lib/services/adminLogs.service'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell
@@ -16,12 +17,12 @@ export default function AdminLogs() {
     carregarLogs, exportarCSV, resetarFiltros,
   } = useAdminLogs()
 
-  const renderDetalhes = (log: any) => {
+  const renderDetalhes = (log: LogAtividade) => {
     const d = log.detalhes || {}
     switch (log.acao) {
-      case 'BUSCA_SEM_SUCESSO': return <span className="text-red-500 font-bold tracking-tight">🔍 &quot;{d.termo}&quot;</span>
-      case 'CLIQUE_PERFIL': return <span className="text-indigo-500 font-bold tracking-tight">👤 {d.nome}</span>
-      case 'DENUNCIA_PERFIL': return <span className="text-amber-600 font-bold tracking-tight">🚨 {d.motivo?.substring(0, 30)}</span>
+      case 'BUSCA_SEM_SUCESSO': return <span className="text-red-500 font-bold tracking-tight">🔍 &quot;{String(d.termo ?? '')}&quot;</span>
+      case 'CLIQUE_PERFIL': return <span className="text-indigo-500 font-bold tracking-tight">👤 {String(d.nome ?? '')}</span>
+      case 'DENUNCIA_PERFIL': return <span className="text-amber-600 font-bold tracking-tight">🚨 {typeof d.motivo === 'string' ? d.motivo.substring(0, 30) : ''}</span>
       default: return <span className="text-slate-400 italic font-medium text-[10px]">Evento de sistema</span>
     }
   }
