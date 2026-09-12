@@ -317,7 +317,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
           <div>
             <span className={`mb-1.5 block ${labelClass}`}>Pré-visualização</span>
             <AdPreview imagemUrl={imagemUrl} titulo={titulo} />
-            <p className="mt-1.5 text-[10px] text-zinc-300">Deixe os cantos livres — o selo "Publicidade" é fixo do sistema</p>
+            <p className="mt-1.5 text-[10px] text-zinc-300">Deixe os cantos livres — o selo &quot;Publicidade&quot; é fixo do sistema</p>
           </div>
         </div>
       </div>

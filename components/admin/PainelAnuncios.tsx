@@ -262,7 +262,7 @@ function AnuncioForm({
           <div>
             <span className="mb-1.5 block text-sm font-semibold text-slate-700">Pré-visualização</span>
             <AdPreview imagemUrl={imagemUrl} titulo={titulo} />
-            <p className="mt-1.5 text-xs text-slate-400">Deixe os cantos livres — o selo "Publicidade" é fixo do sistema</p>
+            <p className="mt-1.5 text-xs text-slate-400">Deixe os cantos livres — o selo &quot;Publicidade&quot; é fixo do sistema</p>
           </div>
         </div>
       </div>
