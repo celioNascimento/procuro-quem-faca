@@ -264,7 +264,7 @@ function ListaConteudo() {
       {/* Bottom sheet mobile — botão flutuante + drawer */}
       <FiltroBottomSheet {...filtrosProps} />
 
-      <div className="max-w-6xl mx-auto px-5 md:px-6 pt-3 lg:grid lg:grid-cols-[260px_1fr] lg:gap-6">
+      <div className="mx-auto w-full max-w-7xl px-5 pt-6 md:px-8 md:pt-8 lg:grid lg:grid-cols-[260px_1fr] lg:gap-8">
 
         {/* Sidebar desktop */}
         {!loading && (
@@ -274,12 +274,12 @@ function ListaConteudo() {
         )}
 
         {/* Coluna principal */}
-          <div className="flex min-w-0 flex-col gap-4">
+          <div className="flex min-w-0 flex-col gap-6">
 
           {/* Título + contagem */}
           <div className="flex items-center justify-between border-l-4 border-blue-600 pl-4 py-1">
             <div>
-              <h1 className="text-[15px] md:text-[16px] font-bold text-slate-800 leading-none text-balance">
+              <h1 className="text-lg md:text-xl font-bold text-slate-800 leading-tight text-balance">
                 {tituloBusca}
               </h1>
               <p className="text-[12px] text-slate-400 mt-1.5 uppercase tracking-widest font-medium">
@@ -309,7 +309,7 @@ function ListaConteudo() {
 
           {/* Skeleton */}
           {loading ? (
-            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-3 lg:grid-cols-2 lg:p-4">
+            <div className="grid grid-cols-1 gap-5 rounded-[2rem] bg-slate-50 p-4 md:gap-6 md:p-5 lg:grid-cols-2 lg:p-6">
               {[1, 2, 3, 4].map(i => (
                 <div
                   key={i}
@@ -318,7 +318,7 @@ function ListaConteudo() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-3 lg:grid-cols-2 lg:p-4">
+            <div className="grid grid-cols-1 gap-5 rounded-[2rem] bg-slate-50 p-4 md:gap-6 md:p-5 lg:grid-cols-2 lg:p-6">
               {/* Anúncio de topo */}
               {prestadoresExibidos.length > 0 && (
                 <div className="lg:col-span-2">
