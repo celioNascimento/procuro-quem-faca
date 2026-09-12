@@ -19,6 +19,8 @@ interface LocationContextData {
 }
 
 function lerCidadeDoCookie(): CidadeSelecionada | null {
+  if (typeof document === 'undefined') return null
+
   const cidadeCookie = document.cookie.split('; ').find((row) => row.startsWith('pqf_cidade='))
   if (!cidadeCookie) return null
 
