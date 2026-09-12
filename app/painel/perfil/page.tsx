@@ -142,7 +142,6 @@ export default function PerfilDoCliente() {
 
           <div className="flex min-w-0 flex-col gap-6">
             <AdCardPainelCliente servicos={servicos} loading={loadingServicos} />
-            <ContextualHelp context="dashboard-cliente" audience="cliente" title="Precisa de ajuda com seus projetos?" />
 
             {(avaliarCount > 0 || garantiaCount > 0 || reclamacaoCount > 0 || temAvaliacoesRecebidas) && (
               <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0">
@@ -389,6 +388,10 @@ export default function PerfilDoCliente() {
                 </section>
               </div>
             )}
+
+            <div className="pt-2 sm:pt-4">
+              <ContextualHelp context="dashboard-cliente" audience="cliente" title="Precisa de ajuda com seus projetos?" />
+            </div>
           </div>
         </div>
       </div>
