@@ -109,7 +109,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
     }
 
     inicializar()
-  }, [])
+  }, [categorias, form, loc, router])
 
   // ── Handlers de Ação ─────────────────────────────────────────────────────
   const handleUploadFotoProcess = async (file: File) => {

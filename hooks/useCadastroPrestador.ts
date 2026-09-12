@@ -182,7 +182,7 @@ export function useCadastroPrestador(reivindicarId: string | null) {
     }
 
     carregarTudo()
-  }, [reivindicarId])
+  }, [categorias, form, loc, reivindicarId, router])
 
   const handleUploadFotoProcess = async (file: File) => {
     setUploading(true)
