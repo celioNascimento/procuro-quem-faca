@@ -127,7 +127,6 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
 
   // ── Efeitos ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    setErroUpload(null)
     if (zoomEtapa) {
       document.body.style.overflow = 'hidden'
     } else {
@@ -186,7 +185,8 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
 
   useEffect(() => {
     if (zoomEtapa && fotosData[zoomEtapa]) {
-      setLegendaEdit(fotosData[zoomEtapa]?.legenda || '')
+      const legenda = fotosData[zoomEtapa]?.legenda || ''
+      queueMicrotask(() => setLegendaEdit(legenda))
     }
   }, [zoomEtapa, fotosData])
 
@@ -214,7 +214,10 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     if (!isProjetoConcluido || !fotosCarrossel[currentSlide]) return
     const etapaAtual = fotosCarrossel[currentSlide].etapa
     const fotoIdAtual = fotosData[etapaAtual]?.id
-    if (!fotoIdAtual) { setComentariosSlideAtual([]); return }
+    if (!fotoIdAtual) {
+      queueMicrotask(() => setComentariosSlideAtual([]))
+      return
+    }
     let cancelado = false
     const buscar = async () => {
       try {
@@ -255,7 +258,10 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
   // Fix: apenas [projetoId] como dep. Usamos ref para ler o status atual sem
   // adicioná-lo como dep reativa.
   const projetoStatusRef = useRef(projetoStatus)
-  projetoStatusRef.current = projetoStatus
+
+  useEffect(() => {
+    projetoStatusRef.current = projetoStatus
+  }, [projetoStatus])
 
   useEffect(() => {
     if (!projetoId) return
@@ -448,7 +454,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
         if (!atual) return prev
         return { ...prev, [etapaAlvo]: { ...atual, legenda: legendaEdit } }
       })
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao salvar legenda — RAW:', err)
       setErroLegenda('Não foi possível salvar a descrição. Tente novamente.')
       setTimeout(() => setErroLegenda(null), 4000)
