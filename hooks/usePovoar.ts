@@ -1,6 +1,22 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+
+interface CidadePovoamento {
+  id: string | number
+  nome: string
+  regiao_id?: string | null
+  estado_sigla?: string | null
+}
+
+interface RegistroPovoamento {
+  id: string | number
+  nome: string
+}
+
+function mensagemDeErro(error: unknown): string {
+  return error instanceof Error ? error.message : 'Erro inesperado'
+}
 import {
   fetchDadosIniciais,
   fetchCategoriasPorGrupo,
@@ -35,10 +51,10 @@ function gerarSlug(nome: string): string {
 }
 
 export function usePovoar() {
-  const [cidades, setCidades] = useState<any[]>([])
-  const [grupos, setGrupos] = useState<any[]>([])
-  const [categorias, setCategorias] = useState<any[]>([])
-  const [regioes, setRegioes] = useState<any[]>([])
+  const [cidades, setCidades] = useState<CidadePovoamento[]>([])
+  const [grupos, setGrupos] = useState<RegistroPovoamento[]>([])
+  const [categorias, setCategorias] = useState<RegistroPovoamento[]>([])
+  const [regioes, setRegioes] = useState<RegistroPovoamento[]>([])
   const [loading, setLoading] = useState(false)
   const [checkLoading, setCheckLoading] = useState(false)
   const [existe, setExiste] = useState(false)
@@ -60,11 +76,14 @@ export function usePovoar() {
   useEffect(() => {
     const cidadeSel = cidades.find(c => String(c.id) === String(form.cidade_id))
     if (cidadeSel) {
-      setForm(prev => ({
-        ...prev,
-        regiao_id: cidadeSel.regiao_id || prev.regiao_id,
-        estado_sigla: cidadeSel.estado_sigla || prev.estado_sigla,
-      }))
+      const timer = setTimeout(() => {
+        setForm(prev => ({
+          ...prev,
+          regiao_id: cidadeSel.regiao_id || prev.regiao_id,
+          estado_sigla: cidadeSel.estado_sigla || prev.estado_sigla,
+        }))
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [form.cidade_id, cidades])
 
@@ -74,7 +93,10 @@ export function usePovoar() {
 
   useEffect(() => {
     const foneLimpo = form.whatsapp.replace(/\D/g, '')
-    if (foneLimpo.length < 10) { setExiste(false); return }
+    if (foneLimpo.length < 10) {
+      const timer = setTimeout(() => setExiste(false), 0)
+      return () => clearTimeout(timer)
+    }
 
     const timer = setTimeout(async () => {
       setCheckLoading(true)
@@ -107,8 +129,8 @@ export function usePovoar() {
       setForm(FORM_INICIAL)
       setExiste(false)
       setTimeout(() => setMsg({ tipo: '', texto: '' }), 4000)
-    } catch (err: any) {
-      setMsg({ tipo: 'erro', texto: '❌ Erro: ' + err.message })
+    } catch (err: unknown) {
+      setMsg({ tipo: 'erro', texto: 'Erro: ' + mensagemDeErro(err) })
     } finally {
       setLoading(false)
     }
