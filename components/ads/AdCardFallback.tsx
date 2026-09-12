@@ -13,7 +13,7 @@ export function AdCardFallback({ fallback, contexto = '' }: Props) {
   return (
     <Link
       href={fallback.href(contexto)}
-      className={`block w-full my-2 bg-gradient-to-r ${fallback.cor} rounded-2xl p-4 text-white shadow-sm hover:opacity-95 active:scale-[0.98] transition-all`}
+      className={`block w-full my-0 bg-gradient-to-r ${fallback.cor} rounded-2xl p-4 text-white shadow-sm hover:opacity-95 active:scale-[0.98] transition-all`}
     >
       <div className="flex items-start gap-3.5">
         <div className="w-10 h-10 md:w-12 md:h-12 bg-white/15 rounded-xl flex items-center justify-center text-xl shrink-0">
