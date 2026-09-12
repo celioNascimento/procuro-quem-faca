@@ -1,7 +1,7 @@
 //hooks/usePainelCliente.ts
 
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
@@ -20,11 +20,15 @@ import {
 export function usePainelCliente() {
   const router = useRouter()
   const [session, setSession]     = useState<Session | null>(null)
-  const [profile, setProfile]     = useState<any>(null)
+  type ClienteProfile = Awaited<ReturnType<typeof getProfile>>
+  const [profile, setProfile]     = useState<ClienteProfile>(null)
   const [servicos, setServicos]   = useState<Servico[]>([])
   const [loading, setLoading]     = useState(true)
   const [zoomImage, setZoomImage] = useState<string | null>(null)
-  const [tokenUrl, setTokenUrl]   = useState<string | null>(null)
+  const tokenUrl = useMemo(() => {
+    if (typeof window === 'undefined') return null
+    return new URLSearchParams(window.location.search).get('token')
+  }, [])
 
   // Derivados diretamente de servicos (que já traz solicitacoes_garantia
   // embutido via join) — não são estado próprio nem consulta separada.
@@ -40,11 +44,6 @@ export function usePainelCliente() {
   // serviço pendente de confirmação para retomar o aceite depois.
   const [confirmandoWhatsapp, setConfirmandoWhatsapp] = useState<Servico | null>(null)
   const [confirmandoErro, setConfirmandoErro] = useState<string | null>(null)
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    setTokenUrl(params.get('token'))
-  }, [])
 
   const buscarDados = useCallback(async (
     user: { id: string },
@@ -156,7 +155,7 @@ export function usePainelCliente() {
     setConfirmandoErro(null)
     try {
       await updateClienteProfile(session.user.id, { whatsapp: numeroConfirmado.replace(/\D/g, '') })
-      setProfile((prev: any) => ({ ...prev, whatsapp: numeroConfirmado }))
+      setProfile((prev) => (prev ? { ...prev, whatsapp: numeroConfirmado } : prev))
 
       const servico = confirmandoWhatsapp
       setConfirmandoWhatsapp(null)
