@@ -143,11 +143,9 @@ function AdCardEntreCards({
 // ─── ListaConteudo ─────────────────────────────────────────────────────────
 
 function ListaConteudo() {
-  // Parâmetros da URL — leitura centralizada em useFiltrosParams
   const { queryBusca, filtroHab, filtroCidade, filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria } =
     useFiltrosParams()
 
-  // Dados de prestadores e opções de filtro em cascata
   const {
     prestadoresBase,
     prestadoresExibidos,
@@ -160,13 +158,11 @@ function ListaConteudo() {
     erro,
   } = usePrestadores()
 
-  // Ações de filtro (aplicar, limpar, contagem)
   const { totalAtivos, aplicar, limparFiltros } = useFiltrosPrestadores()
 
   const session   = useSession()
   const temFiltro = totalAtivos > 0
 
-  // Anúncio de topo
   const [anuncioTopo, setAnuncioTopo] = useState<Anuncio | null | undefined>(undefined)
 
   useEffect(() => {
@@ -188,7 +184,6 @@ function ListaConteudo() {
     return () => { cancelado = true }
   }, [])
 
-  // Cache de praças para anúncios entre cards
   const cachePracaRef   = useRef<Map<string, AnuncioComAnunciante[]>>(new Map())
   const sorteadoresRef  = useRef<Map<string, () => AnuncioComAnunciante | null>>(new Map())
 
@@ -197,7 +192,6 @@ function ListaConteudo() {
     sorteadoresRef.current = new Map()
   }, [queryBusca, filtroHab, filtroCidade, filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria])
 
-  // Calcula posições de anúncio entre cards por praça
   const posicoesPorPraca = useMemo(() => {
     const grupos = new Map<ChavePraca, number[]>()
     let contador = 0
@@ -242,7 +236,6 @@ function ListaConteudo() {
 
   const tituloBusca = getTituloBusca(queryBusca, filtroCidade)
 
-  // Props compartilhadas entre sidebar e bottom sheet
   const filtrosProps = {
     filtroEstado,
     filtroRegiao,
@@ -274,7 +267,7 @@ function ListaConteudo() {
         )}
 
         {/* Coluna principal */}
-          <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4">
 
           {/* Título + contagem */}
           <div className="flex items-center justify-between border-l-4 border-blue-600 pl-4 py-1">
@@ -309,7 +302,7 @@ function ListaConteudo() {
 
           {/* Skeleton */}
           {loading ? (
-            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-4 sm:p-6 lg:grid-cols-2 lg:p-8">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {[1, 2, 3, 4].map(i => (
                 <div
                   key={i}
@@ -318,7 +311,7 @@ function ListaConteudo() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-4 sm:p-6 lg:grid-cols-2 lg:p-8">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {/* Anúncio de topo */}
               {prestadoresExibidos.length > 0 && (
                 <div className="lg:col-span-2">
@@ -407,7 +400,7 @@ function ListaConteudo() {
 
 export default function PaginaPrestadores() {
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-4 antialiased selection:bg-blue-100">
+    <div className="min-h-screen bg-slate-50 pb-4 antialiased selection:bg-blue-100">
       <Header href="/" />
       <div className="pt-16 md:pt-20">
         <Suspense fallback={<ListaSkeleton />}>
