@@ -68,11 +68,18 @@ export async function getPrestadorResumo(
   supabaseClient: SupabaseClient,
   userId: string
 ): Promise<PrestadorResumo | null> {
-  const { data } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from('prestadores')
-    .select('id, categoria_id, nome, origem_tipo, status')
+    .select('id, categoria_id, nome, origem_tipo, status, created_at')
     .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
+
+  if (error) {
+    console.error('[getPrestadorResumo] falha ao consultar prestador:', error.message)
+    return null
+  }
 
   return data as PrestadorResumo | null
 }
