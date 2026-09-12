@@ -25,7 +25,7 @@ export const helpArticles: HelpArticle[] = [
     steps: ['Abra o perfil do prestador escolhido.', 'Toque em solicitar orçamento ou no botão de WhatsApp.', 'Combine detalhes, prazo e valores diretamente com o profissional.']
   },
   {
-    id: 'acompanhar-servico', title: 'Como acompanhar um serviço', summary: 'O painel do cliente reúne os serviços pendentes, em andamento, concluídos e casos de garantia.', category: 'Meus serviços', audiences: ['cliente'], contexts: ['meus-servicos', 'dashboard'],
+    id: 'acompanhar-servico', title: 'Como acompanhar um serviço', summary: 'O painel do cliente reúne os serviços pendentes, em andamento, concluídos e casos de garantia.', category: 'Meus serviços', audiences: ['cliente'], contexts: ['meus-servicos', 'dashboard', 'dashboard-cliente'],
     steps: ['Acesse Meus serviços com a mesma conta usada no contato.', 'Use os filtros para encontrar o serviço desejado.', 'Abra o cartão para aceitar, acompanhar ou consultar uma garantia/reclamação.'], related: ['avaliar-servico', 'garantia']
   },
   {
@@ -35,6 +35,22 @@ export const helpArticles: HelpArticle[] = [
   {
     id: 'garantia', title: 'Como funciona a garantia ou reclamação', summary: 'Use o acompanhamento para registrar uma situação relacionada a um serviço concluído.', category: 'Meus serviços', audiences: ['cliente'], contexts: ['meus-servicos', 'acompanhamento'],
     steps: ['Abra o serviço no painel do cliente.', 'Entre na seção Garantia ou Reclamação.', 'Descreva o ocorrido e, quando solicitado, envie fotos para contextualizar o caso.']
+  },
+  {
+    id: 'editar-perfil-prestador', title: 'Como editar meu perfil profissional', summary: 'Mantenha seus dados, especialidades e formas de contato atualizados para aparecer melhor nas buscas.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador'],
+    steps: ['Abra a aba Dados Profissionais no painel.', 'Atualize sua descrição, localização, especialidades e WhatsApp.', 'Salve as alterações e confira como seu perfil aparece publicamente.'], related: ['portfolio-prestador', 'ativacao-perfil-prestador']
+  },
+  {
+    id: 'portfolio-prestador', title: 'Como publicar projetos no portfólio', summary: 'Adicione fotos e informações de trabalhos realizados para apresentar sua experiência aos clientes.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador'],
+    steps: ['Acesse a aba Meus Projetos.', 'Envie fotos nítidas e escolha trabalhos que representem seu serviço.', 'Revise o conteúdo antes de publicar para manter seu portfólio atualizado.']
+  },
+  {
+    id: 'avaliacoes-prestador', title: 'Como consultar minhas avaliações', summary: 'Acompanhe as avaliações recebidas dos clientes diretamente no seu painel profissional.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador'],
+    steps: ['Abra a aba Avaliações no painel.', 'Leia os comentários e confira sua nota geral.', 'Use os retornos para melhorar a comunicação e a qualidade dos serviços.']
+  },
+  {
+    id: 'ativacao-perfil-prestador', title: 'Ativação ou bloqueio do perfil', summary: 'Entenda o que acontece quando seu perfil está incompleto, em análise ou bloqueado pela moderação.', category: 'Conta', audiences: ['prestador'], contexts: ['dashboard-prestador'],
+    steps: ['Complete os dados obrigatórios indicados na aba Dados Profissionais.', 'Aguarde a análise quando o perfil estiver em revisão.', 'Se houver bloqueio, leia o motivo informado e use o canal de suporte do painel para pedir esclarecimentos.']
   },
   {
     id: 'conta-e-seguranca', title: 'Conta, privacidade e segurança', summary: 'Mantenha seus dados atualizados e use somente os canais oficiais do projeto.', category: 'Conta', audiences: ['cliente', 'publico'], contexts: ['login', 'cadastro', 'perfil-cliente'],

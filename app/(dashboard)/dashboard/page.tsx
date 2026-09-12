@@ -11,6 +11,7 @@ import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
 import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Star } from 'lucide-react'
 import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
+import { ContextualHelp } from '@/components/help/HelpCenter'
 
 function PerfilPageContent() {
   const searchParams = useSearchParams()
@@ -90,8 +91,9 @@ function PerfilPageContent() {
         </section>
       )}
 
-      <div className="pt-6">
+      <div className="flex flex-col gap-6 pt-6">
         <AdCardDashboard />
+        <ContextualHelp context="dashboard-prestador" audience="prestador" title="Encontre respostas para cuidar do seu perfil" />
       </div>
 
       <nav className="sticky top-16 z-40 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
