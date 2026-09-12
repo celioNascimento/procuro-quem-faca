@@ -21,6 +21,7 @@ import { BadgeCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
 import type { Anuncio } from '@/types/ads'
+import { ContextualHelp } from '@/components/help/HelpCenter'
 
 // ── Sub-componente interno — hooks chamados após os dados estarem garantidos ──
 
@@ -145,6 +146,8 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               avaliacoes={avaliacoes}
               portfolioObrigatorio={prestador.portfolio_obrigatorio}
             />
+
+            <ContextualHelp context="perfil-publico" title="Dúvidas sobre este perfil?" />
           </div>
         </div>
       </div>

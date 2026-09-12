@@ -11,6 +11,7 @@ import ZoomImageModal from './ZoomImageModal'
 import { usePainelCliente } from '@/hooks/usePainelCliente'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 import { AdCardPainelCliente } from '@/components/painel/AdCardPainelCliente'
+import { ContextualHelp } from '@/components/help/HelpCenter'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido' | 'garantia' | 'reclamacao'
@@ -212,6 +213,9 @@ export default function PainelDoCliente() {
 
       <div className="mx-auto max-w-5xl px-5 pt-24 md:pt-36 animate-in fade-in duration-700">
         <AdCardPainelCliente servicos={servicos as any} loading={loading} />
+        <div className="mt-6 mb-6">
+          <ContextualHelp context="meus-servicos" title="Dúvidas sobre seus serviços?" />
+        </div>
         <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:gap-8">
 
           {/* ── Coluna Esquerda ── */}
