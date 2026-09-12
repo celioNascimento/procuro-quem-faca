@@ -4,7 +4,7 @@ import Header from '@/components/Header'
 
 export default function PerfilSkeleton() {
   return (
-    <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800 overflow-hidden">
+    <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800 overflow-hidden" aria-busy="true" aria-label="Carregando perfil público">
       <Header href="/prestadores" />
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 lg:px-8 lg:pt-32">

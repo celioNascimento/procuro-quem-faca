@@ -2,7 +2,7 @@
 
 export default function EditarPerfilSkeleton() {
   return (
-    <section className="pb-12 sm:pb-16" aria-hidden="true">
+    <section className="pb-12 sm:pb-16" aria-busy="true" aria-label="Carregando edição do perfil">
       <div className="flex flex-col gap-6 sm:gap-8">
 
         {/* Header — espelha "Dados profissionais" / "Configurações do perfil" */}
