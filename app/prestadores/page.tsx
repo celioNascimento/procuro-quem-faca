@@ -274,7 +274,7 @@ function ListaConteudo() {
         )}
 
         {/* Coluna principal */}
-          <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex min-w-0 flex-col gap-4">
 
           {/* Título + contagem */}
           <div className="flex items-center justify-between border-l-4 border-blue-600 pl-4 py-1">
@@ -309,7 +309,7 @@ function ListaConteudo() {
 
           {/* Skeleton */}
           {loading ? (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-3 lg:grid-cols-2 lg:p-4">
               {[1, 2, 3, 4].map(i => (
                 <div
                   key={i}
@@ -318,7 +318,7 @@ function ListaConteudo() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-3 lg:grid-cols-2 lg:p-4">
               {/* Anúncio de topo */}
               {prestadoresExibidos.length > 0 && (
                 <div className="lg:col-span-2">
@@ -409,7 +409,7 @@ export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-4 antialiased selection:bg-blue-100">
       <Header href="/" />
-      <div className="pt-24 md:pt-32">
+      <div className="pt-16 md:pt-20">
         <Suspense fallback={<ListaSkeleton />}>
           <ListaConteudo />
         </Suspense>
