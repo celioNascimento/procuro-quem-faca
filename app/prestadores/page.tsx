@@ -309,7 +309,7 @@ function ListaConteudo() {
 
           {/* Skeleton */}
           {loading ? (
-            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-3 lg:grid-cols-2 lg:p-4">
+            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-4 sm:p-6 lg:grid-cols-2 lg:p-8">
               {[1, 2, 3, 4].map(i => (
                 <div
                   key={i}
@@ -318,7 +318,7 @@ function ListaConteudo() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-3 lg:grid-cols-2 lg:p-4">
+            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-4 sm:p-6 lg:grid-cols-2 lg:p-8">
               {/* Anúncio de topo */}
               {prestadoresExibidos.length > 0 && (
                 <div className="lg:col-span-2">
