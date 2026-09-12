@@ -8,11 +8,14 @@ export function useComentariosFoto(fotoId: string | undefined) {
    const [comentarios, setComentarios] = useState<ComentarioPortfolio[]>([])
 
   useEffect(() => {
-    if (!fotoId) { setComentarios([]); return }
+    if (!fotoId) {
+      queueMicrotask(() => setComentarios([]))
+      return
+    }
 
-   getComentariosDaFoto(fotoId)
-       .then(setComentarios)
-       .catch(() => setComentarios([]))
+    getComentariosDaFoto(fotoId)
+      .then(setComentarios)
+      .catch(() => setComentarios([]))
   }, [fotoId])
 
   return comentarios
