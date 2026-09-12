@@ -50,7 +50,7 @@ export default function Login() {
           </div>
 
           {/* Título */}
-          <h1 className="text-xl md:text-2xl lg:text-[28px] font-black text-slate-900 mb-1 lg:mb-2 tracking-tight">
+          <h1 className="text-xl md:text-2xl lg:text-[28px] font-semibold text-slate-900 mb-1 lg:mb-2 tracking-tight">
             Entrar ou Criar Conta
           </h1>
 
