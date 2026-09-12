@@ -85,7 +85,12 @@ export function AnuncioClienteForm({ initial, onSave, onCancel, enviando }: Prop
   const [cidadeId, setCidadeId] = useState(initial?.anuncios_segmentacoes?.[0]?.cidade_id ?? '')
   
   // Dados de suporte para contornar exigências do banco
-  const [cidades, setCidades] = useState<Array<{ id: string; nome: string }>>([])
+  const [cidades, setCidades] = useState<Array<{
+    id: string
+    nome: string
+    estado_sigla?: string | null
+    regiao_id?: string | null
+  }>>([])
   const [categoriaCuringa, setCategoriaCuringa] = useState<{ id: string; grupo_id: string } | null>(null)
 
   const [imagemUrl, setImagemUrl] = useState(initial?.imagem_url ?? '')
