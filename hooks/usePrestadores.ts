@@ -1,11 +1,12 @@
 'use client'
 // hooks/usePrestadores.ts
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getPrestadoresAtivos, getMediasAvaliacoes } from '@/lib/db/prestadores'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import { pesoOrdenacao } from '@/lib/ordenacao'
+import { insertLog } from '@/lib/db/logs'
 import { useFiltrosParams } from './useFiltrosParams'
 import { useLocation } from '@/lib/contexts/LocationContext'
 import type { Prestador } from '@/types/prestador'
@@ -55,6 +56,7 @@ export function usePrestadores() {
   const [prestadoresBase, setPrestadoresBase] = useState<Prestador[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState(false)
+  const buscasVaziasRegistradas = useRef(new Set<string>())
 
   // Geolocalização silenciosa — só ativa quando não há nenhuma âncora de cidade:
   // nem na URL, nem na query textual, nem no contexto do usuário.
@@ -264,6 +266,58 @@ export function usePrestadores() {
       return true
     })
   }, [prestadoresBase, filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria, cidadeEfetivaNormalizada])
+
+  useEffect(() => {
+    const termo = queryBusca.trim()
+    const temIntencaoDeBusca = Boolean(
+      termo || filtroCidade || filtroEstado || filtroRegiao || filtroGrupo || filtroCategoria
+    )
+
+    if (loading || erro || locationLoading || prestadoresExibidos.length > 0 || !temIntencaoDeBusca) return
+
+    const chaveBusca = JSON.stringify({
+      termo,
+      filtroHab,
+      filtroCidade,
+      filtroEstado,
+      filtroRegiao,
+      filtroGrupo,
+      filtroCategoria,
+      cidadeEfetiva: cidadeEfetivaNormalizada,
+    })
+
+    if (buscasVaziasRegistradas.current.has(chaveBusca)) return
+    buscasVaziasRegistradas.current.add(chaveBusca)
+
+    void insertLog({
+      acao: 'BUSCA_SEM_SUCESSO',
+      detalhes: {
+        termo,
+        filtroHab: filtroHab || null,
+        cidade: filtroCidade || null,
+        estado: filtroEstado || null,
+        regiao: filtroRegiao || null,
+        grupo: filtroGrupo || null,
+        categoria: filtroCategoria || null,
+        cidadeEfetiva: cidadeEfetivaNormalizada || null,
+      },
+    }).catch((error) => {
+      console.error('[v0] Falha ao registrar busca sem resultados:', error)
+    })
+  }, [
+    queryBusca,
+    filtroHab,
+    filtroCidade,
+    filtroEstado,
+    filtroRegiao,
+    filtroGrupo,
+    filtroCategoria,
+    cidadeEfetivaNormalizada,
+    loading,
+    erro,
+    locationLoading,
+    prestadoresExibidos.length,
+  ])
 
   return {
     prestadoresBase,
