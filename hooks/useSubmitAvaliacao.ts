@@ -34,7 +34,7 @@ export function useSubmitAvaliacao(onComplete: () => void) {
     setErro(null)
 
     try {
-      let urlsEvidencia: string[] = []
+      const urlsEvidencia: string[] = []
 
       // 1. Upload de fotos de evidência (só contestação)
       if (isContestacao && fotosEvidencia.length > 0) {

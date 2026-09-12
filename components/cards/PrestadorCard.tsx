@@ -62,7 +62,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
     // Garante ao menos 1 habilidade visível se houver alguma, mesmo que
     // a primeira já estoure sozinha (evita ficar só com "+N" sem contexto)
     setQtdVisivel(Math.max(count, habilidadesTotais.length > 0 ? 1 : 0))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [habilidadesTotais.length])
 
   if (!prestador) return null

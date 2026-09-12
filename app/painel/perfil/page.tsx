@@ -14,6 +14,7 @@ import { AdCardPainelCliente } from '@/components/painel/AdCardPainelCliente'
 import { CardResumoAvaliacoesCliente } from '@/components/painel/CardResumoAvaliacoesCliente'
 import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
+import { ContextualHelp } from '@/components/help/HelpCenter'
 
 export default function PerfilDoCliente() {
   const {
@@ -387,6 +388,10 @@ export default function PerfilDoCliente() {
                 </section>
               </div>
             )}
+
+            <div className="pt-2 sm:pt-4">
+              <ContextualHelp context="dashboard-cliente" audience="cliente" title="Precisa de ajuda com seus projetos?" />
+            </div>
           </div>
         </div>
       </div>

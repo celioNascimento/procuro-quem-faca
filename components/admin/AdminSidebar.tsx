@@ -42,6 +42,7 @@ export function AdminSidebar({ isMobileMenuOpen, onCloseMobileMenu, onLogout }: 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto scrollbar-hide">
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 ml-4 mt-2">Gestão Geral</p>
           <SidebarLink href="/admin" label="Dashboard" icon={<path d="M3 3h7v9H3V3zm11 0h7v5h-7V3zm0 9h7v9h-7v-9zm-11 11h7v-7H3v7z" />} />
+          <SidebarLink href="/admin/documentacao" label="Documentação" icon={<><path d="M4 4h16v16H4z" /><path d="M8 8h8M8 12h8M8 16h5" /></>} />
           <SidebarLink href="/admin/moderacao" label="Moderação" icon={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />} />
           <SidebarLink
             href="/admin/ativacao"
