@@ -34,7 +34,9 @@ export function useAvaliar(token: string) {
       label: f.ordem === 1 ? 'Antes' : f.ordem === 2 ? 'Durante' : 'Depois',
     }))
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    queueMicrotask(() => setMounted(true))
+  }, [])
 
   useEffect(() => {
     if (!token || !mounted) return
@@ -58,14 +60,14 @@ export function useAvaliar(token: string) {
       }
     }
 
-    carregar()
+    queueMicrotask(() => carregar())
   }, [token, mounted])
 
   // Pré-seleciona indicação com base na nota
   useEffect(() => {
-    if (nota >= 4) setIndica(true)
-    else if (nota > 0 && nota <= 2) setIndica(false)
-    else if (nota === 3) setIndica(null)
+    if (nota >= 4) queueMicrotask(() => setIndica(true))
+    else if (nota > 0 && nota <= 2) queueMicrotask(() => setIndica(false))
+    else if (nota === 3) queueMicrotask(() => setIndica(null))
   }, [nota])
 
   const nextSlide = () =>
