@@ -118,7 +118,7 @@ export default function PerfilDoCliente() {
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-8 animate-in fade-in duration-500 sm:px-6 sm:pt-10 md:pt-12 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-24 animate-in fade-in duration-500 sm:px-6 sm:pt-32 md:pt-36 lg:px-8">
         <header className="mb-6 flex max-w-2xl flex-col gap-2 sm:mb-8">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área do cliente</p>
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Acompanhe seus projetos</h1>
