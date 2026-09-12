@@ -101,4 +101,8 @@ Registrado aqui para não se perder, mas fora do escopo atual:
 
 ## `/admin/ativacao`
 
-Não revisados ainda.
+Implementação legada em `app/(admin)/admin/ativacao/page.js`, independente do padrão Hook → Service. Lista prestadores, filtra por etapa de ativação, monta mensagens de WhatsApp e atualiza `ativacao_status`, `ativacao_enviado_em`, `ativacao_respondeu_em` e `ativacao_obs` diretamente no Supabase. Está funcional, mas permanece como pendência de migração para TypeScript e service compartilhado; não deve ser confundida com uma rota não auditada.
+
+## Estado da auditoria administrativa
+
+As rotas `/admin/ativacao` e `/admin/anuncios` foram revisadas em setembro de 2026. `/admin/anuncios` possui implementação ativa com `useAdminAnuncios`, cadastro de anunciante via API server-side, segmentações, inventário, métricas e simuladores. A integração dos anúncios próprios na vitrine pública continua pendente e está descrita no bloco de integração abaixo.
