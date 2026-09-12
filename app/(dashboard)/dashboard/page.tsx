@@ -94,11 +94,11 @@ function PerfilPageContent() {
         </section>
       )}
 
-      <div className="flex flex-col gap-3 pt-3 sm:gap-4 sm:pt-4">
+      <div className="flex flex-col gap-2 pt-2 sm:gap-3 sm:pt-3">
         <AdCardDashboard />
       </div>
 
-      <nav className="sticky top-16 z-40 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
+      <nav className="sticky top-16 z-40 mt-1 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
         <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {abas.map(aba => {
             const ativa = abaAtiva === aba.id

@@ -274,7 +274,7 @@ function ListaConteudo() {
         )}
 
         {/* Coluna principal */}
-        <div className="flex min-w-0 flex-col gap-3">
+          <div className="flex min-w-0 flex-col gap-2">
 
           {/* Título + contagem */}
           <div className="flex items-center justify-between border-l-4 border-blue-600 pl-4 py-1">
@@ -396,7 +396,7 @@ function ListaConteudo() {
           )}
 
           {/* Espaço extra no mobile para não sobrepor o botão flutuante */}
-          <div className="h-20 lg:hidden" />
+          <div className="h-4 lg:hidden" />
         </div>
       </div>
     </>
@@ -409,7 +409,7 @@ export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
       <Header href="/" />
-      <div className="pt-8 md:pt-12">
+      <div className="pt-20 md:pt-32">
         <Suspense fallback={<ListaSkeleton />}>
           <ListaConteudo />
         </Suspense>
