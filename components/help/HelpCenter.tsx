@@ -29,8 +29,8 @@ export function HelpCenter({ audience = 'cliente', context }: { audience?: HelpA
   )
 }
 
-export function ContextualHelp({ context, title = 'Precisa de ajuda?' }: { context: string; title?: string }) {
-  const articles = getHelpArticles('cliente', context)
+export function ContextualHelp({ context, title = 'Precisa de ajuda?', audience = 'cliente' }: { context: string; title?: string; audience?: HelpAudience }) {
+  const articles = getHelpArticles(audience, context)
   if (!articles.length) return null
   return <section className="rounded-3xl border border-blue-100 bg-blue-50/70 p-5 sm:p-6" aria-labelledby={`help-${context}`}><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Central de ajuda</p><h2 id={`help-${context}`} className="mt-1 text-lg font-black text-slate-900">{title}</h2></div><BookOpen className="mt-1 text-blue-500" size={20} aria-hidden="true" /></div><div className="mt-4 flex flex-wrap gap-2">{articles.map((article) => <Link key={article.id} href={`/ajuda?artigo=${article.id}`} className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:text-blue-600">{article.title}</Link>)}</div><Link href={`/ajuda?contexto=${context}`} className="mt-5 inline-flex text-xs font-black uppercase tracking-wider text-blue-700">Ver todas as respostas <ArrowRight size={14} className="ml-2" /></Link></section>
 }
