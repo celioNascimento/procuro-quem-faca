@@ -407,9 +407,9 @@ function ListaConteudo() {
 
 export default function PaginaPrestadores() {
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
+    <div className="min-h-screen bg-[#FDFDFD] pb-4 antialiased selection:bg-blue-100">
       <Header href="/" />
-      <div className="pt-20 md:pt-32">
+      <div className="pt-24 md:pt-32">
         <Suspense fallback={<ListaSkeleton />}>
           <ListaConteudo />
         </Suspense>
