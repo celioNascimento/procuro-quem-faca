@@ -349,7 +349,7 @@ export default function PainelAnunciosLojista() {
         <div className="mt-6">
           {isFormCliente ? (
             <AnuncioClienteForm
-              initial={initialParaFormCliente}
+              initial={initialParaFormCliente as import('@/components/admin/anuncios/AnuncioClienteForm').ClienteAnuncioInicial | null}
               onSave={handleSave}
               onCancel={() => setEditando(null)}
               enviando={enviando}

@@ -93,7 +93,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
           ])
           form.carregarPerfil(perfilCarregado)
           // Carregar configuração de portfólio do Supabase
-          const portfolioValue = (perfilCarregado as any).portfolio_obrigatorio
+          const portfolioValue = (perfilCarregado as { portfolio_obrigatorio?: unknown }).portfolio_obrigatorio
           setPortfolioOb(typeof portfolioValue === 'boolean' ? portfolioValue : true)
         } else {
           await Promise.all([
@@ -248,8 +248,9 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
       setStatus('Perfil atualizado com sucesso.')
       setTentouEnviar(false)
       onSalvar?.()
-    } catch (err: any) {
-      setStatus(`Erro: ${err.message || 'verifique os dados.'}`)
+    } catch (err: unknown) {
+      const mensagem = err instanceof Error ? err.message : 'verifique os dados.'
+      setStatus(`Erro: ${mensagem}`)
     } finally {
       setSalvando(false)
       setTimeout(() => setStatus(''), 3000)

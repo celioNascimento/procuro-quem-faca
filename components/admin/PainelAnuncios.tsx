@@ -5,6 +5,7 @@
 import { useState, useRef } from 'react'
 import { Plus, Upload, Link as LinkIcon, Trash2, Pencil, Eye, EyeOff, X, ImageOff, AlertTriangle, Copy, Check } from 'lucide-react'
 import { useAdminAnuncios } from '@/hooks/useAdminAnuncios'
+import type { Segmentacao, NovoAnuncioInput } from '@/types/ads'
 
 // Ajustar conforme dados reais vindos de useCategorias / useLocalizacao do projeto
 const CATEGORIAS = [
@@ -26,6 +27,32 @@ const POSICOES = [
 
 const ASPECT_W = 1200
 const ASPECT_H = 514
+
+type AnuncioPainel = {
+  id: string
+  titulo: string
+  posicao: string
+  status: boolean
+  imagem_url?: string | null
+  cliques?: number
+  impressoes?: number
+  categoria_id?: string
+  cidade_id?: string
+  link_destino?: string | null
+  anunciante_id?: string
+  anunciantes?: { email?: string; razao_social?: string; whatsapp?: string | null } | null
+}
+
+type AnuncioFormData = {
+  lojista: { email: string; razaoSocial: string; whatsapp: string }
+  anuncio: Partial<Omit<NovoAnuncioInput, 'anuncianteId' | 'segmentacoes'>> & Record<string, unknown>
+  segmentacoes?: Segmentacao[]
+  imagemFile: File | null
+  idExistente?: string | null
+  anuncianteIdExistente?: string | null
+}
+
+type AnuncioInicial = AnuncioPainel | null
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200'
@@ -111,8 +138,8 @@ function AnuncioForm({
   onCancel,
   enviando,
 }: {
-  initial: any | null
-  onSave: (data: any) => void
+  initial: AnuncioInicial
+  onSave: (data: AnuncioFormData) => void
   onCancel: () => void
   enviando: boolean
 }) {
@@ -283,7 +310,12 @@ function AnuncioForm({
   )
 }
 
-function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
+function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: {
+  anuncio: AnuncioPainel
+  onEdit: (anuncio: AnuncioPainel) => void
+  onDelete: (id: string) => void
+  onToggleAtivo: (id: string, ativo: boolean) => void
+}) {
   return (
     <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-3">
       <div className="h-14 w-28 shrink-0 overflow-hidden rounded-lg bg-slate-100">
@@ -308,18 +340,18 @@ function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
 
 export default function PainelAnuncios() {
   const { anuncios, loading, enviando, erro, cadastrarNovoAnuncio, editarAnuncio, toggleAtivo, remover } = useAdminAnuncios()
-  const [editando, setEditando] = useState<any>(null) // null | 'new' | anuncio
+  const [editando, setEditando] = useState<AnuncioPainel | 'new' | null>(null)
   const [confirmarExclusao, setConfirmarExclusao] = useState<string | null>(null)
   const [senhaModal, setSenhaModal] = useState<{ senha: string; email: string } | null>(null)
 
-  async function handleSave(data: any) {
+  async function handleSave(data: AnuncioFormData) {
     try {
       if (data.idExistente) {
-        await editarAnuncio(data.idExistente, data.anuncio, data.imagemFile, data.anuncianteIdExistente)
+        await editarAnuncio(data.idExistente, data.anuncio, data.segmentacoes ?? [], data.imagemFile, data.anuncianteIdExistente ?? undefined)
       } else {
         const resultado = await cadastrarNovoAnuncio({
           lojista: data.lojista,
-          anuncio: data.anuncio,
+          anuncio: { ...data.anuncio, segmentacoes: data.segmentacoes ?? [] } as Omit<NovoAnuncioInput, 'anuncianteId'>,
           imagemFile: data.imagemFile,
         })
         if (resultado.senhaTemporaria) {

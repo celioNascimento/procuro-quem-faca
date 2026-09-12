@@ -63,7 +63,7 @@ export default function PaginaAtivacao() {
     if (inicial) setLoading(false)
   }, [])
 
-  useEffect(() => { carregar(true) }, [carregar])
+  useEffect(() => { queueMicrotask(() => carregar(true)) }, [carregar])
 
   const atualizarStatus = async (id, novoStatus) => {
     setSalvando(id)

@@ -65,8 +65,32 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   )
 }
 
+export type ClienteAnuncioInicial = {
+  id?: string
+  titulo?: string
+  link_destino?: string
+  categoria_id?: string
+  cidade_id?: string
+  posicao?: string
+  imagem_url?: string | null
+  status?: boolean
+  data_inicio?: string | null
+  data_expiracao?: string | null
+  anuncios_segmentacoes?: Array<{
+    id?: string
+    estado_sigla?: string
+    regiao_id?: string
+    cidade_id?: string
+    grupo_id?: string
+    categoria_id?: string
+    valor_cobrado?: number | string
+  }>
+  anunciante_id?: string
+  anunciantes?: { email?: string; razao_social?: string; whatsapp?: string }
+}
+
 type Props = {
-  initial: any | null
+  initial: ClienteAnuncioInicial | null
   onSave: (data: AnuncioLojistaFormValues) => void
   onCancel: () => void
   enviando: boolean
