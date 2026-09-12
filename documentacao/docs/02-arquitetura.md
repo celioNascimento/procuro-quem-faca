@@ -1,6 +1,8 @@
 # Arquitetura — PQF
 
-> **Índice da documentação:** `01` Visão Geral · `02` Arquitetura (este arquivo) · `03` Banco de Dados · `04` Autenticação · `05` Cadastro de Prestador · `06` Dashboard do Prestador · `07` Painel do Cliente · `08` Portfólio Público · `09` Avaliação e Acompanhamento · `10` Busca e Listagem · `11` Anúncios · `12` Admin · `13` Roadmap · `14` Glossário (índice por conceito, não por arquivo).
+> **Índice da documentação:** `01` Visão Geral · `02` Arquitetura (este arquivo) · `03` Banco de Dados · `04` Autenticação · `05` Cadastro de Prestador · `06` Dashboard do Prestador · `07` Painel do Cliente · `08` Portfólio Público · `09` Avaliação e Acompanhamento · `10` Busca e Listagem · `11` Anúncios · `12` Admin · `13` Roadmap · `15` Catálogo de funções · `00` Glossário por conceito.
+>
+> Para localizar uma função, consumidor e fluxo ponta a ponta, consulte o [catálogo central](./15-catalogo-funcoes.md).
 
 ## Stack
 

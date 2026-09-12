@@ -17,6 +17,7 @@ O PQF conecta clientes a profissionais locais e constrói confiança com portfó
 | [11 — Anúncios](./docs/11-anuncios.md) | MVP de anúncios administrados |
 | [12 — Admin](./docs/12-admin.md) | Área administrativa e permissões |
 | [13 — Roadmap](./docs/13-roadmap.md) | Próximas evoluções |
+| [15 — Catálogo de funções](./docs/15-catalogo-funcoes.md) | Inventário de rotas, hooks, services, funções internas, callbacks e correlações |
 
 ## Stack atual
 
