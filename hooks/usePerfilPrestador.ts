@@ -23,6 +23,17 @@ function normalizarArray<T>(raw: T | T[] | null | undefined): T[] {
 
 const STATUS_GARANTIA_PUBLICA = ['resolvida', 'sem_resposta', 'recusada']
 
+type GarantiaRaw = {
+  id: string
+  status: string
+  origem: string | null
+  descricao_problema: string | null
+  resposta_prestador_garantia: string | null
+  resolucao_descricao: string | null
+  nota_resultante: number | null
+  garantia_fotos: FotoGarantiaPublica[] | FotoGarantiaPublica[] | null
+}
+
 export function usePerfilPrestador(): UsePerfilPrestadorReturn {
   const params       = useParams()
   const searchParams = useSearchParams()
@@ -115,7 +126,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
                 indica:     av.indica ?? false,
                 comentario: av.comentario ?? null,
               })),
-            solicitacoes_garantia: normalizarArray<any>(p.solicitacoes_garantia)
+            solicitacoes_garantia: normalizarArray<GarantiaRaw>(p.solicitacoes_garantia)
               .filter(g => STATUS_GARANTIA_PUBLICA.includes(g.status))
               .map(g => ({
                 id:                          g.id,
@@ -177,7 +188,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
 
     carregar()
     return () => controller.abort()
-  }, [params?.slug])
+  }, [params?.slug, searchParams])
 
   return { data, loading, erro }
 }
