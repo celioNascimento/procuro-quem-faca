@@ -264,7 +264,7 @@ function ListaConteudo() {
       {/* Bottom sheet mobile — botão flutuante + drawer */}
       <FiltroBottomSheet {...filtrosProps} />
 
-      <div className="max-w-6xl mx-auto px-5 md:px-6 pt-6 lg:grid lg:grid-cols-[260px_1fr] lg:gap-8">
+      <div className="max-w-6xl mx-auto px-5 md:px-6 pt-3 lg:grid lg:grid-cols-[260px_1fr] lg:gap-6">
 
         {/* Sidebar desktop */}
         {!loading && (
@@ -274,7 +274,7 @@ function ListaConteudo() {
         )}
 
         {/* Coluna principal */}
-        <div className="space-y-6 min-w-0">
+        <div className="flex min-w-0 flex-col gap-3">
 
           {/* Título + contagem */}
           <div className="flex items-center justify-between border-l-4 border-blue-600 pl-4 py-1">
@@ -309,7 +309,7 @@ function ListaConteudo() {
 
           {/* Skeleton */}
           {loading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {[1, 2, 3, 4].map(i => (
                 <div
                   key={i}
@@ -318,7 +318,7 @@ function ListaConteudo() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {/* Anúncio de topo */}
               {prestadoresExibidos.length > 0 && (
                 <div className="lg:col-span-2">
@@ -409,7 +409,7 @@ export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
       <Header href="/" />
-      <div className="pt-16 md:pt-28">
+      <div className="pt-8 md:pt-12">
         <Suspense fallback={<ListaSkeleton />}>
           <ListaConteudo />
         </Suspense>

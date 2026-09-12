@@ -94,7 +94,7 @@ function PerfilPageContent() {
         </section>
       )}
 
-      <div className="flex flex-col gap-6 pt-6">
+      <div className="flex flex-col gap-3 pt-3 sm:gap-4 sm:pt-4">
         <AdCardDashboard />
       </div>
 

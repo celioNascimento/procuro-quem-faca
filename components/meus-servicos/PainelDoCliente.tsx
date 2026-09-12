@@ -211,16 +211,16 @@ export default function PainelDoCliente() {
         </div>
       )}
 
-      <div className="mx-auto max-w-5xl px-5 pt-20 md:pt-24 animate-in fade-in duration-700">
+      <div className="mx-auto max-w-5xl px-5 pt-8 md:pt-10 animate-in fade-in duration-700">
         <AdCardPainelCliente servicos={servicos as unknown as import('@/types/clienteServicos').ClienteServico[]} loading={loading} />
-        <div className="mt-4 mb-4">
+        <div className="mt-3 mb-3">
           <ContextualHelp context="meus-servicos" title="Dúvidas sobre seus serviços?" />
         </div>
-        <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:gap-6">
+        <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:gap-5">
 
           {/* ── Coluna Esquerda ── */}
           <div className="w-full lg:w-1/3 shrink-0">
-            <div className="lg:sticky lg:top-36 flex flex-col gap-6">
+            <div className="lg:sticky lg:top-36 flex flex-col gap-3">
 
               {prestador && (
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 flex items-center gap-4 transition-all hover:shadow-md">
@@ -349,7 +349,7 @@ export default function PainelDoCliente() {
               </div>
             )}
 
-            <div className="flex flex-col gap-4 mt-2">
+            <div className="mt-1 flex flex-col gap-3">
               {servicosFiltrados.length > 0 ? (
                 servicosFiltrados.map(servico => (
                   <ServicoCard
