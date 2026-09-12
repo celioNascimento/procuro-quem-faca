@@ -22,7 +22,10 @@ function PerfilPageContent() {
   const linkSuporte = `https://wa.me/${NUMERO_WHATSAPP_PQF}?text=${encodeURIComponent(`Olá, equipe Procuro Quem Faça. Meu perfil ${slug ? `(${slug}) ` : ''}foi bloqueado e gostaria de solicitar esclarecimentos.\n\n${mensagemSuporte.trim()}`)}`
 
   useEffect(() => {
-    if (!validando && !cadastroCompleto) setAbaAtiva('perfil')
+    if (!validando && !cadastroCompleto) {
+      const timer = setTimeout(() => setAbaAtiva('perfil'), 0)
+      return () => clearTimeout(timer)
+    }
   }, [validando, cadastroCompleto])
 
   const abas = [

@@ -68,7 +68,7 @@ export default function LinkExpirado() {
           <div className="space-y-6">
             <div className="text-6xl grayscale opacity-10 select-none py-2">🔐</div>
             <p className="text-slate-400 text-[12px] font-medium leading-relaxed italic px-4">
-              "Para garantir a integridade da sua conta, este acesso único foi invalidado. Por favor, inicie um novo processo de recuperação."
+              &quot;Para garantir a integridade da sua conta, este acesso único foi invalidado. Por favor, inicie um novo processo de recuperação.&quot;
             </p>
 
             <button

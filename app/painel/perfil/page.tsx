@@ -2,6 +2,7 @@
 
 'use client'
 import { useState } from 'react'
+import type { MouseEvent as ReactMouseEvent } from 'react'
 import Link from 'next/link'
 import {
   MapPin, Briefcase, Loader2, CheckCircle2,
@@ -305,7 +306,7 @@ export default function PerfilDoCliente() {
                           : null
                         }
                         onClick={() => handleNavigation(
-                          new MouseEvent('click') as any,
+                          new MouseEvent('click') as unknown as ReactMouseEvent<Element>,
                           getRota(s),
                         )}
                       />
