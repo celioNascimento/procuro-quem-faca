@@ -49,7 +49,25 @@ function Toggle({
   )
 }
 
-function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
+type AnuncioListaItem = {
+  id: string
+  titulo: string
+  posicao: string
+  status: boolean
+  imagem_url?: string | null
+  valor_total?: number | string | null
+  cliques?: number | null
+  data_inicio?: string | null
+  data_expiracao?: string | null
+  anunciantes?: { razao_social?: string | null } | null
+}
+
+function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: {
+  anuncio: AnuncioListaItem
+  onEdit: (anuncio: AnuncioListaItem) => void
+  onDelete: (id: string) => void
+  onToggleAtivo: (id: string, ativo: boolean) => void
+}) {
   const agora = new Date()
   const dataExpiracao = anuncio.data_expiracao ? new Date(anuncio.data_expiracao) : null
   const dataInicio = anuncio.data_inicio ? new Date(anuncio.data_inicio) : null
@@ -141,9 +159,9 @@ function AnuncioRow({ anuncio, onEdit, onDelete, onToggleAtivo }: any) {
 }
 
 type Props = {
-  anuncios: any[]
+  anuncios: AnuncioListaItem[]
   loading: boolean
-  onEdit: (anuncio: any) => void
+  onEdit: (anuncio: AnuncioListaItem) => void
   onDelete: (id: string) => void
   onToggleAtivo: (id: string, ativo: boolean) => void
 }

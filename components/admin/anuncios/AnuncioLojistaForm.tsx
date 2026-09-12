@@ -38,11 +38,34 @@ export type PreenchimentoLojista = {
   categoriaId: string
 }
 
-function ehPreenchimentoDoSimulador(initial: any): initial is PreenchimentoLojista {
+type AnuncioInicial = Partial<AnuncioLojistaFormValues> & Partial<PreenchimentoLojista> & {
+  id?: string
+  titulo?: string
+  link_destino?: string
+  data_inicio?: string | null
+  data_expiracao?: string | null
+  imagem_url?: string | null
+  status?: boolean
+  anunciante_id?: string
+  anunciantes?: { email?: string; razao_social?: string; whatsapp?: string }
+  anuncios_segmentacoes?: Array<{
+    id?: string
+    estado_sigla?: string
+    regiao_id?: string
+    cidade_id?: string
+    grupo_id?: string
+    categoria_id?: string
+    valor_cobrado?: number | string
+  }>
+}
+
+export type FormInitial = AnuncioInicial | null
+
+function ehPreenchimentoDoSimulador(initial: FormInitial): initial is PreenchimentoLojista {
   return !!initial && typeof initial === 'object' && !initial.id && 'estadoSigla' in initial
 }
 
-function segmentacoesIniciais(initial: any | null): Segmentacao[] {
+function segmentacoesIniciais(initial: FormInitial): Segmentacao[] {
   if (ehPreenchimentoDoSimulador(initial)) {
     return [{
       estadoSigla: initial.estadoSigla,
@@ -54,13 +77,13 @@ function segmentacoesIniciais(initial: any | null): Segmentacao[] {
     }]
   }
   if (!initial?.anuncios_segmentacoes?.length) return []
-  return initial.anuncios_segmentacoes.map((s: any) => ({
-    id: s.id,
-    estadoSigla: s.estado_sigla,
-    regiaoId: s.regiao_id,
-    cidadeId: s.cidade_id,
-    grupoId: s.grupo_id,
-    categoriaId: s.categoria_id,
+  return initial.anuncios_segmentacoes.map((s) => ({
+    ...(s.id ? { id: s.id } : {}),
+    estadoSigla: s.estado_sigla ?? '',
+    regiaoId: s.regiao_id ?? '',
+    cidadeId: s.cidade_id ?? '',
+    grupoId: s.grupo_id ?? '',
+    categoriaId: s.categoria_id ?? '',
     valorCobrado: Number(s.valor_cobrado) || 0,
   }))
 }
@@ -116,7 +139,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 }
 
 type Props = {
-  initial: any | null
+  initial: FormInitial
   onSave: (data: AnuncioLojistaFormValues) => void
   onCancel: () => void
   enviando: boolean
@@ -206,7 +229,7 @@ export function AnuncioLojistaForm({ initial, onSave, onCancel, enviando }: Prop
       anuncio: {
         titulo,
         linkDestino,
-        imagemUrl: modoImagem === 'url' ? imagemUrl : initial?.imagem_url ?? '',
+        imagemUrl: modoImagem === 'url' ? imagemUrl : (initial && 'imagem_url' in initial ? initial.imagem_url ?? '' : ''),
         posicao,
         ativo,
         dataInicio: dataInicio ? new Date(dataInicio).toISOString() : null,

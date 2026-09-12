@@ -118,10 +118,13 @@ function CardCidade({ linha }: { linha: LinhaCidade }) {
 }
 
 export function MapaVagasPracas() {
-  const [estados, setEstados] = useState<any[]>([])
-  const [regioes, setRegioes] = useState<any[]>([])
-  const [grupos, setGrupos] = useState<any[]>([])
-  const [categorias, setCategorias] = useState<any[]>([])
+  type OpcaoCatalogo = { id?: string | number; nome: string; sigla?: string }
+  type CidadeCatalogo = { id: string | number; nome: string }
+
+  const [estados, setEstados] = useState<OpcaoCatalogo[]>([])
+  const [regioes, setRegioes] = useState<OpcaoCatalogo[]>([])
+  const [grupos, setGrupos] = useState<OpcaoCatalogo[]>([])
+  const [categorias, setCategorias] = useState<OpcaoCatalogo[]>([])
 
   const [estadoSigla, setEstadoSigla] = useState('')
   const [regiaoId, setRegiaoId] = useState('')
@@ -138,15 +141,19 @@ export function MapaVagasPracas() {
   }, [])
 
   useEffect(() => {
-    setRegiaoId('')
-    setRegioes([])
+    queueMicrotask(() => {
+      setRegiaoId('')
+      setRegioes([])
+    })
     if (!estadoSigla) return
     listarRegioesPorEstado(estadoSigla).then(setRegioes).catch(() => setErro('Não foi possível carregar as regiões.'))
   }, [estadoSigla])
 
   useEffect(() => {
-    setCategoriaId('')
-    setCategorias([])
+    queueMicrotask(() => {
+      setCategoriaId('')
+      setCategorias([])
+    })
     if (!grupoId) return
     listarCategoriasPorGrupo(grupoId).then(setCategorias).catch(() => setErro('Não foi possível carregar as categorias.'))
   }, [grupoId])
@@ -166,7 +173,7 @@ export function MapaVagasPracas() {
       // Mostra os cards já com skeleton, e preenche os dados por cidade em
       // paralelo — evita travar a tela inteira esperando todas as cidades.
       setLinhas(
-        cidades.map((c: any) => ({
+        cidades.map((c: CidadeCatalogo) => ({
           cidadeId: String(c.id),
           cidadeNome: c.nome,
           vagas: [],
@@ -184,7 +191,7 @@ export function MapaVagasPracas() {
       )
 
       await Promise.all(
-        cidades.map(async (c: any) => {
+        cidades.map(async (c: CidadeCatalogo) => {
           const cidadeId = String(c.id)
 
           const resultadosPosicoes = await Promise.all(
@@ -235,7 +242,7 @@ export function MapaVagasPracas() {
   }, [regiaoId, categoriaId])
 
   useEffect(() => {
-    carregarMapa()
+    queueMicrotask(() => carregarMapa())
   }, [carregarMapa])
 
   // Oculta por padrão praças sem nenhuma vaga possível (nenhuma posição tem

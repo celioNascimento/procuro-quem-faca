@@ -356,7 +356,7 @@ export default function PainelAnunciosLojista() {
             />
           ) : (
             <AnuncioLojistaForm
-              initial={initialParaFormLojista}
+              initial={initialParaFormLojista as import('@/components/admin/anuncios/AnuncioLojistaForm').FormInitial}
               onSave={handleSave}
               onCancel={() => setEditando(null)}
               enviando={enviando}
