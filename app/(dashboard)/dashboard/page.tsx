@@ -54,7 +54,7 @@ function PerfilPageContent() {
 
   return (
     <div className="mx-auto w-full max-w-6xl">
-      <header className="flex flex-col gap-5 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:pb-8">
+      <header className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-6">
         <div className="flex max-w-2xl flex-col gap-2">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área profissional</p>
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Gerencie sua presença profissional</h1>

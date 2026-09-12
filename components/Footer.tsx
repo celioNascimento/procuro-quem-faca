@@ -7,11 +7,11 @@ export default function Footer() {
   const emailContato = 'procuroquemfaca@gmail.com'
 
   return (
-    <footer className="w-full bg-white border-t border-slate-100 py-10 mt-auto">
-      <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-6">
+    <footer className="w-full bg-white border-t border-slate-100 py-6 mt-auto">
+      <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-4">
         
         {/* Navegação Principal */}
-        <nav className="flex flex-wrap justify-center gap-6 md:gap-8">
+        <nav className="flex flex-wrap justify-center gap-4 md:gap-6">
           <Link 
             href="/privacidade" 
             className="text-slate-400 hover:text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] transition-colors"
@@ -45,7 +45,7 @@ export default function Footer() {
         <div className="w-12 h-[1px] bg-slate-100"></div>
 
         {/* Créditos e Copyright */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-1">
           <p className="text-slate-500 text-xs font-medium">
             © {anoAtual} <span className="text-slate-900 font-black tracking-tight uppercase">Procuro Quem Faça</span>
           </p>
