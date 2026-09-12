@@ -35,7 +35,7 @@ export function useAdminLogs() {
   }, [])
 
   useEffect(() => {
-    carregarLogs()
+    queueMicrotask(() => carregarLogs())
 
     const canal = subscribeLogsAtividades('admin_logs_realtime', (payload) => {
       const novoLog = payload.new as LogAtividade

@@ -23,6 +23,8 @@ export function useAdminPrestadores() {
     } catch { setError('Não foi possível carregar os prestadores.') } finally { setLoading(false) }
   }, [tab, filters])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    queueMicrotask(() => void load())
+  }, [load])
   return { tab, setTab, filters, setFilters, data, selected, setSelected, loading, error, reload: load }
 }
