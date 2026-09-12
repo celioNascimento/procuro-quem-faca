@@ -44,7 +44,7 @@ export default function Login() {
               <img
                 src="/logo.png"
                 alt="Procuro Quem Faça"
-                className="h-10 md:h-12 lg:h-14 w-auto object-contain drop-shadow-sm"
+                className="h-16 md:h-20 lg:h-24 w-auto max-w-full object-contain drop-shadow-sm"
               />
             </Link>
           </div>
