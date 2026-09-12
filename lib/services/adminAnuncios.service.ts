@@ -137,6 +137,14 @@ export async function listarAnuncios(): Promise<AnuncioComAnunciante[]> {
   return data as AnuncioComAnunciante[]
 }
 
+type AnuncianteCriado = {
+  id: string
+  razao_social: string
+  email: string
+  cnpj_cpf: string | null
+  whatsapp: string | null
+}
+
 export async function criarOuBuscarAnunciante(input: {
   email: string
   razaoSocial: string
@@ -150,7 +158,11 @@ export async function criarOuBuscarAnunciante(input: {
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error ?? 'Erro ao criar anunciante')
-  return data as { anunciante: any; senhaTemporaria: string | null; novoUsuario: boolean }
+  return data as {
+    anunciante: AnuncianteCriado
+    senhaTemporaria: string | null
+    novoUsuario: boolean
+  }
 }
 
 export async function uploadBannerAnuncio(file: File, anuncianteId: string) {
@@ -213,6 +225,21 @@ function periodosSeSobrepoe(
 
 type AnuncioPeriodo = { id: string; data_inicio: string | null; data_expiracao: string | null }
 
+type AnuncioPeriodoRow = { anuncios: AnuncioPeriodo | null }
+
+type PrestadorInventario = {
+  id: string
+  nome: string
+  categoria: { nome: string } | null
+  habilidades: string[] | null
+  cidades: { nome: string } | null
+}
+
+type AnuncioAtivoRow = {
+  id: string
+  anuncios: AnuncioComAnunciante | null
+}
+
 async function contarAnunciosSobrepostosNaPraca(
   cidadeId: string,
   categoriaId: string,
@@ -236,7 +263,7 @@ async function contarAnunciosSobrepostosNaPraca(
   const anunciosSobrepostos: AnuncioPeriodo[] = []
 
   for (const row of data ?? []) {
-    const a = (row as any).anuncios as AnuncioPeriodo
+    const { anuncios: a } = row as unknown as AnuncioPeriodoRow
     if (!a || a.id === excluirAnuncioId || vistos.has(a.id)) continue
     vistos.add(a.id)
 
@@ -267,7 +294,7 @@ async function contarPrestadoresDaPraca(cidadeId: string, categoriaId: string): 
   if (erroPrestadores) throw erroPrestadores
   if (!prestadores) return 0
 
-  const normalizados = prestadores.map((p: any) => ({
+  const normalizados = (prestadores as unknown as PrestadorInventario[]).map((p) => ({
     ...p,
     categoria: p.categoria?.nome || '',
   }))
@@ -411,10 +438,9 @@ export async function listarAnunciosAtivosPorPraca(
   const anuncios: AnuncioComAnunciante[] = []
 
   for (const row of data ?? []) {
-    const r = row as any
+    const r = row as unknown as AnuncioAtivoRow
     const a = r.anuncios
     if (!a || vistos.has(a.id)) continue
-    vistos.has(a.id)
     vistos.add(a.id)
 
     // r.id é o id da linha de anuncios_segmentacoes (praça exata do match).
@@ -467,7 +493,7 @@ export async function verificarInventarioCliente(
     const anunciosSobrepostos: AnuncioPeriodo[] = []
 
     for (const row of data ?? []) {
-      const a = (row as any).anuncios as AnuncioPeriodo
+    const { anuncios: a } = row as unknown as AnuncioPeriodoRow
       if (!a || a.id === excluirAnuncioId || vistos.has(a.id)) continue
       vistos.add(a.id)
 

@@ -31,7 +31,9 @@ export function useAcompanhamento(token: string) {
       ? 'Serviço concluído'
       : 'Em andamento'
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    queueMicrotask(() => setMounted(true))
+  }, [])
 
   useEffect(() => {
     if (!token || !mounted) return

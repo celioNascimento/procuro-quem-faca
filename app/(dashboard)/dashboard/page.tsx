@@ -22,7 +22,10 @@ function PerfilPageContent() {
   const linkSuporte = `https://wa.me/${NUMERO_WHATSAPP_PQF}?text=${encodeURIComponent(`Olá, equipe Procuro Quem Faça. Meu perfil ${slug ? `(${slug}) ` : ''}foi bloqueado e gostaria de solicitar esclarecimentos.\n\n${mensagemSuporte.trim()}`)}`
 
   useEffect(() => {
-    if (!validando && !cadastroCompleto) setAbaAtiva('perfil')
+    if (!validando && !cadastroCompleto) {
+      const timer = setTimeout(() => setAbaAtiva('perfil'), 0)
+      return () => clearTimeout(timer)
+    }
   }, [validando, cadastroCompleto])
 
   const abas = [
@@ -51,7 +54,7 @@ function PerfilPageContent() {
 
   return (
     <div className="mx-auto w-full max-w-6xl">
-      <header className="flex flex-col gap-5 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:pb-8">
+      <header className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-6">
         <div className="flex max-w-2xl flex-col gap-2">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área profissional</p>
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Gerencie sua presença profissional</h1>
@@ -91,11 +94,11 @@ function PerfilPageContent() {
         </section>
       )}
 
-      <div className="flex flex-col gap-6 pt-6">
+      <div className="flex flex-col gap-0 pt-2 sm:gap-1 sm:pt-3">
         <AdCardDashboard />
       </div>
 
-      <nav className="sticky top-16 z-40 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
+      <nav className="sticky top-16 z-40 mt-1 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
         <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {abas.map(aba => {
             const ativa = abaAtiva === aba.id

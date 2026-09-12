@@ -55,7 +55,7 @@ export default function PainelDoCliente() {
 
   useEffect(() => {
     if (confirmandoWhatsapp?.cliente_whatsapp) {
-      setWhatsappEditado(confirmandoWhatsapp.cliente_whatsapp)
+      queueMicrotask(() => setWhatsappEditado(confirmandoWhatsapp.cliente_whatsapp))
     }
   }, [confirmandoWhatsapp])
 
@@ -122,7 +122,7 @@ export default function PainelDoCliente() {
   // real do projeto. A sinalização visual nas demais abas é feita pela
   // prop tipoGarantiaAtiva abaixo, que exibe apenas uma tag sem mudar o
   // card inteiro.
-  const getModo = (servico: any) => {
+  const getModo = (servico: (typeof servicos)[number]) => {
     if ((filtroAtivo === 'garantia' || filtroAtivo === 'reclamacao') && tipoGarantiaAtivaDoServico(servico))
       return 'garantia' as const
     if (servico.status === 'em_execucao') return 'andamento' as const
@@ -134,7 +134,7 @@ export default function PainelDoCliente() {
   // Nas abas Garantia/Reclamação → navega para seção de garantia/reclamação
   // do acompanhamento (mesma rota, a seção decide o tipo sozinha).
   // Em qualquer outra aba → comportamento padrão pelo status do projeto.
-  const getOnAceitar = (servico: any) => {
+  const getOnAceitar = (servico: (typeof servicos)[number]) => {
     if ((filtroAtivo === 'garantia' || filtroAtivo === 'reclamacao') && tipoGarantiaAtivaDoServico(servico))
       return () => handleVerGarantia(servico)
     if (servico.status === 'em_execucao')
@@ -211,16 +211,16 @@ export default function PainelDoCliente() {
         </div>
       )}
 
-      <div className="mx-auto max-w-5xl px-5 pt-24 md:pt-36 animate-in fade-in duration-700">
-        <AdCardPainelCliente servicos={servicos as any} loading={loading} />
-        <div className="mt-6 mb-6">
+      <div className="mx-auto max-w-5xl px-5 pt-36 md:pt-32 animate-in fade-in duration-700">
+        <AdCardPainelCliente servicos={servicos as unknown as import('@/types/clienteServicos').ClienteServico[]} loading={loading} />
+        <div className="mt-1 mb-1">
           <ContextualHelp context="meus-servicos" title="Dúvidas sobre seus serviços?" />
         </div>
-        <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:gap-8">
+        <div className="mt-1 flex flex-col gap-2 lg:flex-row lg:gap-4">
 
           {/* ── Coluna Esquerda ── */}
           <div className="w-full lg:w-1/3 shrink-0">
-            <div className="lg:sticky lg:top-36 flex flex-col gap-6">
+            <div className="lg:sticky lg:top-36 flex flex-col gap-3">
 
               {prestador && (
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 flex items-center gap-4 transition-all hover:shadow-md">
@@ -349,7 +349,7 @@ export default function PainelDoCliente() {
               </div>
             )}
 
-            <div className="flex flex-col gap-4 mt-2">
+            <div className="mt-1 flex flex-col gap-3">
               {servicosFiltrados.length > 0 ? (
                 servicosFiltrados.map(servico => (
                   <ServicoCard

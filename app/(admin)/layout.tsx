@@ -2,9 +2,7 @@
 
 'use client'
 
-import '../globals.css'
-  import { useEffect, useState } from 'react'
-
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
@@ -17,7 +15,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { userEmail, userName, handleLogout } = useAdminAuth()
 
   useEffect(() => {
-    setIsMobileMenuOpen(false)
+    queueMicrotask(() => setIsMobileMenuOpen(false))
   }, [pathname])
 
   const isLoginPage = pathname === '/admin/login'

@@ -36,7 +36,9 @@ export function useAvaliacaoDoProjeto(projetoId: string | null) {
     }
   }, [projetoId])
 
-  useEffect(() => { carregar() }, [carregar])
+  useEffect(() => {
+    queueMicrotask(() => carregar())
+  }, [carregar])
 
   return { avaliacao, loading, recarregar: carregar }
 }

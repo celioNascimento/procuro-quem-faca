@@ -36,15 +36,20 @@ export function resolverDestinoPosLogin(
   profile: ProfileRole | null,
   prestador: PrestadorResumo | null
 ): string {
+  // Clientes não devem cair no onboarding de prestador só porque não possuem
+  // uma linha correspondente em `prestadores`.
+  if (profile?.role === 'cliente') {
+    return '/painel/perfil'
+  }
+
   const prestadorCompleto = isPrestadorCompleto(prestador)
 
-  // 1. Se o cadastro de prestador já está 100% completo, painel de controle.
+  // Se o cadastro de prestador já está 100% completo, painel de controle.
   if (prestadorCompleto) {
     return '/dashboard'
   }
 
-  // 2. Se não está completo (conta nova, interrompido, ou cliente fazendo upgrade),
-  // enviamos obrigatoriamente para a página de cadastro.
+  // Conta marcada como prestador, mas ainda sem cadastro concluído.
   return prestador?.origem_tipo === 'curadoria_publica'
     ? `/cadastro?reivindicar=${prestador.id}`
     : '/cadastro'

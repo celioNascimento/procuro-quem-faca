@@ -109,7 +109,7 @@ export function WizardCompleted({ hookData, prestadorId }: Props) {
               </div>
               {avaliacao.comentario ? (
                 <p className="text-[13px] font-medium text-slate-600 leading-relaxed italic bg-white p-4 rounded-2xl border border-slate-100">
-                  "{avaliacao.comentario}"
+                  &quot;{avaliacao.comentario}&quot;
                 </p>
               ) : (
                 <p className="text-[11px] text-slate-400 italic">Cliente não deixou comentário.</p>
@@ -123,7 +123,7 @@ export function WizardCompleted({ hookData, prestadorId }: Props) {
         <div className="relative flex aspect-[4/3] min-h-[350px] max-h-[560px] shrink-0 items-center justify-center overflow-hidden bg-slate-900 group">
           {fotoAtual.url ? (
             <>
-              <img src={fotoAtual.url} width={1200} height={900} loading="eager" decoding="async" className="absolute inset-0 h-full w-full object-cover blur-3xl opacity-40 scale-125" aria-hidden="true" />
+              <img src={fotoAtual.url} width={1200} height={900} loading="eager" decoding="async" alt="" className="absolute inset-0 h-full w-full object-cover blur-3xl opacity-40 scale-125" aria-hidden="true" />
               <img src={fotoAtual.url} width={1200} height={900} loading="eager" decoding="async" className="relative z-10 max-h-full max-w-full object-contain shadow-2xl" alt="Registro final" />
             </>
           ) : (

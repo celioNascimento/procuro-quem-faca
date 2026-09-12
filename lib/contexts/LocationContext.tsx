@@ -18,32 +18,37 @@ interface LocationContextData {
   loading: boolean
 }
 
+function lerCidadeDoCookie(): CidadeSelecionada | null {
+  if (typeof document === 'undefined') return null
+
+  const cidadeCookie = document.cookie.split('; ').find((row) => row.startsWith('pqf_cidade='))
+  if (!cidadeCookie) return null
+
+  try {
+    const valor = JSON.parse(decodeURIComponent(cidadeCookie.slice('pqf_cidade='.length))) as unknown
+    if (
+      typeof valor === 'object' &&
+      valor !== null &&
+      'id' in valor &&
+      'nome' in valor &&
+      typeof valor.id === 'string' &&
+      typeof valor.nome === 'string'
+    ) {
+      return { id: valor.id, nome: valor.nome }
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
 const LocationContext = createContext<LocationContextData>({} as LocationContextData)
 
 export function LocationProvider({ children }: { children: ReactNode }) {
-  const [cidadeAtual, setCidadeAtual] = useState<CidadeSelecionada | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // 1. Ao carregar o app, busca o cookie funcional
-    const cookies = document.cookie.split('; ')
-    const cidadeCookie = cookies.find(row => row.startsWith('pqf_cidade='))
-
-    if (cidadeCookie) {
-      try {
-        const decoded = decodeURIComponent(cidadeCookie.split('=')[1])
-        const cidadeSalva = JSON.parse(decoded)
-        setCidadeAtual(cidadeSalva)
-      } catch (e) {
-        setIsModalOpen(true) // Se der erro ao ler, força a escolha
-      }
-    } else {
-      // 2. Se não tem cookie, obriga o usuário a escolher
-      setIsModalOpen(true)
-    }
-    setLoading(false)
-  }, [])
+  const [cidadeAtual, setCidadeAtual] = useState<CidadeSelecionada | null>(() => lerCidadeDoCookie())
+  const [isModalOpen, setIsModalOpen] = useState(() => lerCidadeDoCookie() === null)
+  const [loading] = useState(false)
 
   const salvarLocalizacao = (cidade: CidadeSelecionada) => {
     // Salva por 30 dias (Cookie Essencial)

@@ -42,5 +42,5 @@ export function useRastreamentoAtivacao(
         entidadeId: String(prestador.id),
       })
     }
-  }, [prestador?.id, srcParam])
+  }, [prestador, srcParam])
 }

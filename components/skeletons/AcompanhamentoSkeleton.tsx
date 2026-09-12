@@ -2,7 +2,7 @@
 
 export default function AcompanhamentoSkeleton() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans" aria-busy="true" aria-label="Carregando acompanhamento">
 
       {/* Header Skeleton — espelha o HeaderCliente fixo (mesma altura/estrutura) */}
       <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-slate-100 overflow-hidden">

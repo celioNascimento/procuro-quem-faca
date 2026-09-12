@@ -10,5 +10,5 @@ export async function listarPrestadoresAdmin(filters: AdminPrestadoresFilters): 
   if (filters.grupoCategoria) query = query.eq('grupo_id', filters.grupoCategoria)
   const { data, error } = await query
   if (error) throw error
-  return (data ?? []).map((row) => normalizeAdminPrestador(row as Record<string, any>))
+  return (data ?? []).map((row) => normalizeAdminPrestador(row as Record<string, unknown>))
 }

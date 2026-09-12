@@ -18,8 +18,10 @@ export default function LocationModal() {
   useEffect(() => {
     if (isModalOpen) {
       getCidadesAtivasParaFiltro().then(setCidadesAtivas)
-      setBusca('')
-      setErroGeo(null)
+      queueMicrotask(() => {
+        setBusca('')
+        setErroGeo(null)
+      })
     }
   }, [isModalOpen])
 

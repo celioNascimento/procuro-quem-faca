@@ -57,7 +57,7 @@ export default function Erro400({ reset }: { error: Error & { digest?: string };
           <div className="space-y-6">
             <div className="text-6xl grayscale opacity-10 select-none">🛠️</div>
             <p className="text-slate-400 text-[12px] font-medium leading-relaxed italic px-4">
-              "A sincronização de dados falhou devido a um erro de comunicação. Isso pode ser causado por um link corrompido ou informações de sessão expiradas."
+              &quot;A sincronização de dados falhou devido a um erro de comunicação. Isso pode ser causado por um link corrompido ou informações de sessão expiradas.&quot;
             </p>
           </div>
 

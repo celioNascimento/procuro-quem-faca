@@ -9,6 +9,7 @@ import { AdCardFallback } from '@/components/ads/AdCardFallback'
 import type { AdFallback } from '@/types/ads'
 
 const POSICAO = 'dashboard_prestador'
+type AnuncioComMetrica = AnuncioComAnunciante & { segmentacao_id_ativa?: string }
 
 // Fallback próprio deste banner — não usa useAdContext/resolverSegmento
 // (aquele é sobre segmento de categoria de serviço, ex: "Pedreiro"). Aqui,
@@ -85,24 +86,24 @@ export function AdCardDashboard() {
   // Registra 1 impressão assim que o anúncio real é resolvido e renderizado
   // (dedup de 30min e validação de vigência acontecem no servidor).
   useEffect(() => {
-    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'impressao')
+    if (!anuncio?.id || !(anuncio as AnuncioComMetrica)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as AnuncioComMetrica).segmentacao_id_ativa, 'impressao')
   }, [anuncio])
 
   function handleClick() {
-    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'clique')
+    if (!anuncio?.id || !(anuncio as AnuncioComMetrica)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as AnuncioComMetrica).segmentacao_id_ativa, 'clique')
   }
 
   // Reserva o espaço enquanto a segmentação é resolvida. Renderizar null aqui
   // fazia o conteúdo subir e depois saltar quando o anúncio chegava.
   if (anuncio === undefined) {
-    return <div className="mx-auto mb-6 h-[120px] w-full max-w-4xl animate-pulse rounded-2xl border border-slate-100 bg-slate-50 md:h-[160px] lg:h-[200px]" aria-label="Carregando publicidade" />
+    return <div className="mx-auto mb-2 h-[120px] w-full max-w-4xl animate-pulse rounded-2xl border border-slate-100 bg-slate-50 md:h-[160px] lg:h-[200px]" aria-label="Carregando publicidade" />
   }
 
   if (!anuncio || !anuncio.imagem_url) {
     return (
-      <div className="mx-auto mb-6 max-w-4xl">
+      <div className="mx-auto mb-2 max-w-4xl">
         <AdCardFallback fallback={FALLBACK_INCENTIVO_PORTFOLIO} />
       </div>
     )
@@ -114,7 +115,7 @@ export function AdCardDashboard() {
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleClick}
-      className="relative mx-auto mb-6 block w-full max-w-4xl overflow-hidden rounded-2xl shadow-sm transition-opacity hover:opacity-95"
+      className="relative mx-auto mb-2 block w-full max-w-4xl overflow-hidden rounded-2xl shadow-sm transition-opacity hover:opacity-95"
     >
       <img
         src={anuncio.imagem_url}

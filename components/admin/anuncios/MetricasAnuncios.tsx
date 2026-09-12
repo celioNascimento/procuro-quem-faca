@@ -13,6 +13,15 @@ type MetricaDiaria = {
   cliques: number
 }
 
+type AnuncioRaw = {
+  id: string
+  titulo: string
+  posicao: string
+  status: boolean
+  data_expiracao: string | null
+  anunciantes?: { razao_social?: string | null } | Array<{ razao_social?: string | null }> | null
+}
+
 type AnuncioComMetricas = {
   id: string
   titulo: string
@@ -171,7 +180,7 @@ export function MetricasAnuncios() {
           metricasPorAnuncio.set(m.anuncio_id, lista)
         }
 
-        const resultado: AnuncioComMetricas[] = (resAnuncios.data ?? []).map((a: any) => {
+        const resultado: AnuncioComMetricas[] = (resAnuncios.data ?? []).map((a: AnuncioRaw) => {
           const diarias = metricasPorAnuncio.get(a.id) ?? []
           const total_impressoes = diarias.reduce((s, m) => s + m.impressoes, 0)
           const total_cliques = diarias.reduce((s, m) => s + m.cliques, 0)
@@ -182,7 +191,9 @@ export function MetricasAnuncios() {
             posicao: a.posicao,
             status: a.status,
             data_expiracao: a.data_expiracao,
-            anunciante_nome: a.anunciantes?.razao_social ?? a.titulo,
+            anunciante_nome: Array.isArray(a.anunciantes)
+              ? a.anunciantes[0]?.razao_social ?? a.titulo
+              : a.anunciantes?.razao_social ?? a.titulo,
             total_impressoes,
             total_cliques,
             ctr,
@@ -198,8 +209,8 @@ export function MetricasAnuncios() {
         })
 
         setAnuncios(resultado)
-      } catch (e: any) {
-        setErro(e.message ?? 'Erro ao carregar métricas')
+      } catch (e: unknown) {
+        setErro(e instanceof Error ? e.message : 'Erro ao carregar métricas')
       } finally {
         setLoading(false)
       }
@@ -316,7 +327,7 @@ export function MetricasAnuncios() {
       ) : anunciosFiltrados.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-10 text-center">
           <p className="text-[13px] font-semibold text-zinc-500">Nenhum anúncio ativo no momento</p>
-          <p className="mt-1 text-[11px] text-zinc-300">Mude para "Todos" para ver expirados e rascunhos</p>
+          <p className="mt-1 text-[11px] text-zinc-300">Mude para &quot;Todos&quot; para ver expirados e rascunhos</p>
         </div>
       ) : (
         <div className="space-y-3">

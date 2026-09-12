@@ -28,8 +28,12 @@ export function useEditarPerfilPrestador({
     if (!prestadorId) return
 
     let cancelado = false
-    setCarregandoInicial(true)
-    setErro(null)
+    const inicializar = setTimeout(() => {
+      if (!cancelado) {
+        setCarregandoInicial(true)
+        setErro(null)
+      }
+    }, 0)
 
     getPrestador(prestadorId)
       .then(data => {
@@ -45,7 +49,10 @@ export function useEditarPerfilPrestador({
         if (!cancelado) setCarregandoInicial(false)
       })
 
-    return () => { cancelado = true }
+    return () => {
+      cancelado = true
+      clearTimeout(inicializar)
+    }
   }, [prestadorId])
 
   const handleTogglePortfolio = useCallback(

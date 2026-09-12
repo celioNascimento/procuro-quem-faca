@@ -1,6 +1,18 @@
 //lib/db/logs.ts
 
+import type { RealtimePostgresInsertPayload } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+
+type LogRow = {
+  id: string
+  acao: string
+  detalhes: Record<string, unknown>
+  entidade_tipo: string | null
+  entidade_id: string | null
+  usuario_id: string | null
+  usuario_email: string | null
+  created_at: string
+}
 
 export interface LogPayload {
   acao: string
@@ -44,7 +56,10 @@ export async function checkLogExists(usuarioId: string, acao: string): Promise<b
   * etc.) usa esta mesma função, cada uma com seu próprio callback e nome
   * de canal, para não competir entre si.
   */
- export function subscribeLogsAtividades(channelName: string, onInsert: (payload: any) => void) {
+ export function subscribeLogsAtividades(
+   channelName: string,
+   onInsert: (payload: RealtimePostgresInsertPayload<LogRow>) => void,
+ ) {
    return supabase
      .channel(channelName)
      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs_atividades' }, onInsert)

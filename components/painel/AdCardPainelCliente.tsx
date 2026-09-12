@@ -9,6 +9,7 @@ import type { AdFallback } from '@/types/ads'
 import type { ClienteServico } from '@/types/clienteServicos'
 
 const POSICAO = 'dashboard_cliente'
+type AnuncioComMetrica = AnuncioComAnunciante & { segmentacao_id_ativa?: string }
 
 const FALLBACK_PADRAO: AdFallback = {
   emoji: '🤝',
@@ -34,7 +35,7 @@ export function AdCardPainelCliente({
     if (loading) return
 
     let cancelado = false
-    setAnuncio(undefined)
+    queueMicrotask(() => setAnuncio(undefined))
 
     async function carregar() {
       try {
@@ -81,13 +82,13 @@ export function AdCardPainelCliente({
 
         if (!cancelado) {
           if (anunciosDaPraca && anunciosDaPraca.length > 0) {
-            const anuncioEncontrado = anunciosDaPraca[0].anuncios as any
+            const anuncioEncontrado = anunciosDaPraca[0].anuncios as unknown as AnuncioComMetrica
             // id da linha de anuncios_segmentacoes — necessário para atribuir
             // a métrica à praça correta em registrarMetricaAnuncio.
             anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
             setAnuncio(anuncioEncontrado as AnuncioComAnunciante)
           } else {
-            setAnuncio(null)
+      queueMicrotask(() => setAnuncio(null))
           }
         }
       } catch {
@@ -98,7 +99,7 @@ export function AdCardPainelCliente({
     if (servicos.length > 0) {
       carregar()
     } else if (!loading) {
-      setAnuncio(null)
+      queueMicrotask(() => setAnuncio(null))
     }
 
     return () => {
@@ -107,13 +108,13 @@ export function AdCardPainelCliente({
   }, [servicos, prestadorId, loading])
 
   useEffect(() => {
-    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'impressao')
+    if (!anuncio?.id || !(anuncio as AnuncioComMetrica)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as AnuncioComMetrica).segmentacao_id_ativa, 'impressao')
   }, [anuncio])
 
   function handleClick() {
-    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'clique')
+    if (!anuncio?.id || !(anuncio as AnuncioComMetrica)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as AnuncioComMetrica).segmentacao_id_ativa, 'clique')
   }
 
   return (

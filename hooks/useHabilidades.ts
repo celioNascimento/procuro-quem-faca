@@ -43,7 +43,9 @@ export function useHabilidades() {
     }
   }, [])
 
-  useEffect(() => { carregarDados() }, [carregarDados])
+  useEffect(() => {
+    queueMicrotask(() => carregarDados())
+  }, [carregarDados])
 
   const adicionarGrupo = useCallback(async (nome: string, icone: string, ordem: number) => {
     if (!nome.trim()) return { ok: false, error: 'Informe o nome do grupo.' }

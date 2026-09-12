@@ -52,8 +52,8 @@ export function GarantiaSecaoCliente({
 
   useEffect(() => {
     if (caso || loadingCaso) {
-      setLoadingElegibilidade(false)
-      return
+      const timer = setTimeout(() => setLoadingElegibilidade(false), 0)
+      return () => clearTimeout(timer)
     }
     verificarElegibilidadeGarantia(projetoId)
       .then((r) => setElegibilidade({ elegivel: r.elegivel, motivo: r.motivo, tipo: r.tipo }))

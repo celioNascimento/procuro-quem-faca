@@ -2,6 +2,7 @@
 
 'use client'
 import { useState } from 'react'
+import type { MouseEvent as ReactMouseEvent } from 'react'
 import Link from 'next/link'
 import {
   MapPin, Briefcase, Loader2, CheckCircle2,
@@ -15,6 +16,7 @@ import { CardResumoAvaliacoesCliente } from '@/components/painel/CardResumoAvali
 import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 import { ContextualHelp } from '@/components/help/HelpCenter'
+import DangerZone from '@/components/account/DangerZone'
 
 export default function PerfilDoCliente() {
   const {
@@ -116,7 +118,7 @@ export default function PerfilDoCliente() {
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-7xl px-4 pb-10 pt-16 animate-in fade-in duration-500 sm:px-6 sm:pt-20 md:pt-28 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-24 animate-in fade-in duration-500 sm:px-6 sm:pt-32 md:pt-36 lg:px-8">
         <header className="mb-6 flex max-w-2xl flex-col gap-2 sm:mb-8">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área do cliente</p>
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Acompanhe seus projetos</h1>
@@ -305,7 +307,7 @@ export default function PerfilDoCliente() {
                           : null
                         }
                         onClick={() => handleNavigation(
-                          new MouseEvent('click') as any,
+                          new MouseEvent('click') as unknown as ReactMouseEvent<Element>,
                           getRota(s),
                         )}
                       />
@@ -386,6 +388,8 @@ export default function PerfilDoCliente() {
                     {loading ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} /> Salvar alterações</>}
                   </button>
                 </section>
+
+                <DangerZone audience="cliente" />
               </div>
             )}
 

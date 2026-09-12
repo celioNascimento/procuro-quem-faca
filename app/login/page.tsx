@@ -44,13 +44,13 @@ export default function Login() {
               <img
                 src="/logo.png"
                 alt="Procuro Quem Faça"
-                className="h-10 md:h-12 lg:h-14 w-auto object-contain drop-shadow-sm"
+                className="h-16 md:h-20 lg:h-24 w-auto max-w-full object-contain drop-shadow-sm"
               />
             </Link>
           </div>
 
           {/* Título */}
-          <h1 className="text-xl md:text-2xl lg:text-[28px] font-black text-slate-900 mb-1 lg:mb-2 tracking-tight">
+          <h1 className="text-xl md:text-2xl lg:text-[28px] font-semibold text-slate-900 mb-1 lg:mb-2 tracking-tight">
             Entrar ou Criar Conta
           </h1>
 

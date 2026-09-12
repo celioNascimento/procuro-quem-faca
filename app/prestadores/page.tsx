@@ -94,11 +94,17 @@ function AdCardEntreCards({
   const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined)
 
   useEffect(() => {
-    if (mostrarAnuncio === undefined) { setAnuncio(undefined); return }
-    if (!mostrarAnuncio || !chavePraca || !cidadeId || !categoriaId) { setAnuncio(null); return }
+    if (mostrarAnuncio === undefined) {
+      const timer = setTimeout(() => setAnuncio(undefined), 0)
+      return () => clearTimeout(timer)
+    }
+    if (!mostrarAnuncio || !chavePraca || !cidadeId || !categoriaId) {
+      const timer = setTimeout(() => setAnuncio(null), 0)
+      return () => clearTimeout(timer)
+    }
 
     let cancelado = false
-    setAnuncio(undefined)
+    const resetTimer = setTimeout(() => setAnuncio(undefined), 0)
 
     async function resolver() {
       const cache = cachePracaRef.current
@@ -118,7 +124,10 @@ function AdCardEntreCards({
     }
 
     resolver().catch(() => { if (!cancelado) setAnuncio(null) })
-    return () => { cancelado = true }
+    return () => {
+      cancelado = true
+      clearTimeout(resetTimer)
+    }
   }, [mostrarAnuncio, chavePraca, cidadeId, categoriaId, cachePracaRef, sorteadoresRef])
 
   const anuncioParaExibir: Anuncio | null | undefined =
@@ -207,7 +216,10 @@ function ListaConteudo() {
     useState<Map<ChavePraca, Set<number>>>(new Map())
 
   useEffect(() => {
-    if (posicoesPorPraca.size === 0) { setPosicoesComAnuncioPorPraca(new Map()); return }
+    if (posicoesPorPraca.size === 0) {
+      const timer = setTimeout(() => setPosicoesComAnuncioPorPraca(new Map()), 0)
+      return () => clearTimeout(timer)
+    }
     let cancelado = false
     async function calcular() {
       const resultado = new Map<ChavePraca, Set<number>>()
@@ -252,7 +264,7 @@ function ListaConteudo() {
       {/* Bottom sheet mobile — botão flutuante + drawer */}
       <FiltroBottomSheet {...filtrosProps} />
 
-      <div className="max-w-6xl mx-auto px-5 md:px-6 pt-6 lg:grid lg:grid-cols-[260px_1fr] lg:gap-8">
+      <div className="max-w-6xl mx-auto px-5 md:px-6 pt-3 lg:grid lg:grid-cols-[260px_1fr] lg:gap-6">
 
         {/* Sidebar desktop */}
         {!loading && (
@@ -262,7 +274,7 @@ function ListaConteudo() {
         )}
 
         {/* Coluna principal */}
-        <div className="space-y-6 min-w-0">
+          <div className="flex min-w-0 flex-col gap-4">
 
           {/* Título + contagem */}
           <div className="flex items-center justify-between border-l-4 border-blue-600 pl-4 py-1">
@@ -297,7 +309,7 @@ function ListaConteudo() {
 
           {/* Skeleton */}
           {loading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-3 lg:grid-cols-2 lg:p-4">
               {[1, 2, 3, 4].map(i => (
                 <div
                   key={i}
@@ -306,7 +318,7 @@ function ListaConteudo() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 rounded-[2rem] bg-slate-50 p-3 lg:grid-cols-2 lg:p-4">
               {/* Anúncio de topo */}
               {prestadoresExibidos.length > 0 && (
                 <div className="lg:col-span-2">
@@ -384,7 +396,7 @@ function ListaConteudo() {
           )}
 
           {/* Espaço extra no mobile para não sobrepor o botão flutuante */}
-          <div className="h-20 lg:hidden" />
+          <div className="h-4 lg:hidden" />
         </div>
       </div>
     </>
@@ -395,9 +407,9 @@ function ListaConteudo() {
 
 export default function PaginaPrestadores() {
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-16 antialiased selection:bg-blue-100">
+    <div className="min-h-screen bg-[#FDFDFD] pb-4 antialiased selection:bg-blue-100">
       <Header href="/" />
-      <div className="pt-16 md:pt-28">
+      <div className="pt-16 md:pt-20">
         <Suspense fallback={<ListaSkeleton />}>
           <ListaConteudo />
         </Suspense>

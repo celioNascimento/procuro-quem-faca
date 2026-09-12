@@ -123,7 +123,7 @@ export default function CarrosselFinalizacao({
           </div>
 
           <p className="text-sm font-medium leading-relaxed opacity-90 italic">
-            "{avaliacaoExistente.comentario || 'Serviço finalizado com sucesso.'}"
+            &quot;{avaliacaoExistente.comentario || 'Serviço finalizado com sucesso.'}&quot;
           </p>
         </div>
       )}

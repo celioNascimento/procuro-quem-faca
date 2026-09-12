@@ -8,8 +8,8 @@ import type { User } from '@supabase/supabase-js'
 import type { PrestadorFormData } from '@/types/prestador'
 
 // UI Components
-import ModalConfirmacao from '@/components/ui/ModalConfirmacao'
 import { Loader2 } from 'lucide-react'
+import DangerZone from '@/components/account/DangerZone'
 import { ErrorModal } from '@/components/ui/ErrorModal'
 
 // Componentes Modulares (Vitrine)
@@ -52,8 +52,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
   const [portfolioOb, setPortfolioOb] = useState(true) // Estado local sincronizado com DB
   const [uploadingSessao, setUploadingSessao] = useState(false)
 
-  const [isModalExcluirOpen, setIsModalExcluirOpen] = useState(false)
-  const [deleting, setDeleting] = useState(false)
   const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
 
   // ── Inicialização ────────────────────────────────────────────────────────
@@ -93,7 +91,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
           ])
           form.carregarPerfil(perfilCarregado)
           // Carregar configuração de portfólio do Supabase
-          const portfolioValue = (perfilCarregado as any).portfolio_obrigatorio
+          const portfolioValue = (perfilCarregado as { portfolio_obrigatorio?: unknown }).portfolio_obrigatorio
           setPortfolioOb(typeof portfolioValue === 'boolean' ? portfolioValue : true)
         } else {
           await Promise.all([
@@ -109,7 +107,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
     }
 
     inicializar()
-  }, [])
+  }, [categorias, form, loc, router])
 
   // ── Handlers de Ação ─────────────────────────────────────────────────────
   const handleUploadFotoProcess = async (file: File) => {
@@ -143,36 +141,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
       if (novas.length) setStatus('Fotos adicionadas. Salve o perfil para publicar.')
     } finally {
       setUploadingSessao(false)
-    }
-  }
-
-  const handleExcluirContaTotal = async () => {
-    setDeleting(true)
-    setStatus('Excluindo tudo...')
-    try {
-      if (form.formData.foto_perfil) {
-        try {
-          const bucketMarker = '/object/public/fotos-perfil/'
-          const markerIdx = form.formData.foto_perfil.indexOf(bucketMarker)
-          if (markerIdx !== -1) {
-            const oldPath = form.formData.foto_perfil.slice(markerIdx + bucketMarker.length).split('?')[0]
-            if (oldPath) await supabase.storage.from('fotos-perfil').remove([oldPath])
-          }
-        } catch { /* silencioso */ }
-      }
-
-      if (userLogado) {
-        const { error: dbError } = await supabase.from('prestadores').delete().eq('user_id', userLogado.id)
-        if (dbError) throw dbError
-      }
-
-      await fetch('/api/delete-account', { method: 'POST' })
-      await supabase.auth.signOut()
-      router.push('/')
-      router.refresh()
-    } catch (err) {
-      setStatus('Erro: não foi possível concluir a exclusão.')
-      setDeleting(false)
     }
   }
 
@@ -248,8 +216,9 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
       setStatus('Perfil atualizado com sucesso.')
       setTentouEnviar(false)
       onSalvar?.()
-    } catch (err: any) {
-      setStatus(`Erro: ${err.message || 'verifique os dados.'}`)
+    } catch (err: unknown) {
+      const mensagem = err instanceof Error ? err.message : 'verifique os dados.'
+      setStatus(`Erro: ${mensagem}`)
     } finally {
       setSalvando(false)
       setTimeout(() => setStatus(''), 3000)
@@ -399,28 +368,14 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
                 {salvando ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Salvando...</> : 'Atualizar meu perfil'}
               </button>
 
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => setIsModalExcluirOpen(true)}
-                  className="min-h-11 rounded-xl px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
-                >
-                  Excluir meu perfil permanentemente
-                </button>
-              </div>
             </div>
+
+            <DangerZone audience="prestador" />
 
           </div>
         </form>
       </div>
 
-      <ModalConfirmacao
-        isOpen={isModalExcluirOpen}
-        onClose={() => setIsModalExcluirOpen(false)}
-        onConfirm={handleExcluirContaTotal}
-        title="Deseja excluir seu perfil?"
-        message="Atenção: Seu perfil profissional, fotos e histórico serão apagados para sempre. Esta ação não tem volta."
-      />
     </section>
   )
 }

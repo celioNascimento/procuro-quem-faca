@@ -66,7 +66,7 @@ export function useGarantiaWizard({ casoId, autorTipo, autorUserId }: UseGaranti
   }, [casoId])
 
   useEffect(() => {
-    if (casoId) carregar()
+    if (casoId) queueMicrotask(() => carregar())
   }, [casoId, carregar])
 
   // Trava scroll do body quando o zoom está aberto — mesmo padrão do wizard original
@@ -78,7 +78,7 @@ export function useGarantiaWizard({ casoId, autorTipo, autorUserId }: UseGaranti
   useEffect(() => {
     if (!zoomFotoId) return
     const foto = fotos.find((f) => f.id === zoomFotoId)
-    setLegendaEdit(foto?.legenda ?? '')
+    queueMicrotask(() => setLegendaEdit(foto?.legenda ?? ''))
   }, [zoomFotoId, fotos])
 
   const fotoAtual = fotos[currentSlide] ?? null
