@@ -78,7 +78,7 @@ function LinhaSegmentacao({
   // Cascata: estado -> região (reseta região/cidade ao trocar estado)
   useEffect(() => {
     if (!valor.estadoSigla) {
-      setRegioes([])
+      queueMicrotask(() => setRegioes([]))
       return
     }
     buscarRegioes(valor.estadoSigla).then(setRegioes)
@@ -87,7 +87,7 @@ function LinhaSegmentacao({
   // Cascata: região -> cidade
   useEffect(() => {
     if (!valor.regiaoId) {
-      setCidades([])
+      queueMicrotask(() => setCidades([]))
       return
     }
     buscarCidades(valor.regiaoId).then(setCidades)
@@ -96,7 +96,7 @@ function LinhaSegmentacao({
   // Cascata: grupo -> categoria
   useEffect(() => {
     if (!valor.grupoId) {
-      setCategorias([])
+      queueMicrotask(() => setCategorias([]))
       return
     }
     buscarCategorias(valor.grupoId).then(setCategorias)
@@ -106,12 +106,12 @@ function LinhaSegmentacao({
   // A validação que efetivamente bloqueia o salvamento roda no submit do form.
   useEffect(() => {
     if (!valor.cidadeId || !valor.categoriaId || !posicao) {
-      setStatusVaga({ estado: 'idle' })
+      queueMicrotask(() => setStatusVaga({ estado: 'idle' }))
       return
     }
 
     let cancelado = false
-    setStatusVaga({ estado: 'carregando' })
+    queueMicrotask(() => setStatusVaga({ estado: 'carregando' }))
 
     verificarInventarioSegmento(valor.cidadeId, valor.categoriaId, posicao, anuncioIdExistente ?? undefined)
       .then((res) => {
@@ -299,7 +299,7 @@ export function SegmentacaoFields({ value, onChange, posicao, anuncioIdExistente
         ))}
       </div>
       <p className="mt-1.5 text-[10px] text-zinc-300">
-        Todos os campos são obrigatórios em cada linha. Use "Adicionar região/categoria" para o mesmo anúncio aparecer em mais de um local.
+        Todos os campos são obrigatórios em cada linha. Use &quot;Adicionar região/categoria&quot; para o mesmo anúncio aparecer em mais de um local.
       </p>
     </div>
   )

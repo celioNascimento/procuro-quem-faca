@@ -76,7 +76,19 @@ export async function fetchCidades(uf: string) {
   return data
 }
 
-export async function updateClienteProfile(userId: string, profileData: any) {
+type ClienteProfileUpdate = {
+  full_name?: string | null
+  avatar_url?: string | null
+  whatsapp?: string | null
+  logradouro?: string | null
+  numero?: string | null
+  complemento?: string | null
+  bairro?: string | null
+  cidade?: string | null
+  uf?: string | null
+}
+
+export async function updateClienteProfile(userId: string, profileData: ClienteProfileUpdate) {
   const { error } = await supabase.from('profiles').upsert({
     id: userId,
     ...profileData,

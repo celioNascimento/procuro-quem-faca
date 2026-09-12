@@ -3,6 +3,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import * as ClienteService from '@/lib/services/cliente.service'
 
@@ -21,13 +22,13 @@ export function usePerfilDados() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
-  const [listaEstados, setListaEstados] = useState<any[]>([])
-  const [listaCidades, setListaCidades] = useState<any[]>([])
+  const [listaEstados, setListaEstados] = useState<Awaited<ReturnType<typeof ClienteService.fetchEstados>>>([])
+  const [listaCidades, setListaCidades] = useState<Awaited<ReturnType<typeof ClienteService.fetchCidades>>>([])
   const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
 
   // Indica se já sabemos, com certeza, os dados do perfil (whatsapp incluso).
@@ -44,7 +45,7 @@ export function usePerfilDados() {
     let cancelado = false
     let jaCarregou = false
 
-    async function processarUsuario(sessionUser: any) {
+    async function processarUsuario(sessionUser: User) {
       if (cancelado || jaCarregou) return
       jaCarregou = true
       clearTimeout(timeoutSemSessao)
@@ -124,7 +125,7 @@ export function usePerfilDados() {
       clearTimeout(timeoutSemSessao)
       subscription.unsubscribe()
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     if (perfil.uf) {
@@ -149,6 +150,7 @@ export function usePerfilDados() {
         event.target.value = ''
         return
       }
+      if (!user) return
       setUploading(true)
       const publicUrl = await ClienteService.uploadClienteAvatar(user.id, file, perfil.avatar_url)
       setPerfil(prev => ({ ...prev, avatar_url: publicUrl }))
@@ -167,6 +169,7 @@ export function usePerfilDados() {
       setErrorModal({ show: true, title: 'Telefone inválido', message: 'O WhatsApp precisa ter 10 ou 11 dígitos.' })
       return
     }
+    if (!user) return
     setLoading(true)
     try {
       await ClienteService.updateClienteProfile(user.id, {

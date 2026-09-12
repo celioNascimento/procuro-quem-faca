@@ -43,11 +43,11 @@ export function useAvaliacoesRecebidasCliente(clienteUserId: string | null) {
     let ativo = true
 
     if (!clienteUserId) {
-      setLoading(false)
-      return
+      const timer = setTimeout(() => setLoading(false), 0)
+      return () => clearTimeout(timer)
     }
 
-    setLoading(true)
+    queueMicrotask(() => setLoading(true))
 
     // A RLS ("Cliente ve avaliacao recebida (double-blind)") já filtra
     // sozinha: só retornam linhas onde o cliente avaliou de volta o

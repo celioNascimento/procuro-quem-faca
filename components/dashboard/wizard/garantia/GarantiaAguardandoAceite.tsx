@@ -25,7 +25,7 @@ export function GarantiaAguardandoAceite({ caso }: Props) {
           o caso é aberto aqui e você poderá responder.
         </p>
         <p className="text-[10px] text-amber-600/70 mt-2 italic">
-          "{caso.descricao_problema}"
+          &quot;{caso.descricao_problema}&quot;
         </p>
       </div>
     </div>

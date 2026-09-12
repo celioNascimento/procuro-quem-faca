@@ -94,11 +94,17 @@ function AdCardEntreCards({
   const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined)
 
   useEffect(() => {
-    if (mostrarAnuncio === undefined) { setAnuncio(undefined); return }
-    if (!mostrarAnuncio || !chavePraca || !cidadeId || !categoriaId) { setAnuncio(null); return }
+    if (mostrarAnuncio === undefined) {
+      const timer = setTimeout(() => setAnuncio(undefined), 0)
+      return () => clearTimeout(timer)
+    }
+    if (!mostrarAnuncio || !chavePraca || !cidadeId || !categoriaId) {
+      const timer = setTimeout(() => setAnuncio(null), 0)
+      return () => clearTimeout(timer)
+    }
 
     let cancelado = false
-    setAnuncio(undefined)
+    const resetTimer = setTimeout(() => setAnuncio(undefined), 0)
 
     async function resolver() {
       const cache = cachePracaRef.current
@@ -118,7 +124,10 @@ function AdCardEntreCards({
     }
 
     resolver().catch(() => { if (!cancelado) setAnuncio(null) })
-    return () => { cancelado = true }
+    return () => {
+      cancelado = true
+      clearTimeout(resetTimer)
+    }
   }, [mostrarAnuncio, chavePraca, cidadeId, categoriaId, cachePracaRef, sorteadoresRef])
 
   const anuncioParaExibir: Anuncio | null | undefined =
@@ -207,7 +216,10 @@ function ListaConteudo() {
     useState<Map<ChavePraca, Set<number>>>(new Map())
 
   useEffect(() => {
-    if (posicoesPorPraca.size === 0) { setPosicoesComAnuncioPorPraca(new Map()); return }
+    if (posicoesPorPraca.size === 0) {
+      const timer = setTimeout(() => setPosicoesComAnuncioPorPraca(new Map()), 0)
+      return () => clearTimeout(timer)
+    }
     let cancelado = false
     async function calcular() {
       const resultado = new Map<ChavePraca, Set<number>>()

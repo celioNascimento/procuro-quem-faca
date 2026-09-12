@@ -22,7 +22,10 @@ function PerfilPageContent() {
   const linkSuporte = `https://wa.me/${NUMERO_WHATSAPP_PQF}?text=${encodeURIComponent(`Olá, equipe Procuro Quem Faça. Meu perfil ${slug ? `(${slug}) ` : ''}foi bloqueado e gostaria de solicitar esclarecimentos.\n\n${mensagemSuporte.trim()}`)}`
 
   useEffect(() => {
-    if (!validando && !cadastroCompleto) setAbaAtiva('perfil')
+    if (!validando && !cadastroCompleto) {
+      const timer = setTimeout(() => setAbaAtiva('perfil'), 0)
+      return () => clearTimeout(timer)
+    }
   }, [validando, cadastroCompleto])
 
   const abas = [
@@ -93,7 +96,6 @@ function PerfilPageContent() {
 
       <div className="flex flex-col gap-6 pt-6">
         <AdCardDashboard />
-        <ContextualHelp context="dashboard-prestador" audience="prestador" title="Encontre respostas para cuidar do seu perfil" />
       </div>
 
       <nav className="sticky top-16 z-40 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
@@ -137,6 +139,10 @@ function PerfilPageContent() {
         ) : (
           abaAtiva === 'perfil' ? <EditarPerfilTab /> : abaAtiva === 'avaliacoes' ? <AvaliacoesDashboardTab prestadorId={prestadorId} /> : <PortfolioDashboardTab />
         )}
+      </div>
+
+      <div className="pt-6 sm:pt-8">
+        <ContextualHelp context="dashboard-prestador" audience="prestador" title="Encontre respostas para cuidar do seu perfil" />
       </div>
     </div>
   )

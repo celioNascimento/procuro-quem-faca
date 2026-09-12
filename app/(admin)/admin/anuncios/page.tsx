@@ -8,6 +8,7 @@ import {
   Search, ChevronDown, Users, BarChart2, SlidersHorizontal
 } from 'lucide-react'
 import { useAdminAnuncios } from '@/hooks/useAdminAnuncios'
+import type { AnuncioComAnunciante } from '@/lib/services/adminAnuncios.service'
 import { AnuncioLojistaForm, type AnuncioLojistaFormValues, type PreenchimentoLojista } from '@/components/admin/anuncios/AnuncioLojistaForm'
 import { AnuncioClienteForm } from '@/components/admin/anuncios/AnuncioClienteForm'
 import { AnuncioLojistaLista } from '@/components/admin/anuncios/AnuncioLojistaLista'
@@ -55,7 +56,7 @@ type ModoEdicao =
   | 'new_cliente'
   | NovoLojistaComDados
   | NovoClienteComDados
-  | { id: string; posicao: string; [key: string]: any }
+  | ({ id: string; posicao: string } & Record<string, unknown>)
 
 export default function PainelAnunciosLojista() {
   const { anuncios, loading, enviando, erro, cadastrarNovoAnuncio, editarAnuncio, toggleAtivo, remover } = useAdminAnuncios()
@@ -90,11 +91,11 @@ export default function PainelAnunciosLojista() {
   }
 
   const agora = new Date()
-  const ativos    = anuncios.filter((a: any) => a.status && !(a.data_expiracao && new Date(a.data_expiracao) < agora)).length
-  const rascunhos = anuncios.filter((a: any) => !a.status).length
-  const expirados = anuncios.filter((a: any) => a.data_expiracao && new Date(a.data_expiracao) < agora).length
+  const ativos    = anuncios.filter((a: AnuncioComAnunciante) => a.status && !(a.data_expiracao && new Date(a.data_expiracao) < agora)).length
+  const rascunhos = anuncios.filter((a: AnuncioComAnunciante) => !a.status).length
+  const expirados = anuncios.filter((a: AnuncioComAnunciante) => a.data_expiracao && new Date(a.data_expiracao) < agora).length
 
-  const anunciosFiltrados = anuncios.filter((a: any) => {
+  const anunciosFiltrados = anuncios.filter((a: AnuncioComAnunciante) => {
     const isExpirado = a.data_expiracao && new Date(a.data_expiracao) < agora
     if (filtroStatus === 'ativos')    return a.status && !isExpirado
     if (filtroStatus === 'rascunhos') return !a.status
@@ -102,7 +103,7 @@ export default function PainelAnunciosLojista() {
     return true
   })
 
-  function ehModoObjeto(v: ModoEdicao): v is NovoLojistaComDados | NovoClienteComDados | { id: string; posicao: string; [key: string]: any } {
+  function ehModoObjeto(v: ModoEdicao): v is NovoLojistaComDados | NovoClienteComDados | ({ id: string; posicao: string } & Record<string, unknown>) {
     return typeof v === 'object' && v !== null
   }
 
@@ -348,14 +349,14 @@ export default function PainelAnunciosLojista() {
         <div className="mt-6">
           {isFormCliente ? (
             <AnuncioClienteForm
-              initial={initialParaFormCliente}
+              initial={initialParaFormCliente as import('@/components/admin/anuncios/AnuncioClienteForm').ClienteAnuncioInicial | null}
               onSave={handleSave}
               onCancel={() => setEditando(null)}
               enviando={enviando}
             />
           ) : (
             <AnuncioLojistaForm
-              initial={initialParaFormLojista}
+              initial={initialParaFormLojista as import('@/components/admin/anuncios/AnuncioLojistaForm').FormInitial}
               onSave={handleSave}
               onCancel={() => setEditando(null)}
               enviando={enviando}

@@ -2,6 +2,7 @@
 
 'use client'
 import { useState } from 'react'
+import type { MouseEvent as ReactMouseEvent } from 'react'
 import Link from 'next/link'
 import {
   MapPin, Briefcase, Loader2, CheckCircle2,
@@ -15,6 +16,7 @@ import { CardResumoAvaliacoesCliente } from '@/components/painel/CardResumoAvali
 import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 import { ContextualHelp } from '@/components/help/HelpCenter'
+import DangerZone from '@/components/account/DangerZone'
 
 export default function PerfilDoCliente() {
   const {
@@ -142,7 +144,6 @@ export default function PerfilDoCliente() {
 
           <div className="flex min-w-0 flex-col gap-6">
             <AdCardPainelCliente servicos={servicos} loading={loadingServicos} />
-            <ContextualHelp context="dashboard-cliente" audience="cliente" title="Precisa de ajuda com seus projetos?" />
 
             {(avaliarCount > 0 || garantiaCount > 0 || reclamacaoCount > 0 || temAvaliacoesRecebidas) && (
               <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0">
@@ -306,7 +307,7 @@ export default function PerfilDoCliente() {
                           : null
                         }
                         onClick={() => handleNavigation(
-                          new MouseEvent('click') as any,
+                          new MouseEvent('click') as unknown as ReactMouseEvent<Element>,
                           getRota(s),
                         )}
                       />
@@ -387,8 +388,14 @@ export default function PerfilDoCliente() {
                     {loading ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} /> Salvar alterações</>}
                   </button>
                 </section>
+
+                <DangerZone audience="cliente" />
               </div>
             )}
+
+            <div className="pt-2 sm:pt-4">
+              <ContextualHelp context="dashboard-cliente" audience="cliente" title="Precisa de ajuda com seus projetos?" />
+            </div>
           </div>
         </div>
       </div>

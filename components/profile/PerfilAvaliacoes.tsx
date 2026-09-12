@@ -107,7 +107,7 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
               {/* Comentário */}
               {av.comentario && (
                 <p className="text-[13px] font-medium text-slate-600 leading-relaxed italic bg-slate-50/50 p-4 rounded-[1.25rem] border border-slate-50">
-                  "{av.comentario}"
+                  &quot;{av.comentario}&quot;
                 </p>
               )}
 

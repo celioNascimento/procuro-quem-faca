@@ -36,10 +36,10 @@ export function useAvaliacaoClienteDoProjeto(projetoId: string | null) {
   useEffect(() => {
     let ativo = true
     if (!projetoId) {
-      setLoading(false)
-      return
+      const timer = setTimeout(() => setLoading(false), 0)
+      return () => clearTimeout(timer)
     }
-    setLoading(true)
+    queueMicrotask(() => setLoading(true))
     supabase
       .from('avaliacoes_clientes')
       .select('id, nota, motivos')

@@ -28,13 +28,17 @@ export function FotoGarantia({ path, publica = false, className = '', alt = '', 
 
   useEffect(() => {
     if (publica) {
-      setUrl(path)
-      setLoading(false)
+      queueMicrotask(() => {
+        setUrl(path)
+        setLoading(false)
+      })
       return
     }
     let cancelado = false
-    setLoading(true)
-    setErro(false)
+    queueMicrotask(() => {
+      setLoading(true)
+      setErro(false)
+    })
     getUrlAssinadaGarantia(path).then((signedUrl) => {
       if (cancelado) return
       if (signedUrl) setUrl(signedUrl)

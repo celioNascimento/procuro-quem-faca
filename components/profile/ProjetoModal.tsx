@@ -227,7 +227,7 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
                 </div>
                 {av.comentario && (
                   <p className="text-[12px] font-medium text-slate-600 leading-relaxed italic bg-slate-50/50 p-4 rounded-xl border border-slate-50">
-                    "{av.comentario}"
+                    &quot;{av.comentario}&quot;
                   </p>
                 )}
               </div>

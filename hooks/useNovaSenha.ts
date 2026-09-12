@@ -36,7 +36,7 @@ export function useNovaSenha() {
   const podeSubmeter = senha.length >= 6 && senhasIguais && !loading
 
   useEffect(() => {
-    setMounted(true)
+    queueMicrotask(() => setMounted(true))
     let isSubscribed = true
 
     const inicializarValidacao = async () => {

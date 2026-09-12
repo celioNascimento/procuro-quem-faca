@@ -38,7 +38,7 @@ export function usePerfilStatus() {
   }, [])
 
   useEffect(() => {
-    verificar()
+    queueMicrotask(() => verificar())
   }, [verificar])
 
   return { cadastroCompleto, validando, slug, prestadorId, bloqueado, motivoBloqueio, revalidar: verificar }

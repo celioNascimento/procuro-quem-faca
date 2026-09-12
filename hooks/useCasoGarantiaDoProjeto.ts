@@ -69,7 +69,9 @@ export function useCasoGarantiaDoProjeto(projetoId: string | null) {
     }
   }, [projetoId])
 
-  useEffect(() => { carregar() }, [carregar])
+  useEffect(() => {
+    queueMicrotask(() => carregar())
+  }, [carregar])
 
   // temGarantiaAtiva deriva do caso carregado — true só quando o status
   // é ativo (em andamento), não quando já foi encerrado. Usado pelos

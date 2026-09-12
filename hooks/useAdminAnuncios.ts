@@ -26,15 +26,15 @@ export function useAdminAnuncios() {
     try {
       const data = await listarAnuncios()
       setAnuncios(data)
-    } catch (e: any) {
-      setErro(e.message ?? 'Erro ao carregar anúncios')
+    } catch (e: unknown) {
+      setErro(e instanceof Error ? e.message : 'Erro ao carregar anúncios')
     } finally {
       setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    carregar()
+    queueMicrotask(() => carregar())
   }, [carregar])
 
   /**
@@ -67,8 +67,8 @@ export function useAdminAnuncios() {
 
         await carregar()
         return { anuncio: novo, senhaTemporaria }
-      } catch (e: any) {
-        setErro(e.message ?? 'Erro ao cadastrar anúncio')
+      } catch (e: unknown) {
+        setErro(e instanceof Error ? e.message : 'Erro ao cadastrar anúncio')
         throw e
       } finally {
         setEnviando(false)
@@ -94,8 +94,8 @@ export function useAdminAnuncios() {
         }
         await atualizarAnuncio(id, { ...dados, imagemUrl }, segmentacoes)
         await carregar()
-      } catch (e: any) {
-        setErro(e.message ?? 'Erro ao editar anúncio')
+      } catch (e: unknown) {
+        setErro(e instanceof Error ? e.message : 'Erro ao editar anúncio')
         throw e
       } finally {
         setEnviando(false)
@@ -110,8 +110,8 @@ export function useAdminAnuncios() {
       setAnuncios((prev) => prev.map((a) => (a.id === id ? { ...a, status: ativo } : a)))
       try {
         await alternarStatusAnuncio(id, ativo)
-      } catch (e: any) {
-        setErro(e.message ?? 'Erro ao atualizar visibilidade')
+      } catch (e: unknown) {
+        setErro(e instanceof Error ? e.message : 'Erro ao atualizar visibilidade')
         await carregar() // reverte pro estado real do banco em caso de falha
       }
     },
@@ -123,8 +123,8 @@ export function useAdminAnuncios() {
     try {
       await excluirAnuncio(id)
       setAnuncios((prev) => prev.filter((a) => a.id !== id))
-    } catch (e: any) {
-      setErro(e.message ?? 'Erro ao excluir anúncio')
+    } catch (e: unknown) {
+      setErro(e instanceof Error ? e.message : 'Erro ao excluir anúncio')
       throw e
     } finally {
       setEnviando(false)

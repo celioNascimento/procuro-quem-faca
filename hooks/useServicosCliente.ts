@@ -34,9 +34,11 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
   useEffect(() => {
     if (!perfilCarregado) return
     if (!whatsapp) {
-      setServicos([])
-      setLoadingServicos(false)
-      return
+      const timer = setTimeout(() => {
+        setServicos([])
+        setLoadingServicos(false)
+      }, 0)
+      return () => clearTimeout(timer)
     }
 
     let cancelado = false

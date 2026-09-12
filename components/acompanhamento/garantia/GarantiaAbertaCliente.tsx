@@ -11,6 +11,7 @@
 
 'use client'
 
+import { useState } from 'react'
 import { Clock } from 'lucide-react'
 import type { CasoGarantia } from '@/hooks/useCasoGarantiaDoProjeto'
 import { useGarantiaWizard } from '@/hooks/useGarantiaWizard'
@@ -29,8 +30,9 @@ export function GarantiaAbertaCliente({ caso, clienteUserId }: Props) {
     autorUserId: clienteUserId,
   })
 
+  const [agora] = useState(() => Date.now())
   const diasRestantes = caso.prazo_resposta
-    ? Math.ceil((new Date(caso.prazo_resposta).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    ? Math.ceil((new Date(caso.prazo_resposta).getTime() - agora) / (1000 * 60 * 60 * 24))
     : null
 
   return (

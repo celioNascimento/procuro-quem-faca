@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 interface UseGoogleAuthParams {
-  onLog?: (acao: string, detalhes?: Record<string, any>) => Promise<void> | void
+  onLog?: (acao: string, detalhes?: Record<string, unknown>) => Promise<void> | void
   // Role a aplicar caso este login crie uma conta nova (via garantirRoleInicial
   // no callback). Omitir quando o botão for usado num contexto neutro, onde
   // um usuário novo deve cair em /auth/escolha normalmente.
@@ -43,8 +43,8 @@ export function useGoogleAuth({ onLog, roleDesejado }: UseGoogleAuthParams = {})
       })
 
       if (error) throw error
-    } catch (error: any) {
-      console.error('Erro login Google:', error.message)
+    } catch (error: unknown) {
+      console.error('Erro login Google:', error instanceof Error ? error.message : 'Erro desconhecido')
       setIsRedirecting(false)
     }
   }

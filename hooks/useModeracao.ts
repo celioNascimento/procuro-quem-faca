@@ -32,7 +32,9 @@ export function useModeracao() {
     }
   }, [filtro])
 
-  useEffect(() => { carregar() }, [carregar])
+  useEffect(() => {
+    queueMicrotask(() => carregar())
+  }, [carregar])
 
   const atualizarMotivo = useCallback((denunciaId: string, valor: string) => {
     setMotivoBloqueio(prev => ({ ...prev, [denunciaId]: valor }))

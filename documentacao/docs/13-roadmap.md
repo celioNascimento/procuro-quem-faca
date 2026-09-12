@@ -86,7 +86,7 @@ Explicar o diferencial do PQF (registro fotográfico + avaliação vinculada a p
 
 ## Pendências técnicas — Área Administrativa
 
-- [ ] Revisar `/admin/ativacao` e `/admin/anuncios` — ainda não auditados
+- [x] Auditar `/admin/ativacao` e `/admin/anuncios` — revisão concluída em setembro de 2026; permanecem as pendências específicas descritas em `12-admin.md`
 - [ ] Confirmar se `acao='FILTRO_CATEGORIA'` é gravada em algum ponto do frontend — o ranking de "categorias mais buscadas" no dashboard admin depende desse log e provavelmente está sempre vazio na prática
 - [ ] Validar em homologação o novo fluxo de `/admin/moderacao` (revisão de denúncias) — os valores de status (`resolvida`/`arquivada`) e a ação de bloqueio foram implementados por suposição a partir do schema documentado de `denuncias`/`prestadores`, sem confirmação de colunas adicionais que possam existir (ex: quem revisou, data de resolução)
 - [ ] Confirmar se a inserção de prestadores via `/admin/povoar` funciona de ponta a ponta após a correção do campo `categoria` inexistente (nunca havia funcionado antes)

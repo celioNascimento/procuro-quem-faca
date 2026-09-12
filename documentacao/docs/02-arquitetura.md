@@ -85,7 +85,8 @@ Route group `app/(admin)/`, com layout próprio (`app/(admin)/layout.tsx`) indep
 | `/admin/moderacao` | `useModeracao` | `denuncia.service.ts` (estendido) |
 | `/admin/povoar` | `usePovoar` | `povoar.service.ts` |
 | `/admin/geografia` | `useGeografia` (`app/(admin)/admin/geografia/hooks/`) | `lib/db/geografia.ts` |
-| `/admin/ativacao`, `/admin/anuncios` | não revisados ainda | — |
+| `/admin/ativacao` | implementação legada em JavaScript; usa `useEffect` + Supabase direto; requer migração/tipagem futura | — |
+| `/admin/anuncios` | `useAdminAnuncios` + componentes de lojista/cliente, mapa de vagas, métricas e simuladores | `adminAnuncios.service.ts` + `app/api/admin/anunciantes/route.ts` |
 
 **Subscription Realtime compartilhada:** `subscribeLogsAtividades` (canal parametrizável) vive em `lib/db/logs.ts` — é infraestrutura da tabela `logs_atividades`, não lógica de uma página específica. Reaproveitada tanto pelo dashboard admin quanto pela tela de logs, cada uma com seu próprio nome de canal.
 

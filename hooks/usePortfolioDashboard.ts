@@ -80,7 +80,9 @@ export function usePortfolioDashboard() {
     }
   }, [])
 
-  useEffect(() => { carregarDados() }, [carregarDados])
+  useEffect(() => {
+    queueMicrotask(() => carregarDados())
+  }, [carregarDados])
 
   const abrirEdicao = (projeto: Projeto) => {
     // Abre imediatamente com os dados já presentes no card; detalhes extras

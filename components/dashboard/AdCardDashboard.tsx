@@ -9,6 +9,7 @@ import { AdCardFallback } from '@/components/ads/AdCardFallback'
 import type { AdFallback } from '@/types/ads'
 
 const POSICAO = 'dashboard_prestador'
+type AnuncioComMetrica = AnuncioComAnunciante & { segmentacao_id_ativa?: string }
 
 // Fallback próprio deste banner — não usa useAdContext/resolverSegmento
 // (aquele é sobre segmento de categoria de serviço, ex: "Pedreiro"). Aqui,
@@ -85,13 +86,13 @@ export function AdCardDashboard() {
   // Registra 1 impressão assim que o anúncio real é resolvido e renderizado
   // (dedup de 30min e validação de vigência acontecem no servidor).
   useEffect(() => {
-    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'impressao')
+    if (!anuncio?.id || !(anuncio as AnuncioComMetrica)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as AnuncioComMetrica).segmentacao_id_ativa, 'impressao')
   }, [anuncio])
 
   function handleClick() {
-    if (!anuncio?.id || !(anuncio as any)?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, (anuncio as any).segmentacao_id_ativa, 'clique')
+    if (!anuncio?.id || !(anuncio as AnuncioComMetrica)?.segmentacao_id_ativa) return
+    registrarMetricaAnuncio(anuncio.id, (anuncio as AnuncioComMetrica).segmentacao_id_ativa, 'clique')
   }
 
   // Reserva o espaço enquanto a segmentação é resolvida. Renderizar null aqui

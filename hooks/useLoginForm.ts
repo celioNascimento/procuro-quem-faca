@@ -14,6 +14,10 @@ import { insertLog } from '@/lib/db/logs'
 // esse valor precisa deixar de ser fixo e virar parâmetro do hook.
 const ROLE_PADRAO_DESTA_TELA = 'prestador'
 
+function mensagemDoErro(error: unknown): string {
+  return error instanceof Error ? error.message : 'Falha ao processar.'
+}
+
 function getAuthRedirectUrl() {
   if (typeof window === 'undefined') return undefined
   return process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ?? `${window.location.origin}/auth/callback`
@@ -35,7 +39,7 @@ export function useLoginForm() {
   const emailInvalido = touched.email && (!email.includes('@') || email.length < 5)
   const senhaInvalida = touched.password && password.length < 6
 
-  const registrarLogAuth = async (acao: string, detalhes: Record<string, any> = {}) => {
+  const registrarLogAuth = async (acao: string, detalhes: Record<string, unknown> = {}) => {
     try {
      await insertLog({
         acao,
@@ -75,7 +79,7 @@ export function useLoginForm() {
 
   useEffect(() => {
     isActive.current = true
-    setMounted(true)
+    queueMicrotask(() => setMounted(true))
 
     const params = new URLSearchParams(window.location.search)
     const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'))
@@ -148,8 +152,8 @@ export function useLoginForm() {
         setMensagem('Sucesso: Link enviado! Verifique seu e-mail.')
         await registrarLogAuth('RECUPERACAO_SENHA_SOLICITADA')
       }
-    } catch (err: any) {
-       if (isActive.current) setMensagem('Erro: ' + (err.message || 'Falha ao processar.'))
+    } catch (err: unknown) {
+       if (isActive.current) setMensagem('Erro: ' + mensagemDoErro(err))
     } finally {
       if (isActive.current) setLoading(false)
     }
@@ -239,8 +243,8 @@ export function useLoginForm() {
 
       isActive.current = false
       router.push(destino)
-    } catch (err: any) {
-      if (isActive.current && err.name !== 'AbortError') {
+    } catch (err: unknown) {
+      if (isActive.current && !(err instanceof DOMException && err.name === 'AbortError')) {
         setMensagem('Erro inesperado. Tente novamente.')
       }
     } finally {

@@ -69,7 +69,7 @@ export function useAdminDashboard() {
   }, [hapticFeedback])
 
   useEffect(() => {
-    carregarDashboard()
+    queueMicrotask(() => carregarDashboard())
 
     const canal = subscribeLogsAtividades('admin_dashboard_realtime', (payload) => {
       if (payload.new.acao === 'DENUNCIA_PERFIL') {

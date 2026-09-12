@@ -40,28 +40,37 @@ export function SimuladorInventarioModal({ onClose, onUsarNoCadastro }: Props) {
   } | null>(null)
 
   useEffect(() => {
-    if (!estadoSigla) return setRegioes([])
+    if (!estadoSigla) {
+      queueMicrotask(() => setRegioes([]))
+      return
+    }
     buscarRegioes(estadoSigla).then(setRegioes)
   }, [estadoSigla, buscarRegioes])
 
   useEffect(() => {
-    if (!regiaoId) return setCidades([])
+    if (!regiaoId) {
+      queueMicrotask(() => setCidades([]))
+      return
+    }
     buscarCidades(regiaoId).then(setCidades)
   }, [regiaoId, buscarCidades])
 
   useEffect(() => {
-    if (!grupoId) return setCategorias([])
+    if (!grupoId) {
+      queueMicrotask(() => setCategorias([]))
+      return
+    }
     buscarCategorias(grupoId).then(setCategorias)
   }, [grupoId, buscarCategorias])
 
   useEffect(() => {
     if (!cidadeId || !categoriaId || !posicao) {
-      setResultado(null)
+      queueMicrotask(() => setResultado(null))
       return
     }
     
     let isMounted = true
-    setResultado(prev => prev ? { ...prev, loading: true } : { vagasTotais: 0, vagasDisponiveis: 0, totalPrestadores: 0, ocupados: 0, proximaExpiracao: null, loading: true })
+    queueMicrotask(() => setResultado(prev => prev ? { ...prev, loading: true } : { vagasTotais: 0, vagasDisponiveis: 0, totalPrestadores: 0, ocupados: 0, proximaExpiracao: null, loading: true }))
     
     verificarInventarioSegmento(cidadeId, categoriaId, posicao)
       .then(res => {

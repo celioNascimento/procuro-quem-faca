@@ -65,8 +65,32 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   )
 }
 
+export type ClienteAnuncioInicial = {
+  id?: string
+  titulo?: string
+  link_destino?: string
+  categoria_id?: string
+  cidade_id?: string
+  posicao?: string
+  imagem_url?: string | null
+  status?: boolean
+  data_inicio?: string | null
+  data_expiracao?: string | null
+  anuncios_segmentacoes?: Array<{
+    id?: string
+    estado_sigla?: string
+    regiao_id?: string
+    cidade_id?: string
+    grupo_id?: string
+    categoria_id?: string
+    valor_cobrado?: number | string
+  }>
+  anunciante_id?: string
+  anunciantes?: { email?: string; razao_social?: string; whatsapp?: string }
+}
+
 type Props = {
-  initial: any | null
+  initial: ClienteAnuncioInicial | null
   onSave: (data: AnuncioLojistaFormValues) => void
   onCancel: () => void
   enviando: boolean
@@ -85,7 +109,12 @@ export function AnuncioClienteForm({ initial, onSave, onCancel, enviando }: Prop
   const [cidadeId, setCidadeId] = useState(initial?.anuncios_segmentacoes?.[0]?.cidade_id ?? '')
   
   // Dados de suporte para contornar exigências do banco
-  const [cidades, setCidades] = useState<any[]>([])
+  const [cidades, setCidades] = useState<Array<{
+    id: string
+    nome: string
+    estado_sigla?: string | null
+    regiao_id?: string | null
+  }>>([])
   const [categoriaCuringa, setCategoriaCuringa] = useState<{ id: string; grupo_id: string } | null>(null)
 
   const [imagemUrl, setImagemUrl] = useState(initial?.imagem_url ?? '')

@@ -42,7 +42,9 @@ export function useGeografia() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { carregarDados() }, [carregarDados])
+  useEffect(() => {
+    queueMicrotask(() => carregarDados())
+  }, [carregarDados])
 
   async function addEstado(sigla: string, nome: string): Promise<string | null> {
     const { error } = await insertEstado(sigla, nome)

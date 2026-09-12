@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 import { listarPrestadoresAdmin } from '@/lib/services/adminPrestadores.service'
 import { matchesTab, type PrestadorTab } from '@/types/adminPrestadores'
 
 export async function GET(request: NextRequest) {
   try {
+    const authClient = await createClient()
+    const { data: { user } } = await authClient.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const { data: adminProfile } = await authClient
+      .from('perfis_admin')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!adminProfile) {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    }
+
     const params = request.nextUrl.searchParams
     const tab = (params.get('tab') ?? 'todos') as PrestadorTab
     const prestadores = await listarPrestadoresAdmin({ busca: params.get('busca') ?? '', origem: params.get('origem') ?? '', cidade: params.get('cidade') ?? '', categoria: params.get('categoria') ?? '', grupoCategoria: params.get('grupoCategoria') ?? '' })

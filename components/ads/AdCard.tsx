@@ -40,7 +40,7 @@ export function AdCard({ page, anuncio, categoria }: Props) {
     if (!anuncio || expirado || agendado || anuncio.tipo === 'proprio') return
 
     if (!anuncio.adsense_slot) {
-      setMostrarFallback(true)
+      queueMicrotask(() => setMostrarFallback(true))
       return
     }
 
