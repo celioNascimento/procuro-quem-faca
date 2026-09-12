@@ -80,7 +80,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
       onClick={() => registrarLog?.('CLIQUE_PERFIL', { nome: prestador.nome })}
       className="group relative block bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
     >
-      <div className="flex min-h-[220px] flex-col gap-5 px-6 py-6 md:min-h-[230px] md:px-7 md:py-7">
+      <div className="flex min-h-[190px] flex-col gap-4 px-5 py-5 md:px-6 md:py-6">
         {/* Primeira linha: identidade do prestador */}
         <div className="flex min-w-0 items-center gap-4 md:gap-5">
           <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 md:size-28">
