@@ -233,23 +233,25 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
 
   useEffect(() => {
     if (isProjetoConcluido && fotosCarrossel.length > 0) {
-      setCurrentSlide(fotosCarrossel.length - 1)
+      queueMicrotask(() => setCurrentSlide(fotosCarrossel.length - 1))
     }
   }, [isProjetoConcluido, fotosCarrossel.length])
 
   useEffect(() => {
-    carregarDadosBase()
-    if (projeto) {
-      setProjetoId(projeto.id)
-      setTitulo(projeto.titulo || '')
-      setClienteWhatsapp(maskPhone(projeto.cliente_whatsapp))
-      setClienteNome(projeto.cliente_nome || '')
-      setClienteUserId(projeto.cliente_user_id ?? null)
-      setSemFotos(projeto.sem_fotos ?? false)
-      setMarcadoConcluidoAt(projeto.marcado_concluido_at ?? null)
-      carregarProgresso(projeto.id)
-    }
-  }, [projetoExistente, carregarProgresso, carregarDadosBase])
+    queueMicrotask(() => {
+      carregarDadosBase()
+      if (projeto) {
+        setProjetoId(projeto.id)
+        setTitulo(projeto.titulo || '')
+        setClienteWhatsapp(maskPhone(projeto.cliente_whatsapp))
+        setClienteNome(projeto.cliente_nome || '')
+        setClienteUserId(projeto.cliente_user_id ?? null)
+        setSemFotos(projeto.sem_fotos ?? false)
+        setMarcadoConcluidoAt(projeto.marcado_concluido_at ?? null)
+        carregarProgresso(projeto.id)
+      }
+    })
+  }, [projeto, carregarProgresso, carregarDadosBase])
 
   // ── FIX 2: loop de sincronização removido ────────────────────────────────
   // Antes: deps [projetoId, projetoStatus] — setProjetoStatus() dentro do efeito
