@@ -33,6 +33,10 @@ interface ErrorModalState {
   actionUrl: string
 }
 
+function isUniqueConstraintError(error: unknown): error is { code: string } {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === '23505'
+}
+
 export function useCadastroPrestador(reivindicarId: string | null) {
   const router = useRouter()
 
@@ -80,7 +84,9 @@ export function useCadastroPrestador(reivindicarId: string | null) {
     show: false, title: '', message: '', actionText: 'Entendido', actionUrl: '',
   })
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    queueMicrotask(() => setMounted(true))
+  }, [])
 
   useEffect(() => {
     sessionStorage.removeItem('pqf_prefill')
@@ -163,7 +169,8 @@ export function useCadastroPrestador(reivindicarId: string | null) {
           form.carregarPerfil(perfilParaCarregar)
         } else {
           const nomeSocial = user?.user_metadata?.full_name || ''
-          form.set({ nome: nomeSocial, slug: form.handleNomeChange(nomeSocial) as any })
+          form.handleNomeChange(nomeSocial)
+          form.set({ nome: nomeSocial })
           await loc.carregarRegioes('PR')
           await loc.carregarCidades(null, 'PR')
         }
@@ -287,22 +294,23 @@ export function useCadastroPrestador(reivindicarId: string | null) {
 
       try {
         await upsertPrestador(payload)
-      } catch (dbError: any) {
-        if (dbError.code === '23505') throw new Error('DB_UNIQUE_CONSTRAINT')
+      } catch (dbError: unknown) {
+        if (isUniqueConstraintError(dbError)) throw new Error('DB_UNIQUE_CONSTRAINT')
         throw dbError
       }
 
       if (!userLogado) await loginEmail(email, senha)
       window.location.href = '/dashboard'
 
-    } catch (err: any) {
-      if (err.message === 'ALREADY_REGISTERED') {
+    } catch (err: unknown) {
+      const code = err instanceof Error ? err.message : ''
+      if (code === 'ALREADY_REGISTERED') {
         setErrorModal({
           show: true, title: 'E-mail já cadastrado',
           message: 'Parece que você já tem uma conta. Use a senha correta para assumir este perfil aqui mesmo ou faça login.',
           actionText: 'Ir para o Login', actionUrl: '/login',
         })
-      } else if (err.message === 'DB_UNIQUE_CONSTRAINT') {
+      } else if (code === 'DB_UNIQUE_CONSTRAINT') {
         setErrorModal({
           show: true, title: 'Conflito de Perfil',
           message: 'Ocorreu um erro ao vincular a conta a este perfil.',
