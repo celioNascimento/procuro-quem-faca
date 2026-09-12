@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { BookOpen, Code2, ExternalLink, Search } from 'lucide-react'
 
 const sections = [
-  { title: 'Arquitetura', description: 'Organização das rotas, componentes, hooks e serviços.', href: '/documentacao/docs/02-arquitetura.md' },
-  { title: 'Catálogo de funções', description: 'Índice de funções, callbacks e correlações do projeto.', href: '/documentacao/docs/15-catalogo-funcoes.md' },
-  { title: 'Operação administrativa', description: 'Fluxos e responsabilidades da área administrativa.', href: '/documentacao/docs/12-admin.md' },
+  { title: 'Arquitetura', description: 'Organização das rotas, componentes, hooks e serviços.', href: '/documentacao/docs/02-arquitetura' },
+  { title: 'Catálogo de funções', description: 'Índice de funções, callbacks e correlações do projeto.', href: '/documentacao/docs/15-catalogo-funcoes' },
+  { title: 'Operação administrativa', description: 'Fluxos e responsabilidades da área administrativa.', href: '/documentacao/docs/12-admin' },
 ]
 
 export default function AdminDocumentacaoPage() {
