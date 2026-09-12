@@ -16,6 +16,7 @@ import { CardResumoAvaliacoesCliente } from '@/components/painel/CardResumoAvali
 import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 import { ContextualHelp } from '@/components/help/HelpCenter'
+import DangerZone from '@/components/account/DangerZone'
 
 export default function PerfilDoCliente() {
   const {
@@ -387,6 +388,8 @@ export default function PerfilDoCliente() {
                     {loading ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} /> Salvar alterações</>}
                   </button>
                 </section>
+
+                <DangerZone audience="cliente" />
               </div>
             )}
 
