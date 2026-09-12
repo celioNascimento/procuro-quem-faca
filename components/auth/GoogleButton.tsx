@@ -5,7 +5,7 @@ import { useGoogleAuth } from '@/hooks/useGoogleAuth'
 
 interface GoogleButtonProps {
   text?: string
-  onLog?: (acao: string, detalhes?: Record<string, any>) => Promise<void> | void
+  onLog?: (acao: string, detalhes?: Record<string, unknown>) => Promise<void> | void
   roleDesejado?: 'prestador' | 'cliente'
 }
 
