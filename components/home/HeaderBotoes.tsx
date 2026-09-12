@@ -74,8 +74,7 @@ export function HeaderBotoes() {
     <>
       <Link href="/painel/perfil" className={btnGhost}>
         <User size={13} className="text-blue-500 shrink-0" />
-        <span className="hidden sm:inline">{role === 'prestador' ? 'Área do Cliente' : 'Minha Área'}</span>
-        <span className="sm:hidden">{role === 'prestador' ? 'Cliente' : 'Área'}</span>
+        <span>Cliente</span>
       </Link>
       
       {/* Se for prestador exibe o Painel/Completar. Se não for, exibe a opção de virar profissional. */}
