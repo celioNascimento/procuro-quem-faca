@@ -2,7 +2,7 @@
 
 'use client'
 import { useState, useEffect } from 'react'
-import { User, Clock, Loader2, ShieldAlert, MessageCircleWarning, Phone, AlertCircle } from 'lucide-react'
+import { User, Clock, Loader2, ShieldAlert, Phone, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import LoginGate from './LoginGate'
@@ -238,29 +238,7 @@ export default function PainelDoCliente() {
                 </div>
               )}
 
-              {servicosGarantia.length > 0 && (
-                <div className="bg-orange-50 rounded-[2rem] border border-orange-100 shadow-sm p-6 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <ShieldAlert size={14} className="text-orange-500" />
-                    <p className="text-[10px] font-black uppercase tracking-widest text-orange-600">Garantia em aberto</p>
-                  </div>
-                  <p className="text-[12px] text-orange-700/80 font-medium leading-relaxed">
-                    Você tem casos de garantia em andamento. Acompanhe as respostas do prestador e confirme quando o problema for resolvido.
-                  </p>
-                </div>
-              )}
 
-              {servicosReclamacao.length > 0 && (
-                <div className="bg-orange-50 rounded-[2rem] border border-orange-100 shadow-sm p-6 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <MessageCircleWarning size={14} className="text-orange-500" />
-                    <p className="text-[10px] font-black uppercase tracking-widest text-orange-600">Reclamação em aberto</p>
-                  </div>
-                  <p className="text-[12px] text-orange-700/80 font-medium leading-relaxed">
-                    Você tem reclamações em andamento. Acompanhe as respostas do prestador e confirme quando o problema for resolvido.
-                  </p>
-                </div>
-              )}
 
             </div>
           </div>
@@ -318,6 +296,30 @@ export default function PainelDoCliente() {
                     </h2>
                     <span className="text-[10px] font-bold text-slate-400">{outrosServicos.length}</span>
                   </div>
+
+                  {/* Aviso consolidado de pendências — só aparece quando há casos
+                      ativos em outros projetos deste prestador, contextualizado
+                      aqui em vez de na coluna esquerda para não interferir na
+                      decisão de aceite do projeto em destaque. */}
+                  {(() => {
+                    const pendenciasNosOutros = outrosServicos.filter(s =>
+                      idsComGarantiaAtiva.has(s.id) || idsComReclamacaoAtiva.has(s.id)
+                    ).length
+                    if (pendenciasNosOutros === 0) return null
+                    const texto = pendenciasNosOutros === 1
+                      ? (() => {
+                          const s = outrosServicos.find(s => idsComGarantiaAtiva.has(s.id) || idsComReclamacaoAtiva.has(s.id))!
+                          return idsComGarantiaAtiva.has(s.id) ? '1 caso de garantia em aberto' : '1 reclamação em aberta'
+                        })()
+                      : `${pendenciasNosOutros} pendências em aberto com este prestador`
+                    return (
+                      <div className="flex items-center gap-2 rounded-xl border border-orange-100 bg-orange-50 px-3.5 py-2.5">
+                        <ShieldAlert size={13} className="shrink-0 text-orange-500" />
+                        <p className="text-[11px] font-bold text-orange-700">{texto}</p>
+                      </div>
+                    )
+                  })()}
+
                   <div className="flex flex-col gap-2" role="list" aria-label="Outros serviços do prestador">
                     {outrosServicos.map(servico => (
                       <div key={servico.id} role="listitem">
