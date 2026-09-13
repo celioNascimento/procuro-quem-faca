@@ -213,9 +213,6 @@ export default function PainelDoCliente() {
 
       <div className="mx-auto max-w-5xl px-5 pt-36 md:pt-32 animate-in fade-in duration-700">
         <AdCardPainelCliente servicos={servicos as unknown as import('@/types/clienteServicos').ClienteServico[]} loading={loading} />
-        <div className="mt-1 mb-1">
-          <ContextualHelp context="meus-servicos" title="Dúvidas sobre seus serviços?" />
-        </div>
         <div className="mt-1 flex flex-col gap-2 lg:flex-row lg:gap-4">
 
           {/* ── Coluna Esquerda ── */}
@@ -377,6 +374,9 @@ export default function PainelDoCliente() {
             </div>
 
           </div>
+        </div>
+        <div className="mt-6">
+          <ContextualHelp context="meus-servicos" title="Dúvidas sobre seus serviços?" />
         </div>
       </div>
     </main>

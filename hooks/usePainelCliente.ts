@@ -1,7 +1,7 @@
 //hooks/usePainelCliente.ts
 
 'use client'
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
@@ -25,6 +25,7 @@ export function usePainelCliente() {
   const [servicos, setServicos]   = useState<Servico[]>([])
   const [loading, setLoading]     = useState(true)
   const [zoomImage, setZoomImage] = useState<string | null>(null)
+  const userCarregadoRef = useRef<string | null>(null)
   const tokenUrl = useMemo(() => {
     if (typeof window === 'undefined') return null
     return new URLSearchParams(window.location.search).get('token')
@@ -51,22 +52,22 @@ export function usePainelCliente() {
   ) => {
     setLoading(true)
     try {
-      const prof = await getProfile(user.id)
+      // Perfil e consulta principal são independentes: iniciá-los juntos
+      // evita que o painel aguarde o perfil antes de buscar os serviços.
+      const [prof, projetosIniciais] = await Promise.all([
+        getProfile(user.id),
+        token ? getServicoPorToken(token) : getServicosPorUserId(user.id),
+      ])
       setProfile(prof)
 
-      let projs: Servico[] = []
+      let projs: Servico[] = projetosIniciais
 
-      // 1. Tenta buscar pelo token da URL primeiro
-      if (token) {
-        projs = await getServicoPorToken(token)
-      }
-
-      // 2. Tenta buscar pelo ID Forte (nova coluna cliente_user_id)
-      if (projs.length === 0) {
+      // Com token, tenta o vínculo forte caso o token não retorne projetos.
+      if (projs.length === 0 && token) {
         projs = await getServicosPorUserId(user.id)
       }
 
-      // 3. Fallback: busca pelo whatsapp (para projetos antigos sem cliente_user_id)
+      // Fallback para projetos antigos sem cliente_user_id.
       if (projs.length === 0) {
         const whatsapp = prof?.whatsapp || localStorage.getItem('cliente_whatsapp')
         if (whatsapp) projs = await getServicosPorWhatsapp(whatsapp)
@@ -95,14 +96,25 @@ export function usePainelCliente() {
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      if (session) buscarDados(session.user, tokenUrl)
-      else setLoading(false)
+      if (session) {
+        userCarregadoRef.current = session.user.id
+        buscarDados(session.user, tokenUrl)
+      } else {
+        setLoading(false)
+      }
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session)
-        if (session) buscarDados(session.user, tokenUrl)
+        if (!session) {
+          userCarregadoRef.current = null
+          setLoading(false)
+          return
+        }
+        if (userCarregadoRef.current === session.user.id) return
+        userCarregadoRef.current = session.user.id
+        buscarDados(session.user, tokenUrl)
       }
     )
 
