@@ -28,7 +28,14 @@ const FILTROS: { valor: Filtro; label: string }[] = [
 
 export default function PainelDoCliente() {
   const router = useRouter()
+  const [tokenSelecionado, setTokenSelecionado] = useState<string | null>(null)
   const [filtroAtivo, setFiltroAtivo] = useState<Filtro>('todos')
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setTokenSelecionado(params.get('token'))
+    if (params.get('origem') === 'perfil') setFiltroAtivo('em_execucao')
+  }, [])
 
   const {
     session, servicos, servicosGarantia, servicosReclamacao, loading,
@@ -150,6 +157,12 @@ export default function PainelDoCliente() {
   if (!session) return <LoginGate tokenUrl={tokenUrl} />
 
   const prestador = servicos[0]?.prestadores
+  const projetoSelecionado = tokenSelecionado
+    ? servicos.find(servico => servico.avaliacao_token === tokenSelecionado)
+    : undefined
+  const outrosServicos = projetoSelecionado
+    ? servicosFiltrados.filter(servico => servico.id !== projetoSelecionado.id)
+    : servicosFiltrados
   const hasMultipleProjects = servicos.length > 1 || servicosGarantia.length > 0 || servicosReclamacao.length > 0
 
   return (
@@ -346,31 +359,63 @@ export default function PainelDoCliente() {
               </div>
             )}
 
-            <div className="mt-1 flex flex-col gap-3">
-              {servicosFiltrados.length > 0 ? (
-                servicosFiltrados.map(servico => (
+            <div className="mt-1 flex flex-col gap-5">
+              {projetoSelecionado && (
+                <section className="flex flex-col gap-3" aria-labelledby="projeto-selecionado-title">
+                  <div className="flex items-center justify-between px-1">
+                    <h2 id="projeto-selecionado-title" className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-600">
+                      Projeto selecionado
+                    </h2>
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-blue-600">
+                      Em destaque
+                    </span>
+                  </div>
                   <ServicoCard
-                    key={servico.id}
-                    servico={servico}
+                    servico={projetoSelecionado}
                     onZoom={setZoomImage}
-                    onAceitar={getOnAceitar(servico)}
+                    onAceitar={getOnAceitar(projetoSelecionado)}
                     hidePrestador
-                    modo={getModo(servico)}
-                    // Prop independente do modo: sinaliza o TIPO do caso
-                    // ativo deste projeto (garantia ou reclamação) em
-                    // QUALQUER aba, permitindo ao ServicoCard exibir a
-                    // tag certa sem alterar o estilo geral do card.
-                    tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(servico)}
+                    modo={getModo(projetoSelecionado)}
+                    tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(projetoSelecionado)}
                   />
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center py-24 text-slate-300 bg-white rounded-[2rem] border border-dashed border-slate-200">
-                  <Clock size={32} className="mb-3 opacity-40" />
-                  <p className="text-[11px] font-black uppercase tracking-widest">
-                    Nenhum projeto nesta categoria
-                  </p>
-                </div>
+                </section>
               )}
+
+              <section className="flex flex-col gap-3" aria-labelledby="outros-servicos-title">
+                {projetoSelecionado && outrosServicos.length > 0 && (
+                  <div className="flex items-center justify-between px-1">
+                    <h2 id="outros-servicos-title" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                      Outros serviços deste prestador
+                    </h2>
+                    <span className="text-[10px] font-bold text-slate-400">{outrosServicos.length}</span>
+                  </div>
+                )}
+                {outrosServicos.length > 0 ? (
+                  <div className="flex flex-col gap-3" role="list" aria-label="Outros serviços do prestador">
+                    {outrosServicos.map(servico => (
+                      <div key={servico.id} role="listitem">
+                        <ServicoCard
+                          servico={servico}
+                          onZoom={setZoomImage}
+                          onAceitar={getOnAceitar(servico)}
+                          hidePrestador
+                          modo={getModo(servico)}
+                          tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(servico)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : !projetoSelecionado ? (
+                  <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-200 bg-white py-24 text-slate-300">
+                    <Clock size={32} className="mb-3 opacity-40" />
+                    <p className="text-[11px] font-black uppercase tracking-widest">Nenhum projeto nesta categoria</p>
+                  </div>
+                ) : (
+                  <div className="rounded-[2rem] border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
+                    <p className="text-[11px] font-bold text-slate-400">Nenhum outro serviço em andamento com este prestador.</p>
+                  </div>
+                )}
+              </section>
             </div>
 
           </div>

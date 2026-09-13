@@ -54,17 +54,29 @@ export function usePainelCliente() {
     try {
       // Perfil e consulta principal são independentes: iniciá-los juntos
       // evita que o painel aguarde o perfil antes de buscar os serviços.
-      const [prof, projetosIniciais] = await Promise.all([
+      const [prof, projetosIniciais, projetosDoCliente] = await Promise.all([
         getProfile(user.id),
         token ? getServicoPorToken(token) : getServicosPorUserId(user.id),
+        token ? getServicosPorUserId(user.id) : Promise.resolve([] as Servico[]),
       ])
       setProfile(prof)
 
       let projs: Servico[] = projetosIniciais
 
+      // Ao abrir um projeto pelo perfil, traz também os demais projetos do
+      // mesmo prestador para que o cliente tenha contexto sem misturar
+      // serviços de profissionais diferentes.
+      if (token && projetosIniciais[0]) {
+        const prestadorId = projetosIniciais[0].prestadores?.id
+        projs = projetosDoCliente.filter(projeto =>
+          projeto.id === projetosIniciais[0].id ||
+          (prestadorId != null && projeto.prestadores?.id === prestadorId),
+        )
+      }
+
       // Com token, tenta o vínculo forte caso o token não retorne projetos.
       if (projs.length === 0 && token) {
-        projs = await getServicosPorUserId(user.id)
+        projs = projetosDoCliente
       }
 
       // Fallback para projetos antigos sem cliente_user_id.
