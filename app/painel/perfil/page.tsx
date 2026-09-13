@@ -142,11 +142,11 @@ export default function PerfilDoCliente() {
             </div>
           </aside>
 
-<div className="flex min-w-0 flex-col gap-4">
+<div className="flex min-w-0 flex-col gap-2">
             <AdCardPainelCliente servicos={servicos} loading={loadingServicos} />
             
             {(avaliarCount > 0 || garantiaCount > 0 || reclamacaoCount > 0 || temAvaliacoesRecebidas) && (
-              <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0">
+              <div className="-mx-1 -mt-2 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1 sm:mx-0 sm:mt-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0">
             {avaliarCount > 0 && (
               <button
                 onClick={irParaAvaliar}
