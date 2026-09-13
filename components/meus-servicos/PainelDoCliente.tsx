@@ -142,11 +142,12 @@ export default function PainelDoCliente() {
   // do acompanhamento (mesma rota, a seção decide o tipo sozinha).
   // Em qualquer outra aba → comportamento padrão pelo status do projeto.
   const getOnAceitar = (servico: (typeof servicos)[number]) => {
+    const status = servico.status?.toLowerCase()
     if ((filtroAtivo === 'garantia' || filtroAtivo === 'reclamacao') && tipoGarantiaAtivaDoServico(servico))
       return () => handleVerGarantia(servico)
-    if (servico.status === 'em_execucao')
+    if (status === 'em_execucao')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
-    if (servico.status === 'finalizado')
+    if (status === 'finalizado')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
     return () => handleAceitar(servico)
   }
@@ -161,7 +162,12 @@ export default function PainelDoCliente() {
     ? servicos.find(servico => servico.avaliacao_token === tokenSelecionado)
     : undefined
   const outrosServicos = projetoSelecionado
-    ? servicosFiltrados.filter(servico => servico.id !== projetoSelecionado.id)
+    ? servicos
+        .filter(servico => servico.id !== projetoSelecionado.id)
+        .filter(servico => {
+          const prestadorId = projetoSelecionado.prestadores?.id
+          return prestadorId == null || servico.prestadores?.id === prestadorId
+        })
     : servicosFiltrados
   const hasMultipleProjects = servicos.length > 1 || servicosGarantia.length > 0 || servicosReclamacao.length > 0
 
@@ -414,7 +420,7 @@ export default function PainelDoCliente() {
                   </div>
                 ) : (
                   <div className="rounded-[2rem] border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
-                    <p className="text-[11px] font-bold text-slate-400">Nenhum outro serviço em andamento com este prestador.</p>
+                    <p className="text-[11px] font-bold text-slate-400">Nenhum outro serviço encontrado com este prestador.</p>
                   </div>
                 )}
               </section>
