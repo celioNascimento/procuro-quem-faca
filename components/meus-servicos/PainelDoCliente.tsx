@@ -370,14 +370,16 @@ export default function PainelDoCliente() {
                       Em destaque
                     </span>
                   </div>
-                  <ServicoCard
-                    servico={projetoSelecionado}
-                    onZoom={setZoomImage}
+                  <div className="rounded-[2.75rem] border-2 border-blue-200 bg-blue-50/40 p-1.5 shadow-[0_20px_60px_-20px_rgba(37,99,235,0.35)]">
+                    <ServicoCard
+                      servico={projetoSelecionado}
+                      onZoom={setZoomImage}
                     onAceitar={getOnAceitar(projetoSelecionado)}
                     hidePrestador
                     modo={getModo(projetoSelecionado)}
-                    tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(projetoSelecionado)}
-                  />
+                      tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(projetoSelecionado)}
+                    />
+                  </div>
                 </section>
               )}
 
