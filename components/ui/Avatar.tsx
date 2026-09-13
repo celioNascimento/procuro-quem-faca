@@ -3,12 +3,7 @@
 'use client'
 import { User } from 'lucide-react'
 
-interface AvatarProps {
-  url?: string | null
-  alt?: string
-  className?: string
-  fallbackSize?: number
-}
+import type { AvatarProps } from './Avatar.types'
 
 export function Avatar({ url, alt = 'Avatar', className = "w-9 h-9", fallbackSize = 14 }: AvatarProps) {
   return (

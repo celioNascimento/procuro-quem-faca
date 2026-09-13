@@ -3,11 +3,9 @@
 'use client'
 import Link from 'next/link'
 
-interface Props {
-  href: string
-}
+import type { BackButtonProps } from './BackButton.types'
 
-export default function BackButton({ href }: Props) {
+export default function BackButton({ href }: BackButtonProps) {
   return (
     <Link
       href={href}

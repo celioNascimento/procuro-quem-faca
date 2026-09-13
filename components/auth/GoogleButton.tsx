@@ -3,11 +3,7 @@
 'use client'
 import { useGoogleAuth } from '@/hooks/useGoogleAuth'
 
-interface GoogleButtonProps {
-  text?: string
-  onLog?: (acao: string, detalhes?: Record<string, unknown>) => Promise<void> | void
-  roleDesejado?: 'prestador' | 'cliente'
-}
+import type { GoogleButtonProps } from './GoogleButton.types'
 
 export default function GoogleButton({ text = "Continuar com Google", onLog, roleDesejado }: GoogleButtonProps) {
   const { isRedirecting, handleLogin } = useGoogleAuth({ onLog, roleDesejado })

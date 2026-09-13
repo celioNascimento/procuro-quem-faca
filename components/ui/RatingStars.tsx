@@ -1,9 +1,6 @@
 // components/ui/RatingStars.tsx
 
-interface RatingStarsProps {
-  nota: number
-  tamanho?: 'sm' | 'md'
-}
+import type { RatingStarsProps } from './RatingStars.types'
 
 export default function RatingStars({ nota, tamanho = 'sm' }: RatingStarsProps) {
   const estrelas = Array.from({ length: 5 }, (_, i) => i + 1)

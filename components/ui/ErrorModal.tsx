@@ -5,14 +5,7 @@
 import Link from 'next/link'
 import { AlertCircle } from 'lucide-react'
 
-interface ErrorModalProps {
-  show: boolean
-  title: string
-  message: string
-  actionText?: string
-  actionUrl?: string
-  onClose: () => void
-}
+import type { ErrorModalProps } from './ErrorModal.types'
 
 export function ErrorModal({
   show,

@@ -2,13 +2,7 @@
 
 'use client'
 
-interface ModalConfirmacaoProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
-  title: string
-  message: string
-}
+import type { ModalConfirmacaoProps } from './ModalConfirmacao.types'
 
 export default function ModalConfirmacao({ isOpen, onClose, onConfirm, title, message }: ModalConfirmacaoProps) {
   if (!isOpen) return null
