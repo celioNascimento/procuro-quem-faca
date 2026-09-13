@@ -8,8 +8,15 @@ import { useEffect } from 'react'
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
+    const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
+    const apiHost = process.env.NEXT_PUBLIC_POSTHOG_HOST
+
+    // Telemetria é opcional: não inicializar sem configuração evita erros no
+    // console e trabalho desnecessário durante o desenvolvimento/preview.
+    if (!key || !apiHost || posthog.__loaded) return
+
+    posthog.init(key, {
+      api_host: apiHost,
       capture_pageview: false,
       person_profiles: 'identified_only',
       opt_out_capturing_by_default: true,
