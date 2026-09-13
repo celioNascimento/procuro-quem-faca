@@ -34,7 +34,7 @@ export default function PainelDoCliente() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     setTokenSelecionado(params.get('token'))
-    if (params.get('origem') === 'perfil') setFiltroAtivo('em_execucao')
+    if (params.get('origem') === 'perfil') setFiltroAtivo('pendente')
   }, [])
 
   const {
@@ -82,10 +82,10 @@ export default function PainelDoCliente() {
   }
 
   // ── Grupos por status ────────────────────────────────────────────────────────
-  const emRegistro  = servicos.filter(s => s.status === 'em_registro')
-  const pendentes   = servicos.filter(s => s.status === 'pendente')
-  const emAndamento = servicos.filter(s => s.status === 'em_execucao')
-  const concluidos  = servicos.filter(s => s.status === 'finalizado')
+  const emRegistro  = servicos.filter(s => s.status?.toLowerCase() === 'em_registro')
+  const pendentes   = servicos.filter(s => s.status?.toLowerCase() === 'pendente')
+  const emAndamento = servicos.filter(s => s.status?.toLowerCase() === 'em_execucao')
+  const concluidos  = servicos.filter(s => s.status?.toLowerCase() === 'finalizado')
   const totalPendentes = pendentes.length + emRegistro.length
 
   const contadores: Record<Filtro, number> = {
@@ -132,8 +132,8 @@ export default function PainelDoCliente() {
   const getModo = (servico: (typeof servicos)[number]) => {
     if ((filtroAtivo === 'garantia' || filtroAtivo === 'reclamacao') && tipoGarantiaAtivaDoServico(servico))
       return 'garantia' as const
-    if (servico.status === 'em_execucao') return 'andamento' as const
-    if (servico.status === 'finalizado')  return 'concluido' as const
+    if (servico.status?.toLowerCase() === 'em_execucao') return 'andamento' as const
+    if (servico.status?.toLowerCase() === 'finalizado')  return 'concluido' as const
     return 'pendente' as const
   }
 
