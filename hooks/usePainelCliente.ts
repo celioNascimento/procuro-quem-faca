@@ -15,6 +15,7 @@ import {
   filtrarComGarantiaAtiva,
   filtrarComReclamacaoAtiva,
   aceitarServico,
+  recusarServico,
 } from '../lib/services/painelCliente.service'
 
 export function usePainelCliente() {
@@ -166,6 +167,11 @@ export function usePainelCliente() {
     await executarAceite(servico)
   }
 
+  const handleRecusar = async (servico: Servico) => {
+    await recusarServico(servico.id)
+    setServicos(prev => prev.filter(s => s.id !== servico.id))
+  }
+
   const executarAceite = async (servico: Servico) => {
     const nome =
       profile?.full_name ||
@@ -228,7 +234,7 @@ export function usePainelCliente() {
     session, profile, servicos, servicosGarantia, servicosReclamacao, loading,
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente, avatarUrl,
-    handleAceitar, handleVerGarantia,
+    handleAceitar, handleRecusar, handleVerGarantia,
     confirmandoWhatsapp, confirmandoErro,
     confirmarWhatsappEAceitar, cancelarConfirmacaoWhatsapp,
   }
