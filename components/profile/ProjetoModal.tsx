@@ -44,55 +44,52 @@ function GarantiaCard({ garantia }: { garantia: GarantiaPublica }) {
   const Icon = config.icon
 
   return (
-    <div className={`rounded-2xl border p-4 space-y-3 ${config.cor}`}>
+    <section className={`rounded-2xl border p-4 space-y-4 ${config.cor}`} aria-label="Garantia do projeto">
       <div className="flex items-center gap-2">
         <Icon size={14} className="shrink-0" />
-        <p className="text-[10px] font-black uppercase tracking-widest leading-none">
-          {config.titulo}
-        </p>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest leading-none">{config.titulo}</p>
+          <p className="mt-1 text-[11px] font-medium leading-snug opacity-80">{config.descricao}</p>
+        </div>
       </div>
-      <p className="text-[11px] font-medium leading-snug opacity-80">
-        {config.descricao}
-      </p>
 
       {garantia.descricao_problema && (
-        <div className="bg-white/60 rounded-xl p-3 space-y-1">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Problema relatado</p>
+        <div className="rounded-xl border border-orange-200/70 bg-orange-50/70 p-3 space-y-1 text-orange-900">
+          <p className="text-[9px] font-black uppercase tracking-widest text-orange-600">Relato do problema</p>
           <p className="text-[11px] font-medium leading-snug">{garantia.descricao_problema}</p>
         </div>
       )}
 
-      {garantia.resposta_prestador_garantia && (
-        <div className="bg-white/60 rounded-xl p-3 space-y-1">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Proposta do prestador</p>
-          <p className="text-[11px] font-medium leading-snug">{garantia.resposta_prestador_garantia}</p>
-        </div>
-      )}
-
-      {garantia.resolucao_descricao && (
-        <div className="bg-white/60 rounded-xl p-3 space-y-1">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Como foi resolvido</p>
-          <p className="text-[11px] font-medium leading-snug">{garantia.resolucao_descricao}</p>
-        </div>
-      )}
-
-      {garantia.fotos && garantia.fotos.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Fotos da resolução</p>
-          <div className="grid grid-cols-3 gap-2">
-            {garantia.fotos.map(foto => (
-              <div key={foto.id} className="aspect-square rounded-xl overflow-hidden bg-white/40">
-                <img
-                  src={foto.url_foto}
-                  alt={foto.legenda ?? 'Foto da resolução'}
-                  className="w-full h-full object-cover"
-                />
+      {(garantia.resposta_prestador_garantia || garantia.resolucao_descricao || (garantia.fotos && garantia.fotos.length > 0)) && (
+        <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/70 p-3 space-y-3 text-emerald-950">
+          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700">Resolução do caso</p>
+          {garantia.resposta_prestador_garantia && (
+            <div className="rounded-lg border border-white/70 bg-white/70 p-3 space-y-1">
+              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Proposta do prestador</p>
+              <p className="text-[11px] font-medium leading-snug">{garantia.resposta_prestador_garantia}</p>
+            </div>
+          )}
+          {garantia.resolucao_descricao && (
+            <div className="rounded-lg border border-white/70 bg-white/70 p-3 space-y-1">
+              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Como foi resolvido</p>
+              <p className="text-[11px] font-medium leading-snug">{garantia.resolucao_descricao}</p>
+            </div>
+          )}
+          {garantia.fotos && garantia.fotos.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Fotos da resolução</p>
+              <div className="grid grid-cols-3 gap-2">
+                {garantia.fotos.map(foto => (
+                  <div key={foto.id} className="aspect-square rounded-xl overflow-hidden bg-white/40">
+                    <img src={foto.url_foto} alt={foto.legenda ?? 'Foto da resolução'} className="w-full h-full object-cover" />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </section>
   )
 }
 
