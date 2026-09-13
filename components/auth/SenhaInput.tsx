@@ -5,13 +5,7 @@
 import { useState } from 'react'
 import { EyeIconButton } from './EyeIconButton'
 
-interface SenhaInputProps {
-  value: string
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  placeholder: string
-  className?: string
-  required?: boolean
-}
+import type { SenhaInputProps } from './SenhaInput.types'
 
 export function SenhaInput({ value, onChange, placeholder, className = '', required }: SenhaInputProps) {
   const [visivel, setVisivel] = useState(false)

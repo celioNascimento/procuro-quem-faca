@@ -6,11 +6,9 @@ import { useRouter } from 'next/navigation'
 import BackButton from './BackButton'
 import { HeaderAuthButton } from './HeaderAuthButton'
 
-type Props = {
-  href?: string
-}
+import type { HeaderProps } from './Header.types'
 
-export default function Header({ href }: Props) {
+export default function Header({ href }: HeaderProps) {
   const router = useRouter()
 
   return (
