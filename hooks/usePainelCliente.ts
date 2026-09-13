@@ -92,9 +92,8 @@ export function usePainelCliente() {
   }, [router])
 
   useEffect(() => {
-    if (tokenUrl === null) return
+    let cancelado = false
 
-    const cancelado = false
 
     const resolverSessao = (session: Session | null) => {
       if (cancelado) return
@@ -133,7 +132,10 @@ export function usePainelCliente() {
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelado = true
+      subscription.unsubscribe()
+    }
   }, [tokenUrl, buscarDados])
 
   const handleAceitar = async (servico: Servico) => {
