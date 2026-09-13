@@ -94,15 +94,30 @@ export function usePainelCliente() {
   useEffect(() => {
     if (tokenUrl === null) return
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const cancelado = false
+
+    const resolverSessao = (session: Session | null) => {
+      if (cancelado) return
       setSession(session)
       if (session) {
         userCarregadoRef.current = session.user.id
-        buscarDados(session.user, tokenUrl)
+        void buscarDados(session.user, tokenUrl)
       } else {
         setLoading(false)
       }
-    })
+    }
+
+    void supabase.auth.getSession()
+      .then(({ data: { session } }) => resolverSessao(session))
+      .catch(() => {
+        // A navegação entre rotas não pode deixar o skeleton preso caso a
+        // leitura da sessão falhe; o listener continuará capaz de recuperar
+        // a sessão quando o Supabase emitir o próximo evento.
+        if (!cancelado) {
+          setSession(null)
+          setLoading(false)
+        }
+      })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
