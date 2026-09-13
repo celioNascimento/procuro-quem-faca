@@ -211,7 +211,7 @@ export default function PainelDoCliente() {
         </div>
       )}
 
-      <div className="mx-auto max-w-5xl px-5 pt-4 md:pt-32 animate-in fade-in duration-700">
+      <div className="mx-auto max-w-5xl px-5 pt-20 md:pt-32 animate-in fade-in duration-700">
         <AdCardPainelCliente servicos={servicos as unknown as import('@/types/clienteServicos').ClienteServico[]} loading={loading} />
         <div className="mt-1 flex flex-col gap-2 lg:flex-row lg:gap-4">
 
