@@ -37,6 +37,8 @@ type GarantiaRaw = {
 export function usePerfilPrestador(): UsePerfilPrestadorReturn {
   const params       = useParams()
   const searchParams = useSearchParams()
+  const slug = params?.slug as string | undefined
+  const fromParam = searchParams?.get('from') ?? null
 
   const [data, setData]       = useState<PerfilData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -46,12 +48,10 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
     const controller = new AbortController()
 
     async function carregar() {
-      const slug = params?.slug as string | undefined
       if (!slug) { setLoading(false); return }
 
-      setLoading(true)
+      // Mantém o perfil atual durante revalidações para evitar o piscar da tela.
       setErro(false)
-      setData(null)
 
       try {
         const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}/.test(slug)
@@ -147,7 +147,6 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
             return a.status === 'finalizado' ? -1 : 1
           })
 
-        const fromParam = searchParams?.get('from')
         let urlRetorno = fromParam ? decodeURIComponent(fromParam) : '/prestadores'
         if (!fromParam) {
           const cat = prestadorRaw.categorias?.nome || prestadorRaw.categoria
@@ -188,7 +187,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
 
     carregar()
     return () => controller.abort()
-  }, [params?.slug, searchParams])
+  }, [slug, fromParam])
 
   return { data, loading, erro }
 }
