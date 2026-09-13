@@ -41,7 +41,7 @@ export default function PainelDoCliente() {
     session, servicos, servicosGarantia, servicosReclamacao, loading,
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente,
-    handleAceitar, handleVerGarantia,
+    handleAceitar, handleRecusar, handleVerGarantia,
     confirmandoWhatsapp, confirmandoErro,
     confirmarWhatsappEAceitar, cancelarConfirmacaoWhatsapp,
   } = usePainelCliente()
@@ -380,11 +380,27 @@ export default function PainelDoCliente() {
                     <ServicoCard
                       servico={projetoSelecionado}
                       onZoom={setZoomImage}
-                    onAceitar={getOnAceitar(projetoSelecionado)}
-                    hidePrestador
-                    modo={getModo(projetoSelecionado)}
+                      onAceitar={getOnAceitar(projetoSelecionado)}
+                      hidePrestador
+                      modo={getModo(projetoSelecionado)}
                       tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(projetoSelecionado)}
                     />
+                    {projetoSelecionado.status?.toLowerCase() === 'pendente' && (
+                      <div className="flex flex-col gap-3 px-3 pb-3 pt-1">
+                        <p className="text-center text-[11px] font-medium leading-relaxed text-slate-500">
+                          Revise os detalhes da proposta antes de decidir. Você pode aceitar pelo WhatsApp ou diretamente aqui.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm('Deseja recusar este serviço?')) void handleRecusar(projetoSelecionado)
+                          }}
+                          className="w-full rounded-2xl border border-red-100 bg-red-50 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-red-600 transition-colors hover:bg-red-100"
+                        >
+                          Recusar serviço
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </section>
               )}

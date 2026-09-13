@@ -132,6 +132,16 @@ export async function aceitarServico(
   if (error) throw error
 }
 
+export async function recusarServico(servicoId: string) {
+  const { error } = await supabase
+    .from('portfolio_projetos')
+    .update({ status: 'recusado' })
+    .eq('id', servicoId)
+    .eq('status', 'pendente')
+
+  if (error) throw error
+}
+
 export async function loginComGoogle(tokenUrl: string | null) {
   const base = typeof window !== 'undefined' ? window.location.origin : ''
   const redirectTo = tokenUrl
