@@ -32,18 +32,9 @@ export function usePainelCliente() {
     return new URLSearchParams(window.location.search).get('token')
   }, [])
 
-  // Derivados diretamente de servicos (que já traz solicitacoes_garantia
-  // embutido via join) — não são estado próprio nem consulta separada.
-  // Elimina o risco de dessincronia entre arrays de origens diferentes.
-  // Separados por tipo: garantia formal e reclamação viram filtros
-  // distintos na UI, mesmo usando a mesma máquina de estados por baixo.
   const servicosGarantia = filtrarComGarantiaAtiva(servicos)
   const servicosReclamacao = filtrarComReclamacaoAtiva(servicos)
 
-  // Confirmação de whatsapp antes do aceite — só é acionado quando
-  // profile.whatsapp ainda não bate com o cliente_whatsapp do projeto
-  // (ver policy portfolio_projetos_cliente_aceita_proprio). Guarda o
-  // serviço pendente de confirmação para retomar o aceite depois.
   const [confirmandoWhatsapp, setConfirmandoWhatsapp] = useState<Servico | null>(null)
   const [confirmandoErro, setConfirmandoErro] = useState<string | null>(null)
 
@@ -53,8 +44,6 @@ export function usePainelCliente() {
   ) => {
     setLoading(true)
     try {
-      // Perfil e consulta principal são independentes: iniciá-los juntos
-      // evita que o painel aguarde o perfil antes de buscar os serviços.
       const [prof, projetosIniciais, projetosDoCliente] = await Promise.all([
         getProfile(user.id),
         token ? getServicoPorToken(token) : getServicosPorUserId(user.id),
@@ -64,32 +53,31 @@ export function usePainelCliente() {
 
       let projs: Servico[] = projetosIniciais
 
-      // Ao abrir um projeto pelo perfil, traz também os demais projetos do
-      // mesmo prestador para que o cliente tenha contexto sem misturar
-      // serviços de profissionais diferentes.
       if (token && projetosIniciais[0]) {
         const prestadorId = projetosIniciais[0].prestadores?.id
         projs = projetosDoCliente.filter(projeto =>
           projeto.id === projetosIniciais[0].id ||
           (prestadorId != null && projeto.prestadores?.id === prestadorId),
         )
+
+        // Serviços pendentes têm cliente_user_id null — não aparecem em
+        // projetosDoCliente (que filtra por cliente_user_id). Garante que
+        // o projeto aberto pelo token sempre esteja na lista, mesmo sem
+        // vínculo formal ainda.
+        if (!projs.some(p => p.id === projetosIniciais[0].id)) {
+          projs = [projetosIniciais[0], ...projs]
+        }
       }
 
-      // Com token, tenta o vínculo forte caso o token não retorne projetos.
       if (projs.length === 0 && token) {
         projs = projetosDoCliente
       }
 
-      // Fallback para projetos antigos sem cliente_user_id.
       if (projs.length === 0) {
         const whatsapp = prof?.whatsapp || localStorage.getItem('cliente_whatsapp')
         if (whatsapp) projs = await getServicosPorWhatsapp(whatsapp)
       }
 
-      // 4. FILTRO ANTI-ESPELHO: Remove projetos onde o usuário atual é o
-      // PRESTADOR, mas nunca descarte o projeto aberto por token. O token é
-      // uma seleção explícita feita no perfil do cliente e precisa continuar
-      // visível mesmo quando a conta também possui vínculo como prestador.
       if (projs.length > 0) {
         projs = projs.filter(p =>
           token && p.avaliacao_token === token
@@ -114,7 +102,6 @@ export function usePainelCliente() {
   useEffect(() => {
     let cancelado = false
 
-
     const resolverSessao = (session: Session | null) => {
       if (cancelado) return
       setSession(session)
@@ -129,9 +116,6 @@ export function usePainelCliente() {
     void supabase.auth.getSession()
       .then(({ data: { session } }) => resolverSessao(session))
       .catch(() => {
-        // A navegação entre rotas não pode deixar o skeleton preso caso a
-        // leitura da sessão falhe; o listener continuará capaz de recuperar
-        // a sessão quando o Supabase emitir o próximo evento.
         if (!cancelado) {
           setSession(null)
           setLoading(false)
@@ -162,10 +146,6 @@ export function usePainelCliente() {
     const whatsappProjeto = servico.cliente_whatsapp?.replace(/\D/g, '') ?? ''
     const whatsappPerfil = profile?.whatsapp?.replace(/\D/g, '') ?? ''
 
-    // Se o whatsapp do perfil ainda não bate com o do projeto, a policy de
-    // update bloquearia o aceite silenciosamente (RLS nega, sem mensagem
-    // clara). Em vez de deixar isso falhar, intercepta aqui e pede
-    // confirmação explícita do número antes de prosseguir.
     if (whatsappProjeto && whatsappPerfil !== whatsappProjeto) {
       setConfirmandoWhatsapp(servico)
       return
@@ -198,12 +178,6 @@ export function usePainelCliente() {
     router.push(`/acompanhamento/${servico.avaliacao_token}`)
   }
 
-  /**
-   * Confirma (ou edita) o whatsapp do cliente e, se bem-sucedido, retoma o
-   * aceite do serviço que ficou pendente de confirmação. numeroConfirmado
-   * é o valor final digitado pelo cliente — pode ser igual ao do projeto
-   * (confirmação simples) ou diferente (edição).
-   */
   const confirmarWhatsappEAceitar = async (numeroConfirmado: string) => {
     if (!confirmandoWhatsapp || !session?.user?.id) return
     setConfirmandoErro(null)
@@ -225,9 +199,6 @@ export function usePainelCliente() {
     setConfirmandoErro(null)
   }
 
-  // Navega para a mesma tela de acompanhamento, sinalizando a seção de
-  // garantia/reclamação — a própria seção decide qual dos dois exibir
-  // com base no tipo do caso, então não precisa de rota diferente aqui.
   const handleVerGarantia = (servico: Servico) => {
     router.push(`/acompanhamento/${servico.avaliacao_token}?garantia=1`)
   }
