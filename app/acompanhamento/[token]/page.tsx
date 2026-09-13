@@ -115,11 +115,6 @@ export default function PaginaAcompanhamento({
               prestadorId={projeto.prestador_id}
             />
 
-            <ContextualHelp
-              context="acompanhamento"
-              title="Dúvidas sobre este acompanhamento?"
-            />
-
             {semFotos ? (
               <LinhaDeTempoSemFotos
                 status={projeto.status}
@@ -199,6 +194,11 @@ export default function PaginaAcompanhamento({
             <div className="lg:hidden">
               <RodapeSeguranca />
             </div>
+
+            <ContextualHelp
+              context="acompanhamento"
+              title="Dúvidas sobre este acompanhamento?"
+            />
           </div>
 
         </div>

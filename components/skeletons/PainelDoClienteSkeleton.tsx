@@ -10,7 +10,7 @@ export default function PainelDoClienteSkeleton() {
           <Skeleton className="size-10 rounded-xl bg-slate-100 md:size-11" />
         </div>
       </nav>
-      <div className="mx-auto max-w-5xl px-5 pb-10 pt-24 md:pt-36">
+      <div className="mx-auto max-w-5xl px-5 pb-10 pt-4 md:pt-36">
         <div className="mb-6 flex flex-col gap-3 sm:mb-8">
           <Skeleton className="h-3 w-24 bg-blue-100" />
           <Skeleton className="h-8 w-72 rounded-lg" />

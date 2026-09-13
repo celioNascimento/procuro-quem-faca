@@ -59,47 +59,48 @@ export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
   return (
     <div className="space-y-4">
 
-      {/* Problema que você relatou */}
-      <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3">
-        <AlertTriangle size={14} className="text-orange-400 shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="text-[9px] font-black uppercase tracking-widest text-orange-500">
-            Problema relatado
-          </p>
+      <section className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4" aria-labelledby="relato-garantia">
+        <p id="relato-garantia" className="mb-3 text-[9px] font-black uppercase tracking-widest text-orange-500">
+          Relato do problema
+        </p>
+        <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3">
+          <AlertTriangle size={14} className="text-orange-400 shrink-0 mt-0.5" />
           <p className="text-[11px] font-medium text-orange-700/80 leading-snug">
             {caso.descricao_problema}
           </p>
         </div>
-      </div>
+        <GarantiaCarrossel
+          wizard={wizard}
+          podeEnviar={false}
+          autorTipo="cliente"
+          fase="problema"
+        />
+      </section>
 
-      <GarantiaCarrossel
-        wizard={wizard}
-        podeEnviar={false}
-        autorTipo="cliente"
-        fase="problema"
-      />
-
-      {/* Proposta registrada pelo prestador */}
-      {caso.resposta_prestador_garantia && (
-        <div className="bg-white border border-slate-100 rounded-2xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 size={12} className="text-blue-400" />
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-              Proposta do prestador
+      <section className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4" aria-labelledby="resolucao-garantia">
+        <p id="resolucao-garantia" className="mb-3 text-[9px] font-black uppercase tracking-widest text-emerald-600">
+          Resolução do caso
+        </p>
+        {caso.resposta_prestador_garantia && (
+          <div className="bg-white border border-slate-100 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 size={12} className="text-blue-400" />
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                Proposta do prestador
+              </p>
+            </div>
+            <p className="text-[12px] font-medium text-slate-700 leading-snug">
+              {caso.resposta_prestador_garantia}
             </p>
           </div>
-          <p className="text-[12px] font-medium text-slate-700 leading-snug">
-            {caso.resposta_prestador_garantia}
-          </p>
-        </div>
-      )}
-
-      <GarantiaCarrossel
-        wizard={wizard}
-        podeEnviar={false}
-        autorTipo="cliente"
-        fase="resolucao"
-      />
+        )}
+        <GarantiaCarrossel
+          wizard={wizard}
+          podeEnviar={false}
+          autorTipo="cliente"
+          fase="resolucao"
+        />
+      </section>
 
       {/* Histórico de conversa — somente leitura */}
       {wizard.derived.comentariosGerais.length > 0 && (

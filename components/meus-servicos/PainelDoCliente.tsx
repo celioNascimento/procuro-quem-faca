@@ -153,7 +153,7 @@ export default function PainelDoCliente() {
   const hasMultipleProjects = servicos.length > 1 || servicosGarantia.length > 0 || servicosReclamacao.length > 0
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] pb-32 font-sans antialiased">
+    <main className="min-h-screen bg-[#F8FAFC] pb-10 md:pb-20 font-sans antialiased">
       <HeaderCliente nomeCliente={nomeCliente} />
 
       {zoomImage && (
@@ -211,7 +211,7 @@ export default function PainelDoCliente() {
         </div>
       )}
 
-      <div className="mx-auto max-w-5xl px-5 pt-36 md:pt-32 animate-in fade-in duration-700">
+      <div className="mx-auto max-w-5xl px-5 pt-4 md:pt-32 animate-in fade-in duration-700">
         <AdCardPainelCliente servicos={servicos as unknown as import('@/types/clienteServicos').ClienteServico[]} loading={loading} />
         <div className="mt-1 flex flex-col gap-2 lg:flex-row lg:gap-4">
 
