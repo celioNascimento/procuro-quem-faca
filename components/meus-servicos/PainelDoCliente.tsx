@@ -13,29 +13,11 @@ import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkele
 import { AdCardPainelCliente } from '@/components/painel/AdCardPainelCliente'
 import { ContextualHelp } from '@/components/help/HelpCenter'
 
-// ── Tipos ──────────────────────────────────────────────────────────────────────
-type Filtro = 'todos' | 'pendente' | 'em_execucao' | 'concluido' | 'garantia' | 'reclamacao'
-
-// ── Config das linhas de filtro ────────────────────────────────────────────────
-const FILTROS: { valor: Filtro; label: string }[] = [
-  { valor: 'todos',       label: 'Todos'        },
-  { valor: 'pendente',    label: 'Pendentes'    },
-  { valor: 'em_execucao', label: 'Em andamento' },
-  { valor: 'concluido',   label: 'Concluídos'   },
-  { valor: 'garantia',    label: 'Garantia'     },
-  { valor: 'reclamacao',  label: 'Reclamação'   },
-]
-
 export default function PainelDoCliente() {
   const router = useRouter()
-  const [tokenSelecionado, setTokenSelecionado] = useState<string | null>(null)
-  const [filtroAtivo, setFiltroAtivo] = useState<Filtro>('todos')
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    setTokenSelecionado(params.get('token'))
-    if (params.get('origem') === 'perfil') setFiltroAtivo('pendente')
-  }, [])
+  const [tokenSelecionado] = useState<string | null>(() =>
+    typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('token')
+  )
 
   const {
     session, servicos, servicosGarantia, servicosReclamacao, loading,
@@ -88,15 +70,6 @@ export default function PainelDoCliente() {
   const concluidos  = servicos.filter(s => s.status?.toLowerCase() === 'finalizado')
   const totalPendentes = pendentes.length + emRegistro.length
 
-  const contadores: Record<Filtro, number> = {
-    todos:       servicos.length,
-    pendente:    totalPendentes,
-    em_execucao: emAndamento.length,
-    concluido:   concluidos.length,
-    garantia:    servicosGarantia.length,
-    reclamacao:  servicosReclamacao.length,
-  }
-
   // IDs com caso ativo — derivado dos mesmos arrays (sem dessincronia).
   // Um projeto nunca aparece nos dois conjuntos ao mesmo tempo (ver
   // painelCliente.service.ts), mas mantemos os Sets separados porque o
@@ -104,15 +77,8 @@ export default function PainelDoCliente() {
   const idsComGarantiaAtiva = new Set(servicosGarantia.map(s => s.id))
   const idsComReclamacaoAtiva = new Set(servicosReclamacao.map(s => s.id))
 
-  // ── Serviços filtrados ────────────────────────────────────────────────────────
-  const servicosFiltrados = (() => {
-    if (filtroAtivo === 'pendente')    return [...pendentes, ...emRegistro]
-    if (filtroAtivo === 'em_execucao') return emAndamento
-    if (filtroAtivo === 'concluido')   return concluidos
-    if (filtroAtivo === 'garantia')    return servicosGarantia
-    if (filtroAtivo === 'reclamacao')  return servicosReclamacao
-    return servicos
-  })()
+  // A listagem não aplica filtros de status: serviços pendentes também ficam visíveis.
+  const servicosFiltrados = servicos
 
   // ── tipoGarantiaAtivaDoServico ───────────────────────────────────────────────
   // Retorna o tipo do caso ativo deste serviço (ou null), usado pelo
@@ -130,7 +96,7 @@ export default function PainelDoCliente() {
   // prop tipoGarantiaAtiva abaixo, que exibe apenas uma tag sem mudar o
   // card inteiro.
   const getModo = (servico: (typeof servicos)[number]) => {
-    if ((filtroAtivo === 'garantia' || filtroAtivo === 'reclamacao') && tipoGarantiaAtivaDoServico(servico))
+    if (tipoGarantiaAtivaDoServico(servico))
       return 'garantia' as const
     if (servico.status?.toLowerCase() === 'em_execucao') return 'andamento' as const
     if (servico.status?.toLowerCase() === 'finalizado')  return 'concluido' as const
@@ -143,7 +109,7 @@ export default function PainelDoCliente() {
   // Em qualquer outra aba → comportamento padrão pelo status do projeto.
   const getOnAceitar = (servico: (typeof servicos)[number]) => {
     const status = servico.status?.toLowerCase()
-    if ((filtroAtivo === 'garantia' || filtroAtivo === 'reclamacao') && tipoGarantiaAtivaDoServico(servico))
+    if (tipoGarantiaAtivaDoServico(servico))
       return () => handleVerGarantia(servico)
     if (status === 'em_execucao')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
@@ -154,7 +120,7 @@ export default function PainelDoCliente() {
     return () => handleAceitar(servico)
   }
 
-  // ── Loading / Auth ────────────────────────────────────────────────────────────
+  // ── Loading / Auth ─────────────────────────────────��──────────────────────────
   if (loading) return <PainelDoClienteSkeleton />
 
   if (!session) return <LoginGate tokenUrl={tokenUrl} />
@@ -171,7 +137,6 @@ export default function PainelDoCliente() {
           return prestadorId == null || servico.prestadores?.id === prestadorId
         })
     : servicosFiltrados
-  const hasMultipleProjects = servicos.length > 1 || servicosGarantia.length > 0 || servicosReclamacao.length > 0
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-10 md:pb-20 font-sans antialiased">
@@ -266,7 +231,7 @@ export default function PainelDoCliente() {
                 </div>
               )}
 
-              {(filtroAtivo === 'todos' || filtroAtivo === 'pendente') && totalPendentes > 0 && (
+              {totalPendentes > 0 && (
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Ao autorizar o serviço
@@ -290,7 +255,7 @@ export default function PainelDoCliente() {
                 </div>
               )}
 
-              {filtroAtivo === 'garantia' && servicosGarantia.length > 0 && (
+              {servicosGarantia.length > 0 && (
                 <div className="bg-orange-50 rounded-[2rem] border border-orange-100 shadow-sm p-6 space-y-3">
                   <div className="flex items-center gap-2">
                     <ShieldAlert size={14} className="text-orange-500" />
@@ -305,7 +270,7 @@ export default function PainelDoCliente() {
                 </div>
               )}
 
-              {filtroAtivo === 'reclamacao' && servicosReclamacao.length > 0 && (
+              {servicosReclamacao.length > 0 && (
                 <div className="bg-orange-50 rounded-[2rem] border border-orange-100 shadow-sm p-6 space-y-3">
                   <div className="flex items-center gap-2">
                     <MessageCircleWarning size={14} className="text-orange-500" />
@@ -323,50 +288,8 @@ export default function PainelDoCliente() {
             </div>
           </div>
 
-          {/* ── Coluna Direita — Filtros e Cards ── */}
+              {/* ── Coluna Direita — Todos os Cards ── */}
           <div className="w-full lg:w-2/3 flex flex-col gap-4">
-
-            {hasMultipleProjects && (
-              <div
-                className="flex gap-2 overflow-x-auto pb-1"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {FILTROS.map((filtro) => {
-                  const ativo = filtroAtivo === filtro.valor
-                  const count = contadores[filtro.valor]
-                  const ehCasoAtivo = filtro.valor === 'garantia' || filtro.valor === 'reclamacao'
-                  if (filtro.valor !== 'todos' && count === 0) return null
-
-                  return (
-                    <button
-                      key={filtro.valor}
-                      onClick={() => setFiltroAtivo(filtro.valor)}
-                      type="button"
-                      className={`
-                        min-h-10 flex items-center gap-2 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 transition-all
-                        focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100
-                        ${ativo
-                          ? ehCasoAtivo
-                            ? 'border-orange-600 bg-orange-600 text-white shadow-sm'
-                            : 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                          : ehCasoAtivo
-                            ? 'border-orange-200 bg-white text-orange-500 hover:border-orange-300'
-                            : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600'
-                        }
-                      `}
-                    >
-                      <span className="text-[11px] font-bold uppercase tracking-wide">
-                        {filtro.label}
-                      </span>
-                      <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black ${ativo ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                        {count}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-
             <div className="mt-1 flex flex-col gap-5">
               {projetoSelecionado && (
                 <section className="flex flex-col gap-3" aria-labelledby="projeto-selecionado-title">
