@@ -76,7 +76,7 @@ export default function PaginaAcompanhamento({
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased">
       <HeaderCliente nomeCliente={projeto.cliente_nome} />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 md:pt-36 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 md:pt-28 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex flex-col lg:flex-row lg:items-start gap-6">
 
           <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-32 space-y-4">
