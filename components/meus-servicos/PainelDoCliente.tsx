@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import LoginGate from './LoginGate'
 import ServicoCard from './ServicoCard'
+import ServicoCardCompacto from './ServicoCardCompacto'
 import ZoomImageModal from './ZoomImageModal'
 import { usePainelCliente } from '@/hooks/usePainelCliente'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
@@ -66,47 +67,26 @@ export default function PainelDoCliente() {
   // ── Grupos por status ────────────────────────────────────────────────────────
   const emRegistro  = servicos.filter(s => s.status?.toLowerCase() === 'em_registro')
   const pendentes   = servicos.filter(s => ['pendente', 'aguardando_aceite'].includes(s.status?.toLowerCase() ?? ''))
-  const emAndamento = servicos.filter(s => s.status?.toLowerCase() === 'em_execucao')
-  const concluidos  = servicos.filter(s => s.status?.toLowerCase() === 'finalizado')
   const totalPendentes = pendentes.length + emRegistro.length
 
-  // IDs com caso ativo — derivado dos mesmos arrays (sem dessincronia).
-  // Um projeto nunca aparece nos dois conjuntos ao mesmo tempo (ver
-  // painelCliente.service.ts), mas mantemos os Sets separados porque o
-  // ServicoCard precisa saber QUAL tipo, não só "tem caso ativo".
-  const idsComGarantiaAtiva = new Set(servicosGarantia.map(s => s.id))
+  const idsComGarantiaAtiva   = new Set(servicosGarantia.map(s => s.id))
   const idsComReclamacaoAtiva = new Set(servicosReclamacao.map(s => s.id))
 
-  // A listagem não aplica filtros de status: serviços pendentes também ficam visíveis.
   const servicosFiltrados = servicos
 
-  // ── tipoGarantiaAtivaDoServico ───────────────────────────────────────────────
-  // Retorna o tipo do caso ativo deste serviço (ou null), usado pelo
-  // ServicoCard para decidir texto/estilo da tag "Garantia"/"Reclamação".
   const tipoGarantiaAtivaDoServico = (servico: { id: string }): 'garantia' | 'reclamacao' | null => {
-    if (idsComGarantiaAtiva.has(servico.id)) return 'garantia'
+    if (idsComGarantiaAtiva.has(servico.id))   return 'garantia'
     if (idsComReclamacaoAtiva.has(servico.id)) return 'reclamacao'
     return null
   }
 
-  // ── getModo ──────────────────────────────────────────────────────────────────
-  // O modo 'garantia' (estilo laranja completo) só se aplica nas abas
-  // Garantia/Reclamação. Em outras abas, o card usa o estilo do status
-  // real do projeto. A sinalização visual nas demais abas é feita pela
-  // prop tipoGarantiaAtiva abaixo, que exibe apenas uma tag sem mudar o
-  // card inteiro.
   const getModo = (servico: (typeof servicos)[number]) => {
-    if (tipoGarantiaAtivaDoServico(servico))
-      return 'garantia' as const
+    if (tipoGarantiaAtivaDoServico(servico))              return 'garantia'  as const
     if (servico.status?.toLowerCase() === 'em_execucao') return 'andamento' as const
     if (servico.status?.toLowerCase() === 'finalizado')  return 'concluido' as const
     return 'pendente' as const
   }
 
-  // ── getOnAceitar ─────────────────────────────────────────────────────────────
-  // Nas abas Garantia/Reclamação → navega para seção de garantia/reclamação
-  // do acompanhamento (mesma rota, a seção decide o tipo sozinha).
-  // Em qualquer outra aba → comportamento padrão pelo status do projeto.
   const getOnAceitar = (servico: (typeof servicos)[number]) => {
     const status = servico.status?.toLowerCase()
     if (tipoGarantiaAtivaDoServico(servico))
@@ -115,26 +95,41 @@ export default function PainelDoCliente() {
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
     if (status === 'finalizado')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
-    if (status === 'pendente' || status === 'aguardando_aceite')
-      return () => handleAceitar(servico)
     return () => handleAceitar(servico)
   }
 
-  // ── Loading / Auth ─────────────────────────────────��──────────────────────────
-  if (loading) return <PainelDoClienteSkeleton />
+  // ── Status visual para ServicoCardCompacto ───────────────────────────────────
+  const getStatusInfo = (servico: (typeof servicos)[number]) => {
+    const s        = servico.status?.toLowerCase()
+    const temCaso  = tipoGarantiaAtivaDoServico(servico)
+    if (temCaso === 'garantia')
+      return { label: 'Garantia',     dot: 'bg-orange-400', badge: 'bg-orange-50 text-orange-700 border-orange-200', urgente: true  }
+    if (temCaso === 'reclamacao')
+      return { label: 'Reclamação',   dot: 'bg-orange-400', badge: 'bg-orange-50 text-orange-700 border-orange-200', urgente: true  }
+    if (s === 'pendente')
+      return { label: 'Aguardando',   dot: 'bg-amber-400',  badge: 'bg-amber-50 text-amber-700 border-amber-200',   urgente: false }
+    if (s === 'em_execucao')
+      return { label: 'Em andamento', dot: 'bg-blue-400',   badge: 'bg-blue-50 text-blue-700 border-blue-200',      urgente: false }
+    if (s === 'finalizado')
+      return { label: 'Concluído',    dot: 'bg-green-400',  badge: 'bg-green-50 text-green-700 border-green-200',   urgente: false }
+    return   { label: s ?? '',        dot: 'bg-slate-300',  badge: 'bg-slate-50 text-slate-500 border-slate-200',   urgente: false }
+  }
 
+  // ── Loading / Auth ───────────────────────────────────────────────────────────
+  if (loading) return <PainelDoClienteSkeleton />
   if (!session) return <LoginGate tokenUrl={tokenUrl} />
 
   const prestador = servicos[0]?.prestadores
   const projetoSelecionado = tokenSelecionado
-    ? servicos.find(servico => servico.avaliacao_token === tokenSelecionado)
+    ? servicos.find(s => s.avaliacao_token === tokenSelecionado)
     : undefined
+
   const outrosServicos = projetoSelecionado
     ? servicos
-        .filter(servico => servico.id !== projetoSelecionado.id)
-        .filter(servico => {
+        .filter(s => s.id !== projetoSelecionado.id)
+        .filter(s => {
           const prestadorId = projetoSelecionado.prestadores?.id
-          return prestadorId == null || servico.prestadores?.id === prestadorId
+          return prestadorId == null || s.prestadores?.id === prestadorId
         })
     : servicosFiltrados
 
@@ -187,10 +182,7 @@ export default function PainelDoCliente() {
                 disabled={!whatsappEditado.trim() || salvandoWhatsapp}
                 className="flex-1 py-4 bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-2xl font-black uppercase text-[11px] tracking-wide hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
               >
-                {salvandoWhatsapp
-                  ? <Loader2 size={14} className="animate-spin" />
-                  : 'Confirmar'
-                }
+                {salvandoWhatsapp ? <Loader2 size={14} className="animate-spin" /> : 'Confirmar'}
               </button>
             </div>
           </div>
@@ -199,6 +191,7 @@ export default function PainelDoCliente() {
 
       <div className="mx-auto max-w-5xl px-5 pt-20 md:pt-32 animate-in fade-in duration-700">
         <AdCardPainelCliente servicos={servicos as unknown as import('@/types/clienteServicos').ClienteServico[]} loading={loading} />
+
         <div className="mt-1 flex flex-col gap-2 lg:flex-row lg:gap-4">
 
           {/* ── Coluna Esquerda ── */}
@@ -209,11 +202,7 @@ export default function PainelDoCliente() {
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 flex items-center gap-4 transition-all hover:shadow-md">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-[1.25rem] border border-slate-100 shadow-sm overflow-hidden bg-slate-50 flex items-center justify-center">
                     {prestador.foto_perfil ? (
-                      <img
-                        src={prestador.foto_perfil}
-                        className="w-full h-full object-contain p-1"
-                        alt={prestador.nome}
-                      />
+                      <img src={prestador.foto_perfil} className="w-full h-full object-contain p-1" alt={prestador.nome} />
                     ) : (
                       <User size={24} className="text-slate-300" />
                     )}
@@ -233,9 +222,7 @@ export default function PainelDoCliente() {
 
               {totalPendentes > 0 && (
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    Ao autorizar o serviço
-                  </p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ao autorizar o serviço</p>
                   <div className="space-y-3">
                     {[
                       { n: '01', texto: 'Você confirma que o prestador pode iniciar o trabalho' },
@@ -243,12 +230,8 @@ export default function PainelDoCliente() {
                       { n: '03', texto: 'Você poderá acompanhar e avaliar ao final'              },
                     ].map(item => (
                       <div key={item.n} className="flex items-start gap-3">
-                        <span className="text-[10px] font-black text-blue-600 bg-blue-50 rounded-lg px-2 py-1 shrink-0 mt-0.5">
-                          {item.n}
-                        </span>
-                        <p className="text-[12px] text-slate-500 font-medium leading-relaxed">
-                          {item.texto}
-                        </p>
+                        <span className="text-[10px] font-black text-blue-600 bg-blue-50 rounded-lg px-2 py-1 shrink-0 mt-0.5">{item.n}</span>
+                        <p className="text-[12px] text-slate-500 font-medium leading-relaxed">{item.texto}</p>
                       </div>
                     ))}
                   </div>
@@ -259,13 +242,10 @@ export default function PainelDoCliente() {
                 <div className="bg-orange-50 rounded-[2rem] border border-orange-100 shadow-sm p-6 space-y-3">
                   <div className="flex items-center gap-2">
                     <ShieldAlert size={14} className="text-orange-500" />
-                    <p className="text-[10px] font-black uppercase tracking-widest text-orange-600">
-                      Garantia em aberto
-                    </p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-orange-600">Garantia em aberto</p>
                   </div>
                   <p className="text-[12px] text-orange-700/80 font-medium leading-relaxed">
-                    Você tem casos de garantia em andamento. Acompanhe as respostas
-                    do prestador e confirme quando o problema for resolvido.
+                    Você tem casos de garantia em andamento. Acompanhe as respostas do prestador e confirme quando o problema for resolvido.
                   </p>
                 </div>
               )}
@@ -274,13 +254,10 @@ export default function PainelDoCliente() {
                 <div className="bg-orange-50 rounded-[2rem] border border-orange-100 shadow-sm p-6 space-y-3">
                   <div className="flex items-center gap-2">
                     <MessageCircleWarning size={14} className="text-orange-500" />
-                    <p className="text-[10px] font-black uppercase tracking-widest text-orange-600">
-                      Reclamação em aberto
-                    </p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-orange-600">Reclamação em aberto</p>
                   </div>
                   <p className="text-[12px] text-orange-700/80 font-medium leading-relaxed">
-                    Você tem reclamações em andamento. Acompanhe as respostas
-                    do prestador e confirme quando o problema for resolvido.
+                    Você tem reclamações em andamento. Acompanhe as respostas do prestador e confirme quando o problema for resolvido.
                   </p>
                 </div>
               )}
@@ -288,9 +265,11 @@ export default function PainelDoCliente() {
             </div>
           </div>
 
-              {/* ── Coluna Direita — Todos os Cards ── */}
+          {/* ── Coluna Direita ── */}
           <div className="w-full lg:w-2/3 flex flex-col gap-4">
             <div className="mt-1 flex flex-col gap-5">
+
+              {/* Projeto em destaque — card completo */}
               {projetoSelecionado && (
                 <section className="flex flex-col gap-3" aria-labelledby="projeto-selecionado-title">
                   <div className="flex items-center justify-between px-1">
@@ -330,45 +309,61 @@ export default function PainelDoCliente() {
                 </section>
               )}
 
-              <section className="flex flex-col gap-3" aria-labelledby="outros-servicos-title">
-                {projetoSelecionado && outrosServicos.length > 0 && (
+              {/* Outros serviços — cards compactos */}
+              {projetoSelecionado && outrosServicos.length > 0 && (
+                <section className="flex flex-col gap-2" aria-labelledby="outros-servicos-title">
                   <div className="flex items-center justify-between px-1">
-                    <h2 id="outros-servicos-title" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                    <h2 id="outros-servicos-title" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Outros serviços deste prestador
                     </h2>
                     <span className="text-[10px] font-bold text-slate-400">{outrosServicos.length}</span>
                   </div>
-                )}
-                {outrosServicos.length > 0 ? (
-                  <div className="flex flex-col gap-3" role="list" aria-label="Outros serviços do prestador">
+                  <div className="flex flex-col gap-2" role="list" aria-label="Outros serviços do prestador">
                     {outrosServicos.map(servico => (
                       <div key={servico.id} role="listitem">
-                        <ServicoCard
-                          servico={servico}
-                          onZoom={setZoomImage}
-                          onAceitar={getOnAceitar(servico)}
-                          hidePrestador
-                          modo={getModo(servico)}
+                        <ServicoCardCompacto
+                          servico={servico as unknown as import('@/types/clienteServicos').ClienteServico}
+                          statusInfo={getStatusInfo(servico)}
                           tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(servico)}
+                          onClick={getOnAceitar(servico)}
                         />
                       </div>
                     ))}
                   </div>
-                ) : !projetoSelecionado ? (
-                  <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-200 bg-white py-24 text-slate-300">
-                    <Clock size={32} className="mb-3 opacity-40" />
-                    <p className="text-[11px] font-black uppercase tracking-widest">Nenhum projeto nesta categoria</p>
-                  </div>
-                ) : (
-                  <div className="rounded-[2rem] border border-dashed border-slate-200 bg-white px-6 py-10 text-center">
-                    <p className="text-[11px] font-bold text-slate-400">Nenhum outro serviço encontrado com este prestador.</p>
-                  </div>
-                )}
-              </section>
-            </div>
+                </section>
+              )}
 
+              {/* Lista geral sem projeto selecionado */}
+              {!projetoSelecionado && (
+                <section className="flex flex-col gap-3" aria-labelledby="todos-servicos-title">
+                  {outrosServicos.length > 0 ? (
+                    <div className="flex flex-col gap-3" role="list">
+                      {outrosServicos.map(servico => (
+                        <div key={servico.id} role="listitem">
+                          <ServicoCard
+                            servico={servico}
+                            onZoom={setZoomImage}
+                            onAceitar={getOnAceitar(servico)}
+                            hidePrestador
+                            modo={getModo(servico)}
+                            tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(servico)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-200 bg-white py-24 text-slate-300">
+                      <Clock size={32} className="mb-3 opacity-40" />
+                      <p className="text-[11px] font-black uppercase tracking-widest">Nenhum projeto encontrado</p>
+                    </div>
+                  )}
+                </section>
+              )}
+
+            </div>
           </div>
         </div>
+
         <div className="mt-6">
           <ContextualHelp context="meus-servicos" title="Dúvidas sobre seus serviços?" />
         </div>
