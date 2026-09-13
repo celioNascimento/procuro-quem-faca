@@ -1,4 +1,4 @@
-//hooks/usePerfilUI.ts 
+//hooks/usePerfilUI.ts
 
 'use client'
 import { useState, useEffect } from 'react'
@@ -25,11 +25,15 @@ export function usePerfilUI(isDirty: boolean) {
       setConfirmLeaveModal({ show: true, destination: destino })
     } else {
       router.push(destino)
+      router.refresh()
     }
   }
 
   const confirmarSaida = () => {
-    if (confirmLeaveModal.destination) router.push(confirmLeaveModal.destination)
+    if (confirmLeaveModal.destination) {
+      router.push(confirmLeaveModal.destination)
+      router.refresh()
+    }
     setConfirmLeaveModal({ show: false, destination: '' })
   }
 
