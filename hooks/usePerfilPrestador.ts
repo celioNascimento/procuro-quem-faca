@@ -51,7 +51,6 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
 
       setLoading(true)
       setErro(false)
-      setData(null)
 
       try {
         const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}/.test(slug)

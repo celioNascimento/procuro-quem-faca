@@ -160,7 +160,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
 export default function PerfilPublicoClient() {
   const { data, loading, erro } = usePerfilPrestador()
 
-  if (loading) return <PerfilSkeleton />
+  if (loading && !data) return <PerfilSkeleton />
 
   if (erro || !data) {
     return (
