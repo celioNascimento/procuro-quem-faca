@@ -83,7 +83,7 @@ export default function PainelDoCliente() {
 
   // ── Grupos por status ────────────────────────────────────────────────────────
   const emRegistro  = servicos.filter(s => s.status?.toLowerCase() === 'em_registro')
-  const pendentes   = servicos.filter(s => s.status?.toLowerCase() === 'pendente')
+  const pendentes   = servicos.filter(s => ['pendente', 'aguardando_aceite'].includes(s.status?.toLowerCase() ?? ''))
   const emAndamento = servicos.filter(s => s.status?.toLowerCase() === 'em_execucao')
   const concluidos  = servicos.filter(s => s.status?.toLowerCase() === 'finalizado')
   const totalPendentes = pendentes.length + emRegistro.length
@@ -149,6 +149,8 @@ export default function PainelDoCliente() {
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
     if (status === 'finalizado')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
+    if (status === 'pendente' || status === 'aguardando_aceite')
+      return () => handleAceitar(servico)
     return () => handleAceitar(servico)
   }
 

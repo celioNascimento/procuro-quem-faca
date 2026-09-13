@@ -17,7 +17,7 @@ const SELECT_SERVICOS = `
   avaliacoes_clientes (id, nota, motivos, created_at)
 `
 
-const STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado', 'em_disputa']
+const STATUS_VISIVEIS = ['em_registro', 'pendente', 'aguardando_aceite', 'em_execucao', 'finalizado', 'em_disputa']
 
 // Status de solicitacoes_garantia considerados "ativos" — casos já resolvidos
 // ou recusados não contam como ativos (voltam a contar como Concluídos).
@@ -63,7 +63,8 @@ export async function getServicoPorToken(token: string) {
     .from('portfolio_projetos')
     .select(SELECT_SERVICOS)
     .eq('avaliacao_token', token)
-    .in('status', STATUS_VISIVEIS)
+    // O token é a identidade do projeto selecionado. Não filtrar por status
+    // aqui evita perder propostas antigas que ainda precisam de aceite.
     .maybeSingle()
   return data ? [data] : []
 }
