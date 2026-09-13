@@ -17,6 +17,7 @@ import { RodapeSeguranca }          from '@/components/acompanhamento/RodapeSegu
 import { GarantiaSecaoCliente }     from '@/components/acompanhamento/garantia/GarantiaSecaoCliente'
 import { AdCardPainelCliente }      from '@/components/painel/AdCardPainelCliente'
 import AcompanhamentoSkeleton       from '@/components/skeletons/AcompanhamentoSkeleton'
+import { ContextualHelp }            from '@/components/help/HelpCenter'
 
 export default function PaginaAcompanhamento({
   params: paramsPromise,
@@ -112,6 +113,11 @@ export default function PaginaAcompanhamento({
             <AdCardPainelCliente
               servicos={[]}
               prestadorId={projeto.prestador_id}
+            />
+
+            <ContextualHelp
+              context="acompanhamento"
+              title="Dúvidas sobre este acompanhamento?"
             />
 
             {semFotos ? (

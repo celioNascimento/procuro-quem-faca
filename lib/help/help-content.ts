@@ -29,8 +29,12 @@ export const helpArticles: HelpArticle[] = [
     steps: ['Acesse Meus serviços com a mesma conta usada no contato.', 'Use os filtros para encontrar o serviço desejado.', 'Abra o cartão para aceitar, acompanhar ou consultar uma garantia/reclamação.'], related: ['avaliar-servico', 'garantia']
   },
   {
+    id: 'acompanhar-atualizacoes', title: 'Como acompanhar atualizações, fotos e comentários', summary: 'Veja o andamento do serviço na linha do tempo e participe da conversa em cada atualização publicada.', category: 'Acompanhamento', audiences: ['cliente'], contexts: ['acompanhamento', 'meus-servicos', 'dashboard-cliente'],
+    steps: ['Abra o acompanhamento pelo cartão do serviço em Meus serviços.', 'Consulte as fotos e etapas publicadas pelo prestador na linha do tempo.', 'Toque em uma atualização para ler comentários ou enviar uma nova mensagem.'], related: ['avaliar-servico', 'garantia']
+  },
+  {
     id: 'avaliar-servico', title: 'Como avaliar um serviço', summary: 'Após a conclusão, use o link de avaliação para registrar sua experiência.', category: 'Meus serviços', audiences: ['cliente'], contexts: ['meus-servicos', 'avaliacao', 'acompanhamento'],
-    steps: ['Abra o acompanhamento do serviço concluído.', 'Acesse o link de avaliação recebido.', 'Escolha a nota e escreva um comentário honesto antes de enviar.']
+    steps: ['Abra o acompanhamento do serviço concluído.', 'Acesse o link de avaliação recebido ou o botão de avaliação exibido na página.', 'Escolha a nota e escreva um comentário honesto antes de enviar.']
   },
   {
     id: 'garantia', title: 'Como funciona a garantia ou reclamação', summary: 'Use o acompanhamento para registrar uma situação relacionada a um serviço concluído.', category: 'Meus serviços', audiences: ['cliente'], contexts: ['meus-servicos', 'acompanhamento'],
