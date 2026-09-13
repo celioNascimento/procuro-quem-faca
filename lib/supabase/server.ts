@@ -2,15 +2,15 @@
 
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { getSupabasePublicEnv } from './env'
 
 // Uso: dentro de um Server Component ou Route Handler
 // const supabase = await createClient()
 export async function createClient() {
   const cookieStore = await cookies()
+  const { url, anonKey } = getSupabasePublicEnv()
 
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  return createServerClient(url, anonKey,
     {
       cookies: {
         getAll: () => cookieStore.getAll(),

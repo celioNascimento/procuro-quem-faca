@@ -2,21 +2,21 @@
 
 import { createBrowserClient } from '@supabase/ssr'
 import { createClient as createPublicSupabaseClient } from '@supabase/supabase-js'
+import { getSupabasePublicEnv } from './env'
 
 export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const { url, anonKey } = getSupabasePublicEnv()
+  return createBrowserClient(url, anonKey)
 }
 
 // Consultas públicas não precisam de cookies, sessão ou locks do navegador.
 // Um cliente stateless evita que proteções de privacidade do Brave interfiram
 // nas buscas anônimas do catálogo.
 export function createPublicClient() {
+  const { url, anonKey } = getSupabasePublicEnv()
   return createPublicSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       auth: {
         persistSession: false,
