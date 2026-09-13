@@ -16,8 +16,6 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
 
   const isConcluido = projeto.status === 'finalizado'
 
-  // Garantia tem prioridade visual sobre "concluído" — o serviço pode estar
-  // finalizado, mas há algo pendente que o cliente precisa resolver.
   const statusLabel = temGarantiaAtiva
     ? 'Garantia em andamento'
     : isConcluido
@@ -29,11 +27,11 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
   const statusText  = temGarantiaAtiva ? 'text-orange-600' : isConcluido ? 'text-green-600' : 'text-blue-600'
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 flex flex-col gap-4 transition-all hover:shadow-md">
+    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 flex flex-col gap-3 transition-all hover:shadow-md">
 
       {/* ── Topo: Avatar e Informações ── */}
-      <div className="flex items-center gap-4">
-        <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 md:size-28">
+      <div className="flex items-center gap-3">
+        <div className="flex size-16 sm:size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
           <img
             src={prestador?.foto_perfil || '/placeholder-avatar.png'}
             className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:scale-[1.02]"
@@ -55,12 +53,10 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
       </div>
 
       {/* ── Base: Status e Ações ── */}
-      <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-50">
+      <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-50">
 
-        {/* Status Badge */}
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/50 ${statusBg}`}>
           <div className="relative flex h-2 w-2 shrink-0">
-            {/* Pulse só quando há algo ativo pendente (em execução ou garantia) */}
             {(!isConcluido || temGarantiaAtiva) && (
               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${statusColor}`} />
             )}
@@ -72,7 +68,6 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
           </span>
         </div>
 
-        {/* Botões de Ação */}
         <div className="flex items-center gap-2 shrink-0">
           {onShare && (
             <button
