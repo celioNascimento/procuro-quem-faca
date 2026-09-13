@@ -35,7 +35,6 @@ export function AdCardPainelCliente({
     if (loading) return
 
     let cancelado = false
-    queueMicrotask(() => setAnuncio(undefined))
 
     async function carregar() {
       try {
@@ -88,7 +87,7 @@ export function AdCardPainelCliente({
             anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
             setAnuncio(anuncioEncontrado as AnuncioComAnunciante)
           } else {
-      queueMicrotask(() => setAnuncio(null))
+            setAnuncio(null)
           }
         }
       } catch {
@@ -118,9 +117,9 @@ export function AdCardPainelCliente({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto transition-all">
+    <div className="w-full max-w-4xl mx-auto min-h-[140px]">
       {anuncio === undefined || loading ? (
-        <div className="w-full h-[90px] md:h-[120px] lg:h-[140px] bg-zinc-50 border border-zinc-100 animate-pulse rounded-2xl" />
+        <div className="w-full h-[140px] bg-zinc-50 border border-zinc-100 rounded-2xl" />
       ) : anuncio === null ? (
         <div className="w-full">
           <AdCardFallback fallback={FALLBACK_PADRAO} />
