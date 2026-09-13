@@ -44,18 +44,8 @@ export default function PaginaAcompanhamento({
     handleShare, handleEnviarComentario,
   } = useAcompanhamento(token)
 
-  // Fluxo sem_fotos: travado na criação do projeto (ver migration
-  // portfolio_projetos.sem_fotos). Quando true, a página usa a timeline
-  // simplificada e desativa a seção de garantia (decisão de produto —
-  // garantia depende de evidência fotográfica para abertura de caso).
   const semFotos = projeto?.sem_fotos ?? false
 
-  // "Pronto para avaliar" — mesma regra usada em useServicosCliente.ts
-  // (estaProntoParaAvaliar): fluxo com fotos depende da foto 3 enviada,
-  // fluxo sem_fotos depende do prestador ter marcado como concluído.
-  // Antes, essa condição só liberava o link de avaliação enviado pelo
-  // prestador via WhatsApp; agora também libera um botão direto aqui,
-  // sem tirar a opção do prestador continuar enviando o link manualmente.
   const podeAvaliar = semFotos
     ? !!projeto?.marcado_concluido_at
     : fotosOrdenadas.some(f => f.ordem === 3)
@@ -64,7 +54,7 @@ export default function PaginaAcompanhamento({
     caso: casoGarantia,
     loading: loadingCaso,
     recarregar: recarregarCaso,
-    temGarantiaAtiva,          // derivado pelo hook — ativo só para status em andamento
+    temGarantiaAtiva,
   } = useCasoGarantiaDoProjeto(projeto?.id ?? null)
 
   const [clienteUserId, setClienteUserId] = useState<string | null>(null)
@@ -80,9 +70,6 @@ export default function PaginaAcompanhamento({
   if (!projeto) return null
 
   const projetoFinalizado = projeto.status === 'finalizado'
-  // Botão só aparece enquanto ainda não foi avaliado (status='em_execucao')
-  // — depois de finalizado, a avaliação já foi feita e o botão some,
-  // mesmo comportamento do link de WhatsApp que já existia.
   const mostrarBotaoAvaliar = podeAvaliar && projeto.status === 'em_execucao'
 
   return (
@@ -106,7 +93,11 @@ export default function PaginaAcompanhamento({
                 statusGarantia={casoGarantia?.status}
               />
             )}
-            <RodapeSeguranca />
+            {/* Rodapé visível só em desktop — em mobile aparece no fim
+                da coluna principal para respeitar o fluxo de leitura. */}
+            <div className="hidden lg:block">
+              <RodapeSeguranca />
+            </div>
           </aside>
 
           <div className="flex-1 min-w-0 space-y-5">
@@ -132,9 +123,6 @@ export default function PaginaAcompanhamento({
               />
             )}
 
-            {/* Botão direto para avaliar — não depende mais só do link
-                enviado pelo prestador via WhatsApp (que continua existindo
-                como alternativa). Mesma condição nos dois fluxos. */}
             {mostrarBotaoAvaliar && (
               <Link
                 href={`/avaliar/${projeto.avaliacao_token}`}
@@ -179,8 +167,6 @@ export default function PaginaAcompanhamento({
               </section>
             )}
 
-            {/* Garantia elegível por garantia_dias (verificarElegibilidadeGarantia),
-                independente de sem_fotos */}
             {projetoFinalizado && clienteUserId && (
               <GarantiaSecaoCliente
                 projetoId={projeto.id}
@@ -191,6 +177,7 @@ export default function PaginaAcompanhamento({
               />
             )}
 
+            {/* Rodapé em mobile — no desktop está na aside. */}
             <div className="lg:hidden">
               <RodapeSeguranca />
             </div>
@@ -219,4 +206,3 @@ export default function PaginaAcompanhamento({
     </div>
   )
 }
-
