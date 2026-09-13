@@ -22,7 +22,7 @@ function RedirecionarParaDashboard() {
   }, [router, searchParams])
 
   return (
-    <div className="p-20 text-center animate-pulse font-bold text-slate-300 uppercase tracking-widest">
+    <div className="flex min-h-64 items-center justify-center p-8 text-center font-bold uppercase tracking-widest text-slate-300">
       Redirecionando...
     </div>
   )
@@ -31,7 +31,7 @@ function RedirecionarParaDashboard() {
 export default function PerfilPage() {
   return (
     <Suspense fallback={
-      <div className="p-20 text-center animate-pulse font-bold text-slate-300 uppercase tracking-widest">
+      <div className="flex min-h-64 items-center justify-center p-8 text-center font-bold uppercase tracking-widest text-slate-300">
         Redirecionando...
       </div>
     }>

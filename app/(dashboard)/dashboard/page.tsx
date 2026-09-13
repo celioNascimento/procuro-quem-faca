@@ -130,7 +130,7 @@ function PerfilPageContent() {
         </div>
       </nav>
 
-      <div className="animate-in fade-in duration-300 pt-6 sm:pt-8">
+      <div className="min-h-[28rem] pt-6 sm:pt-8">
         {validando ? (
           <div className="flex min-h-64 flex-col items-center justify-center gap-4" role="status">
             <Loader2 className="size-8 animate-spin text-blue-600" aria-hidden="true" />
