@@ -77,7 +77,7 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
       <Header href={urlRetorno} />
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 lg:px-8 lg:pt-32">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-center animate-in fade-in duration-500">
+        <div className="mx-auto flex h-[120px] w-full max-w-3xl items-center justify-center overflow-hidden animate-in fade-in duration-500 md:h-[140px]">
           <AdCard
             page="perfil_prestador"
             anuncio={anuncioTopo}
