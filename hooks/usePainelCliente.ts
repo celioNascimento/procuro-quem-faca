@@ -86,9 +86,16 @@ export function usePainelCliente() {
         if (whatsapp) projs = await getServicosPorWhatsapp(whatsapp)
       }
 
-      // 4. FILTRO ANTI-ESPELHO: Remove projetos onde o usuário atual é o PRESTADOR
+      // 4. FILTRO ANTI-ESPELHO: Remove projetos onde o usuário atual é o
+      // PRESTADOR, mas nunca descarte o projeto aberto por token. O token é
+      // uma seleção explícita feita no perfil do cliente e precisa continuar
+      // visível mesmo quando a conta também possui vínculo como prestador.
       if (projs.length > 0) {
-        projs = projs.filter(p => p.prestadores?.user_id !== user.id)
+        projs = projs.filter(p =>
+          token && p.avaliacao_token === token
+            ? true
+            : p.prestadores?.user_id !== user.id,
+        )
       }
 
       if (projs.length > 0) {
