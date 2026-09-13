@@ -82,8 +82,6 @@ export function AdCardPainelCliente({
         if (!cancelado) {
           if (anunciosDaPraca && anunciosDaPraca.length > 0) {
             const anuncioEncontrado = anunciosDaPraca[0].anuncios as unknown as AnuncioComMetrica
-            // id da linha de anuncios_segmentacoes — necessário para atribuir
-            // a métrica à praça correta em registrarMetricaAnuncio.
             anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
             setAnuncio(anuncioEncontrado as AnuncioComAnunciante)
           } else {
@@ -96,6 +94,8 @@ export function AdCardPainelCliente({
     }
 
     if (servicos.length > 0) {
+      carregar()
+    } else if (prestadorId) {
       carregar()
     } else if (!loading) {
       queueMicrotask(() => setAnuncio(null))
@@ -117,7 +117,9 @@ export function AdCardPainelCliente({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto min-h-[140px]">
+    // min-h só durante loading para evitar layout shift — depois o
+    // conteúdo dita a altura, sem espaço extra abaixo do fallback.
+    <div className={`w-full max-w-4xl mx-auto${anuncio === undefined || loading ? ' min-h-[140px]' : ''}`}>
       {anuncio === undefined || loading ? (
         <div className="w-full h-[140px] bg-zinc-50 border border-zinc-100 rounded-2xl" />
       ) : anuncio === null ? (
