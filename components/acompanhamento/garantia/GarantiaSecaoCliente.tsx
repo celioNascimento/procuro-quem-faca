@@ -112,31 +112,39 @@ export function GarantiaSecaoCliente({
   const ehReclamacao = caso.tipo === 'reclamacao'
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 px-1">
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">
-          {ehReclamacao ? 'Reclamação' : 'Garantia'}
-        </span>
-        <span className="text-[9px] font-medium text-slate-400">
-          Continuação deste projeto
-        </span>
+    <section
+      className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+      aria-labelledby="garantia-titulo"
+    >
+      <div className="mb-5 flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">
+            {ehReclamacao ? 'Reclamação' : 'Garantia'}
+          </p>
+          <h2 id="garantia-titulo" className="mt-1 text-base font-black uppercase italic tracking-tight text-slate-800">
+            Acompanhamento do caso
+          </h2>
+        </div>
+        <ShieldCheck size={20} className="shrink-0 text-orange-400" aria-hidden="true" />
       </div>
 
-      {caso.status === 'aguardando_aceite_cliente' && (
-        <GarantiaAguardandoAceiteCliente caso={caso} onAtualizado={recarregar} />
-      )}
+      <div className="space-y-4">
+        {caso.status === 'aguardando_aceite_cliente' && (
+          <GarantiaAguardandoAceiteCliente caso={caso} onAtualizado={recarregar} />
+        )}
 
-      {caso.status === 'aberta' && (
-        <GarantiaAbertaCliente caso={caso} clienteUserId={clienteUserId} />
-      )}
+        {caso.status === 'aberta' && (
+          <GarantiaAbertaCliente caso={caso} clienteUserId={clienteUserId} />
+        )}
 
-      {caso.status === 'respondida' && (
-        <GarantiaRespondidaCliente caso={caso} clienteUserId={clienteUserId} onAtualizado={recarregar} />
-      )}
+        {caso.status === 'respondida' && (
+          <GarantiaRespondidaCliente caso={caso} clienteUserId={clienteUserId} onAtualizado={recarregar} />
+        )}
 
-      {['resolvida', 'sem_resposta', 'recusada'].includes(caso.status) && (
-        <GarantiaFinalizadaCliente caso={caso} clienteUserId={clienteUserId} />
-      )}
-    </div>
+        {['resolvida', 'sem_resposta', 'recusada'].includes(caso.status) && (
+          <GarantiaFinalizadaCliente caso={caso} clienteUserId={clienteUserId} />
+        )}
+      </div>
+    </section>
   )
 }
