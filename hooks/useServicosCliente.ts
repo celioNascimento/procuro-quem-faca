@@ -121,24 +121,25 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
 
   // ── Rotas ───────────────────────────────────────────────────────────────────
   const getRotaDestino = (s: ClienteServico) => {
-    const pronto      = estaProntoParaAvaliar(s)
-    const jaAvaliado = s.avaliacoes?.length > 0
+    const status       = s.status?.toLowerCase()
+    const pronto       = estaProntoParaAvaliar(s)
+    const jaAvaliado   = s.avaliacoes?.length > 0
 
-    if (s.status === 'pendente')
-      return `/meus-servicos?token=${s.avaliacao_token}`
+    if (status === 'pendente')
+      return `/meus-servicos?token=${encodeURIComponent(s.avaliacao_token)}`
 
-    if (s.status === 'em_execucao' && !pronto)
+    if (status === 'em_execucao' && !pronto)
       return `/acompanhamento/${s.avaliacao_token}`
 
-    if (s.status === 'em_execucao' && pronto)
+    if (status === 'em_execucao' && pronto)
       return `/avaliar/${s.avaliacao_token}`
 
     // Finalizado — se já avaliou, vai para acompanhamento (onde vive a garantia);
     // se ainda não avaliou, vai para a página de avaliação.
-    if (s.status === 'finalizado' && jaAvaliado)
+    if (status === 'finalizado' && jaAvaliado)
       return `/acompanhamento/${s.avaliacao_token}`
 
-    if (s.status === 'finalizado')
+    if (status === 'finalizado')
       return `/avaliar/${s.avaliacao_token}`
 
     return `/acompanhamento/${s.avaliacao_token}`
