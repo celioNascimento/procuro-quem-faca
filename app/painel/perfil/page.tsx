@@ -308,7 +308,9 @@ export default function PerfilDoCliente() {
                         }
                         onClick={() => handleNavigation(
                           new MouseEvent('click') as unknown as ReactMouseEvent<Element>,
-                          `/meus-servicos?token=${encodeURIComponent(s.avaliacao_token)}&origem=perfil`,
+                          getRota(s).startsWith('/meus-servicos')
+                            ? `${getRota(s)}&origem=perfil`
+                            : getRota(s),
                         )}
                       />
                     ))}
