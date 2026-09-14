@@ -1,8 +1,8 @@
 # Matriz de homologação E2E fora de `/admin`
 
-> Documento da fase 1: especifica o comportamento que deverá ser homologado antes de qualquer configuração do Playwright. A rota `/admin`, suas páginas, APIs, componentes e fluxos não fazem parte deste escopo.
+> Documento da fase 2: define a configuração inicial e a matriz de homologação automatizada. A rota `/admin`, suas páginas, APIs, componentes e fluxos não fazem parte deste escopo.
 >
-> Status desta revisão: matriz baseada na implementação e na documentação existentes em 14/09/2026. Itens marcados como **PENDENTE** exigem confirmação ou correção antes de virarem teste automatizado.
+> Status desta revisão: configuração Playwright criada em 14/09/2026. Os fluxos mutáveis continuam condicionados a fixtures e credenciais exclusivas de homologação; itens **PENDENTE** não são aprovação funcional.
 
 ## Como usar a matriz
 
@@ -127,6 +127,19 @@
 - Para cada ação, exigir pelo menos uma evidência: URL, estado acessível, mensagem, request/response ou persistência consultável.
 - Marcar como `skip` apenas fluxos sem pré-condição disponível, com motivo e ticket/pendência associado.
 - A configuração Playwright, fixtures, scripts npm e execução automatizada ficam para a fase 2, após esta documentação ser validada e as pendências acima decididas.
+
+## Configuração automatizada entregue
+
+A configuração inicial está em `playwright.config.ts` e cobre Chromium desktop e mobile. Por padrão, o comando inicia `npm run dev`; em CI ou contra um ambiente dedicado, defina `E2E_BASE_URL` para evitar iniciar um servidor local. Os testes em `tests/e2e` apenas navegam e inspecionam controles visíveis nesta etapa; não submetem formulários mutáveis nem usam credenciais reais.
+
+```bash
+npm run test:e2e
+E2E_BASE_URL=https://homologacao.exemplo.test npm run test:e2e
+npm run test:e2e:ui
+npm run test:e2e:report
+```
+
+A auditoria falha quando encontra controle visível sem nome acessível ou link apontando para `/admin`. Rotas dinâmicas e fluxos com sessão, token, upload ou persistência devem ser adicionados somente depois que as variáveis `E2E_*` e fixtures isoladas forem definidas.
 
 ## Critério de aceite documental
 

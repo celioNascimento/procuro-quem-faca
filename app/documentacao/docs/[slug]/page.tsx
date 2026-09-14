@@ -74,7 +74,7 @@ export default async function DocumentoAdminPage({ params }: { params: Promise<{
 
   return (
     <article className="mx-auto max-w-4xl space-y-6">
-      <Link href="/admin/documentacao" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-blue-600 hover:text-blue-800">
+      <Link href="/" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-blue-600 hover:text-blue-800">
         <ArrowLeft size={14} aria-hidden="true" /> Voltar para documentação
       </Link>
       <header className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
