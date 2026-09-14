@@ -167,14 +167,6 @@ export function usePainelCliente() {
 
     await aceitarServico(servico.id, nome, session?.user?.id)
 
-    setServicos(prev =>
-      prev.map(s =>
-        s.id === servico.id
-          ? { ...s, status: 'em_execucao', aceito_at: new Date().toISOString() }
-          : s
-      )
-    )
-
     router.push(`/acompanhamento/${servico.avaliacao_token}`)
   }
 
