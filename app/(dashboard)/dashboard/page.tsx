@@ -54,6 +54,7 @@ function PerfilPageContent() {
 
   return (
     <div className="mx-auto w-full max-w-6xl">
+      {/* ── Cabeçalho ── */}
       <header className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-6">
         <div className="flex max-w-2xl flex-col gap-2">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área profissional</p>
@@ -61,8 +62,9 @@ function PerfilPageContent() {
         </div>
       </header>
 
+      {/* ── Alerta de bloqueio ── */}
       {bloqueado && (
-        <section className="mt-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-950" role="alert" aria-labelledby="perfil-bloqueado-titulo">
+        <section className="mt-4 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-950" role="alert" aria-labelledby="perfil-bloqueado-titulo">
           <ShieldAlert className="mt-0.5 size-5 shrink-0 text-red-600" aria-hidden="true" />
           <div className="min-w-0 space-y-1">
             <h2 id="perfil-bloqueado-titulo" className="text-sm font-black uppercase tracking-wide text-red-700">Seu perfil está bloqueado</h2>
@@ -94,11 +96,16 @@ function PerfilPageContent() {
         </section>
       )}
 
-      <div className="flex flex-col gap-0 pt-2 sm:gap-1 sm:pt-3">
+      {/*
+        AJUSTE: removido o wrapper com gap/pt inconsistentes.
+        mt-4 alinha o AdCard com o mesmo ritmo do alerta de bloqueio e do nav abaixo.
+      */}
+      <div className="mt-4">
         <AdCardDashboard />
       </div>
 
-      <nav className="sticky top-16 z-40 mt-1 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
+      {/* ── Nav de abas ── */}
+      <nav className="sticky top-16 z-40 mt-4 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
         <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {abas.map(aba => {
             const ativa = abaAtiva === aba.id
