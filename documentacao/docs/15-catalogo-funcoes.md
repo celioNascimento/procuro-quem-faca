@@ -37,6 +37,8 @@ As páginas exportam o componente default descrito abaixo. Handlers `GET`/`POST`
 | [`app/(perfil)/[slug]/PerfilPublicoClient.tsx`](../../app/(perfil)/[slug]/PerfilPublicoClient.tsx) | `PerfilPublicoClient` e `PerfilCarregado`; `carregarAnuncio` busca anúncio contextual. |
 | [`app/cadastro/page.tsx`](../../app/cadastro/page.tsx) | `CadastroPage`, `FormularioCadastro`, `CadastroSkeleton`: carregamento e formulário de onboarding. |
 | [`app/login/page.tsx`](../../app/login/page.tsx) | `Login`: tela de entrada; lógica principal está em `useLoginForm`. |
+| [`app/recuperar-senha/page.tsx`](../../app/recuperar-senha/page.tsx) | `RecuperarSenha`: solicitação/definição de nova senha; usa `useNovaSenha`. |
+| [`app/auth/link-expirado/page.tsx`](../../app/auth/link-expirado/page.tsx) | `LinkExpirado`: estado de recovery inválido ou expirado. |
 | [`app/acompanhamento/[token]/page.tsx`](../../app/acompanhamento/[token]/page.tsx) | `PaginaAcompanhamento`: tela pública protegida por token. |
 | [`app/avaliar/[token]/page.tsx`](../../app/avaliar/[token]/page.tsx) | `PaginaAvaliar`: entrada do formulário de avaliação por token. |
 | [`app/meus-servicos/page.tsx`](../../app/meus-servicos/page.tsx) | `MeusServicosPage`: painel de serviços do cliente. |
@@ -44,7 +46,16 @@ As páginas exportam o componente default descrito abaixo. Handlers `GET`/`POST`
 | [`app/(dashboard)/dashboard/page.tsx`](../../app/(dashboard)/dashboard/page.tsx) | `PerfilPage`, `PerfilPageContent`: dashboard do prestador. |
 | [`app/(dashboard)/dashboard/perfil/page.tsx`](../../app/(dashboard)/dashboard/perfil/page.tsx) | `PerfilPage`, `RedirecionarParaDashboard`: compatibilidade/redirect. |
 | [`app/denunciar/[id]/page.tsx`](../../app/denunciar/[id]/page.tsx) | `PaginaDenuncia`, `enviarDenuncia`: submissão de denúncia. |
+| [`app/reivindicar/page.tsx`](../../app/reivindicar/page.tsx) | `Reivindicar`: encaminha para cadastro com `?reivindicar=<id>`. |
 | [`app/confirmar-exclusao/page.tsx`](../../app/confirmar-exclusao/page.tsx) | `ConfirmarExclusao`: confirmação do fluxo de remoção de conta. |
+| [`app/sucesso/page.tsx`](../../app/sucesso/page.tsx) | `Sucesso`: confirmação pós-avaliação e compartilhamento genérico. |
+| [`app/quem-somos/page.tsx`](../../app/quem-somos/page.tsx) | `QuemSomos`: página institucional com CTAs públicos. |
+| [`app/ajuda/page.tsx`](../../app/ajuda/page.tsx) | `Ajuda`: página de suporte e orientações. |
+| [`app/termos/page.tsx`](../../app/termos/page.tsx) | `Termos`: conteúdo legal e retorno ao histórico. |
+| [`app/privacidade/page.tsx`](../../app/privacidade/page.tsx) | `Privacidade`: conteúdo legal e retorno ao histórico. |
+| [`app/documentacao/docs/[slug]/page.tsx`](../../app/documentacao/docs/[slug]/page.tsx) | `DocumentacaoDoc`: renderização pública de documento; retorno atualmente aponta para `/admin/documentacao` e está pendente de correção. |
+| [`app/not-found.tsx`](../../app/not-found.tsx) | Estado 404 e CTA de retorno à home. |
+| [`app/error.tsx`](../../app/error.tsx) | Estado de erro e callback `reset` para recuperação. |
 | [`app/auth/callback/route.ts`](../../app/auth/callback/route.ts) | Callback OAuth; troca o código e resolve destino pós-login. |
 | [`app/api/delete-account/route.ts`](../../app/api/delete-account/route.ts) | Route Handler de exclusão via cliente administrativo. |
 | [`app/api/garantia/responder/route.ts`](../../app/api/garantia/responder/route.ts) | Handler de resposta de garantia; `calcularPrazoUteis` calcula prazo de dias úteis. |
