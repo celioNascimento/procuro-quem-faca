@@ -76,7 +76,13 @@ export default function PaginaAcompanhamento({
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased">
       <HeaderCliente nomeCliente={projeto.cliente_nome} />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 md:pt-28 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/*
+        AJUSTE 1: pt-16 → pt-24 no mobile.
+        O header fixo tem ~56-64px de altura; com pt-16 (64px) o card ficava
+        colado. pt-24 (96px) abre o respiro necessário sem mexer no desktop
+        (md:pt-28 permanece igual).
+      */}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-24 md:pt-28 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex flex-col lg:flex-row lg:items-start gap-6">
 
           <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-32 space-y-4">
@@ -101,27 +107,36 @@ export default function PaginaAcompanhamento({
           </aside>
 
           <div className="flex-1 min-w-0 space-y-5">
-            <AdCardPainelCliente
-              servicos={[]}
-              prestadorId={projeto.prestador_id}
-            />
 
-            {semFotos ? (
-              <LinhaDeTempoSemFotos
-                status={projeto.status}
-                aceitoEm={projeto.aceito_at ?? null}
-                marcadoConcluidoEm={projeto.marcado_concluido_at ?? null}
+            {/*
+              AJUSTE 2: AdCard + LinhaDeTempo dentro de um wrapper com gap-3
+              em vez de herdar o space-y-5 da coluna pai.
+              O anúncio e a linha do tempo ficam visualmente agrupados (12px)
+              enquanto o restante dos cards mantém o espaçamento original (20px).
+            */}
+            <div className="flex flex-col gap-3">
+              <AdCardPainelCliente
+                servicos={[]}
+                prestadorId={projeto.prestador_id}
               />
-            ) : (
-              <LinhaDeTempo
-                fotosOrdenadas={fotosOrdenadas}
-                comentarios={comentarios}
-                labelEtapaAtual={labelEtapaAtual}
-                status={projeto.status}
-                onFotoClick={setFotoSelecionada}
-                temGarantiaAtiva={temGarantiaAtiva}
-              />
-            )}
+
+              {semFotos ? (
+                <LinhaDeTempoSemFotos
+                  status={projeto.status}
+                  aceitoEm={projeto.aceito_at ?? null}
+                  marcadoConcluidoEm={projeto.marcado_concluido_at ?? null}
+                />
+              ) : (
+                <LinhaDeTempo
+                  fotosOrdenadas={fotosOrdenadas}
+                  comentarios={comentarios}
+                  labelEtapaAtual={labelEtapaAtual}
+                  status={projeto.status}
+                  onFotoClick={setFotoSelecionada}
+                  temGarantiaAtiva={temGarantiaAtiva}
+                />
+              )}
+            </div>
 
             {mostrarBotaoAvaliar && (
               <Link
