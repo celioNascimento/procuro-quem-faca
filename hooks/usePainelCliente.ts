@@ -43,6 +43,7 @@ export function usePainelCliente() {
     token: string | null,
   ) => {
     setLoading(true)
+    setServicos([])
     try {
       const [prof, projetosIniciais, projetosDoCliente] = await Promise.all([
         getProfile(user.id),
