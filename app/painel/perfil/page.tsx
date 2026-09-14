@@ -53,10 +53,6 @@ export default function PerfilDoCliente() {
     reclamacaoCount,
   } = usePerfilCliente()
 
-  // Controla se o card de resumo de avaliações recebidas tem conteúdo.
-  // O próprio card decide isso internamente (via useAvaliacoesRecebidasCliente)
-  // e avisa aqui — a condição do carrossel abaixo não precisa conhecer a
-  // regra interna (total > 0) nem refazer a query.
   const [temAvaliacoesRecebidas, setTemAvaliacoesRecebidas] = useState(false)
 
   if (loading || !perfilCarregado || loadingServicos) {
@@ -142,74 +138,75 @@ export default function PerfilDoCliente() {
             </div>
           </aside>
 
-<div className="flex min-w-0 flex-col gap-2">
+          {/*
+            AJUSTE: gap-2 → gap-3 para ritmo consistente.
+            Removidos -mx-1 e -mt-2 do carrossel — esses negativos
+            cancelavam o gap do pai e criavam o espaço irregular entre
+            o AdCard e os alertas.
+          */}
+          <div className="flex min-w-0 flex-col gap-3">
             <AdCardPainelCliente servicos={servicos} loading={loadingServicos} />
-            
+
             {(avaliarCount > 0 || garantiaCount > 0 || reclamacaoCount > 0 || temAvaliacoesRecebidas) && (
-              <div className="-mx-1 -mt-2 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1 sm:mx-0 sm:mt-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0">
-            {avaliarCount > 0 && (
-              <button
-                onClick={irParaAvaliar}
-                className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-blue-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-blue-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
-              >
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
-                  <Star size={22} className="text-white" fill="white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
-                    {avaliarCount === 1 ? '1 serviço aguarda avaliação' : `${avaliarCount} serviços aguardam avaliação`}
-                  </p>
-                  <p className="text-blue-200 text-[11px] font-medium mt-1">Toque para avaliar e concluir</p>
-                </div>
-                <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
-              </button>
-            )}
+              <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-0 pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0">
+                {avaliarCount > 0 && (
+                  <button
+                    onClick={irParaAvaliar}
+                    className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-blue-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-blue-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
+                  >
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
+                      <Star size={22} className="text-white" fill="white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
+                        {avaliarCount === 1 ? '1 serviço aguarda avaliação' : `${avaliarCount} serviços aguardam avaliação`}
+                      </p>
+                      <p className="text-blue-200 text-[11px] font-medium mt-1">Toque para avaliar e concluir</p>
+                    </div>
+                    <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
+                  </button>
+                )}
 
-            {garantiaCount > 0 && (
-              <button
-                onClick={() => { setAba('servicos'); setFiltroStatus('garantia') }}
-                className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
-              >
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
-                  <ShieldAlert size={22} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
-                    {garantiaCount === 1 ? '1 caso de garantia em aberto' : `${garantiaCount} casos de garantia em aberto`}
-                  </p>
-                  <p className="text-orange-200 text-[11px] font-medium mt-1">Toque para acompanhar</p>
-                </div>
-                <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
-              </button>
-            )}
+                {garantiaCount > 0 && (
+                  <button
+                    onClick={() => { setAba('servicos'); setFiltroStatus('garantia') }}
+                    className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
+                  >
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
+                      <ShieldAlert size={22} className="text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
+                        {garantiaCount === 1 ? '1 caso de garantia em aberto' : `${garantiaCount} casos de garantia em aberto`}
+                      </p>
+                      <p className="text-orange-200 text-[11px] font-medium mt-1">Toque para acompanhar</p>
+                    </div>
+                    <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
+                  </button>
+                )}
 
-            {reclamacaoCount > 0 && (
-              <button
-                onClick={() => { setAba('servicos'); setFiltroStatus('reclamacao') }}
-                className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
-              >
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
-                  <MessageCircleWarning size={22} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
-                    {reclamacaoCount === 1 ? '1 reclamação em aberto' : `${reclamacaoCount} reclamações em aberto`}
-                  </p>
-                  <p className="text-orange-200 text-[11px] font-medium mt-1">Toque para acompanhar</p>
-                </div>
-                <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
-              </button>
-            )}
+                {reclamacaoCount > 0 && (
+                  <button
+                    onClick={() => { setAba('servicos'); setFiltroStatus('reclamacao') }}
+                    className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
+                  >
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
+                      <MessageCircleWarning size={22} className="text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
+                        {reclamacaoCount === 1 ? '1 reclamação em aberto' : `${reclamacaoCount} reclamações em aberto`}
+                      </p>
+                      <p className="text-orange-200 text-[11px] font-medium mt-1">Toque para acompanhar</p>
+                    </div>
+                    <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
+                  </button>
+                )}
 
-            {/* Resumo das avaliações recebidas pelo cliente (feitas pelos
-                prestadores). Sempre montado — ele mesmo decide se tem
-                conteúdo via onVisibilidadeChange, respeitando o double-blind
-                já garantido pela RLS de avaliacoes_clientes. */}
-            <CardResumoAvaliacoesCliente
-              onVisibilidadeChange={setTemAvaliacoesRecebidas}
-              onClick={() => setAba('servicos')}
-            />
-
+                <CardResumoAvaliacoesCliente
+                  onVisibilidadeChange={setTemAvaliacoesRecebidas}
+                  onClick={() => setAba('servicos')}
+                />
               </div>
             )}
 
@@ -246,33 +243,33 @@ export default function PerfilDoCliente() {
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {[
-{ id: 'todos',       label: `Todos (${servicos.length})` },
-  { id: 'pendente',    label: `Aceitar (${servicos.filter(s => s.status?.toLowerCase() === 'pendente').length})` },
-  { id: 'andamento',   label: `Em andamento (${servicos.filter(s => s.status === 'em_execucao').length})` },
-  { id: 'avaliar',     label: `Avaliar (${avaliarCount})` },
-  { id: 'finalizados', label: `Concluídos (${servicos.filter(s => s.status === 'finalizado').length})` },
+                    { id: 'todos',       label: `Todos (${servicos.length})` },
+                    { id: 'pendente',    label: `Aceitar (${servicos.filter(s => s.status?.toLowerCase() === 'pendente').length})` },
+                    { id: 'andamento',   label: `Em andamento (${servicos.filter(s => s.status === 'em_execucao').length})` },
+                    { id: 'avaliar',     label: `Avaliar (${avaliarCount})` },
+                    { id: 'finalizados', label: `Concluídos (${servicos.filter(s => s.status === 'finalizado').length})` },
                     ...(garantiaCount > 0 ? [{ id: 'garantia', label: `Garantia (${garantiaCount})` }] : []),
                     ...(reclamacaoCount > 0 ? [{ id: 'reclamacao', label: `Reclamação (${reclamacaoCount})` }] : []),
                   ].map(f => {
                     const ehCasoAtivo = f.id === 'garantia' || f.id === 'reclamacao'
                     return (
-                    <button
-                      key={f.id}
-                      onClick={() => setFiltroStatus(f.id)}
-                      type="button"
-                      aria-pressed={filtroStatus === f.id}
-                      className={`min-h-10 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 ${
-                        filtroStatus === f.id
-                          ? ehCasoAtivo
-                            ? 'border-orange-600 bg-orange-600 text-white shadow-sm focus-visible:ring-orange-100'
-                            : 'border-blue-600 bg-blue-600 text-white shadow-sm focus-visible:ring-blue-100'
-                          : ehCasoAtivo
-                            ? 'border-orange-200 bg-white text-orange-500 hover:border-orange-300 focus-visible:ring-orange-100'
-                            : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600 focus-visible:ring-blue-100'
-                      }`}
-                    >
-                      {f.label}
-                    </button>
+                      <button
+                        key={f.id}
+                        onClick={() => setFiltroStatus(f.id)}
+                        type="button"
+                        aria-pressed={filtroStatus === f.id}
+                        className={`min-h-10 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 ${
+                          filtroStatus === f.id
+                            ? ehCasoAtivo
+                              ? 'border-orange-600 bg-orange-600 text-white shadow-sm focus-visible:ring-orange-100'
+                              : 'border-blue-600 bg-blue-600 text-white shadow-sm focus-visible:ring-blue-100'
+                            : ehCasoAtivo
+                              ? 'border-orange-200 bg-white text-orange-500 hover:border-orange-300 focus-visible:ring-orange-100'
+                              : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600 focus-visible:ring-blue-100'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
                     )
                   })}
                 </div>
