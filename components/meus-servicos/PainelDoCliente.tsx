@@ -3,7 +3,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { User, Clock, Loader2, ShieldAlert, Phone, AlertCircle } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import LoginGate from './LoginGate'
 import ServicoCard from './ServicoCard'
@@ -16,9 +16,8 @@ import { ContextualHelp } from '@/components/help/HelpCenter'
 
 export default function PainelDoCliente() {
   const router = useRouter()
-  const [tokenSelecionado] = useState<string | null>(() =>
-    typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('token')
-  )
+  const searchParams = useSearchParams()
+  const tokenSelecionado = searchParams.get('token')
 
   const {
     session, servicos, servicosGarantia, servicosReclamacao, loading,
@@ -238,8 +237,6 @@ export default function PainelDoCliente() {
                 </div>
               )}
 
-
-
             </div>
           </div>
 
@@ -297,10 +294,6 @@ export default function PainelDoCliente() {
                     <span className="text-[10px] font-bold text-slate-400">{outrosServicos.length}</span>
                   </div>
 
-                  {/* Aviso consolidado de pendências — só aparece quando há casos
-                      ativos em outros projetos deste prestador, contextualizado
-                      aqui em vez de na coluna esquerda para não interferir na
-                      decisão de aceite do projeto em destaque. */}
                   {(() => {
                     const pendenciasNosOutros = outrosServicos.filter(s =>
                       idsComGarantiaAtiva.has(s.id) || idsComReclamacaoAtiva.has(s.id)
