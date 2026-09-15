@@ -1,8 +1,8 @@
 //hooks/usePainelCliente.ts
 
 'use client'
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Servico } from '@/types/painel'
@@ -19,24 +19,26 @@ import {
 } from '../lib/services/painelCliente.service'
 
 export function usePainelCliente() {
-  const router = useRouter()
-  const [session, setSession]     = useState<Session | null>(null)
-  type ClienteProfile = Awaited<ReturnType<typeof getProfile>>
-  const [profile, setProfile]     = useState<ClienteProfile>(null)
-  const [servicos, setServicos]   = useState<Servico[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [zoomImage, setZoomImage] = useState<string | null>(null)
-  const userCarregadoRef = useRef<string | null>(null)
-  const tokenUrl = useMemo(() => {
-    if (typeof window === 'undefined') return null
-    return new URLSearchParams(window.location.search).get('token')
-  }, [])
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const tokenUrl     = searchParams.get('token')
 
-  const servicosGarantia = filtrarComGarantiaAtiva(servicos)
+  const [session, setSession]   = useState<Session | null>(null)
+  type ClienteProfile = Awaited<ReturnType<typeof getProfile>>
+  const [profile, setProfile]   = useState<ClienteProfile>(null)
+  const [servicos, setServicos] = useState<Servico[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [zoomImage, setZoomImage] = useState<string | null>(null)
+
+  // Rastreia qual user já foi carregado para evitar re-fetch desnecessário
+  // quando onAuthStateChange dispara após getSession já ter resolvido.
+  const [userCarregadoId, setUserCarregadoId] = useState<string | null>(null)
+
+  const servicosGarantia   = filtrarComGarantiaAtiva(servicos)
   const servicosReclamacao = filtrarComReclamacaoAtiva(servicos)
 
   const [confirmandoWhatsapp, setConfirmandoWhatsapp] = useState<Servico | null>(null)
-  const [confirmandoErro, setConfirmandoErro] = useState<string | null>(null)
+  const [confirmandoErro, setConfirmandoErro]         = useState<string | null>(null)
 
   const buscarDados = useCallback(async (
     user: { id: string },
@@ -107,7 +109,7 @@ export function usePainelCliente() {
       if (cancelado) return
       setSession(session)
       if (session) {
-        userCarregadoRef.current = session.user.id
+        setUserCarregadoId(session.user.id)
         void buscarDados(session.user, tokenUrl)
       } else {
         setLoading(false)
@@ -127,12 +129,12 @@ export function usePainelCliente() {
       (_event, session) => {
         setSession(session)
         if (!session) {
-          userCarregadoRef.current = null
+          setUserCarregadoId(null)
           setLoading(false)
           return
         }
-        if (userCarregadoRef.current === session.user.id) return
-        userCarregadoRef.current = session.user.id
+        if (userCarregadoId === session.user.id) return
+        setUserCarregadoId(session.user.id)
         buscarDados(session.user, tokenUrl)
       }
     )
@@ -141,11 +143,13 @@ export function usePainelCliente() {
       cancelado = true
       subscription.unsubscribe()
     }
-  }, [tokenUrl, buscarDados])
+  // tokenUrl agora vem de useSearchParams e é reativo — re-executa
+  // buscarDados quando a URL muda (ex: navegação client-side com token novo).
+  }, [tokenUrl, buscarDados, userCarregadoId])
 
   const handleAceitar = async (servico: Servico) => {
     const whatsappProjeto = servico.cliente_whatsapp?.replace(/\D/g, '') ?? ''
-    const whatsappPerfil = profile?.whatsapp?.replace(/\D/g, '') ?? ''
+    const whatsappPerfil  = profile?.whatsapp?.replace(/\D/g, '') ?? ''
 
     if (whatsappProjeto && whatsappPerfil !== whatsappProjeto) {
       setConfirmandoWhatsapp(servico)
