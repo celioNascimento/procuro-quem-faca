@@ -9,3 +9,5 @@ export default function MeusServicosPage() {
     <Suspense fallback={<PainelDoClienteSkeleton />}>
       <PainelDoCliente />
     </Suspense>
+  )
+}
