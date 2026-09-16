@@ -8,7 +8,7 @@ type PrestadorSitemapRow = {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://procuroquemfaca.com.br'
-  const agora = new Date().toISOString()
+  const agora = new Date()
 
   const { data } = await supabase
     .from('prestadores')
