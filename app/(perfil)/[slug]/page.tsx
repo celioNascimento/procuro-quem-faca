@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import PerfilPublicoClient from './PerfilPublicoClient'
+import ServicoPage, { getServicoMetadata } from '@/components/seo-service-page'
 
 type PerfilSeo = {
   nome: string | null
@@ -60,6 +61,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
+  if (/^.+-em-.+$/.test(slug)) {
+    return getServicoMetadata(slug)
+  }
+
   const perfil = await buscarPerfil(slug)
 
   if (!perfil) {
@@ -95,6 +100,16 @@ export async function generateMetadata({
   }
 }
 
-export default function PerfilPublicoPage() {
+export default async function PerfilPublicoPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+
+  if (/^.+-em-.+$/.test(slug)) {
+    return <ServicoPage params={Promise.resolve({ slug })} />
+  }
+
   return <PerfilPublicoClient />
 }

@@ -4,6 +4,9 @@ import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://procuroquemfaca.com.br'),
+  alternates: {
+    canonical: 'https://procuroquemfaca.com.br',
+  },
   title: {
     default: "Encontre Profissionais na Sua Região",
     template: "%s | Procuro Quem Faça"
