@@ -93,7 +93,7 @@ export function AdCard({ page, anuncio, categoria }: Props) {
         <ins
           className="adsbygoogle"
           style={{ display: 'block' }}
-          data-ad-client={anuncio.adsense_client ?? 'ca-pub-XXXXXXXXXXXXXXXX'}
+          data-ad-client={anuncio.adsense_client ?? 'ca-pub-7818876710105434'}
           data-ad-slot={anuncio.adsense_slot}
           data-ad-format="auto"
           data-full-width-responsive="true"
