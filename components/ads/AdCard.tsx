@@ -44,11 +44,18 @@ export function AdCard({ page, anuncio, categoria }: Props) {
       return
     }
 
+    // Inicializa o slot do AdSense
+    try {
+      ;(window.adsbygoogle = window.adsbygoogle || []).push({})
+    } catch {
+      // AdSense ainda não carregou — o script global inicializa os slots pendentes automaticamente
+    }
+
     const timer = setTimeout(() => {
       const el = adRef.current
       if (!el || el.offsetHeight <= 10) setMostrarFallback(true)
     }, 2000)
-    
+
     return () => clearTimeout(timer)
   }, [anuncio, expirado, agendado])
 
@@ -93,7 +100,7 @@ export function AdCard({ page, anuncio, categoria }: Props) {
         <ins
           className="adsbygoogle"
           style={{ display: 'block' }}
-          data-ad-client={anuncio.adsense_client ?? 'ca-pub-XXXXXXXXXXXXXXXX'}
+          data-ad-client="ca-pub-7818876710105434"
           data-ad-slot={anuncio.adsense_slot}
           data-ad-format="auto"
           data-full-width-responsive="true"
