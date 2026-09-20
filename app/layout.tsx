@@ -1,5 +1,6 @@
 import "./globals.css"
 import { Suspense } from 'react'
+import Script from 'next/script'
 import { geistSans, geistMono } from "@/lib/fonts"
 import FooterWrapper from "@/components/FooterWrapper"
 import CookieConsent from "@/components/CookieConsent"
@@ -34,6 +35,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Analytics />
           <SpeedInsights />
         </PostHogProvider>
+
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7818876710105434"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   )
