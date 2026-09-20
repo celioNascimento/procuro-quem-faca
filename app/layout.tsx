@@ -9,6 +9,7 @@ import { PostHogPageview } from "@/components/PostHogPageview"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { LocationProvider } from "@/lib/contexts/LocationContext"
+import Script from "next/script"
 
 export { metadata } from "./metadata"
 
@@ -33,6 +34,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <Analytics />
           <SpeedInsights />
+          <Script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7818876710105434"
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
         </PostHogProvider>
       </body>
     </html>
