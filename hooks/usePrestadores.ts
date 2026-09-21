@@ -249,7 +249,14 @@ export function usePrestadores() {
   // ─── Lista final com todos os filtros aplicados ───────────────────────────
   // Ordem de prioridade: URL > query textual ("em X") > contexto do usuário
   const cidadeDaBusca = queryBusca.match(/^(.+?)\s+em\s+(.+)$/i)?.[2]?.trim() || null
-  const cidadeEfetiva = filtroCidade || cidadeDaBusca || (!locationLoading ? cidadeAtual?.nome : null) || null
+  // A localização do contexto é apenas um fallback para a busca inicial.
+  // Quando o usuário escolhe estado ou região, esses filtros mais amplos
+  // devem permitir resultados fora da cidade atual.
+  const cidadeEfetiva =
+    filtroCidade ||
+    cidadeDaBusca ||
+    (!filtroEstado && !filtroRegiao && !locationLoading ? cidadeAtual?.nome : null) ||
+    null
   const cidadeEfetivaNormalizada = normalizarCidade(cidadeEfetiva)
 
   const prestadoresExibidos = useMemo(() => {
