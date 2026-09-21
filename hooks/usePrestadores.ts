@@ -2,7 +2,6 @@
 // hooks/usePrestadores.ts
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { getPrestadoresAtivos, getMediasAvaliacoes } from '@/lib/db/prestadores'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import { pesoOrdenacao } from '@/lib/ordenacao'
@@ -57,41 +56,6 @@ export function usePrestadores() {
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState(false)
   const buscasVaziasRegistradas = useRef(new Set<string>())
-
-  // Geolocalização silenciosa — só ativa quando não há nenhuma âncora de cidade:
-  // nem na URL, nem na query textual, nem no contexto do usuário.
-  useEffect(() => {
-    if (locationLoading || cidadeAtual || filtroCidade || filtroEstado || filtroRegiao || queryBusca) return
-    if (!navigator.geolocation) return
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const { latitude, longitude } = pos.coords
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
-          )
-          const data = await res.json()
-          const nome =
-            data.address?.city ||
-            data.address?.town ||
-            data.address?.municipality
-
-          if (nome) {
-            const params = new URLSearchParams(window.location.search)
-            if (!params.has('cidade')) {
-              params.set('cidade', nome)
-              router.replace(`/prestadores?${params.toString()}`, { scroll: false })
-            }
-          }
-        } catch {
-          // silencioso
-        }
-      },
-      () => {},
-      { timeout: 8000 }
-    )
-  }, [cidadeAtual, locationLoading, filtroCidade, filtroEstado, filtroRegiao, queryBusca, router])
 
   // Fetch principal — só refaz quando a busca textual muda.
   // Filtros de localização/categoria filtram no cliente sobre prestadoresBase.
