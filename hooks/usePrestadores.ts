@@ -105,16 +105,22 @@ export function usePrestadores() {
       setErro(false)
       setPrestadoresBase([])
 
-      if (!cidadeAtual?.id) {
-        setLoading(false)
-        return
-      }
-
       try {
+        // A cidade salva é apenas um fallback. Quando a busca informa uma cidade
+        // ("serviço em cidade"), ou quando há filtros amplos, precisamos consultar
+        // o catálogo completo para que o filtro local encontre os resultados certos.
+        // Sem localização salva também consultamos o catálogo completo — a busca
+        // não pode depender da permissão de geolocalização/cookie do usuário.
+        const { cidadeExtraida } = parsearBusca(queryBusca)
+        const cidadeIdDaConsulta =
+          cidadeExtraida || filtroCidade || filtroEstado || filtroRegiao
+            ? undefined
+            : cidadeAtual?.id
+
         // O catálogo é público e stateless; não cancelamos o fetch manualmente.
         // Alguns navegadores, incluindo o Brave com Shields ativos, reportam o
         // cancelamento como erro de rede e deixavam a tela presa em "erro".
-        const { data: pData, error: pError } = await getPrestadoresAtivos(cidadeAtual?.id)
+        const { data: pData, error: pError } = await getPrestadoresAtivos(cidadeIdDaConsulta)
 
         if (!ativo) return
 
@@ -183,7 +189,15 @@ export function usePrestadores() {
       ativo = false
     }
 
-  }, [queryBusca, filtroHab, cidadeAtual?.id, locationLoading])
+  }, [
+    queryBusca,
+    filtroHab,
+    filtroCidade,
+    filtroEstado,
+    filtroRegiao,
+    cidadeAtual?.id,
+    locationLoading,
+  ])
 
   // ─── Opções disponíveis em cascata ────────────────────────────────────────
 
