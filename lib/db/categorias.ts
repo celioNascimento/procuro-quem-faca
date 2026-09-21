@@ -9,34 +9,38 @@ export async function getSugestoesDestaque() {
 
 export async function getSugestoesPorBusca(termo: string, cidadeId?: string | null) {
   const busca = termo.trim()
+  const categorias = await supabase
+    .from('categorias')
+    .select('id, nome')
+    .ilike('nome', `%${busca}%`)
+    .limit(24)
 
-  if (cidadeId) {
-    const resposta = await supabase
-      .from('prestadores')
-      .select('categorias!inner(nome)')
-      .eq('cidade_id', cidadeId)
-      .eq('status', 'ativo')
-      .eq('bloqueado', false)
-      .ilike('categorias.nome', `%${busca}%`)
-      .limit(24)
-
-    if (resposta.error) return resposta
-
-    const nomes = Array.from(new Set(
-      (resposta.data ?? [])
-        .map(item => {
-          const categoria = Array.isArray(item.categorias) ? item.categorias[0] : item.categorias
-          return categoria?.nome
-        })
-        .filter((nome): nome is string => Boolean(nome))
-    )).slice(0, 6)
-
-    return { data: nomes.map(nome => ({ nome })), error: null }
+  if (categorias.error || !cidadeId) {
+    return {
+      data: (categorias.data ?? []).slice(0, 6).map(({ nome }) => ({ nome })),
+      error: categorias.error,
+    }
   }
 
-  return supabase
-    .from('categorias')
-    .select('nome')
-    .ilike('nome', `%${busca}%`)
-    .limit(6)
+  const ids = categorias.data.map(({ id }) => id)
+  if (ids.length === 0) return { data: [], error: null }
+
+  const prestadores = await supabase
+    .from('prestadores')
+    .select('categoria_id')
+    .eq('cidade_id', cidadeId)
+    .eq('status', 'ativo')
+    .eq('bloqueado', false)
+    .in('categoria_id', ids)
+
+  if (prestadores.error) return prestadores
+
+  const idsDisponiveis = new Set((prestadores.data ?? []).map(({ categoria_id }) => String(categoria_id)))
+  return {
+    data: categorias.data
+      .filter(({ id }) => idsDisponiveis.has(String(id)))
+      .slice(0, 6)
+      .map(({ nome }) => ({ nome })),
+    error: null,
+  }
 }

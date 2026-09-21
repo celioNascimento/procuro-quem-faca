@@ -2,6 +2,7 @@
 // hooks/usePrestadores.ts
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { getPrestadoresAtivos, getMediasAvaliacoes } from '@/lib/db/prestadores'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import { pesoOrdenacao } from '@/lib/ordenacao'
