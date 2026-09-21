@@ -213,14 +213,12 @@ export function FiltroBottomSheet({
               opcoes={regioesDisponiveis.map(r => ({ id: r.id, label: r.nome, count: r.count }))}
               valorAtivo={filtroRegiao}
               onToggle={v => onAplicar('regiao', v)}
-              disabled={!filtroEstado}
             />
             <GrupoFiltro
               titulo="Cidade"
               opcoes={cidadesDisponiveis.map(c => ({ id: c.nome, label: c.nome, count: c.count }))}
               valorAtivo={filtroCidade}
               onToggle={v => onAplicar('cidade', v)}
-              disabled={!filtroEstado}
             />
             <GrupoFiltro
               titulo="Área"

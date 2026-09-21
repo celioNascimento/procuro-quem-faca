@@ -257,8 +257,9 @@ export function usePrestadores() {
   // devem permitir resultados fora da cidade atual.
   const cidadeEfetiva =
     filtroCidade ||
-    cidadeDaBusca ||
-    (!filtroEstado && !filtroRegiao && !locationLoading ? cidadeAtual?.nome : null) ||
+    (!filtroEstado && !filtroRegiao
+      ? cidadeDaBusca || (!locationLoading ? cidadeAtual?.nome : null)
+      : null) ||
     null
   const cidadeEfetivaNormalizada = normalizarCidade(cidadeEfetiva)
 
