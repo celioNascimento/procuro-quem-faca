@@ -122,6 +122,9 @@ export function usePrestadores() {
           const cidadeRelacionada = Array.isArray(p.cidades) ? p.cidades[0] : p.cidades
           const categoriaRelacionada = Array.isArray(p.categorias) ? p.categorias[0] : p.categorias
           const regiaoRelacionada = Array.isArray(p.regioes) ? p.regioes[0] : p.regioes
+          const regiaoDaCidade = cidadeRelacionada
+            ? Array.isArray(cidadeRelacionada.regioes) ? cidadeRelacionada.regioes[0] : cidadeRelacionada.regioes
+            : null
           const grupoRelacionado = Array.isArray(categoriaRelacionada?.categorias_grupos)
             ? categoriaRelacionada.categorias_grupos[0]
             : categoriaRelacionada?.categorias_grupos
@@ -134,7 +137,7 @@ export function usePrestadores() {
             categoria_id:  normalizarId(categoriaRelacionada?.id         || p.categoria_id),
             estado_sigla:  p.estado_sigla                          || cidadeRelacionada?.estado_sigla || '',
             regiao_id:     normalizarId(p.regiao_id                    || cidadeRelacionada?.regiao_id),
-            regiao_nome:   regiaoRelacionada?.nome                    || '',
+            regiao_nome:   regiaoRelacionada?.nome                    || regiaoDaCidade?.nome || '',
             grupo_id:      normalizarId(p.grupo_id                     || categoriaRelacionada?.grupo_id || grupoRelacionado?.id),
             grupo_nome:    grupoRelacionado?.nome                    || '',
             media_nota:    mediaMap[p.id] ? mediaMap[p.id].soma / mediaMap[p.id].total : 0,

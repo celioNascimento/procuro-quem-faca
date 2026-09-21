@@ -5,7 +5,7 @@ const publicSupabase = createPublicClient()
 export async function getPrestadoresAtivos(signal?: AbortSignal) {
   const query = publicSupabase
     .from('prestadores')
-    .select('*, cidades(id, nome, estado_sigla, regiao_id), categorias(id, nome, grupo_id, categorias_grupos(id, nome)), regioes(id, nome)')
+    .select('*, cidades(id, nome, estado_sigla, regiao_id, regioes(id, nome)), categorias(id, nome, grupo_id, categorias_grupos(id, nome)), regioes(id, nome)')
     .eq('status', 'ativo')
     .or('bloqueado.is.null,bloqueado.eq.false')
 
