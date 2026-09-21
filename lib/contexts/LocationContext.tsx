@@ -82,7 +82,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
           const resposta = await fetch(`https://nominatim.openstreetmap.org/reverse?${params}`)
           const local = await resposta.json()
           const nome = local.address?.city || local.address?.town || local.address?.municipality
-          const estado = local.address?.state_code?.replace('BR-', '') || local.address?.ISO3166-2-lvl4?.replace('BR-', '')
+          const estado = local.address?.state_code?.replace('BR-', '') || local.address?.['ISO3166-2-lvl4']?.replace('BR-', '')
 
           if (!ativo || !nome) return
 
