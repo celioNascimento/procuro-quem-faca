@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react'
 import { getSugestoesPorBusca } from '@/lib/db/categorias'
 import { SUGESTOES_FALLBACK } from '@/config/categorias'
+import { useLocation } from '@/lib/contexts/LocationContext'
 
 const MAX_SUGESTOES = 8
 
 export function useSugestoes(busca: string) {
+  const { cidadeAtual } = useLocation()
+
   // Inicia já com o fallback visível — sem tela em branco
   const [sugestoes, setSugestoes] = useState<string[]>(SUGESTOES_FALLBACK)
   const [carregado, setCarregado] = useState(true)
@@ -20,7 +23,7 @@ export function useSugestoes(busca: string) {
 
     const buscarSugestoes = async () => {
       try {
-        const { data } = await getSugestoesPorBusca(busca)
+        const { data } = await getSugestoesPorBusca(busca, cidadeAtual?.id)
         if (cancelado) return
         if (data && data.length > 0) {
           setSugestoes(data.slice(0, MAX_SUGESTOES).map(i => i.nome))
@@ -36,7 +39,7 @@ export function useSugestoes(busca: string) {
       clearTimeout(timer)
       cancelado = true
     }
-  }, [busca])
+  }, [busca, cidadeAtual?.id])
 
   return { sugestoes, carregado }
 }
