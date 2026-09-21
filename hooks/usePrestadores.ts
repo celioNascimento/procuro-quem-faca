@@ -99,22 +99,31 @@ export function usePrestadores() {
     let ativo = true
 
     async function fetchDados() {
+      if (locationLoading) return
+
       setLoading(true)
       setErro(false)
       setPrestadoresBase([])
+
+      if (!cidadeAtual?.id) {
+        setLoading(false)
+        return
+      }
 
       try {
         // O catálogo é público e stateless; não cancelamos o fetch manualmente.
         // Alguns navegadores, incluindo o Brave com Shields ativos, reportam o
         // cancelamento como erro de rede e deixavam a tela presa em "erro".
-        const [{ data: pData, error: pError }, { data: medias }] = await Promise.all([
-          getPrestadoresAtivos(),
-          getMediasAvaliacoes(),
-        ])
+        const { data: pData, error: pError } = await getPrestadoresAtivos(cidadeAtual?.id)
 
         if (!ativo) return
 
         if (pError) throw pError
+
+        const { data: medias, error: mediasError } = await getMediasAvaliacoes(
+          (pData || []).map(p => p.id)
+        )
+        if (mediasError) throw mediasError
 
         const mediaMap = calcularMedias(medias || [])
 
@@ -174,7 +183,7 @@ export function usePrestadores() {
       ativo = false
     }
 
-  }, [queryBusca, filtroHab])
+  }, [queryBusca, filtroHab, cidadeAtual?.id, locationLoading])
 
   // ─── Opções disponíveis em cascata ────────────────────────────────────────
 
