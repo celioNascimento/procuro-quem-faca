@@ -51,7 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 3. Gera URLs individuais dos perfis dos prestadores
   const paginasPrestadores: MetadataRoute.Sitemap = (prestadores || []).map((p) => ({
-    url: `${baseUrl}/prestador/${p.slug}`, // Ajuste se a rota for direta ex: `${baseUrl}/${p.slug}`
+    url: `${baseUrl}/${p.slug}`, // Ajuste se a rota for direta ex: `${baseUrl}/${p.slug}`
     lastModified: p.created_at ? new Date(p.created_at) : lastModified,
     changeFrequency: 'weekly',
     priority: 0.7,
