@@ -12,14 +12,14 @@ import '../globals.css'
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
-  const { userEmail, userName, handleLogout } = useAdminAuth()
+  const { userEmail, userName, isLoading, handleLogout } = useAdminAuth()
 
   useEffect(() => {
     queueMicrotask(() => setIsMobileMenuOpen(false))
   }, [pathname])
 
   const isLoginPage = pathname === '/admin/login'
-  const mostrarSidebar = !!userEmail && !isLoginPage
+  const mostrarSidebar = !isLoading && !!userEmail && !isLoginPage
 
   return (
     <div className="h-screen bg-[#F8FAFC] flex font-sans text-slate-900 overflow-hidden">

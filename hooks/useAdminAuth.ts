@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation'
 export function useAdminAuth() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [userName, setUserName] = useState('Administrador')
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
@@ -23,7 +24,10 @@ export function useAdminAuth() {
       if (user) {
         setUserEmail(user.email || '')
         setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Admin')
+      } else {
+        setUserEmail(null)
       }
+      setIsLoading(false)
     }
 
     carregarDadosUsuario()
@@ -35,6 +39,7 @@ export function useAdminAuth() {
       } else {
         setUserEmail(null)
       }
+      setIsLoading(false)
     })
 
     return () => subscription.unsubscribe()
@@ -45,5 +50,5 @@ export function useAdminAuth() {
     router.push('/admin/login')
   }
 
-  return { userEmail, userName, handleLogout }
+  return { userEmail, userName, isLoading, handleLogout }
 }

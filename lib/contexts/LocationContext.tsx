@@ -67,12 +67,10 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (cidadeAtual || typeof navigator === 'undefined' || !navigator.geolocation) {
-      setLoading(false)
       return
     }
 
     let ativo = true
-    setLoading(true)
 
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
