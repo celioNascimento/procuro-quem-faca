@@ -77,23 +77,15 @@ export function HeaderBotoes() {
         <span>Cliente</span>
       </Link>
       
-      {/* Se for prestador exibe o Painel/Completar. Se não for, exibe a opção de virar profissional. */}
-      {role === 'prestador' ? (
-        <Link href={painelHref} className={btnPrimary}>
-          <LayoutDashboard size={13} className="shrink-0" />
-          <span className="hidden sm:inline">
-            {cadastroPendente ? 'Completar Cadastro' : 'Meu Painel'}
-          </span>
-          <span className="sm:hidden">
-            {cadastroPendente ? 'Cadastro' : 'Painel'}
-          </span>
-        </Link>
-      ) : (
-        <Link href="/cadastro" className={btnPrimary}>
-          <LogIn size={13} className="shrink-0" />
-          <span className="hidden sm:inline">Sou </span>Profissional
-        </Link>
-      )}
+      <Link href={painelHref} className={btnPrimary}>
+        <LayoutDashboard size={13} className="shrink-0" />
+        <span className="hidden sm:inline">
+          {cadastroPendente ? 'Completar Cadastro' : 'Meu Painel'}
+        </span>
+        <span className="sm:hidden">
+          {cadastroPendente ? 'Cadastro' : 'Painel'}
+        </span>
+      </Link>
     </>
   )
 }
