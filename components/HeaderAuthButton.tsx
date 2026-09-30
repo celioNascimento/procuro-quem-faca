@@ -35,7 +35,7 @@ export function HeaderAuthButton() {
     const safeRole = role || 'cliente'
 
     const destinoPainel = safeRole === 'prestador' 
-      ? (prestadorStatus === 'pendente' ? '/cadastro' : '/dashboard/perfil')
+      ? (prestadorStatus === 'pendente' ? '/cadastro' : '/dashboard')
       : '/painel/perfil'
       
     const labelPainel = safeRole === 'prestador'
