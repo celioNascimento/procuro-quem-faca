@@ -41,7 +41,13 @@ export async function proxy(request: NextRequest) {
       supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
       supabase.from('prestadores').select('status').eq('user_id', user.id).maybeSingle(),
     ])
-    const intendedRole = profileRes.data?.role || 'cliente'
+    // A existência de um cadastro em `prestadores` libera o dashboard
+    // profissional, mesmo quando `profiles.role` ainda está como cliente.
+    // Isso permite que a mesma conta use os dois perfis.
+    const temCadastroPrestador = Boolean(prestadorRes.data)
+    const intendedRole = profileRes.data?.role === 'prestador' || temCadastroPrestador
+      ? 'prestador'
+      : 'cliente'
     const isPendente = !prestadorRes.data || prestadorRes.data.status === 'pendente'
 
     if (isDashboard) {

@@ -36,17 +36,20 @@ export function resolverDestinoPosLogin(
   profile: ProfileRole | null,
   prestador: PrestadorResumo | null
 ): string {
-  // Clientes não devem cair no onboarding de prestador só porque não possuem
-  // uma linha correspondente em `prestadores`.
-  if (profile?.role === 'cliente') {
-    return '/painel/perfil'
-  }
-
+  // A existência do cadastro em `prestadores` é a fonte de verdade para
+  // liberar o dashboard profissional. `profiles.role` pode continuar como
+  // "cliente" quando a mesma conta começou usando apenas o painel do cliente;
+  // nesse caso, não devemos esconder um cadastro profissional já existente.
   const prestadorCompleto = isPrestadorCompleto(prestador)
 
-  // Se o cadastro de prestador já está 100% completo, painel de controle.
   if (prestadorCompleto) {
     return '/dashboard'
+  }
+
+  // Clientes sem cadastro profissional continuam no painel do cliente e não
+  // caem no onboarding apenas por não possuírem uma linha em `prestadores`.
+  if (profile?.role === 'cliente' && !prestador) {
+    return '/painel/perfil'
   }
 
   // Conta marcada como prestador, mas ainda sem cadastro concluído.
