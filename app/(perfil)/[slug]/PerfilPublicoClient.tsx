@@ -131,13 +131,14 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
             <PerfilCTA
               nome={prestador.nome || ''}
               whatsapp={prestador.whatsapp || ''}
-              onClique={() =>
-                insertLog({
+              onClique={async () => {
+                await insertLog({
                   acao: 'CLIQUE_WHATSAPP_ORCAMENTO',
                   detalhes: { nome_prestador: prestador.nome },
+                  entidadeTipo: 'prestador',
                   entidadeId: String(prestador.id),
                 })
-              }
+              }}
             />
 
             {/* 4. Portfólio + Avaliações em abas — única fonte de verdade para o portfólio */}
