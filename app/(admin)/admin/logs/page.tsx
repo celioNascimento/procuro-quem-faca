@@ -23,6 +23,7 @@ export default function AdminLogs() {
       case 'BUSCA_SEM_SUCESSO': return <span className="text-red-500 font-bold tracking-tight">🔍 &quot;{String(d.termo ?? '')}&quot;</span>
       case 'CLIQUE_PERFIL': return <span className="text-indigo-500 font-bold tracking-tight">👤 {String(d.nome ?? '')}</span>
       case 'DENUNCIA_PERFIL': return <span className="text-amber-600 font-bold tracking-tight">🚨 {typeof d.motivo === 'string' ? d.motivo.substring(0, 30) : ''}</span>
+      case 'CLIQUE_WHATSAPP_ORCAMENTO': return <span className="text-emerald-600 font-bold tracking-tight">{String(d.nome_prestador ?? 'Prestador')}</span>
       default: return <span className="text-slate-400 italic font-medium text-[10px]">Evento de sistema</span>
     }
   }
@@ -61,6 +62,7 @@ export default function AdminLogs() {
             <option value="BUSCA_SEM_SUCESSO">Buscas Vazias</option>
             <option value="DENUNCIA_PERFIL">Denúncias</option>
             <option value="CLIQUE_PERFIL">Cliques em Perfis</option>
+            <option value="CLIQUE_WHATSAPP_ORCAMENTO">Solicitações de orçamento</option>
           </select>
         </div>
       </div>
@@ -113,9 +115,10 @@ export default function AdminLogs() {
               <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-xs border shadow-sm transition-transform group-hover:scale-110 ${
                 log.acao.includes('BUSCA') ? 'bg-amber-50 text-amber-600 border-amber-100' :
                 log.acao.includes('DENUNCIA') ? 'bg-red-50 text-red-600 border-red-100' :
+                log.acao === 'CLIQUE_WHATSAPP_ORCAMENTO' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                 'bg-indigo-50 text-indigo-600 border-indigo-100'
               }`}>
-                {log.acao.includes('BUSCA') ? '🔍' : log.acao.includes('DENUNCIA') ? '🚨' : '📄'}
+                {log.acao.includes('BUSCA') ? '🔍' : log.acao.includes('DENUNCIA') ? '🚨' : log.acao === 'CLIQUE_WHATSAPP_ORCAMENTO' ? '💬' : '📄'}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
