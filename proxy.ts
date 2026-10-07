@@ -71,7 +71,10 @@ export async function proxy(request: NextRequest) {
       if (adminProfile) return NextResponse.redirect(new URL('/admin', request.url))
       return response
     }
-    if (!user) return NextResponse.redirect(new URL('/', request.url))
+    // Usuários deslogados devem voltar ao login administrativo, não à home.
+    // Isso mantém o painel acessível após o logout e evita uma rota morta para /admin.
+    if (!user && !isAdminLogin) return NextResponse.redirect(new URL('/admin/login', request.url))
+    if (!user) return response
 
     const { data: adminProfile } = await supabase
       .from('perfis_admin')
