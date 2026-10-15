@@ -132,6 +132,12 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               nome={prestador.nome || ''}
               whatsapp={prestador.whatsapp || ''}
               onClique={async () => {
+                const { error: cliqueError } = await supabase.from('cliques').insert({
+                  prestador_id: prestador.id,
+                })
+
+                if (cliqueError) throw cliqueError
+
                 await insertLog({
                   acao: 'CLIQUE_WHATSAPP_ORCAMENTO',
                   detalhes: { nome_prestador: prestador.nome },
