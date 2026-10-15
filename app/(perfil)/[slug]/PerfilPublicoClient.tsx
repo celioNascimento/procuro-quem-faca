@@ -132,18 +132,26 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               nome={prestador.nome || ''}
               whatsapp={prestador.whatsapp || ''}
               onClique={async () => {
-                const { error: cliqueError } = await supabase.from('cliques').insert({
-                  prestador_id: prestador.id,
+                const resposta = await fetch('/api/prestadores/clique-whatsapp', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ prestadorId: prestador.id }),
                 })
 
-                if (cliqueError) throw cliqueError
+                if (!resposta.ok) {
+                  throw new Error('Não foi possível registrar o clique no perfil.')
+                }
 
-                await insertLog({
-                  acao: 'CLIQUE_WHATSAPP_ORCAMENTO',
-                  detalhes: { nome_prestador: prestador.nome },
-                  entidadeTipo: 'prestador',
-                  entidadeId: String(prestador.id),
-                })
+                try {
+                  await insertLog({
+                    acao: 'CLIQUE_WHATSAPP_ORCAMENTO',
+                    detalhes: { nome_prestador: prestador.nome },
+                    entidadeTipo: 'prestador',
+                    entidadeId: String(prestador.id),
+                  })
+                } catch (logError) {
+                  console.error('[v0] Clique registrado, mas o log auxiliar falhou:', logError)
+                }
               }}
             />
 
