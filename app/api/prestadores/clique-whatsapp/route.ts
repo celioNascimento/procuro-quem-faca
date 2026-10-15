@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-function createServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } },
-  )
-}
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Prestador inválido.' }, { status: 400 })
     }
 
-    const supabase = createServiceClient()
+    const supabase = getAdminClient()
     const { data: prestador, error: leituraError } = await supabase
       .from('prestadores')
       .select('id, cliques_whatsapp')
