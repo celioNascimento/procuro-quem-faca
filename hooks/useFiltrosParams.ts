@@ -8,8 +8,15 @@ import { useSearchParams } from 'next/navigation'
 
 export function useFiltrosParams() {
   const searchParams = useSearchParams()
+  const queryBusca = (
+    searchParams.get('q') ||
+    searchParams.get('profissao') ||
+    ''
+  ).trim()
+
   return {
-    queryBusca:      (searchParams.get('q')          || '').trim(),
+    // "profissao" mantém compatibilidade com links antigos e campanhas indexadas.
+    queryBusca,
     filtroHab:       (searchParams.get('habilidade') || '').trim(),
     filtroCidade:     searchParams.get('cidade')     || '',
     filtroEstado:     searchParams.get('estado')     || '',
