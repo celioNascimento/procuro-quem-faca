@@ -136,6 +136,43 @@ await teste('Perfil inexistente é marcado noindex', async () => {
   garantir(/noindex/i.test(html), 'a página não tem noindex (o page.tsx corrigido está no ar?)')
 })
 
+// ── Tarefa 4: cookie de origem/campanha (pqf_origem) ──────────────────────────
+// Só leitura: não grava nada no banco, só confere o Set-Cookie da resposta.
+function cookiesDe(r) {
+  return typeof r.headers.getSetCookie === 'function'
+    ? r.headers.getSetCookie()
+    : [r.headers.get('set-cookie') || '']
+}
+function decodificarPqfOrigem(linhaDeCookie) {
+  const valor = linhaDeCookie.split(';')[0].split('=').slice(1).join('=')
+  return JSON.parse(decodeURIComponent(valor))
+}
+
+await teste('Cookie pqf_origem é gravado com utm na URL', async () => {
+  const r = await buscar(`${BASE}/?utm_source=smoke&utm_campaign=teste-cookie`, { redirect: 'manual' })
+  const linha = cookiesDe(r).find((c) => c.startsWith('pqf_origem='))
+  garantir(linha, 'nenhum Set-Cookie pqf_origem na resposta (proxy.ts está rodando na home? veja o matcher)')
+  const dados = decodificarPqfOrigem(linha)
+  garantir(dados.o === 'smoke', `origem esperada 'smoke', veio '${dados.o}'`)
+  garantir(dados.c === 'teste-cookie', `campanha esperada 'teste-cookie', veio '${dados.c}'`)
+})
+
+await teste('Cookie pqf_origem NÃO é sobrescrito se já existir (first-touch)', async () => {
+  const cookieExistente = encodeURIComponent(JSON.stringify({ o: 'google', c: 'seo' }))
+  const r = await buscar(`${BASE}/?utm_source=outro&utm_campaign=outro`, {
+    redirect: 'manual',
+    headers: { Cookie: `pqf_origem=${cookieExistente}` },
+  })
+  const linha = cookiesDe(r).find((c) => c.startsWith('pqf_origem='))
+  garantir(!linha, 'o cookie foi sobrescrito mesmo já existindo (quebra a regra de primeiro toque)')
+})
+
+await teste('Sem utm na URL, nenhum cookie pqf_origem é gravado', async () => {
+  const r = await buscar(`${BASE}/`, { redirect: 'manual' })
+  const linha = cookiesDe(r).find((c) => c.startsWith('pqf_origem='))
+  garantir(!linha, 'um cookie pqf_origem foi gravado sem nenhum utm na URL')
+})
+
 // ── testes de escrita (clique) ───────────────────────────────────────────────
 if (flag('writes')) {
   const local = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(BASE)
