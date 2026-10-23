@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getSupabasePublicEnv } from './lib/supabase/env'
+import { gravarOrigemSeNecessario } from './lib/tracking/gravarOrigem'
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
@@ -12,6 +13,14 @@ export async function proxy(request: NextRequest) {
   const isLogin = pathname === '/login'
   const isAdmin = pathname.startsWith('/admin')
   const isAdminLogin = pathname === '/admin/login'
+  const precisaAuth = isDashboard || isCadastro || isAcompanhamento || isAvaliar || isLogin || isAdmin
+
+  // Páginas públicas (home, perfis, páginas de serviço etc.): só grava o
+  // cookie de origem/campanha (Tarefa 4), sem gastar uma consulta ao
+  // Supabase para autenticação — essas rotas não precisam disso.
+  if (!precisaAuth) {
+    return gravarOrigemSeNecessario(request, response)
+  }
 
   const { url: supabaseUrl, anonKey } = getSupabasePublicEnv()
   const supabase = createServerClient(supabaseUrl, anonKey, {
@@ -88,12 +97,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // Antes, o proxy só rodava nas rotas de autenticação. A Tarefa 4 precisa
+  // dele em TODAS as páginas (home, perfis, serviços...) para capturar o
+  // utm_source no primeiro clique vindo de um anúncio. Por isso o matcher
+  // agora cobre tudo, exceto arquivos estáticos, imagens e a própria API.
   matcher: [
-    '/dashboard/:path*',
-    '/cadastro/:path*',
-    '/acompanhamento/:path*',
-    '/avaliar/:path*',
-    '/login',
-    '/admin/:path*',
+    '/((?!api/|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml)$).*)',
   ],
 }
