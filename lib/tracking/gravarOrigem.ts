@@ -31,7 +31,13 @@ export function gravarOrigemSeNecessario(
   // (O clique no WhatsApp ainda pode cair em 'direto' via resolverOrigem.)
   if (!origem) return response
 
-  const valor = encodeURIComponent(JSON.stringify({ o: origem, c: campanha }))
+  // NÃO fazer encodeURIComponent aqui: o response.cookies.set() do Next.js já
+  // codifica o valor sozinho ao montar o cabeçalho Set-Cookie (usa
+  // encodeURIComponent internamente). Codificar de novo aqui grava o cookie
+  // com dupla codificação no HTTP real — e só não aparece num teste que lê de
+  // volta pelo objeto ResponseCookies em memória, porque esse objeto devolve
+  // o valor cru que foi passado para .set(), sem simular a ida e volta HTTP.
+  const valor = JSON.stringify({ o: origem, c: campanha })
   response.cookies.set(COOKIE_ORIGEM, valor, {
     httpOnly: true,
     sameSite: 'lax',
