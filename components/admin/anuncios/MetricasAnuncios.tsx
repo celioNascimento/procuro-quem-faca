@@ -1,39 +1,11 @@
 // components/admin/anuncios/MetricasAnuncios.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
 import { TrendingUp, MousePointerClick, Eye, BarChart2, Calendar, AlertCircle } from 'lucide-react'
+import { useMetricasAnuncios, type AnuncioComMetricas } from '@/hooks/useMetricasAnuncios'
 
 const labelClass = 'text-[10px] font-medium text-zinc-400 uppercase tracking-widest'
-
-type MetricaDiaria = {
-  data_referencia: string
-  impressoes: number
-  cliques: number
-}
-
-type AnuncioRaw = {
-  id: string
-  titulo: string
-  posicao: string
-  status: boolean
-  data_expiracao: string | null
-  anunciantes?: { razao_social?: string | null } | Array<{ razao_social?: string | null }> | null
-}
-
-type AnuncioComMetricas = {
-  id: string
-  titulo: string
-  posicao: string
-  status: boolean
-  data_expiracao: string | null
-  anunciante_nome: string
-  total_impressoes: number
-  total_cliques: number
-  ctr: number
-  metricas_diarias: MetricaDiaria[]
-}
 
 const POSICOES_LABELS: Record<string, string> = {
   topo_busca: 'Topo da Busca',
@@ -141,83 +113,9 @@ function AnuncioMetricaCard({ anuncio }: { anuncio: AnuncioComMetricas }) {
 }
 
 export function MetricasAnuncios() {
-  const [anuncios, setAnuncios] = useState<AnuncioComMetricas[]>([])
-  const [loading, setLoading] = useState(true)
-  const [erro, setErro] = useState<string | null>(null)
   const [periodo, setPeriodo] = useState<7 | 14 | 30>(7)
   const [filtro, setFiltro] = useState<FiltroMetrica>('ativos')
-
-  useEffect(() => {
-    async function carregar() {
-      setLoading(true)
-      setErro(null)
-      try {
-        const supabase = createClient()
-
-        const dataInicio = new Date()
-        dataInicio.setDate(dataInicio.getDate() - periodo)
-        const dataInicioStr = dataInicio.toISOString().slice(0, 10)
-
-        // Anúncios: leitura direta via client (RLS permite authenticated)
-        // Métricas: via API route com service_role — client anon não tem acesso
-        const [resAnuncios, resMetricasHttp] = await Promise.all([
-          supabase
-            .from('anuncios')
-            .select('id, titulo, posicao, status, data_expiracao, anunciantes(razao_social)')
-            .order('created_at', { ascending: false }),
-          fetch(`/api/anuncios/metricas?dataInicio=${dataInicioStr}`),
-        ])
-
-        if (resAnuncios.error) throw new Error(resAnuncios.error.message)
-        if (!resMetricasHttp.ok) throw new Error('Erro ao buscar métricas')
-
-        const { data: metricasData } = await resMetricasHttp.json()
-
-        const metricasPorAnuncio = new Map<string, MetricaDiaria[]>()
-        for (const m of metricasData ?? []) {
-          const lista = metricasPorAnuncio.get(m.anuncio_id) ?? []
-          lista.push({ data_referencia: m.data_referencia, impressoes: m.impressoes, cliques: m.cliques })
-          metricasPorAnuncio.set(m.anuncio_id, lista)
-        }
-
-        const resultado: AnuncioComMetricas[] = (resAnuncios.data ?? []).map((a: AnuncioRaw) => {
-          const diarias = metricasPorAnuncio.get(a.id) ?? []
-          const total_impressoes = diarias.reduce((s, m) => s + m.impressoes, 0)
-          const total_cliques = diarias.reduce((s, m) => s + m.cliques, 0)
-          const ctr = total_impressoes > 0 ? (total_cliques / total_impressoes) * 100 : 0
-          return {
-            id: a.id,
-            titulo: a.titulo,
-            posicao: a.posicao,
-            status: a.status,
-            data_expiracao: a.data_expiracao,
-            anunciante_nome: Array.isArray(a.anunciantes)
-              ? a.anunciantes[0]?.razao_social ?? a.titulo
-              : a.anunciantes?.razao_social ?? a.titulo,
-            total_impressoes,
-            total_cliques,
-            ctr,
-            metricas_diarias: diarias,
-          }
-        })
-
-        resultado.sort((a, b) => {
-          const aTotal = a.total_cliques + a.total_impressoes
-          const bTotal = b.total_cliques + b.total_impressoes
-          if (bTotal !== aTotal) return bTotal - aTotal
-          return b.total_cliques - a.total_cliques
-        })
-
-        setAnuncios(resultado)
-      } catch (e: unknown) {
-        setErro(e instanceof Error ? e.message : 'Erro ao carregar métricas')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    carregar()
-  }, [periodo])
+  const { anuncios, loading, erro } = useMetricasAnuncios(periodo)
 
   const agora = new Date()
 
