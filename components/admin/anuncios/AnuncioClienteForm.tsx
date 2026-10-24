@@ -1,10 +1,10 @@
 // components/admin/anuncios/AnuncioClienteForm.tsx
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, Link as LinkIcon, X, ImageOff, AlertCircle } from 'lucide-react'
-import { supabase } from '@/lib/supabase/client'
+import { useAnuncioClienteFormDados } from '@/hooks/useAnuncioClienteFormDados'
 import type { Segmentacao, AnuncioLojistaFormValues } from '@/types/ads'
 
 const ASPECT_W = 1200
@@ -107,15 +107,9 @@ export function AnuncioClienteForm({ initial, onSave, onCancel, enviando }: Prop
   const [dataInicio, setDataInicio] = useState(initial?.data_inicio ? new Date(initial.data_inicio).toISOString().slice(0, 16) : '')
   const [dataExpiracao, setDataExpiracao] = useState(initial?.data_expiracao ? new Date(initial.data_expiracao).toISOString().slice(0, 16) : '')
   const [cidadeId, setCidadeId] = useState(initial?.anuncios_segmentacoes?.[0]?.cidade_id ?? '')
-  
+
   // Dados de suporte para contornar exigências do banco
-  const [cidades, setCidades] = useState<Array<{
-    id: string
-    nome: string
-    estado_sigla?: string | null
-    regiao_id?: string | null
-  }>>([])
-  const [categoriaCuringa, setCategoriaCuringa] = useState<{ id: string; grupo_id: string } | null>(null)
+  const { cidades, categoriaCuringa } = useAnuncioClienteFormDados()
 
   const [imagemUrl, setImagemUrl] = useState(initial?.imagem_url ?? '')
   const [imagemFile, setImagemFile] = useState<File | null>(null)
@@ -123,21 +117,6 @@ export function AnuncioClienteForm({ initial, onSave, onCancel, enviando }: Prop
   const [ativo, setAtivo] = useState(initial?.status ?? false)
   const [erro, setErro] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    async function carregarDadosBase() {
-      // 1. Carrega as cidades
-      const { data: cid } = await supabase.from('cidades').select('id, nome, regiao_id, estado_sigla').eq('ativa', true).order('nome')
-      if (cid) setCidades(cid)
-
-      // 2. Busca apenas uma categoria qualquer do banco.
-      // Isso é necessário apenas para satisfazer a chave estrangeira (NOT NULL) 
-      // da tabela 'anuncios_segmentacoes' sem exigir preenchimento manual na tela.
-      const { data: cat } = await supabase.from('categorias').select('id, grupo_id').limit(1).single()
-      if (cat) setCategoriaCuringa(cat)
-    }
-    carregarDadosBase()
-  }, [])
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]

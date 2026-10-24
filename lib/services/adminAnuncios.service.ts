@@ -209,6 +209,42 @@ export async function listarCategoriasPorGrupo(grupoId: string) {
   return data
 }
 
+export interface CidadeComRegiao {
+  id: string
+  nome: string
+  estado_sigla: string | null
+  regiao_id: string | null
+}
+
+// Usado pelo AnuncioClienteForm para popular o select de "cidade de exibição".
+// Precisa de regiao_id (diferente de getCidadesAtivasParaFiltro, que só serve
+// o modal público "Onde você está?") porque o anúncio precisa gravar a
+// segmentação completa (estado + região + cidade).
+export async function listarCidadesAtivasComRegiao(): Promise<CidadeComRegiao[]> {
+  const { data, error } = await supabase
+    .from('cidades')
+    .select('id, nome, regiao_id, estado_sigla')
+    .eq('ativa', true)
+    .order('nome')
+  if (error) throw error
+  return (data ?? []) as CidadeComRegiao[]
+}
+
+export interface CategoriaCuringa {
+  id: string
+  grupo_id: string
+}
+
+// Anúncios do painel do cliente (posicao: 'dashboard_cliente') não são
+// segmentados por categoria — mas 'anuncios_segmentacoes.categoria_id' é
+// NOT NULL no banco. Pega uma categoria qualquer só pra satisfazer essa
+// chave estrangeira, sem exigir escolha manual na tela.
+export async function buscarCategoriaCuringa(): Promise<CategoriaCuringa | null> {
+  const { data, error } = await supabase.from('categorias').select('id, grupo_id').limit(1).single()
+  if (error) throw error
+  return data
+}
+
 function periodosSeSobrepoe(
   inicioA: string | null,
   fimA: string | null,
