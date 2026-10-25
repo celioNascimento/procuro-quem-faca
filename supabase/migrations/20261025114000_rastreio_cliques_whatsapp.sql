@@ -5,11 +5,11 @@
 -- idempotente: em produção não altera nada; em um ambiente novo
 -- (homologação, banco local) cria o que falta.
 --
--- Estrutura conferida em 25/10/2026 (information_schema e pg_policies).
--- Ainda NÃO conferidos: chaves primárias, chaves estrangeiras e índices
--- (o resultado da consulta de índices não foi coletado). As chaves
--- primárias abaixo são as esperadas pelo código (consulta por id/chave),
--- e valem apenas para ambientes novos.
+-- Estrutura conferida em 25/10/2026 no banco de produção
+-- (information_schema, pg_policies, pg_indexes e pg_class): colunas,
+-- chaves primárias, índices, políticas e RLS ativo nas três tabelas.
+-- Ainda NÃO conferidas: chaves estrangeiras (cliques.prestador_id e
+-- rastreio_amostra.prestador_id não têm FK declarada aqui).
 
 -- ── cliques ─────────────────────────────────────────────────────────────
 create table if not exists public.cliques (
@@ -20,6 +20,12 @@ create table if not exists public.cliques (
   campanha     text,
   sessao_id    text
 );
+
+-- Índices existentes em produção (mesmos nomes, para não duplicar).
+create index if not exists idx_cliques_prestador_data
+  on public.cliques (prestador_id, created_at desc);
+create index if not exists idx_cliques_origem_data
+  on public.cliques (origem, created_at desc);
 
 -- ── rastreio_config: modo do rastreio ('amostra' | 'todos') ─────────────
 create table if not exists public.rastreio_config (
