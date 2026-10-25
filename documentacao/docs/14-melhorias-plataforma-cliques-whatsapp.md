@@ -62,7 +62,7 @@ Regras aplicadas hoje na rota (Tarefa 3):
 
 ## 4. Andamento
 
-- [~] 1. Conferir modo e criar migration — migration escrita, falta confirmar o modo (ver seção 5)
+- [x] 1. Conferir modo e criar migration — modo confirmado como `amostra`; migration enviada (ver seção 5)
 - [ ] 2. `keepalive` e log unificado
 - [ ] 3. Exibir cliques nos painéis
 - [ ] 4. Decidir rastreio dos demais botões
@@ -75,7 +75,8 @@ Regras aplicadas hoje na rota (Tarefa 3):
 
 **O que foi conferido no banco de produção** (consultas executadas pelo Célio no SQL Editor; a sessão do Claude não tem acesso ao projeto do PQF, que fica em outra conta do Supabase):
 
-- `rastreio_amostra` tem **15 prestadores**.
+- **Modo do rastreio: `amostra`** (`rastreio_config`, chave `modo`). `rastreio_amostra` tem **15 prestadores**. Ou seja, hoje só os cliques desses 15 são registrados; os de todos os outros prestadores são descartados pela rota, que responde ok.
+- Índices em `cliques`: `cliques_pkey (id)`, `idx_cliques_prestador_data (prestador_id, created_at desc)` e `idx_cliques_origem_data (origem, created_at desc)`. `rastreio_amostra` e `rastreio_config` têm só a chave primária (`prestador_id` e `chave`).
 - `cliques`: `id` (bigint, sem default visível, provavelmente identity), `prestador_id` (bigint), `created_at` (timestamptz, default `now()`), `origem`, `campanha` e `sessao_id` (text). Só `id` é `NOT NULL`.
 - `rastreio_amostra`: `prestador_id` (bigint, `NOT NULL`), `observacao` (text), `criado_em` (timestamptz, default `now()`).
 - `rastreio_config`: `chave` e `valor` (text, `NOT NULL`), `atualizado_em` (timestamptz, default `now()`).
@@ -83,10 +84,14 @@ Regras aplicadas hoje na rota (Tarefa 3):
 - Conteúdo de `cliques`: **19 linhas com origem e campanha nulas** (da versão antiga da rota, anteriores à Tarefa 3, de 22/10) e **8 linhas `meta` / `teste`** (do `smoke.mjs --writes`). Nenhuma linha `direto` nem de campanha real foi gravada pela rota nova.
 - Os 8 registros de teste deviam ser apagados com `delete from public.cliques where campanha = 'teste';`. A contagem prévia deu 8; **não foi confirmado se o `delete` foi executado**.
 
-**O que foi feito:** a migration `supabase/migrations/20261025114000_rastreio_cliques_whatsapp.sql` (branch `fix/passo1-migration-rastreio`) versiona as três tabelas, ativa o RLS e recria as três políticas existentes. É idempotente: em produção não muda nada. Para a primeira política, depende de `is_admin()`, que também não está versionada. O valor inicial de `modo` é `amostra`, só quando a chave não existe.
+**O que foi feito:** a migration `supabase/migrations/20261025114000_rastreio_cliques_whatsapp.sql` (branch `fix/passo1-migration-rastreio`) versiona as três tabelas com as colunas, chaves primárias e índices reais, mantém o RLS ativo e recria as três políticas existentes. É idempotente: em produção não muda nada. O valor inicial de `modo` é `amostra`, só quando a chave não existe.
 
-**Ainda pendente neste passo:**
-- Valor atual de `rastreio_config` (chave `modo`): `amostra` ou `todos`. É ele que explica por que nenhum clique real aparece desde 22/10. Só 15 prestadores estão na amostra; se o modo for `amostra`, o resto não é contado.
-- Índices, chaves primárias e estrangeiras de `cliques` (resultado da consulta não coletado).
-- Versionar `is_admin()`, que não está em nenhuma migration do repositório.
+**Conclusão sobre os cliques:** o modo `amostra` explica a falta de cliques reais nas métricas gerais. O que ainda não se sabe é se os 15 prestadores da amostra receberam algum clique real desde 22/10 e se a versão nova da rota está publicada em produção. Teste simples: abrir o perfil público de um prestador da amostra (sem estar logado como dono), clicar em "Solicitar Orçamento" e conferir se entrou uma linha `direto` em `cliques`.
+
+**Decisão pendente (negócio):** quando encerrar o teste por amostra, mudar o modo para `todos`: `update public.rastreio_config set valor = 'todos', atualizado_em = now() where chave = 'modo';`. Isso é um ajuste de dados feito no banco, não faz parte da migration, e deve ser decidido pelo Célio.
+
+**Pendências restantes do passo 1 (não bloqueiam o passo 2):**
+- Versionar `is_admin()`, que não está em nenhuma migration do repositório. Sem ela, a política de leitura do admin não é criada em um ambiente novo.
+- Conferir as chaves estrangeiras de `cliques.prestador_id` e `rastreio_amostra.prestador_id`.
 - Aplicar a migration em um ambiente novo ou de homologação para validar.
+- Confirmar se o `delete` dos 8 cliques de teste foi executado.
