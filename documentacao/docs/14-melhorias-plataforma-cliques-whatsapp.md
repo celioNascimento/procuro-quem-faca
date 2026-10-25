@@ -49,6 +49,7 @@ Regras aplicadas hoje na rota (Tarefa 3):
 7. **Proxy em todas as páginas públicas.** Desde a Tarefa 4 o `proxy.ts` roda em quase todas as rotas. Ele só lê o cookie, sem consultar o Supabase, então o custo é baixo; acompanhar no Speed Insights.
 8. **Sobras menores.** 13 `console` com `[v0]` no código, e a pendência do roadmap de revisar os pontos que montam o link de WhatsApp manualmente.
 9. **Lição de teste.** Os testes unitários do cookie não pegaram a dupla codificação porque liam o valor em memória. Testes de cookie devem ler o cabeçalho `Set-Cookie` real, como o `smoke.mjs` faz.
+10. **Qualquer pessoa pode inserir cliques direto pela API pública.** Em produção, a política `Qualquer um pode registrar um clique` em `cliques` permite `INSERT` para `public` com `with check (true)`. Quem tiver a chave pública do Supabase pode gravar cliques sem passar pelas regras da rota (robôs, dedupe de 24h, amostra) e inflar a contagem. A rota usa o cliente administrativo, que ignora o RLS, então a política parece desnecessária; antes de remover, confirmar que nada mais insere em `cliques` pelo cliente público.
 
 ## 3. Ordem de correção proposta
 
@@ -57,11 +58,36 @@ Regras aplicadas hoje na rota (Tarefa 3):
 3. Mostrar os cliques da tabela `cliques` no painel do prestador e no admin.
 4. Decidir se `ServicoCard` e `CardPrestador` entram no rastreio.
 5. Remover os `console` `[v0]` e rodar o `smoke.mjs --writes` após as mudanças.
+6. Remover a política pública de `INSERT` em `cliques` (pendência 10), depois de confirmar que nada insere pelo cliente público.
 
 ## 4. Andamento
 
-- [ ] 1. Conferir modo e criar migration
+- [~] 1. Conferir modo e criar migration — migration escrita, falta confirmar o modo (ver seção 5)
 - [ ] 2. `keepalive` e log unificado
 - [ ] 3. Exibir cliques nos painéis
 - [ ] 4. Decidir rastreio dos demais botões
 - [ ] 5. Limpeza e smoke test
+- [ ] 6. Remover a política pública de `INSERT` em `cliques`
+
+## 5. Registro por passo
+
+### Passo 1 — Conferir o banco e versionar as tabelas (25/10/2026)
+
+**O que foi conferido no banco de produção** (consultas executadas pelo Célio no SQL Editor; a sessão do Claude não tem acesso ao projeto do PQF, que fica em outra conta do Supabase):
+
+- `rastreio_amostra` tem **15 prestadores**.
+- `cliques`: `id` (bigint, sem default visível, provavelmente identity), `prestador_id` (bigint), `created_at` (timestamptz, default `now()`), `origem`, `campanha` e `sessao_id` (text). Só `id` é `NOT NULL`.
+- `rastreio_amostra`: `prestador_id` (bigint, `NOT NULL`), `observacao` (text), `criado_em` (timestamptz, default `now()`).
+- `rastreio_config`: `chave` e `valor` (text, `NOT NULL`), `atualizado_em` (timestamptz, default `now()`).
+- Políticas de `cliques`: admin lê tudo (`is_admin()`); prestador lê só os próprios; **qualquer pessoa pode inserir** (pendência 10). Não há políticas em `rastreio_config` nem em `rastreio_amostra`.
+- Conteúdo de `cliques`: **19 linhas com origem e campanha nulas** (da versão antiga da rota, anteriores à Tarefa 3, de 22/10) e **8 linhas `meta` / `teste`** (do `smoke.mjs --writes`). Nenhuma linha `direto` nem de campanha real foi gravada pela rota nova.
+- Os 8 registros de teste deviam ser apagados com `delete from public.cliques where campanha = 'teste';`. A contagem prévia deu 8; **não foi confirmado se o `delete` foi executado**.
+
+**O que foi feito:** a migration `supabase/migrations/20261025114000_rastreio_cliques_whatsapp.sql` (branch `fix/passo1-migration-rastreio`) versiona as três tabelas, ativa o RLS e recria as três políticas existentes. É idempotente: em produção não muda nada. Para a primeira política, depende de `is_admin()`, que também não está versionada. O valor inicial de `modo` é `amostra`, só quando a chave não existe.
+
+**Ainda pendente neste passo:**
+- Valor atual de `rastreio_config` (chave `modo`): `amostra` ou `todos`. É ele que explica por que nenhum clique real aparece desde 22/10. Só 15 prestadores estão na amostra; se o modo for `amostra`, o resto não é contado.
+- Índices, chaves primárias e estrangeiras de `cliques` (resultado da consulta não coletado).
+- Se o RLS está ativo hoje nas três tabelas.
+- Versionar `is_admin()`, que não está em nenhuma migration do repositório.
+- Aplicar a migration em um ambiente novo ou de homologação para validar.
