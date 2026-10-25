@@ -7,14 +7,7 @@ import {
   salvarObservacaoAtivacao,
   type PrestadorAtivacao,
 } from '@/lib/services/adminAtivacao.service'
-
-function contarPorStatus(lista: PrestadorAtivacao[]): Record<string, number> {
-  const contagem: Record<string, number> = {}
-  lista.forEach((p) => {
-    contagem[p.ativacao_status] = (contagem[p.ativacao_status] || 0) + 1
-  })
-  return contagem
-}
+import { contarPorStatus } from '@/lib/stats/ativacaoStats'
 
 export function useAdminAtivacao() {
   const [prestadores, setPrestadores] = useState<PrestadorAtivacao[]>([])
