@@ -79,7 +79,7 @@ Regras aplicadas hoje na rota (Tarefa 3):
 - `cliques`: `id` (bigint, sem default visível, provavelmente identity), `prestador_id` (bigint), `created_at` (timestamptz, default `now()`), `origem`, `campanha` e `sessao_id` (text). Só `id` é `NOT NULL`.
 - `rastreio_amostra`: `prestador_id` (bigint, `NOT NULL`), `observacao` (text), `criado_em` (timestamptz, default `now()`).
 - `rastreio_config`: `chave` e `valor` (text, `NOT NULL`), `atualizado_em` (timestamptz, default `now()`).
-- Políticas de `cliques`: admin lê tudo (`is_admin()`); prestador lê só os próprios; **qualquer pessoa pode inserir** (pendência 10). Não há políticas em `rastreio_config` nem em `rastreio_amostra`.
+- Políticas de `cliques`: admin lê tudo (`is_admin()`); prestador lê só os próprios; **qualquer pessoa pode inserir** (pendência 10). Não há políticas em `rastreio_config` nem em `rastreio_amostra`. O RLS está **ativo nas três tabelas** (confirmado), então só a chave administrativa acessa `rastreio_*`.
 - Conteúdo de `cliques`: **19 linhas com origem e campanha nulas** (da versão antiga da rota, anteriores à Tarefa 3, de 22/10) e **8 linhas `meta` / `teste`** (do `smoke.mjs --writes`). Nenhuma linha `direto` nem de campanha real foi gravada pela rota nova.
 - Os 8 registros de teste deviam ser apagados com `delete from public.cliques where campanha = 'teste';`. A contagem prévia deu 8; **não foi confirmado se o `delete` foi executado**.
 
@@ -88,6 +88,5 @@ Regras aplicadas hoje na rota (Tarefa 3):
 **Ainda pendente neste passo:**
 - Valor atual de `rastreio_config` (chave `modo`): `amostra` ou `todos`. É ele que explica por que nenhum clique real aparece desde 22/10. Só 15 prestadores estão na amostra; se o modo for `amostra`, o resto não é contado.
 - Índices, chaves primárias e estrangeiras de `cliques` (resultado da consulta não coletado).
-- Se o RLS está ativo hoje nas três tabelas.
 - Versionar `is_admin()`, que não está em nenhuma migration do repositório.
 - Aplicar a migration em um ambiente novo ou de homologação para validar.
