@@ -63,7 +63,7 @@ Regras aplicadas hoje na rota (Tarefa 3):
 ## 4. Andamento
 
 - [x] 1. Conferir modo e criar migration — modo confirmado como `amostra`; migration enviada (ver seção 5)
-- [x] 2. `keepalive` e log unificado — código enviado na branch `fix/passo2-log-clique-servidor`; falta validar no deploy de preview (ver seção 5)
+- [x] 2. `keepalive` e log unificado — código no PR `fix/rastreio-cliques-whatsapp`; falta validar no deploy de preview (ver seção 5)
 - [ ] 3. Exibir cliques nos painéis
 - [ ] 4. Decidir rastreio dos demais botões
 - [ ] 5. Limpeza e smoke test
@@ -84,7 +84,7 @@ Regras aplicadas hoje na rota (Tarefa 3):
 - Conteúdo de `cliques` em 25/10: 19 linhas com origem e campanha nulas e 8 linhas `meta` / `teste` (do `smoke.mjs --writes`). **Correção (27/10):** as 19 linhas nulas têm `sessao_id = 'backfill'` e datas de março a setembro; são registros históricos importados, e não da versão antiga da rota como foi afirmado antes.
 - Os 8 registros de teste foram apagados (`delete from public.cliques where campanha = 'teste';`): a consulta dos últimos cliques em 27/10 não os mostra.
 
-**O que foi feito:** a migration `supabase/migrations/20261025114000_rastreio_cliques_whatsapp.sql` (branch `fix/passo1-migration-rastreio`) versiona as três tabelas com as colunas, chaves primárias e índices reais, mantém o RLS ativo e recria as três políticas existentes. É idempotente: em produção não muda nada. O valor inicial de `modo` é `amostra`, só quando a chave não existe.
+**O que foi feito:** a migration `supabase/migrations/20261025114000_rastreio_cliques_whatsapp.sql` (PR `fix/rastreio-cliques-whatsapp`) versiona as três tabelas com as colunas, chaves primárias e índices reais, mantém o RLS ativo e recria as três políticas existentes. É idempotente: em produção não muda nada. O valor inicial de `modo` é `amostra`, só quando a chave não existe.
 
 **Conclusão sobre os cliques:** o modo `amostra` explica a falta de cliques reais nas métricas gerais.
 
@@ -103,7 +103,7 @@ Regras aplicadas hoje na rota (Tarefa 3):
 
 **Decisão (Célio):** gravar o log de auditoria no servidor, e não no navegador.
 
-**O que mudou** (branch `fix/passo2-log-clique-servidor`, commit `94e7a4a`):
+**O que mudou** (PR `fix/rastreio-cliques-whatsapp`, commit original `94e7a4a`):
 - `app/api/prestadores/clique-whatsapp/route.ts`: depois de gravar o clique, grava `CLIQUE_WHATSAPP_ORCAMENTO` em `logs_atividades` **só quando o clique é contado**. O log leva o nome do prestador, a origem, a campanha e, se houver sessão, o `usuario_id` e o `usuario_email`. Se o log falhar, o clique já está gravado e a rota responde normalmente (o erro vai para o `console.error`).
 - `lib/services/cliques.service.ts`: nova função `inserirLogClique` e o nome do prestador na consulta `buscarPrestadorParaClique`.
 - `app/(perfil)/[slug]/PerfilPublicoClient.tsx`: o `fetch` passa a usar `keepalive: true` e o `insertLog` do navegador foi removido.
