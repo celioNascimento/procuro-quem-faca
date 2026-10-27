@@ -27,3 +27,25 @@ export async function rastreioAtivoPara(
     return false
   }
 }
+
+export interface ConfigRastreio {
+  modo: string
+  prestadoresNaAmostra: number
+}
+
+// Estado do rastreio para a página de admin. Qualquer valor diferente de
+// 'todos' vale como 'amostra', igual à regra de deveRastrear().
+export async function lerConfigRastreio(db: SupabaseClient): Promise<ConfigRastreio> {
+  const [config, amostra] = await Promise.all([
+    db.from('rastreio_config').select('valor').eq('chave', 'modo').maybeSingle(),
+    db.from('rastreio_amostra').select('prestador_id', { count: 'exact', head: true }),
+  ])
+
+  if (config.error) throw config.error
+  if (amostra.error) throw amostra.error
+
+  return {
+    modo: config.data?.valor === 'todos' ? 'todos' : 'amostra',
+    prestadoresNaAmostra: amostra.count ?? 0,
+  }
+}

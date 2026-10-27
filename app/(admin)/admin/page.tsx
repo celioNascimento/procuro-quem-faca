@@ -128,11 +128,11 @@ export default function AdminDashboard() {
             {radar.map((item, i) => (
               <div key={i} className="flex items-start gap-3">
                 <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${
-                  item.acao === 'CLIQUE_WHATSAPP' ? 'bg-emerald-500' : 'bg-orange-500'
+                  item.acao === 'CLIQUE_WHATSAPP_ORCAMENTO' ? 'bg-emerald-500' : 'bg-orange-500'
                 }`} />
                 <div>
                   <p className="text-[11px] font-semibold text-zinc-300">
-                    {item.acao === 'CLIQUE_WHATSAPP' ? 'WhatsApp clicado' : 'Busca sem resultado'}
+                    {item.acao === 'CLIQUE_WHATSAPP_ORCAMENTO' ? 'WhatsApp clicado' : 'Busca sem resultado'}
                   </p>
                   <p className="text-[9px] text-zinc-600 mt-0.5">
                     {item.acao === 'BUSCA_SEM_SUCESSO'
