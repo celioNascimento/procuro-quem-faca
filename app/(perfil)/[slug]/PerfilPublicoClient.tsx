@@ -15,7 +15,6 @@ import { SessaoFotos } from '@/components/profile/SessaoFotos'
 import { AdCard } from '@/components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
-import { insertLog } from '@/lib/db/logs'
 import { useCompartilharPerfil } from '@/hooks/useCompartilharPerfil'
 import { BadgeCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
@@ -132,25 +131,19 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               nome={prestador.nome || ''}
               whatsapp={prestador.whatsapp || ''}
               onClique={async () => {
+                // keepalive: no celular o link abre o app do WhatsApp e a página
+                // pode ser suspensa; com isso o navegador conclui a requisição.
+                // O log de auditoria é gravado pela própria rota, só quando o
+                // clique é contado.
                 const resposta = await fetch('/api/prestadores/clique-whatsapp', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ prestadorId: prestador.id }),
+                  keepalive: true,
                 })
 
                 if (!resposta.ok) {
                   throw new Error('Não foi possível registrar o clique no perfil.')
-                }
-
-                try {
-                  await insertLog({
-                    acao: 'CLIQUE_WHATSAPP_ORCAMENTO',
-                    detalhes: { nome_prestador: prestador.nome },
-                    entidadeTipo: 'prestador',
-                    entidadeId: String(prestador.id),
-                  })
-                } catch (logError) {
-                  console.error('[v0] Clique registrado, mas o log auxiliar falhou:', logError)
                 }
               }}
             />
