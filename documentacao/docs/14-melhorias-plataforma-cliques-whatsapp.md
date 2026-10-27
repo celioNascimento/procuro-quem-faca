@@ -63,7 +63,7 @@ Regras aplicadas hoje na rota (Tarefa 3):
 ## 4. Andamento
 
 - [x] 1. Conferir modo e criar migration — modo confirmado como `amostra`; migration enviada (ver seção 5)
-- [ ] 2. `keepalive` e log unificado
+- [x] 2. `keepalive` e log unificado — código enviado na branch `fix/passo2-log-clique-servidor`; falta validar no deploy de preview (ver seção 5)
 - [ ] 3. Exibir cliques nos painéis
 - [ ] 4. Decidir rastreio dos demais botões
 - [ ] 5. Limpeza e smoke test
@@ -98,3 +98,33 @@ Regras aplicadas hoje na rota (Tarefa 3):
 - Versionar `is_admin()`, que não está em nenhuma migration do repositório. Sem ela, a política de leitura do admin não é criada em um ambiente novo.
 - Conferir as chaves estrangeiras de `cliques.prestador_id` e `rastreio_amostra.prestador_id`.
 - Aplicar a migration em um ambiente novo ou de homologação para validar.
+
+### Passo 2 — Log no servidor e `keepalive` (27/10/2026)
+
+**Decisão (Célio):** gravar o log de auditoria no servidor, e não no navegador.
+
+**O que mudou** (branch `fix/passo2-log-clique-servidor`, commit `94e7a4a`):
+- `app/api/prestadores/clique-whatsapp/route.ts`: depois de gravar o clique, grava `CLIQUE_WHATSAPP_ORCAMENTO` em `logs_atividades` **só quando o clique é contado**. O log leva o nome do prestador, a origem, a campanha e, se houver sessão, o `usuario_id` e o `usuario_email`. Se o log falhar, o clique já está gravado e a rota responde normalmente (o erro vai para o `console.error`).
+- `lib/services/cliques.service.ts`: nova função `inserirLogClique` e o nome do prestador na consulta `buscarPrestadorParaClique`.
+- `app/(perfil)/[slug]/PerfilPublicoClient.tsx`: o `fetch` passa a usar `keepalive: true` e o `insertLog` do navegador foi removido.
+
+**Efeitos a observar**
+- O log de auditoria e a tabela `cliques` passam a ter a mesma contagem: robôs, dono do perfil, repetição em 24h e prestadores fora da amostra deixam de gerar log. Os logs antigos continuam na tabela e não batem com `cliques`; só valem os de antes de 22/10.
+- A rota agora consulta o usuário logado em todo clique (antes, só quando o prestador tinha `user_id`). Para visitante sem sessão, não há chamada de rede ao Supabase Auth.
+- Nos logs novos, `detalhes` ganha `origem` e `campanha`. A página `/admin/logs` continua mostrando só `nome_prestador`.
+
+**Não validado nesta sessão:** lint, tipos (`tsc`) e testes não rodaram, porque o registro do npm não é acessível no ambiente de trabalho; os tipos foram conferidos só pela leitura. Não há teste automatizado da rota nem do service.
+
+**Como validar no deploy de preview**
+1. Abrir o perfil de um prestador da amostra, sem estar logado como dono, e clicar em "Solicitar Orçamento".
+2. Conferir que entrou uma linha nova em `cliques` **e** uma linha `CLIQUE_WHATSAPP_ORCAMENTO` em `logs_atividades`:
+   ```sql
+   select created_at, acao, entidade_id, usuario_email, detalhes
+   from public.logs_atividades
+   where acao = 'CLIQUE_WHATSAPP_ORCAMENTO'
+   order by created_at desc limit 5;
+   ```
+3. Clicar de novo no mesmo perfil: não deve entrar linha nova em nenhuma das duas tabelas (dedupe de 24h).
+4. No celular, conferir se o clique é gravado mesmo com o WhatsApp abrindo na hora.
+
+**Observação (não corrigida):** a verificação de dedupe e a gravação do clique não são atômicas. Dois cliques quase simultâneos da mesma sessão, por exemplo no botão do corpo da página e no botão flutuante, podem passar pela verificação ao mesmo tempo e gravar duas linhas. É raro e não foi tratado neste passo; a correção seria uma restrição única no banco.
