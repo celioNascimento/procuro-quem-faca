@@ -19,6 +19,7 @@ import { rastreioAtivoPara } from '@/lib/services/rastreio.service'
 import {
   buscarPrestadorParaClique,
   inserirClique,
+  inserirLogClique,
   jaContouCliqueRecente,
 } from '@/lib/services/cliques.service'
 
@@ -52,12 +53,12 @@ export async function POST(request: NextRequest) {
     }
     if (!rastrear) return responder(false)
 
-    // 3) Clique do próprio dono do perfil não conta
-    if (prestador.user_id) {
-      const auth = await createClient()
-      const { data } = await auth.auth.getUser()
-      if (data.user?.id === prestador.user_id) return responder(false)
-    }
+    // 3) Clique do próprio dono do perfil não conta. O usuário (se houver
+    // sessão) também vai para o log de auditoria.
+    const auth = await createClient()
+    const { data: dadosUsuario } = await auth.auth.getUser()
+    const usuario = dadosUsuario.user
+    if (prestador.user_id && usuario?.id === prestador.user_id) return responder(false)
 
     // 4) No máximo 1 clique por sessão e prestador a cada 24h
     if (await jaContouCliqueRecente(db, prestadorId, sessao.id)) return responder(false)
@@ -69,6 +70,22 @@ export async function POST(request: NextRequest) {
     })
 
     await inserirClique(db, { prestadorId, origem, campanha, sessaoId: sessao.id })
+
+    // 6) Log de auditoria só quando o clique foi contado. Se falhar, o clique
+    // já está gravado e o botão não pode travar por causa do log.
+    try {
+      await inserirLogClique(db, {
+        prestadorId,
+        nomePrestador: prestador.nome,
+        origem,
+        campanha,
+        usuarioId: usuario?.id ?? null,
+        usuarioEmail: usuario?.email ?? null,
+      })
+    } catch (erroLog) {
+      console.error('[clique-whatsapp] Clique gravado, mas o log de auditoria falhou:', erroLog)
+    }
+
     return responder(true)
   } catch (error) {
     console.error('[clique-whatsapp] Erro ao registrar clique:', error)
