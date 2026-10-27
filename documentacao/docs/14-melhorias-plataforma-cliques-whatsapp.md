@@ -81,12 +81,16 @@ Regras aplicadas hoje na rota (Tarefa 3):
 - `rastreio_amostra`: `prestador_id` (bigint, `NOT NULL`), `observacao` (text), `criado_em` (timestamptz, default `now()`).
 - `rastreio_config`: `chave` e `valor` (text, `NOT NULL`), `atualizado_em` (timestamptz, default `now()`).
 - Políticas de `cliques`: admin lê tudo (`is_admin()`); prestador lê só os próprios; **qualquer pessoa pode inserir** (pendência 10). Não há políticas em `rastreio_config` nem em `rastreio_amostra`. O RLS está **ativo nas três tabelas** (confirmado), então só a chave administrativa acessa `rastreio_*`.
-- Conteúdo de `cliques`: **19 linhas com origem e campanha nulas** (da versão antiga da rota, anteriores à Tarefa 3, de 22/10) e **8 linhas `meta` / `teste`** (do `smoke.mjs --writes`). Nenhuma linha `direto` nem de campanha real foi gravada pela rota nova.
-- Os 8 registros de teste deviam ser apagados com `delete from public.cliques where campanha = 'teste';`. A contagem prévia deu 8; **não foi confirmado se o `delete` foi executado**.
+- Conteúdo de `cliques` em 25/10: 19 linhas com origem e campanha nulas e 8 linhas `meta` / `teste` (do `smoke.mjs --writes`). **Correção (27/10):** as 19 linhas nulas têm `sessao_id = 'backfill'` e datas de março a setembro; são registros históricos importados, e não da versão antiga da rota como foi afirmado antes.
+- Os 8 registros de teste foram apagados (`delete from public.cliques where campanha = 'teste';`): a consulta dos últimos cliques em 27/10 não os mostra.
 
 **O que foi feito:** a migration `supabase/migrations/20261025114000_rastreio_cliques_whatsapp.sql` (branch `fix/passo1-migration-rastreio`) versiona as três tabelas com as colunas, chaves primárias e índices reais, mantém o RLS ativo e recria as três políticas existentes. É idempotente: em produção não muda nada. O valor inicial de `modo` é `amostra`, só quando a chave não existe.
 
-**Conclusão sobre os cliques:** o modo `amostra` explica a falta de cliques reais nas métricas gerais. O que ainda não se sabe é se os 15 prestadores da amostra receberam algum clique real desde 22/10 e se a versão nova da rota está publicada em produção. Teste simples: abrir o perfil público de um prestador da amostra (sem estar logado como dono), clicar em "Solicitar Orçamento" e conferir se entrou uma linha `direto` em `cliques`.
+**Conclusão sobre os cliques:** o modo `amostra` explica a falta de cliques reais nas métricas gerais.
+
+**Validação em produção (27/10, 19h20 no horário de Brasília):** teste manual no perfil de um prestador da amostra (id 128, "W&A Manutenções e Reformas"). Entrou uma linha `origem = 'direto'`, `campanha` nula e `sessao_id` preenchido. Isso confirma que a rota nova (Tarefa 3) está publicada e grava corretamente. Desde 22/10 só existe esse clique real: dos 15 prestadores da amostra, 14 não receberam nenhum.
+
+**Ainda não testado:** o dedupe de 24h (um segundo clique na mesma sessão e no mesmo prestador não deve gerar outra linha) e a origem por campanha (abrir o perfil com `?utm_source=meta&utm_campaign=teste` e conferir se o cookie `pqf_origem` é gravado e usado). Cliques de teste com campanha `teste` podem ser apagados depois com o `delete` acima.
 
 **Decisão pendente (negócio):** quando encerrar o teste por amostra, mudar o modo para `todos`: `update public.rastreio_config set valor = 'todos', atualizado_em = now() where chave = 'modo';`. Isso é um ajuste de dados feito no banco, não faz parte da migration, e deve ser decidido pelo Célio.
 
@@ -94,4 +98,3 @@ Regras aplicadas hoje na rota (Tarefa 3):
 - Versionar `is_admin()`, que não está em nenhuma migration do repositório. Sem ela, a política de leitura do admin não é criada em um ambiente novo.
 - Conferir as chaves estrangeiras de `cliques.prestador_id` e `rastreio_amostra.prestador_id`.
 - Aplicar a migration em um ambiente novo ou de homologação para validar.
-- Confirmar se o `delete` dos 8 cliques de teste foi executado.
