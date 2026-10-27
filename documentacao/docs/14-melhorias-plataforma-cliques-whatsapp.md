@@ -64,7 +64,7 @@ Regras aplicadas hoje na rota (Tarefa 3):
 
 - [x] 1. Conferir modo e criar migration — modo confirmado como `amostra`; migration enviada (ver seção 5)
 - [x] 2. `keepalive` e log unificado — código no PR `fix/rastreio-cliques-whatsapp`; falta validar no deploy de preview (ver seção 5)
-- [ ] 3. Exibir cliques nos painéis
+- [x] 3. Exibir cliques nos painéis — código na branch `feat/passo3-cliques-paineis`; falta validar no deploy de preview (ver seção 5)
 - [ ] 4. Decidir rastreio dos demais botões
 - [ ] 5. Limpeza e smoke test
 - [ ] 6. Remover a política pública de `INSERT` em `cliques`
@@ -128,3 +128,36 @@ Regras aplicadas hoje na rota (Tarefa 3):
 4. No celular, conferir se o clique é gravado mesmo com o WhatsApp abrindo na hora.
 
 **Observação (não corrigida):** a verificação de dedupe e a gravação do clique não são atômicas. Dois cliques quase simultâneos da mesma sessão, por exemplo no botão do corpo da página e no botão flutuante, podem passar pela verificação ao mesmo tempo e gravar duas linhas. É raro e não foi tratado neste passo; a correção seria uma restrição única no banco.
+
+### Passo 3 — Cliques no dashboard do prestador e no admin (27/10/2026)
+
+**Decisão (Célio):** mostrar nos dois lugares. Branch `feat/passo3-cliques-paineis`, que parte da branch unificada `fix/rastreio-cliques-whatsapp`; abrir o PR depois que o PR do passo 1 e 2 for mergeado (ou apontar o PR para a branch unificada).
+
+**Prestador** (`/dashboard`)
+- Card "Pedidos de orçamento pelo WhatsApp" abaixo do anúncio, com cliques dos últimos 7 dias, dos últimos 30 dias e o total registrado (inclui os registros históricos importados).
+- Rota `GET /api/prestadores/meus-cliques`: descobre o prestador pela sessão. Roda no servidor porque só ele sabe se o rastreio está ativo para aquele prestador. **Fora da amostra, o card mostra um aviso em vez de "0"**, para o prestador não achar que ninguém clicou.
+- O card só aparece com cadastro completo e perfil não bloqueado.
+
+**Admin** (`/admin/cliques`, link "Cliques WhatsApp" no menu, em Inteligência)
+- Períodos de 7, 30 e 90 dias: total de cliques, pessoas diferentes (cookies de sessão distintos, sem os registros `backfill`), prestadores distintos, cliques por dia (dias de Brasília), origem e campanha, e ranking dos 10 prestadores.
+- Aviso fixo com o modo do rastreio (`amostra` com N prestadores, ou `todos`), porque em `amostra` quem está fora não aparece e isso não quer dizer zero cliques.
+- Rota `GET /api/admin/cliques`: exige admin (`perfis_admin`, como as outras rotas de `/api/admin`). Lê em páginas de 1000 linhas, que é o teto do Supabase por consulta, até 10 páginas; se passar disso, a página avisa que os números são parciais em vez de mostrar um total menor como se fosse completo.
+
+**Correção encontrada no caminho:** o "Pulso ao vivo" da home do admin filtrava a ação `CLIQUE_WHATSAPP`, que nenhum ponto do código grava. A ação real é `CLIQUE_WHATSAPP_ORCAMENTO`. Por isso o painel nunca mostrou cliques de WhatsApp. Corrigido em `adminDashboard.service.ts` e na própria home.
+
+**Verificação feita**
+- `lib/tracking/resumo.ts` (a agregação, que concentra a lógica) tem 8 testes que passam, rodados com o executor de testes do Node e um adaptador mínimo no lugar do vitest, e compila em modo estrito (`tsc --strict`, saída 0).
+- O `tsc` do projeto inteiro só acusa módulos e tipos do React ausentes no ambiente; nenhum erro de tipo nos arquivos alterados.
+
+**Não verificado:** lint, `vitest` de verdade, build e as telas no navegador. As rotas e o card nunca foram executados contra o banco. O número a conferir primeiro é o do prestador 128, que tem 1 clique real desde 22/10.
+
+**Como validar no deploy de preview**
+1. Entrar como o dono do prestador 128, que está na amostra: o card deve mostrar 1 clique nos últimos 7 e 30 dias (mais os históricos no total).
+2. Entrar como um prestador fora da amostra: o card deve mostrar o aviso de contagem não ativa, e não "0".
+3. Entrar no admin e abrir `/admin/cliques`: o aviso deve dizer "modo amostra" com 15 prestadores, e o prestador 128 deve aparecer no ranking.
+4. Na home do admin, depois de um clique de teste num perfil da amostra, o "Pulso ao vivo" deve mostrar "WhatsApp clicado".
+
+**Limites conhecidos**
+- Os números do prestador somam linhas da tabela `cliques`; o log de auditoria não entra.
+- "Pessoas diferentes" é por navegador: quem limpa os cookies ou troca de aparelho conta como outra pessoa.
+- O ranking do admin mostra só os 10 primeiros prestadores e as 20 maiores combinações de origem e campanha.

@@ -112,7 +112,7 @@ export async function getRadarRecente(): Promise<RadarItem[]> {
   const { data, error } = await supabase
     .from('logs_atividades')
     .select('acao, detalhes, created_at')
-    .in('acao', ['CLIQUE_WHATSAPP', 'BUSCA_SEM_SUCESSO', 'DENUNCIA_PERFIL', 'FILTRO_CATEGORIA'])
+    .in('acao', ['CLIQUE_WHATSAPP_ORCAMENTO', 'BUSCA_SEM_SUCESSO', 'DENUNCIA_PERFIL', 'FILTRO_CATEGORIA'])
     .order('created_at', { ascending: false })
     .limit(8)
 

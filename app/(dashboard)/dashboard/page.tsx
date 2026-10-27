@@ -8,6 +8,7 @@ import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
 import AvaliacoesDashboardTab from '@/components/dashboard/AvaliacoesDashboardTab'
 import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
+import { CliquesWhatsappCard } from '@/components/dashboard/CliquesWhatsappCard'
 import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Star } from 'lucide-react'
 import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
@@ -103,6 +104,12 @@ function PerfilPageContent() {
       <div className="mt-4">
         <AdCardDashboard />
       </div>
+
+      {!validando && cadastroCompleto && !bloqueado && (
+        <div className="mt-4">
+          <CliquesWhatsappCard />
+        </div>
+      )}
 
       {/* ── Nav de abas ── */}
       <nav className="sticky top-16 z-40 mt-4 -mx-4 border-b border-slate-200 bg-[#F8FAFC]/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8" aria-label="Seções do dashboard">
