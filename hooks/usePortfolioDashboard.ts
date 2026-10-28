@@ -95,7 +95,7 @@ export function usePortfolioDashboard() {
         if (atualizado) setProjetoParaEdicao(atualizado)
       })
       .catch((err) => {
-        console.error('[v0] Erro ao atualizar projeto em segundo plano:', err)
+        console.error('Erro ao atualizar projeto em segundo plano:', err)
       })
   }
 

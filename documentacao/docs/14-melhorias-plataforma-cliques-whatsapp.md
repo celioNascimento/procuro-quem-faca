@@ -65,8 +65,8 @@ Regras aplicadas hoje na rota (Tarefa 3):
 - [x] 1. Conferir modo e criar migration — modo confirmado como `amostra`; migration enviada (ver seção 5)
 - [x] 2. `keepalive` e log unificado — código no PR `fix/rastreio-cliques-whatsapp`; falta validar no deploy de preview (ver seção 5)
 - [x] 3. Exibir cliques nos painéis — código na branch `feat/passo3-cliques-paineis`; falta validar no deploy de preview (ver seção 5)
-- [ ] 4. Decidir rastreio dos demais botões
-- [ ] 5. Limpeza e smoke test
+- [x] 4. Decidir rastreio dos demais botões — decidido: não rastrear (ver seção 5)
+- [x] 5. Limpeza — `console` `[v0]` removidos (ver seção 5); `smoke.mjs --writes` não rodou nesta sessão (sem acesso ao Supabase do PQF)
 - [ ] 6. Remover a política pública de `INSERT` em `cliques`
 
 ## 5. Registro por passo
@@ -161,3 +161,17 @@ Regras aplicadas hoje na rota (Tarefa 3):
 - Os números do prestador somam linhas da tabela `cliques`; o log de auditoria não entra.
 - "Pessoas diferentes" é por navegador: quem limpa os cookies ou troca de aparelho conta como outra pessoa.
 - O ranking do admin mostra só os 10 primeiros prestadores e as 20 maiores combinações de origem e campanha.
+
+### Passo 4 — Decisão sobre os demais botões de WhatsApp (28/10/2026)
+
+**Decisão (Célio):** não rastrear `ServicoCard` (meus serviços) nem `CardPrestador` (acompanhamento).
+
+**Motivo:** diferente do `PerfilCTA` (perfil público, "Solicitar Orçamento" — um lead novo), esses dois botões aparecem depois que o cliente já aceitou o prestador e o serviço está em andamento ou concluído. São um telefone de contato sobre um serviço que já existe, não um pedido de orçamento novo. Contar os três juntos infla "pedidos de orçamento" com cliques que não são leads — e a tabela `cliques` não tem coluna para distinguir os dois casos, então misturar agora corrige errado depois (exigiria mudança de schema). Nenhum código foi alterado nesses dois componentes.
+
+Se no futuro fizer sentido medir esse tipo de engajamento pós-contrato, deve ser uma métrica separada (ex: coluna `tipo` em `cliques`, ou tabela própria), nunca somada a "pedidos de orçamento".
+
+### Passo 5 — Limpeza (28/10/2026)
+
+**O que foi feito:** removido o prefixo `[v0] ` de todas as 12 ocorrências de `console.error` encontradas no código (`WizardCompleted.tsx`, `usePrestadores.ts`, `useAdminDashboard.ts`, `useAdminLogs.ts`, `useHabilidades.ts` ×2, `useAvaliacoesRecebidasCliente.ts`, `useAvaliacaoClienteDoProjeto.ts` ×2, `usePortfolioDashboard.ts`, `app/api/admin/prestadores/route.ts`, `denuncia.service.ts`). Só o texto do prefixo mudou — nenhuma lógica foi tocada.
+
+**Não feito nesta sessão:** `smoke.mjs --writes` não rodou — o ambiente de trabalho não tem `node_modules` instalado nem acesso ao Supabase do PQF (mesma limitação já registrada nos passos 1–3). Rodar manualmente antes de abrir o PR para produção, ou validar no deploy de preview.

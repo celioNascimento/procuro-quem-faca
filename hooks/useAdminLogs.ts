@@ -26,7 +26,7 @@ export function useAdminLogs() {
       const data = await fetchLogsRecentes(1000)
       setLogs(data)
     } catch (err) {
-      console.error('[v0] Erro ao carregar logs:', err)
+      console.error('Erro ao carregar logs:', err)
       setErro('Não foi possível carregar os logs. Verifique sua sessão e tente novamente.')
     } finally {
       setLoading(false)

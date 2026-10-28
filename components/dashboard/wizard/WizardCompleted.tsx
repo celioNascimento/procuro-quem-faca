@@ -46,7 +46,7 @@ export function WizardCompleted({ hookData, prestadorId }: Props) {
       motivos,
     })
     if (error) {
-      console.error('[v0] Falha ao salvar avaliação do cliente:', {
+      console.error('Falha ao salvar avaliação do cliente:', {
         code: error.code,
         message: error.message,
         details: error.details,

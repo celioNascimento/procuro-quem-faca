@@ -30,7 +30,7 @@ export async function criarDenuncia(prestadorId: number, motivo: string): Promis
     detalhes: { motivo: motivoNormalizado, timestamp: new Date().toISOString() },
   })
 
-  if (logError) console.error('[v0] Denúncia criada, mas o log falhou:', logError)
+  if (logError) console.error('Denúncia criada, mas o log falhou:', logError)
 }
 
   export interface DenunciaComPrestador {

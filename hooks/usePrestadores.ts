@@ -301,7 +301,7 @@ export function usePrestadores() {
         cidadeEfetiva: cidadeEfetivaNormalizada || null,
       },
     }).catch((error) => {
-      console.error('[v0] Falha ao registrar busca sem resultados:', error)
+      console.error('Falha ao registrar busca sem resultados:', error)
     })
   }, [
     queryBusca,
