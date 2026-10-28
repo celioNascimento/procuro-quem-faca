@@ -1,0 +1,21 @@
+-- Passo 6 do rastreio de cliques no WhatsApp
+-- (documentacao/docs/14-melhorias-plataforma-cliques-whatsapp.md)
+--
+-- Remove a política que deixava QUALQUER pessoa inserir direto na tabela
+-- `cliques` pela API pública do Supabase (com a chave anon/publishable),
+-- sem passar pelas regras da rota /api/prestadores/clique-whatsapp
+-- (filtro de robô, dedupe de 24h, dono do perfil, amostra).
+--
+-- Confirmado antes de remover (28/10/2026): a única inserção em `cliques`
+-- no código é lib/services/cliques.service.ts -> inserirClique(), chamada
+-- só por app/api/prestadores/clique-whatsapp/route.ts, que usa
+-- getAdminClient() (service role) — client que ignora RLS por completo.
+-- Ou seja, nenhum caminho do app depende dessa política; ela só existe
+-- como superfície de ataque (qualquer um com a chave pública podia inflar
+-- a contagem de cliques de um prestador).
+--
+-- Depois desta migration, com RLS ativo e sem nenhuma política de INSERT,
+-- o Supabase nega por padrão qualquer INSERT feito com a chave anon ou
+-- por um usuário autenticado comum. A rota continua funcionando normalmente
+-- porque usa o cliente administrativo.
+drop policy if exists "Qualquer um pode registrar um clique" on public.cliques;
