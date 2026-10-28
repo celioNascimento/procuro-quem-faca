@@ -148,10 +148,31 @@ function decodificarPqfOrigem(linhaDeCookie) {
   return JSON.parse(decodeURIComponent(valor))
 }
 
+// O domínio raiz (apex) redireciona para o www direto na Vercel, ANTES de
+// qualquer código do Next.js rodar — esse primeiro salto nunca vai ter o
+// Set-Cookie do proxy.ts, porque o proxy.ts não chega a ser chamado nele.
+// Um visitante de verdade sempre segue o redirect e o cookie é gravado só
+// na resposta final (em www). Por isso seguimos os saltos manualmente
+// (até 5, por segurança) acumulando os Set-Cookie de cada um, em vez de
+// olhar só a primeira resposta.
+async function buscarAcumulandoCookies(url, init = {}) {
+  let atual = url
+  const cookies = []
+  for (let i = 0; i < 5; i++) {
+    const r = await buscar(atual, { ...init, redirect: 'manual' })
+    cookies.push(...cookiesDe(r))
+    const isRedirect = r.status >= 300 && r.status < 400
+    const local = r.headers.get('location')
+    if (!isRedirect || !local) return { resposta: r, cookies }
+    atual = new URL(local, atual).toString()
+  }
+  throw new Error(`mais de 5 redirects seguindo ${url} — loop de domínio?`)
+}
+
 await teste('Cookie pqf_origem é gravado com utm na URL', async () => {
-  const r = await buscar(`${BASE}/?utm_source=smoke&utm_campaign=teste-cookie`, { redirect: 'manual' })
-  const linha = cookiesDe(r).find((c) => c.startsWith('pqf_origem='))
-  garantir(linha, 'nenhum Set-Cookie pqf_origem na resposta (proxy.ts está rodando na home? veja o matcher)')
+  const { cookies } = await buscarAcumulandoCookies(`${BASE}/?utm_source=smoke&utm_campaign=teste-cookie`)
+  const linha = cookies.find((c) => c.startsWith('pqf_origem='))
+  garantir(linha, 'nenhum Set-Cookie pqf_origem em nenhum salto (proxy.ts está rodando na home? veja o matcher)')
   const dados = decodificarPqfOrigem(linha)
   garantir(dados.o === 'smoke', `origem esperada 'smoke', veio '${dados.o}'`)
   garantir(dados.c === 'teste-cookie', `campanha esperada 'teste-cookie', veio '${dados.c}'`)
@@ -159,17 +180,16 @@ await teste('Cookie pqf_origem é gravado com utm na URL', async () => {
 
 await teste('Cookie pqf_origem NÃO é sobrescrito se já existir (first-touch)', async () => {
   const cookieExistente = encodeURIComponent(JSON.stringify({ o: 'google', c: 'seo' }))
-  const r = await buscar(`${BASE}/?utm_source=outro&utm_campaign=outro`, {
-    redirect: 'manual',
+  const { cookies } = await buscarAcumulandoCookies(`${BASE}/?utm_source=outro&utm_campaign=outro`, {
     headers: { Cookie: `pqf_origem=${cookieExistente}` },
   })
-  const linha = cookiesDe(r).find((c) => c.startsWith('pqf_origem='))
+  const linha = cookies.find((c) => c.startsWith('pqf_origem='))
   garantir(!linha, 'o cookie foi sobrescrito mesmo já existindo (quebra a regra de primeiro toque)')
 })
 
 await teste('Sem utm na URL, nenhum cookie pqf_origem é gravado', async () => {
-  const r = await buscar(`${BASE}/`, { redirect: 'manual' })
-  const linha = cookiesDe(r).find((c) => c.startsWith('pqf_origem='))
+  const { cookies } = await buscarAcumulandoCookies(`${BASE}/`)
+  const linha = cookies.find((c) => c.startsWith('pqf_origem='))
   garantir(!linha, 'um cookie pqf_origem foi gravado sem nenhum utm na URL')
 })
 
