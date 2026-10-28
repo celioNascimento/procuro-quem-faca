@@ -67,7 +67,9 @@ Regras aplicadas hoje na rota (Tarefa 3):
 - [x] 3. Exibir cliques nos painéis — código na branch `feat/passo3-cliques-paineis`; falta validar no deploy de preview (ver seção 5)
 - [x] 4. Decidir rastreio dos demais botões — decidido: não rastrear (ver seção 5)
 - [x] 5. Limpeza — `console` `[v0]` removidos (ver seção 5); `smoke.mjs --writes` revalidado em produção pelo Célio (11 passaram, 0 falharam, 1 pulado)
-- [x] 6. Remover a política pública de `INSERT` em `cliques` — migration criada (ver seção 5); falta aplicar em produção
+- [x] 6. Remover a política pública de `INSERT` em `cliques` — migration criada e aplicada em produção pelo Célio (ver seção 5)
+
+**Frente encerrada em 28/10/2026** — os 6 passos estão concluídos e aplicados em produção. O modo do rastreio saiu de `amostra` para `todos` (ver seção 5, Passo 7); a partir daqui os cliques de WhatsApp são contados para todos os prestadores.
 
 ## 5. Registro por passo
 
@@ -186,4 +188,19 @@ Se no futuro fizer sentido medir esse tipo de engajamento pós-contrato, deve se
 
 **O que foi feito:** migration `supabase/migrations/20261028220000_remove_insert_publico_cliques.sql` — `drop policy if exists "Qualquer um pode registrar um clique" on public.cliques`. Depois dela, com RLS ativo e sem política de INSERT, o Supabase nega por padrão qualquer inserção feita com a chave anon ou por usuário comum; a rota continua funcionando normalmente porque usa o cliente administrativo.
 
-**Falta:** aplicar a migration em produção (`supabase db push` ou pela interface do Supabase) e então confirmar, repetindo a consulta em `pg_policy` do passo 1, que só restaram as duas políticas de leitura.
+**Aplicado pelo Célio em produção (28/10/2026)** direto no SQL Editor do Supabase. A política pública de `INSERT` não existe mais em `cliques`.
+
+### Passo 7 — Sair do modo amostra (28/10/2026)
+
+**Decisão (Célio):** encerrar o teste por amostra e passar a contar cliques de todos os prestadores, não só dos 15 da tabela `rastreio_amostra`.
+
+**O que foi feito:** ajuste de dados no banco (não é migration — mesmo comando já previsto no Passo 1):
+```sql
+update public.rastreio_config
+set valor = 'todos', atualizado_em = now()
+where chave = 'modo';
+```
+
+**Efeito imediato, sem deploy:** `deveRastrear()` (`lib/tracking/amostra.ts`) passa a devolver `true` para qualquer prestador. O card "Pedidos de orçamento pelo WhatsApp" no dashboard (`/dashboard`) mostra os números reais para todo mundo, em vez do aviso de contagem não ativa. Em `/admin/cliques`, o aviso fixo passa de "modo amostra com 15 prestadores" para "modo todos".
+
+**Observação:** a tabela `rastreio_amostra` não precisa ser apagada — fica sem efeito enquanto `rastreio_config.valor = 'todos'`, e serve de histórico de quem foi testado primeiro.
