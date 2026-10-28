@@ -66,8 +66,8 @@ Regras aplicadas hoje na rota (Tarefa 3):
 - [x] 2. `keepalive` e log unificado — código no PR `fix/rastreio-cliques-whatsapp`; falta validar no deploy de preview (ver seção 5)
 - [x] 3. Exibir cliques nos painéis — código na branch `feat/passo3-cliques-paineis`; falta validar no deploy de preview (ver seção 5)
 - [x] 4. Decidir rastreio dos demais botões — decidido: não rastrear (ver seção 5)
-- [x] 5. Limpeza — `console` `[v0]` removidos (ver seção 5); `smoke.mjs --writes` não rodou nesta sessão (sem acesso ao Supabase do PQF)
-- [ ] 6. Remover a política pública de `INSERT` em `cliques`
+- [x] 5. Limpeza — `console` `[v0]` removidos (ver seção 5); `smoke.mjs --writes` revalidado em produção pelo Célio (11 passaram, 0 falharam, 1 pulado)
+- [x] 6. Remover a política pública de `INSERT` em `cliques` — migration criada (ver seção 5); falta aplicar em produção
 
 ## 5. Registro por passo
 
@@ -177,3 +177,13 @@ Se no futuro fizer sentido medir esse tipo de engajamento pós-contrato, deve se
 **Não feito nesta sessão:** `smoke.mjs --writes` não rodou — o ambiente de trabalho não tem `node_modules` instalado nem acesso ao Supabase do PQF (mesma limitação já registrada nos passos 1–3). Rodar manualmente antes de abrir o PR para produção, ou validar no deploy de preview.
 
 **Validado pelo Célio em produção (28/10/2026):** rodou `node scripts/smoke.mjs --writes` contra `https://procuroquemfaca.com.br`. 10 testes passaram; 1 "falhou" (`Cookie pqf_origem é gravado com utm na URL`) por um bug do próprio script, não da aplicação — o domínio raiz redireciona (307) para `www.procuroquemfaca.com.br` direto na Vercel, antes do `proxy.ts` rodar, e o teste usava `redirect: 'manual'`, então só via essa primeira resposta (sem Set-Cookie, porque o proxy.ts nem chega a ser chamado nela). Um visitante real sempre segue o redirect e cai em `www`, onde o cookie é gravado normalmente — confirmado com `curl.exe -i` mostrando o `307`/`Location` e `x-vercel-id` da Vercel, antes de qualquer código do Next.js. Corrigido o script (`scripts/smoke.mjs`): os 3 testes de cookie agora seguem manualmente até 5 saltos de redirect, acumulando os `Set-Cookie` de cada um, em vez de olhar só a primeira resposta. Testes de escrita (`--writes`) pulados porque a base não era localhost e `--confirmo-producao` não foi usado — nenhuma linha de teste foi gravada em `cliques`.
+
+**Re-validado pelo Célio (28/10/2026) após a correção:** `node scripts/smoke.mjs --writes` contra produção — **11 passaram, 0 falharam, 1 pulado** (o de escrita, mesma razão de antes). Passos 2 e 3 ficam validados de ponta a ponta em produção.
+
+### Passo 6 — Remover o INSERT público em `cliques` (28/10/2026)
+
+**Confirmado antes de remover:** a única inserção em `cliques` no código é `inserirClique()` (`lib/services/cliques.service.ts`), chamada só pela rota `/api/prestadores/clique-whatsapp`, que usa `getAdminClient()` (service role — ignora RLS). Nenhum caminho do app depende da política pública; ela só era superfície de ataque (qualquer pessoa com a chave anon podia inserir cliques falsos direto pela API do Supabase, sem dedupe, sem filtro de robô, sem respeitar a amostra).
+
+**O que foi feito:** migration `supabase/migrations/20261028220000_remove_insert_publico_cliques.sql` — `drop policy if exists "Qualquer um pode registrar um clique" on public.cliques`. Depois dela, com RLS ativo e sem política de INSERT, o Supabase nega por padrão qualquer inserção feita com a chave anon ou por usuário comum; a rota continua funcionando normalmente porque usa o cliente administrativo.
+
+**Falta:** aplicar a migration em produção (`supabase db push` ou pela interface do Supabase) e então confirmar, repetindo a consulta em `pg_policy` do passo 1, que só restaram as duas políticas de leitura.
