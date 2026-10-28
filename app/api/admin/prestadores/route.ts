@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const totais = { todos: prestadores.length, publico: prestadores.filter((item) => item.etapa === 'publico').length, cadastro: prestadores.filter((item) => item.etapa === 'cadastro').length, reivindicado: prestadores.filter((item) => item.etapa === 'reivindicado').length, ativo: prestadores.filter((item) => item.etapa === 'ativo').length, acompanhar: prestadores.filter((item) => item.contatoStatus !== 'sem_contato').length }
     return NextResponse.json({ prestadores: filtrados, totais })
   } catch (error) {
-    console.error('[v0] admin prestadores error', error)
+    console.error('admin prestadores error', error)
     return NextResponse.json({ error: 'Não foi possível carregar os prestadores.' }, { status: 500 })
   }
 }

@@ -55,7 +55,7 @@ export function useHabilidades() {
       await carregarDados()
       return { ok: true, error: null }
     } catch (err) {
-      console.error('[v0] Erro ao cadastrar grupo:', err)
+      console.error('Erro ao cadastrar grupo:', err)
       return { ok: false, error: getSaveError(err, 'grupo') }
     } finally { setSaving(false) }
   }, [carregarDados])
@@ -69,7 +69,7 @@ export function useHabilidades() {
       await carregarDados()
       return { ok: true, error: null }
     } catch (err) {
-      console.error('[v0] Erro ao cadastrar categoria:', err)
+      console.error('Erro ao cadastrar categoria:', err)
       return { ok: false, error: getSaveError(err, 'categoria') }
     } finally { setSaving(false) }
   }, [carregarDados])

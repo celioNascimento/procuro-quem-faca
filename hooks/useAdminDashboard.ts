@@ -61,7 +61,7 @@ export function useAdminDashboard() {
       })
       setRadar(radarRecente)
     } catch (err) {
-      console.error('[v0] Erro ao carregar dashboard admin:', err)
+      console.error('Erro ao carregar dashboard admin:', err)
       setErro('Não foi possível atualizar os dados do painel.')
     } finally {
       setRefreshing(false)

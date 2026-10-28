@@ -27,7 +27,7 @@ export function useAvaliacaoClienteDoProjeto(projetoId: string | null) {
       .maybeSingle()
 
     if (error) {
-      console.error('[v0] Falha ao buscar avaliação do cliente:', error)
+      console.error('Falha ao buscar avaliação do cliente:', error)
     }
     setAvaliacao(data ?? null)
     setLoading(false)
@@ -48,7 +48,7 @@ export function useAvaliacaoClienteDoProjeto(projetoId: string | null) {
       .then(({ data, error }) => {
         if (!ativo) return
         if (error) {
-          console.error('[v0] Falha ao buscar avaliação do cliente:', error)
+          console.error('Falha ao buscar avaliação do cliente:', error)
         }
         setAvaliacao(data ?? null)
         setLoading(false)

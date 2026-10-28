@@ -61,7 +61,7 @@ export function useAvaliacoesRecebidasCliente(clienteUserId: string | null) {
       .then(({ data, error }) => {
         if (!ativo) return
         if (error) {
-          console.error('[v0] Falha ao buscar avaliações recebidas:', error)
+          console.error('Falha ao buscar avaliações recebidas:', error)
         }
         setAvaliacoes(data ?? [])
         setLoading(false)
