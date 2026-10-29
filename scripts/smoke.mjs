@@ -174,6 +174,22 @@ async function buscarAcumulandoCookies(url, init = {}) {
   throw new Error(`mais de 5 redirects seguindo ${url} — loop de domínio?`)
 }
 
+// Endereço FINAL do site, depois dos redirects de domínio (apex -> www). Os testes
+// de escrita mandam o cookie de sessão (pqf_sid) e o fetch do Node DESCARTA o
+// cabeçalho Cookie ao seguir um redirect para outro domínio. Sem isso, a
+// "repetição" chegaria ao servidor sem cookie, como uma sessão nova, e seria
+// contada. Falar direto com o endereço final evita o redirect.
+async function resolverBaseFinal(base) {
+  let atual = new URL(base).origin
+  for (let i = 0; i < 5; i++) {
+    const r = await buscar(`${atual}/`, { redirect: 'manual' })
+    const destino = r.headers.get('location')
+    if (!(r.status >= 300 && r.status < 400) || !destino) return atual
+    atual = new URL(destino, atual).origin
+  }
+  throw new Error(`mais de 5 redirects resolvendo ${base} — loop de domínio?`)
+}
+
 await teste('Cookie pqf_origem é gravado com utm na URL', async () => {
   const { cookies } = await buscarAcumulandoCookies(`${BASE}/?utm_source=smoke&utm_campaign=teste-cookie`)
   const linha = cookies.find((c) => c.startsWith('pqf_origem='))
@@ -207,7 +223,9 @@ if (flag('writes')) {
       detalhe: 'base não é localhost; use --confirmo-producao se for mesmo gravar na produção',
     })
   } else {
-    const rota = `${BASE}/api/prestadores/clique-whatsapp`
+    const BASE_ESCRITA = await resolverBaseFinal(BASE)
+    console.log(`Testes de escrita falam direto com: ${BASE_ESCRITA}${BASE_ESCRITA !== BASE ? `  (o endereço ${BASE} redireciona para ele)` : ''}`)
+    const rota = `${BASE_ESCRITA}/api/prestadores/clique-whatsapp`
     async function clicar(prestadorId, { ua = UA_PESSOA, cookie = '' } = {}) {
       const r = await buscar(rota, {
         method: 'POST',
@@ -239,7 +257,8 @@ if (flag('writes')) {
     await teste('Repetir o clique na mesma sessão NÃO conta', async () => {
       garantir(cookieSessao, 'depende do teste anterior')
       const r = await clicar(ID_AMOSTRA, { cookie: cookieSessao })
-      garantir(r.json && r.json.contado === false, `esperava contado=false e veio ${JSON.stringify(r.json)}`)
+      garantir(r.json && r.json.contado === false,
+        `esperava contado=false e veio ${JSON.stringify(r.json)} (cookie enviado: ${cookieSessao}; resposta devolveu: ${r.cookie || 'nenhum cookie novo'})`)
     })
     await teste('Robô (Googlebot) NÃO conta', async () => {
       const r = await clicar(ID_AMOSTRA, { ua: 'Googlebot/2.1' })
@@ -256,7 +275,7 @@ if (flag('writes')) {
     })
 
     // ── visitas ao perfil (gravadas pelo servidor) ──────────────────────────
-    const rotaVisita = `${BASE}/api/prestadores/visita-perfil`
+    const rotaVisita = `${BASE_ESCRITA}/api/prestadores/visita-perfil`
     async function visitar(prestadorId, { ua = UA_PESSOA, cookie = '' } = {}) {
       const r = await buscar(rotaVisita, {
         method: 'POST',
@@ -287,7 +306,8 @@ if (flag('writes')) {
     await teste('Repetir a visita na mesma sessão NÃO conta', async () => {
       garantir(cookieVisita, 'depende do teste anterior')
       const r = await visitar(ID_AMOSTRA, { cookie: cookieVisita })
-      garantir(r.json && r.json.contado === false, `esperava contado=false e veio ${JSON.stringify(r.json)}`)
+      garantir(r.json && r.json.contado === false,
+        `esperava contado=false e veio ${JSON.stringify(r.json)} (cookie enviado: ${cookieVisita}; resposta devolveu: ${r.cookie || 'nenhum cookie novo'})`)
     })
     await teste('Visita de robô (Googlebot) NÃO conta', async () => {
       const r = await visitar(ID_AMOSTRA, { ua: 'Googlebot/2.1' })
