@@ -4,20 +4,24 @@
 // USO (precisa de Node 18 ou mais novo):
 //   node scripts/smoke.mjs                          confere a produção (somente leitura)
 //   node scripts/smoke.mjs --base http://localhost:3000 --writes
-//                                                   também testa o registro de cliques
-//                                                   (GRAVA linhas com campanha 'teste')
+//                                                   também testa o registro de cliques e de
+//                                                   visitas (GRAVA linhas com campanha 'teste')
 // OPÇÕES:
 //   --base URL            endereço do site (padrão: https://procuroquemfaca.com.br)
 //   --slugs a,b,c         slugs com "-em-" para conferir (padrão: busca no Supabase)
 //   --servico slug        página de serviço a conferir (padrão: pedreiro-em-londrina)
 //   --amostra-id N        prestador DENTRO da amostra (padrão: 145)
 //   --fora-id N           prestador FORA da amostra (padrão: 41)
-//   --writes              liga os testes que gravam dados (clique)
+//   --modo todos|amostra  modo do rastreio no banco (padrão: todos, o de produção desde
+//                         28/10). Com 'todos' o teste "fora da amostra" é pulado, porque
+//                         nesse modo todo prestador é contado.
+//   --writes              liga os testes que gravam dados (clique e visita)
 //   --confirmo-producao   necessário para --writes em endereço que não seja localhost
 //
 // Os testes de leitura NÃO alteram nada. Os testes de escrita gravam no banco real
 // (você só tem um banco) usando campanha 'teste'. Depois, apague com:
 //   delete from public.cliques where campanha = 'teste';
+//   delete from public.visitas_perfil where campanha = 'teste';
 
 import { existsSync, readFileSync } from 'node:fs'
 
@@ -32,6 +36,7 @@ const BASE = opcao('base', 'https://procuroquemfaca.com.br').replace(/\/$/, '')
 const SERVICO = opcao('servico', 'pedreiro-em-londrina')
 const ID_AMOSTRA = Number(opcao('amostra-id', '145'))
 const ID_FORA = Number(opcao('fora-id', '41'))
+const MODO = opcao('modo', 'todos')
 const UA_PESSOA =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
 const REFERER = `${BASE}/perfil-de-teste?utm_source=meta&utm_campaign=teste`
@@ -241,11 +246,55 @@ if (flag('writes')) {
       garantir(r.json && r.json.contado === false, `esperava contado=false e veio ${JSON.stringify(r.json)}`)
     })
     await teste('Prestador fora da amostra NÃO conta', async () => {
+      if (MODO !== 'amostra') return 'PULOU' // no modo todos, todo prestador é contado
       const r = await clicar(ID_FORA)
       garantir(r.json && r.json.contado === false, `esperava contado=false e veio ${JSON.stringify(r.json)}`)
     })
     await teste('Pedido inválido é recusado (400)', async () => {
       const r = await clicar(-5)
+      garantir(r.status === 400, `status ${r.status}`)
+    })
+
+    // ── visitas ao perfil (gravadas pelo servidor) ──────────────────────────
+    const rotaVisita = `${BASE}/api/prestadores/visita-perfil`
+    async function visitar(prestadorId, { ua = UA_PESSOA, cookie = '' } = {}) {
+      const r = await buscar(rotaVisita, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 'User-Agent': ua, Referer: REFERER,
+          ...(cookie ? { Cookie: cookie } : {}),
+        },
+        body: JSON.stringify({ prestadorId }),
+      })
+      const lista = typeof r.headers.getSetCookie === 'function' ? r.headers.getSetCookie() : [r.headers.get('set-cookie') || '']
+      const sessao = lista.join(';').match(/pqf_sid=[^;,\s]+/)
+      let json = null
+      try { json = await r.json() } catch { /* sem corpo JSON */ }
+      return { status: r.status, json, cookie: sessao ? sessao[0] : '' }
+    }
+    let cookieVisita = ''
+
+    await teste('Visita válida é contada', async () => {
+      const r = await visitar(ID_AMOSTRA)
+      garantir(r.status !== 404, 'rota /api/prestadores/visita-perfil não encontrada (deploy antigo no ar?)')
+      garantir(r.status === 200, r.status === 500
+        ? 'status 500: confira SUPABASE_SERVICE_ROLE_KEY e se a tabela visitas_perfil tem origem, campanha e sessao_id'
+        : `status ${r.status}`)
+      garantir(r.json && r.json.contado === true, `esperava contado=true e veio ${JSON.stringify(r.json)}`)
+      cookieVisita = r.cookie
+      garantir(cookieVisita, 'a rota não devolveu o cookie de sessão pqf_sid')
+    })
+    await teste('Repetir a visita na mesma sessão NÃO conta', async () => {
+      garantir(cookieVisita, 'depende do teste anterior')
+      const r = await visitar(ID_AMOSTRA, { cookie: cookieVisita })
+      garantir(r.json && r.json.contado === false, `esperava contado=false e veio ${JSON.stringify(r.json)}`)
+    })
+    await teste('Visita de robô (Googlebot) NÃO conta', async () => {
+      const r = await visitar(ID_AMOSTRA, { ua: 'Googlebot/2.1' })
+      garantir(r.json && r.json.contado === false, `esperava contado=false e veio ${JSON.stringify(r.json)}`)
+    })
+    await teste('Visita com pedido inválido é recusada (400)', async () => {
+      const r = await visitar(-5)
       garantir(r.status === 400, `status ${r.status}`)
     })
   }
@@ -259,5 +308,9 @@ for (const r of resultados) {
 }
 const falhas = resultados.filter((r) => r.estado === 'FALHOU').length
 console.log(`\n${resultados.filter((r) => r.estado === 'PASSOU').length} passaram, ${falhas} falharam, ${resultados.filter((r) => r.estado === 'PULOU').length} pulados.`)
-if (flag('writes')) console.log("Lembrete: apague os testes com  delete from public.cliques where campanha = 'teste';")
+if (flag('writes')) {
+  console.log("Lembrete: apague os testes com:")
+  console.log("  delete from public.cliques where campanha = 'teste';")
+  console.log("  delete from public.visitas_perfil where campanha = 'teste';")
+}
 process.exit(falhas > 0 ? 1 : 0)

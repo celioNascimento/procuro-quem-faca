@@ -13,20 +13,36 @@ import { setCookie, getCookie } from '@/lib/cookies'
  * dispara quando a visita veio da busca via ?from=), este é sobre contagem
  * geral de acesso (dispara sempre, independente de origem), usado para
  * exibir "você teve X acessos este mês" ao prestador.
+ *
+ * A GRAVAÇÃO é feita pelo servidor (POST /api/prestadores/visita-perfil), que
+ * decide o que conta: ignora robôs e o dono do perfil, aplica o dedupe de 24h
+ * por sessão, respeita o modo do rastreio e grava origem e campanha. O
+ * navegador não insere mais direto no banco. A LEITURA abaixo continua pelo
+ * cliente do navegador, protegida pelo RLS.
  */
 
 const DEDUPE_DIAS = 1
+const ROTA_VISITA = '/api/prestadores/visita-perfil'
+
+// Prestadores com pedido em andamento nesta aba. Evita duas chamadas quase
+// simultâneas (ex.: o hook do perfil carregando duas vezes seguidas) antes de
+// o cookie de dedupe existir.
+const emVoo = new Set<string>()
 
 function cookieKeyVisita(prestadorId: number | string): string {
   return `pqf_visita_perfil_${prestadorId}`
 }
 
 /**
- * Registra 1 visita ao perfil, com dedupe de 24h por prestador via cookie —
- * evita que um F5 do próprio prestador olhando o próprio perfil, ou reload
- * do visitante, infle a contagem. Cookie (não sessionStorage) porque
- * sessionStorage zera a cada nova aba, e abrir o link do WhatsApp em nova
- * aba não deveria contar como novo acesso.
+ * Pede ao servidor para registrar 1 visita ao perfil. O cookie de 24h por
+ * prestador só evita chamadas repetidas do mesmo navegador (um F5 não precisa
+ * nem ir ao servidor); a regra que vale é a do servidor. Cookie (não
+ * sessionStorage) porque sessionStorage zera a cada nova aba, e abrir o link
+ * do WhatsApp em nova aba não deveria contar como novo acesso.
+ *
+ * O cookie é gravado quando o servidor responde ok, mesmo que ele tenha
+ * ignorado a visita (robô, dono do perfil, repetida): repetir o pedido não
+ * mudaria o resultado.
  *
  * Silencioso em caso de erro — nunca deve quebrar o carregamento da página
  * de perfil por causa de uma falha no registro de métrica.
@@ -34,17 +50,27 @@ function cookieKeyVisita(prestadorId: number | string): string {
 export async function registrarVisitaPerfil(prestadorId: number | string): Promise<void> {
   if (typeof window === 'undefined') return
 
-  const cookieKey = cookieKeyVisita(prestadorId)
-  if (getCookie(cookieKey)) return
+  const id = Number(prestadorId)
+  if (!Number.isInteger(id) || id <= 0) return
 
+  const cookieKey = cookieKeyVisita(id)
+  if (getCookie(cookieKey) || emVoo.has(cookieKey)) return
+
+  emVoo.add(cookieKey)
   try {
-    const { error } = await supabase.from('visitas_perfil').insert({
-      prestador_id: prestadorId,
+    // keepalive: o pedido termina mesmo que a pessoa saia da página logo em seguida.
+    const resposta = await fetch(ROTA_VISITA, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prestadorId: id }),
+      keepalive: true,
     })
-    if (error) throw error
+    if (!resposta.ok) throw new Error(`status ${resposta.status}`)
     setCookie(cookieKey, '1', DEDUPE_DIAS)
   } catch (err) {
     console.error('[registrarVisitaPerfil] falha ao registrar visita:', err)
+  } finally {
+    emVoo.delete(cookieKey)
   }
 }
 
