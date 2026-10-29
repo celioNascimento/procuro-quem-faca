@@ -3,7 +3,6 @@
 'use client'
 import { useState, useRef, useLayoutEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { MapPin, ChevronRight, Globe } from 'lucide-react'
 import type { Prestador } from '@/types/prestador'
 import { getIniciais, getLocalizacao, getPerfilHref } from '@/lib/prestadorUtils'
@@ -22,7 +21,6 @@ const GAP_BADGES = 6
 
 export default function PrestadorCard({ prestador, session, registrarLog }: Props) {
   const [imgError, setImgError] = useState(false)
-  const router = useRouter()
 
   const habilidadesTotais = prestador?.habilidades || []
   const medidorRef = useRef<HTMLDivElement>(null)
@@ -74,12 +72,14 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
   const habilidadesVisiveis = qtdVisivel !== null ? habilidadesTotais.slice(0, qtdVisivel) : []
   const extras = qtdVisivel !== null ? habilidadesTotais.length - qtdVisivel : 0
 
+  const reivindicarHref = `/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome || '')}`
+
+  // O card inteiro é clicável sem que o <a> envolva o conteúdo: o link do nome
+  // ganha uma camada (after:) que cobre o card (z-10), e o link de reivindicação
+  // fica acima dela (z-20). Assim não há link dentro de link, os dois recebem foco
+  // do teclado e cada um tem o próprio nome para leitores de tela.
   return (
-    <Link
-      href={perfilHref}
-      onClick={() => registrarLog?.('CLIQUE_PERFIL', { nome: prestador.nome })}
-      className="group relative block bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
-    >
+    <div className="group relative bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
       <div className="flex min-h-[190px] flex-col gap-4 px-5 py-5 md:px-6 md:py-6">
         {/* Primeira linha: identidade do prestador */}
         <div className="flex min-w-0 items-center gap-4 md:gap-5">
@@ -100,7 +100,14 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
 
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h3 className="text-pretty text-base font-bold leading-snug tracking-tight text-slate-900 line-clamp-2 md:text-lg">
-              {prestador.nome}
+              <Link
+                href={perfilHref}
+                onClick={() => registrarLog?.('CLIQUE_PERFIL', { nome: prestador.nome })}
+                className="after:absolute after:inset-0 after:z-10 after:rounded-[2rem] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-blue-600"
+              >
+                <span className="sr-only">Ver perfil de </span>
+                {prestador.nome}
+              </Link>
             </h3>
             <span className="text-[11px] font-black uppercase leading-none tracking-widest text-blue-600 md:text-xs">
               {prestador.categoria}
@@ -165,25 +172,23 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
             )}
           </div>
 
-          <div className="flex shrink-0 flex-col items-center gap-2 sm:items-end">
-            <span className="flex min-h-10 w-full items-center justify-center gap-1 rounded-xl bg-blue-600 px-5 py-2.5 text-[11px] font-black uppercase tracking-wider text-white shadow-sm shadow-blue-200 transition-all group-hover:bg-blue-700 sm:w-auto sm:min-w-36">
+          <div className="flex shrink-0 flex-col items-center gap-1 sm:items-end">
+            <span
+              aria-hidden="true"
+              className="flex min-h-10 w-full items-center justify-center gap-1 rounded-xl bg-blue-600 px-5 py-2.5 text-[11px] font-black uppercase tracking-wider text-white shadow-sm shadow-blue-200 transition-all group-hover:bg-blue-700 sm:w-auto sm:min-w-36">
               Ver perfil <ChevronRight size={12} strokeWidth={3} />
             </span>
             {isPublico && (
-              <span
-                onClick={e => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  router.push(`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome || '')}`)
-                }}
-                className="cursor-pointer text-[10px] font-semibold text-slate-400 transition-colors hover:text-blue-600"
+              <Link
+                href={reivindicarHref}
+                className="relative z-20 inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-[13px] font-semibold text-blue-600 underline-offset-4 transition-colors hover:text-blue-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
               >
                 Este perfil é seu?
-              </span>
+              </Link>
             )}
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
