@@ -1,0 +1,51 @@
+# Verificações automáticas a cada push: testes (Vitest), lint (ESLint) e tipos (tsc).
+# Não roda `pnpm build`, que precisa das chaves do Supabase; quem valida o build é
+# o deploy da Vercel. O workflow do Playwright (e2e) é separado.
+
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+# Um push novo na mesma branch cancela a verificação anterior, ainda em andamento.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: Testes, lint e tipos
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Testes (Vitest)
+        run: pnpm test:run
+
+      # Os passos seguintes rodam mesmo que um anterior falhe, para o resultado
+      # mostrar tudo que está quebrado de uma vez.
+      - name: Lint (ESLint)
+        if: ${{ !cancelled() }}
+        run: pnpm lint
+
+      - name: Tipos (TypeScript)
+        if: ${{ !cancelled() }}
+        run: pnpm exec tsc --noEmit
