@@ -71,13 +71,6 @@ export function VisitasPerfilCard() {
           </div>
         )}
       </div>
-
-      {!carregando && !erro && dados && dados.visitasTotal > 0 && (
-        <p className="mt-3 text-[11px] leading-4 text-slate-400">
-          Cada pessoa conta uma vez a cada 24 horas. Desde 29/10, suas próprias visitas e as de
-          robôs não entram; os números anteriores podem incluí-las.
-        </p>
-      )}
     </section>
   )
 }
