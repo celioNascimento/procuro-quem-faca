@@ -9,6 +9,7 @@ import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
 import AvaliacoesDashboardTab from '@/components/dashboard/AvaliacoesDashboardTab'
 import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
 import { CliquesWhatsappCard } from '@/components/dashboard/CliquesWhatsappCard'
+import { VisitasPerfilCard } from '@/components/dashboard/VisitasPerfilCard'
 import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Star } from 'lucide-react'
 import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
@@ -106,7 +107,8 @@ function PerfilPageContent() {
       </div>
 
       {!validando && cadastroCompleto && !bloqueado && (
-        <div className="mt-4">
+        <div className="mt-4 flex flex-col gap-4">
+          <VisitasPerfilCard />
           <CliquesWhatsappCard />
         </div>
       )}
