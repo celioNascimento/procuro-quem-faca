@@ -50,7 +50,7 @@ Supabase (Postgres + RLS)
 **Exemplo real — módulo de upload de portfólio:**
 
 - `components/dashboard/wizard/UploadWizardContainer.tsx` → UI, recebe tudo via `hookData`
-- `hooks/useUploadWizard.ts` → estado (fotos, legendas, projeto atual), efeitos (sincronização de status), ações (`handleUpload`, `handleSalvarLegenda`)
+- `hooks/useUploadWizard.ts` → estado (fotos, legendas, projeto atual), efeitos (sincronização de status), ações (`handleUpload`, `handleSalvarLegenda`); carrossel em `hooks/useWizardCarrossel.ts` e links de WhatsApp em `hooks/useWizardWhatsappLinks.ts`
 - `lib/services/uploadWizard.service.ts` → funções isoladas (`upsertFotoProjeto`, `atualizarLegendaFoto`, `uploadImagemPortfolio`)
 
 Essa separação existe para:

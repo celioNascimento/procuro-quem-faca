@@ -1,15 +1,11 @@
 // components/dashboard/AdCardDashboard.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import { buscarPrestadorPorUserId } from '@/lib/services/cadastroPrestador.service'
-import { listarAnunciosAtivosPorPraca, registrarMetricaAnuncio, type AnuncioComAnunciante } from '@/lib/services/adminAnuncios.service'
+import { useAdCardDashboard } from '@/hooks/useAdCardDashboard'
 import { AdCardFallback } from '@/components/ads/AdCardFallback'
 import type { AdFallback } from '@/types/ads'
 
 const POSICAO = 'dashboard_prestador'
-type AnuncioComMetrica = AnuncioComAnunciante & { segmentacao_id_ativa?: string }
 
 // Fallback próprio deste banner — não usa useAdContext/resolverSegmento
 // (aquele é sobre segmento de categoria de serviço, ex: "Pedreiro"). Aqui,
@@ -46,54 +42,7 @@ const FALLBACK_INCENTIVO_PORTFOLIO: AdFallback = {
  * para anúncios próprios.
  */
 export function AdCardDashboard() {
-  const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined) // undefined = carregando
-
-  useEffect(() => {
-    let cancelado = false
-
-    async function carregar() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        const userId = session?.user?.id
-        if (!userId) {
-          if (!cancelado) setAnuncio(null)
-          return
-        }
-
-        const prestador = await buscarPrestadorPorUserId(userId)
-        const cidadeId = prestador?.cidade_id ? String(prestador.cidade_id) : null
-        const categoriaId = prestador?.categoria_id ? String(prestador.categoria_id) : null
-
-        if (!cidadeId || !categoriaId) {
-          if (!cancelado) setAnuncio(null)
-          return
-        }
-
-        const anunciosDaPraca = await listarAnunciosAtivosPorPraca(cidadeId, categoriaId, POSICAO)
-        
-        if (!cancelado) setAnuncio(anunciosDaPraca[0] ?? null)
-      } catch {
-        if (!cancelado) setAnuncio(null)
-      }
-    }
-
-    carregar()
-    return () => {
-      cancelado = true
-    }
-  }, [])
-
-  // Registra 1 impressão assim que o anúncio real é resolvido e renderizado
-  // (dedup de 30min e validação de vigência acontecem no servidor).
-  useEffect(() => {
-    if (!anuncio?.id || !(anuncio as AnuncioComMetrica)?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, (anuncio as AnuncioComMetrica).segmentacao_id_ativa, 'impressao')
-  }, [anuncio])
-
-  function handleClick() {
-    if (!anuncio?.id || !(anuncio as AnuncioComMetrica)?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, (anuncio as AnuncioComMetrica).segmentacao_id_ativa, 'clique')
-  }
+  const { anuncio, handleClick } = useAdCardDashboard(POSICAO)
 
   // Reserva o espaço enquanto a segmentação é resolvida. Renderizar null aqui
   // fazia o conteúdo subir e depois saltar quando o anúncio chegava.

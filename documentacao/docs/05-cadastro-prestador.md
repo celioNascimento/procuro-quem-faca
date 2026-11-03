@@ -34,7 +34,7 @@ Mesmo que o usuário já possua uma sessão válida e caia no fluxo que o hook d
 
 **Autenticação embutida no formulário:** diferente de `/login`, o cadastro de conta acontece no mesmo formulário (`SecaoAcessoCadastro`/`SecaoAcessoLogado`, ambos usando `components/auth/SenhaInput.tsx`). É um segundo ponto de criação de conta, além de `/login`.
 
-**Submit:** valida → `criarContaEmail`/`loginEmail` (se sem sessão) → `atualizarSenha` (se logado trocando) → limpa cidades duplicadas da sede → `deletarOutrosPrestadoresDoUsuario` (se reivindicando) → `upsertPrestador` → `loginEmail` (garante sessão) → `window.location.href = '/dashboard'` (hard redirect, força `useAuth` reprocessar do zero).
+**Submit:** valida → `autenticarOuCriarConta` (= `criarContaEmail` com fallback `loginEmail`, se sem sessão) → `atualizarSenha` (se logado trocando) → limpa cidades duplicadas da sede → `deletarOutrosPrestadoresDoUsuario` (se reivindicando) → `upsertPrestador` → `loginEmail` (garante sessão) → `window.location.href = '/dashboard'` (hard redirect, força `useAuth` reprocessar do zero).
 
 **Exclusão de perfil** (distinta de exclusão de conta completa): `handleExcluirPerfil` → `deletarPrestador`, cascata via FK.
 

@@ -1,7 +1,9 @@
 //hooks/useUploadWizard.ts
 
-import { useState, useEffect, useCallback, useMemo, useRef, ChangeEvent } from 'react'
+import { useState, useEffect, useCallback, useRef, ChangeEvent } from 'react'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
+import { useWizardCarrossel } from '@/hooks/useWizardCarrossel'
+import { useWizardWhatsappLinks } from '@/hooks/useWizardWhatsappLinks'
 import { FotoPortfolio, ComentarioPortfolio, ProjetoIdentificado } from '@/types/portfolio'
 import {
   getPrestadorBaseInfo,
@@ -92,16 +94,8 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
   // foto). null = ainda não escolheu; o card fica visível até escolher.
   const [escolhaSemFotos, setEscolhaSemFotos] = useState<boolean | null>(null)
 
-  // ── FIX 1: fotosCarrossel estabilizado com useMemo ───────────────────────
-  // Antes: era recalculado a cada render, gerando nova referência de array que
-  // disparava os useEffects de slide e comentários desnecessariamente.
-  const fotosCarrossel = useMemo(() => [
-    { etapa: 1, url: fotosUrls[1], label: "Início" },
-    { etapa: 2, url: fotosUrls[2], label: "Execução" },
-    { etapa: 3, url: fotosUrls[3], label: "Conclusão" }
-  ].filter(f => f.url), [fotosUrls])
-
-  const fotoAtual = fotosCarrossel[currentSlide] || {}
+  // Carrossel de etapas (memoização e navegação em hooks/useWizardCarrossel.ts)
+  const { fotosCarrossel, fotoAtual, nextSlide, prevSlide } = useWizardCarrossel(fotosUrls, currentSlide, setCurrentSlide)
 
   // ── Variáveis Derivadas ──────────────────────────────────────────────────
   const hasLegendaSalva = (etapa: number | null) =>
@@ -520,35 +514,10 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     }
   }
 
-  const gerarLinkAceite = async () => {
-    setLinkGerado(true)
-    if (projetoId) {
-      const currentId = projetoId
-      if (projetoStatus === 'em_registro') {
-        await atualizarStatusProjeto(currentId, 'pendente')
-        setProjetoStatus('pendente')
-      }
-      const projData = await getStatusETokenProjeto(currentId)
-      const token = projData?.avaliacao_token
-      const numTelefone = clienteWhatsapp.replace(/\D/g, '')
-      const linkProjeto = `${window.location.origin}/meus-servicos${token ? `?token=${token}` : ''}`
-      const mensagem = `Olá${clienteNome ? `, ${clienteNome}` : ''}! 👋\n\nRegistramos o início do serviço *${titulo}* e preparamos um acompanhamento exclusivo para você.\n\nPor este link você visualiza as fotos de cada etapa e pode deixar comentários em tempo real:\n\n🔗 ${linkProjeto}\n\nAssim que confirmar o início, seguimos com o serviço. Qualquer dúvida, é só chamar!`
-      const urlWhatsapp = `https://wa.me/55${numTelefone}?text=${encodeURIComponent(mensagem)}`
-      window.open(urlWhatsapp, '_blank')
-    }
-  }
-
-  const gerarLinkConclusao = async () => {
-    if (!projetoId) return
-    const currentId = projetoId
-    const projData = await getStatusETokenProjeto(currentId)
-    const token = projData?.avaliacao_token
-    const numTelefone = clienteWhatsapp.replace(/\D/g, '')
-    const linkAvaliacao = `${window.location.origin}/avaliar/${token}`
-    const mensagem = `Olá${clienteNome ? `, ${clienteNome}` : ''}! 🎉\n\nO serviço *${titulo}* foi concluído com sucesso!\n\nAcesse o link abaixo para conferir as fotos do resultado final e deixar sua avaliação — ela é muito importante para nós:\n\n🔗 ${linkAvaliacao}\n\nFoi um prazer trabalhar com você!`
-    const urlWhatsapp = `https://wa.me/55${numTelefone}?text=${encodeURIComponent(mensagem)}`
-    window.open(urlWhatsapp, '_blank')
-  }
+  const { gerarLinkAceite, gerarLinkConclusao } = useWizardWhatsappLinks({
+    projetoId, projetoStatus, clienteWhatsapp, clienteNome, titulo,
+    setLinkGerado, setProjetoStatus,
+  })
 
   const selecionarProjeto = (proj: ProjetoIdentificado) => {
     setProjetoId(proj.id)
@@ -559,16 +528,6 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     setLinkGerado(true)
     carregarProgresso(proj.id)
     setProjetosEncontrados([])
-  }
-
-  const nextSlide = (e?: React.MouseEvent) => {
-    e?.stopPropagation()
-    setCurrentSlide((prev) => (prev + 1) % fotosCarrossel.length)
-  }
-
-  const prevSlide = (e?: React.MouseEvent) => {
-    e?.stopPropagation()
-    setCurrentSlide((prev) => (prev - 1 + fotosCarrossel.length) % fotosCarrossel.length)
   }
 
   const handleZoomClose = () => { if (canCloseZoom) setZoomEtapa(null) }

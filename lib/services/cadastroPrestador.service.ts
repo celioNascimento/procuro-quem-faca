@@ -66,6 +66,28 @@ export async function loginEmail(email: string, senha: string) {
   return supabase.auth.signInWithPassword({ email, password: senha })
 }
 
+/**
+ * Cria a conta por e-mail ou, se o e-mail já estiver cadastrado, tenta logar
+ * com a mesma senha. Retorna o id do usuário. Lança Error('ALREADY_REGISTERED')
+ * quando o e-mail existe mas a senha não confere.
+ */
+export async function autenticarOuCriarConta(email: string, senha: string, nome: string): Promise<string> {
+  const { data: auth, error: aErr } = await criarContaEmail(email, senha, nome)
+  let userId: string | undefined
+
+  if (aErr) {
+    if (!aErr.message.toLowerCase().includes('already registered')) throw aErr
+    const { data: loginData, error: lErr } = await loginEmail(email, senha)
+    if (lErr) throw new Error('ALREADY_REGISTERED')
+    userId = loginData.user?.id
+  } else {
+    userId = auth.user?.id
+  }
+
+  if (!userId) throw new Error('Erro de conexão ao criar/autenticar usuário')
+  return userId
+}
+
 export async function atualizarSenha(senha: string) {
   const { error } = await supabase.auth.updateUser({ password: senha })
   if (error) throw error
