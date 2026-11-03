@@ -103,7 +103,7 @@ Isso também resolve o item 3 (`ModeracaoCard.js`) — o novo `DenunciaCard.tsx`
 
 ## 5. 🟠 Componentes chamando Supabase/fetch diretamente (violação de camada)
 
-**Status:** resolvido (exceto `AdCard.tsx`, baixa prioridade)
+**Status:** resolvido
 
 Padrão de referência já usado corretamente no projeto (seguir este modelo):
 `hooks/useModeracao.ts` → `lib/services/denuncia.service.ts`
@@ -116,7 +116,7 @@ Padrão de referência já usado corretamente no projeto (seguir este modelo):
 | `components/admin/anuncios/MetricasAnuncios.tsx` | Chama `createClient()`, `.from('anuncios')` e `fetch('/api/anuncios/metricas')` direto num `useEffect` | ✅ Já resolvido: `hooks/useMetricasAnuncios.ts` + `lib/services/adminAnunciosMetricas.service.ts` |
 | `components/dashboard/AdCardDashboard.tsx` | Resolve sessão, busca prestador, busca anúncio e registra métrica, tudo inline | ✅ `hooks/useAdCardDashboard.ts` (sessão → prestador → anúncio da praça → métricas); o componente só renderiza |
 | `components/painel/AdCardPainelCliente.tsx` | Mesmo padrão (busca cidade, busca anúncios, registra métrica inline) | ✅ `hooks/useAdCardPainelCliente.ts` + `lib/services/adCardPainelCliente.service.ts` (consultas ao Supabase isoladas no service) |
-| `components/ads/AdCard.tsx` | Mais aceitável (recebe `anuncio` via prop), mas ainda tem `useEffect` chamando `registrarMetricaAnuncio` direto | ⚪ pendente (baixa prioridade) — no futuro expor `onImpressao`/`onClique` via hook do componente pai |
+| `components/ads/AdCard.tsx` | Mais aceitável (recebe `anuncio` via prop), mas ainda tem `useEffect` chamando `registrarMetricaAnuncio` direto | ✅ `hooks/useAdCardMetricas.ts` (vigência + impressão + clique); o componente só renderiza |
 
 ---
 
@@ -156,7 +156,7 @@ Divisão proposta:
 2. ✅ Bug crítico do item 1 (`AnunciosTab.tsx`) — já corrigido no `main`
 3. ✅ Conflito de rota do item 2 (`admin/anuncios/page` vs `page.tsx`)
 4. ✅ Órfãos do item 3 e `DenunciaCard.tsx` do item 4
-5. ✅ Extrações do item 5 (`useAdCardDashboard`, `useAdCardPainelCliente`); `AdCard.tsx` segue como pendência de baixa prioridade
+5. ✅ Extrações do item 5 (`useAdCardDashboard`, `useAdCardPainelCliente`, `useAdCardMetricas`)
 6. ✅ Hooks grandes do item 6 e tipos/extensões do item 7
 7. ✅ `handleExcluirContaTotal` duplicado em `EditarPerfilTab.tsx`: não existe mais no código; a exclusão de conta aponta para `/confirmar-exclusao` (`components/account/DangerZone.tsx`)
 8. ✅ Testes, lint e tipos validados pelo CI do GitHub na branch `refactor/auditoria-arquitetura` (commit `4cc22bf`, 03/11/2026): 12 arquivos e 95 testes passando, `eslint` e `tsc --noEmit` sem erros
