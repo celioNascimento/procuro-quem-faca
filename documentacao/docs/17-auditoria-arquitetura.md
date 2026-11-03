@@ -9,7 +9,7 @@
 - **Prioridade**: 🔴 crítico (bug/quebra) · 🟠 alto (viola a arquitetura de forma visível) · 🟡 médio (organização/duplicidade) · ⚪ baixo (nice-to-have, já tem item no roadmap)
 - **Status**: `pendente` · `em andamento` · `resolvido`
 - A auditoria original foi feita por leitura estática do código colado numa conversa. Em 2026-11-03 cada item foi reconferido no repositório real (`main` @ `42220ec`) com `grep` antes de qualquer remoção; as notas **Verificação** abaixo registram o que foi encontrado.
-- Validação: o ambiente onde as correções foram feitas não tinha acesso ao registro npm, então `tsc`/`lint`/`build` **não foram executados** localmente — rodar `pnpm lint`, `npx tsc --noEmit` e `pnpm test` (ou conferir o CI) antes do merge.
+- Validação: o ambiente onde as correções foram feitas não tinha acesso ao registro npm, então `tsc`/`lint`/testes não rodaram localmente; a validação veio do CI do GitHub (ver plano de ação, item 8). `pnpm build` não roda no CI (precisa das chaves do Supabase); fica para o deploy de preview da Vercel.
 
 ---
 
@@ -159,8 +159,9 @@ Divisão proposta:
 5. ✅ Extrações do item 5 (`useAdCardDashboard`, `useAdCardPainelCliente`); `AdCard.tsx` segue como pendência de baixa prioridade
 6. ✅ Hooks grandes do item 6 e tipos/extensões do item 7
 7. ✅ `handleExcluirContaTotal` duplicado em `EditarPerfilTab.tsx`: não existe mais no código; a exclusão de conta aponta para `/confirmar-exclusao` (`components/account/DangerZone.tsx`)
-8. 🔲 Rodar `pnpm lint`, `npx tsc --noEmit` e `pnpm test` / conferir o CI (não executados no ambiente das correções, sem acesso ao npm)
-9. 🔲 Trabalho de design maior (geolocalização, login obrigatório, vitrine paga) — requer sessão de design dedicada antes de codar, conforme `13-roadmap.md`
+8. ✅ Testes, lint e tipos validados pelo CI do GitHub na branch `refactor/auditoria-arquitetura` (commit `4cc22bf`, 03/11/2026): 12 arquivos e 95 testes passando, `eslint` e `tsc --noEmit` sem erros
+9. 🔲 Conferir o deploy de preview da Vercel (build) antes do merge
+10. 🔲 Trabalho de design maior (geolocalização, login obrigatório, vitrine paga) — requer sessão de design dedicada antes de codar, conforme `13-roadmap.md`
 
 ## Nota sobre acesso ao repositório
 
