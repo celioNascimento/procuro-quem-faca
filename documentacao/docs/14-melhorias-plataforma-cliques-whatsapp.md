@@ -75,8 +75,8 @@ Regras aplicadas hoje na rota (Tarefa 3):
 
 - [x] 8. Versionar o SQL que existia só no banco (`perfis_admin`, `is_admin()`, `visitas_perfil`, FKs) — migrations aplicadas em produção em 28/10 (ver Passo 8)
 - [x] 9. Visitas ao perfil gravadas pelo servidor — deploy, smoke, conferência no navegador e remoção da política pública de `INSERT` em `visitas_perfil` concluídos em produção (29/10; ver Passo 9)
-- [ ] 10. Painel do prestador: card de visitas ao perfil (Fase 1 do planejamento) — código e testes prontos; falta aplicar a migration, fazer o deploy e conferir no painel (ver Passo 10)
-- [ ] 11. Verificação automática no GitHub (testes, lint e tipos a cada push) — workflow pronto e simulado; falta commitar e ver a primeira execução no GitHub (ver Passo 11)
+- [ ] 10. Painel do prestador: card de visitas ao perfil (Fase 1 do planejamento) — migration aplicada em produção (função conferida no banco depois do push da branch) e código na `main`; falta a conferência visual do card no painel, inclusive no celular (ver Passo 10)
+- [x] 11. Verificação automática no GitHub (testes, lint e tipos a cada push) — primeira execução verde; actions atualizadas para Node 24 no commit seguinte (ver Passo 11)
 
 ## 5. Registro por passo
 
@@ -269,7 +269,7 @@ where chave = 'modo';
 3. Abrir `?utm_source=meta&utm_campaign=teste` em outra guia anônima e conferir `origem = meta` e `campanha = teste`.
 4. Logado como o dono do perfil, abrir o próprio perfil: não deve entrar linha nova.
 
-**Situação (29/10): concluído em produção.** Deploy feito e `smoke.mjs --writes` passou (19 passaram, 0 falharam, 1 pulado). Conferência no navegador, confirmada no banco: cinco atualizações do mesmo perfil gravaram 1 linha (origem `direto`, `sessao_id` preenchido) e a visita com `?utm_source=meta&utm_campaign=teste-nav` gravou origem `meta` e campanha `teste-nav`, na mesma sessão da anterior (as janelas anônimas compartilham cookies). A migration `20261029230000_remove_insert_publico_visitas_perfil.sql` foi aplicada pelo Célio e as linhas de teste foram apagadas. Conferido no banco depois: `visitas_perfil` e `cliques` têm só as duas políticas de leitura (admin e prestador) e `cliques` não tem linhas de teste. A conferência do dono do perfil (item 4) não foi confirmada em produção; essa regra está coberta apenas pelos testes da rota. A `20261028230000` continua criando a política pública em ambiente novo, e a `20261029230000` a remove em seguida.
+**Situação (29/10): concluído em produção.** Deploy feito e `smoke.mjs --writes` passou (19 passaram, 0 falharam, 1 pulado). Conferência no navegador, confirmada no banco: cinco atualizações do mesmo perfil gravaram 1 linha (origem `direto`, `sessao_id` preenchido) e a visita com `?utm_source=meta&utm_campaign=teste-nav` gravou origem `meta` e campanha `teste-nav`, na mesma sessão da anterior (as janelas anônimas compartilham cookies). A migration `20261029230000_remove_insert_publico_visitas_perfil.sql` foi aplicada pelo Célio e as linhas de teste foram apagadas (depois disso, a conferência da busca gerou mais 2 linhas de teste em `visitas_perfil`, ids 1328 e 1329, ainda a apagar). Conferido no banco depois: `visitas_perfil` e `cliques` têm só as duas políticas de leitura (admin e prestador) e `cliques` não tem linhas de teste. A conferência do dono do perfil (item 4) não foi confirmada em produção; essa regra está coberta apenas pelos testes da rota. A `20261028230000` continua criando a política pública em ambiente novo, e a `20261029230000` a remove em seguida.
 
 **Observação (29/10/2026) — primeira rodada de `--writes` em produção:** 14 testes passaram e 5 falharam.
 - O teste "Repetir o clique na mesma sessão NÃO conta" falhou por um bug do script, não da aplicação. O domínio raiz redireciona (307) para `www` e o `fetch` do Node descarta o cabeçalho `Cookie` ao seguir um redirect para outro domínio, então a repetição chegou ao servidor sem o `pqf_sid` e foi contada como sessão nova. O banco confirma: as 4 linhas de teste em `cliques` (ids 64 a 67) vieram em pares com `sessao_id` diferentes, nunca repetido. Corrigido no `scripts/smoke.mjs` (`resolverBaseFinal`). Uma rodada intermediária ainda falhou porque a versão antiga do script estava em uso (as sessões continuavam diferentes no banco). Com a versão corrigida, a rodada de 29/10 passou: **19 passaram, 0 falharam, 1 pulado** (o teste "fora da amostra", pulado no modo `todos`).
@@ -309,7 +309,7 @@ where chave = 'modo';
 3. Logar como um prestador sem visitas: aparece a mensagem curta de incentivo.
 4. No celular, com a rede lenta (Fast 3G): os três quadros têm a mesma altura e o card não pula quando os números chegam.
 
-**Migrations para commitar** (as três primeiras já foram aplicadas pelo console e a quarta ainda será; até 30/10 nenhuma das quatro estava no repositório): `20261028230000` (versão corrigida), `20261028230100`, `20261029230000` e `20261030120000`.
+**Migrations:** as quatro (`20261028230000`, na versão corrigida, `20261028230100`, `20261029230000` e `20261030120000`) foram aplicadas pelo console, e a função `resumo_visitas_prestador` foi conferida no banco depois do push da branch. Entraram no repositório pela branch `feat/visitas-painel-ci`.
 
 ### Passo 11 — Verificação automática no GitHub (30/10/2026)
 
@@ -326,6 +326,10 @@ where chave = 'modo';
 - Cada verificação falha quando algo está quebrado: um teste alterado, uma regra de lint violada e um tipo errado derrubam a execução (códigos de saída diferentes de 0).
 - `actionlint` não apontou problemas no workflow.
 
-**Não verificado:** a primeira execução no GitHub, em um runner de verdade.
+**Primeira execução no GitHub** (branch `feat/visitas-painel-ci`, commit `e34d82b`): **Success em 43 s**, com 12 arquivos de teste e 95 testes passando. O GitHub trouxe dois avisos, que não quebram nada:
+- `actions/checkout`, `actions/setup-node` e `pnpm/action-setup` na versão 4 estavam sendo forçadas para o Node 24.
+- O rótulo `ubuntu-latest` migra para o Ubuntu 26 a partir de 19/10/2026.
+
+**Ajuste feito em seguida (03/11/2026):** `actions/checkout@v5`, `actions/setup-node@v6` e `pnpm/action-setup@v5`, todas em Node 24, e `runs-on: ubuntu-24.04`, para a execução não mudar de sistema operacional sozinha. O `cache: pnpm` do `setup-node` continua explícito, porque a v6 só faz cache automático para npm. As versões foram conferidas nas notas de lançamento das próprias actions; a execução com elas ainda precisa ser vista na aba Actions do GitHub.
 
 **Para o CI bloquear merge:** o workflow só avisa. Para impedir o merge com o CI vermelho, é preciso ativar uma regra de proteção na branch principal exigindo o check "Testes, lint e tipos" (Settings, Branches). Isso é configuração do GitHub, fora do código.
