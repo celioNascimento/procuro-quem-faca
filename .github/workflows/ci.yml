@@ -1,6 +1,10 @@
 # Verificações automáticas a cada push: testes (Vitest), lint (ESLint) e tipos (tsc).
 # Não roda `pnpm build`, que precisa das chaves do Supabase; quem valida o build é
 # o deploy da Vercel. O workflow do Playwright (e2e) é separado.
+#
+# Versões fixas de propósito: as actions abaixo rodam em Node 24 (as v4 estavam sendo
+# forçadas para Node 24 pelo GitHub) e o runner é o ubuntu-24.04, para a execução não
+# mudar de sistema operacional sozinha quando o ubuntu-latest migrar.
 
 name: CI
 
@@ -19,17 +23,17 @@ permissions:
 jobs:
   verificar:
     name: Testes, lint e tipos
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           version: 12
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
