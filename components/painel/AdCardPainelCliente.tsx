@@ -1,15 +1,12 @@
 // components/painel/AdCardPainelCliente.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
-import { registrarMetricaAnuncio, type AnuncioComAnunciante } from '@/lib/services/adminAnuncios.service'
+import { useAdCardPainelCliente } from '@/hooks/useAdCardPainelCliente'
 import { AdCardFallback } from '@/components/ads/AdCardFallback'
 import type { AdFallback } from '@/types/ads'
 import type { ClienteServico } from '@/types/clienteServicos'
 
 const POSICAO = 'dashboard_cliente'
-type AnuncioComMetrica = AnuncioComAnunciante & { segmentacao_id_ativa?: string }
 
 const FALLBACK_PADRAO: AdFallback = {
   emoji: '🤝',
@@ -29,92 +26,7 @@ export function AdCardPainelCliente({
   prestadorId?: string | number | null
   loading?: boolean
 }) {
-  const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined)
-
-  useEffect(() => {
-    if (loading) return
-
-    let cancelado = false
-
-    async function carregar() {
-      try {
-        const servicoRecente = servicos[0]
-        const prestadorIdParaBusca = prestadorId ?? servicoRecente?.prestadores?.id
-        if (!prestadorIdParaBusca) {
-          if (!cancelado) setAnuncio(null)
-          return
-        }
-
-        const { data: prestador, error } = await supabase
-          .from('prestadores')
-          .select('cidade_id')
-          .eq('id', prestadorIdParaBusca)
-          .maybeSingle()
-
-        if (error) throw error
-
-        const cidadeId = prestador?.cidade_id ? String(prestador.cidade_id) : null
-
-        if (!cidadeId) {
-          if (!cancelado) setAnuncio(null)
-          return
-        }
-
-        const agora = new Date().toISOString()
-
-        const { data: anunciosDaPraca } = await supabase
-          .from('anuncios_segmentacoes')
-          .select(`
-            id,
-            anuncios!inner(
-              *,
-              anunciantes(id, razao_social, whatsapp)
-            )
-          `)
-          .eq('cidade_id', cidadeId)
-          .eq('anuncios.status', true)
-          .eq('anuncios.status_aprovacao', 'aprovado')
-          .eq('anuncios.tipo', 'proprio')
-          .eq('anuncios.posicao', POSICAO)
-          .or(`data_inicio.is.null,data_inicio.lte.${agora}`, { foreignTable: 'anuncios' })
-          .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`, { foreignTable: 'anuncios' })
-
-        if (!cancelado) {
-          if (anunciosDaPraca && anunciosDaPraca.length > 0) {
-            const anuncioEncontrado = anunciosDaPraca[0].anuncios as unknown as AnuncioComMetrica
-            anuncioEncontrado.segmentacao_id_ativa = anunciosDaPraca[0].id
-            setAnuncio(anuncioEncontrado as AnuncioComAnunciante)
-          } else {
-            setAnuncio(null)
-          }
-        }
-      } catch {
-        if (!cancelado) setAnuncio(null)
-      }
-    }
-
-    if (servicos.length > 0) {
-      carregar()
-    } else if (prestadorId) {
-      carregar()
-    } else if (!loading) {
-      queueMicrotask(() => setAnuncio(null))
-    }
-
-    return () => {
-      cancelado = true
-    }
-  }, [servicos, prestadorId, loading])
-
-  useEffect(() => {
-    if (!anuncio?.id || !(anuncio as AnuncioComMetrica)?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, (anuncio as AnuncioComMetrica).segmentacao_id_ativa, 'impressao')
-  }, [anuncio])
-
-  function handleClick() {
-    if (!anuncio?.id || !(anuncio as AnuncioComMetrica)?.segmentacao_id_ativa) return
-    registrarMetricaAnuncio(anuncio.id, (anuncio as AnuncioComMetrica).segmentacao_id_ativa, 'clique')
-  }
+  const { anuncio, handleClick } = useAdCardPainelCliente({ servicos, prestadorId, loading, posicao: POSICAO })
 
   return (
     // min-h só durante loading para evitar layout shift — depois o

@@ -330,6 +330,6 @@ where chave = 'modo';
 - `actions/checkout`, `actions/setup-node` e `pnpm/action-setup` na versão 4 estavam sendo forçadas para o Node 24.
 - O rótulo `ubuntu-latest` migra para o Ubuntu 26 a partir de 19/10/2026.
 
-**Ajuste feito em seguida (03/11/2026):** `actions/checkout@v5`, `actions/setup-node@v6` e `pnpm/action-setup@v5`, todas em Node 24, e `runs-on: ubuntu-24.04`, para a execução não mudar de sistema operacional sozinha. O `cache: pnpm` do `setup-node` continua explícito, porque a v6 só faz cache automático para npm. As versões foram conferidas nas notas de lançamento das próprias actions; a execução com elas ainda precisa ser vista na aba Actions do GitHub.
+**Ajuste feito em seguida (03/11/2026):** `actions/checkout@v5`, `actions/setup-node@v6` e `pnpm/action-setup@v5`, todas em Node 24, e `runs-on: ubuntu-24.04`, para a execução não mudar de sistema operacional sozinha. O `cache: pnpm` do `setup-node` continua explícito, porque a v6 só faz cache automático para npm. As versões foram conferidas nas notas de lançamento das próprias actions. **Confirmado em 03/11/2026:** a execução na branch `refactor/auditoria-arquitetura` (run 41730208552) passou com `checkout@v5` e `pnpm/action-setup@v5`, em 51 s, com 95 testes.
 
 **Para o CI bloquear merge:** o workflow só avisa. Para impedir o merge com o CI vermelho, é preciso ativar uma regra de proteção na branch principal exigindo o check "Testes, lint e tipos" (Settings, Branches). Isso é configuração do GitHub, fora do código.

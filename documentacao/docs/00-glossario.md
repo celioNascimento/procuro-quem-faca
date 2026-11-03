@@ -39,7 +39,7 @@ Monta `https://wa.me/55<numero>` (prefixo Brasil fixo), com mensagem opcional pr
 - `components/profile/PerfilCTA.tsx` (perfil público, com mensagem de orçamento)
 
 **Consumidores que montam o link manualmente, sem usar o util** (candidatos a migrar, se for auditar todos de uma vez):
-- `hooks/useUploadWizard.ts` — `gerarLinkAceite`/`gerarLinkConclusao` montam `https://wa.me/55${numTelefone}?text=...` diretamente
+- `hooks/useWizardWhatsappLinks.ts` (usado por `useUploadWizard`) — `gerarLinkAceite`/`gerarLinkConclusao` montam `https://wa.me/55${numTelefone}?text=...` diretamente
 - `lib/services/compartilharPerfil.service.ts` — `compartilharViaWhatsApp` monta o link manualmente
 - `lib/ads/fallbacks.ts` e `components/dashboard/AnunciosTab.tsx` — usam `lib/config/contato.ts` (`NUMERO_WHATSAPP_PQF`), propósito diferente (contato institucional, não com um prestador/cliente específico)
 

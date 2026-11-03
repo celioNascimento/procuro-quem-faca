@@ -18,7 +18,7 @@ import {
   deletarPrestador,
   deletarOutrosPrestadoresDoUsuario,
   upsertPrestador,
-  criarContaEmail,
+  autenticarOuCriarConta,
   loginEmail,
   atualizarSenha,
 } from '@/lib/services/cadastroPrestador.service'
@@ -254,21 +254,7 @@ export function useCadastroPrestador(reivindicarId: string | null) {
     try {
       let userId = userLogado?.id
 
-      if (!userId) {
-        const { data: auth, error: aErr } = await criarContaEmail(email, senha, f.nome)
-        if (aErr) {
-          if (aErr.message.toLowerCase().includes('already registered')) {
-            const { data: loginData, error: lErr } = await loginEmail(email, senha)
-            if (lErr) throw new Error('ALREADY_REGISTERED')
-            userId = loginData.user?.id
-          } else {
-            throw aErr
-          }
-        } else {
-          userId = auth.user?.id
-        }
-        if (!userId) throw new Error('Erro de conexão ao criar/autenticar usuário')
-      }
+      if (!userId) userId = await autenticarOuCriarConta(email, senha, f.nome)
 
       if (userLogado && senha.length >= 6) {
         setStatus('Atualizando credenciais de acesso...')

@@ -129,7 +129,7 @@ Todos os hooks abaixo são pontos de entrada de UI. O hook geralmente mantém es
 | [`lib/prestadorUtils.ts`](../../lib/prestadorUtils.ts) | `getIniciais`, `getLocalizacao`, `getPerfilHref`, `getTituloBusca`: apresentação e links. |
 | [`lib/mascaras.ts`](../../lib/mascaras.ts) | `aplicarMascaraWhatsapp`, `formatarParaSlug`. |
 | [`lib/ordenacao.ts`](../../lib/ordenacao.ts) | `pesoOrdenacao`: prioridade de prestadores. |
-| [`lib/buscaUtils.tsx`](../../lib/buscaUtils.tsx) | `normalizarTermo`, `filtrarPrestadores`; `simplificar` é interno. |
+| [`lib/buscaUtils.ts`](../../lib/buscaUtils.ts) | `normalizarTermo`, `filtrarPrestadores`; `simplificar` é interno. |
 | [`lib/auth/resolverDestinoPosLogin.ts`](../../lib/auth/resolverDestinoPosLogin.ts) | `isPrestadorCompleto`, `resolverDestinoPosLogin`: única decisão de redirecionamento. |
 | [`lib/ads/*.ts`](../../lib/ads) | `resolverSegmento`, `getFallbackPorSegmento`: segmentação e fallback de anúncios. |
 | [`lib/cookies.ts`](../../lib/cookies.ts) | `setCookie`, `getCookie`: cookies simples, usado pela localização/UX. |
