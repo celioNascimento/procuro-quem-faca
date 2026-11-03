@@ -71,6 +71,13 @@ Regras aplicadas hoje na rota (Tarefa 3):
 
 **Frente encerrada em 28/10/2026** — os 6 passos estão concluídos e aplicados em produção. O modo do rastreio saiu de `amostra` para `todos` (ver seção 5, Passo 7); a partir daqui os cliques de WhatsApp são contados para todos os prestadores.
 
+**Continuação (28 e 29/10/2026):**
+
+- [x] 8. Versionar o SQL que existia só no banco (`perfis_admin`, `is_admin()`, `visitas_perfil`, FKs) — migrations aplicadas em produção em 28/10 (ver Passo 8)
+- [x] 9. Visitas ao perfil gravadas pelo servidor — deploy, smoke, conferência no navegador e remoção da política pública de `INSERT` em `visitas_perfil` concluídos em produção (29/10; ver Passo 9)
+- [ ] 10. Painel do prestador: card de visitas ao perfil (Fase 1 do planejamento) — migration aplicada em produção (função conferida no banco depois do push da branch) e código na `main`; falta a conferência visual do card no painel, inclusive no celular (ver Passo 10)
+- [x] 11. Verificação automática no GitHub (testes, lint e tipos a cada push) — primeira execução verde; actions atualizadas para Node 24 no commit seguinte (ver Passo 11)
+
 ## 5. Registro por passo
 
 ### Passo 1 — Conferir o banco e versionar as tabelas (25/10/2026)
@@ -97,8 +104,8 @@ Regras aplicadas hoje na rota (Tarefa 3):
 **Decisão pendente (negócio):** quando encerrar o teste por amostra, mudar o modo para `todos`: `update public.rastreio_config set valor = 'todos', atualizado_em = now() where chave = 'modo';`. Isso é um ajuste de dados feito no banco, não faz parte da migration, e deve ser decidido pelo Célio.
 
 **Pendências restantes do passo 1 (não bloqueiam o passo 2):**
-- Versionar `is_admin()`, que não está em nenhuma migration do repositório. Sem ela, a política de leitura do admin não é criada em um ambiente novo.
-- Conferir as chaves estrangeiras de `cliques.prestador_id` e `rastreio_amostra.prestador_id`.
+- Versionar `is_admin()`, que não está em nenhuma migration do repositório. Sem ela, a política de leitura do admin não é criada em um ambiente novo. **Feito no Passo 8.**
+- Conferir as chaves estrangeiras de `cliques.prestador_id` e `rastreio_amostra.prestador_id`. **Feito no Passo 8:** as duas (e a de `visitas_perfil`) são `ON DELETE CASCADE` para `prestadores(id)`.
 - Aplicar a migration em um ambiente novo ou de homologação para validar.
 
 ### Passo 2 — Log no servidor e `keepalive` (27/10/2026)
@@ -204,3 +211,125 @@ where chave = 'modo';
 **Efeito imediato, sem deploy:** `deveRastrear()` (`lib/tracking/amostra.ts`) passa a devolver `true` para qualquer prestador. O card "Pedidos de orçamento pelo WhatsApp" no dashboard (`/dashboard`) mostra os números reais para todo mundo, em vez do aviso de contagem não ativa. Em `/admin/cliques`, o aviso fixo passa de "modo amostra com 15 prestadores" para "modo todos".
 
 **Observação:** a tabela `rastreio_amostra` não precisa ser apagada — fica sem efeito enquanto `rastreio_config.valor = 'todos'`, e serve de histórico de quem foi testado primeiro.
+
+### Passo 8 — Versionar o SQL que existia só no banco (28/10/2026)
+
+**Decisão (Célio):** versionar primeiro o que está só em produção, com migrations idempotentes (em produção não alteram nada), e só depois mexer nas visitas. O índice duplicado sai em uma migration separada.
+
+**Conferido no banco de produção** (consultas de leitura em 28/10):
+- `perfis_admin`: `user_id` (uuid, chave primária, FK para `auth.users`), `email` (not null), `role` (padrão `editor`, só `owner`, `moderator` ou `editor`) e `created_at`. RLS ativo, com uma política: a pessoa lê a própria linha.
+- `is_admin()`: função SQL `STABLE`, `SECURITY DEFINER`, com `search_path` vazio, que consulta `perfis_admin` pelo usuário logado.
+- `visitas_perfil`: `id` (identity), `prestador_id` (not null), `criado_em` (not null, padrão `now()`), `origem` (até 60 caracteres), `campanha` (até 100) e `sessao_id` (até 64). RLS ativo. Políticas: admin lê tudo, prestador lê só as próprias e **qualquer pessoa insere** (ainda aberta; sai no passo 9).
+- Chaves estrangeiras de `cliques`, `rastreio_amostra` e `visitas_perfil`: todas para `prestadores(id)` com `ON DELETE CASCADE`. Apagar um prestador apaga o histórico de cliques e visitas dele.
+- Índices de `visitas_perfil`: `idx_visitas_perfil_prestador_data` (crescente) e `idx_visitas_prestador_data` (decrescente) eram redundantes entre si.
+- Modo do rastreio: **`todos`** (desde o Passo 7; a seção do Passo 1 registra `amostra`, o valor de 25/10).
+
+**O que foi feito:** duas migrations em `supabase/migrations`.
+- `20261028230000_versiona_is_admin_e_visitas_perfil.sql`: cria o que falta de `perfis_admin`, `is_admin()` e `visitas_perfil`, as políticas, os dois índices que ficam, as FKs (só se `prestadores` existir e se a tabela ainda não tiver FK para ela) e garante a política de leitura do admin em `cliques`, que a migration de cliques pula em ambiente novo porque `is_admin()` ainda não existe.
+- `20261028230100_remove_indice_duplicado_visitas_perfil.sql`: remove `idx_visitas_perfil_prestador_data`, mantendo o decrescente.
+
+**Aplicadas pelo Célio no SQL Editor em 28/10.** Conferido depois: o índice duplicado sumiu, as políticas e FKs ficaram iguais e as 1.281 visitas continuam lá.
+
+**Testes feitos antes** (Postgres 16 local, com `auth` e papéis do Supabase simulados): ambiente novo com `prestadores`, ambiente novo sem `prestadores` (as partes que dependem dela são puladas com um aviso), reexecução sem erro e sem mudar nada, estado parecido com produção (FK com outro nome não é duplicada e o índice redundante é removido) e `is_admin()` verdadeiro para quem está em `perfis_admin`.
+
+**Limite conhecido:** `supabase/migrations/20260201183500_remote_schema.sql` tem 0 linhas. `prestadores`, `profiles` e o restante do schema não estão em nenhuma migration, então um ambiente novo ainda não sobe só com as migrations. A correção é rodar `supabase db pull` e commitar o resultado nesse arquivo (pendente).
+
+**Observação:** `anon` e `authenticated` têm todos os privilégios de tabela em `perfis_admin` e `visitas_perfil`. O RLS cobre o acesso, mas vale endurecer depois.
+
+### Passo 9 — Visitas gravadas pelo servidor (28/10/2026)
+
+**Decisão (Célio):** as visitas seguem as mesmas regras dos cliques, e a política pública de `INSERT` em `visitas_perfil` só sai depois do deploy, para a gravação não parar no intervalo.
+
+**Por que:** `registrarVisitaPerfil` inseria direto do navegador, só com `prestador_id`. Isso deixava qualquer pessoa com a chave pública inflar a contagem, contava robôs que executam JavaScript e a visita do próprio dono, e não gravava origem, campanha nem sessão (as 1.281 visitas atuais não têm `sessao_id`).
+
+**O que mudou:**
+- `app/api/prestadores/visita-perfil/route.ts` (novo): `POST` com as regras no servidor. Ignora robôs, ignora a visita do dono logado, conta no máximo 1 visita por sessão e prestador a cada 24h, respeita o modo do rastreio (`rastreioAtivoPara`) e grava origem e campanha (cookie `pqf_origem`, depois o referer, depois `direto`). Usa o mesmo cookie `pqf_sid` dos cliques, então visita e clique da mesma pessoa podem ser ligados no funil. Sempre responde ok quando ignora a visita.
+- `lib/services/visitas.service.ts` (novo): consultas da rota (`buscarPrestadorParaVisita`, `jaContouVisitaRecente`, `inserirVisita`). Na tabela de visitas a data é `criado_em`, e não `created_at`.
+- `lib/db/visitasPerfil.ts`: `registrarVisitaPerfil` passa a chamar a rota, com `keepalive`. O cookie de 24h por prestador só evita chamadas repetidas do mesmo navegador e é gravado quando o servidor responde ok. Pedidos simultâneos para o mesmo prestador são evitados. A leitura (`getVisitasDoMesAtual` e `getVisitasTotais`) não mudou. O hook `usePerfilPrestador` também não mudou.
+- `scripts/smoke.mjs`: novos testes de visita (válida, repetida, robô e pedido inválido) e a opção `--modo todos|amostra`. O teste "fora da amostra" é pulado no modo `todos` (o padrão); antes ele falharia em produção, porque nesse modo todo prestador é contado. Os testes de escrita agora falam direto com o endereço final (`www`), porque o `fetch` do Node descarta o cookie ao seguir o redirect do domínio raiz (ver a observação de 29/10 abaixo).
+
+**Efeitos a observar:**
+- A visita do próprio dono do perfil deixa de contar (antes contava).
+- As visitas novas passam a ter `origem`, `campanha` e `sessao_id`. As antigas continuam sem `sessao_id`.
+- Quem já tem o cookie `pqf_visita_perfil_<id>` só volta a ser contado depois de 24h.
+- A verificação do dedupe e a gravação não são atômicas, como nos cliques. Duas chamadas quase simultâneas da mesma sessão podem gravar duas linhas. Na prática o cliente evita isso, mas o servidor não garante.
+
+**Verificação feita:** 64 testes passando (12 do lado do navegador, 18 da rota com o banco simulado e os 34 que já existiam). `eslint` sem erros nos arquivos novos e `tsc` sem erros novos (os 2 de `components/ads/AdCard.tsx` já existiam). Quebrar de propósito a regra do dono, a de 24h e a checagem de resposta ok no cliente faz o teste correspondente falhar.
+
+**Não verificado:** `pnpm build`, a rota contra o banco real e a página no navegador.
+
+**Como validar depois do deploy**
+1. Rodar `node scripts/smoke.mjs --base https://procuroquemfaca.com.br --writes --confirmo-producao` e conferir que os testes de visita passam. Depois apagar os testes: `delete from public.visitas_perfil where campanha = 'teste';`
+2. Abrir um perfil em guia anônima, atualizar 5 vezes e conferir que entrou 1 linha nova, com `origem` e `sessao_id` preenchidos:
+   ```sql
+   select id, prestador_id, origem, campanha, sessao_id, criado_em
+   from public.visitas_perfil
+   order by criado_em desc limit 5;
+   ```
+3. Abrir `?utm_source=meta&utm_campaign=teste` em outra guia anônima e conferir `origem = meta` e `campanha = teste`.
+4. Logado como o dono do perfil, abrir o próprio perfil: não deve entrar linha nova.
+
+**Situação (29/10): concluído em produção.** Deploy feito e `smoke.mjs --writes` passou (19 passaram, 0 falharam, 1 pulado). Conferência no navegador, confirmada no banco: cinco atualizações do mesmo perfil gravaram 1 linha (origem `direto`, `sessao_id` preenchido) e a visita com `?utm_source=meta&utm_campaign=teste-nav` gravou origem `meta` e campanha `teste-nav`, na mesma sessão da anterior (as janelas anônimas compartilham cookies). A migration `20261029230000_remove_insert_publico_visitas_perfil.sql` foi aplicada pelo Célio e as linhas de teste foram apagadas (depois disso, a conferência da busca gerou mais 2 linhas de teste em `visitas_perfil`, ids 1328 e 1329, ainda a apagar). Conferido no banco depois: `visitas_perfil` e `cliques` têm só as duas políticas de leitura (admin e prestador) e `cliques` não tem linhas de teste. A conferência do dono do perfil (item 4) não foi confirmada em produção; essa regra está coberta apenas pelos testes da rota. A `20261028230000` continua criando a política pública em ambiente novo, e a `20261029230000` a remove em seguida.
+
+**Observação (29/10/2026) — primeira rodada de `--writes` em produção:** 14 testes passaram e 5 falharam.
+- O teste "Repetir o clique na mesma sessão NÃO conta" falhou por um bug do script, não da aplicação. O domínio raiz redireciona (307) para `www` e o `fetch` do Node descarta o cabeçalho `Cookie` ao seguir um redirect para outro domínio, então a repetição chegou ao servidor sem o `pqf_sid` e foi contada como sessão nova. O banco confirma: as 4 linhas de teste em `cliques` (ids 64 a 67) vieram em pares com `sessao_id` diferentes, nunca repetido. Corrigido no `scripts/smoke.mjs` (`resolverBaseFinal`). Uma rodada intermediária ainda falhou porque a versão antiga do script estava em uso (as sessões continuavam diferentes no banco). Com a versão corrigida, a rodada de 29/10 passou: **19 passaram, 0 falharam, 1 pulado** (o teste "fora da amostra", pulado no modo `todos`).
+- Os 4 testes de visita falharam com 404 porque a rota nova ainda não estava no ar. Eles devem passar depois do deploy.
+- As rodadas deixaram linhas de teste em `cliques` e em `visitas_perfil` (`campanha = 'teste'`). Apagar com `delete from public.cliques where campanha = 'teste';` e `delete from public.visitas_perfil where campanha = 'teste';`.
+
+### Passo 10 — Card de visitas no painel do prestador (30/10/2026)
+
+**Objetivo (Fase 1 do planejamento):** mostrar ao prestador que o perfil dele está sendo visto. É o incentivo para ele usar a plataforma.
+
+**Decisões (Célio):**
+- Entram **todas** as visitas desde 27/08, inclusive as gravadas pelo navegador antes de 29/10. Essas incluem a visita do próprio dono e de robôs que executam JavaScript, então os números antigos podem estar levemente inflados. O card não traz nota sobre isso (decisão de 30/10).
+- A variação em relação ao período anterior aparece **só quando é positiva**. A base para mostrar a negativa fica pronta: para ligar, troque `MOSTRAR_VARIACAO_NEGATIVA` para `true` em `lib/utils/variacaoVisitas.ts`. O cálculo, o tipo (`sentido: 'alta' | 'queda'`), o card e os testes já tratam a queda, que apareceria em cinza e não em vermelho.
+- Perfil sem nenhuma visita mostra só uma mensagem curta de incentivo, sem lista do que falta no perfil.
+
+**O que foi feito:**
+- `supabase/migrations/20261030120000_funcao_resumo_visitas_prestador.sql`: função `public.resumo_visitas_prestador()`. É `SECURITY DEFINER`, `STABLE`, sem parâmetros e com `search_path` vazio. Descobre o prestador por `auth.uid()` e devolve uma linha com `visitas_7d`, `visitas_7d_anterior`, `visitas_30d`, `visitas_30d_anterior` e `visitas_total`, contadas no banco pelo índice `(prestador_id, criado_em desc)`. Quem não tem perfil de prestador recebe zero linhas. Só o papel `authenticated` executa (`revoke` de `public` e `anon`).
+- `lib/db/resumoVisitas.ts`: chama a função e converte para camelCase.
+- `hooks/useMinhasVisitas.ts`: estado de carregando, erro e dados, no mesmo formato de `useMeusCliques`.
+- `lib/utils/variacaoVisitas.ts`: cálculo e regra de exibição da variação (sem base ou 0% não mostra nada).
+- `components/dashboard/VisitasPerfilCard.tsx`: o card. Esqueleto com a altura reservada, estado vazio, erro, três quadros (7 dias, 30 dias e total). Entra no `dashboard/page.tsx` acima do card de cliques, com as mesmas condições (cadastro completo e conta não bloqueada).
+- `getVisitasDoMesAtual` e `getVisitasTotais`, em `lib/db/visitasPerfil.ts`, seguem sem uso. O card não depende delas.
+
+**Verificação feita:**
+- Postgres 16 local, com `auth` e os papéis do Supabase simulados. As janelas de 7 e 30 dias e as anteriores bateram com o esperado, com visitas a 1 hora, 6 dias e 23 horas, 7 dias e 1 hora, 13, 20, 31, 59 e 61 dias.
+- Isolamento: um prestador não enxerga as visitas de outro; usuário sem perfil de prestador e usuário logado sem identificação recebem zero linhas; prestador sem visitas recebe uma linha de zeros; `anon` recebe `permission denied`.
+- Volume: 1,5 milhão de visitas, 5 mil prestadores e um prestador com 200 mil visitas. Prestador típico (cerca de 230 visitas): 1,3 a 1,9 ms. Prestador com 200 mil visitas: 80 a 100 ms, com varredura apenas pelo índice (`Heap Fetches: 0`). Executar o mesmo cálculo sob RLS, com a função `INVOKER`, custaria mais (cerca de 136 ms no mesmo caso) porque as políticas de `visitas_perfil` são avaliadas linha a linha; por isso a função é `DEFINER`.
+- 95 testes passando (70 anteriores e 25 novos: variação, serviço, hook e card). `eslint` limpo e `tsc` sem erros novos. Quebrar de propósito a regra de exibição e o estado vazio faz os testes falharem.
+
+**Correção em migration já aplicada:** o bloco de FKs da `20261028230000_versiona_is_admin_e_visitas_perfil.sql` usava `to_regclass(...) is not null and not exists (... ::regclass ...)`, e o Postgres não garante o curto-circuito do `AND`; rodada isolada, sem `cliques`, a migration dava erro. Agora são dois `IF`. Em produção e na cadeia normal de migrations não muda nada.
+
+**Não verificado:** o card em navegador (altura sem pulo em Fast 3G, leitura no celular) e a função no banco de produção.
+
+**Como validar depois de aplicar a migration e do deploy:**
+1. Conferir os privilégios: `select has_function_privilege('anon', 'public.resumo_visitas_prestador()', 'execute'), has_function_privilege('authenticated', 'public.resumo_visitas_prestador()', 'execute');` deve dar `false` e `true`.
+2. Logar como um prestador com visitas (9 contas tiveram visita nos últimos 30 dias): o card mostra os três números, e a variação só se for positiva.
+3. Logar como um prestador sem visitas: aparece a mensagem curta de incentivo.
+4. No celular, com a rede lenta (Fast 3G): os três quadros têm a mesma altura e o card não pula quando os números chegam.
+
+**Migrations:** as quatro (`20261028230000`, na versão corrigida, `20261028230100`, `20261029230000` e `20261030120000`) foram aplicadas pelo console, e a função `resumo_visitas_prestador` foi conferida no banco depois do push da branch. Entraram no repositório pela branch `feat/visitas-painel-ci`.
+
+### Passo 11 — Verificação automática no GitHub (30/10/2026)
+
+**Decisão (Célio):** rodar testes, lint e tipos a cada push. Antes, nada disso rodava sozinho: a pasta `.husky` não tem hook de commit ou push, e o único workflow existente é o do Playwright (e2e).
+
+**O que foi feito:**
+- `.github/workflows/ci.yml` (novo): dispara em todo `push` e também manualmente. Um push novo na mesma branch cancela a verificação anterior. Usa Node 22 e pnpm 12, com cache, e instala com `pnpm install --frozen-lockfile`. Os passos são `pnpm test:run`, `pnpm lint` e `pnpm exec tsc --noEmit`; lint e tipos rodam mesmo que o teste falhe, para o resultado mostrar tudo que está quebrado de uma vez. Não roda `pnpm build`, que precisa das chaves do Supabase; o build é validado pelo deploy da Vercel. O workflow do Playwright não foi alterado.
+- `pnpm-workspace.yaml`: `core-js` e `unrs-resolver` em `allowBuilds` passam de "set this to true or false" para `false`. Com o texto no lugar do valor, `pnpm install --frozen-lockfile` falha com `ERR_PNPM_IGNORED_BUILDS`, e o CI quebraria já na instalação. Os dois scripts de instalação não são necessários: testes, lint e tipos funcionam sem eles.
+- `types/adsbygoogle.d.ts` (novo): declara `window.adsbygoogle`. Sem isso o `tsc` falhava em `components/ads/AdCard.tsx` (2 erros que já existiam), e o CI nasceria vermelho.
+
+**Verificação feita** (checkout limpo do commit `742b232`, simulando o CI):
+- A instalação congelada passa com pnpm 10.34.9, 11.28.9 e 12.16.1, e falha com o `pnpm-workspace.yaml` como estava.
+- Antes das correções: 70 testes passando, lint sem erros e 2 erros de `tsc` (os do `AdCard`). Depois: `tsc` com 0 erros.
+- Cada verificação falha quando algo está quebrado: um teste alterado, uma regra de lint violada e um tipo errado derrubam a execução (códigos de saída diferentes de 0).
+- `actionlint` não apontou problemas no workflow.
+
+**Primeira execução no GitHub** (branch `feat/visitas-painel-ci`, commit `e34d82b`): **Success em 43 s**, com 12 arquivos de teste e 95 testes passando. O GitHub trouxe dois avisos, que não quebram nada:
+- `actions/checkout`, `actions/setup-node` e `pnpm/action-setup` na versão 4 estavam sendo forçadas para o Node 24.
+- O rótulo `ubuntu-latest` migra para o Ubuntu 26 a partir de 19/10/2026.
+
+**Ajuste feito em seguida (03/11/2026):** `actions/checkout@v5`, `actions/setup-node@v6` e `pnpm/action-setup@v5`, todas em Node 24, e `runs-on: ubuntu-24.04`, para a execução não mudar de sistema operacional sozinha. O `cache: pnpm` do `setup-node` continua explícito, porque a v6 só faz cache automático para npm. As versões foram conferidas nas notas de lançamento das próprias actions; a execução com elas ainda precisa ser vista na aba Actions do GitHub.
+
+**Para o CI bloquear merge:** o workflow só avisa. Para impedir o merge com o CI vermelho, é preciso ativar uma regra de proteção na branch principal exigindo o check "Testes, lint e tipos" (Settings, Branches). Isso é configuração do GitHub, fora do código.
