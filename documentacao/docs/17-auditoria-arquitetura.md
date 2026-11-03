@@ -160,7 +160,7 @@ Divisão proposta:
 6. ✅ Hooks grandes do item 6 e tipos/extensões do item 7
 7. ✅ `handleExcluirContaTotal` duplicado em `EditarPerfilTab.tsx`: não existe mais no código; a exclusão de conta aponta para `/confirmar-exclusao` (`components/account/DangerZone.tsx`)
 8. ✅ Testes, lint e tipos validados pelo CI do GitHub na branch `refactor/auditoria-arquitetura` (commit `4cc22bf`, 03/11/2026): 12 arquivos e 95 testes passando, `eslint` e `tsc --noEmit` sem erros
-9. 🔲 Conferir o deploy de preview da Vercel (build) antes do merge
+9. ✅ Build validado pelo deploy de preview da Vercel no PR #124 (03/11/2026): "Deployment has completed". O workflow Playwright segue falhando por causa do `ubuntu-latest` (Ubuntu 26.04 não suportado pelo Playwright 1.58.2), problema anterior a esta auditoria e fora do escopo dela
 10. 🔲 Trabalho de design maior (geolocalização, login obrigatório, vitrine paga) — requer sessão de design dedicada antes de codar, conforme `13-roadmap.md`
 
 ## Nota sobre acesso ao repositório
