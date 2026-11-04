@@ -19,18 +19,48 @@ export async function fetchProjetoPorToken(token: string) {
   return data                       // null quando não encontrado, objeto quando encontrado
 }
 
+export type ResultadoReivindicacao =
+  | 'vinculado'
+  | 'ja_vinculado'
+  | 'vinculado_outra_conta'
+  | 'prestador_dono'
+  | 'nao_encontrado'
+  | 'nao_autenticado'
+
+const RESULTADOS_VALIDOS: ResultadoReivindicacao[] = [
+  'vinculado', 'ja_vinculado', 'vinculado_outra_conta',
+  'prestador_dono', 'nao_encontrado', 'nao_autenticado',
+]
+
 /**
- * "Reivindica" um projeto para o usuário logado, preenchendo cliente_user_id
- * quando ainda está null e o whatsapp do projeto bate com o whatsapp do
- * profile do usuário. Idempotente — não faz nada se já houver vínculo
- * (mesmo que seja de outro usuário, para não sobrescrever silenciosamente).
+ * Reivindica o projeto pelo token: a primeira conta logada que abre o link
+ * passa a ser a dona do vínculo (`cliente_user_id`). A regra vive na função
+ * `reivindicar_projeto_por_token` do banco (atômica; nunca sobrescreve um
+ * vínculo existente e não deixa o próprio prestador virar cliente).
  *
- * Chamado a partir de useAcompanhamento sempre que o projeto é carregado
- * pelo token, para que projetos antigos (criados antes do vínculo forte
- * existir) sejam gradualmente migrados conforme o cliente os acessa —
- * sem precisar de um backfill único cobrindo todos os casos de uma vez.
+ * Não-bloqueante por desenho: se a função ainda não existir no banco (migration
+ * não aplicada) ou a chamada falhar, devolve null e quem chama usa o caminho
+ * antigo por WhatsApp (`reivindicarProjetoPorWhatsapp`).
  */
-export async function reivindicarProjetoParaCliente(projetoId: string, userId: string) {
+export async function reivindicarProjetoPorToken(token: string): Promise<ResultadoReivindicacao | null> {
+  const { data, error } = await supabase.rpc('reivindicar_projeto_por_token', { p_token: token })
+
+  if (error) {
+    console.error('Erro ao reivindicar projeto pelo token:', error.message)
+    return null
+  }
+
+  return RESULTADOS_VALIDOS.includes(data as ResultadoReivindicacao) ? (data as ResultadoReivindicacao) : null
+}
+
+/**
+ * Caminho antigo (fallback): vincula pelo WhatsApp do `profiles` quando ele bate
+ * com o do projeto. Só roda quando `reivindicarProjetoPorToken` devolve null
+ * (função ainda não aplicada no banco ou falha), para não regredir quem já era
+ * vinculado assim. Nunca sobrescreve um vínculo existente. Pode ser removido
+ * depois que a migration 20261103230000 estiver em produção.
+ */
+export async function reivindicarProjetoPorWhatsapp(projetoId: string, userId: string) {
   const { data: perfil } = await supabase
     .from('profiles')
     .select('whatsapp')
@@ -39,9 +69,6 @@ export async function reivindicarProjetoParaCliente(projetoId: string, userId: s
 
   if (!perfil?.whatsapp) return
 
-  // Só atualiza se cliente_user_id ainda for null — nunca sobrescreve um
-  // vínculo já existente (mesmo que pareça "errado", isso seria uma
-  // decisão manual/administrativa, não algo para essa função silenciosa).
   const { error } = await supabase
     .from('portfolio_projetos')
     .update({ cliente_user_id: userId })
@@ -49,12 +76,7 @@ export async function reivindicarProjetoParaCliente(projetoId: string, userId: s
     .eq('cliente_whatsapp', perfil.whatsapp)
     .is('cliente_user_id', null)
 
-  if (error) {
-    // Não-bloqueante: se falhar (ex: RLS impedindo, ou corrida com outra
-    // reivindicação), a página continua funcionando normalmente — só o
-    // vínculo forte não é criado nesta visita.
-    console.error('Erro ao reivindicar projeto para cliente:', error.message)
-  }
+  if (error) console.error('Erro ao reivindicar projeto por WhatsApp:', error.message)
 }
 
 export async function fetchAvaliacaoPorProjeto(projetoId: string) {

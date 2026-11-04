@@ -10,6 +10,7 @@ import { CardPrestador } from '@/components/acompanhamento/CardPrestador'
 import CarrosselFinalizacao from '@/components/acompanhamento/CarrosselFinalizacao'
 import { BlocoAvaliacao } from '@/components/acompanhamento/BlocoAvaliacao'
 import { RodapeSeguranca } from '@/components/acompanhamento/RodapeSeguranca'
+import { AvisoProjetoOutraConta } from '@/components/acompanhamento/AvisoProjetoOutraConta'
 
 export default function PaginaAvaliar({
   params: paramsPromise,
@@ -36,7 +37,7 @@ export default function PaginaAvaliar({
     loading, mounted,
     nota, setNota, hoverNota, setHoverNota,
     comentarioGeral, setComentarioGeral,
-    indica, setIndica, submitting,
+    indica, setIndica, submitting, vinculo,
     handleFinalizarAvaliacao,
   } = useAvaliar(token)
 
@@ -75,7 +76,9 @@ export default function PaginaAvaliar({
               avaliacaoExistente={avaliacaoExistente}
             />
 
-            {!avaliacaoFinalizada ? (
+            {vinculo === 'vinculado_outra_conta' && !avaliacaoFinalizada ? (
+              <AvisoProjetoOutraConta />
+            ) : !avaliacaoFinalizada ? (
               <BlocoAvaliacao
                 nota={nota}
                 setNota={setNota}
