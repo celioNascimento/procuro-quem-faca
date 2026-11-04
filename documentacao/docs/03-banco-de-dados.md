@@ -128,7 +128,7 @@ Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas
 
 **`portfolio_projetos.status`** — valores reais em uso: `em_registro` → `pendente` → `em_execucao` → `finalizado`. O valor `em_andamento` não é válido — nunca é gravado no banco.
 
-**`cliente_user_id` vs `cliente_whatsapp`:** vínculo do cliente ao projeto migrado de âncora fraca (`cliente_whatsapp`) para âncora forte (`cliente_user_id` uuid, FK `auth.users`). O WhatsApp é mantido apenas como dado de contato legível. RLS já reflete essa migração — há policies específicas para "reivindicar" o projeto (`portfolio_projetos_reivindicar_cliente`) vinculando `cliente_user_id` a partir do WhatsApp do `profiles`.
+**`cliente_user_id` vs `cliente_whatsapp`:** vínculo do cliente ao projeto migrado de âncora fraca (`cliente_whatsapp`) para âncora forte (`cliente_user_id` uuid, FK `auth.users`). O WhatsApp é mantido apenas como dado de contato legível. RLS já reflete essa migração — há policies específicas para "reivindicar" o projeto (`portfolio_projetos_reivindicar_cliente`) vinculando `cliente_user_id` a partir do WhatsApp do `profiles`. Desde a migration `20261103230000_reivindicar_projeto_por_token.sql` (a aplicar), a função `reivindicar_projeto_por_token(p_token text)` (`SECURITY DEFINER`, só para `authenticated`) vincula pela primeira conta logada que abre o link, sem depender do WhatsApp (ver `09-avaliacao-acompanhamento.md`).
 
 **Novos campos confirmados no schema (não documentados anteriormente):**
 - `sem_fotos` (boolean, default `false`) — travado na criação a partir de `prestadores.portfolio_obrigatorio = false`. Define se o projeto segue o fluxo sem etapas de foto (aceite → marcar concluído → avaliação).

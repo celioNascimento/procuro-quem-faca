@@ -6,7 +6,9 @@ import {
   fetchAvaliacaoClientePorProjeto,
   fetchComentariosPorProjeto,
   inserirComentario,
-  reivindicarProjetoParaCliente,
+  reivindicarProjetoPorToken,
+  reivindicarProjetoPorWhatsapp,
+  type ResultadoReivindicacao,
 } from '@/lib/services/avaliacao.service'
 import type { FotoOrdenada, Comentario, Projeto } from '@/types/avaliacao'
 
@@ -18,6 +20,7 @@ export function useAcompanhamento(token: string) {
   const [fotoSelecionada, setFotoSelecionada] = useState<FotoOrdenada | null>(null)
   const [novoComentario, setNovoComentario]   = useState('')
   const [enviandoComentario, setEnviandoComentario] = useState(false)
+  const [vinculo, setVinculo] = useState<ResultadoReivindicacao | null>(null)
 
   const fotosOrdenadas: FotoOrdenada[] =
     projeto?.portfolio_fotos?.sort((a, b) => a.ordem - b.ordem) ?? []
@@ -45,17 +48,21 @@ export function useAcompanhamento(token: string) {
 
         const comData = await fetchComentariosPorProjeto(projData.id)
         setComentarios(comData)
-        // Reivindicação silenciosa: se o projeto ainda não tem
-        // cliente_user_id (caso legado) e o usuário logado bate pelo
-        // whatsapp, vincula agora e atualiza o objeto em memória —
-        // sem isso, a verificação de dono em abrirCasoGarantiaCliente
-        // só passaria a funcionar na visita SEGUINTE (já que o objeto
-        // buscado acima não reflete a mudança feita depois dele).
+        // Reivindicação pelo token: a primeira conta logada que abre o link vira
+        // a dona do vínculo (cliente_user_id). Atualiza o objeto em memória —
+        // sem isso, a verificação de dono em abrirCasoGarantiaCliente só
+        // passaria a funcionar na visita SEGUINTE.
         const { data: userData } = await supabase.auth.getUser()
         if (userData.user) {
-          await reivindicarProjetoParaCliente(projData.id, userData.user.id)
-          if (!projData.cliente_user_id) {
+          const resultado = await reivindicarProjetoPorToken(token)
+          setVinculo(resultado)
+          if (resultado === 'vinculado') {
             projData.cliente_user_id = userData.user.id
+          } else if (resultado === null) {
+            // RPC indisponível (ex.: migration ainda não aplicada): mantém o
+            // comportamento anterior, vínculo pelo WhatsApp do perfil.
+            await reivindicarProjetoPorWhatsapp(projData.id, userData.user.id)
+            if (!projData.cliente_user_id) projData.cliente_user_id = userData.user.id
           }
         }
 
@@ -121,7 +128,7 @@ export function useAcompanhamento(token: string) {
   }
 
   return {
-    projeto, comentarios, fotosOrdenadas, temConclusao, labelEtapaAtual,
+    projeto, comentarios, fotosOrdenadas, temConclusao, labelEtapaAtual, vinculo,
     loading, mounted, fotoSelecionada, setFotoSelecionada,
     novoComentario, setNovoComentario, enviandoComentario,
     handleShare, handleEnviarComentario,

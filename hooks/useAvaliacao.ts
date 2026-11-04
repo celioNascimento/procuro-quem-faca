@@ -3,8 +3,11 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import {
   fetchProjetoPorToken,
+  reivindicarProjetoPorToken,
+  type ResultadoReivindicacao,
   fetchAvaliacaoPorProjeto,
   inserirAvaliacao,
   finalizarProjeto,
@@ -25,6 +28,7 @@ export function useAvaliar(token: string) {
   const [comentarioGeral, setComentarioGeral] = useState('')
   const [indica, setIndica] = useState<boolean | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [vinculo, setVinculo] = useState<ResultadoReivindicacao | null>(null)
 
   const avaliacaoFinalizada = avaliacaoExistente?.status === 'finalizado'
 
@@ -47,6 +51,10 @@ export function useAvaliar(token: string) {
         if (!projData) { setLoading(false); return }
 
         setProjeto(projData)
+
+        // Primeira conta logada que abre o link vira a dona do vínculo do projeto.
+        const { data: userData } = await supabase.auth.getUser()
+        if (userData.user) setVinculo(await reivindicarProjetoPorToken(token))
 
         const avalData = await fetchAvaliacaoPorProjeto(projData.id)
         if (avalData) setAvaliacaoExistente(avalData)
@@ -77,7 +85,8 @@ export function useAvaliar(token: string) {
     setCurrentSlide(prev => (prev - 1 + fotosCarrossel.length) % fotosCarrossel.length)
 
   const handleFinalizarAvaliacao = async () => {
-    if (nota === 0 || submitting || avaliacaoFinalizada) return
+    // Projeto vinculado a outra conta: só quem é o cliente do projeto avalia.
+    if (nota === 0 || submitting || avaliacaoFinalizada || vinculo === 'vinculado_outra_conta') return
     setSubmitting(true)
     try {
       await inserirAvaliacao({
@@ -107,7 +116,7 @@ export function useAvaliar(token: string) {
     loading, mounted,
     nota, setNota, hoverNota, setHoverNota,
     comentarioGeral, setComentarioGeral,
-    indica, setIndica, submitting,
+    indica, setIndica, submitting, vinculo,
     handleFinalizarAvaliacao,
   }
 }

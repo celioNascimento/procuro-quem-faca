@@ -18,7 +18,9 @@ Funcionalidades planejadas ou em avaliação, e pendências técnicas conhecidas
 
 **Problema:** segmentação por localização hoje não é confiável — `bairro` é texto livre, sem normalização, e não permite cálculo de distância/raio. Além disso, `/acompanhamento/[token]` e `/avaliar/[token]` são acessados só pelo token, sem sessão — identidade do cliente é apenas `cliente_whatsapp` (texto), sem vínculo de conta.
 
-**Decisões fechadas (design, ainda não implementado):**
+**Andamento (03/11/2026):** a decisão 1 foi implementada em partes. O **login** nas rotas `/acompanhamento/[token]` e `/avaliar/[token]` já é exigido no `proxy.ts` (redireciona para `/login?next=...`), então o texto abaixo sobre "hoje não exigem sessão" está desatualizado. A **reivindicação pelo token** (primeira conta logada vira dona do vínculo) está no código e na migration `20261103230000_reivindicar_projeto_por_token.sql`, **ainda não aplicada em produção**. Seguem pendentes: a decisão 2 (gate de cadastro completo só no botão de avaliar, que depende dos campos de endereço da decisão 4), a policy de `SELECT` por `cliente_user_id` e todo o restante (geolocalização, vitrine paga).
+
+**Decisões fechadas (design, ainda não implementado, salvo o andamento acima):**
 
 1. **Login obrigatório desde o início do ciclo do serviço.** Prestador continua indicando o cliente só pelo WhatsApp ao criar o projeto (sem fricção nessa ponta). Cliente precisa logar com Google ao abrir o link do projeto pela primeira vez — a primeira conta que logar a partir do token daquele projeto "reivindica" o vínculo (mesmo princípio já usado na reivindicação de perfil de prestador via `origem_tipo: 'curadoria_publica'`). Novo campo: `portfolio_projetos.cliente_user_id` (nullable, preenchido no primeiro login via aquele token).
 
@@ -67,7 +69,7 @@ prestadores.vitrine_pago_ate timestamp with time zone
 - [ ] Revisitar `origem_tipo: 'vitrine'` (hoje um valor solto sem lance real por trás) à luz deste modelo — provável que a vitrine paga substitua/formalize esse valor
 
 **Impacto em módulos já documentados, quando implementado:**
-- `useAcompanhamento`/`useAvaliar` (`09-avaliacao-acompanhamento.md`) passariam a exigir sessão, hoje não exigem
+- `useAcompanhamento`/`useAvaliar` (`09-avaliacao-acompanhamento.md`): a sessão já é exigida pelo `proxy.ts`; a reivindicação pelo token já está implementada (ver andamento acima)
 - `SecaoLocalizacao.tsx`/`FormCidade` etc. (bairro em texto livre) seriam substituídos por captura de coordenada
 - `lib/services/localizacao.service.ts` ganharia geocode real, hoje só lista estado/região/cidade
 - `origem_tipo: 'vitrine'` (`03-banco-de-dados.md`) ganharia mecânica de lance real

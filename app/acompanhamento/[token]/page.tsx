@@ -18,6 +18,7 @@ import { GarantiaSecaoCliente }     from '@/components/acompanhamento/garantia/G
 import { AdCardPainelCliente }      from '@/components/painel/AdCardPainelCliente'
 import AcompanhamentoSkeleton       from '@/components/skeletons/AcompanhamentoSkeleton'
 import { ContextualHelp }            from '@/components/help/HelpCenter'
+import { AvisoProjetoOutraConta }    from '@/components/acompanhamento/AvisoProjetoOutraConta'
 
 export default function PaginaAcompanhamento({
   params: paramsPromise,
@@ -38,7 +39,7 @@ export default function PaginaAcompanhamento({
   }, [token])
 
   const {
-    projeto, comentarios, fotosOrdenadas, temConclusao, labelEtapaAtual,
+    projeto, comentarios, fotosOrdenadas, temConclusao, labelEtapaAtual, vinculo,
     loading, mounted, fotoSelecionada, setFotoSelecionada,
     novoComentario, setNovoComentario, enviandoComentario,
     handleShare, handleEnviarComentario,
@@ -70,7 +71,8 @@ export default function PaginaAcompanhamento({
   if (!projeto) return null
 
   const projetoFinalizado = projeto.status === 'finalizado'
-  const mostrarBotaoAvaliar = podeAvaliar && projeto.status === 'em_execucao'
+  const vinculadoOutraConta = vinculo === 'vinculado_outra_conta'
+  const mostrarBotaoAvaliar = podeAvaliar && projeto.status === 'em_execucao' && !vinculadoOutraConta
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased">
@@ -182,7 +184,9 @@ export default function PaginaAcompanhamento({
               </section>
             )}
 
-            {projetoFinalizado && clienteUserId && (
+            {vinculadoOutraConta && <AvisoProjetoOutraConta />}
+
+            {projetoFinalizado && clienteUserId && !vinculadoOutraConta && (
               <GarantiaSecaoCliente
                 projetoId={projeto.id}
                 clienteUserId={clienteUserId}

@@ -73,6 +73,24 @@ Acesso via `avaliacao_token`, sem login. Duas colunas: `CardPrestador`+`StatusMi
 | `RodapeSeguranca.tsx` | Estático, sem props |
 | `StatusMini.tsx` | Dois cards de resumo (progresso, registros) |
 
+## Reivindicação do projeto pelo token
+
+Os links `/acompanhamento/[token]` e `/avaliar/[token]` exigem login (o `proxy.ts` manda para `/login?next=...`). Ao carregar o projeto, `useAcompanhamento` e `useAvaliar` chamam `reivindicarProjetoPorToken(token)` (`lib/services/avaliacao.service.ts`), que executa a função `reivindicar_projeto_por_token` do banco: **a primeira conta logada que abre o link vira a dona do vínculo** (`portfolio_projetos.cliente_user_id`).
+
+| Resultado | Significado | Efeito na tela |
+|---|---|---|
+| `vinculado` | Esta conta acabou de virar a dona | `projeto.cliente_user_id` é atualizado em memória (garantia já funciona na mesma visita) |
+| `ja_vinculado` | Esta conta já era a dona | Nada muda |
+| `vinculado_outra_conta` | Outra conta chegou antes | `AvisoProjetoOutraConta`; sem botão de avaliar, sem garantia, e `handleFinalizarAvaliacao` não envia |
+| `prestador_dono` | O próprio prestador abriu o link | Não vira cliente; vê a página normalmente |
+| `nao_encontrado` / `nao_autenticado` | Token inexistente / sem sessão | Nada muda |
+
+Detalhes que importam:
+- A chamada é **não-bloqueante**: se a função não existir (migration não aplicada) ou falhar, o service devolve `null` e `useAcompanhamento` cai no caminho antigo (`reivindicarProjetoPorWhatsapp`, vínculo pelo WhatsApp do perfil), então nada regride antes da migration. Esse fallback pode sair depois que a migration estiver em produção.
+- Antes, o vínculo só era criado se o WhatsApp do `profiles` batesse com o do projeto, o que raramente acontecia para quem entra só com Google. A policy antiga (`portfolio_projetos_reivindicar_cliente`) não foi removida.
+- O token funciona como segredo de portador: se o link for repassado, a primeira pessoa que entrar com uma conta vira a dona. É o comportamento decidido no roadmap (decisão 1), não um descuido.
+- Quem está vinculado a outra conta ainda **vê** o andamento (a leitura continua por token); só avaliar e acionar garantia ficam bloqueados na interface. A garantia e a avaliação precisam ser protegidas também por RLS no banco; esse reforço está nas pendências do roadmap (policy de `SELECT`/escrita por `cliente_user_id`).
+
 ## Reivindicação de Perfil
 
 **Rota:** `app/reivindicar/page.tsx` — puramente apresentacional, sem I/O. Redireciona para `/cadastro?reivindicar=<id>`, toda lógica real vive no Cadastro (`05-cadastro-prestador.md`).
