@@ -35,7 +35,8 @@ set search_path = public
 as $$
 declare
   v_uid uuid := auth.uid();
-  v_projeto_id uuid;
+  v_token uuid;
+  v_projeto_id public.portfolio_projetos.id%type;
   v_cliente uuid;
   v_prestador_user uuid;
 begin
@@ -43,11 +44,19 @@ begin
     return 'nao_autenticado';
   end if;
 
+  -- avaliacao_token é uuid único (docs/03-banco-de-dados.md). Comparar como uuid usa o
+  -- índice da constraint; um texto malformado vira "não encontrado" em vez de erro.
+  begin
+    v_token := p_token::uuid;
+  exception when invalid_text_representation then
+    return 'nao_encontrado';
+  end;
+
   select pp.id, pp.cliente_user_id, pr.user_id
     into v_projeto_id, v_cliente, v_prestador_user
     from public.portfolio_projetos pp
     left join public.prestadores pr on pr.id = pp.prestador_id
-   where pp.avaliacao_token::text = p_token;
+   where pp.avaliacao_token = v_token;
 
   if v_projeto_id is null then
     return 'nao_encontrado';
