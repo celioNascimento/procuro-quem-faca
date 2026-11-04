@@ -16,13 +16,13 @@
 --
 -- NÃO aplicada automaticamente: rodar pelo console do Supabase, como as demais migrations.
 
--- 1) Garante a coluna e o índice onde a tabela existir (idempotente; em produção a coluna já existe).
+-- 1) Garante a coluna onde a tabela existir (idempotente). Em produção a coluna e o índice
+--    `idx_portfolio_projetos_cliente_user_id` já existem (conferido em 04/11/2026), por isso
+--    esta migration NÃO cria outro índice.
 do $$
 begin
   if to_regclass('public.portfolio_projetos') is not null then
     alter table public.portfolio_projetos add column if not exists cliente_user_id uuid;
-    create index if not exists portfolio_projetos_cliente_user_id_idx
-      on public.portfolio_projetos (cliente_user_id);
   end if;
 end $$;
 
