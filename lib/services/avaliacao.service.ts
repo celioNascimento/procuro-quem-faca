@@ -126,11 +126,55 @@ export async function inserirComentario(payload: {
   return data
 }
 
+export type ResultadoAvaliacao =
+  | 'avaliado'
+  | 'nao_autenticado'
+  | 'nao_encontrado'
+  | 'sem_vinculo'
+  | 'nao_e_dono'
+  | 'projeto_nao_concluido'
+  | 'ja_avaliado'
+  | 'nota_invalida'
+
+const RESULTADOS_AVALIACAO: ResultadoAvaliacao[] = [
+  'avaliado', 'nao_autenticado', 'nao_encontrado', 'sem_vinculo',
+  'nao_e_dono', 'projeto_nao_concluido', 'ja_avaliado', 'nota_invalida',
+]
+
+/**
+ * Avalia o projeto como cliente. Somente a conta DONA do projeto
+ * (`portfolio_projetos.cliente_user_id`) consegue: a regra vive na função
+ * `avaliar_projeto` do banco, que também grava a avaliação e finaliza o projeto
+ * de forma atômica. Devolve o código do resultado; só lança em erro de rede/banco.
+ */
+export async function avaliarProjeto(params: {
+  projetoId: string
+  nota: number
+  comentario: string
+  indica: boolean
+}): Promise<ResultadoAvaliacao> {
+  const { data, error } = await supabase.rpc('avaliar_projeto', {
+    p_projeto_id: params.projetoId,
+    p_nota: params.nota,
+    p_comentario: params.comentario,
+    p_indica: params.indica,
+  })
+
+  if (error) throw error
+
+  if (!RESULTADOS_AVALIACAO.includes(data as ResultadoAvaliacao)) {
+    throw new Error(`Resposta inesperada de avaliar_projeto: ${String(data)}`)
+  }
+  return data as ResultadoAvaliacao
+}
+
+/** @deprecated Escrita direta bloqueada pelo banco após 20261104190100; use `avaliarProjeto`. */
 export async function inserirAvaliacao(payload: AvaliacaoInsertPayload) {
   const { error } = await supabase.from('avaliacoes').insert(payload)
   if (error) throw error
 }
 
+/** @deprecated Update direto de status bloqueado para clientes após 20261104190100; use `avaliarProjeto`. */
 export async function finalizarProjeto(projetoId: string) {
   const { error } = await supabase
     .from('portfolio_projetos')

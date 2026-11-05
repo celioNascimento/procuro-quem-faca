@@ -37,7 +37,7 @@ export default function PaginaAvaliar({
     loading, mounted,
     nota, setNota, hoverNota, setHoverNota,
     comentarioGeral, setComentarioGeral,
-    indica, setIndica, submitting, vinculo,
+    indica, setIndica, submitting, vinculo, erroEnvio,
     handleFinalizarAvaliacao,
   } = useAvaliar(token)
 
@@ -79,6 +79,12 @@ export default function PaginaAvaliar({
             {vinculo === 'vinculado_outra_conta' && !avaliacaoFinalizada ? (
               <AvisoProjetoOutraConta />
             ) : !avaliacaoFinalizada ? (
+              <>
+              {erroEnvio && (
+                <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[11px] font-bold text-red-700">
+                  {erroEnvio}
+                </p>
+              )}
               <BlocoAvaliacao
                 nota={nota}
                 setNota={setNota}
@@ -91,6 +97,7 @@ export default function PaginaAvaliar({
                 submitting={submitting}
                 onSubmit={handleFinalizarAvaliacao}
               />
+              </>
             ) : (
               // Depois de avaliado, a avaliação em si já foi concluída —
               // a próxima etapa relevante é o acompanhamento pós-serviço,

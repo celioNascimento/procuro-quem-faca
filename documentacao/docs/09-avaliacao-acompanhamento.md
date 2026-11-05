@@ -89,7 +89,32 @@ Detalhes que importam:
 - A chamada é **não-bloqueante**: se a função não existir (migration não aplicada) ou falhar, o service devolve `null` e `useAcompanhamento` cai no caminho antigo (`reivindicarProjetoPorWhatsapp`, vínculo pelo WhatsApp do perfil), então nada regride antes da migration. Esse fallback pode sair depois que a migration estiver em produção.
 - Antes, o vínculo só era criado se o WhatsApp do `profiles` batesse com o do projeto, o que raramente acontecia para quem entra só com Google. A policy antiga (`portfolio_projetos_reivindicar_cliente`) não foi removida.
 - O token funciona como segredo de portador: se o link for repassado, a primeira pessoa que entrar com uma conta vira a dona. É o comportamento decidido no roadmap (decisão 1), não um descuido.
-- Quem está vinculado a outra conta ainda **vê** o andamento (a leitura continua por token); só avaliar e acionar garantia ficam bloqueados na interface. A garantia e a avaliação precisam ser protegidas também por RLS no banco; esse reforço está nas pendências do roadmap (policy de `SELECT`/escrita por `cliente_user_id`).
+- Quem está vinculado a outra conta ainda **vê** o andamento (a leitura continua por token). A **avaliação** é bloqueada também no banco (seção seguinte); a garantia ainda depende só da interface e da policy própria de `solicitacoes_garantia`.
+
+## Quem pode avaliar: somente o dono do projeto
+
+A avaliação em `/avaliar/[token]` só é aceita da conta **dona do projeto** (`portfolio_projetos.cliente_user_id`, ver a seção anterior). Isso é garantido no banco, não só na interface: `handleFinalizarAvaliacao` (`hooks/useAvaliacao.ts`) chama `avaliarProjeto` (`lib/services/avaliacao.service.ts`), que executa a função `avaliar_projeto(p_projeto_id, p_nota, p_comentario, p_indica)`. Ela grava a avaliação (com `cliente_id` = conta logada) e finaliza o projeto numa única transação.
+
+| Resultado | Quando | Mensagem na tela |
+|---|---|---|
+| `avaliado` | Dono, projeto `em_execucao` com conclusão registrada, ainda sem avaliação | Vai para `/sucesso` |
+| `nao_e_dono` | A conta logada não é a dona | Aviso de projeto vinculado a outra conta |
+| `sem_vinculo` | O projeto ainda não tem dono | Pede para abrir o link de novo |
+| `projeto_nao_concluido` | Status diferente de `em_execucao`, ou sem foto da etapa 3 (ou, em `sem_fotos`, sem `marcado_concluido_at`) | Serviço ainda não concluído |
+| `ja_avaliado` | Já existe avaliação finalizada | Serviço já avaliado |
+| `nota_invalida` / `nao_autenticado` / `nao_encontrado` | Nota fora de 1 a 5, sem sessão, projeto inexistente | Mensagens próprias |
+
+Além disso, como a avaliação agora grava `cliente_id`, o trigger `check_auto_avaliacao` passa a barrar de fato o prestador avaliando a si mesmo (antes `cliente_id` ia nulo e o trigger nunca disparava).
+
+**Migrations e ordem de aplicação** (nenhuma foi aplicada automaticamente):
+1. `20261103230000_reivindicar_projeto_por_token.sql`: vínculo do dono pelo token.
+2. `20261104190000_avaliar_projeto_somente_dono.sql`: cria `avaliar_projeto` (aditiva, segura a qualquer momento).
+3. **Deploy do app** com `avaliarProjeto`.
+4. `20261104190100_fecha_escrita_aberta_avaliacao.sql`: só **depois** do deploy. Remove as policies que deixavam qualquer conta logada inserir avaliação (`"Clientes logados podem avaliar"`, `"Clientes podem avaliar"`) e qualquer visitante finalizar projeto (`"Clientes podem finalizar projetos via token"`). Se for aplicada antes do deploy, o fluxo de avaliar atual para de gravar. O arquivo traz o SQL de rollback.
+
+`inserirAvaliacao`, `finalizarProjeto` e `marcarProjetoEmDisputa` ficaram marcadas como `@deprecated`: após a migration 4 o banco recusa essas escritas diretas. Só o legado `FormularioAvaliacao`/`useSubmitAvaliacao` (hoje sem uso na aplicação) ainda as chama.
+
+**Limite conhecido:** "dono" só é confiável se o token do projeto for secreto. Hoje as policies de leitura de `portfolio_projetos` expõem `avaliacao_token` (e `cliente_whatsapp`) a qualquer pessoa com a chave pública, então um projeto **ainda sem dono** pode ser reivindicado por qualquer conta logada que leia o token. Fechar isso exige tirar o token da leitura pública (ver `13-roadmap.md`).
 
 ## Reivindicação de Perfil
 
