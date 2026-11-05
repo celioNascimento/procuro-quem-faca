@@ -8,11 +8,22 @@ import {
   fetchProjetoPorToken,
   reivindicarProjetoPorToken,
   type ResultadoReivindicacao,
+  type ResultadoAvaliacao,
   fetchAvaliacaoPorProjeto,
-  inserirAvaliacao,
-  finalizarProjeto,
+  avaliarProjeto,
 } from '@/lib/services/avaliacao.service'
 import type { FotoOrdenada, Avaliacao, Projeto } from '@/types/avaliacao'
+
+const MENSAGENS_ERRO_AVALIACAO: Record<Exclude<ResultadoAvaliacao, 'avaliado'> | 'erro_generico', string> = {
+  nao_autenticado: 'Sua sessão expirou. Entre novamente para avaliar.',
+  nao_encontrado: 'Não encontramos este projeto.',
+  sem_vinculo: 'Este projeto ainda não está vinculado à sua conta. Abra o link do projeto de novo e tente outra vez.',
+  nao_e_dono: 'Este serviço está associado a outra conta. Entre com a conta que abriu o link pela primeira vez.',
+  projeto_nao_concluido: 'O prestador ainda não concluiu o serviço, então ele não pode ser avaliado agora.',
+  ja_avaliado: 'Este serviço já foi avaliado.',
+  nota_invalida: 'Escolha uma nota de 1 a 5.',
+  erro_generico: 'Não foi possível enviar sua avaliação. Tente novamente.',
+}
 
 export function useAvaliar(token: string) {
   const router = useRouter()
@@ -29,6 +40,7 @@ export function useAvaliar(token: string) {
   const [indica, setIndica] = useState<boolean | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [vinculo, setVinculo] = useState<ResultadoReivindicacao | null>(null)
+  const [erroEnvio, setErroEnvio] = useState<string | null>(null)
 
   const avaliacaoFinalizada = avaliacaoExistente?.status === 'finalizado'
 
@@ -85,26 +97,29 @@ export function useAvaliar(token: string) {
     setCurrentSlide(prev => (prev - 1 + fotosCarrossel.length) % fotosCarrossel.length)
 
   const handleFinalizarAvaliacao = async () => {
-    // Projeto vinculado a outra conta: só quem é o cliente do projeto avalia.
+    // Projeto vinculado a outra conta: só o dono do projeto avalia (o banco também exige).
     if (nota === 0 || submitting || avaliacaoFinalizada || vinculo === 'vinculado_outra_conta') return
     setSubmitting(true)
+    setErroEnvio(null)
     try {
-      await inserirAvaliacao({
-        projeto_id: projeto!.id,
-        prestador_id: projeto!.prestador_id,
+      const resultado = await avaliarProjeto({
+        projetoId: projeto!.id,
         nota,
         comentario: comentarioGeral,
         indica: indica ?? false,
-        visivel: true,
-        status: 'finalizado',
-        cliente_nome: projeto!.cliente_nome ?? null,
-        cliente_foto_url: projeto!.cliente_foto_url ?? null,
       })
-      await finalizarProjeto(projeto!.id)
-      setProjeto(prev => prev ? { ...prev, status: 'finalizado' } : prev)
-      router.push('/sucesso')
+
+      if (resultado === 'avaliado') {
+        setProjeto(prev => prev ? { ...prev, status: 'finalizado' } : prev)
+        router.push('/sucesso')
+        return
+      }
+
+      if (resultado === 'nao_e_dono') setVinculo('vinculado_outra_conta')
+      setErroEnvio(MENSAGENS_ERRO_AVALIACAO[resultado])
     } catch (err) {
       console.error(err)
+      setErroEnvio(MENSAGENS_ERRO_AVALIACAO.erro_generico)
     } finally {
       setSubmitting(false)
     }
@@ -116,7 +131,7 @@ export function useAvaliar(token: string) {
     loading, mounted,
     nota, setNota, hoverNota, setHoverNota,
     comentarioGeral, setComentarioGeral,
-    indica, setIndica, submitting, vinculo,
+    indica, setIndica, submitting, vinculo, erroEnvio,
     handleFinalizarAvaliacao,
   }
 }
