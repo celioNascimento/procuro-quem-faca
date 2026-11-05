@@ -106,7 +106,7 @@ A avaliação em `/avaliar/[token]` só é aceita da conta **dona do projeto** (
 
 Além disso, como a avaliação agora grava `cliente_id`, o trigger `check_auto_avaliacao` passa a barrar de fato o prestador avaliando a si mesmo (antes `cliente_id` ia nulo e o trigger nunca disparava).
 
-**Migrations e ordem de aplicação** (nenhuma foi aplicada automaticamente):
+**Migrations e ordem de aplicação.** Status em produção (banco `procuro-quem-faca-DB`), conferido em 05/11/2026: **as quatro estão aplicadas**, na ordem abaixo (a 1 pelo console, a 2 e a 4 pelo MCP do Supabase após o deploy do app). Verificado no banco: `avaliar_projeto` existe (`SECURITY DEFINER`, `anon` sem execução); `avaliacoes` não tem mais policy de INSERT; `portfolio_projetos` não tem mais UPDATE anônimo; um INSERT direto em `avaliacoes` por conta logada e um UPDATE anônimo de status foram recusados.
 1. `20261103230000_reivindicar_projeto_por_token.sql`: vínculo do dono pelo token.
 2. `20261104190000_avaliar_projeto_somente_dono.sql`: cria `avaliar_projeto` (aditiva, segura a qualquer momento).
 3. **Deploy do app** com `avaliarProjeto`.

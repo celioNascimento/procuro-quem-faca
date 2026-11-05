@@ -126,7 +126,7 @@ Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas
 | `projeto_logs` | Log de ações realizadas em um projeto (auditoria) |
 | `orcamentos` | Orçamento formal emitido pelo prestador ao cliente — **mencionado aqui, mas sem implementação ativa confirmada no frontend** |
 
-**Avaliação só pelo dono (RLS):** a função `avaliar_projeto` (`SECURITY DEFINER`, só `authenticated`) é a única porta de entrada para avaliações de clientes; ver `09-avaliacao-acompanhamento.md`. Após a migration `20261104190100_fecha_escrita_aberta_avaliacao.sql` (a aplicar depois do deploy do app), `avaliacoes` não tem mais INSERT para clientes e `portfolio_projetos` não tem mais UPDATE anônimo. **Pendente:** as policies `"Projetos são visíveis por todos"` e `"Projetos visíveis publicamente"` (`SELECT` com `true` para `public`) expõem `avaliacao_token` e `cliente_whatsapp`; ver `13-roadmap.md`.
+**Avaliação só pelo dono (RLS):** a função `avaliar_projeto` (`SECURITY DEFINER`, só `authenticated`) é a única porta de entrada para avaliações de clientes; ver `09-avaliacao-acompanhamento.md`. Após a migration `20261104190100_fecha_escrita_aberta_avaliacao.sql` (aplicada em 05/11/2026, depois do deploy do app), `avaliacoes` não tem mais INSERT para clientes e `portfolio_projetos` não tem mais UPDATE anônimo. **Pendente:** as policies `"Projetos são visíveis por todos"` e `"Projetos visíveis publicamente"` (`SELECT` com `true` para `public`) expõem `avaliacao_token` e `cliente_whatsapp`; ver `13-roadmap.md`.
 
 **`portfolio_projetos.status`** — valores reais em uso: `em_registro` → `pendente` → `em_execucao` → `finalizado`. O valor `em_andamento` não é válido — nunca é gravado no banco.
 
