@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase'
 import { FotoPortfolio, ComentarioPortfolio, ProjetoIdentificado } from '@/types/portfolio'
+import { buscarTokensDosProjetos } from './projetoToken.service'
 
 export async function getPrestadorBaseInfo(prestadorId: number) {
   const { data, error } = await supabase
@@ -63,11 +64,13 @@ export async function criarNovoProjeto(payload: {
   const { data, error } = await supabase
     .from('portfolio_projetos')
     .insert(payload)
-    .select()
+    // Colunas explícitas: `.select()` pediria avaliacao_token, que o navegador não pode ler.
+    // O token é gerado aqui (payload) e devolvido junto.
+    .select('id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio, cliente_whatsapp, status, cliente_nome, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at')
     .single()
 
   if (error) throw error
-  return data
+  return { ...data, avaliacao_token: payload.avaliacao_token }
 }
 
 /**
@@ -87,19 +90,20 @@ export async function iniciarProjetoSemFoto(payload: {
   cliente_whatsapp: string
   cliente_nome: string
 }) {
+  const avaliacao_token = crypto.randomUUID()
   const { data, error } = await supabase
     .from('portfolio_projetos')
     .insert({
       ...payload,
       status: 'pendente',
       sem_fotos: true,
-      avaliacao_token: crypto.randomUUID(),
+      avaliacao_token,
     })
-    .select()
+    .select('id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio, cliente_whatsapp, status, cliente_nome, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at')
     .single()
 
   if (error) throw error
-  return data
+  return { ...data, avaliacao_token }
 }
 
 /**
@@ -190,12 +194,14 @@ export async function getStatusETokenProjeto(projetoId: string) {
     // sem_fotos e marcado_concluido_at adicionados: necessários para o
     // useUploadWizard saber, ao sincronizar o projeto, se está no fluxo
     // sem foto e se já foi marcado como concluído (libera link de avaliação).
-    .select('status, avaliacao_token, sem_fotos, marcado_concluido_at')
+    .select('status, sem_fotos, marcado_concluido_at')
     .eq('id', projetoId)
     .single()
 
   if (error) throw error
-  return data
+  // O token não é legível pela API; só o prestador dono do projeto o recebe (função do banco).
+  const tokens = await buscarTokensDosProjetos([projetoId])
+  return { ...data, avaliacao_token: tokens[projetoId] ?? '' }
 }
 
 export async function uploadImagemPortfolio(filePath: string, file: File) {

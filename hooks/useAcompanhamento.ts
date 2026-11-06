@@ -7,7 +7,6 @@ import {
   fetchComentariosPorProjeto,
   inserirComentario,
   reivindicarProjetoPorToken,
-  reivindicarProjetoPorWhatsapp,
   type ResultadoReivindicacao,
 } from '@/lib/services/avaliacao.service'
 import type { FotoOrdenada, Comentario, Projeto } from '@/types/avaliacao'
@@ -58,11 +57,6 @@ export function useAcompanhamento(token: string) {
           setVinculo(resultado)
           if (resultado === 'vinculado') {
             projData.cliente_user_id = userData.user.id
-          } else if (resultado === null) {
-            // RPC indisponível (ex.: migration ainda não aplicada): mantém o
-            // comportamento anterior, vínculo pelo WhatsApp do perfil.
-            await reivindicarProjetoPorWhatsapp(projData.id, userData.user.id)
-            if (!projData.cliente_user_id) projData.cliente_user_id = userData.user.id
           }
         }
 

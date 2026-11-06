@@ -1,22 +1,29 @@
 //lib/services/avaliacao.service.ts
 
 import { supabase } from '@/lib/supabase'
-import type { AvaliacaoRaw, AvaliacaoInsertPayload } from '@/types/avaliacao'
+import type { AvaliacaoRaw, AvaliacaoInsertPayload, Projeto } from '@/types/avaliacao'
+import { obterProjetoIdPorToken } from './projetoToken.service'
 
-export async function fetchProjetoPorToken(token: string) {
+export async function fetchProjetoPorToken(token: string): Promise<Projeto | null> {
+  // O token não é legível pela API: a função do banco resolve token -> id e o resto
+  // é lido por id. O token (já na URL) é devolvido junto, para os links da tela.
+  const projetoId = await obterProjetoIdPorToken(token)
+  if (!projetoId) return null
+
   const { data, error } = await supabase
     .from('portfolio_projetos')
     .select(`
-      *,
+      id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio,
+      cliente_whatsapp, status, cliente_nome, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at,
       portfolio_fotos(*),
       prestadores(id, nome, slug, foto_perfil, whatsapp, garantia_dias, categoria:categorias(nome)),
       avaliacoes_clientes(id, nota, motivos, created_at)
     `)
-    .eq('avaliacao_token', token)
+    .eq('id', projetoId)
     .maybeSingle()                  // ← era .single(); nunca lança PGRST116
 
   if (error) throw error            // só lança erros reais (rede, permissão…)
-  return data                       // null quando não encontrado, objeto quando encontrado
+  return data ? ({ ...data, avaliacao_token: token } as unknown as Projeto) : null
 }
 
 export type ResultadoReivindicacao =
@@ -38,9 +45,8 @@ const RESULTADOS_VALIDOS: ResultadoReivindicacao[] = [
  * `reivindicar_projeto_por_token` do banco (atômica; nunca sobrescreve um
  * vínculo existente e não deixa o próprio prestador virar cliente).
  *
- * Não-bloqueante por desenho: se a função ainda não existir no banco (migration
- * não aplicada) ou a chamada falhar, devolve null e quem chama usa o caminho
- * antigo por WhatsApp (`reivindicarProjetoPorWhatsapp`).
+ * Não-bloqueante por desenho: se a chamada falhar, devolve null. Não existe mais
+ * vínculo por WhatsApp (era forjável: `profiles.whatsapp` é editável pelo usuário).
  */
 export async function reivindicarProjetoPorToken(token: string): Promise<ResultadoReivindicacao | null> {
   const { data, error } = await supabase.rpc('reivindicar_projeto_por_token', { p_token: token })
@@ -51,32 +57,6 @@ export async function reivindicarProjetoPorToken(token: string): Promise<Resulta
   }
 
   return RESULTADOS_VALIDOS.includes(data as ResultadoReivindicacao) ? (data as ResultadoReivindicacao) : null
-}
-
-/**
- * Caminho antigo (fallback): vincula pelo WhatsApp do `profiles` quando ele bate
- * com o do projeto. Só roda quando `reivindicarProjetoPorToken` devolve null
- * (função ainda não aplicada no banco ou falha), para não regredir quem já era
- * vinculado assim. Nunca sobrescreve um vínculo existente. Pode ser removido
- * depois que a migration 20261103230000 estiver em produção.
- */
-export async function reivindicarProjetoPorWhatsapp(projetoId: string, userId: string) {
-  const { data: perfil } = await supabase
-    .from('profiles')
-    .select('whatsapp')
-    .eq('id', userId)
-    .maybeSingle()
-
-  if (!perfil?.whatsapp) return
-
-  const { error } = await supabase
-    .from('portfolio_projetos')
-    .update({ cliente_user_id: userId })
-    .eq('id', projetoId)
-    .eq('cliente_whatsapp', perfil.whatsapp)
-    .is('cliente_user_id', null)
-
-  if (error) console.error('Erro ao reivindicar projeto por WhatsApp:', error.message)
 }
 
 export async function fetchAvaliacaoPorProjeto(projetoId: string) {

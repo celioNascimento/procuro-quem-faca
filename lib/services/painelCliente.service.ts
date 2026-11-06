@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase'
+import type { Servico } from '@/types/painel'
+import { anexarTokens, obterProjetoIdPorToken } from './projetoToken.service'
 
 // Adicionado o user_id no retorno de prestadores para permitir o filtro.
 // solicitacoes_garantia é LEFT JOIN (sem !inner) — traz o array vazio []
@@ -10,7 +12,8 @@ import { supabase } from '@/lib/supabase'
 // tipo adicionado: distingue garantia formal de reclamação — mesma
 // máquina de estados, prazos e linguagem diferentes (ver garantia.service.ts).
 const SELECT_SERVICOS = `
-  *,
+  id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio,
+      cliente_whatsapp, status, cliente_nome, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at,
   prestadores (id, user_id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
   portfolio_fotos (*),
   solicitacoes_garantia (id, status, origem, tipo, prazo_resposta),
@@ -58,36 +61,27 @@ export async function getProfile(userId: string) {
   return data
 }
 
-export async function getServicoPorToken(token: string) {
+export async function getServicoPorToken(token: string): Promise<Servico[]> {
+  // O token é a identidade do projeto selecionado (não filtrar por status: propostas
+  // antigas ainda precisam de aceite). Não é legível pela API: resolve token -> id no banco.
+  const projetoId = await obterProjetoIdPorToken(token)
+  if (!projetoId) return []
   const { data } = await supabase
     .from('portfolio_projetos')
     .select(SELECT_SERVICOS)
-    .eq('avaliacao_token', token)
-    // O token é a identidade do projeto selecionado. Não filtrar por status
-    // aqui evita perder propostas antigas que ainda precisam de aceite.
+    .eq('id', projetoId)
     .maybeSingle()
-  return data ? [data] : []
+  return data ? ((await anexarTokens([data])) as unknown as Servico[]) : []
 }
 
-// Nova função usando a coluna que já existe no banco
-export async function getServicosPorUserId(userId: string) {
+export async function getServicosPorUserId(userId: string): Promise<Servico[]> {
   const { data } = await supabase
     .from('portfolio_projetos')
     .select(SELECT_SERVICOS)
     .eq('cliente_user_id', userId)
     .in('status', STATUS_VISIVEIS)
     .order('created_at', { ascending: false })
-  return data ?? []
-}
-
-export async function getServicosPorWhatsapp(whatsapp: string) {
-  const { data } = await supabase
-    .from('portfolio_projetos')
-    .select(SELECT_SERVICOS)
-    .eq('cliente_whatsapp', whatsapp.replace(/\D/g, ''))
-    .in('status', STATUS_VISIVEIS)
-    .order('created_at', { ascending: false })
-  return data ?? []
+  return (await anexarTokens(data ?? [])) as unknown as Servico[]
 }
 
 /**
@@ -111,36 +105,23 @@ export function filtrarComReclamacaoAtiva<T extends { solicitacoes_garantia?: { 
   return servicos.filter(temReclamacaoAtiva)
 }
 
-export async function aceitarServico(
-  servicoId: string,
-  nomeCliente: string,
-  clienteUserId?: string,
-) {
-  const { error } = await supabase
-    .from('portfolio_projetos')
-    .update({
-      status: 'em_execucao',
-      aceito_at: new Date().toISOString(),
-      cliente_nome: nomeCliente,
-      // Vínculo forte no exato momento em que o cliente confirma que é ele
-      // mesmo (clicou no link recebido via WhatsApp e está logado) — esta é
-      // a âncora que o "Efeito Espelho" (ver glossário) foi desenhada para
-      // usar, mas que nunca era preenchida em nenhum ponto de escrita real.
-      ...(clienteUserId ? { cliente_user_id: clienteUserId } : {}),
-    })
-    .eq('id', servicoId)
+type ResultadoAcao = 'ok' | 'nao_autenticado' | 'nao_encontrado' | 'nao_e_dono' | 'status_invalido'
 
+function exigirOk(resultado: unknown) {
+  if (resultado !== 'ok') throw new Error(`Ação recusada pelo banco: ${String(resultado)}`)
+}
+
+/** Somente a conta dona do projeto (vinculada pelo token) aceita. Regra na função do banco. */
+export async function aceitarServico(servicoId: string, nomeCliente: string) {
+  const { data, error } = await supabase.rpc('aceitar_projeto', { p_projeto_id: servicoId, p_nome: nomeCliente })
   if (error) throw error
+  exigirOk(data as ResultadoAcao)
 }
 
 export async function recusarServico(servicoId: string) {
-  const { error } = await supabase
-    .from('portfolio_projetos')
-    .update({ status: 'recusado' })
-    .eq('id', servicoId)
-    .eq('status', 'pendente')
-
+  const { data, error } = await supabase.rpc('recusar_projeto', { p_projeto_id: servicoId })
   if (error) throw error
+  exigirOk(data as ResultadoAcao)
 }
 
 export async function loginComGoogle(tokenUrl: string | null) {
