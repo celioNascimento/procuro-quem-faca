@@ -1,10 +1,10 @@
 //lib/services/avaliacao.service.ts
 
 import { supabase } from '@/lib/supabase'
-import type { AvaliacaoRaw, AvaliacaoInsertPayload } from '@/types/avaliacao'
+import type { AvaliacaoRaw, AvaliacaoInsertPayload, Projeto } from '@/types/avaliacao'
 import { obterProjetoIdPorToken } from './projetoToken.service'
 
-export async function fetchProjetoPorToken(token: string) {
+export async function fetchProjetoPorToken(token: string): Promise<Projeto | null> {
   // O token não é legível pela API: a função do banco resolve token -> id e o resto
   // é lido por id. O token (já na URL) é devolvido junto, para os links da tela.
   const projetoId = await obterProjetoIdPorToken(token)
@@ -23,7 +23,7 @@ export async function fetchProjetoPorToken(token: string) {
     .maybeSingle()                  // ← era .single(); nunca lança PGRST116
 
   if (error) throw error            // só lança erros reais (rede, permissão…)
-  return data ? { ...data, avaliacao_token: token } : null
+  return data ? ({ ...data, avaliacao_token: token } as unknown as Projeto) : null
 }
 
 export type ResultadoReivindicacao =

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import type { Servico } from '@/types/painel'
 import { anexarTokens, obterProjetoIdPorToken } from './projetoToken.service'
 
 // Adicionado o user_id no retorno de prestadores para permitir o filtro.
@@ -60,7 +61,7 @@ export async function getProfile(userId: string) {
   return data
 }
 
-export async function getServicoPorToken(token: string) {
+export async function getServicoPorToken(token: string): Promise<Servico[]> {
   // O token é a identidade do projeto selecionado (não filtrar por status: propostas
   // antigas ainda precisam de aceite). Não é legível pela API: resolve token -> id no banco.
   const projetoId = await obterProjetoIdPorToken(token)
@@ -70,17 +71,17 @@ export async function getServicoPorToken(token: string) {
     .select(SELECT_SERVICOS)
     .eq('id', projetoId)
     .maybeSingle()
-  return data ? await anexarTokens([data]) : []
+  return data ? ((await anexarTokens([data])) as unknown as Servico[]) : []
 }
 
-export async function getServicosPorUserId(userId: string) {
+export async function getServicosPorUserId(userId: string): Promise<Servico[]> {
   const { data } = await supabase
     .from('portfolio_projetos')
     .select(SELECT_SERVICOS)
     .eq('cliente_user_id', userId)
     .in('status', STATUS_VISIVEIS)
     .order('created_at', { ascending: false })
-  return await anexarTokens(data ?? [])
+  return (await anexarTokens(data ?? [])) as unknown as Servico[]
 }
 
 /**
