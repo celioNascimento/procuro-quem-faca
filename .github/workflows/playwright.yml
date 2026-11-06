@@ -16,7 +16,9 @@ jobs:
     - name: Install dependencies
       run: npm ci
     - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      timeout-minutes: 10
+      # Só o Chromium: os dois projetos do playwright.config usam Chromium (desktop e Pixel 5).
+      run: npx playwright install --with-deps chromium
     - name: Run Playwright tests
       run: npx playwright test
     - uses: actions/upload-artifact@v4
