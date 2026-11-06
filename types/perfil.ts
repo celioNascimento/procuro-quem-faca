@@ -51,7 +51,11 @@ export interface ProjetoPerfil {
   sem_fotos?: boolean
 }
 
-export interface PrestadorPerfil extends Omit<Prestador, 'cidades' | 'categorias'> {
+// Campos internos (contato de ativação, bloqueio, cliques, dono da conta) nunca vão para o perfil público.
+type CamposInternos = 'user_id' | 'cliques_whatsapp' | 'motivo_bloqueio'
+  | 'ativacao_status' | 'ativacao_enviado_em' | 'ativacao_respondeu_em' | 'ativacao_obs'
+
+export interface PrestadorPerfil extends Omit<Prestador, 'cidades' | 'categorias' | CamposInternos> {
   cidades?: { nome: string; estado_sigla: string } | null
   categorias?: { nome: string } | null
   portfolio_projetos?: ProjetoPerfil[]
@@ -62,5 +66,7 @@ export interface PerfilData {
   prestador: PrestadorPerfil
   projetos: ProjetoPerfil[]
   avaliacoes: AvaliacaoPerfil[] // <- Adicionado aqui
+  /** Total de indicações de clientes (avaliações visíveis com indica = true), sem o limite da lista. */
+  totalIndicacoes: number
   urlRetorno: string
 }
