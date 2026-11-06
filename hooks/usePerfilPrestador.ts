@@ -211,7 +211,8 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
         registrarVisitaPerfil(prestadorRaw.id)
 
         setData({
-          prestador: prestadorRaw,
+          // portfolio_projetos já foi normalizado em `projetos`; não é repassado no prestador.
+          prestador: { ...prestadorRaw, portfolio_projetos: undefined } as PrestadorPerfil,
           projetos,
           avaliacoes,
           totalIndicacoes: totalIndicacoesRaw ?? 0,
