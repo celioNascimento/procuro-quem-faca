@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { insertLog } from '@/lib/db/logs'
 import { registrarVisitaPerfil } from '@/lib/db/visitasPerfil'
-import type { PerfilData, ProjetoPerfil, FotoProjeto, GarantiaPublica, FotoGarantiaPublica } from '@/types/perfil'
+import type { PerfilData, PrestadorPerfil, ProjetoPerfil, FotoProjeto, GarantiaPublica, FotoGarantiaPublica } from '@/types/perfil'
 import type { AvaliacaoPerfil } from '@/types/avaliacao'
 
 interface UsePerfilPrestadorReturn {
@@ -19,6 +19,31 @@ function normalizarArray<T>(raw: T | T[] | null | undefined): T[] {
   if (Array.isArray(raw)) return raw
   if (typeof raw === 'object') return [raw as T]
   return []
+}
+
+// Colunas públicas de `prestadores` (nada de user_id, cliques, motivo de bloqueio, ativação).
+const COLUNAS_PRESTADOR_PUBLICO = [
+  'id', 'created_at', 'nome', 'bio', 'whatsapp', 'foto_perfil', 'bairro', 'status', 'aprovado_em',
+  'bloqueado', 'habilidades', 'tags', 'estado_sigla', 'cidade_id', 'regiao_id', 'slug',
+  'cidades_atendidas', 'origem_tipo', 'verificado', 'grupo_id', 'categoria_id', 'garantia_dias',
+  'portfolio_obrigatorio', 'sessao_fotos_titulo', 'sessao_fotos_urls',
+].join(', ')
+
+type ProjetoRaw = {
+  id: string
+  titulo: string
+  descricao?: string | null
+  status: string
+  created_at: string
+  sem_fotos: boolean | null
+  portfolio_fotos: FotoProjeto | FotoProjeto[] | null
+  solicitacoes_garantia: GarantiaRaw | GarantiaRaw[] | null
+}
+
+type PrestadorRaw = Omit<PrestadorPerfil, 'portfolio_projetos'> & {
+  portfolio_projetos: ProjetoRaw | ProjetoRaw[] | null
+  sessao_fotos_titulo?: string | null
+  sessao_fotos_urls?: string[] | null
 }
 
 const STATUS_GARANTIA_PUBLICA = ['resolvida', 'sem_resposta', 'recusada']
@@ -59,7 +84,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
         let query = supabase
           .from('prestadores')
           .select(`
-            *,
+            ${COLUNAS_PRESTADOR_PUBLICO},
             cidades(nome, estado_sigla),
             categorias(nome),
             portfolio_projetos(
@@ -77,8 +102,9 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
 
         query = isUUID ? query.eq('id', slug) : query.eq('slug', slug)
 
-        const { data: prestadorRaw, error: prestadorError } = await query.single()
+        const { data: prestadorData, error: prestadorError } = await query.single()
         if (prestadorError) throw prestadorError
+        const prestadorRaw = prestadorData as unknown as PrestadorRaw
         if (prestadorRaw.bloqueado === true) {
           throw new Error('PERFIL_BLOQUEADO')
         }
@@ -108,14 +134,28 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
           cliente_foto_url: av.cliente_foto_url ?? null,
         }))
 
+        // Total de indicações (sem o limite de 10 da lista acima) — é a prova social do perfil.
+        const { count: totalIndicacoesRaw, error: indicError } = await supabase
+          .from('avaliacoes')
+          .select('id', { count: 'exact', head: true })
+          .eq('prestador_id', prestadorRaw.id)
+          .eq('visivel', true)
+          .eq('indica', true)
+          .abortSignal(controller.signal)
+        if (indicError) throw indicError
+
         prestadorRaw.sessao_fotos = prestadorRaw.sessao_fotos_titulo && Array.isArray(prestadorRaw.sessao_fotos_urls)
           ? { titulo: prestadorRaw.sessao_fotos_titulo, fotos: prestadorRaw.sessao_fotos_urls.slice(0, 5) }
           : null
 
         const projetos: ProjetoPerfil[] = normalizarArray(prestadorRaw.portfolio_projetos)
           .filter(p => ['em_execucao', 'finalizado'].includes(p.status))
-          .map(p => ({
-            ...p,
+          .map((p): ProjetoPerfil => ({
+            id: p.id,
+            titulo: p.titulo,
+            descricao: p.descricao ?? undefined,
+            status: p.status as ProjetoPerfil['status'],
+            created_at: p.created_at,
             sem_fotos: p.sem_fotos ?? false,
             portfolio_fotos: normalizarArray<FotoProjeto>(p.portfolio_fotos)
               .filter(f => Boolean(f?.url_foto)),
@@ -171,9 +211,11 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
         registrarVisitaPerfil(prestadorRaw.id)
 
         setData({
-          prestador: prestadorRaw,
+          // portfolio_projetos já foi normalizado em `projetos`; não é repassado no prestador.
+          prestador: { ...prestadorRaw, portfolio_projetos: undefined } as PrestadorPerfil,
           projetos,
           avaliacoes,
+          totalIndicacoes: totalIndicacoesRaw ?? 0,
           urlRetorno,
         })
       } catch (err) {

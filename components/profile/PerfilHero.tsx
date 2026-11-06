@@ -3,21 +3,19 @@
 'use client'
 import Link from 'next/link'
 import { MapPin, ShieldCheck, Flag, Share2, CheckCircle, Wrench } from 'lucide-react'
-import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
+import type { PrestadorPerfil } from '@/types/perfil'
 
 interface Props {
   prestador: PrestadorPerfil
-  projetos: ProjetoPerfil[]
   compartilhando: boolean
   onCompartilhar: () => void
 }
 
-export default function PerfilHero({ prestador, projetos, compartilhando, onCompartilhar }: Props) {
+export default function PerfilHero({ prestador, compartilhando, onCompartilhar }: Props) {
   const localizacao = [prestador.bairro, prestador.cidades?.nome]
     .filter(v => v?.trim())
     .join(', ')
 
-  const totalFinalizados = projetos.filter(p => p.status === 'finalizado').length
   const slug             = prestador.slug
   const categoria        = prestador.categorias?.nome || prestador.categoria
 
@@ -74,19 +72,12 @@ export default function PerfilHero({ prestador, projetos, compartilhando, onComp
 
         </div>
 
-        {(categoria || totalFinalizados > 0) && (
-          <div className="flex items-center justify-between gap-4 px-5 py-3 border-t border-slate-100 text-[11px]">
-            {categoria && (
-              <span className="inline-flex items-center gap-1.5 text-blue-600 font-bold uppercase tracking-wide min-w-0">
-                <Wrench size={13} className="shrink-0" />
-                <span className="truncate">{categoria}</span>
-              </span>
-            )}
-            {totalFinalizados > 0 && (
-              <span className="text-slate-500 font-semibold whitespace-nowrap">
-                {totalFinalizados} serviço{totalFinalizados > 1 ? 's' : ''} concluído{totalFinalizados > 1 ? 's' : ''}
-              </span>
-            )}
+        {categoria && (
+          <div className="flex items-center gap-4 px-5 py-3 border-t border-slate-100 text-[12px]">
+            <span className="inline-flex items-center gap-1.5 text-blue-600 font-bold uppercase tracking-wide min-w-0">
+              <Wrench size={14} className="shrink-0" />
+              <span className="truncate">{categoria}</span>
+            </span>
           </div>
         )}
       </div>

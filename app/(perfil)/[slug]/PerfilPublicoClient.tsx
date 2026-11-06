@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import PerfilSkeleton from '@/components/skeletons/PerfilSkeleton'
 import PerfilHero from '@/components/profile/PerfilHero'
+import PerfilConfianca from '@/components/profile/PerfilConfianca'
 import PerfilSobre from '@/components/profile/PerfilSobre'
 import PerfilCTA from '@/components/profile/PerfilCTA'
 import PerfilTabs from '@/components/profile/PerfilTabs'
@@ -30,10 +31,11 @@ interface PerfilCarregadoProps {
   avaliacoes: ReturnType<typeof usePerfilPrestador>['data'] extends infer D
     ? D extends { avaliacoes: infer A } ? A : never
     : never
+  totalIndicacoes: number
   urlRetorno: string
 }
 
-function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: PerfilCarregadoProps) {
+function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicacoes, urlRetorno }: PerfilCarregadoProps) {
   const { status: statusCompartilhamento, compartilhar } = useCompartilharPerfil({
     prestador,
     projetos,
@@ -76,22 +78,19 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
       <Header href={urlRetorno} />
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 lg:px-8 lg:pt-32">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-center animate-in fade-in duration-500">
-          <AdCard
-            page="perfil_prestador"
-            anuncio={anuncioTopo}
-            categoria={prestador.categorias?.nome || prestador.categoria || undefined}
-          />
-        </div>
-
-        <div className="mt-5 grid items-start gap-6 lg:mt-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] xl:gap-14">
+        <div className="grid items-start gap-6 lg:mt-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] xl:gap-14">
           <aside className="min-w-0 lg:sticky lg:top-28">
             <div className="flex flex-col gap-4 animate-in fade-in duration-500 lg:gap-5">
               <PerfilHero
                 prestador={prestador}
-                projetos={projetos}
                 compartilhando={statusCompartilhamento === 'copiado'}
                 onCompartilhar={compartilhar}
+              />
+
+              <PerfilConfianca
+                prestador={prestador}
+                totalIndicacoes={totalIndicacoes}
+                totalConcluidos={projetos.filter(p => p.status === 'finalizado').length}
               />
 
               {isPublico && (
@@ -154,6 +153,15 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, urlRetorno }: Perfil
               avaliacoes={avaliacoes}
               portfolioObrigatorio={prestador.portfolio_obrigatorio}
             />
+
+            {/* Anúncio só depois da apresentação completa (perfil, portfólio e avaliações) */}
+            <div className="mx-auto flex w-full max-w-3xl items-center justify-center">
+              <AdCard
+                page="perfil_prestador"
+                anuncio={anuncioTopo}
+                categoria={prestador.categorias?.nome || prestador.categoria || undefined}
+              />
+            </div>
 
             <ContextualHelp context="perfil-publico" title="Dúvidas sobre este perfil?" />
           </div>
