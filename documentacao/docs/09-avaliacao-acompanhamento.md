@@ -86,8 +86,8 @@ Os links `/acompanhamento/[token]` e `/avaliar/[token]` exigem login (o `proxy.t
 | `nao_encontrado` / `nao_autenticado` | Token inexistente / sem sessão | Nada muda |
 
 Detalhes que importam:
-- A chamada é **não-bloqueante**: se a função não existir (migration não aplicada) ou falhar, o service devolve `null` e `useAcompanhamento` cai no caminho antigo (`reivindicarProjetoPorWhatsapp`, vínculo pelo WhatsApp do perfil), então nada regride antes da migration. Esse fallback pode sair depois que a migration estiver em produção.
-- Antes, o vínculo só era criado se o WhatsApp do `profiles` batesse com o do projeto, o que raramente acontecia para quem entra só com Google. A policy antiga (`portfolio_projetos_reivindicar_cliente`) não foi removida.
+- A chamada é **não-bloqueante**: se falhar, o service devolve `null`. O vínculo por WhatsApp do perfil foi removido (forjável: `profiles.whatsapp` é editável); o aceite no painel `/meus-servicos` também deixou de pedir confirmação de WhatsApp — só o dono aceita (`aceitar_projeto`).
+- O token não é lido pela API: `fetchProjetoPorToken` resolve token → id por `projeto_id_por_token` e lê o resto por id; listas de projetos recebem o token por `tokens_projetos` (`lib/services/projetoToken.service.ts`).
 - O token funciona como segredo de portador: se o link for repassado, a primeira pessoa que entrar com uma conta vira a dona. É o comportamento decidido no roadmap (decisão 1), não um descuido.
 - Quem está vinculado a outra conta ainda **vê** o andamento (a leitura continua por token). A **avaliação** é bloqueada também no banco (seção seguinte); a garantia ainda depende só da interface e da policy própria de `solicitacoes_garantia`.
 
@@ -114,7 +114,7 @@ Além disso, como a avaliação agora grava `cliente_id`, o trigger `check_auto_
 
 `inserirAvaliacao`, `finalizarProjeto` e `marcarProjetoEmDisputa` ficaram marcadas como `@deprecated`: após a migration 4 o banco recusa essas escritas diretas. Só o legado `FormularioAvaliacao`/`useSubmitAvaliacao` (hoje sem uso na aplicação) ainda as chama.
 
-**Limite conhecido:** "dono" só é confiável se o token do projeto for secreto. Hoje as policies de leitura de `portfolio_projetos` expõem `avaliacao_token` (e `cliente_whatsapp`) a qualquer pessoa com a chave pública, então um projeto **ainda sem dono** pode ser reivindicado por qualquer conta logada que leia o token. Fechar isso exige tirar o token da leitura pública (ver `13-roadmap.md`).
+**Token secreto:** "dono" só é confiável se o token não vazar. As migrations `20261105190000` (funções, aditiva) e `20261105190100` (revoga leitura pública do token, remove vínculo por WhatsApp, trava `cliente_user_id`) fecham isso; aplicar na ordem: aditiva → deploy → restritiva. Limite residual: o modelo é de portador — quem recebe o link primeiro e loga vira dono (inclusive uma segunda conta do próprio prestador).
 
 ## Reivindicação de Perfil
 

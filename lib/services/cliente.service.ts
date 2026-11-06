@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { ClienteServico } from '@/types/clienteServicos'
+import { anexarTokens } from './projetoToken.service'
 
 // Status de solicitacoes_garantia considerados ativos — mesmo critério de
 // painelCliente.service.ts, centralizado aqui para evitar divergência.
@@ -12,7 +13,7 @@ export const STATUS_GARANTIA_ATIVOS = ['aguardando_aceite_cliente', 'aberta', 'r
 // derivar corretamente "pronto para avaliar" em projetos do fluxo sem foto,
 // onde portfolio_fotos.some(ordem===3) nunca é verdadeiro (não há fotos).
 const SELECT_CLIENTE_SERVICOS = `
-  id, titulo, status, created_at, avaliacao_token, sem_fotos, marcado_concluido_at,
+  id, titulo, status, created_at, sem_fotos, marcado_concluido_at,
   portfolio_fotos(ordem),
   prestadores!inner(id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
   avaliacoes(id),
@@ -31,19 +32,20 @@ export async function fetchClienteProfile(userId: string) {
 }
 
 /**
- * Busca todos os projetos do cliente por whatsapp — garantias derivadas
- * localmente via temGarantiaAtiva(), sem query separada.
+ * Busca os projetos da conta logada (cliente_user_id) — garantias derivadas
+ * localmente via temGarantiaAtiva(), sem query separada. Não busca mais por WhatsApp:
+ * o vínculo é só pelo token (a conta que abre o link vira dona).
  */
-export async function fetchClienteServicos(whatsapp: string): Promise<ClienteServico[]> {
-  const numLimpo = whatsapp.replace(/\D/g, '')
+export async function fetchClienteServicos(userId: string): Promise<ClienteServico[]> {
   const { data, error } = await supabase
     .from('portfolio_projetos')
     .select(SELECT_CLIENTE_SERVICOS)
-    .eq('cliente_whatsapp', numLimpo)
+    .eq('cliente_user_id', userId)
     .in('status', ['pendente', 'em_execucao', 'finalizado'])
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as unknown as ClienteServico[]
+  const linhas = (data ?? []) as unknown as Omit<ClienteServico, 'avaliacao_token'>[]
+  return (await anexarTokens(linhas)) as unknown as ClienteServico[]
 }
 
 /**

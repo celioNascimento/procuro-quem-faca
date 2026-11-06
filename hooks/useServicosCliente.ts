@@ -1,6 +1,7 @@
 // hooks/useServicosCliente.ts
 
 'use client'
+import { supabase } from '@/lib/supabase'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import * as ClienteService from '@/lib/services/cliente.service'
@@ -23,7 +24,7 @@ function estaProntoParaAvaliar(s: ClienteServico): boolean {
   return s.portfolio_fotos?.some(f => f.ordem === 3) ?? false
 }
 
-export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
+export function useServicosCliente(perfilCarregado: boolean) {
   const router    = useRouter()
   const filtroRef = useRef<HTMLDivElement>(null)
 
@@ -33,20 +34,17 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
 
   useEffect(() => {
     if (!perfilCarregado) return
-    if (!whatsapp) {
-      const timer = setTimeout(() => {
-        setServicos([])
-        setLoadingServicos(false)
-      }, 0)
-      return () => clearTimeout(timer)
-    }
-
     let cancelado = false
 
     async function buscar() {
       setLoadingServicos(true)
       try {
-        const data = await ClienteService.fetchClienteServicos(whatsapp)
+        const { data: userData } = await supabase.auth.getUser()
+        if (!userData.user) {
+          if (!cancelado) setServicos([])
+          return
+        }
+        const data = await ClienteService.fetchClienteServicos(userData.user.id)
         if (cancelado) return
         setServicos(data)
       } finally {
@@ -56,7 +54,7 @@ export function useServicosCliente(whatsapp: string, perfilCarregado: boolean) {
 
     buscar()
     return () => { cancelado = true }
-  }, [whatsapp, perfilCarregado])
+  }, [perfilCarregado])
 
   // Derivados localmente — sem estado próprio nem query separada.
   // Separados por tipo: garantia (formal, garantia_dias > 0) e reclamação

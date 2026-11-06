@@ -6,12 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Servico } from '@/types/painel'
-import { updateClienteProfile } from '@/lib/services/cliente.service'
 import {
   getProfile,
   getServicoPorToken,
   getServicosPorUserId,
-  getServicosPorWhatsapp,
   filtrarComGarantiaAtiva,
   filtrarComReclamacaoAtiva,
   aceitarServico,
@@ -36,9 +34,6 @@ export function usePainelCliente() {
 
   const servicosGarantia   = filtrarComGarantiaAtiva(servicos)
   const servicosReclamacao = filtrarComReclamacaoAtiva(servicos)
-
-  const [confirmandoWhatsapp, setConfirmandoWhatsapp] = useState<Servico | null>(null)
-  const [confirmandoErro, setConfirmandoErro]         = useState<string | null>(null)
 
   const buscarDados = useCallback(async (
     user: { id: string },
@@ -74,11 +69,6 @@ export function usePainelCliente() {
 
       if (projs.length === 0 && token) {
         projs = projetosDoCliente
-      }
-
-      if (projs.length === 0) {
-        const whatsapp = prof?.whatsapp || localStorage.getItem('cliente_whatsapp')
-        if (whatsapp) projs = await getServicosPorWhatsapp(whatsapp)
       }
 
       if (projs.length > 0) {
@@ -147,53 +137,22 @@ export function usePainelCliente() {
   // buscarDados quando a URL muda (ex: navegação client-side com token novo).
   }, [tokenUrl, buscarDados, userCarregadoId])
 
+  // Só a conta dona do projeto (vinculada ao abrir o link com o token) aceita; a regra
+  // é imposta pela função aceitar_projeto no banco.
   const handleAceitar = async (servico: Servico) => {
-    const whatsappProjeto = servico.cliente_whatsapp?.replace(/\D/g, '') ?? ''
-    const whatsappPerfil  = profile?.whatsapp?.replace(/\D/g, '') ?? ''
-
-    if (whatsappProjeto && whatsappPerfil !== whatsappProjeto) {
-      setConfirmandoWhatsapp(servico)
-      return
-    }
-
-    await executarAceite(servico)
-  }
-
-  const handleRecusar = async (servico: Servico) => {
-    await recusarServico(servico.id)
-    setServicos(prev => prev.filter(s => s.id !== servico.id))
-  }
-
-  const executarAceite = async (servico: Servico) => {
     const nome =
       profile?.full_name ||
       session?.user?.user_metadata?.full_name ||
       servico.cliente_nome
 
-    await aceitarServico(servico.id, nome, session?.user?.id)
+    await aceitarServico(servico.id, nome)
 
     router.push(`/acompanhamento/${servico.avaliacao_token}`)
   }
 
-  const confirmarWhatsappEAceitar = async (numeroConfirmado: string) => {
-    if (!confirmandoWhatsapp || !session?.user?.id) return
-    setConfirmandoErro(null)
-    try {
-      await updateClienteProfile(session.user.id, { whatsapp: numeroConfirmado.replace(/\D/g, '') })
-      setProfile((prev) => (prev ? { ...prev, whatsapp: numeroConfirmado } : prev))
-
-      const servico = confirmandoWhatsapp
-      setConfirmandoWhatsapp(null)
-      await executarAceite(servico)
-    } catch (err) {
-      console.error('Erro ao confirmar whatsapp:', err)
-      setConfirmandoErro('Não foi possível salvar. Tente novamente.')
-    }
-  }
-
-  const cancelarConfirmacaoWhatsapp = () => {
-    setConfirmandoWhatsapp(null)
-    setConfirmandoErro(null)
+  const handleRecusar = async (servico: Servico) => {
+    await recusarServico(servico.id)
+    setServicos(prev => prev.filter(s => s.id !== servico.id))
   }
 
   const handleVerGarantia = (servico: Servico) => {
@@ -210,7 +169,5 @@ export function usePainelCliente() {
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente, avatarUrl,
     handleAceitar, handleRecusar, handleVerGarantia,
-    confirmandoWhatsapp, confirmandoErro,
-    confirmarWhatsappEAceitar, cancelarConfirmacaoWhatsapp,
   }
 }

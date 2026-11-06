@@ -7,10 +7,7 @@ import { usePerfilUI } from './usePerfilUI'
 
 export function usePerfilCliente() {
   const dados    = usePerfilDados()
-  const servicos = useServicosCliente(
-    dados.perfil.whatsapp.replace(/\D/g, ''),
-    dados.perfilCarregado,
-  )
+  const servicos = useServicosCliente(dados.perfilCarregado)
   const ui = usePerfilUI(dados.isDirty)
 
   return {
