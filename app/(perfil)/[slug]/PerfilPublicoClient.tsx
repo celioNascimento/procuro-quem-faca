@@ -77,9 +77,11 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
       <Header href={urlRetorno} />
 
-      <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 md:pt-36 lg:px-8 2xl:max-w-[96rem] 2xl:px-12">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 md:pt-36 lg:px-8 lg:pb-8 2xl:max-w-[96rem] 2xl:px-12">
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] xl:gap-14 2xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
-          <aside className="min-w-0 [@media(min-width:1024px)_and_(min-height:960px)]:sticky [@media(min-width:1024px)_and_(min-height:960px)]:top-36">
+          {/* Coluna do profissional sempre visível ao rolar (lg+): fixa abaixo do header de 112px e limitada
+            à altura da tela; em telas muito baixas ela rola por dentro, sem barra visível. */}
+          <aside className="min-w-0 lg:sticky lg:top-36 lg:max-h-[calc(100vh-11rem)] lg:overflow-y-auto lg:overscroll-contain lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">
             <div className="flex flex-col gap-4 animate-in fade-in duration-500 lg:gap-5">
               {/* Ordem visual: celular = cartão → confiança → CTA; desktop = cartão → CTA → confiança
                   (o CTA precisa caber na primeira tela, ao lado do anúncio). Uma instância de cada. */}

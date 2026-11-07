@@ -61,7 +61,7 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalConcl
                 {plural(totalIndicacoes, 'indicação', 'indicações')}
               </span>
             </p>
-            <p className="mt-1 text-xs font-medium leading-snug text-slate-500 lg:text-sm">
+            <p className="mt-1 text-xs font-medium leading-snug text-slate-500 lg:text-sm [@media(min-width:1024px)_and_(max-height:860px)]:hidden">
               {plural(totalIndicacoes, 'Cliente indicou', 'Clientes indicaram')} este profissional depois do serviço.
             </p>
           </div>
