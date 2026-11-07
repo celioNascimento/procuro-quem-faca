@@ -84,7 +84,7 @@ export async function generateMetadata({
 
   const title = criarTitulo(perfil)
   const description = normalizarDescricao(perfil.bio)
-  const image = perfil.fotoPerfil || `${baseUrl}/logo.png`
+  const image = perfil.fotoPerfil || `${baseUrl}/og-image.png`
 
   return {
     title,

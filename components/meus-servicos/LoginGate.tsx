@@ -4,6 +4,7 @@
 import Link from 'next/link'
 import { ShieldCheck, Briefcase } from 'lucide-react'
 import { loginComGoogle } from '../../lib/services/painelCliente.service'
+import Logo from '@/components/Logo'
 
 export default function LoginGate({ tokenUrl }: { tokenUrl: string | null }) {
   return (
@@ -11,7 +12,7 @@ export default function LoginGate({ tokenUrl }: { tokenUrl: string | null }) {
       <div className="w-full max-w-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex justify-center mb-4">
           <Link href="/">
-            <img src="/logo.png" alt="Procuro Quem Faça" className="h-10 md:h-12 w-auto object-contain" />
+            <Logo variant="card" />
           </Link>
         </div>
 

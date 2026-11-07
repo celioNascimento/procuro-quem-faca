@@ -3,6 +3,7 @@
 'use client'
 import { useEffect } from 'react'
 import { insertLog } from '@/lib/db/logs'
+import Logo from '@/components/Logo'
 
 export default function NotFound() {
 
@@ -31,16 +32,8 @@ export default function NotFound() {
         
         <header className="mb-5">
           
-          {/* LOGO: 
-              - h-[320px] mantido para autoridade visual.
-              - mb-[-2rem] para aproximar drasticamente os elementos abaixo (redução de padding).
-              - relative z-10 para garantir que a imagem não sobreponha a interação.
-          */}
-          <img 
-            src="/logo.png" 
-            alt="Logo Procuro Quem Faça" 
-            className="h-[320px] w-auto mx-auto -mb-8 md:-mb-12 object-contain drop-shadow-sm relative z-10" 
-          />
+          {/* Logo: tamanho definido em components/Logo.tsx (variant "erro") */}
+          <Logo variant="erro" priority className="mx-auto mb-6 drop-shadow-sm" />
           
           <div className="relative z-20">
             <span className="bg-blue-50 text-blue-600 px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-blue-100">

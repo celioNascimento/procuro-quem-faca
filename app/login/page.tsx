@@ -5,6 +5,7 @@ import Link from 'next/link'
 import AuthSkeleton from '@/components/auth/AuthSkeleton'
 import GoogleButton from '@/components/auth/GoogleButton'
 import { useLoginForm } from '@/hooks/useLoginForm'
+import Logo from '@/components/Logo'
 
 export default function Login() {
   const {
@@ -41,11 +42,7 @@ export default function Login() {
           {/* Logo — escala maior em telas grandes */}
           <div className="flex justify-center mb-5 lg:mb-6">
             <Link href="/" className="block transition-transform hover:opacity-80 active:scale-95">
-              <img
-                src="/logo.png"
-                alt="Procuro Quem Faça"
-                className="h-16 md:h-20 lg:h-24 w-auto max-w-full object-contain drop-shadow-sm"
-              />
+              <Logo variant="auth" priority className="drop-shadow-sm" />
             </Link>
           </div>
 

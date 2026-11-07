@@ -3,6 +3,7 @@
 'use client'
 import { useEffect } from 'react'
 import { insertLog } from '@/lib/db/logs'
+import Logo from '@/components/Logo'
 
 export default function Erro400({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
 
@@ -31,12 +32,8 @@ export default function Erro400({ reset }: { error: Error & { digest?: string };
       <div className="w-full max-w-lg text-center animate-in fade-in zoom-in-95 duration-700">
         
         <header className="mb-2">
-          {/* LOGO MONUMENTAL: h-[400px] para domínio visual total */}
-          <img 
-            src="/logo.png" 
-            alt="Logo Procuro Quem Faça" 
-            className="h-[400px] w-auto mx-auto -mb-24 md:-mb-32 object-contain drop-shadow-sm relative z-10" 
-          />
+          {/* Logo: tamanho definido em components/Logo.tsx (variant "erro") */}
+          <Logo variant="erro" priority className="mx-auto mb-6 drop-shadow-sm" />
           
           <div className="relative z-20 space-y-4">
             <div className="inline-flex items-center bg-slate-100 text-slate-500 px-5 py-2 rounded-full border border-slate-200 shadow-sm">

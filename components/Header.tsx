@@ -7,6 +7,7 @@ import BackButton from './BackButton'
 import { HeaderAuthButton } from './HeaderAuthButton'
 
 import type { HeaderProps } from './Header.types'
+import Logo from './Logo'
 
 export default function Header({ href }: HeaderProps) {
   const router = useRouter()
@@ -34,11 +35,7 @@ export default function Header({ href }: HeaderProps) {
         {/* Centro — logo */}
         <div className="flex-1 flex justify-center items-center px-2">
           <Link href="/" className="transition-all hover:opacity-80 active:scale-95">
-            <img
-              src="/logo.png"
-              alt="Procuro Quem Faça"
-              className="h-10 md:h-14 w-auto object-contain"
-            />
+            <Logo variant="header" priority />
           </Link>
         </div>
 

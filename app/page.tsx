@@ -12,6 +12,7 @@ import CTAPrestadorSkeleton from '@/components/home/CTAPrestadorSkeleton'
 import { ArrowRight, Briefcase } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useLocation } from '@/lib/contexts/LocationContext'
+import Logo from '@/components/Logo'
 
 const HeroSection = dynamic(() => import('@/components/home/HeroSection'), { ssr: false })
 
@@ -87,11 +88,7 @@ export default function Home() {
         <div className="w-full max-w-3xl flex flex-col items-center text-center gap-6">
 
           <Link href="/" className="block transition-transform active:scale-95 duration-200">
-            <img
-              src="/logo.png"
-              alt="Procuro Quem Faça"
-              className="h-14 md:h-24 w-auto object-contain drop-shadow-sm"
-            />
+            <Logo variant="hero" priority className="drop-shadow-sm" />
           </Link>
 
           <div className="w-full">

@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { insertLog } from '@/lib/db/logs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Logo from '@/components/Logo'
 
 export default function LinkExpirado() {
   const router = useRouter()
@@ -32,13 +33,9 @@ export default function LinkExpirado() {
     <main className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6 font-sans antialiased text-slate-600">
       <div className="w-full max-w-[420px] text-center animate-in fade-in zoom-in-95 duration-700">
         
-        <div className="relative z-20 -mb-28 md:-mb-36">
+        <div className="relative z-20 mb-6 flex justify-center">
           <Link href="/">
-            <img 
-              src="/logo.png" 
-              alt="Logo Procuro Quem Faça" 
-              className="h-80 md:h-[400px] w-auto mx-auto object-contain drop-shadow-sm select-none" 
-            />
+            <Logo variant="erro" priority className="drop-shadow-sm select-none" />
           </Link>
         </div>
 

@@ -1,10 +1,10 @@
 //components/perfil/HeaderCliente.tsx 
 
 'use client'
-import Image from 'next/image'
 import Link from 'next/link'
 import { LogOut, ChevronLeft } from 'lucide-react'
 import { useHeaderCliente } from '@/hooks/useHeaderCliente'
+import Logo from '@/components/Logo'
 
 interface HeaderClienteProps {
   nomeCliente?: string
@@ -32,14 +32,7 @@ export default function HeaderCliente({ nomeCliente }: HeaderClienteProps) {
         {/* Centro — logo (idêntico ao Header público) */}
         <div className="flex-1 flex justify-center items-center px-2">
           <Link href="/" className="transition-all hover:opacity-80 active:scale-95">
-            <Image
-              src="/logo.png"
-              alt="Procuro Quem Faça"
-              width={240}
-              height={70}
-              className="h-10 md:h-14 w-auto object-contain"
-              priority
-            />
+            <Logo variant="header" priority />
           </Link>
         </div>
 

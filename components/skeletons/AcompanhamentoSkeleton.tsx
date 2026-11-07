@@ -14,7 +14,7 @@ export default function AcompanhamentoSkeleton() {
 
           {/* Logo central */}
           <div className="flex-1 flex justify-center items-center px-2">
-            <div className="h-10 md:h-14 w-32 md:w-44 rounded-md bg-slate-100" />
+            <div className="aspect-[3/1] w-40 md:w-64 rounded-md bg-slate-100" />
           </div>
 
           {/* Nome + logout */}

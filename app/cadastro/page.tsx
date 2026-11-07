@@ -4,10 +4,8 @@
 
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 
 import Header from '@/components/Header'
-import BackButton from '@/components/BackButton'
 import CadastroCard from '@/components/auth/CadastroCard'
 import ModalConfirmacao from '@/components/ui/ModalConfirmacao'
 import { ErrorModal } from '@/components/ui/ErrorModal'
@@ -32,15 +30,16 @@ function CadastroSkeleton() {
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-20 font-sans antialiased overflow-x-hidden animate-pulse">
-      {/* Header fixo idêntico ao real */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 h-16 md:h-20 flex items-center px-6">
-        <div className="max-w-5xl mx-auto w-full flex justify-between items-center">
-          <div className="w-9 h-9 rounded-full bg-slate-100" />
-          <div className="h-10 md:h-12 w-32 bg-slate-100 rounded-lg" />
-          <div className="w-10" />
-        </div>
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-50">
-          <div className="h-full bg-blue-100" style={{ width: '35%' }} />
+      {/* Header fixo idêntico ao real (components/Header.tsx) */}
+      <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-slate-100">
+        <div className="max-w-5xl mx-auto px-4 h-16 md:h-28 flex items-center justify-between">
+          <div className="w-10 md:w-32 flex justify-start items-center shrink-0">
+            <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-slate-100" />
+          </div>
+          <div className="flex-1 flex justify-center items-center px-2">
+            <div className="aspect-[3/1] w-44 md:w-72 rounded-lg bg-slate-100" />
+          </div>
+          <div className="w-10 md:w-32 shrink-0" />
         </div>
       </nav>
 
@@ -152,17 +151,6 @@ function FormularioCadastro() {
       />
 
       <Header href="/" />
-
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 h-16 md:h-20 flex items-center px-6">
-        <div className="max-w-5xl mx-auto w-full flex justify-between items-center">
-          <BackButton href="/" />
-          <Link href="/"><img src="/logo.png" alt="Logo" className="h-10 md:h-12 w-auto" /></Link>
-          <div className="w-10"></div>
-        </div>
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-50">
-          <div className="h-full bg-blue-600 transition-all duration-700" style={{ width: `${calcularProgresso()}%` }} />
-        </div>
-      </nav>
 
       <div className="w-full px-4 pt-32 md:pt-40 max-w-5xl mx-auto">
         <CadastroCard

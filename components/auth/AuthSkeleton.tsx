@@ -11,7 +11,7 @@ export default function AuthSkeleton() {
 
       {/* Logo Placeholder */}
       <div className="flex justify-center mb-8">
-        <div className="w-32 h-14 bg-slate-100 rounded-2xl" />
+        <div className="aspect-[3/1] w-56 md:w-64 lg:w-72 max-w-full bg-slate-100 rounded-2xl" />
       </div>
 
       {/* Título e Subtítulo */}

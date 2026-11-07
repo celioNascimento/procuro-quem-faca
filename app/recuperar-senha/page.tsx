@@ -6,6 +6,7 @@ import { ShieldCheck, AlertCircle } from 'lucide-react'
 import { EyeIconButton } from '@/components/auth/EyeIconButton'
 import { ForcaSenhaBar } from '@/components/auth/ForcaSenhaBar'
 import { useNovaSenha } from '@/hooks/useNovaSenha'
+import Logo from '@/components/Logo'
 
 export default function NovaSenha() {
   const {
@@ -41,7 +42,7 @@ export default function NovaSenha() {
       <div className="w-full max-w-[400px] flex flex-col items-center gap-6">
 
         <Link href="/" className="hover:opacity-80 active:scale-95 transition-all">
-          <img src="/logo.png" alt="Procuro Quem Faça" className="h-12 w-auto object-contain" />
+          <Logo variant="card" />
         </Link>
 
         <div className="w-full bg-white p-8 md:p-10 rounded-[3rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.07)] border border-slate-100 text-center">
