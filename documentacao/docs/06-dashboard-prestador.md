@@ -47,3 +47,13 @@ Card de identidade + dados profissionais na sidebar. Link "Ver meu perfil" → `
 ### `AnunciosTab.tsx`
 
 Card estático direcionando ao WhatsApp institucional (`lib/config/contato.ts`), com mensagem própria de prestador interessado em destaque de perfil — distinto do módulo de anúncios para lojistas (ver `11-anuncios.md`).
+
+### Aba "Divulgação" — `CentralDivulgacaoTab.tsx`
+
+Kit de divulgação do prestador, com os mesmos dados do perfil público (`lib/services/divulgacao.service.ts` → `useKitDivulgacao`). Liberada quando o cadastro está completo e o perfil não está bloqueado. Três sub-abas:
+
+- **Cartão digital & WhatsApp** — PNG em Quadrado 1:1 (1080²), 4:3 (1200×900) e Stories 9:16 (1080×1920), com foto, especialidade, **"N indicações"** (prova social; não há nota média), serviços concluídos, garantia, melhores fotos do portfólio (uma por projeto finalizado) e QR do perfil. Botões "Baixar imagem" e "Copiar link do perfil".
+- **Adesivos & QR Code** — adesivo de veículo/baú 30×15 cm (200 dpi) e cartão de visita 90×50 mm frente/verso (300 dpi). "{Categoria} Verificado" só aparece se `verificado = true`. Saída: PNG ou impressão/"Salvar como PDF" via iframe com `@page` no tamanho físico. Sem sangria.
+- **Links & orçamentos** — link geral da vitrine e 4 mensagens prontas de WhatsApp (portfólio, orçamento, status, grupos), que citam apenas números existentes.
+
+Detalhes técnicos: QR próprio em `lib/qr/qrcode.ts` (byte, EC M, versões 1–10, sem dependências); artes em canvas (`lib/divulgacao/canvas.ts`); todo material usa o domínio canônico `SITE_URL` (`lib/divulgacao/links.ts`), nunca o de preview. Imagens externas carregam com `crossOrigin='anonymous'`; se o CORS falhar, a arte sai sem a foto. Uso registrado em `logs_atividades` (`BAIXAR_MATERIAL_DIVULGACAO`, `COPIAR_LINK_DIVULGACAO`, `COPIAR_MENSAGEM_DIVULGACAO`).
