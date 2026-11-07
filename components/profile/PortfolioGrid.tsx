@@ -28,7 +28,7 @@ export default function PortfolioGrid({ projetos, projetoAbertoId, onAbrirProjet
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 lg:gap-3">
       {projetosComFoto.map((projeto) => {
         const key = String(projeto.id)
         const isDestaque = projetoAbertoId === key
@@ -81,7 +81,7 @@ export default function PortfolioGrid({ projetos, projetoAbertoId, onAbrirProjet
               {isConcluido ? (
                 <>
                   <CheckCircle2 size={9} className="text-green-500 shrink-0" />
-                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">
                     Concluído
                   </span>
                 </>
@@ -98,7 +98,7 @@ export default function PortfolioGrid({ projetos, projetoAbertoId, onAbrirProjet
               )}
             </div>
 
-            <p className="text-[8px] font-semibold text-slate-400 truncate mt-0.5 px-0.5">
+            <p className="text-[11px] font-semibold text-slate-500 truncate mt-0.5 px-0.5">
               {projeto.titulo}
             </p>
           </div>
