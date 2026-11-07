@@ -26,11 +26,11 @@ export default function PerfilHero({ prestador, compartilhando, onCompartilhar }
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
 
         {/* Banner com avatar + nome lado a lado */}
-        <div className="w-full bg-slate-50 px-5 py-5 flex items-center gap-4 lg:flex-col lg:items-stretch lg:gap-5 lg:px-6 lg:py-6">
+        <div className="w-full bg-slate-50 px-5 py-5 flex items-center gap-4 lg:flex-col lg:items-stretch lg:gap-4 lg:px-6 lg:py-5">
 
           {/* Avatar */}
           <div className="relative shrink-0 lg:w-full">
-            <div className="w-32 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white md:h-36 md:w-44 lg:h-48 lg:w-full xl:h-56">
+            <div className="w-32 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white md:h-36 md:w-44 lg:h-[clamp(6rem,19vh,13rem)] lg:w-full">
               {prestador.foto_perfil ? (
                 <img
                   src={prestador.foto_perfil}
