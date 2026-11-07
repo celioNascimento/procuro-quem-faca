@@ -26,11 +26,11 @@ export default function PerfilHero({ prestador, compartilhando, onCompartilhar }
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
 
         {/* Banner com avatar + nome lado a lado */}
-        <div className="w-full bg-slate-50 px-5 py-5 flex items-center gap-4">
+        <div className="w-full bg-slate-50 px-5 py-5 flex items-center gap-4 lg:flex-col lg:items-stretch lg:gap-5 lg:px-6 lg:py-6">
 
           {/* Avatar */}
-          <div className="relative shrink-0">
-            <div className="w-32 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white">
+          <div className="relative shrink-0 lg:w-full">
+            <div className="w-32 h-28 rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-white md:h-36 md:w-44 lg:h-48 lg:w-full xl:h-56">
               {prestador.foto_perfil ? (
                 <img
                   src={prestador.foto_perfil}
@@ -53,17 +53,17 @@ export default function PerfilHero({ prestador, compartilhando, onCompartilhar }
           </div>
 
           {/* Nome + slug + localização no banner */}
-          <div className="flex-1 min-w-0">
-            <h1 className="font-black text-[15px] text-slate-800 leading-tight tracking-tight uppercase italic break-words">
+          <div className="flex-1 min-w-0 lg:text-center">
+            <h1 className="font-black text-[15px] text-slate-800 leading-tight tracking-tight uppercase italic break-words lg:text-2xl">
               {prestador.nome}
             </h1>
             {slug && (
-              <p className="text-[10px] text-blue-400 font-bold truncate mt-0.5 tracking-wide">
+              <p className="text-[10px] text-blue-400 font-bold truncate mt-0.5 tracking-wide lg:text-xs">
                 @{slug}
               </p>
             )}
             {localizacao && (
-              <p className="flex items-center gap-1 text-[10px] font-medium text-slate-400 mt-1.5">
+              <p className="flex items-center gap-1 text-[10px] font-medium text-slate-400 mt-1.5 lg:justify-center lg:text-sm">
                 <MapPin size={11} className="shrink-0" />
                 {localizacao}
               </p>
@@ -73,7 +73,7 @@ export default function PerfilHero({ prestador, compartilhando, onCompartilhar }
         </div>
 
         {categoria && (
-          <div className="flex items-center gap-4 px-5 py-3 border-t border-slate-100 text-[12px]">
+          <div className="flex items-center gap-4 px-5 py-3 border-t border-slate-100 text-[12px] lg:justify-center lg:text-sm">
             <span className="inline-flex items-center gap-1.5 text-blue-600 font-bold uppercase tracking-wide min-w-0">
               <Wrench size={14} className="shrink-0" />
               <span className="truncate">{categoria}</span>

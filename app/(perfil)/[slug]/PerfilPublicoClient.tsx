@@ -35,7 +35,7 @@ interface PerfilCarregadoProps {
   urlRetorno: string
 }
 
-function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicacoes, urlRetorno }: PerfilCarregadoProps) {
+export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicacoes, urlRetorno }: PerfilCarregadoProps) {
   const { status: statusCompartilhamento, compartilhar } = useCompartilharPerfil({
     prestador,
     projetos,
@@ -77,26 +77,56 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicacoes, url
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
       <Header href={urlRetorno} />
 
-      <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 lg:px-8 lg:pt-32">
-        <div className="grid items-start gap-6 lg:mt-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] xl:gap-14">
-          <aside className="min-w-0 lg:sticky lg:top-28">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 lg:px-8 lg:pt-28 2xl:max-w-[96rem] 2xl:px-12">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] xl:gap-14 2xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
+          <aside className="min-w-0 [@media(min-width:1024px)_and_(min-height:840px)]:sticky [@media(min-width:1024px)_and_(min-height:840px)]:top-24">
             <div className="flex flex-col gap-4 animate-in fade-in duration-500 lg:gap-5">
-              <PerfilHero
-                prestador={prestador}
-                compartilhando={statusCompartilhamento === 'copiado'}
-                onCompartilhar={compartilhar}
-              />
+              {/* Ordem visual: celular = cartão → confiança → CTA; desktop = cartão → CTA → confiança
+                  (o CTA precisa caber na primeira tela, ao lado do anúncio). Uma instância de cada. */}
+              <div className="order-1">
+                <PerfilHero
+                  prestador={prestador}
+                  compartilhando={statusCompartilhamento === 'copiado'}
+                  onCompartilhar={compartilhar}
+                />
+              </div>
 
-              <PerfilConfianca
-                prestador={prestador}
-                totalIndicacoes={totalIndicacoes}
-                totalConcluidos={projetos.filter(p => p.status === 'finalizado').length}
-              />
+              <div className="order-2 lg:order-3">
+                <PerfilConfianca
+                  prestador={prestador}
+                  totalIndicacoes={totalIndicacoes}
+                  totalConcluidos={projetos.filter(p => p.status === 'finalizado').length}
+                />
+              </div>
+
+              {/* CTA sempre à vista: fica na coluna do profissional (sticky no desktop) */}
+              <div className="order-3 lg:order-2">
+                <PerfilCTA
+                  nome={prestador.nome || ''}
+                  whatsapp={prestador.whatsapp || ''}
+                  onClique={async () => {
+                    // keepalive: no celular o link abre o app do WhatsApp e a página
+                    // pode ser suspensa; com isso o navegador conclui a requisição.
+                    // O log de auditoria é gravado pela própria rota, só quando o
+                    // clique é contado.
+                    const resposta = await fetch('/api/prestadores/clique-whatsapp', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ prestadorId: prestador.id }),
+                      keepalive: true,
+                    })
+
+                    if (!resposta.ok) {
+                      throw new Error('Não foi possível registrar o clique no perfil.')
+                    }
+                  }}
+                />
+              </div>
 
               {isPublico && (
                 <Link
                   href={`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome || '')}`}
-                  className="group flex items-center gap-3 rounded-[1.75rem] border border-indigo-100 bg-indigo-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-[...]"
+                  className="group order-4 flex items-center gap-3 rounded-[1.75rem] border border-indigo-100 bg-indigo-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-[...]"
                 >
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm transition-transform group-hover:scale-105">
                     <BadgeCheck size={20} aria-hidden="true" />
@@ -116,6 +146,16 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicacoes, url
 
           <div className="flex min-w-0 flex-col gap-7 animate-in fade-in duration-500 sm:gap-8 lg:gap-10">
 
+            {/* Anúncio: UMA instância só. No celular aparece logo depois do cartão do profissional,
+                da confiança e do CTA; no desktop abre a coluna de conteúdo, ao lado do cartão. */}
+            <div className="mx-auto flex w-full max-w-3xl items-center justify-center lg:max-w-none">
+              <AdCard
+                page="perfil_prestador"
+                anuncio={anuncioTopo}
+                categoria={prestador.categorias?.nome || prestador.categoria || undefined}
+              />
+            </div>
+
             {/* 1. Quem é e o que faz */}
             <div className="flex flex-col gap-4">
               <PerfilEspecialidades prestador={prestador} />
@@ -125,43 +165,12 @@ function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicacoes, url
             {/* 2. Estrutura e local de trabalho — convence antes do CTA */}
             <SessaoFotos sessao={prestador.sessao_fotos} />
 
-            {/* 3. CTA — após apresentação completa */}
-            <PerfilCTA
-              nome={prestador.nome || ''}
-              whatsapp={prestador.whatsapp || ''}
-              onClique={async () => {
-                // keepalive: no celular o link abre o app do WhatsApp e a página
-                // pode ser suspensa; com isso o navegador conclui a requisição.
-                // O log de auditoria é gravado pela própria rota, só quando o
-                // clique é contado.
-                const resposta = await fetch('/api/prestadores/clique-whatsapp', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ prestadorId: prestador.id }),
-                  keepalive: true,
-                })
-
-                if (!resposta.ok) {
-                  throw new Error('Não foi possível registrar o clique no perfil.')
-                }
-              }}
-            />
-
             {/* 4. Portfólio + Avaliações em abas — única fonte de verdade para o portfólio */}
             <PerfilTabs
               projetos={projetos}
               avaliacoes={avaliacoes}
               portfolioObrigatorio={prestador.portfolio_obrigatorio}
             />
-
-            {/* Anúncio só depois da apresentação completa (perfil, portfólio e avaliações) */}
-            <div className="mx-auto flex w-full max-w-3xl items-center justify-center">
-              <AdCard
-                page="perfil_prestador"
-                anuncio={anuncioTopo}
-                categoria={prestador.categorias?.nome || prestador.categoria || undefined}
-              />
-            </div>
 
             <ContextualHelp context="perfil-publico" title="Dúvidas sobre este perfil?" />
           </div>

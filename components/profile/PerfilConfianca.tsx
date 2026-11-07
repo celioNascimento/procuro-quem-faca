@@ -55,13 +55,13 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalConcl
             <ThumbsUp size={20} aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-2xl font-black leading-none text-slate-800 tabular-nums">
+            <p className="text-2xl font-black leading-none text-slate-800 tabular-nums lg:text-3xl">
               {totalIndicacoes}{' '}
-              <span className="text-base font-bold text-slate-700">
+              <span className="text-base font-bold text-slate-700 lg:text-lg">
                 {plural(totalIndicacoes, 'indicação', 'indicações')}
               </span>
             </p>
-            <p className="mt-1 text-xs font-medium leading-snug text-slate-500">
+            <p className="mt-1 text-xs font-medium leading-snug text-slate-500 lg:text-sm">
               {plural(totalIndicacoes, 'Cliente indicou', 'Clientes indicaram')} este profissional depois do serviço.
             </p>
           </div>
@@ -71,7 +71,7 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalConcl
       {itens.length > 0 && (
         <ul className={`flex flex-col gap-2.5 ${temDestaque ? 'mt-4 border-t border-slate-50 pt-4' : ''}`}>
           {itens.map(item => (
-            <li key={item.key} className="flex items-start gap-2.5 text-[13px] font-semibold leading-snug text-slate-600">
+            <li key={item.key} className="flex items-start gap-2.5 text-[13px] font-semibold leading-snug text-slate-600 lg:text-sm">
               <span className="mt-0.5 shrink-0">{item.icon}</span>
               <span className="min-w-0">{item.texto}</span>
             </li>
