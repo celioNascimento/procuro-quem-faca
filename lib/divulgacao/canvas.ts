@@ -90,6 +90,26 @@ function imagemCobrindo(ctx: Ctx, img: HTMLImageElement, x: number, y: number, w
   ctx.restore()
 }
 
+/** Mostra a foto inteira (sem cortar) num quadro arredondado; só corta quando a diferença de proporção é pequena. */
+function fotoNoQuadro(ctx: Ctx, img: HTMLImageElement, x: number, y: number, w: number, h: number, r: number) {
+  const a = img.width / img.height
+  const b = w / h
+  const corte = 1 - Math.min(a, b) / Math.max(a, b)
+  if (corte <= 0.18) return imagemCobrindo(ctx, img, x, y, w, h, r)
+  ctx.save()
+  caminhoArredondado(ctx, x, y, w, h, r)
+  ctx.clip()
+  ctx.fillStyle = '#e2e8f0'
+  ctx.fillRect(x, y, w, h)
+  // fundo: a própria foto ampliada e esmaecida, para não sobrar faixa vazia
+  const esc = Math.max(w / img.width, h / img.height)
+  ctx.globalAlpha = 0.35
+  ctx.drawImage(img, x + (w - img.width * esc) / 2, y + (h - img.height * esc) / 2, img.width * esc, img.height * esc)
+  ctx.globalAlpha = 1
+  imagemContida(ctx, img, x, y, w, h)
+  ctx.restore()
+}
+
 function imagemContida(ctx: Ctx, img: HTMLImageElement, x: number, y: number, w: number, h: number) {
   const escala = Math.min(w / img.width, h / img.height)
   const dw = img.width * escala
@@ -334,18 +354,25 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   if (fotos.length > 0 && restante > 120) {
     const gap = Math.round(q * 0.4)
     if (vertical) {
-      const colunas = 2
-      const linhas = Math.ceil(fotos.length / colunas)
-      const cellW = (iw - gap) / colunas
-      const cellH = Math.min((restante - gap * (linhas - 1)) / linhas, cellW * 1.1)
-      fotos.forEach((f, i) => {
-        const col = i % colunas
-        const lin = Math.floor(i / colunas)
-        imagemCobrindo(ctx, f, ix + col * (cellW + gap), y + lin * (cellH + gap), cellW, cellH, 22)
-      })
+      if (fotos.length <= 2) {
+        // 1–2 fotos: empilhadas em largura total, cada uma com a altura da sua proporção
+        const altMax = (restante - gap * (fotos.length - 1)) / fotos.length
+        const alts = fotos.map(f => Math.min(altMax, iw / (f.width / f.height)))
+        const total = alts.reduce((a, b) => a + b, 0) + gap * (fotos.length - 1)
+        let fy = y + Math.max(0, (restante - total) / 2)
+        fotos.forEach((f, i) => { fotoNoQuadro(ctx, f, ix, fy, iw, alts[i], 22); fy += alts[i] + gap })
+      } else {
+        const colunas = 2
+        const linhas = Math.ceil(fotos.length / colunas)
+        const cellW = (iw - gap) / colunas
+        const cellH = Math.min((restante - gap * (linhas - 1)) / linhas, cellW * 1.1)
+        fotos.forEach((f, i) => {
+          fotoNoQuadro(ctx, f, ix + (i % colunas) * (cellW + gap), y + Math.floor(i / colunas) * (cellH + gap), cellW, cellH, 22)
+        })
+      }
     } else {
       const cellW = (iw - gap * (fotos.length - 1)) / fotos.length
-      fotos.forEach((f, i) => imagemCobrindo(ctx, f, ix + i * (cellW + gap), y, cellW, restante, 22))
+      fotos.forEach((f, i) => fotoNoQuadro(ctx, f, ix + i * (cellW + gap), y, cellW, restante, 22))
     }
   }
 

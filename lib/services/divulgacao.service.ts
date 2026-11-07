@@ -21,13 +21,13 @@ interface PrestadorRow {
 interface FotoRow { url_foto: string | null; ordem: number | null }
 interface ProjetoRow { id: string; portfolio_fotos: FotoRow[] | null }
 
-/** Primeira foto (menor `ordem`) de cada projeto concluído, até `max` — o "melhor" recorte de cada serviço. */
+/** Foto final (maior `ordem`: 3 = "Depois") de cada projeto concluído, até `max` — o resultado é o que vende. */
 export function escolherFotosPortfolio(projetos: ProjetoRow[], max = 4): string[] {
   const urls: string[] = []
   for (const p of projetos) {
     const fotos = [...(p.portfolio_fotos ?? [])]
       .filter(f => Boolean(f.url_foto))
-      .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
+      .sort((a, b) => (b.ordem ?? 0) - (a.ordem ?? 0))
     if (fotos[0]?.url_foto) urls.push(fotos[0].url_foto)
     if (urls.length >= max) break
   }
