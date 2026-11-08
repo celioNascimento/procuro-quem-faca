@@ -215,17 +215,17 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   const topoH = Math.round(h * (vertical ? 0.085 : 0.115))
   const rodapeH = Math.round(h * (vertical ? 0.135 : 0.16))
 
-  // topo: marca + selo
-  const logoH = Math.round(topoH * 0.62)
+  // topo: marca direto sobre o fundo (PNG transparente), sem caixa branca competindo com o cartão
+  const logoH = Math.round(topoH * 0.7)
+  const logoY = Math.round((topoH - logoH) / 2) + Math.round(p * 0.2)
   if (imgs.logoPqf) {
     const lw = (imgs.logoPqf.width / imgs.logoPqf.height) * logoH
-    preencher(ctx, p, Math.round((topoH - logoH * 1.4) / 2) + p * 0.2, lw + logoH * 0.7, logoH * 1.4, logoH * 0.35, '#ffffff')
-    ctx.drawImage(imgs.logoPqf, p + logoH * 0.35, Math.round((topoH - logoH * 1.4) / 2) + p * 0.2 + logoH * 0.2, lw, logoH)
+    ctx.drawImage(imgs.logoPqf, p, logoY, lw, logoH)
   } else {
-    const bp = ajustarFonte(ctx, 'PROCURO QUEM FAÇA', w * 0.5, logoH * 0.7, 18, 900)
+    const bp = ajustarFonte(ctx, 'PROCURO QUEM FAÇA', w * 0.5, logoH * 0.6, 18, 900)
     fonte(ctx, bp, 900)
-    ctx.fillStyle = '#ffffff'
-    ctx.fillText('PROCURO QUEM FAÇA', p, topoH * 0.7)
+    ctx.fillStyle = AZUL_ESCURO
+    ctx.fillText('PROCURO QUEM FAÇA', p, logoY + logoH * 0.7)
   }
 
   // cartão branco
