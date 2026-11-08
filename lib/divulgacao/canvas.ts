@@ -292,21 +292,22 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   const tx = ix + lado + Math.round(q * 0.7)
   const tw = iw - lado - Math.round(q * 0.7)
   const sub = [dados.categoria, dados.cidade].filter(Boolean).join('  •  ').toUpperCase()
-  const nomePx = ajustarFonte(ctx, dados.nome.toUpperCase(), tw, lado * 0.46, 26, 900)
-  fonte(ctx, nomePx, 900)
-  const linhasNome = quebrarLinhas(ctx, dados.nome.toUpperCase(), tw, 2)
-  const subPx = sub ? ajustarFonte(ctx, sub, tw, lado * 0.25, 16, 700) : 0
-  const folgaNome = nomePx * 0.22
-  const hTexto = nomePx * 0.88 + (linhasNome.length - 1) * nomePx * 1.08 + (sub ? folgaNome + subPx * 1.0 : 0)
+  // nome: peso médio, caixa normal e azul da marca — destaque pelo tamanho e cor, não pelo peso
+  const nomePx = ajustarFonte(ctx, dados.nome, tw, lado * 0.42, 26, 700)
+  fonte(ctx, nomePx, 700)
+  const linhasNome = quebrarLinhas(ctx, dados.nome, tw, 2)
+  const subPx = sub ? ajustarFonte(ctx, sub, tw, lado * 0.19, 15, 600) : 0
+  const folgaNome = nomePx * 0.3
+  const hTexto = nomePx * 0.88 + (linhasNome.length - 1) * nomePx * 1.1 + (sub ? folgaNome + subPx : 0)
   let ty = identY + Math.max(0, (lado - hTexto) / 2) + nomePx * 0.88
-  fonte(ctx, nomePx, 900)
-  ctx.fillStyle = TINTA
-  linhasNome.forEach((l, i) => ctx.fillText(l, tx, ty + i * nomePx * 1.08))
-  ty += (linhasNome.length - 1) * nomePx * 1.08
+  fonte(ctx, nomePx, 700)
+  ctx.fillStyle = AZUL
+  linhasNome.forEach((l, i) => ctx.fillText(l, tx, ty + i * nomePx * 1.1))
+  ty += (linhasNome.length - 1) * nomePx * 1.1
   if (sub) {
-    fonte(ctx, subPx, 700)
-    ctx.fillStyle = '#475569'
-    ctx.fillText(sub, tx, ty + folgaNome + subPx * 1.0)
+    fonte(ctx, subPx, 600)
+    ctx.fillStyle = '#64748b'
+    ctx.fillText(sub, tx, ty + folgaNome + subPx)
   }
 
   // rodapé: chamada + QR
@@ -327,8 +328,8 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   ctx.fillText(chamada, p, qrY + qrTam * 0.38)
   const curta = urlCurta(url)
   const urlPx = ajustarFonte(ctx, curta, textoW, rodapeH * 0.26, 18, 900)
-  fonte(ctx, urlPx, 900)
-  ctx.fillStyle = TINTA
+  fonte(ctx, urlPx, 800)
+  ctx.fillStyle = AZUL
   ctx.fillText(curta, p, qrY + qrTam * 0.78, textoW)
 }
 
