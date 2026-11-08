@@ -46,7 +46,7 @@ export function CartaoDigitalPanel({ dados, imagens }: { dados: DadosDivulgacao;
       <div className="flex flex-col gap-4">
         <div>
           <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Cartão para WhatsApp</h3>
-          <p className="mt-1 text-sm text-slate-600">Imagem pronta com sua foto, especialidade, indicações de clientes e fotos dos seus serviços. Baixe e envie no chat ou poste no status.</p>
+          <p className="mt-1 text-sm text-slate-600">Imagem pronta com a foto do seu serviço mais recente em destaque, seu nome, especialidade e QR do perfil. Não traz números que mudam, então não fica desatualizada. Baixe e envie no chat ou poste no status.</p>
         </div>
         <div role="radiogroup" aria-label="Formato do cartão" className="flex flex-col gap-2">
           {FORMATOS.map(f => (

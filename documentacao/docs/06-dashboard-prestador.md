@@ -52,7 +52,7 @@ Card estático direcionando ao WhatsApp institucional (`lib/config/contato.ts`),
 
 Kit de divulgação do prestador, com os mesmos dados do perfil público (`lib/services/divulgacao.service.ts` → `useKitDivulgacao`). Liberada quando o cadastro está completo e o perfil não está bloqueado. Três sub-abas:
 
-- **Cartão digital & WhatsApp** — PNG em Quadrado 1:1 (1080²), 4:3 (1200×900) e Stories 9:16 (1080×1920), com foto, especialidade, **"N indicações"** (prova social; não há nota média), serviços concluídos, garantia, melhores fotos do portfólio (uma por projeto finalizado) e QR do perfil. Botões "Baixar imagem" e "Copiar link do perfil".
+- **Cartão digital & WhatsApp** — PNG em Quadrado 1:1 (1080²), 4:3 (1200×900) e Stories 9:16 (1080×1920). A **foto final ("Depois", maior `ordem`) do projeto concluído mais recente** é o destaque, mostrada inteira (sem corte; sobra esmaecida quando a proporção difere); abaixo, foto/inicial, nome, categoria • cidade; rodapé com chamada, link curto e QR. **Não leva dados voláteis** (indicações, concluídos, garantia, selo de verificação), porque a imagem circula por semanas. Botões "Baixar imagem" e "Copiar link do perfil".
 - **Adesivos & QR Code** — adesivo de veículo/baú 30×15 cm (200 dpi) e cartão de visita 90×50 mm frente/verso (300 dpi). "{Categoria} Verificado" só aparece se `verificado = true`. Saída: PNG ou impressão/"Salvar como PDF" via iframe com `@page` no tamanho físico. Sem sangria.
 - **Links & orçamentos** — link geral da vitrine e 4 mensagens prontas de WhatsApp (portfólio, orçamento, status, grupos), que citam apenas números existentes.
 

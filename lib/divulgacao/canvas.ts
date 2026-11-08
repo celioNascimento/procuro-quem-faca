@@ -12,7 +12,6 @@ const AZUL_ESCURO = '#1e3a8a'
 const AZUL = '#2563eb'
 const TINTA = '#0f172a'
 const CINZA = '#64748b'
-const VERDE = '#15803d'
 const FONTE = '"Segoe UI", "Helvetica Neue", Arial, sans-serif'
 
 export interface ImagensArte {
@@ -180,10 +179,6 @@ function pilula(ctx: Ctx, texto: string, x: number, y: number, px: number, corTe
   return w
 }
 
-function plural(n: number, s: string, p: string) {
-  return n === 1 ? s : p
-}
-
 function matrizDoPerfil(dados: DadosDivulgacao) {
   const url = urlCanonicaPerfil(dados.slug, dados.id)
   return { url, matriz: gerarMatrizQr(url) }
@@ -230,150 +225,75 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
     ctx.fillStyle = '#ffffff'
     ctx.fillText('PROCURO QUEM FAÇA', p, topoH * 0.7)
   }
-  if (dados.verificado) {
-    const px = Math.round(topoH * 0.2)
-    fonte(ctx, px, 800)
-    const t = 'PERFIL VERIFICADO'
-    const tw = ctx.measureText(t).width + px * 1.6
-    preencher(ctx, w - p - tw, Math.round((topoH - px * 2.2) / 2) + p * 0.2, tw, px * 2.2, px * 1.1, 'rgba(255,255,255,0.18)')
-    ctx.fillStyle = '#ffffff'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(t, w - p - tw + px * 0.8, Math.round(topoH / 2) + p * 0.2 + px * 0.05)
-    ctx.textBaseline = 'alphabetic'
-  }
 
   // cartão branco
   const cx = p
-  const cy = topoH + Math.round(p * 0.35)
+  const regiaoY = topoH + Math.round(p * 0.35)
   const cw = w - p * 2
-  const ch = h - rodapeH - cy - Math.round(p * 0.25)
+  const regiaoH = h - rodapeH - regiaoY - Math.round(p * 0.25)
+
+  const q = Math.round(cw * 0.045)
+  const ix = cx + q
+  const iw = cw - q * 2
+  const foto = imgs.fotos[0] ?? null
+
+  // Só entram dados estáveis (foto, nome, nicho, cidade, link). Números que mudam — indicações,
+  // concluídos, garantia, verificação — ficam de fora: a imagem circula por semanas e envelhece.
+  const lado = Math.round(vertical ? iw * 0.2 : Math.min(regiaoH * 0.22, iw * 0.17))
+  const identH = lado
+  const gapId = Math.round(q * 0.8)
+  const disponivel = regiaoH - q * 2 - identH - gapId
+  // vertical: o quadro da foto segue a proporção dela e o cartão encolhe ao conteúdo (sem sobra de branco)
+  const fotoH = foto ? (vertical ? Math.min(disponivel, Math.max(iw / (foto.width / foto.height), iw * 0.9)) : disponivel) : 0
+  const grupoH = foto ? fotoH + gapId + identH : identH
+  const ch = vertical ? Math.min(regiaoH, grupoH + q * 2) : regiaoH
+  const cy = vertical ? regiaoY + (regiaoH - ch) / 2 : regiaoY
   ctx.save()
   ctx.shadowColor = 'rgba(15,23,42,0.35)'
   ctx.shadowBlur = 40
   ctx.shadowOffsetY = 12
   preencher(ctx, cx, cy, cw, ch, 44, '#ffffff')
   ctx.restore()
+  const topoGrupo = cy + Math.max(q, (ch - grupoH) / 2)
+  const identY = foto ? topoGrupo + fotoH + gapId : topoGrupo
 
-  const q = Math.round(cw * 0.05)
-  const ix = cx + q
-  const iw = cw - q * 2
-  let y = cy + q
+  if (foto) fotoNoQuadro(ctx, foto, ix, topoGrupo, iw, fotoH, 30)
 
-  // identidade
-  const lado = Math.round(vertical ? iw * 0.3 : Math.min(ch * 0.26, iw * 0.24))
-  preencher(ctx, ix, y, lado, lado, 28, '#f1f5f9')
+  preencher(ctx, ix, identY, lado, lado, 22, '#f1f5f9')
   if (imgs.perfil) {
     ctx.save()
-    caminhoArredondado(ctx, ix, y, lado, lado, 28)
+    caminhoArredondado(ctx, ix, identY, lado, lado, 22)
     ctx.clip()
-    imagemContida(ctx, imgs.perfil, ix + 6, y + 6, lado - 12, lado - 12)
+    imagemContida(ctx, imgs.perfil, ix + 5, identY + 5, lado - 10, lado - 10)
     ctx.restore()
   } else {
     fonte(ctx, lado * 0.42, 900)
     ctx.fillStyle = AZUL
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText((dados.nome.trim()[0] ?? '?').toUpperCase(), ix + lado / 2, y + lado / 2)
+    ctx.fillText((dados.nome.trim()[0] ?? '?').toUpperCase(), ix + lado / 2, identY + lado / 2)
     ctx.textAlign = 'left'
     ctx.textBaseline = 'alphabetic'
   }
   const tx = ix + lado + Math.round(q * 0.7)
   const tw = iw - lado - Math.round(q * 0.7)
-  const nomePx = ajustarFonte(ctx, dados.nome, tw, vertical ? 64 : 56, 30, 900)
+  const sub = [dados.categoria, dados.cidade].filter(Boolean).join('  •  ').toUpperCase()
+  const nomePx = ajustarFonte(ctx, dados.nome.toUpperCase(), tw, lado * 0.46, 26, 900)
   fonte(ctx, nomePx, 900)
   const linhasNome = quebrarLinhas(ctx, dados.nome.toUpperCase(), tw, 2)
+  const subPx = sub ? ajustarFonte(ctx, sub, tw, lado * 0.25, 16, 700) : 0
+  const hTexto = linhasNome.length * nomePx * 1.08 + (sub ? subPx * 1.5 : 0)
+  let ty = identY + Math.max(0, (lado - hTexto) / 2) + nomePx * 0.88
+  fonte(ctx, nomePx, 900)
   ctx.fillStyle = TINTA
-  let ty = y + nomePx * 1.05
   for (const l of linhasNome) {
     ctx.fillText(l, tx, ty)
     ty += nomePx * 1.08
   }
-  const sub = [dados.categoria, dados.cidade].filter(Boolean).join('  •  ')
   if (sub) {
-    const subPx = ajustarFonte(ctx, sub.toUpperCase(), tw, vertical ? 34 : 28, 18, 700)
     fonte(ctx, subPx, 700)
     ctx.fillStyle = AZUL
-    ctx.fillText(sub.toUpperCase(), tx, Math.min(ty + subPx * 0.35, y + lado - 2))
-  }
-  y += lado + Math.round(q * 0.9)
-
-  // prova social
-  const temIndicacoes = dados.totalIndicacoes > 0
-  const chips: string[] = []
-  if (dados.totalConcluidos > 0) chips.push(`${dados.totalConcluidos} ${plural(dados.totalConcluidos, 'serviço concluído', 'serviços concluídos')}`)
-  if (dados.garantiaDias > 0) chips.push(`${dados.garantiaDias} dias de garantia`)
-  if (temIndicacoes || chips.length > 0) {
-    const blocoH = Math.round(vertical ? iw * 0.2 : Math.min(ch * 0.2, iw * 0.16))
-    preencher(ctx, ix, y, iw, blocoH, 28, '#eff6ff')
-    let bx = ix + q * 0.8
-    if (temIndicacoes) {
-      const numPx = blocoH * 0.62
-      fonte(ctx, numPx, 900)
-      ctx.fillStyle = AZUL
-      const num = String(dados.totalIndicacoes)
-      ctx.textBaseline = 'middle'
-      ctx.fillText(num, bx, y + blocoH / 2 + numPx * 0.04)
-      bx += ctx.measureText(num).width + q * 0.35
-      const labPx = blocoH * 0.2
-      fonte(ctx, labPx, 800)
-      ctx.fillStyle = TINTA
-      ctx.fillText(plural(dados.totalIndicacoes, 'INDICAÇÃO', 'INDICAÇÕES'), bx, y + blocoH / 2 - labPx * 0.55)
-      fonte(ctx, labPx * 0.82, 600)
-      ctx.fillStyle = CINZA
-      ctx.fillText('de clientes reais', bx, y + blocoH / 2 + labPx * 0.75)
-      bx += Math.max(ctx.measureText('de clientes reais').width, labPx * 6.2) + q * 0.5
-    }
-    ctx.textBaseline = 'alphabetic'
-    const chipPx = blocoH * 0.2
-    if (vertical) {
-      y += blocoH + Math.round(q * 0.5)
-      let chx = ix
-      for (const c of chips) {
-        fonte(ctx, chipPx * 0.92, 700)
-        const wChip = ctx.measureText(c).width + chipPx * 1.5
-        if (chx + wChip > ix + iw) break
-        chx += pilula(ctx, c, chx, y, chipPx * 0.92, VERDE, '#dcfce7') + q * 0.4
-      }
-      y += chipPx * 0.92 * 1.9 + Math.round(q * 0.8)
-    } else {
-      let cyChip = y + blocoH / 2 - (chips.length > 1 ? chipPx * 2.0 : chipPx * 0.95)
-      for (const c of chips) {
-        fonte(ctx, chipPx, 700)
-        const wChip = ctx.measureText(c).width + chipPx * 1.4
-        if (bx + wChip > ix + iw - q * 0.4) break
-        pilula(ctx, c, bx, cyChip, chipPx, VERDE, '#dcfce7')
-        cyChip += chipPx * 2.2
-      }
-      y += blocoH + Math.round(q * 0.8)
-    }
-  }
-
-  // portfólio
-  const restante = cy + ch - q - y
-  const fotos = imgs.fotos.slice(0, vertical ? 4 : 3)
-  if (fotos.length > 0 && restante > 120) {
-    const gap = Math.round(q * 0.4)
-    if (vertical) {
-      if (fotos.length <= 2) {
-        // 1–2 fotos: empilhadas em largura total, cada uma com a altura da sua proporção
-        const altMax = (restante - gap * (fotos.length - 1)) / fotos.length
-        const alts = fotos.map(f => Math.min(altMax, iw / (f.width / f.height)))
-        const total = alts.reduce((a, b) => a + b, 0) + gap * (fotos.length - 1)
-        let fy = y + Math.max(0, (restante - total) / 2)
-        fotos.forEach((f, i) => { fotoNoQuadro(ctx, f, ix, fy, iw, alts[i], 22); fy += alts[i] + gap })
-      } else {
-        const colunas = 2
-        const linhas = Math.ceil(fotos.length / colunas)
-        const cellW = (iw - gap) / colunas
-        const cellH = Math.min((restante - gap * (linhas - 1)) / linhas, cellW * 1.1)
-        fotos.forEach((f, i) => {
-          fotoNoQuadro(ctx, f, ix + (i % colunas) * (cellW + gap), y + Math.floor(i / colunas) * (cellH + gap), cellW, cellH, 22)
-        })
-      }
-    } else {
-      const cellW = (iw - gap * (fotos.length - 1)) / fotos.length
-      fotos.forEach((f, i) => fotoNoQuadro(ctx, f, ix + i * (cellW + gap), y, cellW, restante, 22))
-    }
+    ctx.fillText(sub, tx, ty + subPx * 0.2)
   }
 
   // rodapé: chamada + QR
