@@ -6,20 +6,29 @@ import { useSearchParams } from 'next/navigation'
 
 import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
-import AvaliacoesDashboardTab from '@/components/dashboard/AvaliacoesDashboardTab'
+import DesempenhoDashboardTab, { type SubAbaDesempenho } from '@/components/dashboard/DesempenhoDashboardTab'
 import CentralDivulgacaoTab from '@/components/dashboard/CentralDivulgacaoTab'
 import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
-import { CliquesWhatsappCard } from '@/components/dashboard/CliquesWhatsappCard'
-import { VisitasPerfilCard } from '@/components/dashboard/VisitasPerfilCard'
-import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Star, Megaphone } from 'lucide-react'
+import { ResumoDesempenhoStrip } from '@/components/dashboard/ResumoDesempenhoStrip'
+import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Activity, Megaphone } from 'lucide-react'
 import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 import { ContextualHelp } from '@/components/help/HelpCenter'
 
+// Selo "Novo" da aba Desempenho: some assim que o prestador abre a aba pela primeira vez.
+const CHAVE_DESEMPENHO_VISTO = 'pqf:dashboard:desempenho-visto'
+
 function PerfilPageContent() {
   const searchParams = useSearchParams()
-  const abaInicial = searchParams.get('aba') === 'perfil' ? 'perfil' : 'portfolio'
+  const abaParam = searchParams.get('aba')
+  // 'avaliacoes' é o nome antigo da aba: links existentes caem em Desempenho > Avaliações.
+  const abaInicial =
+    abaParam === 'perfil' ? 'perfil' : abaParam === 'desempenho' || abaParam === 'avaliacoes' ? 'desempenho' : 'portfolio'
+  const subAbaInicial: SubAbaDesempenho =
+    abaParam === 'avaliacoes' || searchParams.get('sub') === 'avaliacoes' ? 'avaliacoes' : 'analises'
   const [abaAtiva, setAbaAtiva] = useState(abaInicial)
+  // Começa como "visto" para o selo não piscar antes de ler o armazenamento do navegador.
+  const [desempenhoVisto, setDesempenhoVisto] = useState(true)
   const [mensagemSuporte, setMensagemSuporte] = useState('')
   const { cadastroCompleto, validando, slug, prestadorId, bloqueado, motivoBloqueio } = usePerfilStatus()
   const linkSuporte = `https://wa.me/${NUMERO_WHATSAPP_PQF}?text=${encodeURIComponent(`Olá, equipe Procuro Quem Faça. Meu perfil ${slug ? `(${slug}) ` : ''}foi bloqueado e gostaria de solicitar esclarecimentos.\n\n${mensagemSuporte.trim()}`)}`
@@ -31,6 +40,29 @@ function PerfilPageContent() {
     }
   }, [validando, cadastroCompleto])
 
+  useEffect(() => {
+    queueMicrotask(() => {
+      try {
+        setDesempenhoVisto(window.localStorage.getItem(CHAVE_DESEMPENHO_VISTO) === '1')
+      } catch {
+        // Armazenamento indisponível (modo privado, bloqueio de dados): mantém o selo oculto.
+        setDesempenhoVisto(true)
+      }
+    })
+  }, [])
+
+  const abrirAba = (id: string) => {
+    setAbaAtiva(id)
+    if (id === 'desempenho') {
+      setDesempenhoVisto(true)
+      try {
+        window.localStorage.setItem(CHAVE_DESEMPENHO_VISTO, '1')
+      } catch {
+        // Sem armazenamento: o selo só some nesta sessão.
+      }
+    }
+  }
+
   const abas = [
     {
       id: 'portfolio',
@@ -40,9 +72,9 @@ function PerfilPageContent() {
       externo: false,
     },
     {
-      id: 'avaliacoes',
-      label: 'Avaliações',
-      icon: <Star size={14} />,
+      id: 'desempenho',
+      label: 'Desempenho',
+      icon: <Activity size={14} />,
       bloqueado: !cadastroCompleto,
       externo: false,
     },
@@ -114,10 +146,10 @@ function PerfilPageContent() {
         <AdCardDashboard />
       </div>
 
-      {!validando && cadastroCompleto && !bloqueado && (
-        <div className="mt-4 flex flex-col gap-4">
-          <VisitasPerfilCard />
-          <CliquesWhatsappCard />
+      {/* Faixa resumo (7 dias) com atalho para a aba Desempenho; escondida dentro dela para não repetir. */}
+      {!validando && cadastroCompleto && !bloqueado && abaAtiva !== 'desempenho' && (
+        <div className="mt-4">
+          <ResumoDesempenhoStrip onAbrir={() => abrirAba('desempenho')} />
         </div>
       )}
 
@@ -131,7 +163,7 @@ function PerfilPageContent() {
                 key={aba.id}
                 type="button"
                 disabled={aba.bloqueado || validando}
-                onClick={() => setAbaAtiva(aba.id)}
+                onClick={() => abrirAba(aba.id)}
                 aria-current={ativa ? 'page' : undefined}
                 aria-describedby={aba.bloqueado ? `${aba.id}-locked` : undefined}
                 className={`flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${ativa
@@ -143,6 +175,9 @@ function PerfilPageContent() {
               >
                 {aba.bloqueado && !validando ? <Lock size={13} aria-hidden="true" /> : aba.icon}
                 {aba.label}
+                {aba.id === 'desempenho' && !desempenhoVisto && !aba.bloqueado && !ativa && (
+                  <span className="rounded-md bg-blue-600 px-1.5 py-0.5 text-[8px] tracking-wide text-white">Novo</span>
+                )}
                 {aba.bloqueado && !validando && (
                   <span id={`${aba.id}-locked`} className="rounded-md bg-white/70 px-1.5 py-0.5 text-[8px] tracking-wide text-slate-400">
                     Complete o perfil
@@ -161,7 +196,7 @@ function PerfilPageContent() {
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Verificando seu perfil</p>
           </div>
         ) : (
-          abaAtiva === 'perfil' ? <EditarPerfilTab /> : abaAtiva === 'avaliacoes' ? <AvaliacoesDashboardTab prestadorId={prestadorId} /> : abaAtiva === 'divulgacao' ? <CentralDivulgacaoTab prestadorId={prestadorId} /> : <PortfolioDashboardTab />
+          abaAtiva === 'perfil' ? <EditarPerfilTab /> : abaAtiva === 'desempenho' ? <DesempenhoDashboardTab prestadorId={prestadorId} subAbaInicial={subAbaInicial} /> : abaAtiva === 'divulgacao' ? <CentralDivulgacaoTab prestadorId={prestadorId} /> : <PortfolioDashboardTab />
         )}
       </div>
 

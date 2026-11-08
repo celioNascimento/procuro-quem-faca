@@ -6,13 +6,17 @@ Complementa `02-arquitetura.md`. Ver `00-glossario.md` para localizar um conceit
 
 ```
 layout.tsx    → DashboardLayout, header com botão voltar dinâmico via ?origem=
-page.tsx      → Dashboard raiz, abas "Meus Projetos"/"Dados Profissionais"
+page.tsx      → Dashboard raiz, abas "Meus Projetos"/"Desempenho"/"Divulgação"/"Dados Profissionais"
 perfil/page.tsx → redireciona para /dashboard?aba=perfil (ver nota abaixo)
 ```
 
 **`usePerfilStatus`** — gatekeeper: `cadastroCompleto = !!(nome && whatsapp && categoria_id)` (3 campos mínimos, mais permissivo que o form de cadastro completo). Usa `buscarPrestadorPorUserId` (`cadastroPrestador.service.ts`).
 
-**Abas** (em `page.tsx`): "Meus Projetos" (`PortfolioDashboardTab`, bloqueada se `!cadastroCompleto`) / "Dados Profissionais" (`EditarPerfilTab`, nunca bloqueada). Aba inicial controlável via `?aba=perfil`. "Ver meu perfil" (link `/${slug}`) só aparece com slug.
+**Abas** (em `page.tsx`): "Meus Projetos" (`PortfolioDashboardTab`, bloqueada se `!cadastroCompleto`) / "Desempenho" (`DesempenhoDashboardTab`, bloqueada se `!cadastroCompleto`) / "Divulgação" (`CentralDivulgacaoTab`, bloqueada se `!cadastroCompleto` ou perfil bloqueado) / "Dados Profissionais" (`EditarPerfilTab`, nunca bloqueada). Aba inicial controlável via `?aba=perfil` ou `?aba=desempenho` (com `&sub=avaliacoes` para abrir direto nas avaliações). `?aba=avaliacoes` é o nome antigo da aba e continua funcionando: abre Desempenho > Avaliações. "Ver meu perfil" (link `/${slug}`) só aparece com slug.
+
+**Faixa resumo** (`ResumoDesempenhoStrip`): entre o card de anúncio e a barra de abas, mostra visitas e pedidos de orçamento dos últimos 7 dias e leva à aba Desempenho. Só aparece com cadastro completo, perfil não bloqueado e fora da própria aba Desempenho. Usa `useMinhasVisitas` e `useMeusCliques`; sem contagem de cliques ativa mostra "—", nunca "0".
+
+**Selo "Novo"** na aba Desempenho: some na primeira vez que o prestador abre a aba. Estado em `localStorage` (`pqf:dashboard:desempenho-visto`), sempre dentro de `try/catch`; sem armazenamento disponível, o selo não aparece.
 
 **`perfil/page.tsx`** não renderiza mais UI própria — é um redirecionamento client-side para `/dashboard?aba=perfil` (preservando `?origem=` se presente). Existe só por compatibilidade com links antigos (ex: "Minha Conta" em `HeaderAuthButton`); antes duplicava UI/gatekeeping de forma inconsistente com `/dashboard`.
 
@@ -47,6 +51,15 @@ Card de identidade + dados profissionais na sidebar. Link "Ver meu perfil" → `
 ### `AnunciosTab.tsx`
 
 Card estático direcionando ao WhatsApp institucional (`lib/config/contato.ts`), com mensagem própria de prestador interessado em destaque de perfil — distinto do módulo de anúncios para lojistas (ver `11-anuncios.md`).
+
+### Aba "Desempenho" — `DesempenhoDashboardTab.tsx`
+
+Antes, visitas ao perfil e pedidos de orçamento ficavam fixos no topo do dashboard e as avaliações tinham aba própria. Agora tudo vive em "Desempenho", com um seletor segmentado (`role="tablist"`, setas esquerda/direita alternam) em duas sub-abas:
+
+- **Análises** (padrão ao abrir) — `VisitasPerfilCard` (visitas 7d, 30d e total, com variação) e `CliquesWhatsappCard` (pedidos de orçamento pelo WhatsApp, com a nota de contagem única a cada 24 h). Com zero pedidos, o card orienta a completar o perfil e adicionar trabalhos.
+- **Avaliações** — `AvaliacoesDashboardTab` (nota média, distribuição, evolução e comentários recentes), sem alteração de conteúdo.
+
+"Análises" é o padrão porque avaliações são poucas e esporádicas, enquanto o prestador volta ao painel para ver se está recebendo contato.
 
 ### Aba "Divulgação" — `CentralDivulgacaoTab.tsx`
 
