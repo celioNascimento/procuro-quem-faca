@@ -333,3 +333,24 @@ where chave = 'modo';
 **Ajuste feito em seguida (03/11/2026):** `actions/checkout@v5`, `actions/setup-node@v6` e `pnpm/action-setup@v5`, todas em Node 24, e `runs-on: ubuntu-24.04`, para a execução não mudar de sistema operacional sozinha. O `cache: pnpm` do `setup-node` continua explícito, porque a v6 só faz cache automático para npm. As versões foram conferidas nas notas de lançamento das próprias actions. **Confirmado em 03/11/2026:** a execução na branch `refactor/auditoria-arquitetura` (run 41730208552) passou com `checkout@v5` e `pnpm/action-setup@v5`, em 51 s, com 95 testes.
 
 **Para o CI bloquear merge:** o workflow só avisa. Para impedir o merge com o CI vermelho, é preciso ativar uma regra de proteção na branch principal exigindo o check "Testes, lint e tipos" (Settings, Branches). Isso é configuração do GitHub, fora do código.
+
+### Passo 12 — Aba "Desempenho" no dashboard do prestador (08/11/2026)
+
+**Decisão (Célio):** tirar os cards de visitas e de pedidos de orçamento do topo fixo do dashboard e juntá-los às avaliações numa aba nova. Motivos: com zeros, o topo abria com uma fileira de números que desmotiva o prestador novo, e os dois blocos ocupavam quase metade da primeira dobra antes de "Meus Projetos". Nome escolhido: **Desempenho** (curto, cabe na barra de abas no celular).
+
+**O que foi feito:**
+- `components/dashboard/DesempenhoDashboardTab.tsx` (novo): aba com seletor segmentado em duas sub-abas. **Análises** (padrão) traz `VisitasPerfilCard` e `CliquesWhatsappCard`; **Avaliações** traz `AvaliacoesDashboardTab`, sem mudança de conteúdo.
+- `components/dashboard/ResumoDesempenhoStrip.tsx` (novo): faixa compacta no topo com visitas e orçamentos dos últimos 7 dias, que abre a aba Desempenho. Some quando o prestador já está na aba. Sem contagem de cliques ativa, mostra "—" em vez de "0".
+- `app/(dashboard)/dashboard/page.tsx`: aba "Avaliações" virou "Desempenho"; os dois cards saíram do topo; selo "Novo" na aba até a primeira abertura (`localStorage`, com `try/catch`); `?aba=avaliacoes` continua válido e abre Desempenho > Avaliações; `?aba=desempenho&sub=avaliacoes` abre direto nas avaliações.
+- `CliquesWhatsappCard.tsx`: com total zero, texto orientando a completar o perfil e adicionar trabalhos.
+- `lib/help/help-content.ts`: o passo a passo "Como consultar minhas avaliações" aponta para a aba Desempenho.
+- Testes novos: `DesempenhoDashboardTab.test.tsx` e `ResumoDesempenhoStrip.test.tsx`.
+
+**Não verificado:** `vitest`, `eslint`, `tsc` completo e as telas no navegador. As dependências não estavam instaladas neste ambiente e a rede para instalar estava desligada; só foi feita uma checagem de sintaxe dos arquivos alterados.
+
+**Como validar:**
+1. `pnpm test:run`, `pnpm lint` e `pnpm exec tsc --noEmit`.
+2. Abrir `/dashboard`: o topo mostra o banner e a faixa resumo, sem os dois cards; a aba "Desempenho" tem o selo "Novo" até ser aberta.
+3. Dentro de Desempenho: abre em Análises; alternar para Avaliações e voltar; a faixa resumo some enquanto a aba está aberta.
+4. Abrir `/dashboard?aba=avaliacoes`: cai em Desempenho > Avaliações.
+5. No celular: as quatro abas e o seletor cabem ou rolam sem quebrar o layout.

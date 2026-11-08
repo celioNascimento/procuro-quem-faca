@@ -46,6 +46,12 @@ export function CliquesWhatsappCard() {
             <Numero valor={dados.ultimos30} rotulo="Últimos 30 dias" />
             <Numero valor={dados.total} rotulo="Total registrado" />
           </div>
+          {dados.total === 0 && (
+            <p className="mt-3 text-xs leading-5 text-slate-500">
+              Ainda não há pedidos de orçamento. Complete seu perfil e adicione trabalhos ao
+              portfólio para receber mais contatos de clientes.
+            </p>
+          )}
           <p className="mt-3 text-[11px] leading-4 text-slate-400">
             Cada pessoa conta uma vez a cada 24 horas no mesmo perfil, mesmo que clique várias
             vezes. Seus próprios cliques não entram.
