@@ -11,7 +11,17 @@ interface Props {
 }
 
 export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }: Props) {
-  if (avaliacoes.length === 0) return null
+  // Estado vazio com a mesma altura/estilo do PortfolioGrid vazio:
+  // retornar null encolhia a página ao trocar de aba e causava "pulo" de tela.
+  if (avaliacoes.length === 0) {
+    return (
+      <div className="bg-slate-50 border-2 border-dashed border-slate-100 rounded-[3rem] p-12 text-center">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 italic">
+          Nenhuma avaliação ainda
+        </p>
+      </div>
+    )
+  }
 
   const totalIndica = avaliacoes.filter(a => a.indica === true).length
   const totalNaoIndica = avaliacoes.filter(a => a.indica === false).length
