@@ -423,43 +423,43 @@ export function desenharAdesivo(canvas: HTMLCanvasElement, dados: DadosDivulgaca
   ctx.textAlign = 'left'
   desenharQr(ctx, matriz, qrX, qrY, qrTam, Math.round(qrTam * 0.04))
 
-  // texto
+  // texto — hierarquia: marca → nome (destaque) → nicho (selo) → cidade → link
   const m = Math.round(h * 0.09)
   const larguraTexto = w - painelW - m * 1.6
+  let y = m
+  if (imgs.logoPqf) {
+    const lh = h * 0.2
+    const lw = Math.min((imgs.logoPqf.width / imgs.logoPqf.height) * lh, larguraTexto * 0.6)
+    ctx.drawImage(imgs.logoPqf, m, y, lw, lw / (imgs.logoPqf.width / imgs.logoPqf.height))
+    y += lw / (imgs.logoPqf.width / imgs.logoPqf.height) + h * 0.06
+  }
+  const nomePx = ajustarFonte(ctx, dados.nome, larguraTexto, h * 0.19, h * 0.1, 900)
+  fonte(ctx, nomePx, 900)
+  ctx.fillStyle = TINTA
+  const linhasNome = quebrarLinhas(ctx, dados.nome, larguraTexto, 2)
+  y += nomePx * 0.85
+  for (const l of linhasNome) {
+    ctx.fillText(l, m, y)
+    y += nomePx * 1.05
+  }
   const nicho = (dados.categoria ?? 'Profissional').toUpperCase()
   const titulo = dados.verificado ? `${nicho} VERIFICADO` : nicho
-  const tPx = ajustarFonte(ctx, titulo, larguraTexto, h * 0.2, h * 0.09, 900)
-  fonte(ctx, tPx, 900)
-  ctx.fillStyle = AZUL_ESCURO
-  const linhas = quebrarLinhas(ctx, titulo, larguraTexto, 2)
-  let y = m + tPx * 0.9
-  for (const l of linhas) {
-    ctx.fillText(l, m, y)
-    y += tPx * 1.05
-  }
-  const nomePx = ajustarFonte(ctx, dados.nome, larguraTexto, h * 0.11, h * 0.06, 800)
-  fonte(ctx, nomePx, 800)
-  ctx.fillStyle = TINTA
-  ctx.fillText(dados.nome, m, y + nomePx * 0.4, larguraTexto)
-  y += nomePx * 1.5
+  const nPx = ajustarFonte(ctx, titulo, larguraTexto * 0.9, h * 0.085, h * 0.05, 800)
+  y += nPx * 0.1
+  pilula(ctx, titulo, m, y, nPx, '#ffffff', AZUL)
+  y += nPx * 1.9 + h * 0.07
   if (dados.cidade) {
     fonte(ctx, h * 0.065, 600)
     ctx.fillStyle = CINZA
     ctx.fillText(dados.cidade, m, y, larguraTexto)
   }
 
-  // base: URL + marca
-  const baseY = h - m
+  // base: URL
   const curta = urlCurta(url)
-  const uPx = ajustarFonte(ctx, curta, larguraTexto, h * 0.075, h * 0.04, 900)
+  const uPx = ajustarFonte(ctx, curta, larguraTexto, h * 0.07, h * 0.04, 900)
   fonte(ctx, uPx, 900)
   ctx.fillStyle = AZUL
-  ctx.fillText(curta, m, baseY, larguraTexto)
-  if (imgs.logoPqf) {
-    const lh = h * 0.13
-    const lw = (imgs.logoPqf.width / imgs.logoPqf.height) * lh
-    ctx.drawImage(imgs.logoPqf, m, baseY - uPx * 1.5 - lh, Math.min(lw, larguraTexto * 0.5), lh)
-  }
+  ctx.fillText(curta, m, h - m, larguraTexto)
 }
 
 // ── Cartão de visita (90 × 50 mm) ─────────────────────────────────────────
@@ -501,9 +501,9 @@ export function desenharCartaoVisita(canvas: HTMLCanvasElement, lado: 'frente' |
     ctx.fillStyle = AZUL
     ctx.fillText(curta, seguro, h - seguro * 0.75, w - seguro * 2)
     if (imgs.logoPqf) {
-      const lh = h * 0.14
-      const lw = (imgs.logoPqf.width / imgs.logoPqf.height) * lh
-      ctx.drawImage(imgs.logoPqf, w - seguro - lw, h - seguro * 0.75 - lh * 0.8, lw, lh)
+      const lh = h * 0.13
+      const lw = Math.min((imgs.logoPqf.width / imgs.logoPqf.height) * lh, tw)
+      ctx.drawImage(imgs.logoPqf, tx, y + h * 0.02, lw, lw / (imgs.logoPqf.width / imgs.logoPqf.height))
     }
     return
   }
