@@ -63,25 +63,28 @@ export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio 
         />
       </div>
 
-      {portfolioObrigatorio && aba === 'portfolio' && (
-        <div className="animate-in fade-in duration-200">
-          <PortfolioGrid
-            projetos={projetos}
-            onAbrirProjeto={abrirModal}
-            projetoAbertoId={projetoId}
-          />
-        </div>
-      )}
+      {/* min-h evita que a página encolha/pule ao alternar entre abas */}
+      <div className="min-h-[320px]">
+        {portfolioObrigatorio && aba === 'portfolio' && (
+          <div className="animate-in fade-in duration-200">
+            <PortfolioGrid
+              projetos={projetos}
+              onAbrirProjeto={abrirModal}
+              projetoAbertoId={projetoId}
+            />
+          </div>
+        )}
 
-      {aba === 'avaliacoes' && (
-        <div className="animate-in fade-in duration-200">
-          <PerfilAvaliacoes
-            avaliacoes={avaliacoes}
-            projetos={projetos}
-            onVerProjeto={abrirModal}
-          />
-        </div>
-      )}
+        {aba === 'avaliacoes' && (
+          <div className="animate-in fade-in duration-200">
+            <PerfilAvaliacoes
+              avaliacoes={avaliacoes}
+              projetos={projetos}
+              onVerProjeto={abrirModal}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Modal vive aqui — independente da aba ativa */}
       {projetoAberto && (
