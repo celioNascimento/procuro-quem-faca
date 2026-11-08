@@ -501,9 +501,11 @@ export function desenharCartaoVisita(canvas: HTMLCanvasElement, lado: 'frente' |
     ctx.fillStyle = AZUL
     ctx.fillText(curta, seguro, h - seguro * 0.75, w - seguro * 2)
     if (imgs.logoPqf) {
-      const lh = h * 0.13
-      const lw = Math.min((imgs.logoPqf.width / imgs.logoPqf.height) * lh, tw)
-      ctx.drawImage(imgs.logoPqf, tx, y + h * 0.02, lw, lw / (imgs.logoPqf.width / imgs.logoPqf.height))
+      // ancorada na base do QR (mesma linha de base), alinhada à coluna de texto
+      const prop = imgs.logoPqf.width / imgs.logoPqf.height
+      const lw = Math.min(h * 0.2 * prop, tw)
+      const lh = lw / prop
+      ctx.drawImage(imgs.logoPqf, tx, qrY + qrTam - lh, lw, lh)
     }
     return
   }
