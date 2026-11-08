@@ -6,6 +6,8 @@ Complementa `02-arquitetura.md`. Ver `00-glossario.md` para localizar um conceit
 
 Duas colunas: `PerfilHero` + ações à esquerda; `PerfilSobre`, `PerfilCTA`, `PortfolioGrid`, `PerfilAvaliacoes` à direita.
 
+**`PerfilTabs.tsx`** — alterna entre as abas Portfólio (`PortfolioGrid`) e Avaliações (`PerfilAvaliacoes`) e hospeda o `ProjetoModal`. O conteúdo das abas fica dentro de um contêiner com `min-h-[320px]`, e ambas as abas têm estado vazio visível ("Nenhum registro de atividade ainda" / "Nenhuma avaliação ainda", mesma caixa tracejada). Isso mantém a altura da página estável ao trocar de aba — nenhuma aba pode renderizar `null`, pois isso causa salto de tela.
+
 **`usePerfilPrestador`** — duas queries: `prestadores` com joins (`cidades`, `categorias`, `portfolio_projetos`+`portfolio_fotos`+`avaliacoes.indica`) filtrado por `slug`/`id`; e `avaliacoes` separada (`visivel=true`, limite 10). Só `em_execucao`/`finalizado` aparecem publicamente; finalizados primeiro.
 
 **`?from=`** captura origem da busca (log `VISITA_PERFIL_VIA_BUSCA`), removido da URL via `history.replaceState`. Sem `?from=`, monta `/prestadores?q=<categoria>`. Nome diverge de `?origem=` (dashboard) — mesma ideia, nomes diferentes.

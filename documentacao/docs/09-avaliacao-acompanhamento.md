@@ -42,6 +42,8 @@ Badge no cabeçalho de cada card usa comparação estrita (`=== true` / `=== fal
 
 Resumo no topo da seção exibe dois contadores independentes (indicações e não-indicações), ambos só aparecem se > 0.
 
+**Estado vazio:** sem avaliações, o componente renderiza a caixa tracejada "Nenhuma avaliação ainda" (mesmo estilo e padding do estado vazio de `PortfolioGrid`). Antes retornava `null`, o que esvaziava a aba, encurtava a página e fazia a tela "pular" ao alternar de Portfólio para Avaliações.
+
 
 ### `FormularioAvaliacao.tsx` (ativo, `components/profile/`)
 
@@ -51,7 +53,7 @@ A solicitação de garantia/reclamação deve ser tratada pelo fluxo `solicitaco
 
 ### `AvaliacoesTab`/`AvaliacaoCard`/`AvaliacoesResumo`
 
-Não conectados a nenhuma tela. `PerfilAvaliacoes` (em produção) esconde a seção quando vazia; `calcularStats` (`lib/utils/avaliacao.utils.ts`) só marca `exibir: true` com 10+ avaliações — decisão de produto para o volume atual.
+Não conectados a nenhuma tela. `PerfilAvaliacoes` (em produção) mostra o estado vazio "Nenhuma avaliação ainda" quando não há avaliações; `calcularStats` (`lib/utils/avaliacao.utils.ts`) só marca `exibir: true` com 10+ avaliações — decisão de produto para o volume atual.
 
 ## Acompanhamento do Cliente
 

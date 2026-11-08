@@ -51,8 +51,8 @@ As páginas exportam o componente default descrito abaixo. Handlers `GET`/`POST`
 | [`app/sucesso/page.tsx`](../../app/sucesso/page.tsx) | `Sucesso`: confirmação pós-avaliação e compartilhamento genérico. |
 | [`app/quem-somos/page.tsx`](../../app/quem-somos/page.tsx) | `QuemSomos`: página institucional com CTAs públicos. |
 | [`app/ajuda/page.tsx`](../../app/ajuda/page.tsx) | `Ajuda`: página de suporte e orientações. |
-| [`app/termos/page.tsx`](../../app/termos/page.tsx) | `Termos`: conteúdo legal e retorno ao histórico. |
-| [`app/privacidade/page.tsx`](../../app/privacidade/page.tsx) | `Privacidade`: conteúdo legal e retorno ao histórico. |
+| [`app/termos/page.tsx`](../../app/termos/page.tsx) | `Termos`: conteúdo legal (inclui seção de imagens e conteúdo enviado) e retorno ao histórico. |
+| [`app/privacidade/page.tsx`](../../app/privacidade/page.tsx) | `Privacidade`: conteúdo legal (inclui seção de imagens, cookies, localização e direitos LGPD) e retorno ao histórico. |
 | [`app/documentacao/docs/[slug]/page.tsx`](../../app/documentacao/docs/[slug]/page.tsx) | `DocumentacaoDoc`: renderização pública de documento; retorno atualmente aponta para `/admin/documentacao` e está pendente de correção. |
 | [`app/not-found.tsx`](../../app/not-found.tsx) | Estado 404 e CTA de retorno à home. |
 | [`app/error.tsx`](../../app/error.tsx) | Estado de erro e callback `reset` para recuperação. |
@@ -144,7 +144,7 @@ Componentes de apresentação são catalogados pelo arquivo; callbacks locais de
 - **Home/busca**: [`components/home`](../../components/home), [`components/filtros`](../../components/filtros), [`components/cards/PrestadorCard.tsx`](../../components/cards/PrestadorCard.tsx). Callbacks de submit, filtros, seleção e navegação.
 - **Dashboard**: [`components/dashboard`](../../components/dashboard). Tabs, edição, anúncios, avaliações e wizard.
 - **Wizard/garantia**: [`components/dashboard/wizard`](../../components/dashboard/wizard). Callbacks de upload, legenda, zoom, comentários e status.
-- **Perfil público**: [`components/profile`](../../components/profile). `PortfolioGrid` usa a URL `?projeto=`; `ProjetoModal`, avaliações e CTA consomem o projeto selecionado.
+- **Perfil público**: [`components/profile`](../../components/profile). `PortfolioGrid` usa a URL `?projeto=`; `ProjetoModal`, avaliações e CTA consomem o projeto selecionado. `PerfilTabs` mantém altura mínima nas abas e `PerfilAvaliacoes` exibe estado vazio (nunca `null`) para evitar salto de tela.
 - **Cliente/acompanhamento**: [`components/meus-servicos`](../../components/meus-servicos), [`components/acompanhamento`](../../components/acompanhamento), [`components/painel`](../../components/painel). Ações de aceite, contato, garantia e avaliação.
 - **Admin**: [`components/admin`](../../components/admin), [`app/(admin)/admin/geografia/components`](../../app/(admin)/admin/geografia/components). Callbacks de CRUD, filtros, modais, cópia e mudança de status.
 - **Transversais**: [`components/PostHogProvider.tsx`](../../components/PostHogProvider.tsx), [`components/PostHogPageview.tsx`](../../components/PostHogPageview.tsx), [`components/LogAcesso.tsx`](../../components/LogAcesso.tsx), [`components/CookieConsent.tsx`](../../components/CookieConsent.tsx), [`components/RastreamentoAtivacaoProvider.tsx`](../../components/RastreamentoAtivacaoProvider.tsx). Analytics, consentimento e auditoria.

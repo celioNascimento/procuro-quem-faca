@@ -229,6 +229,8 @@ Três dimensões independentes — não confundir:
 - **Páginas:** `app/termos/page.tsx`, `app/privacidade/page.tsx` — estáticas, sem I/O
 - **Aceite no cadastro:** `components/perfil/SecaoTermos.tsx` — dois checkboxes com links reais para as páginas acima (abrem em nova aba)
 - **Footer:** `components/Footer.tsx` — links de navegação para as mesmas páginas
+- **Revisão de novembro/2026:** `/termos` ganhou a seção 4 (imagens e conteúdo enviado: autoria/autorização, cuidado com terceiros, licença limitada, visibilidade pública x área restrita de garantia, remoção), seção 7 (contato via WhatsApp, anúncios e links externos) e a regra de nome/foto do cliente na avaliação. `/privacidade` ganhou a seção 4 (imagens: buckets público/privado, promoção de fotos de resolução, metadados EXIF não removidos, pedidos de remoção), detalhamento de dados coletados, cookies (`pqf_cidade`, `pqf_sessao_registrada`, consentimento; PostHog só após aceite), localização (Nominatim) e direitos LGPD.
+- **Ao mudar o produto, revisar as páginas:** novos buckets/uploads, novos provedores de terceiros, novos cookies/logs e mudanças de visibilidade de fotos precisam refletir em `/termos` e `/privacidade` (e atualizar a data de "Última atualização").
 
 ---
 
