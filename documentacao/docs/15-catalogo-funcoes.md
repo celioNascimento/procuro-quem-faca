@@ -51,8 +51,8 @@ As páginas exportam o componente default descrito abaixo. Handlers `GET`/`POST`
 | [`app/sucesso/page.tsx`](../../app/sucesso/page.tsx) | `Sucesso`: confirmação pós-avaliação e compartilhamento genérico. |
 | [`app/quem-somos/page.tsx`](../../app/quem-somos/page.tsx) | `QuemSomos`: página institucional com CTAs públicos. |
 | [`app/ajuda/page.tsx`](../../app/ajuda/page.tsx) | `Ajuda`: página de suporte e orientações. |
-| [`app/termos/page.tsx`](../../app/termos/page.tsx) | `Termos`: conteúdo legal e retorno ao histórico. |
-| [`app/privacidade/page.tsx`](../../app/privacidade/page.tsx) | `Privacidade`: conteúdo legal e retorno ao histórico. |
+| [`app/termos/page.tsx`](../../app/termos/page.tsx) | `Termos`: conteúdo legal (inclui seção de imagens e conteúdo enviado) e retorno ao histórico. |
+| [`app/privacidade/page.tsx`](../../app/privacidade/page.tsx) | `Privacidade`: conteúdo legal (inclui seção de imagens, cookies, localização e direitos LGPD) e retorno ao histórico. |
 | [`app/documentacao/docs/[slug]/page.tsx`](../../app/documentacao/docs/[slug]/page.tsx) | `DocumentacaoDoc`: renderização pública de documento; retorno atualmente aponta para `/admin/documentacao` e está pendente de correção. |
 | [`app/not-found.tsx`](../../app/not-found.tsx) | Estado 404 e CTA de retorno à home. |
 | [`app/error.tsx`](../../app/error.tsx) | Estado de erro e callback `reset` para recuperação. |
