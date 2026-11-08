@@ -423,40 +423,44 @@ export function desenharAdesivo(canvas: HTMLCanvasElement, dados: DadosDivulgaca
   ctx.textAlign = 'left'
   desenharQr(ctx, matriz, qrX, qrY, qrTam, Math.round(qrTam * 0.04))
 
-  // texto — hierarquia: marca → nome (destaque) → nicho (selo) → cidade → link
+  // texto — marca no topo, link na base, e o bloco nome/nicho/cidade centralizado no espaço que sobra
   const m = Math.round(h * 0.09)
   const larguraTexto = w - painelW - m * 1.6
-  let y = m
+  let topo = m
   if (imgs.logoPqf) {
-    const lh = h * 0.2
-    const lw = Math.min((imgs.logoPqf.width / imgs.logoPqf.height) * lh, larguraTexto * 0.6)
-    ctx.drawImage(imgs.logoPqf, m, y, lw, lw / (imgs.logoPqf.width / imgs.logoPqf.height))
-    y += lw / (imgs.logoPqf.width / imgs.logoPqf.height) + h * 0.06
+    const prop = imgs.logoPqf.width / imgs.logoPqf.height
+    const lw = Math.min(h * 0.22 * prop, larguraTexto * 0.6)
+    ctx.drawImage(imgs.logoPqf, m, m, lw, lw / prop)
+    topo = m + lw / prop
   }
-  const nomePx = ajustarFonte(ctx, dados.nome, larguraTexto, h * 0.19, h * 0.1, 900)
+  const curta = urlCurta(url)
+  const uPx = ajustarFonte(ctx, curta, larguraTexto, h * 0.075, h * 0.04, 900)
+  const baseTopo = h - m - uPx
+
+  const nomePx = ajustarFonte(ctx, dados.nome, larguraTexto, h * 0.22, h * 0.1, 900)
   fonte(ctx, nomePx, 900)
-  ctx.fillStyle = TINTA
   const linhasNome = quebrarLinhas(ctx, dados.nome, larguraTexto, 2)
-  y += nomePx * 0.85
-  for (const l of linhasNome) {
-    ctx.fillText(l, m, y)
-    y += nomePx * 1.05
-  }
   const nicho = (dados.categoria ?? 'Profissional').toUpperCase()
   const titulo = dados.verificado ? `${nicho} VERIFICADO` : nicho
-  const nPx = ajustarFonte(ctx, titulo, larguraTexto * 0.9, h * 0.085, h * 0.05, 800)
-  y += nPx * 0.1
-  pilula(ctx, titulo, m, y, nPx, '#ffffff', AZUL)
-  y += nPx * 1.9 + h * 0.07
+  const nPx = ajustarFonte(ctx, titulo, larguraTexto * 0.9, h * 0.075, h * 0.05, 800)
+  const cPx = h * 0.065
+  const gap = h * 0.05
+  const hNome = nomePx * 0.8 + (linhasNome.length - 1) * nomePx * 1.05 + nomePx * 0.2
+  const hPilula = nPx * 1.9
+  const hGrupo = hNome + gap * 0.7 + hPilula + (dados.cidade ? gap * 0.6 + cPx : 0)
+  const yTopo = topo + Math.max(gap * 0.5, (baseTopo - topo - hGrupo) / 2)
+
+  ctx.fillStyle = TINTA
+  fonte(ctx, nomePx, 900)
+  linhasNome.forEach((l, i) => ctx.fillText(l, m, yTopo + nomePx * 0.8 + i * nomePx * 1.05))
+  const yPilula = yTopo + hNome + gap * 0.7
+  pilula(ctx, titulo, m, yPilula, nPx, '#ffffff', AZUL)
   if (dados.cidade) {
-    fonte(ctx, h * 0.065, 600)
+    fonte(ctx, cPx, 600)
     ctx.fillStyle = CINZA
-    ctx.fillText(dados.cidade, m, y, larguraTexto)
+    ctx.fillText(dados.cidade, m, yPilula + hPilula + gap * 0.6 + cPx * 0.8, larguraTexto)
   }
 
-  // base: URL
-  const curta = urlCurta(url)
-  const uPx = ajustarFonte(ctx, curta, larguraTexto, h * 0.07, h * 0.04, 900)
   fonte(ctx, uPx, 900)
   ctx.fillStyle = AZUL
   ctx.fillText(curta, m, h - m, larguraTexto)
