@@ -7,10 +7,11 @@ import { useSearchParams } from 'next/navigation'
 import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
 import AvaliacoesDashboardTab from '@/components/dashboard/AvaliacoesDashboardTab'
+import CentralDivulgacaoTab from '@/components/dashboard/CentralDivulgacaoTab'
 import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
 import { CliquesWhatsappCard } from '@/components/dashboard/CliquesWhatsappCard'
 import { VisitasPerfilCard } from '@/components/dashboard/VisitasPerfilCard'
-import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Star } from 'lucide-react'
+import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Star, Megaphone } from 'lucide-react'
 import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 import { ContextualHelp } from '@/components/help/HelpCenter'
@@ -43,6 +44,13 @@ function PerfilPageContent() {
       label: 'Avaliações',
       icon: <Star size={14} />,
       bloqueado: !cadastroCompleto,
+      externo: false,
+    },
+    {
+      id: 'divulgacao',
+      label: 'Divulgação',
+      icon: <Megaphone size={14} />,
+      bloqueado: !cadastroCompleto || bloqueado,
       externo: false,
     },
     {
@@ -153,7 +161,7 @@ function PerfilPageContent() {
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Verificando seu perfil</p>
           </div>
         ) : (
-          abaAtiva === 'perfil' ? <EditarPerfilTab /> : abaAtiva === 'avaliacoes' ? <AvaliacoesDashboardTab prestadorId={prestadorId} /> : <PortfolioDashboardTab />
+          abaAtiva === 'perfil' ? <EditarPerfilTab /> : abaAtiva === 'avaliacoes' ? <AvaliacoesDashboardTab prestadorId={prestadorId} /> : abaAtiva === 'divulgacao' ? <CentralDivulgacaoTab prestadorId={prestadorId} /> : <PortfolioDashboardTab />
         )}
       </div>
 
