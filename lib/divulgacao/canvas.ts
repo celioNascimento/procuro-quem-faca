@@ -9,8 +9,8 @@ import type { DadosDivulgacao, FormatoCartao } from './tipos'
 type Ctx = CanvasRenderingContext2D
 
 const AZUL_ESCURO = '#1e3a8a'
-const GRAFITE_CLARO = '#434850'
-const GRAFITE_ESCURO = '#17191d'
+const FUNDO_CLARO = '#f8fafc'
+const FUNDO_ESCURO = '#e2e8f0'
 const AZUL = '#2563eb'
 const TINTA = '#0f172a'
 const CINZA = '#64748b'
@@ -204,16 +204,11 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   const vertical = h / w > 1.3
   const { url, matriz } = matrizDoPerfil(dados)
 
-  // fundo grafite com luz suave no canto superior esquerdo (efeito de relevo discreto)
+  // fundo cinza claro (padrão de sites): o cartão branco se destaca só com borda e sombra suaves
   const grad = ctx.createLinearGradient(0, 0, w, h)
-  grad.addColorStop(0, GRAFITE_CLARO)
-  grad.addColorStop(1, GRAFITE_ESCURO)
+  grad.addColorStop(0, FUNDO_CLARO)
+  grad.addColorStop(1, FUNDO_ESCURO)
   ctx.fillStyle = grad
-  ctx.fillRect(0, 0, w, h)
-  const luz = ctx.createRadialGradient(w * 0.15, h * 0.05, 0, w * 0.15, h * 0.05, Math.max(w, h) * 0.8)
-  luz.addColorStop(0, 'rgba(255,255,255,0.10)')
-  luz.addColorStop(1, 'rgba(255,255,255,0)')
-  ctx.fillStyle = luz
   ctx.fillRect(0, 0, w, h)
 
   const p = Math.round(w * 0.055)
@@ -256,23 +251,13 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   const ch = vertical ? Math.min(regiaoH, grupoH + q * 2) : regiaoH
   const cy = vertical ? regiaoY + (regiaoH - ch) / 2 : regiaoY
   ctx.save()
-  ctx.shadowColor = 'rgba(0,0,0,0.55)'
-  ctx.shadowBlur = 60
-  ctx.shadowOffsetY = 22
+  ctx.shadowColor = 'rgba(15,23,42,0.12)'
+  ctx.shadowBlur = 40
+  ctx.shadowOffsetY = 14
   preencher(ctx, cx, cy, cw, ch, 44, '#ffffff')
   ctx.restore()
-  ctx.save()
-  ctx.shadowColor = 'rgba(0,0,0,0.35)'
-  ctx.shadowBlur = 8
-  ctx.shadowOffsetY = 3
-  preencher(ctx, cx, cy, cw, ch, 44, '#ffffff')
-  ctx.restore()
-  // brilho fino na borda superior do cartão
-  const rim = ctx.createLinearGradient(0, cy, 0, cy + ch * 0.25)
-  rim.addColorStop(0, 'rgba(255,255,255,0.9)')
-  rim.addColorStop(1, 'rgba(255,255,255,0)')
-  caminhoArredondado(ctx, cx + 1, cy + 1, cw - 2, ch - 2, 43)
-  ctx.strokeStyle = rim
+  caminhoArredondado(ctx, cx + 0.5, cy + 0.5, cw - 1, ch - 1, 44)
+  ctx.strokeStyle = '#e2e8f0'
   ctx.lineWidth = 2
   ctx.stroke()
   const topoGrupo = cy + Math.max(q, (ch - grupoH) / 2)
@@ -280,9 +265,9 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
 
   if (foto) {
     ctx.save()
-    ctx.shadowColor = 'rgba(15,23,42,0.28)'
-    ctx.shadowBlur = 22
-    ctx.shadowOffsetY = 8
+    ctx.shadowColor = 'rgba(15,23,42,0.16)'
+    ctx.shadowBlur = 20
+    ctx.shadowOffsetY = 6
     preencher(ctx, ix, topoGrupo, iw, fotoH, 30, '#e2e8f0')
     ctx.restore()
     fotoNoQuadro(ctx, foto, ix, topoGrupo, iw, fotoH, 30)
@@ -311,7 +296,7 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   fonte(ctx, nomePx, 900)
   const linhasNome = quebrarLinhas(ctx, dados.nome.toUpperCase(), tw, 2)
   const subPx = sub ? ajustarFonte(ctx, sub, tw, lado * 0.25, 16, 700) : 0
-  const folgaNome = nomePx * 0.14
+  const folgaNome = nomePx * 0.22
   const hTexto = nomePx * 0.88 + (linhasNome.length - 1) * nomePx * 1.08 + (sub ? folgaNome + subPx * 1.0 : 0)
   let ty = identY + Math.max(0, (lado - hTexto) / 2) + nomePx * 0.88
   fonte(ctx, nomePx, 900)
@@ -328,17 +313,22 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   const qrTam = Math.round(rodapeH * 0.8)
   const qrX = w - p - qrTam
   const qrY = h - rodapeH + Math.round((rodapeH - qrTam) / 2) - Math.round(p * 0.1)
+  ctx.save()
+  ctx.shadowColor = 'rgba(15,23,42,0.12)'
+  ctx.shadowBlur = 16
+  ctx.shadowOffsetY = 5
   desenharQr(ctx, matriz, qrX, qrY, qrTam, 18)
+  ctx.restore()
   const textoW = qrX - p - Math.round(p * 0.6)
   const chamada = vertical ? 'Escaneie e veja o portfólio completo' : 'Veja o portfólio completo e as indicações'
   const chPx = ajustarFonte(ctx, chamada, textoW, rodapeH * 0.17, 14, 600)
   fonte(ctx, chPx, 600)
-  ctx.fillStyle = 'rgba(255,255,255,0.85)'
+  ctx.fillStyle = '#64748b'
   ctx.fillText(chamada, p, qrY + qrTam * 0.38)
   const curta = urlCurta(url)
   const urlPx = ajustarFonte(ctx, curta, textoW, rodapeH * 0.26, 18, 900)
   fonte(ctx, urlPx, 900)
-  ctx.fillStyle = '#ffffff'
+  ctx.fillStyle = TINTA
   ctx.fillText(curta, p, qrY + qrTam * 0.78, textoW)
 }
 
