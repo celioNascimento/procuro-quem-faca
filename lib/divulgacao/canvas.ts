@@ -9,6 +9,8 @@ import type { DadosDivulgacao, FormatoCartao } from './tipos'
 type Ctx = CanvasRenderingContext2D
 
 const AZUL_ESCURO = '#1e3a8a'
+const GRAFITE_CLARO = '#434850'
+const GRAFITE_ESCURO = '#17191d'
 const AZUL = '#2563eb'
 const TINTA = '#0f172a'
 const CINZA = '#64748b'
@@ -202,11 +204,16 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   const vertical = h / w > 1.3
   const { url, matriz } = matrizDoPerfil(dados)
 
-  // fundo
+  // fundo grafite com luz suave no canto superior esquerdo (efeito de relevo discreto)
   const grad = ctx.createLinearGradient(0, 0, w, h)
-  grad.addColorStop(0, AZUL_ESCURO)
-  grad.addColorStop(1, AZUL)
+  grad.addColorStop(0, GRAFITE_CLARO)
+  grad.addColorStop(1, GRAFITE_ESCURO)
   ctx.fillStyle = grad
+  ctx.fillRect(0, 0, w, h)
+  const luz = ctx.createRadialGradient(w * 0.15, h * 0.05, 0, w * 0.15, h * 0.05, Math.max(w, h) * 0.8)
+  luz.addColorStop(0, 'rgba(255,255,255,0.10)')
+  luz.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = luz
   ctx.fillRect(0, 0, w, h)
 
   const p = Math.round(w * 0.055)
@@ -249,15 +256,37 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   const ch = vertical ? Math.min(regiaoH, grupoH + q * 2) : regiaoH
   const cy = vertical ? regiaoY + (regiaoH - ch) / 2 : regiaoY
   ctx.save()
-  ctx.shadowColor = 'rgba(15,23,42,0.35)'
-  ctx.shadowBlur = 40
-  ctx.shadowOffsetY = 12
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'
+  ctx.shadowBlur = 60
+  ctx.shadowOffsetY = 22
   preencher(ctx, cx, cy, cw, ch, 44, '#ffffff')
   ctx.restore()
+  ctx.save()
+  ctx.shadowColor = 'rgba(0,0,0,0.35)'
+  ctx.shadowBlur = 8
+  ctx.shadowOffsetY = 3
+  preencher(ctx, cx, cy, cw, ch, 44, '#ffffff')
+  ctx.restore()
+  // brilho fino na borda superior do cartão
+  const rim = ctx.createLinearGradient(0, cy, 0, cy + ch * 0.25)
+  rim.addColorStop(0, 'rgba(255,255,255,0.9)')
+  rim.addColorStop(1, 'rgba(255,255,255,0)')
+  caminhoArredondado(ctx, cx + 1, cy + 1, cw - 2, ch - 2, 43)
+  ctx.strokeStyle = rim
+  ctx.lineWidth = 2
+  ctx.stroke()
   const topoGrupo = cy + Math.max(q, (ch - grupoH) / 2)
   const identY = foto ? topoGrupo + fotoH + gapId : topoGrupo
 
-  if (foto) fotoNoQuadro(ctx, foto, ix, topoGrupo, iw, fotoH, 30)
+  if (foto) {
+    ctx.save()
+    ctx.shadowColor = 'rgba(15,23,42,0.28)'
+    ctx.shadowBlur = 22
+    ctx.shadowOffsetY = 8
+    preencher(ctx, ix, topoGrupo, iw, fotoH, 30, '#e2e8f0')
+    ctx.restore()
+    fotoNoQuadro(ctx, foto, ix, topoGrupo, iw, fotoH, 30)
+  }
 
   preencher(ctx, ix, identY, lado, lado, 22, '#f1f5f9')
   if (imgs.perfil) {
@@ -268,7 +297,7 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
     ctx.restore()
   } else {
     fonte(ctx, lado * 0.42, 900)
-    ctx.fillStyle = AZUL
+    ctx.fillStyle = '#475569'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText((dados.nome.trim()[0] ?? '?').toUpperCase(), ix + lado / 2, identY + lado / 2)
@@ -282,18 +311,17 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   fonte(ctx, nomePx, 900)
   const linhasNome = quebrarLinhas(ctx, dados.nome.toUpperCase(), tw, 2)
   const subPx = sub ? ajustarFonte(ctx, sub, tw, lado * 0.25, 16, 700) : 0
-  const hTexto = linhasNome.length * nomePx * 1.08 + (sub ? subPx * 1.5 : 0)
+  const folgaNome = nomePx * 0.14
+  const hTexto = nomePx * 0.88 + (linhasNome.length - 1) * nomePx * 1.08 + (sub ? folgaNome + subPx * 1.0 : 0)
   let ty = identY + Math.max(0, (lado - hTexto) / 2) + nomePx * 0.88
   fonte(ctx, nomePx, 900)
   ctx.fillStyle = TINTA
-  for (const l of linhasNome) {
-    ctx.fillText(l, tx, ty)
-    ty += nomePx * 1.08
-  }
+  linhasNome.forEach((l, i) => ctx.fillText(l, tx, ty + i * nomePx * 1.08))
+  ty += (linhasNome.length - 1) * nomePx * 1.08
   if (sub) {
     fonte(ctx, subPx, 700)
-    ctx.fillStyle = AZUL
-    ctx.fillText(sub, tx, ty + subPx * 0.2)
+    ctx.fillStyle = '#475569'
+    ctx.fillText(sub, tx, ty + folgaNome + subPx * 1.0)
   }
 
   // rodapé: chamada + QR
