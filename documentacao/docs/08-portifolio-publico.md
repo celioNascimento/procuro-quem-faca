@@ -10,7 +10,7 @@ Duas colunas: `PerfilHero` + ações à esquerda; `PerfilSobre`, `PerfilCTA`, `P
 
 **`usePerfilPrestador`** — duas queries: `prestadores` com joins (`cidades`, `categorias`, `portfolio_projetos`+`portfolio_fotos`+`avaliacoes.indica`) filtrado por `slug`/`id`; e `avaliacoes` separada (`visivel=true`, limite 10). Só `em_execucao`/`finalizado` aparecem publicamente; finalizados primeiro.
 
-**`?from=`** captura origem da busca (log `VISITA_PERFIL_VIA_BUSCA`), removido da URL via `history.replaceState`. Sem `?from=`, monta `/prestadores?q=<categoria>`. Nome diverge de `?origem=` (dashboard) — mesma ideia, nomes diferentes.
+**`?from=`** captura a origem da busca (log `VISITA_PERFIL_VIA_BUSCA`) e é removido da URL via `history.replaceState`. É lido uma única vez por `slug` e validado como rota interna (`sanitizarRotaInterna`). Serve de **fallback** do botão voltar: com histórico do app a seta usa `history.back`; sem histórico (link direto) vai para `from` ou, sem ele, `/prestadores?q=<categoria>`. Detalhes em [18-navegacao-voltar.md](18-navegacao-voltar.md). Nome diverge de `?origem=` (dashboard) — mesma ideia, nomes diferentes.
 
 **`PerfilHero.tsx`** — avatar, chips (categoria, projetos concluídos/em andamento, média de avaliação via `useAvaliacoes`), ações (denunciar, compartilhar via `useCompartilharPerfil`).
 
