@@ -18,7 +18,7 @@ export const helpArticles: HelpArticle[] = [
   },
   {
     id: 'ler-perfil-publico', title: 'Como consultar um perfil público', summary: 'Veja especialidades, fotos, avaliações e formas de contato antes de decidir.', category: 'Encontrar ajuda', audiences: ['cliente', 'publico'], contexts: ['perfil-publico'],
-    steps: ['Confira a descrição e as especialidades do profissional.', 'Veja o portfólio e as avaliações de outros clientes.', 'Use o botão de contato para solicitar um orçamento diretamente ao prestador.'], related: ['entrar-em-contato', 'avaliar-servico']
+    steps: ['Confira a descrição e as especialidades do profissional.', 'Veja o portfólio e as avaliações de outros clientes. Se o profissional ainda não tiver fotos ou avaliações, a aba mostra um aviso — isso é normal para perfis novos.', 'Use o botão de contato para solicitar um orçamento diretamente ao prestador.'], related: ['entrar-em-contato', 'avaliar-servico']
   },
   {
     id: 'entrar-em-contato', title: 'Como entrar em contato', summary: 'O contato acontece pelo WhatsApp informado no perfil do prestador.', category: 'Contratar', audiences: ['cliente', 'publico'], contexts: ['perfil-publico'],
@@ -46,7 +46,7 @@ export const helpArticles: HelpArticle[] = [
   },
   {
     id: 'portfolio-prestador', title: 'Como publicar projetos no portfólio', summary: 'Adicione fotos e informações de trabalhos realizados para apresentar sua experiência aos clientes.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador'],
-    steps: ['Acesse a aba Meus Projetos.', 'Envie fotos nítidas e escolha trabalhos que representem seu serviço.', 'Revise o conteúdo antes de publicar para manter seu portfólio atualizado.']
+    steps: ['Acesse a aba Meus Projetos.', 'Envie fotos nítidas e escolha trabalhos que representem seu serviço.', 'Avise o cliente de que as fotos do serviço podem aparecer no seu portfólio público e evite mostrar rostos, documentos, placas e endereços completos.', 'Revise o conteúdo antes de publicar para manter seu portfólio atualizado.']
   },
   {
     id: 'avaliacoes-prestador', title: 'Como consultar minhas avaliações', summary: 'Acompanhe as avaliações recebidas dos clientes diretamente no seu painel profissional.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador'],
@@ -74,7 +74,7 @@ export const helpArticles: HelpArticle[] = [
   },
   {
     id: 'conta-e-seguranca', title: 'Conta, privacidade e segurança', summary: 'Mantenha seus dados atualizados e use somente os canais oficiais do projeto.', category: 'Conta', audiences: ['cliente', 'publico'], contexts: ['login', 'cadastro', 'perfil-cliente'],
-    steps: ['Entre com seu e-mail para acessar a conta.', 'Use a recuperação de senha caso não consiga entrar.', 'Para excluir a conta, siga o fluxo de confirmação e leia a política de privacidade.']
+    steps: ['Entre com seu e-mail para acessar a conta.', 'Use a recuperação de senha caso não consiga entrar.', 'Para excluir a conta, siga o fluxo de confirmação e leia a política de privacidade.', 'Se aparecer em uma foto que não autorizou, use o botão de denúncia do perfil para pedir a remoção.']
   },
 ]
 

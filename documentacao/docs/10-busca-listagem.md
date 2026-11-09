@@ -30,3 +30,11 @@ A cidade identificada no texto não deve alterar os filtros visuais de forma ine
 - `app/page.tsx`
 - `hooks/usePrestadores.ts`
 - `hooks/useFiltrosParams.ts`
+- `hooks/useFiltrosPrestadores.ts`
+- `hooks/useRestaurarScroll.ts`
+
+## Navegação e voltar
+
+- Filtros da lista atualizam a URL com `router.replace` (não criam entrada no histórico).
+- `usePrestadores` mantém cache em memória por 3 min; `useRestaurarScroll` devolve a rolagem ao voltar do perfil.
+- Regras completas em [18-navegacao-voltar.md](18-navegacao-voltar.md).

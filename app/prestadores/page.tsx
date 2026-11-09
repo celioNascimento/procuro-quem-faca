@@ -8,6 +8,7 @@ import { usePrestadores } from '@/hooks/usePrestadores'
 import { useFiltrosParams } from '@/hooks/useFiltrosParams'
 import { useFiltrosPrestadores } from '@/hooks/useFiltrosPrestadores'
 import { useSession } from '@/hooks/useSession'
+import { useRestaurarScroll } from '@/hooks/useRestaurarScroll'
 import Header from '@/components/Header'
 import PrestadorCard from '@/components/cards/PrestadorCard'
 import { AdCard } from '@/components/ads/AdCard'
@@ -159,6 +160,9 @@ function ListaConteudo() {
   } = usePrestadores()
 
   const { totalAtivos, aplicar, limparFiltros } = useFiltrosPrestadores()
+
+  // Voltar do perfil devolve o usuário ao ponto da lista onde estava.
+  useRestaurarScroll(!loading)
 
   const session   = useSession()
   const temFiltro = totalAtivos > 0

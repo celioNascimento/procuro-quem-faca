@@ -51,8 +51,8 @@ As páginas exportam o componente default descrito abaixo. Handlers `GET`/`POST`
 | [`app/sucesso/page.tsx`](../../app/sucesso/page.tsx) | `Sucesso`: confirmação pós-avaliação e compartilhamento genérico. |
 | [`app/quem-somos/page.tsx`](../../app/quem-somos/page.tsx) | `QuemSomos`: página institucional com CTAs públicos. |
 | [`app/ajuda/page.tsx`](../../app/ajuda/page.tsx) | `Ajuda`: página de suporte e orientações. |
-| [`app/termos/page.tsx`](../../app/termos/page.tsx) | `Termos`: conteúdo legal e retorno ao histórico. |
-| [`app/privacidade/page.tsx`](../../app/privacidade/page.tsx) | `Privacidade`: conteúdo legal e retorno ao histórico. |
+| [`app/termos/page.tsx`](../../app/termos/page.tsx) | `Termos`: conteúdo legal (inclui seção de imagens e conteúdo enviado) e retorno ao histórico. |
+| [`app/privacidade/page.tsx`](../../app/privacidade/page.tsx) | `Privacidade`: conteúdo legal (inclui seção de imagens, cookies, localização e direitos LGPD) e retorno ao histórico. |
 | [`app/documentacao/docs/[slug]/page.tsx`](../../app/documentacao/docs/[slug]/page.tsx) | `DocumentacaoDoc`: renderização pública de documento; retorno atualmente aponta para `/admin/documentacao` e está pendente de correção. |
 | [`app/not-found.tsx`](../../app/not-found.tsx) | Estado 404 e CTA de retorno à home. |
 | [`app/error.tsx`](../../app/error.tsx) | Estado de erro e callback `reset` para recuperação. |
@@ -77,7 +77,7 @@ Todos os hooks abaixo são pontos de entrada de UI. O hook geralmente mantém es
 | Cliente | [`usePerfilCliente`](../../hooks/usePerfilCliente.ts), [`usePerfilDados`](../../hooks/usePerfilDados.ts), [`usePainelCliente`](../../hooks/usePainelCliente.ts), [`useServicosCliente`](../../hooks/useServicosCliente.ts), [`useHeaderCliente`](../../hooks/useHeaderCliente.ts) |
 | Portfólio/garantia | [`useUploadWizard`](../../hooks/useUploadWizard.ts), [`usePortfolioDashboard`](../../hooks/usePortfolioDashboard.ts), [`useGarantiaWizard`](../../hooks/useGarantiaWizard.ts), [`useCasoGarantiaDoProjeto`](../../hooks/useCasoGarantiaDoProjeto.ts), [`useComentariosFoto`](../../hooks/useComentariosFoto.ts), [`useAcompanhamento`](../../hooks/useAcompanhamento.ts) |
 | Avaliações | [`useAvaliar`](../../hooks/useAvaliacao.ts), [`useAvaliacoes`](../../hooks/useAvaliacoes.ts), [`useSubmitAvaliacao`](../../hooks/useSubmitAvaliacao.ts), [`useAvaliacaoDoProjeto`](../../hooks/useAvaliacaoDoProjeto.ts), [`useAvaliacaoClienteDoProjeto`](../../hooks/useAvaliacaoClienteDoProjeto.ts), [`useAvaliacoesRecebidasCliente`](../../hooks/useAvaliacoesRecebidasCliente.ts) |
-| Busca/UX | [`useFiltrosPrestadores`](../../hooks/useFiltrosPrestadores.ts), [`useFiltrosParams`](../../hooks/useFiltrosParams.ts), [`useSugestoes`](../../hooks/useSugestoes.ts), [`useSlides`](../../hooks/useSlides.ts), [`useCompartilharPerfil`](../../hooks/useCompartilharPerfil.ts), [`useLocalizacao`](../../hooks/useLocalizacao.ts), [`useCategorias`](../../hooks/useCategorias.ts), [`useCookieConsent`](../../hooks/useCookieConsent.ts), [`useHaptic`](../../hooks/useHaptic.ts) |
+| Busca/UX | [`useFiltrosPrestadores`](../../hooks/useFiltrosPrestadores.ts), [`useFiltrosParams`](../../hooks/useFiltrosParams.ts), [`useSugestoes`](../../hooks/useSugestoes.ts), [`useSlides`](../../hooks/useSlides.ts), [`useCompartilharPerfil`](../../hooks/useCompartilharPerfil.ts), [`useLocalizacao`](../../hooks/useLocalizacao.ts), [`useCategorias`](../../hooks/useCategorias.ts), [`useCookieConsent`](../../hooks/useCookieConsent.ts), [`useHaptic`](../../hooks/useHaptic.ts), [`useVoltar`](../../hooks/useVoltar.ts), [`useRestaurarScroll`](../../hooks/useRestaurarScroll.ts) |
 | Anúncios/ativação | [`useAdContext`](../../hooks/useAdContext.ts), [`useAdminAnuncios`](../../hooks/useAdminAnuncios.ts), [`useRastreamentoAtivacao`](../../hooks/useRastreamentoAtivacao.ts), [`useSegmentacaoReferencia`](../../hooks/useSegmentacaoReferencia.ts) |
 | Admin | [`useAdminAuth`](../../hooks/useAdminAuth.ts), [`useAdminDashboard`](../../hooks/useAdminDashboard.ts), [`useAdminLogs`](../../hooks/useAdminLogs.ts), [`useModeracao`](../../hooks/useModeracao.ts), [`useHabilidades`](../../hooks/useHabilidades.ts), [`usePovoar`](../../hooks/usePovoar.ts), [`useAdminPrestadores`](../../hooks/admin/useAdminPrestadores.ts), [`useGeografia`](../../app/(admin)/admin/geografia/hooks/useGeografia.ts) |
 
@@ -102,6 +102,7 @@ Todos os hooks abaixo são pontos de entrada de UI. O hook geralmente mantém es
 
 | Arquivo | Funções/objetivo |
 |---|---|
+| [`lib/navegacao.ts`](../../lib/navegacao.ts) | `voltarOuIr`, `podeVoltarNoApp`, `sanitizarRotaInterna`, `salvarScroll`, `consumirScrollSalvo`. Ver [18-navegacao-voltar.md](18-navegacao-voltar.md). |
 | [`lib/services/auth.service.ts`](../../lib/services/auth.service.ts) | Autenticação, role inicial e logout legado. Consumido por hooks de auth. |
 | [`lib/services/cadastroPrestador.service.ts`](../../lib/services/cadastroPrestador.service.ts) | CRUD/onboarding, slug, busca por usuário e dados do prestador. |
 | [`lib/services/cliente.service.ts`](../../lib/services/cliente.service.ts) | Perfil/avatar e exclusão de conta; `temGarantiaAtiva` aplica filtro de negócio. |
@@ -144,7 +145,7 @@ Componentes de apresentação são catalogados pelo arquivo; callbacks locais de
 - **Home/busca**: [`components/home`](../../components/home), [`components/filtros`](../../components/filtros), [`components/cards/PrestadorCard.tsx`](../../components/cards/PrestadorCard.tsx). Callbacks de submit, filtros, seleção e navegação.
 - **Dashboard**: [`components/dashboard`](../../components/dashboard). Tabs, edição, anúncios, avaliações e wizard.
 - **Wizard/garantia**: [`components/dashboard/wizard`](../../components/dashboard/wizard). Callbacks de upload, legenda, zoom, comentários e status.
-- **Perfil público**: [`components/profile`](../../components/profile). `PortfolioGrid` usa a URL `?projeto=`; `ProjetoModal`, avaliações e CTA consomem o projeto selecionado.
+- **Perfil público**: [`components/profile`](../../components/profile). `PortfolioGrid` usa a URL `?projeto=`; `ProjetoModal`, avaliações e CTA consomem o projeto selecionado. `PerfilTabs` mantém altura mínima nas abas e `PerfilAvaliacoes` exibe estado vazio (nunca `null`) para evitar salto de tela.
 - **Cliente/acompanhamento**: [`components/meus-servicos`](../../components/meus-servicos), [`components/acompanhamento`](../../components/acompanhamento), [`components/painel`](../../components/painel). Ações de aceite, contato, garantia e avaliação.
 - **Admin**: [`components/admin`](../../components/admin), [`app/(admin)/admin/geografia/components`](../../app/(admin)/admin/geografia/components). Callbacks de CRUD, filtros, modais, cópia e mudança de status.
 - **Transversais**: [`components/PostHogProvider.tsx`](../../components/PostHogProvider.tsx), [`components/PostHogPageview.tsx`](../../components/PostHogPageview.tsx), [`components/LogAcesso.tsx`](../../components/LogAcesso.tsx), [`components/CookieConsent.tsx`](../../components/CookieConsent.tsx), [`components/RastreamentoAtivacaoProvider.tsx`](../../components/RastreamentoAtivacaoProvider.tsx). Analytics, consentimento e auditoria.

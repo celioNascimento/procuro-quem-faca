@@ -1,10 +1,11 @@
 // hooks/usePerfilPrestador.ts
 
 import { useState, useEffect } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { insertLog } from '@/lib/db/logs'
 import { registrarVisitaPerfil } from '@/lib/db/visitasPerfil'
+import { sanitizarRotaInterna } from '@/lib/navegacao'
 import type { PerfilData, PrestadorPerfil, ProjetoPerfil, FotoProjeto, GarantiaPublica, FotoGarantiaPublica } from '@/types/perfil'
 import type { AvaliacaoPerfil } from '@/types/avaliacao'
 
@@ -61,9 +62,7 @@ type GarantiaRaw = {
 
 export function usePerfilPrestador(): UsePerfilPrestadorReturn {
   const params       = useParams()
-  const searchParams = useSearchParams()
   const slug = params?.slug as string | undefined
-  const fromParam = searchParams?.get('from') ?? null
 
   const [data, setData]       = useState<PerfilData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -71,6 +70,13 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
 
   useEffect(() => {
     const controller = new AbortController()
+
+    // `from` é lido uma única vez por perfil. Antes ele vinha de useSearchParams e era
+    // apagado da URL logo após o carregamento: isso mudava a dependência do efeito,
+    // recarregava o perfil e trocava a URL de retorno pela da categoria.
+    const fromParam = typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('from')
+      : null
 
     async function carregar() {
       if (!slug) { setLoading(false); return }
@@ -187,7 +193,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
             return a.status === 'finalizado' ? -1 : 1
           })
 
-        let urlRetorno = fromParam ? decodeURIComponent(fromParam) : '/prestadores'
+        let urlRetorno = fromParam ? sanitizarRotaInterna(fromParam) : '/prestadores'
         if (!fromParam) {
           const cat = prestadorRaw.categorias?.nome || prestadorRaw.categoria
           if (cat) urlRetorno = `/prestadores?q=${encodeURIComponent(cat)}`
@@ -229,7 +235,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
 
     carregar()
     return () => controller.abort()
-  }, [slug, fromParam])
+  }, [slug])
 
   return { data, loading, erro }
 }

@@ -1,14 +1,20 @@
 //components/BackButton.tsx
 
 'use client'
-import Link from 'next/link'
+import { useVoltar } from '@/hooks/useVoltar'
 
 import type { BackButtonProps } from './BackButton.types'
 
+// `href` é só o destino de segurança: usado quando não há página anterior do app
+// (link aberto direto, nova aba). Com histórico, o botão volta de verdade.
 export default function BackButton({ href }: BackButtonProps) {
+  const voltar = useVoltar(href)
+
   return (
-    <Link
-      href={href}
+    <button
+      type="button"
+      onClick={voltar}
+      aria-label="Voltar"
       className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 hover:text-blue-600 hover:border-blue-100 hover:shadow-sm transition-all active:scale-95"
     >
       <svg
@@ -21,6 +27,6 @@ export default function BackButton({ href }: BackButtonProps) {
       >
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
       </svg>
-    </Link>
+    </button>
   )
 }

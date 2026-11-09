@@ -2,7 +2,8 @@
 
 'use client'
 import { useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useParams } from 'next/navigation'
+import { useVoltar } from '@/hooks/useVoltar'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import { criarDenuncia } from '@/lib/services/denuncia.service'
@@ -10,7 +11,8 @@ import { criarDenuncia } from '@/lib/services/denuncia.service'
 export default function PaginaDenuncia() {
   const params = useParams()
   const id = params?.id as string
-  const router = useRouter()
+  // Vem do perfil do prestador: volta para ele; sem histórico, vai para a lista.
+  const voltar = useVoltar('/prestadores')
   
   const [motivo, setMotivo] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -62,10 +64,10 @@ export default function PaginaDenuncia() {
 
           <div className="flex flex-col gap-3">
             <button 
-              onClick={() => router.back()} 
+              onClick={voltar} 
               className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95"
             >
-              Voltar para a Lista
+              Voltar ao perfil
             </button>
             <Link 
               href="/" 
@@ -133,7 +135,7 @@ export default function PaginaDenuncia() {
               </button>
               
               <button 
-                onClick={() => router.back()} 
+                onClick={voltar} 
                 className="py-3 text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-slate-600 transition-colors"
               >
                 Cancelar
