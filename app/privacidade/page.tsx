@@ -1,15 +1,15 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useVoltar } from '@/hooks/useVoltar'
 
 export default function Privacidade() {
-  const router = useRouter()
+  const voltar = useVoltar('/')
 
   return (
     <main className="min-h-screen bg-slate-50 p-6 text-slate-800 md:p-20">
       <div className="mx-auto max-w-3xl rounded-[3rem] border border-slate-100 bg-white p-8 shadow-sm md:p-16">
         <button
-          onClick={() => router.back()}
+          onClick={voltar}
           className="group mb-10 flex items-center gap-2 text-sm font-bold text-blue-600 hover:underline"
         >
           <span className="transition-transform group-hover:-translate-x-1">←</span> Voltar

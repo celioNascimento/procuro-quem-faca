@@ -46,7 +46,9 @@ export function useFiltrosPrestadores() {
       params.delete('categoria')
     }
 
-    router.push(`/prestadores?${params.toString()}`, { scroll: false })
+    // replace: filtro refina a MESMA tela. Com push, cada filtro virava uma entrada no
+    // histórico e o "voltar" (do navegador ou da seta) desfazia filtro em vez de sair da lista.
+    router.replace(`/prestadores?${params.toString()}`, { scroll: false })
   }
 
   function limparFiltros() {
@@ -56,7 +58,7 @@ export function useFiltrosPrestadores() {
     params.delete('cidade')
     params.delete('grupo')
     params.delete('categoria')
-    router.push(`/prestadores?${params.toString()}`, { scroll: false })
+    router.replace(`/prestadores?${params.toString()}`, { scroll: false })
   }
 
   return {

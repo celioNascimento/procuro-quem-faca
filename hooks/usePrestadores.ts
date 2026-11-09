@@ -40,6 +40,11 @@ function parsearBusca(query: string): { termo: string; cidadeExtraida: string | 
   return { termo: query, cidadeExtraida: null }
 }
 
+// Cache em memória da lista (vive enquanto a aba estiver aberta). Ao voltar do perfil
+// a lista aparece na hora, sem skeleton, e o scroll pode ser restaurado.
+const TTL_CACHE_LISTA_MS = 3 * 60 * 1000
+const cacheLista = new Map<string, { dados: Prestador[]; em: number }>()
+
 export function usePrestadores() {
   const router = useRouter()
   const {
@@ -66,10 +71,6 @@ export function usePrestadores() {
     async function fetchDados() {
       if (locationLoading) return
 
-      setLoading(true)
-      setErro(false)
-      setPrestadoresBase([])
-
       try {
         // A cidade salva é apenas um fallback. Quando a busca informa uma cidade
         // ("serviço em cidade"), ou quando há filtros amplos, precisamos consultar
@@ -81,6 +82,19 @@ export function usePrestadores() {
           cidadeExtraida || filtroCidade || filtroEstado || filtroRegiao
             ? undefined
             : cidadeAtual?.id
+
+        const chaveCache = JSON.stringify([queryBusca, filtroHab, cidadeIdDaConsulta ?? null])
+        const emCache = cacheLista.get(chaveCache)
+        if (emCache && Date.now() - emCache.em < TTL_CACHE_LISTA_MS) {
+          setPrestadoresBase(emCache.dados)
+          setErro(false)
+          setLoading(false)
+          return
+        }
+
+        setLoading(true)
+        setErro(false)
+        setPrestadoresBase([])
 
         // O catálogo é público e stateless; não cancelamos o fetch manualmente.
         // Alguns navegadores, incluindo o Brave com Shields ativos, reportam o
@@ -132,10 +146,12 @@ export function usePrestadores() {
         const demais   = normalizados.filter(p => p.origem_tipo !== 'vitrine')
         const filtrados = filtrarPrestadores(demais, termoNorm)
 
-        setPrestadoresBase([
+        const listaFinal = [
           ...vitrines,
           ...[...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b)),
-        ])
+        ]
+        cacheLista.set(chaveCache, { dados: listaFinal, em: Date.now() })
+        setPrestadoresBase(listaFinal)
 
       } catch (err) {
         if (!ativo) return
