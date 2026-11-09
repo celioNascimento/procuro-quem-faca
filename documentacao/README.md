@@ -19,6 +19,7 @@ O PQF conecta clientes a profissionais locais e constrói confiança com portfó
 | [13 — Roadmap](./docs/13-roadmap.md) | Próximas evoluções |
 | [15 — Catálogo de funções](./docs/15-catalogo-funcoes.md) | Inventário de rotas, hooks, services, funções internas, callbacks e correlações |
 | [16 — Homologação E2E](./docs/16-homologacao-e2e.md) | Matriz documental de botões, links, formulários e fluxos fora de `/admin` |
+| [19 — Plano de confiança e conformidade](./docs/19%20-%20PQF%20plano%20de%20confian%C3%A7a%20e%20conformidade.md) | Plano em quatro etapas: LGPD, CNPJ, formação e seguro, com selos de verificação |
 
 ## Stack atual
 

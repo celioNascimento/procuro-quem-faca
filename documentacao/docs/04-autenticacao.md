@@ -18,7 +18,7 @@ Se o destino calculado for `/cadastro`, `email`/`password` são salvos em `sessi
 
 ### Recuperação de senha
 
-1. **Solicitação** — `handleEsqueciSenha` (`useLoginForm.ts`): valida existência da conta via RPC `verificar_usuario_existe`, dispara `resetPasswordForEmail`.
+1. **Solicitação** — `handleEsqueciSenha` (`useLoginForm.ts`): dispara `resetPasswordForEmail` direto e mostra sempre a mesma mensagem neutra ("Se este e-mail estiver cadastrado, você receberá um link"), sem consultar se a conta existe. A RPC `verificar_usuario_existe` foi desativada para `anon` e `authenticated` (migration `20261109190100`) porque permitia descobrir quem tem conta na plataforma (LGPD, Etapa 1).
 2. **Definição de nova senha** — `app/recuperar-senha/page.tsx` + `hooks/useNovaSenha.ts` + `lib/services/recuperacaoSenha.service.ts`. Detecta o link via `access_token`/`type=recovery` no hash da URL ou sessão ativa (`PASSWORD_RECOVERY` event). Trata `error=access_denied` como link expirado. Após sucesso, usa `useLogout().logout({ origem: 'recuperacao_senha', redirectTo: '/login?msg=senha_alterada' })`.
 
 Componentes de apoio: `components/auth/EyeIconButton.tsx` (toggle de visibilidade isolado), `components/auth/SenhaInput.tsx` (input + toggle embutido, usa `EyeIconButton` internamente), `components/auth/ForcaSenhaBar.tsx` (indicador visual de força, client-side, não bloqueia submissão).

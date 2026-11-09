@@ -46,19 +46,23 @@ Os selos são independentes (CNPJ, Formação, Seguro) e o nível do prestador �
 
 ## Etapa 1: LGPD completa
 
+**Andamento (09/11/2026):** a fatia 1 (banco) está aplicada no Supabase e versionada em `supabase/migrations/20261109190000_lgpd_etapa1_estrutura.sql`. Também fechamos a RPC `verificar_usuario_existe`, que permitia descobrir quais e-mails têm conta (migration restritiva `20261109190100`, a aplicar após o deploy do app sem essa chamada). Fatia 2 (telas e aceite nos cadastros) e fatia 3 (textos legais) seguem pendentes. Retenção de IP e expiração dos backups aguardam a definição do prazo.
+
+**Achados do levantamento:** 940 dos 955 prestadores vêm de curadoria pública (`origem_tipo`), então a base legal e o canal de saída são o item mais sensível. `perfis` é uma tabela legada, vazia e sem uso no código, mas com três policies de leitura pública que expõem `whatsapp` se um dia receber dados; vale remover. O Auth está com a proteção contra senhas vazadas desligada (configuração no painel do Supabase).
+
 A primeira atualização deixa a plataforma em conformidade com a LGPD (lei brasileira, 13.709) antes de coletar qualquer dado novo. Boas práticas do GDPR europeu valem como referência, mas só se aplicam se houver atendimento a residentes na UE.
 
 **Consentimento e documentos legais**
 
 - [ ] Redigir Política de Privacidade e Termos de Uso (rascunho para revisão de advogado)
 - [ ] Definir o contato do encarregado de dados e publicá-lo
-- [ ] Criar a tabela `consentimentos` (usuário, tipo, versão do documento, data, origem)
+- [x] Criar a tabela `consentimentos` (usuário, tipo, versão do documento, data, origem) — estrutura criada em 09/11 (migration `20261109190000`)
 - [ ] Registrar o aceite de termos no cadastro de prestadores e clientes
 
 **Direitos do titular**
 
-- [ ] Criar `solicitacoes_titular` (acesso, correção, exclusão, portabilidade, revogação) com prazo e status
-- [ ] Criar função de anonimização (ex.: nome do cliente em avaliações) em vez de apagar registros ligados a garantias
+- [x] Criar `solicitacoes_titular` (acesso, correção, exclusão, portabilidade, revogação) com prazo e status — criada com a RPC `registrar_solicitacao_titular` (aceita `anon`, 3 pedidos/hora por contato)
+- [x] Criar função de anonimização (ex.: nome do cliente em avaliações) em vez de apagar registros ligados a garantias — `anonimizar_dados_titular`, só admin
 - [ ] Tela ou formulário para o titular fazer a solicitação
 
 **Dados de terceiros e retenção**
@@ -70,7 +74,7 @@ A primeira atualização deixa a plataforma em conformidade com a LGPD (lei bras
 
 **Fotos de pessoas**
 
-- [ ] Adicionar a `portfolio_fotos` os campos "contém pessoas" e "consentimento de terceiros confirmado"
+- [x] Adicionar a `portfolio_fotos` os campos "contém pessoas" e "consentimento de terceiros confirmado" — campos e constraint criados; falta usar no upload (fatia 2)
 - [ ] Termo de responsabilidade do prestador no upload
 - [ ] Seleção manual de capa do portfólio
 

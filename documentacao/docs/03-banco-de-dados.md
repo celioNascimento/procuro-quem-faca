@@ -120,7 +120,7 @@ Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas
 | Tabela | Propósito |
 |---|---|
 | `portfolio_projetos` | Um projeto/serviço contratado — status, cliente (`cliente_whatsapp` e âncora forte `cliente_user_id`), token de avaliação |
-| `portfolio_fotos` | Fotos de um projeto, com legenda e comentário do cliente |
+| `portfolio_fotos` | Fotos de um projeto, com legenda e comentário do cliente. Campos de privacidade (LGPD): `contem_pessoas`, `consentimento_terceiros_confirmado`, `consentimento_terceiros_em` (a constraint exige o consentimento quando há pessoas na foto) e `capa` (no máximo uma capa por projeto, índice único parcial) |
 | `portfolio_comentarios` | Comentários no projeto, de cliente ou prestador (`autor_tipo`) |
 | `portfolio_curtidas` | Curtidas de usuários autenticados em projetos (portfólio público) |
 | `projeto_logs` | Log de ações realizadas em um projeto (auditoria) |
@@ -220,6 +220,14 @@ Sistema com infraestrutura de banco pronta para leilão de lance (CPC) e segment
 |---|---|
 | `cliques` | Registro de clique no WhatsApp do prestador |
 | `visitas_perfil` | Registro de visita ao perfil do prestador |
+
+### Privacidade e LGPD
+
+| Tabela / função | Propósito |
+|---|---|
+| `consentimentos` | Registro append-only de aceite de termos, política, termo de fotos de terceiros e comunicação por WhatsApp (tipo, versão do documento, origem, data). Revogar é inserir nova linha com `concedido = false`. RLS: o usuário insere e lê os próprios; admin lê todos |
+| `solicitacoes_titular` | Pedidos de acesso, correção, exclusão, portabilidade, revogação e oposição, com `status` e `prazo_resposta` (15 dias). Sem INSERT direto: o registro é feito pela RPC `registrar_solicitacao_titular` (aceita `anon`, limita a 3 pedidos por hora por contato), porque prestadores de curadoria não têm conta. Só admin atualiza |
+| `anonimizar_dados_titular(p_user_id, p_whatsapp, p_solicitacao_id)` | Função só para admin. Troca nome, WhatsApp, foto e endereço por valores anonimizados em `portfolio_projetos`, `orcamentos`, `avaliacoes` e `profiles`, mantendo os registros ligados a garantias. Registra o resultado (só contagens) em `logs_atividades` |
 
 ### Infraestrutura / cross-cutting
 

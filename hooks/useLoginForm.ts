@@ -120,36 +120,19 @@ export function useLoginForm() {
   async function handleEsqueciSenha() {
     if (!email || emailInvalido) { setMensagem('Erro: Digite um e-mail válido primeiro.'); return }
     setLoading(true)
-    setMensagem('Verificando conta...')
+    setMensagem('Enviando link de recuperação...')
     window.sessionStorage.setItem('recuperacao_em_curso', 'true')
 
     try {
-      const { data: usuarioExiste, error: rpcError } = await supabase.rpc('verificar_usuario_existe', { email_busca: email })
-
-      // Falha técnica ou rate limit (RPC agora lança exceção após 5
-      // tentativas/15min para o mesmo e-mail — ver rls_garantia.sql /
-      // rate_limit_verificar_email no banco). Não revela se a conta existe.
-      if (rpcError) {
-        setMensagem('Erro: Não foi possível processar agora. Tente novamente em instantes.')
-        setLoading(false)
-        return
-      }
-
-      // IMPORTANTE: mensagem idêntica ao caminho de sucesso abaixo.
-      // Antes, este branch mostrava "Esta conta não foi encontrada", o que
-      // permitia descobrir se um e-mail tem conta no PQF (enumeração de
-      // usuários) só testando o formulário de recuperação de senha.
-      // Nunca diferenciar "não existe" de "existe, e-mail enviado" aqui.
-      if (!usuarioExiste) {
-        setMensagem('Sucesso: Se este e-mail estiver cadastrado, você receberá um link.')
-        setLoading(false)
-        return
-      }
-
+      // LGPD: não consultamos se o e-mail tem conta. O Supabase Auth responde igual
+      // para e-mails cadastrados e não cadastrados (e aplica o próprio limite de envio),
+      // então o formulário não permite descobrir quem usa a plataforma.
+      // A RPC verificar_usuario_existe foi fechada (migration 20261109190100).
+      // Nunca diferenciar "não existe" de "existe, e-mail enviado" na mensagem.
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/recuperar-senha` })
       if (isActive.current) {
         if (error) throw error
-        setMensagem('Sucesso: Link enviado! Verifique seu e-mail.')
+        setMensagem('Sucesso: Se este e-mail estiver cadastrado, você receberá um link.')
         await registrarLogAuth('RECUPERACAO_SENHA_SOLICITADA')
       }
     } catch (err: unknown) {
