@@ -5,6 +5,7 @@ import { geistSans, geistMono } from "@/lib/fonts"
 import FooterWrapper from "@/components/FooterWrapper"
 import CookieConsent from "@/components/CookieConsent"
 import LogAcesso from "@/components/LogAcesso"
+import NavegacaoTracker from "@/components/NavegacaoTracker"
 import { PostHogProvider } from "@/components/PostHogProvider"
 import { PostHogPageview } from "@/components/PostHogPageview"
 import { Analytics } from "@vercel/analytics/next"
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <FooterWrapper />
             <CookieConsent />
             <LogAcesso />
+            <NavegacaoTracker />
           </LocationProvider>
 
           <Analytics />

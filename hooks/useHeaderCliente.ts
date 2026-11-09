@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLogout } from '@/hooks/useLogout'
+import { voltarOuIr } from '@/lib/navegacao'
 
 export function useHeaderCliente() {
   const router = useRouter()
@@ -22,7 +23,8 @@ export function useHeaderCliente() {
   }
 
   const handleBack = () => {
-    router.back()
+    // Sem página anterior do app (link aberto direto), vai para a home em vez de não fazer nada.
+    voltarOuIr(router, '/')
   }
 
   return {
