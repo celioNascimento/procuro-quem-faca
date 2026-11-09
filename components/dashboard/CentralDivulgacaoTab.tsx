@@ -6,6 +6,7 @@ import { useKitDivulgacao } from '@/hooks/useKitDivulgacao'
 import { CartaoDigitalPanel } from './divulgacao/CartaoDigitalPanel'
 import { MaterialFisicoPanel } from './divulgacao/MaterialFisicoPanel'
 import { LinksPanel } from './divulgacao/LinksPanel'
+import { ContextualHelp } from '@/components/help/HelpCenter'
 
 type SubAba = 'cartao' | 'fisico' | 'links'
 const SUBABAS: { id: SubAba; label: string; icon: React.ReactNode }[] = [
@@ -49,6 +50,7 @@ export default function CentralDivulgacaoTab({ prestadorId }: { prestadorId: num
         {aba === 'fisico' && <MaterialFisicoPanel dados={dados} imagens={imagens} />}
         {aba === 'links' && <LinksPanel dados={dados} />}
       </div>
+      <ContextualHelp context="divulgacao" audience="prestador" title="Dúvidas sobre divulgação?" />
     </div>
   )
 }

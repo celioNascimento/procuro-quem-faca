@@ -53,6 +53,22 @@ export const helpArticles: HelpArticle[] = [
     steps: ['Abra a aba Desempenho no painel e escolha a visão Avaliações.', 'Leia os comentários e confira sua nota geral.', 'Use os retornos para melhorar a comunicação e a qualidade dos serviços.']
   },
   {
+    id: 'divulgacao-visao-geral', title: 'O que é a Central de divulgação', summary: 'Materiais prontos, gratuitos e com os dados do seu perfil, para você divulgar seu trabalho e levar clientes à sua vitrine.', category: 'Divulgação', audiences: ['prestador'], contexts: ['dashboard-prestador', 'divulgacao'],
+    steps: ['Abra a aba Divulgação no painel. Ela fica liberada depois que o cadastro está completo e enquanto o perfil não está bloqueado.', 'Escolha o material: Cartão digital & WhatsApp, Adesivos & QR Code ou Links & orçamentos.', 'Baixe a imagem, imprima ou copie o link e use onde seus clientes estão: WhatsApp, Instagram, veículo, cartão de visita.', 'Todo material aponta para o seu perfil público. Se você atualizar o perfil e o portfólio, os próximos materiais já saem atualizados.'], related: ['divulgacao-cartao-digital', 'divulgacao-adesivos-qrcode', 'divulgacao-links-mensagens']
+  },
+  {
+    id: 'divulgacao-cartao-digital', title: 'Como baixar o cartão digital para WhatsApp e redes sociais', summary: 'Gere uma imagem com a foto do seu trabalho mais recente, seu nome, categoria, cidade e o QR do seu perfil.', category: 'Divulgação', audiences: ['prestador'], contexts: ['divulgacao'],
+    steps: ['Na aba Divulgação, abra Cartão digital & WhatsApp.', 'Escolha o formato: quadrado (feed), 4:3 ou Stories.', 'Toque em Baixar imagem e compartilhe pelo WhatsApp ou pelas redes sociais.', 'Se quiser só o endereço, use Copiar link do perfil.', 'O destaque da imagem é a foto final do projeto concluído mais recente. Publique trabalhos concluídos no portfólio para o cartão ficar mais forte.'], related: ['divulgacao-visao-geral', 'portfolio-prestador']
+  },
+  {
+    id: 'divulgacao-adesivos-qrcode', title: 'Como imprimir adesivo e cartão de visita com QR Code', summary: 'Use o adesivo para veículo ou baú e o cartão de visita com QR Code que leva direto ao seu perfil.', category: 'Divulgação', audiences: ['prestador'], contexts: ['divulgacao'],
+    steps: ['Na aba Divulgação, abra Adesivos & QR Code.', 'Escolha o adesivo de veículo/baú (30×15 cm) ou o cartão de visita (90×50 mm, frente e verso).', 'Toque em Baixar PNG para enviar à gráfica, ou em Imprimir / salvar PDF para imprimir no tamanho real.', 'Na janela de impressão, deixe a escala em 100% (tamanho real) para o QR Code não ficar distorcido.', 'A arte não inclui sangria: avise a gráfica ou peça para ela aplicar.', 'Antes de imprimir em quantidade, escaneie o QR Code com o celular para conferir se abre o seu perfil.'], related: ['divulgacao-visao-geral']
+  },
+  {
+    id: 'divulgacao-links-mensagens', title: 'Como usar o link do perfil e as mensagens prontas de WhatsApp', summary: 'Copie o link da sua vitrine e use textos prontos para mostrar o portfólio, responder orçamentos e divulgar em grupos.', category: 'Divulgação', audiences: ['prestador'], contexts: ['divulgacao'],
+    steps: ['Na aba Divulgação, abra Links & orçamentos.', 'Toque em Copiar link geral para pegar o endereço do seu perfil público.', 'Escolha uma mensagem: portfólio completo, responder pedido de orçamento, texto para Status/Stories ou grupos de bairro e condomínio.', 'Toque em Copiar e cole no WhatsApp. Ajuste o texto ao seu jeito antes de enviar.', 'Respeite as regras de cada grupo antes de divulgar.'], related: ['divulgacao-visao-geral', 'avaliacoes-prestador']
+  },
+  {
     id: 'ativacao-perfil-prestador', title: 'Ativação ou bloqueio do perfil', summary: 'Entenda o que acontece quando seu perfil está incompleto, em análise ou bloqueado pela moderação.', category: 'Conta', audiences: ['prestador'], contexts: ['dashboard-prestador'],
     steps: ['Complete os dados obrigatórios indicados na aba Dados Profissionais.', 'Aguarde a análise quando o perfil estiver em revisão.', 'Se houver bloqueio, leia o motivo informado e use o canal de suporte do painel para pedir esclarecimentos.']
   },
