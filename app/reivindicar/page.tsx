@@ -7,8 +7,9 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import Header from '@/components/Header'
 import { useReivindicarPorToken } from '@/hooks/useReivindicarPorToken'
+import { CONTROLADOR } from '@/config/controlador'
 
-const EMAIL_CONTATO = 'procuroquemfaca@gmail.com'
+const EMAIL_CONTATO = CONTROLADOR.emailPrivacidade
 
 function Moldura({ icone, titulo, children }: { icone: string; titulo: string; children: React.ReactNode }) {
   return (

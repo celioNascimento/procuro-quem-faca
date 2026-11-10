@@ -68,8 +68,8 @@ A primeira atualização deixa a plataforma em conformidade com a LGPD (lei bras
 
 **Consentimento e documentos legais**
 
-- [ ] Redigir Política de Privacidade e Termos de Uso (rascunho para revisão de advogado)
-- [ ] Publicar o contato do encarregado de dados na `/privacidade` (e-mail definido: procuroquemfaca@gmail.com; já aparece na página `/reivindicar`)
+- [ ] Redigir Política de Privacidade e Termos de Uso (rascunho para revisão de advogado). Política atualizada em 10/11 (seções de controlador, perfis de fonte pública, direitos e prazo), aguardando revisão e deploy; os Termos ainda precisam de revisão
+- [ ] Publicar o contato do encarregado de dados na `/privacidade` (e-mail definido: procuroquemfaca@gmail.com; incluído na Política, aguardando deploy)
 - [x] Criar a tabela `consentimentos` (usuário, tipo, versão do documento, data, origem), feito no banco. Falta o objeto consentido, como `feed_projeto` com o id do projeto, para a Etapa 6
 - [ ] Registrar o aceite de termos no cadastro de prestadores e clientes
 
@@ -116,7 +116,8 @@ Atualizado em 10/11/2026. O site segue no ar como está e não há novas ativaç
 - O PQF será rígido com as políticas a partir de agora, usando o GDPR como padrão de rigor.
 - Remoção a pedido do titular significa apagar o perfil, mantendo só dados anônimos das avaliações já feitas.
 - Só o titular assume ou exclui um perfil, usando um link pessoal com token secreto por perfil. Ao retomar as ativações, o link é enviado a quem já foi contatado.
-- Contato de privacidade: procuroquemfaca@gmail.com.
+- Contato de privacidade: procuroquemfaca@gmail.com. Prazo de resposta aos titulares: 15 dias.
+- Controlador dos dados: Celio Roberto Ramos do Nascimento, como pessoa física, até a abertura do CNPJ. Os dados ficam em `config/controlador.ts`; ao constituir a empresa, basta preencher razão social e CNPJ ali, e a Política passa a exibi-los.
 
 **Achado de segurança (10/11/2026)**
 
@@ -127,7 +128,7 @@ A policy `Reivindicação de Perfil` em `prestadores` deixava qualquer usuário 
 | 1 | Reivindicação e exclusão por link pessoal (token) | Feito e testado: `prestador_tokens` e funções | Pronto: `/reivindicar`, cadastro e serviço | Falta o deploy; depois aplicar a migration que fecha a policy aberta e troca a policy do admin de e-mail fixo para `is_admin()` |
 | 2 | Consentimento explícito no cadastro e na reivindicação (sem pré-marcar, gravado em `consentimentos`) | Tabela pronta | Pendente | A fazer |
 | 3 | Canal do titular: formulário geral e link "Este perfil é seu?" no perfil público | Função `registrar_solicitacao_titular` pronta | Pendente | A fazer |
-| 4 | Texto da `/privacidade`: origem pública, base legal (interesse legítimo), prazos, contato | Não se aplica | Pendente | A fazer |
+| 4 | Texto da `/privacidade`: origem pública, base legal (interesse legítimo), prazos, contato | Não se aplica | Rascunho pronto (`app/privacidade`, `config/controlador.ts`) | Falta a revisão do advogado, confirmar a origem dos dados e o deploy |
 | 5 | Painel admin: fila de solicitações, botão de exclusão e geração do link pessoal | Funções prontas | Pendente | A fazer |
 | 6 | "Meus dados" para quem tem conta e limpeza: fechar `verificar_usuario_existe` (depois de ajustar o `useLoginForm`), decidir sobre a coluna `ip_address`, revisar as funções `SECURITY DEFINER` abertas ao `anon`, ligar a proteção contra senhas vazadas no Auth | Parcial | Pendente | A fazer |
 | 7 | Retomar as ativações com nova mensagem (origem do dado, base legal, link de exclusão) e mensagem corretiva para quem já foi contatado | Não se aplica | Não se aplica | Só depois dos itens 1 a 5 |
@@ -303,7 +304,8 @@ O feed não cria um canal novo de contato nem altera o ciclo de orçamento.
 
 As decisões abaixo precisam de resposta antes ou durante as etapas indicadas.
 
-- [ ] Etapa 1: qual advogado revisa os termos (o contato de privacidade já está definido: procuroquemfaca@gmail.com)
+- [ ] Etapa 1: qual advogado revisa a Política e os Termos (o contato de privacidade já está definido: procuroquemfaca@gmail.com)
+- [ ] Etapa 1: preencher razão social e CNPJ em `config/controlador.ts` quando a empresa for aberta
 - [x] Etapa 1: base legal e opção de saída para prestadores que não vieram de cadastro direto (decidido em 10/11: interesse legítimo; saída por link pessoal que apaga o perfil, mantendo só dados anônimos das avaliações)
 - [ ] Etapa 1: verificar a região do Supabase e listar serviços com dados pessoais (prioridade baixa no Brasil; alta na expansão)
 - [ ] Etapa 2: o boolean `verificado` vira o nível Bronze ou é substituído
