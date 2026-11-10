@@ -116,6 +116,7 @@ Atualizado em 10/11/2026. O site segue no ar como está e não há novas ativaç
 - O PQF será rígido com as políticas a partir de agora, usando o GDPR como padrão de rigor.
 - Remoção a pedido do titular significa apagar o perfil, mantendo só dados anônimos das avaliações já feitas.
 - Só o titular assume ou exclui um perfil, usando um link pessoal com token secreto por perfil. Ao retomar as ativações, o link é enviado a quem já foi contatado.
+- O PQF não se compromete a apagar perfis manualmente por mensagem: o titular exclui os próprios dados pelo link pessoal, que vai em todas as mensagens de ativação. A função de exclusão do admin permanece no banco para casos excepcionais.
 - Contato de privacidade: procuroquemfaca@gmail.com. Prazo de resposta aos titulares: 15 dias.
 - Aceite dos documentos: uma tela exibida depois do login, para quem ainda não aceitou a versão atual (`2026-11`, definida em `config/documentos.ts`). Todos os usuários atuais passam por ela uma vez. Quando o advogado revisar os textos, basta aumentar a versão para todos aceitarem de novo. Os Termos têm aceite ativo e a Política tem confirmação de leitura; para criar e operar a conta a base legal é a execução do contrato, e o consentimento fica para o que é opcional (cookies, localização, fotos de terceiros, feed).
 - Controlador dos dados: Celio Roberto Ramos do Nascimento, como pessoa física, até a abertura do CNPJ. Os dados ficam em `config/controlador.ts`; ao constituir a empresa, basta preencher razão social e CNPJ ali, e a Política passa a exibi-los.
@@ -130,7 +131,7 @@ A policy `Reivindicação de Perfil` em `prestadores` deixava qualquer usuário 
 | 2 | Aceite explícito e registrado dos Termos e da Política (sem pré-marcar), para clientes e prestadores | Feito: origem `login` aceita em `consentimentos`, com as regras de acesso testadas | Pronto: tela de aceite depois do login, registro no cadastro de prestador e fim do pré-aceite na reivindicação | Falta o deploy |
 | 3 | Canal do titular: formulário geral e link "Este perfil é seu?" no perfil público | Função `registrar_solicitacao_titular` pronta | Pendente | A fazer |
 | 4 | Texto da `/privacidade`: origem pública, base legal (interesse legítimo), prazos, contato | Não se aplica | Rascunho pronto (`app/privacidade`, `config/controlador.ts`) | Falta a revisão do advogado, confirmar a origem dos dados e o deploy |
-| 5 | Painel admin: fila de solicitações, botão de exclusão e geração do link pessoal | Funções prontas | Pendente | A fazer |
+| 5 | Mensagens de ativação revisadas e geração do link pessoal na tela `/admin/ativacao` (a fila de solicitações do titular vem junto com o formulário do item 3) | Funções prontas | Pronto: três mensagens (primeiro contato, corretiva para quem já recebeu a primeira e link de exclusão para quem recusou), com o link pessoal gerado na hora do envio | Falta o deploy |
 | 6 | "Meus dados" para quem tem conta e limpeza: fechar `verificar_usuario_existe` (depois de ajustar o `useLoginForm`), decidir sobre a coluna `ip_address`, revisar as funções `SECURITY DEFINER` abertas ao `anon`, ligar a proteção contra senhas vazadas no Auth | Parcial | Pendente | A fazer |
 | 7 | Retomar as ativações com nova mensagem (origem do dado, base legal, link de exclusão) e mensagem corretiva para quem já foi contatado | Não se aplica | Não se aplica | Só depois dos itens 1 a 5 |
 
