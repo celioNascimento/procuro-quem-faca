@@ -125,7 +125,7 @@ A policy `Reivindicação de Perfil` em `prestadores` deixava qualquer usuário 
 
 | # | Ação | Banco | App | Situação |
 | --- | --- | --- | --- | --- |
-| 1 | Reivindicação e exclusão por link pessoal (token) | Feito e testado: `prestador_tokens` e funções | Pronto: `/reivindicar`, cadastro e serviço | Falta o deploy; depois aplicar a migration que fecha a policy aberta e troca a policy do admin de e-mail fixo para `is_admin()` |
+| 1 | Reivindicação e exclusão por link pessoal (token) | Concluído em 10/11/2026: `prestador_tokens`, funções e fechamento da policy aberta, com a policy do admin trocada de e-mail fixo para `is_admin()` | Concluído: `/reivindicar`, cadastro e serviço, em produção | Concluído e testado (assumir perfil sem token não afeta nenhuma linha; dono, admin e anônimo conferidos) |
 | 2 | Consentimento explícito no cadastro e na reivindicação (sem pré-marcar, gravado em `consentimentos`) | Tabela pronta | Pendente | A fazer |
 | 3 | Canal do titular: formulário geral e link "Este perfil é seu?" no perfil público | Função `registrar_solicitacao_titular` pronta | Pendente | A fazer |
 | 4 | Texto da `/privacidade`: origem pública, base legal (interesse legítimo), prazos, contato | Não se aplica | Rascunho pronto (`app/privacidade`, `config/controlador.ts`) | Falta a revisão do advogado, confirmar a origem dos dados e o deploy |
