@@ -69,42 +69,70 @@ A primeira atualização deixa a plataforma em conformidade com a LGPD (lei bras
 **Consentimento e documentos legais**
 
 - [ ] Redigir Política de Privacidade e Termos de Uso (rascunho para revisão de advogado)
-- [ ] Definir o contato do encarregado de dados e publicá-lo
-- [ ] Criar a tabela `consentimentos` (usuário, tipo, versão do documento, data, origem, objeto consentido, como `feed_projeto` com o id do projeto)
+- [ ] Publicar o contato do encarregado de dados na `/privacidade` (e-mail definido: procuroquemfaca@gmail.com; já aparece na página `/reivindicar`)
+- [x] Criar a tabela `consentimentos` (usuário, tipo, versão do documento, data, origem), feito no banco. Falta o objeto consentido, como `feed_projeto` com o id do projeto, para a Etapa 6
 - [ ] Registrar o aceite de termos no cadastro de prestadores e clientes
 
 **Direitos do titular**
 
-- [ ] Criar `solicitacoes_titular` (acesso, correção, exclusão, portabilidade, revogação) com prazo e status
-- [ ] Criar função de anonimização (ex.: nome do cliente em avaliações) em vez de apagar registros ligados a garantias
-- [ ] Tela ou formulário para o titular fazer a solicitação
+- [x] Criar `solicitacoes_titular` (acesso, correção, exclusão, portabilidade, revogação) com prazo e status, feito no banco
+- [x] Criar função de anonimização (ex.: nome do cliente em avaliações) em vez de apagar registros ligados a garantias (`anonimizar_dados_titular`; para prestadores sem conta, `excluir_prestador_titular` e `excluir_perfil_por_token`)
+- [ ] Tela ou formulário para o titular fazer a solicitação (a exclusão de perfil sem conta por link pessoal está pronta no código, aguardando deploy; falta o formulário geral)
 - [ ] Permitir a revogação do consentimento de feed a qualquer momento, com remoção imediata do projeto do feed
 
 **Dados de terceiros e retenção**
 
 - [ ] Mapear dados pessoais: `cliente_nome` e `cliente_whatsapp` (projetos e orçamentos), endereço em `profiles`, `cliente_foto_url` em avaliações
 - [ ] Definir prazos de retenção por tipo de dado, parametrizados por configuração e não por código
-- [ ] Zerar `ip_address` em `logs_atividades` após o prazo de guarda (o Marco Civil exige seis meses para provedores de aplicação)
-- [ ] Apagar ou dar prazo de expiração às tabelas `bkp_cliques_20261014` e `bkp_visitas_20261014`
+- [x] Zerar `ip_address` em `logs_atividades` após o prazo de guarda (o Marco Civil exige seis meses para provedores de aplicação). Em 10/11 a coluna estava vazia; falta decidir se ela é removida
+- [x] Apagar ou dar prazo de expiração às tabelas `bkp_cliques_20261014` e `bkp_visitas_20261014` (apagadas em 10/11/2026)
 
 **Fotos de pessoas**
 
-- [ ] Adicionar a `portfolio_fotos` os campos "contém pessoas" e "consentimento de terceiros confirmado"
+- [x] Adicionar a `portfolio_fotos` os campos "contém pessoas" e "consentimento de terceiros confirmado" (feito no banco; o campo `capa` também)
 - [ ] Termo de responsabilidade do prestador no upload
 - [ ] Seleção manual de capa do portfólio
 - [ ] Fotos com pessoas identificáveis não entram no feed sem revisão manual
 
 **Segurança e base legal**
 
-- [ ] Revisar RLS de todas as tabelas e rodar os advisors de segurança do Supabase
-- [ ] Conferir os valores de `origem_tipo` entre os 955 prestadores e documentar a base legal de quem não veio de cadastro direto, com opção de sair
-- [ ] Revisar o texto das mensagens de ativação enviadas por WhatsApp
+- [ ] Revisar RLS de todas as tabelas e rodar os advisors de segurança do Supabase (advisors rodados em 10/11; achados tratados no mapa de execução)
+- [ ] Conferir os valores de `origem_tipo` entre os 955 prestadores e documentar a base legal de quem não veio de cadastro direto, com opção de sair (conferido em 10/11: a grande maioria é `curadoria_publica`, sem conta; a opção de sair é o link pessoal de exclusão; falta documentar a base legal)
+- [ ] Revisar o texto das mensagens de ativação enviadas por WhatsApp (ativações pausadas até a conclusão do mapa)
 - [ ] Verificar a região do projeto Supabase e listar os serviços que recebem dados pessoais (Vercel, WhatsApp/Meta, demais). Não bloqueia o lançamento no Brasil; a análise de transferência internacional vira prioridade na expansão
 
 **Estrutura de base para expansão (sem custo)**
 
 - [ ] Registrar o `pais` e a `fonte_validacao` em toda verificação
 - [ ] Manter o registro de atividades de tratamento (quais dados, para quê, por quanto tempo, com quem são compartilhados) em documento simples, atualizado a cada nova funcionalidade
+
+## Mapa de execução da Etapa 1
+
+Atualizado em 10/11/2026. O site segue no ar como está e não há novas ativações até a conclusão dos itens 1 a 5.
+
+**Decisões tomadas**
+
+- Os perfis da curadoria foram montados com dados públicos de anúncios do Google, e o botão "solicitar orçamento" abre uma conversa de WhatsApp pré-preenchida.
+- O PQF será rígido com as políticas a partir de agora, usando o GDPR como padrão de rigor.
+- Remoção a pedido do titular significa apagar o perfil, mantendo só dados anônimos das avaliações já feitas.
+- Só o titular assume ou exclui um perfil, usando um link pessoal com token secreto por perfil. Ao retomar as ativações, o link é enviado a quem já foi contatado.
+- Contato de privacidade: procuroquemfaca@gmail.com.
+
+**Achado de segurança (10/11/2026)**
+
+A policy `Reivindicação de Perfil` em `prestadores` deixava qualquer usuário logado assumir qualquer perfil sem dono, e os ids são sequenciais. O fluxo de cadastro por reivindicação também marcava termos e privacidade como aceitos automaticamente. O item 1 corrige a brecha, e o item 2 corrige o aceite.
+
+| # | Ação | Banco | App | Situação |
+| --- | --- | --- | --- | --- |
+| 1 | Reivindicação e exclusão por link pessoal (token) | Feito e testado: `prestador_tokens` e funções | Pronto: `/reivindicar`, cadastro e serviço | Falta o deploy; depois aplicar a migration que fecha a policy aberta e troca a policy do admin de e-mail fixo para `is_admin()` |
+| 2 | Consentimento explícito no cadastro e na reivindicação (sem pré-marcar, gravado em `consentimentos`) | Tabela pronta | Pendente | A fazer |
+| 3 | Canal do titular: formulário geral e link "Este perfil é seu?" no perfil público | Função `registrar_solicitacao_titular` pronta | Pendente | A fazer |
+| 4 | Texto da `/privacidade`: origem pública, base legal (interesse legítimo), prazos, contato | Não se aplica | Pendente | A fazer |
+| 5 | Painel admin: fila de solicitações, botão de exclusão e geração do link pessoal | Funções prontas | Pendente | A fazer |
+| 6 | "Meus dados" para quem tem conta e limpeza: fechar `verificar_usuario_existe` (depois de ajustar o `useLoginForm`), decidir sobre a coluna `ip_address`, revisar as funções `SECURITY DEFINER` abertas ao `anon`, ligar a proteção contra senhas vazadas no Auth | Parcial | Pendente | A fazer |
+| 7 | Retomar as ativações com nova mensagem (origem do dado, base legal, link de exclusão) e mensagem corretiva para quem já foi contatado | Não se aplica | Não se aplica | Só depois dos itens 1 a 5 |
+
+Pontos de atenção do item 1: os links antigos `/cadastro?reivindicar=ID` deixam de funcionar sem o token, e os botões "Reivindicar" dos cards e do perfil público levam à página `/reivindicar`, que agora explica como pedir o link pessoal.
 
 ## Etapa 2: consulta de CNPJ
 
@@ -275,8 +303,8 @@ O feed não cria um canal novo de contato nem altera o ciclo de orçamento.
 
 As decisões abaixo precisam de resposta antes ou durante as etapas indicadas.
 
-- [ ] Etapa 1: quem será o encarregado de dados e qual advogado revisa os termos
-- [ ] Etapa 1: base legal e opção de saída para prestadores que não vieram de cadastro direto
+- [ ] Etapa 1: qual advogado revisa os termos (o contato de privacidade já está definido: procuroquemfaca@gmail.com)
+- [x] Etapa 1: base legal e opção de saída para prestadores que não vieram de cadastro direto (decidido em 10/11: interesse legítimo; saída por link pessoal que apaga o perfil, mantendo só dados anônimos das avaliações)
 - [ ] Etapa 1: verificar a região do Supabase e listar serviços com dados pessoais (prioridade baixa no Brasil; alta na expansão)
 - [ ] Etapa 2: o boolean `verificado` vira o nível Bronze ou é substituído
 - [ ] Etapa 2: fonte de consulta de CNPJ, gratuita com reserva ou API comercial em tempo real
