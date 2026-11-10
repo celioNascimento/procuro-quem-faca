@@ -23,6 +23,7 @@ import {
   atualizarSenha,
 } from '@/lib/services/cadastroPrestador.service'
 import { reivindicarPerfilPorToken, tokenTemFormatoValido } from '@/lib/services/reivindicacao.service'
+import { registrarConsentimentos } from '@/lib/services/consentimento.service'
 
 import type { PrestadorFormData } from '@/types/prestador'
 
@@ -164,9 +165,8 @@ export function useCadastroPrestador(reivindicarId: string | null, tokenReivindi
             setIsRedirecting(true)
             return
           }
+          // O aceite de termos e privacidade é sempre ativo: quem assume o perfil marca as caixas
           perfilParaCarregar = perfilReivindicar
-          setAceitouTermos(true)
-          setAceitouPrivacidade(true)
           setModoEdicao(false)
         } else if (perfilExistente) {
           perfilParaCarregar = perfilExistente
@@ -301,6 +301,16 @@ export function useCadastroPrestador(reivindicarId: string | null, tokenReivindi
       } catch (dbError: unknown) {
         if (isUniqueConstraintError(dbError)) throw new Error('DB_UNIQUE_CONSTRAINT')
         throw dbError
+      }
+
+      // Registra o aceite feito no formulário. Se falhar, a tela de aceite pós-login pede de novo,
+      // então o cadastro não é interrompido.
+      if (aceitouTermos && aceitouPrivacidade) {
+        try {
+          await registrarConsentimentos({ userId, origem: 'cadastro_prestador' })
+        } catch (e) {
+          console.error('Não foi possível registrar o aceite no cadastro:', e)
+        }
       }
 
       if (!userLogado) await loginEmail(email, senha)
