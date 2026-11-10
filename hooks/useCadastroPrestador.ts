@@ -22,6 +22,7 @@ import {
   loginEmail,
   atualizarSenha,
 } from '@/lib/services/cadastroPrestador.service'
+import { reivindicarPerfilPorToken, tokenTemFormatoValido } from '@/lib/services/reivindicacao.service'
 
 import type { PrestadorFormData } from '@/types/prestador'
 
@@ -37,7 +38,7 @@ function isUniqueConstraintError(error: unknown): error is { code: string } {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === '23505'
 }
 
-export function useCadastroPrestador(reivindicarId: string | null) {
+export function useCadastroPrestador(reivindicarId: string | null, tokenReivindicacao: string | null = null) {
   const router = useRouter()
 
   const form = usePrestadorForm()
@@ -129,6 +130,16 @@ export function useCadastroPrestador(reivindicarId: string | null) {
         
 
         if (reivindicarId) {
+          // Assumir um perfil exige o link pessoal do titular (token)
+          if (!tokenTemFormatoValido(tokenReivindicacao)) {
+            setErrorModal({
+              show: true, title: 'Link pessoal necessário',
+              message: 'Para assumir um perfil é preciso usar o link pessoal enviado ao titular. Veja como pedir o seu.',
+              actionText: 'Como pedir meu link', actionUrl: `/reivindicar?id=${reivindicarId}`,
+            })
+            setIsRedirecting(true)
+            return
+          }
           const perfilReivindicar = await buscarPrestadorPorId(reivindicarId)
           if (!perfilReivindicar) {
             setErrorModal({
@@ -182,7 +193,7 @@ export function useCadastroPrestador(reivindicarId: string | null) {
     }
 
     carregarTudo()
-  }, [categorias, form, loc, reivindicarId, router])
+  }, [categorias, form, loc, reivindicarId, tokenReivindicacao, router])
 
   const handleUploadFotoProcess = async (file: File) => {
     setUploading(true)
@@ -266,6 +277,13 @@ export function useCadastroPrestador(reivindicarId: string | null) {
 
       if (reivindicarId && userId) {
         await deletarOutrosPrestadoresDoUsuario(userId, reivindicarId)
+
+        // Vincula o perfil à conta com o token. Se uma tentativa anterior já vinculou, não repete.
+        const perfilAtual = await buscarPrestadorPorId(reivindicarId)
+        if (perfilAtual?.user_id !== userId) {
+          if (!tokenReivindicacao) throw new Error('LINK_INVALIDO')
+          await reivindicarPerfilPorToken(tokenReivindicacao)
+        }
       }
 
       const payload = {
@@ -295,6 +313,18 @@ export function useCadastroPrestador(reivindicarId: string | null) {
           show: true, title: 'E-mail já cadastrado',
           message: 'Parece que você já tem uma conta. Use a senha correta para assumir este perfil aqui mesmo ou faça login.',
           actionText: 'Ir para o Login', actionUrl: '/login',
+        })
+      } else if (code === 'LINK_INVALIDO' || code === 'PERFIL_JA_TEM_CONTA') {
+        setErrorModal({
+          show: true, title: 'Link inválido',
+          message: 'Este link já foi usado ou o perfil já foi assumido. Peça um novo link se precisar.',
+          actionText: 'Como pedir meu link', actionUrl: reivindicarId ? `/reivindicar?id=${reivindicarId}` : '/reivindicar',
+        })
+      } else if (code === 'CONTA_JA_TEM_PERFIL') {
+        setErrorModal({
+          show: true, title: 'Conta já possui um perfil',
+          message: 'Esta conta já está vinculada a outro perfil. Entre com outra conta ou fale com a gente.',
+          actionText: 'Ir para Dashboard', actionUrl: '/dashboard',
         })
       } else if (code === 'DB_UNIQUE_CONSTRAINT') {
         setErrorModal({
