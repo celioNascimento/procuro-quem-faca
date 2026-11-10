@@ -4,6 +4,7 @@ import Script from 'next/script'
 import { geistSans, geistMono } from "@/lib/fonts"
 import FooterWrapper from "@/components/FooterWrapper"
 import CookieConsent from "@/components/CookieConsent"
+import AceiteDocumentosGate from "@/components/AceiteDocumentosGate"
 import LogAcesso from "@/components/LogAcesso"
 import NavegacaoTracker from "@/components/NavegacaoTracker"
 import { PostHogProvider } from "@/components/PostHogProvider"
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             <FooterWrapper />
             <CookieConsent />
+            <AceiteDocumentosGate />
             <LogAcesso />
             <NavegacaoTracker />
           </LocationProvider>

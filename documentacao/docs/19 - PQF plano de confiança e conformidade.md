@@ -71,7 +71,7 @@ A primeira atualização deixa a plataforma em conformidade com a LGPD (lei bras
 - [ ] Redigir Política de Privacidade e Termos de Uso (rascunho para revisão de advogado). Política atualizada em 10/11 (seções de controlador, perfis de fonte pública, direitos e prazo), aguardando revisão e deploy; os Termos ainda precisam de revisão
 - [ ] Publicar o contato do encarregado de dados na `/privacidade` (e-mail definido: procuroquemfaca@gmail.com; incluído na Política, aguardando deploy)
 - [x] Criar a tabela `consentimentos` (usuário, tipo, versão do documento, data, origem), feito no banco. Falta o objeto consentido, como `feed_projeto` com o id do projeto, para a Etapa 6
-- [ ] Registrar o aceite de termos no cadastro de prestadores e clientes
+- [x] Registrar o aceite de termos no cadastro de prestadores e clientes (pronto no código, aguardando deploy: tela de aceite depois do login para todos e gravação no cadastro de prestador)
 
 **Direitos do titular**
 
@@ -117,6 +117,7 @@ Atualizado em 10/11/2026. O site segue no ar como está e não há novas ativaç
 - Remoção a pedido do titular significa apagar o perfil, mantendo só dados anônimos das avaliações já feitas.
 - Só o titular assume ou exclui um perfil, usando um link pessoal com token secreto por perfil. Ao retomar as ativações, o link é enviado a quem já foi contatado.
 - Contato de privacidade: procuroquemfaca@gmail.com. Prazo de resposta aos titulares: 15 dias.
+- Aceite dos documentos: uma tela exibida depois do login, para quem ainda não aceitou a versão atual (`2026-11`, definida em `config/documentos.ts`). Todos os usuários atuais passam por ela uma vez. Quando o advogado revisar os textos, basta aumentar a versão para todos aceitarem de novo. Os Termos têm aceite ativo e a Política tem confirmação de leitura; para criar e operar a conta a base legal é a execução do contrato, e o consentimento fica para o que é opcional (cookies, localização, fotos de terceiros, feed).
 - Controlador dos dados: Celio Roberto Ramos do Nascimento, como pessoa física, até a abertura do CNPJ. Os dados ficam em `config/controlador.ts`; ao constituir a empresa, basta preencher razão social e CNPJ ali, e a Política passa a exibi-los.
 
 **Achado de segurança (10/11/2026)**
@@ -126,7 +127,7 @@ A policy `Reivindicação de Perfil` em `prestadores` deixava qualquer usuário 
 | # | Ação | Banco | App | Situação |
 | --- | --- | --- | --- | --- |
 | 1 | Reivindicação e exclusão por link pessoal (token) | Concluído em 10/11/2026: `prestador_tokens`, funções e fechamento da policy aberta, com a policy do admin trocada de e-mail fixo para `is_admin()` | Concluído: `/reivindicar`, cadastro e serviço, em produção | Concluído e testado (assumir perfil sem token não afeta nenhuma linha; dono, admin e anônimo conferidos) |
-| 2 | Consentimento explícito no cadastro e na reivindicação (sem pré-marcar, gravado em `consentimentos`) | Tabela pronta | Pendente | A fazer |
+| 2 | Aceite explícito e registrado dos Termos e da Política (sem pré-marcar), para clientes e prestadores | Feito: origem `login` aceita em `consentimentos`, com as regras de acesso testadas | Pronto: tela de aceite depois do login, registro no cadastro de prestador e fim do pré-aceite na reivindicação | Falta o deploy |
 | 3 | Canal do titular: formulário geral e link "Este perfil é seu?" no perfil público | Função `registrar_solicitacao_titular` pronta | Pendente | A fazer |
 | 4 | Texto da `/privacidade`: origem pública, base legal (interesse legítimo), prazos, contato | Não se aplica | Rascunho pronto (`app/privacidade`, `config/controlador.ts`) | Falta a revisão do advogado, confirmar a origem dos dados e o deploy |
 | 5 | Painel admin: fila de solicitações, botão de exclusão e geração do link pessoal | Funções prontas | Pendente | A fazer |
