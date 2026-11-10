@@ -3,6 +3,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, MessageCircle, Copy, ExternalLink, ChevronDown, Search, Phone } from 'lucide-react'
+import { gerarTokenReivindicacao } from '@/lib/services/ativacao.service'
+import { montarMensagemAtivacao, rotuloAcaoAtivacao, tipoMensagemAtivacao } from '@/lib/ativacao/mensagem'
+import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 
@@ -25,19 +28,6 @@ const PROXIMOS = {
 
 const FILTROS = ['todos', 'nao_enviado', 'enviado', 'respondeu_positivo', 'respondeu_negativo', 'sem_whatsapp', 'perfil_completo', 'avaliacao_recebida']
 
-function montarMsg(p) {
-  return (
-    `Oi ${p.nome}, tudo bem? 👋\n\n` +
-    `Sou o Célio, criador do *Procuro Quem Faça* — uma plataforma aqui de Londrina onde moradores buscam profissionais para serviços.\n\n` +
-    `Montei um perfil pra vocês lá. Aqui está:\n` +
-    `👉 procuroquemfaca.com.br/${p.slug}?src=ativacao\n\n` +
-    `Quer ver como fica quando está completo, com fotos dos serviços?\n` +
-    `👉 procuroquemfaca.com.br/carlos-mendes-pedreiro\n\n` +
-    `A diferença tá nas fotos — antes, durante e depois de cada serviço. É como uma indicação permanente: o cliente vê o trabalho, já chega sabendo o que esperar.\n\n` +
-    `É gratuito. Posso ajudar a completar se quiser. 🙂`
-  )
-}
-
 // ─── Componente principal ──────────────────────────────────────────────────────
 
 export default function PaginaAtivacao() {
@@ -49,12 +39,13 @@ export default function PaginaAtivacao() {
   const [salvando, setSalvando]       = useState(null)
   const [copiado, setCopiado]         = useState(null)
   const [stats, setStats]             = useState({})
+  const [aviso, setAviso]             = useState('')
 
   const carregar = useCallback(async (inicial = false) => {
     if (inicial) setLoading(true)
     const { data } = await supabase
       .from('prestadores')
-      .select('id, nome, whatsapp, slug, ativacao_status, ativacao_enviado_em, ativacao_obs')
+      .select('id, nome, whatsapp, slug, user_id, ativacao_status, ativacao_enviado_em, ativacao_obs')
       .order('nome')
     setPrestadores(data || [])
     const c = {}
@@ -93,17 +84,61 @@ export default function PaginaAtivacao() {
     setPrestadores(prev => prev.map(p => p.id === id ? { ...p, ativacao_obs: obs } : p))
   }
 
-  const abrirWA = (p) => {
-    const wpp = p.whatsapp?.replace(/\D/g, '')
-    window.open(`https://wa.me/55${wpp}?text=${encodeURIComponent(montarMsg(p))}`, '_blank')
+  // Monta o link do WhatsApp com a mensagem certa e o link pessoal do prestador.
+  // O token é gerado no banco na hora do envio; perfis que já têm conta não recebem mensagem.
+  const prepararEnvio = async (p) => {
+    if (p.user_id) throw new Error('PERFIL_JA_TEM_CONTA')
+    const token = await gerarTokenReivindicacao(Number(p.id))
+    const mensagem = montarMensagemAtivacao({
+      tipo: tipoMensagemAtivacao(p),
+      nome: p.nome,
+      slug: p.slug,
+      token,
+    })
+    const link = buildLinkWhatsapp(p.whatsapp, mensagem)
+    if (!link) throw new Error('SEM_WHATSAPP')
+    return link
+  }
+
+  const mensagemDeErro = (e) => {
+    const codigo = e instanceof Error ? e.message : ''
+    if (codigo === 'PERFIL_JA_TEM_CONTA') return 'Este perfil já tem conta: não precisa de mensagem de ativação.'
+    if (codigo === 'SEM_WHATSAPP') return 'Este perfil não tem um WhatsApp válido.'
+    if (codigo === 'SEM_PERMISSAO') return 'Sem permissão de administrador para gerar o link.'
+    return 'Não foi possível gerar o link agora. Tente novamente.'
+  }
+
+  // Devolve true quando a mensagem foi aberta, para só marcar "enviado" nesse caso
+  const abrirWA = async (p) => {
+    setAviso('')
+    // Abre a aba antes do await para o navegador não bloquear o pop-up
+    const aba = window.open('', '_blank')
+    try {
+      const link = await prepararEnvio(p)
+      if (aba) aba.location.href = link
+      else window.location.assign(link)
+      return true
+    } catch (e) {
+      if (aba) aba.close()
+      console.error('[ativacao] erro ao preparar envio', e)
+      setAviso(mensagemDeErro(e))
+      return false
+    }
   }
 
   const copiarLink = async (p) => {
-    const wpp = p.whatsapp?.replace(/\D/g, '')
-    const link = `https://wa.me/55${wpp}?text=${encodeURIComponent(montarMsg(p))}`
-    await navigator.clipboard.writeText(link)
-    setCopiado(p.id)
-    setTimeout(() => setCopiado(null), 2000)
+    setAviso('')
+    try {
+      const link = await prepararEnvio(p)
+      await navigator.clipboard.writeText(link)
+      setCopiado(p.id)
+      setTimeout(() => setCopiado(null), 2000)
+      return true
+    } catch (e) {
+      console.error('[ativacao] erro ao copiar link', e)
+      setAviso(mensagemDeErro(e))
+      return false
+    }
   }
 
   const lista = prestadores.filter(p => {
@@ -222,6 +257,12 @@ export default function PaginaAtivacao() {
       </p>
 
       {/* ── Lista ── */}
+      {aviso && (
+        <p role="alert" className="mb-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[12px] font-semibold text-red-600">
+          {aviso}
+        </p>
+      )}
+
       <div className="space-y-1.5">
         <AnimatePresence>
           {lista.map(p => (
@@ -249,6 +290,8 @@ export default function PaginaAtivacao() {
 function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, onCopiar, onAbrir, onObs }) {
   const st      = STATUS[p.ativacao_status]
   const proximo = PROXIMOS[p.ativacao_status]
+  const temConta = Boolean(p.user_id)
+  const tipoMsg  = tipoMensagemAtivacao(p)
   const [obs, setObs]         = useState(p.ativacao_obs || '')
   const [editObs, setEditObs] = useState(false)
 
@@ -303,22 +346,24 @@ function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, on
               {/* Ações WhatsApp */}
               <div className="flex gap-2">
                 <button
-                  onClick={() => {
-                    onAbrir()
-                    if (p.ativacao_status === 'nao_enviado') onStatus('enviado')
+                  disabled={temConta}
+                  onClick={async () => {
+                    const ok = await onAbrir()
+                    if (ok && p.ativacao_status === 'nao_enviado') onStatus('enviado')
                   }}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#25D366] text-white rounded-xl text-[11px] font-semibold"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#25D366] text-white rounded-xl text-[11px] font-semibold disabled:opacity-40"
                 >
                   <MessageCircle size={13} />
-                  {p.ativacao_status === 'nao_enviado' ? 'Enviar WA' : 'Abrir WA'}
+                  {rotuloAcaoAtivacao(tipoMsg, p.ativacao_status)}
                 </button>
 
                 <button
-                  onClick={() => {
-                    onCopiar()
-                    if (p.ativacao_status === 'nao_enviado') onStatus('enviado')
+                  disabled={temConta}
+                  onClick={async () => {
+                    const ok = await onCopiar()
+                    if (ok && p.ativacao_status === 'nao_enviado') onStatus('enviado')
                   }}
-                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-[11px] font-semibold border transition-all ${
+                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-[11px] font-semibold border transition-all disabled:opacity-40 ${
                     copiado ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-zinc-50 text-zinc-600 border-zinc-200'
                   }`}
                 >
@@ -335,6 +380,12 @@ function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, on
                   <ExternalLink size={13} className="text-zinc-400" />
                 </a>
               </div>
+
+              {temConta && (
+                <p className="text-[10px] text-zinc-400">
+                  Este perfil já tem conta. Não precisa de mensagem de ativação.
+                </p>
+              )}
 
               {/* Avançar status */}
               {proximo && p.ativacao_status !== 'nao_enviado' && (
