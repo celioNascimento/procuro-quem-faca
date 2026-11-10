@@ -113,6 +113,7 @@ function CadastroSkeleton() {
 function FormularioCadastro() {
   const searchParams = useSearchParams()
   const reivindicarId = searchParams.get('reivindicar')
+  const tokenReivindicacao = searchParams.get('token')
 
   const { prestadorStatus } = useAuth()
 
@@ -124,7 +125,7 @@ function FormularioCadastro() {
     aceitouTermos, setAceitouTermos, aceitouPrivacidade, setAceitouPrivacidade,
     errorModal, setErrorModal,
     handleUploadFotoProcess, handleExcluirPerfil, calcularProgresso, handleSubmit, handleLogout,
-  } = useCadastroPrestador(reivindicarId)
+  } = useCadastroPrestador(reivindicarId, tokenReivindicacao)
 
   // Skeleton reflete apenas o carregamento inicial da página.
   // O envio do formulário (enviando) NÃO deve reativar o skeleton — ver handleSubmit no hook.
