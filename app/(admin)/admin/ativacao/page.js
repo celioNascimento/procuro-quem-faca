@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, MessageCircle, Copy, ExternalLink, ChevronDown, Search, Phone } from 'lucide-react'
 import { gerarTokenReivindicacao } from '@/lib/services/ativacao.service'
+import { listarPerfisParaAtivacao, salvarObsAtivacao, salvarStatusAtivacao } from '@/lib/services/ativacaoAdmin.service'
 import { montarMensagemAtivacao, rotuloAcaoAtivacao, tipoMensagemAtivacao } from '@/lib/ativacao/mensagem'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 import { correspondeABusca, nomeDoPerfil } from '@/lib/ativacao/lista'
@@ -44,13 +45,16 @@ export default function PaginaAtivacao() {
 
   const carregar = useCallback(async (inicial = false) => {
     if (inicial) setLoading(true)
-    const { data } = await supabase
-      .from('prestadores')
-      .select('id, nome, whatsapp, slug, user_id, ativacao_status, ativacao_enviado_em, ativacao_obs')
-      .order('nome')
-    setPrestadores(data || [])
+    let data = []
+    try {
+      data = await listarPerfisParaAtivacao()
+    } catch (e) {
+      console.error('[ativacao] erro ao carregar a lista', e)
+      setAviso('Não foi possível carregar a lista de perfis. Atualize a página.')
+    }
+    setPrestadores(data)
     const c = {}
-    ;(data || []).forEach(p => { c[p.ativacao_status] = (c[p.ativacao_status] || 0) + 1 })
+    data.forEach(p => { c[p.ativacao_status] = (c[p.ativacao_status] || 0) + 1 })
     setStats(c)
     if (inicial) setLoading(false)
   }, [])
@@ -59,15 +63,10 @@ export default function PaginaAtivacao() {
 
   const atualizarStatus = async (id, novoStatus) => {
     setSalvando(id)
-    const update = { ativacao_status: novoStatus }
-    if (novoStatus === 'enviado')            update.ativacao_enviado_em   = new Date().toISOString()
-    if (novoStatus === 'respondeu_positivo') update.ativacao_respondeu_em = new Date().toISOString()
-    const { error } = await supabase.from('prestadores').update(update).eq('id', Number(id))
-    if (error) console.error('[ativacao] erro ao salvar', error)
-    else {
-      console.log('[ativacao] salvo ok')
+    try {
+      const alterados = await salvarStatusAtivacao(Number(id), novoStatus)
       setPrestadores(prev => prev.map(p =>
-        p.id === id ? { ...p, ativacao_status: novoStatus, ...update } : p
+        p.id === id ? { ...p, ...alterados } : p
       ))
       setStats(prev => {
         const antigo = prestadores.find(p => p.id === id)?.ativacao_status
@@ -76,13 +75,21 @@ export default function PaginaAtivacao() {
         novo[novoStatus] = (novo[novoStatus] || 0) + 1
         return novo
       })
+    } catch (e) {
+      console.error('[ativacao] erro ao salvar', e)
+      setAviso('Não foi possível salvar o status. Tente novamente.')
     }
     setSalvando(null)
   }
 
   const salvarObs = async (id, obs) => {
-    await supabase.from('prestadores').update({ ativacao_obs: obs }).eq('id', Number(id))
-    setPrestadores(prev => prev.map(p => p.id === id ? { ...p, ativacao_obs: obs } : p))
+    try {
+      await salvarObsAtivacao(Number(id), obs)
+      setPrestadores(prev => prev.map(p => p.id === id ? { ...p, ativacao_obs: obs } : p))
+    } catch (e) {
+      console.error('[ativacao] erro ao salvar a observação', e)
+      setAviso('Não foi possível salvar a observação. Tente novamente.')
+    }
   }
 
   // Monta o link do WhatsApp com a mensagem certa e o link pessoal do prestador.

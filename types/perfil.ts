@@ -51,9 +51,9 @@ export interface ProjetoPerfil {
   sem_fotos?: boolean
 }
 
-// Campos internos (contato de ativação, bloqueio, cliques, dono da conta) nunca vão para o perfil público.
-type CamposInternos = 'user_id' | 'cliques_whatsapp' | 'motivo_bloqueio'
-  | 'ativacao_status' | 'ativacao_enviado_em' | 'ativacao_respondeu_em' | 'ativacao_obs'
+// Campos internos (cliques, dono da conta) nunca vão para o perfil público. O funil de ativação e o motivo
+// de bloqueio ficam em tabelas próprias (prestador_ativacao e prestador_bloqueio), só para admin e dono.
+type CamposInternos = 'user_id' | 'cliques_whatsapp'
 
 export interface PrestadorPerfil extends Omit<Prestador, 'cidades' | 'categorias' | CamposInternos> {
   cidades?: { nome: string; estado_sigla: string } | null

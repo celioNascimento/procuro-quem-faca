@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { buscarPrestadorPorUserId } from '@/lib/services/cadastroPrestador.service'
+import { buscarMotivoBloqueio } from '@/lib/services/bloqueio.service'
 
 export function usePerfilStatus() {
   const [cadastroCompleto, setCadastroCompleto] = useState(false)
@@ -28,8 +29,13 @@ export function usePerfilStatus() {
       setCadastroCompleto(completo)
       setPrestadorId(prestador?.id ? Number(prestador.id) : null)
       setSlug(prestador?.slug || null)
-      setBloqueado(prestador?.bloqueado === true || prestador?.status === 'bloqueado')
-      setMotivoBloqueio(prestador?.motivo_bloqueio || null)
+      const estaBloqueado = prestador?.bloqueado === true || prestador?.status === 'bloqueado'
+      setBloqueado(estaBloqueado)
+      // O motivo mora em tabela própria; só o admin e o próprio prestador conseguem lê-lo
+      const motivo = estaBloqueado && prestador?.id
+        ? await buscarMotivoBloqueio(Number(prestador.id)).catch(() => null)
+        : null
+      setMotivoBloqueio(motivo)
     } catch {
       setCadastroCompleto(false)
     } finally {

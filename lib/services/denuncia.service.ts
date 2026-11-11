@@ -69,17 +69,12 @@ export async function criarDenuncia(prestadorId: number, motivo: string): Promis
   }
  
   export async function bloquearPrestadorDenunciado(prestadorId: number, motivo: string): Promise<void> {
-    const { error } = await supabase
-      .from('prestadores')
-      .update({ bloqueado: true, motivo_bloqueio: motivo })
-      .eq('id', prestadorId)
+    // O motivo fica em tabela própria (prestador_bloqueio), fora da tabela pública de prestadores
+    const { error } = await supabase.rpc('admin_bloquear_prestador', { p_prestador_id: prestadorId, p_motivo: motivo })
     if (error) throw error
   }
 
   export async function desbloquearPrestador(prestadorId: number): Promise<void> {
-    const { error } = await supabase
-      .from('prestadores')
-      .update({ bloqueado: false, motivo_bloqueio: null, status: 'ativo' })
-      .eq('id', prestadorId)
+    const { error } = await supabase.rpc('admin_desbloquear_prestador', { p_prestador_id: prestadorId })
     if (error) throw error
   }
