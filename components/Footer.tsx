@@ -19,6 +19,12 @@ export default function Footer() {
             Privacidade
           </Link>
           <Link 
+            href="/titular" 
+            className="text-slate-400 hover:text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] transition-colors"
+          >
+            Seus dados
+          </Link>
+          <Link 
             href="/termos" 
             className="text-slate-400 hover:text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] transition-colors"
           >

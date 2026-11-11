@@ -129,13 +129,34 @@ A policy `Reivindicação de Perfil` em `prestadores` deixava qualquer usuário 
 | --- | --- | --- | --- | --- |
 | 1 | Reivindicação e exclusão por link pessoal (token) | Concluído em 10/11/2026: `prestador_tokens`, funções e fechamento da policy aberta, com a policy do admin trocada de e-mail fixo para `is_admin()` | Concluído: `/reivindicar`, cadastro e serviço, em produção | Concluído e testado (assumir perfil sem token não afeta nenhuma linha; dono, admin e anônimo conferidos) |
 | 2 | Aceite explícito e registrado dos Termos e da Política (sem pré-marcar), para clientes e prestadores | Feito: origem `login` aceita em `consentimentos`, com as regras de acesso testadas | Pronto: tela de aceite depois do login, registro no cadastro de prestador e fim do pré-aceite na reivindicação | Falta o deploy |
-| 3 | Canal do titular: formulário geral e link "Este perfil é seu?" no perfil público | Função `registrar_solicitacao_titular` pronta | Pendente | A fazer |
+| 3 | Canal do titular: formulário `/titular` (também dentro de `/reivindicar`, ligado ao perfil), link no rodapé e na Política, e fila no admin em `/admin/titular` | Feito e testado: tipo `outro` aceito e funções de contagem | Pronto: formulário com protocolo e prazo de 15 dias, proteção contra robôs e fila com alerta de prazo | Falta o deploy e configurar o aviso por e-mail (ver Notificações do admin) |
 | 4 | Texto da `/privacidade`: origem pública, base legal (interesse legítimo), prazos, contato | Não se aplica | Rascunho pronto (`app/privacidade`, `config/controlador.ts`) | Falta a revisão do advogado, confirmar a origem dos dados e o deploy |
-| 5 | Mensagens de ativação revisadas e geração do link pessoal na tela `/admin/ativacao` (a fila de solicitações do titular vem junto com o formulário do item 3) | Funções prontas | Pronto: três mensagens (primeiro contato, corretiva para quem já recebeu a primeira e link de exclusão para quem recusou), com o link pessoal gerado na hora do envio | Falta o deploy |
+| 5 | Mensagens de ativação revisadas e geração do link pessoal na tela `/admin/ativacao`; a fila de solicitações do titular veio com o item 3 | Funções prontas | Pronto: três mensagens (primeiro contato, corretiva para quem já recebeu a primeira e link de exclusão para quem recusou), com o link pessoal gerado na hora do envio | Falta o deploy |
 | 6 | "Meus dados" para quem tem conta e limpeza: fechar `verificar_usuario_existe` (depois de ajustar o `useLoginForm`), decidir sobre a coluna `ip_address`, revisar as funções `SECURITY DEFINER` abertas ao `anon`, ligar a proteção contra senhas vazadas no Auth | Parcial | Pendente | A fazer |
 | 7 | Retomar as ativações com nova mensagem (origem do dado, base legal, link de exclusão) e mensagem corretiva para quem já foi contatado | Não se aplica | Não se aplica | Só depois dos itens 1 a 5 |
 
 Pontos de atenção do item 1: os links antigos `/cadastro?reivindicar=ID` deixam de funcionar sem o token, e os botões "Reivindicar" dos cards e do perfil público levam à página `/reivindicar`, que agora explica como pedir o link pessoal.
+
+**Notificações do admin**
+
+O painel avisa quando há pendências, sem depender de você abrir cada tela:
+
+- **Contador no menu lateral.** "Pedidos LGPD" mostra os pedidos em aberto (em vermelho se algum passou do prazo) e "Moderação" soma denúncias, garantias e contestações a tratar. Atualiza a cada minuto e ao voltar para a aba.
+- **E-mail imediato** quando chega um pedido do titular ou uma denúncia. O e-mail leva só o tipo, o protocolo e o link do painel, sem nome, contato ou texto do pedido. Para denúncias há limite: no máximo um aviso por perfil a cada 30 minutos e dez no total a cada 10 minutos.
+- **Resumo diário às 8h (horário de Brasília)** com as contagens, só quando há algo a tratar.
+- Se o e-mail falhar ou não estiver configurado, nada se perde: o pedido continua na fila e no contador.
+
+Configuração na Vercel (Settings > Environment Variables), em Production:
+
+| Variável | Para quê |
+| --- | --- |
+| `RESEND_API_KEY` | Chave do Resend. Sem ela nenhum e-mail é enviado. Crie a conta no Resend com o e-mail procuroquemfaca@gmail.com, porque o remetente de teste só entrega para o dono da conta. |
+| `CRON_SECRET` | Texto longo e aleatório. Protege a rota do resumo diário; sem ele a rota recusa tudo. |
+| `NOTIFICACAO_EMAIL_DESTINO` | Opcional. Padrão: procuroquemfaca@gmail.com. |
+| `NOTIFICACAO_EMAIL_REMETENTE` | Opcional. Use quando houver domínio verificado no Resend. |
+
+Depois de cadastrar as variáveis, é preciso fazer um novo deploy para valerem.
+
 
 ## Etapa 2: consulta de CNPJ
 

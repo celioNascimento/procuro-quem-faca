@@ -29,13 +29,13 @@ describe('tipoMensagemAtivacao', () => {
 })
 
 describe('montarMensagemAtivacao', () => {
-  it.each(['primeiro_contato', 'corretiva', 'exclusao'] as const)('%s: traz o link pessoal e a política de privacidade', (tipo) => {
+  it.each(['primeiro_contato', 'corretiva', 'exclusao', 'resposta_pedido'] as const)('%s: traz o link pessoal e a política de privacidade', (tipo) => {
     const msg = montarMensagemAtivacao({ tipo, ...base })
     expect(msg).toContain(linkPessoal(TOKEN))
     expect(msg).toContain('https://procuroquemfaca.com.br/privacidade')
   })
 
-  it.each(['primeiro_contato', 'corretiva', 'exclusao'] as const)('%s: não promete que a plataforma apaga nem pede resposta para sair', (tipo) => {
+  it.each(['primeiro_contato', 'corretiva', 'exclusao', 'resposta_pedido'] as const)('%s: não promete que a plataforma apaga nem pede resposta para sair', (tipo) => {
     const msg = montarMensagemAtivacao({ tipo, ...base }).toLowerCase()
     expect(msg).not.toContain('eu apago')
     expect(msg).not.toContain('responda sair')
@@ -63,5 +63,6 @@ describe('rotuloAcaoAtivacao', () => {
     expect(rotuloAcaoAtivacao('primeiro_contato', 'sem_whatsapp')).toBe('Abrir WA')
     expect(rotuloAcaoAtivacao('corretiva', 'enviado')).toBe('Enviar aviso corretivo')
     expect(rotuloAcaoAtivacao('exclusao', 'respondeu_negativo')).toBe('Enviar link de exclusão')
+    expect(rotuloAcaoAtivacao('resposta_pedido', 'recebida')).toBe('Enviar link ao WhatsApp do perfil')
   })
 })

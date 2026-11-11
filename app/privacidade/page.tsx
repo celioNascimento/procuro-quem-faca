@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 import { useVoltar } from '@/hooks/useVoltar'
 import { CONTROLADOR, DATA_ATUALIZACAO_PRIVACIDADE } from '@/config/controlador'
 
@@ -92,7 +93,8 @@ export default function Privacidade() {
                 <a href={`mailto:${emailPrivacidade}`} className="font-bold text-blue-600 hover:underline">
                   {emailPrivacidade}
                 </a>{' '}
-                informando o nome do perfil e o WhatsApp cadastrado nele, para que possamos confirmar que o perfil é seu.
+                informando o nome do perfil e o WhatsApp cadastrado nele, para que possamos confirmar que o perfil é seu. Você também pode fazer o pedido pelo{' '}
+                <Link href="/titular" className="font-bold text-blue-600 hover:underline">formulário do titular</Link>.
               </p>
               <p>
                 <Destaque>O que a exclusão faz.</Destaque> O perfil e os dados ligados a ele são apagados. Mantemos apenas registros anônimos, sem nome, foto, texto ou qualquer vínculo com você, de avaliações já feitas. A existência de um perfil criado pelo PQF não significa que o profissional tenha aderido à plataforma.
@@ -169,6 +171,8 @@ export default function Privacidade() {
                 <a href={`mailto:${emailPrivacidade}`} className="font-bold text-blue-600 hover:underline">
                   {emailPrivacidade}
                 </a>
+                {' '}ou usar o{' '}
+                <Link href="/titular" className="font-bold text-blue-600 hover:underline">formulário do titular</Link>
                 . Para sua segurança, podemos pedir informações que confirmem que você é o titular antes de atender o pedido.
               </p>
               <p>
