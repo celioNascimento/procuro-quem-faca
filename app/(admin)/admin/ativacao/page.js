@@ -6,6 +6,7 @@ import { CheckCircle2, MessageCircle, Copy, ExternalLink, ChevronDown, Search, P
 import { gerarTokenReivindicacao } from '@/lib/services/ativacao.service'
 import { montarMensagemAtivacao, rotuloAcaoAtivacao, tipoMensagemAtivacao } from '@/lib/ativacao/mensagem'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
+import { correspondeABusca, nomeDoPerfil } from '@/lib/ativacao/lista'
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 
@@ -91,7 +92,7 @@ export default function PaginaAtivacao() {
     const token = await gerarTokenReivindicacao(Number(p.id))
     const mensagem = montarMensagemAtivacao({
       tipo: tipoMensagemAtivacao(p),
-      nome: p.nome,
+      nome: nomeDoPerfil(p),
       slug: p.slug,
       token,
     })
@@ -142,7 +143,7 @@ export default function PaginaAtivacao() {
   }
 
   const lista = prestadores.filter(p => {
-    const passaBusca  = p.nome.toLowerCase().includes(busca.toLowerCase()) || p.slug?.toLowerCase().includes(busca.toLowerCase())
+    const passaBusca  = correspondeABusca(p, busca)
     const passaFiltro = filtro === 'todos' || p.ativacao_status === filtro
     return passaBusca && passaFiltro
   })
@@ -311,7 +312,7 @@ function CardPrestador({ p, expandido, salvando, copiado, onExpand, onStatus, on
         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: st.dot }} />
 
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-semibold text-zinc-900 truncate leading-tight">{p.nome}</p>
+          <p className="text-[13px] font-semibold text-zinc-900 truncate leading-tight">{nomeDoPerfil(p)}</p>
           <span className={`inline-block mt-0.5 px-1.5 py-px rounded text-[9px] font-semibold uppercase tracking-wide ${st.badge}`}>
             {st.label}
           </span>

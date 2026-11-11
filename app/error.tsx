@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import { insertLog } from '@/lib/db/logs'
 import Logo from '@/components/Logo'
 
-export default function Erro400({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function Erro400({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
 
   useEffect(() => {
     // Log de Erro de Requisição (Bad Request)
@@ -17,7 +17,12 @@ export default function Erro400({ reset }: { error: Error & { digest?: string };
           detalhes: {
             url: window.location.href,
             timestamp: new Date().toISOString(),
-            mensagem: 'Requisição malformada ou cabeçalhos inválidos',
+            // Esta tela aparece para qualquer erro inesperado no navegador, não só para erro 400.
+            // Registra a causa real (curta) para o diagnóstico não depender de reproduzir o erro.
+            mensagem: 'Erro inesperado na tela',
+            nome_erro: error?.name ?? null,
+            erro: typeof error?.message === 'string' ? error.message.slice(0, 300) : null,
+            digest: error?.digest ?? null,
           },
         })
       } catch (err) {
@@ -25,7 +30,7 @@ export default function Erro400({ reset }: { error: Error & { digest?: string };
       }
     }
     registrarErro400()
-  }, [])
+  }, [error])
 
   return (
     <main className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-6 font-sans antialiased text-slate-600">
