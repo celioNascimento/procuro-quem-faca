@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getSupabasePublicEnv } from './lib/supabase/env'
 import { gravarOrigemSeNecessario } from './lib/tracking/gravarOrigem'
+import { deveSairDoCadastro } from './lib/auth/cadastroRota'
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
@@ -63,7 +64,7 @@ export async function proxy(request: NextRequest) {
       if (intendedRole === 'prestador' && isPendente) return NextResponse.redirect(new URL('/cadastro', request.url))
       if (intendedRole === 'cliente') return NextResponse.redirect(new URL('/painel/perfil', request.url))
     }
-    if (isCadastro && intendedRole === 'prestador' && !isPendente) {
+    if (isCadastro && deveSairDoCadastro({ intendedRole, isPendente, ehReivindicacao: request.nextUrl.searchParams.has('reivindicar') })) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }

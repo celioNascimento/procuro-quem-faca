@@ -129,7 +129,20 @@ function FormularioCadastro() {
 
   // Skeleton reflete apenas o carregamento inicial da página.
   // O envio do formulário (enviando) NÃO deve reativar o skeleton — ver handleSubmit no hook.
-  if (!mounted || loading || isRedirecting) return <CadastroSkeleton />
+  // O aviso de bloqueio (link sem token, perfil indisponível, conta que já tem perfil) precisa aparecer
+  // também aqui: antes o modal ficava depois deste retorno e nunca era desenhado.
+  const modalDeErro = (
+    <ErrorModal
+      show={errorModal.show}
+      title={errorModal.title}
+      message={errorModal.message}
+      actionText={errorModal.actionText}
+      actionUrl={errorModal.actionUrl}
+      onClose={() => setErrorModal({ ...errorModal, show: false })}
+    />
+  )
+
+  if (!mounted || loading || isRedirecting) return <>{modalDeErro}<CadastroSkeleton /></>
 
   // Garante que mesmo logado, se o cadastro for pendente, tratamos como novo para forçar Termos
   const isPendente = prestadorStatus === 'pendente' || !modoEdicao
@@ -142,14 +155,7 @@ function FormularioCadastro() {
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-20 font-sans antialiased overflow-x-hidden">
 
-      <ErrorModal
-        show={errorModal.show}
-        title={errorModal.title}
-        message={errorModal.message}
-        actionText={errorModal.actionText}
-        actionUrl={errorModal.actionUrl}
-        onClose={() => setErrorModal({ ...errorModal, show: false })}
-      />
+      {modalDeErro}
 
       <Header href="/" />
 
