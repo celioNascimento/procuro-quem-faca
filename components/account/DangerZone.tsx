@@ -36,6 +36,10 @@ export function DangerZone({ audience }: DangerZoneProps) {
           <p className="text-[13px] leading-6 text-red-900/80">{item.description}</p>
         </div>
       </div>
+      <p className="text-[13px] leading-6 text-red-900/80">
+        Antes de excluir, você pode{' '}
+        <Link href="/meus-dados" className="font-bold underline">ver e baixar seus dados</Link>.
+      </p>
       <Link
         href="/confirmar-exclusao"
         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-300 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-widest text-red-700 transition-colors hover:bg-red-600 hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200"

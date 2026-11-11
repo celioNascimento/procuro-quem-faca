@@ -9,7 +9,7 @@ describe('rotaExigeAceite', () => {
 
   it.each([
     '/termos', '/privacidade', '/login', '/auth/callback', '/cadastro', '/recuperar-senha',
-    '/confirmar-exclusao', '/reivindicar', '/admin', '/admin/prestadores',
+    '/confirmar-exclusao', '/reivindicar', '/admin', '/admin/prestadores', '/meus-dados', '/titular',
   ])('não bloqueia %s, para o usuário poder ler, entrar, sair ou excluir a conta', (rota) =>
     expect(rotaExigeAceite(rota)).toBe(false),
   )

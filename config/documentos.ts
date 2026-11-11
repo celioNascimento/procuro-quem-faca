@@ -31,6 +31,8 @@ const ROTAS_SEM_ACEITE = [
   '/cadastro',
   '/recuperar-senha',
   '/confirmar-exclusao',
+  '/meus-dados',
+  '/titular',
   '/reivindicar',
   '/admin',
 ] as const
