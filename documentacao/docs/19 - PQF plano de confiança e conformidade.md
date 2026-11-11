@@ -134,6 +134,7 @@ A policy `Reivindicação de Perfil` em `prestadores` deixava qualquer usuário 
 | 5 | Mensagens de ativação revisadas e geração do link pessoal na tela `/admin/ativacao`; a fila de solicitações do titular veio com o item 3 | Funções prontas | Pronto: três mensagens (primeiro contato, corretiva para quem já recebeu a primeira e link de exclusão para quem recusou), com o link pessoal gerado na hora do envio | Falta o deploy |
 | 6 | Limpeza e "Meus dados": fechar `verificar_usuario_existe` e `registrar_metrica_anuncio`, revisar as funções `SECURITY DEFINER` abertas, retenção automática, exportação dos dados e página `/meus-dados` | Concluído em 11/11/2026: `registrar_metrica_anuncio` e `verificar_usuario_existe` fechadas (com a tabela de e-mails do limite de tentativas), retenção diária ligada e `exportar_meus_dados` | Concluído e em produção: login sem a consulta de e-mail e página `/meus-dados` com download em JSON | Falta só ligar a proteção contra senhas vazadas no painel do Supabase |
 | 7 | Retomar as ativações com nova mensagem (origem do dado, base legal, link de exclusão) e mensagem corretiva para quem já foi contatado | Não se aplica | Não se aplica | Só depois dos itens 1 a 5 |
+| 8 | Campos internos fora da tabela pública de prestadores: funil de ativação, observações e motivo de bloqueio passam para `prestador_ativacao` e `prestador_bloqueio` (acesso só do admin e, no bloqueio, do dono) | Tabelas, cópia dos dados e funções aplicadas e testadas em 11/11/2026 | Pronto: ativação, moderação, painel do prestador e estatísticas do admin usam as tabelas novas | Falta o deploy; depois aplicar a migration que remove as colunas antigas e a view `prestadores_ranqueados` (inclui o ajuste do gatilho `prestadores_proteger_campos`) |
 
 Pontos de atenção do item 1: os links antigos `/cadastro?reivindicar=ID` deixam de funcionar sem o token, e os botões "Reivindicar" dos cards e do perfil público levam à página `/reivindicar`, que agora explica como pedir o link pessoal.
 
@@ -183,6 +184,8 @@ Os advisors do Supabase listam funções que visitantes ou usuários logados pod
 - Funções de administração (`admin_pendencias`, `admin_token_reivindicacao`, `admin_simular_retencao`, `anonimizar_dados_titular`, `excluir_prestador_titular`) e as chamadas do app para usuários logados: conferem o usuário dentro da própria função.
 
 Fechadas em 11/11/2026: `registrar_metrica_anuncio` (sem uso e abusável) e `verificar_usuario_existe` (permitia descobrir se um e-mail tem conta). Depois disso, os advisors passaram a listar apenas as seis funções públicas acima.
+
+Leitura da tabela `prestadores`: ela é legível por qualquer visitante (cinco regras de leitura liberam todas as linhas e o app usa `select *`), então nenhum dado interno pode morar nela. Por isso o funil de ativação, as observações e o motivo de bloqueio ficam em tabelas próprias. Em 11/11/2026 havia 2 motivos de bloqueio legíveis por qualquer pessoa. Pendência registrada: consolidar as 28 regras de acesso da tabela (hoje redundantes e sem uma regra de leitura para o admin, que depende das abertas), o que exige revisar as leituras do app uma a uma.
 
 Proteção contra senhas vazadas: ligar no painel do Supabase (Authentication, em Sign In / Providers). Se a opção aparecer indisponível, é limite do plano.
 

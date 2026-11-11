@@ -13,7 +13,6 @@ export interface Prestador {
   status: string | null
   aprovado_em: string | null
   bloqueado: boolean | null
-  motivo_bloqueio: string | null
   habilidades: string[] | null
   tags: string[] | null
   estado_sigla: string | null
@@ -33,10 +32,6 @@ export interface Prestador {
   grupo_nome?: string | null
   media_nota?: number | null
   total_avals?: number | null
-  ativacao_status: string
-  ativacao_enviado_em: string | null
-  ativacao_respondeu_em: string | null
-  ativacao_obs: string | null
   garantia_dias: number
   portfolio_obrigatorio: boolean
   portfolio_titulo?: string | null

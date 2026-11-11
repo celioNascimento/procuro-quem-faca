@@ -165,6 +165,18 @@ export function useCadastroPrestador(reivindicarId: string | null, tokenReivindi
             setIsRedirecting(true)
             return
           }
+          // Cada conta tem um único perfil profissional. Com um perfil ativo, assumir outro não é
+          // possível: avisa em vez de redirecionar sem explicação (e sem risco de apagar o perfil atual).
+          if (user && perfilExistente && perfilExistente.status !== 'pendente') {
+            const nomeAtual = perfilExistente.nome ? ` (${perfilExistente.nome})` : ''
+            setErrorModal({
+              show: true, title: 'Esta conta já tem um perfil',
+              message: `Cada conta pode ter um perfil profissional, e o da sua conta já está ativo${nomeAtual}. Para assumir outro perfil, saia da conta e entre com a conta que vai ficar com ele.`,
+              actionText: 'Ir para o meu perfil', actionUrl: '/dashboard',
+            })
+            setIsRedirecting(true)
+            return
+          }
           // O aceite de termos e privacidade é sempre ativo: quem assume o perfil marca as caixas
           perfilParaCarregar = perfilReivindicar
           setModoEdicao(false)

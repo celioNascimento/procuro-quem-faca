@@ -1,6 +1,8 @@
 //lib/services/adminDashboard.service.ts
 
 import { supabase } from '@/lib/supabase'
+import { buscarTodasAsLinhas } from '@/lib/supabase/paginar'
+import { achatarAtivacao, type AtivacaoEmbutida } from '@/lib/ativacao/lista'
 
 export interface CategoriaRanking {
   nome: string
@@ -54,11 +56,16 @@ export async function getContadoresGerais(): Promise<ContadoresGerais> {
 }
 
 export async function getOrigemEAtivacaoStats(): Promise<{ origem: OrigemStats; ativacao: AtivacaoStats }> {
-  const { data: pDataAll, error } = await supabase
-    .from('prestadores')
-    .select('origem_tipo, user_id, ativacao_status')
-
-  if (error) throw error
+  // Paginado: o PostgREST corta em 1000 linhas e a tabela já tem 957 perfis
+  type Linha = { origem_tipo: string | null; user_id: string | null; prestador_ativacao: AtivacaoEmbutida | AtivacaoEmbutida[] | null }
+  const linhas = await buscarTodasAsLinhas<Linha>((de, ate) =>
+    supabase
+      .from('prestadores')
+      .select('origem_tipo, user_id, prestador_ativacao(status, enviado_em, respondeu_em, obs)')
+      .order('id')
+      .range(de, ate) as unknown as PromiseLike<{ data: Linha[] | null; error: unknown }>,
+  )
+  const pDataAll = linhas.map(achatarAtivacao)
 
   const origem: OrigemStats = {
     curadoria: pDataAll?.filter(p => p.origem_tipo === 'curadoria_publica' && !p.user_id).length || 0,

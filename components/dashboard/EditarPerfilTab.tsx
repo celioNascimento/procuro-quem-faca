@@ -173,12 +173,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         !!form.formData.grupo_id &&
         !!form.formData.categoria_id
 
-      const statusAtual = form.formData.ativacao_status
-      const novoAtivacaoStatus =
-        camposObrigatoriosOk && (statusAtual === 'nao_enviado' || !statusAtual)
-          ? 'perfil_completo'
-          : statusAtual
-
       const { id, ...restData } = {
         ...form.formData,
         cidade_id: form.formData.cidade_id || null,
@@ -188,7 +182,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         cidades_atendidas: cidadesLimpo,
         user_id: userLogado?.id,
         status: 'ativo',
-        ativacao_status: novoAtivacaoStatus,
         // portfolio_obrigatorio não existe em usePrestadorForm/form.formData
         // — precisa ser injetado explicitamente a partir do state local
         // (portfolioOb), senão o upsert envia esse campo ausente/undefined
@@ -209,8 +202,11 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
 
       if (error) throw error
 
-      if (novoAtivacaoStatus !== statusAtual) {
-        form.set({ ativacao_status: novoAtivacaoStatus })
+      // O funil de ativação é interno (tabela só do admin): quem avança é uma função do banco, que só
+      // muda "não enviado" para "perfil completo". Falha aqui não pode impedir o salvamento do perfil.
+      if (camposObrigatoriosOk) {
+        const { error: erroAtivacao } = await supabase.rpc('ativacao_marcar_perfil_completo')
+        if (erroAtivacao) console.error('Não foi possível atualizar o funil de ativação:', erroAtivacao)
       }
 
       setStatus('Perfil atualizado com sucesso.')

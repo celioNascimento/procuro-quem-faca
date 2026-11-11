@@ -8,11 +8,11 @@ import Logo from '@/components/Logo'
 export default function Erro400({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
 
   useEffect(() => {
-    // Log de Erro de Requisição (Bad Request)
+    // Registra o erro inesperado (com a causa real)
     const registrarErro400 = async () => {
       try {
         await insertLog({
-          acao: 'ERRO_400_BAD_REQUEST',
+          acao: 'ERRO_NA_TELA',
           entidadeTipo: 'erro_tecnico',
           detalhes: {
             url: window.location.href,
@@ -26,7 +26,7 @@ export default function Erro400({ error, reset }: { error: Error & { digest?: st
           },
         })
       } catch (err) {
-        console.warn('Falha ao registrar log de erro 400.')
+        console.warn('Falha ao registrar o log do erro da tela.')
       }
     }
     registrarErro400()
@@ -42,15 +42,15 @@ export default function Erro400({ error, reset }: { error: Error & { digest?: st
           
           <div className="relative z-20 space-y-4">
             <div className="inline-flex items-center bg-slate-100 text-slate-500 px-5 py-2 rounded-full border border-slate-200 shadow-sm">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Erro 400 • Bad Request</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Erro inesperado</span>
             </div>
             
             <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
-              Requisição<br />Inválida<span className="text-blue-600">.</span>
+              Algo deu<br />errado<span className="text-blue-600">.</span>
             </h1>
             
             <p className="text-slate-500 text-[11px] font-bold uppercase tracking-[0.2em] max-w-xs mx-auto leading-relaxed px-4">
-              O servidor não conseguiu interpretar os dados enviados pelo seu navegador.
+              Aconteceu um problema inesperado ao carregar esta página.
             </p>
           </div>
         </header>
@@ -59,7 +59,7 @@ export default function Erro400({ error, reset }: { error: Error & { digest?: st
           <div className="space-y-6">
             <div className="text-6xl grayscale opacity-10 select-none">🛠️</div>
             <p className="text-slate-400 text-[12px] font-medium leading-relaxed italic px-4">
-              &quot;A sincronização de dados falhou devido a um erro de comunicação. Isso pode ser causado por um link corrompido ou informações de sessão expiradas.&quot;
+              Não foi possível concluir. Tente novamente; se o problema continuar, fale com a gente em procuroquemfaca@gmail.com.
             </p>
           </div>
 

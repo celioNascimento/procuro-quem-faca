@@ -33,11 +33,14 @@ export async function deletarPrestador(id: string | number) {
   if (error) throw error
 }
 
+// Remove só RASCUNHOS (cadastro pendente) da conta, para o perfil assumido poder ocupar o lugar.
+// Nunca apaga um perfil ativo: antes, quem já tinha perfil e assumia outro perdia o perfil que tinha.
 export async function deletarOutrosPrestadoresDoUsuario(userId: string, exceptId: string | number) {
   const { error } = await supabase
     .from('prestadores')
     .delete()
     .eq('user_id', userId)
+    .eq('status', 'pendente')
     .neq('id', exceptId)
   if (error) throw error
 }
