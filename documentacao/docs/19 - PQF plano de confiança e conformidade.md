@@ -83,7 +83,7 @@ A primeira atualização deixa a plataforma em conformidade com a LGPD (lei bras
 **Dados de terceiros e retenção**
 
 - [x] Mapear dados pessoais: `cliente_nome` e `cliente_whatsapp` (projetos e orçamentos), endereço em `profiles`, `cliente_foto_url` em avaliações (o mapa está na função `exportar_meus_dados`, que lista as 18 seções com dados da pessoa e deixa de fora os dados de terceiros)
-- [x] Definir prazos de retenção por tipo de dado, parametrizados por configuração e não por código (tabela `retencao_regras` e execução diária; duas regras com dados pessoais aguardam a confirmação dos prazos, ver a seção Retenção e exportação de dados)
+- [x] Definir prazos de retenção por tipo de dado, parametrizados por configuração e não por código (tabela `retencao_regras` e execução diária; as quatro regras estão ligadas, ver a seção Retenção e exportação de dados)
 - [x] Zerar `ip_address` em `logs_atividades` após o prazo de guarda (o Marco Civil exige seis meses para provedores de aplicação). Em 10/11 a coluna estava vazia e nada no código a grava. Decisão de 11/11: manter a coluna, porque o Marco Civil (art. 15) pode exigir a guarda de registros de acesso quando o PQF virar pessoa jurídica; confirmar com o advogado
 - [x] Apagar ou dar prazo de expiração às tabelas `bkp_cliques_20261014` e `bkp_visitas_20261014` (apagadas em 10/11/2026)
 
@@ -132,7 +132,7 @@ A policy `Reivindicação de Perfil` em `prestadores` deixava qualquer usuário 
 | 3 | Canal do titular: formulário `/titular` (também dentro de `/reivindicar`, ligado ao perfil), link no rodapé e na Política, e fila no admin em `/admin/titular` | Feito e testado: tipo `outro` aceito e funções de contagem | Pronto: formulário com protocolo e prazo de 15 dias, proteção contra robôs e fila com alerta de prazo | Falta o deploy e configurar o aviso por e-mail (ver Notificações do admin) |
 | 4 | Texto da `/privacidade`: origem pública, base legal (interesse legítimo), prazos, contato | Não se aplica | Rascunho pronto (`app/privacidade`, `config/controlador.ts`) | Falta a revisão do advogado, confirmar a origem dos dados e o deploy |
 | 5 | Mensagens de ativação revisadas e geração do link pessoal na tela `/admin/ativacao`; a fila de solicitações do titular veio com o item 3 | Funções prontas | Pronto: três mensagens (primeiro contato, corretiva para quem já recebeu a primeira e link de exclusão para quem recusou), com o link pessoal gerado na hora do envio | Falta o deploy |
-| 6 | Limpeza e "Meus dados": fechar `verificar_usuario_existe` e `registrar_metrica_anuncio`, revisar as funções `SECURITY DEFINER` abertas, retenção automática, exportação dos dados e página `/meus-dados` | Feito e testado: `registrar_metrica_anuncio` fechada, retenção diária e `exportar_meus_dados`. Pendente: `verificar_usuario_existe` | Pronto: login sem a consulta de e-mail e página `/meus-dados` com download em JSON | Falta o deploy; depois aplicar a migration que fecha `verificar_usuario_existe`; ligar a proteção contra senhas vazadas no painel do Supabase |
+| 6 | Limpeza e "Meus dados": fechar `verificar_usuario_existe` e `registrar_metrica_anuncio`, revisar as funções `SECURITY DEFINER` abertas, retenção automática, exportação dos dados e página `/meus-dados` | Concluído em 11/11/2026: `registrar_metrica_anuncio` e `verificar_usuario_existe` fechadas (com a tabela de e-mails do limite de tentativas), retenção diária ligada e `exportar_meus_dados` | Concluído e em produção: login sem a consulta de e-mail e página `/meus-dados` com download em JSON | Falta só ligar a proteção contra senhas vazadas no painel do Supabase |
 | 7 | Retomar as ativações com nova mensagem (origem do dado, base legal, link de exclusão) e mensagem corretiva para quem já foi contatado | Não se aplica | Não se aplica | Só depois dos itens 1 a 5 |
 
 Pontos de atenção do item 1: os links antigos `/cadastro?reivindicar=ID` deixam de funcionar sem o token, e os botões "Reivindicar" dos cards e do perfil público levam à página `/reivindicar`, que agora explica como pedir o link pessoal.
@@ -166,8 +166,8 @@ Os dados vencidos são apagados por uma rotina do próprio banco (`pg_cron`), to
 | --- | --- | --- | --- |
 | `tokens_reivindicacao` | Apaga links pessoais não usados de perfis sem conta (gere outro quando precisar) | 90 dias | Ligada |
 | `eventos_anuncio_sessao` | Apaga eventos de sessão que só servem para não contar o mesmo anúncio duas vezes | 2 dias | Ligada |
-| `logs_atividades` | Apaga registros de atividade, que têm e-mail e identificação de quem agiu | 12 meses | Desligada, aguardando confirmação do prazo |
-| `pedidos_titular_encerrados` | Tira nome, contato, descrição e resposta de pedidos já respondidos, mantendo tipo, datas e protocolo como prova do atendimento | 12 meses | Desligada, aguardando confirmação do prazo |
+| `logs_atividades` | Apaga registros de atividade, que têm e-mail e identificação de quem agiu | 12 meses | Ligada em 11/11/2026 (o log mais antigo é de março, então só passa a apagar a partir de março de 2027) |
+| `pedidos_titular_encerrados` | Tira nome, contato, descrição e resposta de pedidos já respondidos, mantendo tipo, datas e protocolo como prova do atendimento | 12 meses | Ligada em 11/11/2026 |
 
 A prévia de quanto seria apagado, sem alterar nada, é a função `admin_simular_retencao()`, chamada por um administrador.
 
@@ -182,7 +182,7 @@ Os advisors do Supabase listam funções que visitantes ou usuários logados pod
 - `usuario_tem_acesso_ao_caso_garantia`: usada nas regras de acesso das fotos de garantia, inclusive as públicas. Só informa o acesso de quem chama.
 - Funções de administração (`admin_pendencias`, `admin_token_reivindicacao`, `admin_simular_retencao`, `anonimizar_dados_titular`, `excluir_prestador_titular`) e as chamadas do app para usuários logados: conferem o usuário dentro da própria função.
 
-Fechadas em 11/11/2026: `registrar_metrica_anuncio` (sem uso e abusável) e, depois do deploy, `verificar_usuario_existe` (permitia descobrir se um e-mail tem conta).
+Fechadas em 11/11/2026: `registrar_metrica_anuncio` (sem uso e abusável) e `verificar_usuario_existe` (permitia descobrir se um e-mail tem conta). Depois disso, os advisors passaram a listar apenas as seis funções públicas acima.
 
 Proteção contra senhas vazadas: ligar no painel do Supabase (Authentication, em Sign In / Providers). Se a opção aparecer indisponível, é limite do plano.
 
@@ -359,7 +359,7 @@ As decisões abaixo precisam de resposta antes ou durante as etapas indicadas.
 - [ ] Etapa 1: qual advogado revisa a Política e os Termos (o contato de privacidade já está definido: procuroquemfaca@gmail.com)
 - [ ] Etapa 1: preencher razão social e CNPJ em `config/controlador.ts` quando a empresa for aberta
 - [ ] Etapa 1: confirmar com o advogado a guarda de registros de acesso (Marco Civil, art. 15) quando houver CNPJ; a coluna `ip_address` foi mantida para isso
-- [ ] Etapa 1: confirmar os prazos de retenção dos registros de atividade (12 meses) e dos pedidos do titular já respondidos (12 meses) para ligar essas duas regras
+- [x] Etapa 1: confirmar os prazos de retenção dos registros de atividade (12 meses) e dos pedidos do titular já respondidos (12 meses) para ligar essas duas regras (confirmado e ligado em 11/11/2026)
 - [x] Etapa 1: base legal e opção de saída para prestadores que não vieram de cadastro direto (decidido em 10/11: interesse legítimo; saída por link pessoal que apaga o perfil, mantendo só dados anônimos das avaliações)
 - [ ] Etapa 1: verificar a região do Supabase e listar serviços com dados pessoais (prioridade baixa no Brasil; alta na expansão)
 - [ ] Etapa 2: o boolean `verificado` vira o nível Bronze ou é substituído
