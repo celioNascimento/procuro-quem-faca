@@ -31,6 +31,14 @@ export async function criarDenuncia(prestadorId: number, motivo: string): Promis
   })
 
   if (logError) console.error('Denúncia criada, mas o log falhou:', logError)
+
+  // Aviso ao administrador por e-mail. Falha aqui nunca afeta a denúncia já gravada.
+  void fetch('/api/notificacoes/denuncia', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prestadorId }),
+    keepalive: true,
+  }).catch(() => {})
 }
 
   export interface DenunciaComPrestador {

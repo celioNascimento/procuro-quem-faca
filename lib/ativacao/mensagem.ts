@@ -9,7 +9,7 @@
 
 import { SITE_URL } from '@/lib/divulgacao/links'
 
-export type TipoMensagemAtivacao = 'primeiro_contato' | 'corretiva' | 'exclusao'
+export type TipoMensagemAtivacao = 'primeiro_contato' | 'corretiva' | 'exclusao' | 'resposta_pedido'
 
 interface DadosAtivacao {
   ativacao_status: string
@@ -48,6 +48,15 @@ export function montarMensagemAtivacao({ tipo, nome, slug, token }: ParamsMensag
   const link = linkPessoal(token)
   const perfil = `${SITE_URL}/${slug}`
 
+  if (tipo === 'resposta_pedido') {
+    return (
+      `Olá, ${nome}! Aqui é o Célio, responsável pelo Procuro Quem Faça.\n\n` +
+      `Recebemos o seu pedido sobre o perfil. Para sua segurança, enviamos o link pessoal a este WhatsApp, o número cadastrado no perfil. Com ele você pode assumir o perfil e corrigir as informações, ou excluir o perfil e todos os dados:\n` +
+      `${link}\n\n` +
+      `Como tratamos seus dados: ${LINK_PRIVACIDADE}`
+    )
+  }
+
   if (tipo === 'exclusao') {
     return (
       `Olá, ${nome}! Obrigado pelo retorno e desculpe o incômodo.\n\n` +
@@ -80,6 +89,7 @@ export function montarMensagemAtivacao({ tipo, nome, slug, token }: ParamsMensag
 }
 
 export function rotuloAcaoAtivacao(tipo: TipoMensagemAtivacao, status: string): string {
+  if (tipo === 'resposta_pedido') return 'Enviar link ao WhatsApp do perfil'
   if (tipo === 'exclusao') return 'Enviar link de exclusão'
   if (tipo === 'corretiva') return 'Enviar aviso corretivo'
   return status === 'nao_enviado' ? 'Enviar WA' : 'Abrir WA'

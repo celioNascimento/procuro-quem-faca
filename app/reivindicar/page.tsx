@@ -8,6 +8,7 @@ import { Suspense } from 'react'
 import Header from '@/components/Header'
 import { useReivindicarPorToken } from '@/hooks/useReivindicarPorToken'
 import { CONTROLADOR } from '@/config/controlador'
+import { FormularioTitular } from '@/components/titular/FormularioTitular'
 
 const EMAIL_CONTATO = CONTROLADOR.emailPrivacidade
 
@@ -26,37 +27,21 @@ function Moldura({ icone, titulo, children }: { icone: string; titulo: string; c
 }
 
 function SemLink({ nome, id }: { nome: string | null; id: string | null }) {
-  const assunto = encodeURIComponent(`Perfil no Procuro Quem Faça${id ? ` (nº ${id})` : ''}`)
-  const corpo = encodeURIComponent(
-    `Olá! Sou o titular do perfil${nome ? ` "${nome}"` : ''} e quero assumir, corrigir ou remover meus dados.`
-  )
+  const idNumero = Number(id)
+  const prestadorId = Number.isInteger(idNumero) && idNumero > 0 ? idNumero : null
   return (
     <Moldura icone="🔒" titulo="Este perfil é seu?">
-      {nome && (
-        <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-6 leading-relaxed">
-          Perfil: <span className="text-blue-600 text-sm">{nome}</span>
-        </p>
-      )}
-      <div className="bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-sm mb-8 text-left space-y-4">
-        <p className="text-[11px] font-black text-slate-600 uppercase italic leading-relaxed">
+      <div className="mb-8 space-y-3 text-left">
+        <p className="text-[11px] font-black uppercase italic leading-relaxed text-slate-600">
           Para proteger você, só o titular consegue assumir ou excluir um perfil, usando um link pessoal.
         </p>
-        <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
-          Fale com a gente informando o nome do perfil e o WhatsApp cadastrado nele. Confirmamos que é você e enviamos o link para assumir ou excluir.
+        <p className="text-[11px] font-bold leading-relaxed text-slate-500">
+          Faça o pedido abaixo. Confirmamos que é você enviando o link ao WhatsApp cadastrado no perfil, e com ele você assume, corrige ou exclui.
         </p>
       </div>
-      <a
-        href={`mailto:${EMAIL_CONTATO}?subject=${assunto}&body=${corpo}`}
-        className="block w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95 italic"
-      >
-        Pedir meu link por e-mail
-      </a>
-      <p className="mt-6 text-[9px] font-black text-slate-400 uppercase italic tracking-widest">
-        {EMAIL_CONTATO}
-      </p>
-      <p className="mt-6 text-[9px] font-black text-slate-400 uppercase italic tracking-widest leading-relaxed">
-        Saiba como tratamos seus dados na{' '}
-        <Link href="/privacidade" className="text-blue-600 underline">Política de Privacidade</Link>
+      <FormularioTitular prestadorId={prestadorId} prestadorNome={nome} tipoInicial="correcao" />
+      <p className="mt-6 text-[9px] font-black uppercase italic tracking-widest text-slate-400">
+        Ou escreva para {EMAIL_CONTATO}
       </p>
     </Moldura>
   )

@@ -10,9 +10,12 @@ interface SidebarLinkProps {
   href: string
   label: string
   icon: ReactNode
+  // Quantidade a tratar; some quando é zero. `alerta` pinta de vermelho (ex.: prazo vencido).
+  badge?: number
+  alerta?: boolean
 }
 
-export function SidebarLink({ href, label, icon }: SidebarLinkProps) {
+export function SidebarLink({ href, label, icon, badge = 0, alerta = false }: SidebarLinkProps) {
   const pathname = usePathname()
   const isActive = pathname === href
 
@@ -37,7 +40,15 @@ export function SidebarLink({ href, label, icon }: SidebarLinkProps) {
       >
         {icon}
       </svg>
-      {label}
+      <span className="flex-1">{label}</span>
+      {badge > 0 && (
+        <span
+          aria-label={`${badge} pendente${badge > 1 ? 's' : ''}`}
+          className={`min-w-5 rounded-full px-1.5 py-0.5 text-center text-[10px] font-bold ${alerta ? 'bg-red-500 text-white' : 'bg-amber-400 text-slate-900'}`}
+        >
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
     </Link>
   )
 }
