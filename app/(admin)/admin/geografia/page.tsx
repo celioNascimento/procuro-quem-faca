@@ -1,67 +1,57 @@
 //app/(admin)/admin/geografia/page.tsx
 
 'use client'
+
 import { useGeografia } from './hooks/useGeografia'
 import { FormEstado } from './components/FormEstado'
 import { FormRegiao } from './components/FormRegiao'
 import { FormCidade } from './components/FormCidade'
 import { TabelaCidades } from './components/TabelaCidades'
+import { PageHeader, StatCard } from '@/components/admin/ui'
 
 export default function SuperGestaoGeografia() {
   const { estados, regioes, cidades, loading, error, addEstado, addRegiao, addCidade, atualizarRegiaoCidade } = useGeografia()
 
   return (
-    <div className="text-slate-900 font-sans antialiased pb-20">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-20 md:px-6">
+      <PageHeader
+        titulo="Geografia"
+        descricao="Estados, regiões e municípios atendidos pela plataforma."
+        acoes={<StatCard label="Municípios ativos" valor={cidades.length} />}
+      />
 
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase italic">
-            GeoMestra<span className="text-indigo-600 not-italic">.OS</span>
-          </h1>
-          <p className="text-slate-500 font-medium text-[10px] uppercase tracking-[0.2em] flex items-center gap-2 mt-1">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> Sincronização em Tempo Real
-          </p>
+      {error && (
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          Erro ao carregar dados: {error}
         </div>
-        <div className="bg-slate-100 px-4 py-2 rounded-xl border border-slate-200">
-          <p className="text-[9px] font-black text-slate-400 uppercase leading-none mb-1">Municípios Ativos</p>
-          <p className="text-sm font-black text-slate-700 leading-none">{cidades.length}</p>
-        </div>
-      </div>
+      )}
 
-      <main className="space-y-8">
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl px-6 py-4 text-red-700 text-sm font-semibold">
-            ⚠️ Erro ao carregar dados: {error}
-          </div>
-        )}
-
-        {loading && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-[2rem] border border-slate-200 p-8 h-64 animate-pulse">
-                <div className="h-2 bg-slate-100 rounded mb-6 w-1/3" />
-                <div className="space-y-4">
-                  <div className="h-12 bg-slate-50 rounded-xl" />
-                  <div className="h-12 bg-slate-50 rounded-xl" />
-                  <div className="h-12 bg-slate-100 rounded-2xl" />
-                </div>
+      {loading && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-64 animate-pulse rounded-xl border border-slate-200 bg-white p-6">
+              <div className="mb-6 h-2 w-1/3 rounded bg-slate-100" />
+              <div className="space-y-4">
+                <div className="h-11 rounded-lg bg-slate-50" />
+                <div className="h-11 rounded-lg bg-slate-50" />
+                <div className="h-11 rounded-lg bg-slate-100" />
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
+      )}
 
-        {!loading && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <FormEstado onSubmit={addEstado} />
-            <FormRegiao estados={estados} onSubmit={addRegiao} />
-            <FormCidade estados={estados} regioes={regioes} onSubmit={addCidade} />
-          </div>
-        )}
+      {!loading && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <FormEstado onSubmit={addEstado} />
+          <FormRegiao estados={estados} onSubmit={addRegiao} />
+          <FormCidade estados={estados} regioes={regioes} onSubmit={addCidade} />
+        </div>
+      )}
 
-        {!loading && (
-          <TabelaCidades cidades={cidades} regioes={regioes} onAtualizarRegiao={atualizarRegiaoCidade} total={cidades.length} />
-        )}
-      </main>
+      {!loading && (
+        <TabelaCidades cidades={cidades} regioes={regioes} onAtualizarRegiao={atualizarRegiaoCidade} total={cidades.length} />
+      )}
     </div>
   )
 }

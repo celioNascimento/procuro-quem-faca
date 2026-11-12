@@ -1,17 +1,21 @@
 //app/(admin)/admin/geografia/components/FormEstado.tsx
 
 'use client'
-import { useState } from 'react'
 
-const inputClass = "w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all text-sm"
+import { useState, type FormEvent } from 'react'
+import { Button, Card, Field, Input } from '@/components/admin/ui'
 
-export function FormEstado({ onSubmit }) {
+type Props = {
+  onSubmit: (sigla: string, nome: string) => Promise<string | null>
+}
+
+export function FormEstado({ onSubmit }: Props) {
   const [sigla, setSigla] = useState('')
   const [nome, setNome] = useState('')
   const [loading, setLoading] = useState(false)
-  const [erro, setErro] = useState(null)
+  const [erro, setErro] = useState<string | null>(null)
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!sigla || !nome) return
     setLoading(true)
@@ -23,16 +27,19 @@ export function FormEstado({ onSubmit }) {
   }
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm">
-      <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-6 block">01. Registrar Estado</span>
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <input value={sigla} onChange={e => setSigla(e.target.value)} placeholder="Sigla (EX: PR)" className={inputClass} maxLength={2} />
-        <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Nome do Estado" className={inputClass} />
-        {erro && <p className="text-red-500 text-xs font-bold">{erro}</p>}
-        <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] disabled:opacity-50">
+    <Card titulo="1. Registrar estado">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label="Sigla">
+          <Input value={sigla} onChange={e => setSigla(e.target.value)} placeholder="Ex.: PR" maxLength={2} />
+        </Field>
+        <Field label="Nome do estado">
+          <Input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex.: Paraná" />
+        </Field>
+        {erro && <p className="text-sm font-medium text-red-700">{erro}</p>}
+        <Button type="submit" variante="primario" disabled={loading} className="w-full justify-center">
           {loading ? 'Salvando...' : 'Adicionar UF'}
-        </button>
+        </Button>
       </form>
-    </div>
+    </Card>
   )
 }

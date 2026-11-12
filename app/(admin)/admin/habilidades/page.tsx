@@ -1,15 +1,10 @@
 'use client'
 
-import { useState, type FormEvent, type ReactNode } from 'react'
-import { FolderPlus, Layers3, Plus, RefreshCw, Sparkles, Star, Wrench, Home, Hammer, BriefcaseBusiness, Heart, Car } from 'lucide-react'
+import { useState, type FormEvent } from 'react'
+import { Layers3, Plus, RefreshCw, Sparkles, Star, Wrench, Home, Hammer, BriefcaseBusiness, Heart, Car } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useHabilidades } from '@/hooks/useHabilidades'
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return <label className="flex flex-col gap-2 text-xs font-semibold text-muted-foreground"><span>{label}</span>{children}</label>
-}
-
-const inputClass = 'h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10'
+import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Select } from '@/components/admin/ui'
 
 const iconMap: Record<string, LucideIcon> = { sparkles: Sparkles, home: Home, hammer: Hammer, wrench: Wrench, briefcase: BriefcaseBusiness, heart: Heart, car: Car }
 
@@ -40,20 +35,112 @@ export default function GestaoHabilidades() {
     if (result.ok) { setCategoriaNome(''); setCategoriaGrupo(''); setDestaque(false); setFeedback('Categoria cadastrada com sucesso.') } else setFeedback(result.error)
   }
 
-  return <main className="min-h-screen bg-background px-4 py-6 text-foreground sm:px-8 lg:px-12 lg:py-10">
-    <header className="mx-auto flex w-full max-w-7xl flex-col gap-5 border-b border-border pb-7 sm:flex-row sm:items-end sm:justify-between">
-      <div className="flex min-w-0 items-start gap-4"><div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm shadow-blue-200"><Layers3 /></div><div className="min-w-0"><p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Painel administrativo</p><h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Catálogo de habilidades</h1><p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Organize serviços em grupos e categorias para manter a busca simples e consistente.</p></div></div>
-      <button onClick={recarregar} className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100" type="button"><RefreshCw data-icon="inline-start" /> Atualizar</button>
-    </header>
+  return (
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-20 md:px-6">
+      <PageHeader
+        titulo="Habilidades"
+        descricao="Organize serviços em grupos e categorias para manter a busca simples e consistente."
+        acoes={
+          <Button variante="secundario" onClick={recarregar} icone={<RefreshCw size={16} aria-hidden="true" />}>
+            Atualizar
+          </Button>
+        }
+      />
 
-    <section className="mx-auto mt-7 grid w-full max-w-7xl gap-6 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
-      <div className="flex min-w-0 flex-col gap-5">
-        <form onSubmit={submitGrupo} className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6"><div className="mb-5 flex items-center gap-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><FolderPlus /></div><div><h2 className="font-bold">Novo grupo</h2><p className="text-xs text-muted-foreground">Ex.: Manutenção, Beleza</p></div></div><div className="flex flex-col gap-4"><Field label="Nome do grupo"><input required value={grupoNome} onChange={e => setGrupoNome(e.target.value)} className={inputClass} placeholder="Nome do grupo" /></Field><div className="grid grid-cols-[minmax(0,1fr)_76px] gap-3"><Field label="Ícone"><input value={grupoIcone} onChange={e => setGrupoIcone(e.target.value)} className={inputClass} placeholder="home" /><span className="text-[11px] font-normal text-muted-foreground">home, hammer, wrench</span></Field><Field label="Ordem"><input type="number" value={grupoOrdem} onChange={e => setGrupoOrdem(e.target.value)} className={inputClass} /></Field></div><button disabled={saving} className="mt-1 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white shadow-sm shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"><Plus data-icon="inline-start" /> Cadastrar grupo</button></div></form>
-        <form onSubmit={submitCategoria} className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6"><div className="mb-5 flex items-center gap-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><Sparkles /></div><div><h2 className="font-bold">Nova categoria</h2><p className="text-xs text-muted-foreground">Vincule ao grupo certo</p></div></div><div className="flex flex-col gap-4"><Field label="Nome da categoria"><input required value={categoriaNome} onChange={e => setCategoriaNome(e.target.value)} className={inputClass} placeholder="Ex.: Instalação elétrica" /></Field><Field label="Grupo"><select required value={categoriaGrupo} onChange={e => setCategoriaGrupo(e.target.value)} className={inputClass}><option value="">Selecione um grupo</option>{grupos.map(grupo => <option key={grupo.id} value={String(grupo.id)}>{grupo.nome}</option>)}</select></Field><label className="flex items-center gap-3 text-sm font-semibold"><input type="checkbox" checked={destaque} onChange={e => setDestaque(e.target.checked)} className="size-4 accent-foreground" /><Star aria-hidden="true" /> Marcar como destaque</label><button disabled={saving || grupos.length === 0} className="mt-1 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-orange-500 bg-orange-500 px-4 text-sm font-bold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"><Plus data-icon="inline-start" /> Cadastrar categoria</button></div></form>
-        {feedback && <p role="status" className="rounded-xl border border-border bg-muted px-4 py-3 text-sm font-medium">{feedback}</p>}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-4">
+          <Card titulo="Novo grupo" descricao="Ex.: Manutenção, Beleza">
+            <form onSubmit={submitGrupo} className="flex flex-col gap-4">
+              <Field label="Nome do grupo">
+                <Input required value={grupoNome} onChange={e => setGrupoNome(e.target.value)} placeholder="Nome do grupo" />
+              </Field>
+              <div className="grid grid-cols-[minmax(0,1fr)_88px] gap-3">
+                <Field label="Ícone">
+                  <Input value={grupoIcone} onChange={e => setGrupoIcone(e.target.value)} placeholder="home" />
+                  <span className="text-xs text-pqf-muted">home, hammer, wrench</span>
+                </Field>
+                <Field label="Ordem">
+                  <Input type="number" value={grupoOrdem} onChange={e => setGrupoOrdem(e.target.value)} />
+                </Field>
+              </div>
+              <Button type="submit" variante="primario" disabled={saving} icone={<Plus size={16} aria-hidden="true" />} className="justify-center">
+                Cadastrar grupo
+              </Button>
+            </form>
+          </Card>
+
+          <Card titulo="Nova categoria" descricao="Vincule ao grupo certo">
+            <form onSubmit={submitCategoria} className="flex flex-col gap-4">
+              <Field label="Nome da categoria">
+                <Input required value={categoriaNome} onChange={e => setCategoriaNome(e.target.value)} placeholder="Ex.: Instalação elétrica" />
+              </Field>
+              <Field label="Grupo">
+                <Select required value={categoriaGrupo} onChange={e => setCategoriaGrupo(e.target.value)}>
+                  <option value="">Selecione um grupo</option>
+                  {grupos.map(grupo => <option key={grupo.id} value={String(grupo.id)}>{grupo.nome}</option>)}
+                </Select>
+              </Field>
+              <label className="flex items-center gap-2 text-sm font-medium text-pqf-ink">
+                <input type="checkbox" checked={destaque} onChange={e => setDestaque(e.target.checked)} className="size-4 accent-pqf-blue" />
+                <Star size={16} aria-hidden="true" className="text-pqf-yellow" /> Marcar como destaque
+              </label>
+              <Button type="submit" variante="primario" disabled={saving || grupos.length === 0} icone={<Plus size={16} aria-hidden="true" />} className="justify-center">
+                Cadastrar categoria
+              </Button>
+            </form>
+          </Card>
+
+          {feedback && <p role="status" className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-pqf-ink">{feedback}</p>}
+        </div>
+
+        <Card
+          titulo="Grupos e categorias"
+          descricao="Estrutura atual do catálogo"
+          acoes={<Badge tom="marca">{categorias.length} categorias</Badge>}
+          className="min-w-0"
+        >
+          {loading ? (
+            <p className="flex min-h-80 items-center justify-center text-sm text-pqf-muted" role="status">Carregando catálogo...</p>
+          ) : error ? (
+            <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+          ) : grupos.length === 0 ? (
+            <EmptyState titulo="Nenhum grupo cadastrado" descricao="Comece criando o primeiro grupo ao lado." />
+          ) : (
+            <div className="flex min-w-0 flex-col gap-3">
+              {grupos.map(grupo => {
+                const items = categorias.filter(categoria => String(categoria.grupo_id) === String(grupo.id))
+                return (
+                  <article key={grupo.id} className="min-w-0 rounded-xl border border-slate-200 p-4">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-pqf-blue-soft text-pqf-blue">
+                          <GroupIcon name={grupo.icone} className="size-5" />
+                        </span>
+                        <div className="min-w-0">
+                          <h3 className="truncate text-sm font-semibold text-pqf-ink">{grupo.nome}</h3>
+                          <p className="text-xs text-pqf-muted">{items.length} {items.length === 1 ? 'categoria' : 'categorias'}</p>
+                        </div>
+                      </div>
+                      <Badge tom="neutro">Ordem {grupo.ordem ?? 0}</Badge>
+                    </div>
+                    {items.length > 0 && (
+                      <div className="mt-4 grid grid-cols-1 gap-2 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                        {items.map(item => (
+                          <div key={item.id} className="flex min-w-0 items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-pqf-ink">
+                            <span className="size-1.5 shrink-0 rounded-full bg-pqf-blue" aria-hidden="true" />
+                            <span className="truncate">{item.nome}</span>
+                            {item.destaque && <Star aria-label="Categoria em destaque" className="ml-auto size-4 shrink-0 text-pqf-yellow" />}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+                )
+              })}
+            </div>
+          )}
+        </Card>
       </div>
-
-      <div className="min-w-0 rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-8"><div className="mb-6 flex items-end justify-between gap-4"><div className="min-w-0"><p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Estrutura atual</p><h2 className="mt-2 text-2xl font-bold">Grupos e categorias</h2></div><div className="shrink-0 text-right text-xs text-muted-foreground"><strong className="block text-2xl text-foreground">{categorias.length}</strong> categorias</div></div>{loading ? <div className="flex min-h-80 items-center justify-center text-sm text-muted-foreground">Carregando catálogo...</div> : error ? <div className="rounded-2xl border border-border bg-muted p-6 text-sm">{error}</div> : grupos.length === 0 ? <div className="flex min-h-80 flex-col items-center justify-center rounded-2xl border border-dashed border-border px-5 text-center"><Layers3 className="mb-3 text-muted-foreground" /><p className="font-semibold">Nenhum grupo cadastrado</p><p className="mt-1 text-sm text-muted-foreground">Comece criando o primeiro grupo ao lado.</p></div> : <div className="flex min-w-0 flex-col gap-3">{grupos.map(grupo => { const items = categorias.filter(categoria => String(categoria.grupo_id) === String(grupo.id)); return <article key={grupo.id} className="min-w-0 rounded-2xl border border-border p-4 transition hover:border-foreground/40 sm:p-5"><div className="flex min-w-0 items-start justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-muted"><GroupIcon name={grupo.icone} className="size-5" /></div><div className="min-w-0"><h3 className="truncate font-bold">{grupo.nome}</h3><p className="text-xs text-muted-foreground">{items.length} {items.length === 1 ? 'categoria' : 'categorias'}</p></div></div><span className="shrink-0 rounded-full border border-border px-3 py-1 text-xs font-bold text-muted-foreground">Ordem {grupo.ordem ?? 0}</span></div>{items.length > 0 && <div className="mt-4 grid grid-cols-1 gap-2 border-t border-border pt-4 sm:grid-cols-2">{items.map(item => <div key={item.id} className="flex min-w-0 items-center gap-2 rounded-xl bg-muted px-3 py-2 text-sm"><span className="size-1.5 shrink-0 rounded-full bg-foreground" aria-hidden="true" /><span className="truncate">{item.nome}</span>{item.destaque && <Star aria-label="Categoria em destaque" className="ml-auto size-4 shrink-0" />}</div>)}</div>}</article> })}</div>}</div>
-    </section>
-  </main>
+    </div>
+  )
 }

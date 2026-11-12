@@ -1,11 +1,10 @@
 //app/(admin)/admin/geografia/components/FormCidade.tsx
 
 'use client'
-import { useState, useMemo } from 'react'
-import type { Estado, Regiao } from '../types/geografia'
 
-const inputClass = "w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 placeholder:text-slate-400 outline-none focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-50 transition-all text-sm"
-const subLabel = "text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-1 block"
+import { useState, useMemo, type FormEvent } from 'react'
+import type { Estado, Regiao } from '../types/geografia'
+import { Button, Card, Field, Input, Select } from '@/components/admin/ui'
 
 type Props = {
   estados: Estado[]
@@ -18,7 +17,7 @@ export function FormCidade({ estados, regioes, onSubmit }: Props) {
   const [estadoSigla, setEstadoSigla] = useState('')
   const [regiaoId, setRegiaoId] = useState('')
   const [loading, setLoading] = useState(false)
-  const [erro, setErro] = useState<string | null>(null)  // ← tipado
+  const [erro, setErro] = useState<string | null>(null)
   const [sucesso, setSucesso] = useState(false)
 
   const siglaEfetiva = estadoSigla || estados[0]?.sigla || ''
@@ -28,12 +27,12 @@ export function FormCidade({ estados, regioes, onSubmit }: Props) {
     [regioes, siglaEfetiva]
   )
 
-  function handleEstadoChange(sigla) {
+  function handleEstadoChange(sigla: string) {
     setEstadoSigla(sigla)
     setRegiaoId('') // limpa ao trocar estado
   }
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!nome || !siglaEfetiva) return
     setLoading(true)
@@ -52,36 +51,32 @@ export function FormCidade({ estados, regioes, onSubmit }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm border-t-4 border-t-green-500">
-      <span className="text-[10px] font-black uppercase tracking-widest text-green-600 mb-6 block">03. Novo Município</span>
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className={subLabel}>Estado</label>
-          <select value={siglaEfetiva} onChange={e => handleEstadoChange(e.target.value)} className={inputClass}>
+    <Card titulo="3. Novo município">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label="Estado">
+          <Select value={siglaEfetiva} onChange={e => handleEstadoChange(e.target.value)}>
             {estados.map(e => <option key={e.sigla} value={e.sigla}>{e.nome}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className={subLabel}>
-            Região {regioesFiltradas.length === 0 && siglaEfetiva ? '— nenhuma cadastrada' : ''}
-          </label>
-          <select
+          </Select>
+        </Field>
+        <Field label={`Região${regioesFiltradas.length === 0 && siglaEfetiva ? ' — nenhuma cadastrada' : ''}`}>
+          <Select
             value={regiaoId}
             onChange={e => setRegiaoId(e.target.value)}
-            className={inputClass}
             disabled={regioesFiltradas.length === 0}
           >
-            <option value="">Sem Região Específica</option>
+            <option value="">Sem região específica</option>
             {regioesFiltradas.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}
-          </select>
-        </div>
-        <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Nome da Cidade" className={inputClass} />
-        {erro && <p className="text-red-500 text-xs font-bold">{erro}</p>}
-        {sucesso && <p className="text-green-600 text-xs font-bold">✓ Cidade cadastrada!</p>}
-        <button type="submit" disabled={loading || !nome} className="w-full bg-green-600 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] disabled:opacity-50 transition-opacity">
-          {loading ? 'Salvando...' : 'Cadastrar Cidade'}
-        </button>
+          </Select>
+        </Field>
+        <Field label="Nome da cidade">
+          <Input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex.: Londrina" />
+        </Field>
+        {erro && <p className="text-sm font-medium text-red-700">{erro}</p>}
+        {sucesso && <p role="status" className="text-sm font-medium text-emerald-700">Cidade cadastrada.</p>}
+        <Button type="submit" variante="primario" disabled={loading || !nome} className="w-full justify-center">
+          {loading ? 'Salvando...' : 'Cadastrar cidade'}
+        </Button>
       </form>
-    </div>
+    </Card>
   )
 }
