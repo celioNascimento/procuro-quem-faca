@@ -55,3 +55,95 @@ export function achatarAtivacao<T extends ComAtivacao>(linha: T): Omit<T, 'prest
     ativacao_obs: ativacao?.obs ?? null,
   }
 }
+
+// ─── Onde o perfil atua (estado, cidade, região e categoria) ──────────────────────────────────
+// A consulta traz as tabelas de apoio embutidas: `cidades(nome, estado_sigla)`, `regioes(nome)` e
+// `categorias(nome)`. Aqui elas voltam ao formato plano. O estado vem da cidade; quando o perfil não
+// tem cidade, usa o `estado_sigla` do próprio perfil. Qualquer campo pode ser nulo.
+
+type Embutido<T> = T | T[] | null | undefined
+
+function primeiro<T>(valor: Embutido<T>): T | null {
+  const item = Array.isArray(valor) ? valor[0] : valor
+  return item ?? null
+}
+
+function limpar(texto?: string | null): string | null {
+  return texto?.trim() || null
+}
+
+export interface LocalEmbutido {
+  estado_sigla?: string | null
+  cidades?: Embutido<{ nome: string | null; estado_sigla: string | null }>
+  regioes?: Embutido<{ nome: string | null }>
+  categorias?: Embutido<{ nome: string | null }>
+}
+
+export type LocalPlano = {
+  estado: string | null
+  cidade: string | null
+  regiao: string | null
+  categoria: string | null
+}
+
+export function achatarLocal<T extends LocalEmbutido>(linha: T): Omit<T, 'cidades' | 'regioes' | 'categorias'> & LocalPlano {
+  const { cidades, regioes, categorias, ...resto } = linha
+  const cidade = primeiro(cidades)
+  return {
+    ...resto,
+    estado: (limpar(cidade?.estado_sigla) ?? limpar(linha.estado_sigla))?.toUpperCase() ?? null,
+    cidade: limpar(cidade?.nome),
+    regiao: limpar(primeiro(regioes)?.nome),
+    categoria: limpar(primeiro(categorias)?.nome),
+  } as Omit<T, 'cidades' | 'regioes' | 'categorias'> & LocalPlano
+}
+
+// ─── Filtros por local ─────────────────────────────────────────────────────────────────────────
+
+// Valor usado no filtro para "perfis sem esse dado" (ex.: sem cidade)
+export const SEM_VALOR = '__sem__'
+
+export type ChaveLocal = 'estado' | 'cidade' | 'regiao' | 'categoria'
+export type FiltroLocal = Partial<Record<ChaveLocal, string>>
+
+const CHAVES_LOCAL: ChaveLocal[] = ['estado', 'cidade', 'regiao', 'categoria']
+
+// Filtro vazio ou ausente não restringe nada. SEM_VALOR pega só os perfis sem aquele dado.
+export function passaFiltroLocal(perfil: Partial<LocalPlano>, filtro: FiltroLocal): boolean {
+  return CHAVES_LOCAL.every((chave) => {
+    const alvo = filtro[chave]
+    if (!alvo) return true
+    const valor = perfil[chave] ?? null
+    return alvo === SEM_VALOR ? valor === null : valor === alvo
+  })
+}
+
+export function temFiltroLocal(filtro: FiltroLocal): boolean {
+  return CHAVES_LOCAL.some((chave) => Boolean(filtro[chave]))
+}
+
+export interface OpcaoLocal {
+  valor: string
+  quantidade: number
+}
+
+// Opções de um filtro com a contagem de perfis. Ordem alfabética; "sem o dado" vai por último.
+export function opcoesDeLocal(perfis: Partial<LocalPlano>[], chave: ChaveLocal): OpcaoLocal[] {
+  const contagem = new Map<string, number>()
+  let semDado = 0
+  for (const perfil of perfis) {
+    const valor = perfil[chave] ?? null
+    if (valor === null) semDado += 1
+    else contagem.set(valor, (contagem.get(valor) ?? 0) + 1)
+  }
+  const opcoes = [...contagem.entries()]
+    .map(([valor, quantidade]) => ({ valor, quantidade }))
+    .sort((a, b) => a.valor.localeCompare(b.valor, 'pt-BR'))
+  if (semDado > 0) opcoes.push({ valor: SEM_VALOR, quantidade: semDado })
+  return opcoes
+}
+
+// Funil + local no formato plano usado pela tela
+export function achatarPerfil<T extends ComAtivacao & LocalEmbutido>(linha: T) {
+  return achatarLocal(achatarAtivacao(linha))
+}

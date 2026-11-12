@@ -21,7 +21,8 @@ describe('listarPerfisParaAtivacao', () => {
   it('traz o funil embutido, ordena com desempate e devolve no formato plano', async () => {
     rangeMock.mockResolvedValue({
       data: [
-        { id: 2, nome: 'Ana', whatsapp: '43911112222', slug: 'ana', user_id: null,
+        { id: 2, nome: 'Ana', whatsapp: '43911112222', slug: 'ana', user_id: null, estado_sigla: 'PR',
+          cidades: { nome: 'Londrina', estado_sigla: 'PR' }, regioes: null, categorias: { nome: 'Eletricista' },
           prestador_ativacao: { status: 'enviado', enviado_em: '2026-11-01T10:00:00Z', respondeu_em: null, obs: null } },
         { id: 1, nome: 'Zé', whatsapp: null, slug: null, user_id: null, prestador_ativacao: null },
       ],
@@ -31,9 +32,15 @@ describe('listarPerfisParaAtivacao', () => {
     const lista = await listarPerfisParaAtivacao()
 
     expect(selecionado).toContain('prestador_ativacao(status, enviado_em, respondeu_em, obs)')
+    expect(selecionado).toContain('cidades(nome, estado_sigla)')
+    expect(selecionado).toContain('regioes(nome)')
+    expect(selecionado).toContain('categorias(nome)')
     expect(ordenacoes).toEqual(['nome', 'id'])
-    expect(lista[0]).toMatchObject({ id: 2, ativacao_status: 'enviado' })
+    expect(lista[0]).toMatchObject({
+      id: 2, ativacao_status: 'enviado', estado: 'PR', cidade: 'Londrina', regiao: null, categoria: 'Eletricista',
+    })
     expect(lista[1]).toMatchObject({ id: 1, ativacao_status: 'nao_enviado' })
+    expect(lista[1]).toMatchObject({ estado: null, cidade: null, regiao: null, categoria: null })
   })
 
   it('propaga o erro do banco', async () => {
