@@ -5,11 +5,13 @@
 
 import { supabase } from '@/lib/supabase'
 import { buscarTodasAsLinhas } from '@/lib/supabase/paginar'
-import { achatarAtivacao, type AtivacaoEmbutida } from '@/lib/ativacao/lista'
+import { achatarPerfil, type AtivacaoEmbutida, type LocalEmbutido } from '@/lib/ativacao/lista'
 
-const COLUNAS = 'id, nome, whatsapp, slug, user_id, prestador_ativacao(status, enviado_em, respondeu_em, obs)'
+const COLUNAS =
+  'id, nome, whatsapp, slug, user_id, estado_sigla, cidades(nome, estado_sigla), regioes(nome), categorias(nome), ' +
+  'prestador_ativacao(status, enviado_em, respondeu_em, obs)'
 
-interface LinhaDaLista {
+interface LinhaDaLista extends LocalEmbutido {
   id: number
   nome: string | null
   whatsapp: string | null
@@ -27,7 +29,7 @@ export async function listarPerfisParaAtivacao() {
       .order('id') // desempate: sem ele a paginação poderia repetir ou pular perfis com o mesmo nome
       .range(de, ate) as unknown as PromiseLike<{ data: LinhaDaLista[] | null; error: unknown }>,
   )
-  return linhas.map(achatarAtivacao)
+  return linhas.map(achatarPerfil)
 }
 
 // Devolve só os campos alterados, já no formato plano usado pela tela

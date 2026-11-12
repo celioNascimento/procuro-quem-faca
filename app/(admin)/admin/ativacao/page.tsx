@@ -12,9 +12,12 @@ import { gerarTokenReivindicacao } from '@/lib/services/ativacao.service'
 import { listarPerfisParaAtivacao, salvarObsAtivacao, salvarStatusAtivacao } from '@/lib/services/ativacaoAdmin.service'
 import { montarMensagemAtivacao, rotuloAcaoAtivacao, tipoMensagemAtivacao } from '@/lib/ativacao/mensagem'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
-import { correspondeABusca, nomeDoPerfil } from '@/lib/ativacao/lista'
+import {
+  correspondeABusca, nomeDoPerfil, opcoesDeLocal, passaFiltroLocal, SEM_VALOR, temFiltroLocal,
+  type ChaveLocal, type FiltroLocal,
+} from '@/lib/ativacao/lista'
 import { SITE_URL } from '@/lib/divulgacao/links'
-import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Segmented, StatCard, Textarea, cn } from '@/components/admin/ui'
+import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Segmented, Select, StatCard, Textarea, cn } from '@/components/admin/ui'
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 
@@ -53,6 +56,35 @@ const CLASSES_LINK =
   'transition-colors hover:border-pqf-blue hover:text-pqf-blue ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pqf-blue focus-visible:ring-offset-2'
 
+// Texto das opções "sem o dado" de cada filtro de local
+const ROTULO_SEM: Record<ChaveLocal, string> = {
+  estado: 'Sem estado',
+  cidade: 'Sem cidade',
+  regiao: 'Sem região',
+  categoria: 'Sem categoria',
+}
+
+const ROTULO_CAMPO: Record<ChaveLocal, string> = {
+  estado: 'Estado',
+  cidade: 'Cidade',
+  regiao: 'Região',
+  categoria: 'Serviço',
+}
+
+const ROTULO_TODOS: Record<ChaveLocal, string> = {
+  estado: 'Todos os estados',
+  cidade: 'Todas as cidades',
+  regiao: 'Todas as regiões',
+  categoria: 'Todos os serviços',
+}
+
+// Segunda linha de cada perfil: serviço, cidade, estado e região (só o que existir)
+function descricaoDoLocal(p: Perfil) {
+  const lugar = [p.cidade, p.estado].filter(Boolean).join(' - ')
+  const partes = [p.categoria, lugar, p.regiao].filter(Boolean)
+  return partes.length ? partes.join(' · ') : 'Sem serviço e local informados'
+}
+
 function formatarData(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 }
@@ -65,6 +97,7 @@ export default function PaginaAtivacao() {
   const [atualizando, setAtualizando] = useState(false)
   const [filtro, setFiltro] = useState<Filtro>('todos')
   const [busca, setBusca] = useState('')
+  const [local, setLocal] = useState<FiltroLocal>({})
   const [expandido, setExpandido] = useState<number | null>(null)
   const [salvando, setSalvando] = useState<number | null>(null)
   const [copiado, setCopiado] = useState<number | null>(null)
@@ -85,12 +118,39 @@ export default function PaginaAtivacao() {
 
   useEffect(() => { queueMicrotask(() => carregar(true)) }, [carregar])
 
-  // Contagem por status, sempre calculada a partir da lista
+  // Perfis dentro do recorte de estado, cidade, região e categoria. Números e filtro de status
+  // contam só esse recorte, para mostrar o avanço da campanha em cada lugar.
+  const doRecorte = useMemo(() => prestadores.filter((p) => passaFiltroLocal(p, local)), [prestadores, local])
+
+  // Contagem por status, sempre calculada a partir do recorte
   const stats = useMemo(() => {
     const c: Record<string, number> = {}
-    prestadores.forEach((p) => { c[p.ativacao_status] = (c[p.ativacao_status] || 0) + 1 })
+    doRecorte.forEach((p) => { c[p.ativacao_status] = (c[p.ativacao_status] || 0) + 1 })
     return c
-  }, [prestadores])
+  }, [doRecorte])
+
+  // Cada filtro só oferece opções que existem dentro do que já foi escolhido acima dele
+  const opcoes = useMemo(() => {
+    const ate = (chaves: ChaveLocal[]) =>
+      prestadores.filter((p) => passaFiltroLocal(p, Object.fromEntries(chaves.map((k) => [k, local[k]]))))
+    return {
+      estado: opcoesDeLocal(prestadores, 'estado'),
+      cidade: opcoesDeLocal(ate(['estado']), 'cidade'),
+      regiao: opcoesDeLocal(ate(['estado', 'cidade']), 'regiao'),
+      categoria: opcoesDeLocal(ate(['estado', 'cidade', 'regiao']), 'categoria'),
+    }
+  }, [prestadores, local])
+
+  // Ao mudar um filtro, os que dependem dele voltam para "Todos"
+  const ORDEM: ChaveLocal[] = ['estado', 'cidade', 'regiao', 'categoria']
+  const mudarLocal = (chave: ChaveLocal, valor: string) => {
+    const proximo: FiltroLocal = {}
+    ORDEM.forEach((k, i) => {
+      if (i <= ORDEM.indexOf(chave)) proximo[k] = k === chave ? valor : local[k]
+    })
+    setLocal(proximo)
+    setExpandido(null)
+  }
 
   const atualizarStatus = async (id: number, novoStatus: StatusChave) => {
     setAviso('')
@@ -175,13 +235,14 @@ export default function PaginaAtivacao() {
     }
   }
 
-  const lista = prestadores.filter((p) => {
+  const lista = doRecorte.filter((p) => {
     const passaBusca = correspondeABusca(p, busca)
     const passaFiltro = filtro === 'todos' || p.ativacao_status === filtro
     return passaBusca && passaFiltro
   })
 
-  const total = prestadores.length
+  const total = doRecorte.length
+  const recorteAtivo = temFiltroLocal(local)
   const contatados = total - (stats.nao_enviado || 0)
   const ativos = (stats.perfil_completo || 0) + (stats.avaliacao_recebida || 0)
   const pct = total ? Math.round((contatados / total) * 100) : 0
@@ -219,10 +280,37 @@ export default function PaginaAtivacao() {
       ) : (
         <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <StatCard label="Perfis na campanha" valor={total} />
+            <StatCard label={recorteAtivo ? 'Perfis no recorte' : 'Perfis na campanha'} valor={total} />
             <StatCard label="Contatados" valor={contatados} hint={`${pct}% do total`} tom="marca" />
             <StatCard label="Com perfil completo" valor={ativos} hint="Completaram ou já foram avaliados" />
           </div>
+
+          <Card
+            titulo="Onde atuam"
+            descricao="Escolha o estado, a cidade, a região ou o serviço para ver só esse grupo de perfis."
+            acoes={
+              recorteAtivo ? (
+                <Button variante="fantasma" onClick={() => { setLocal({}); setExpandido(null) }}>
+                  Limpar filtros
+                </Button>
+              ) : undefined
+            }
+          >
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {(['estado', 'cidade', 'regiao', 'categoria'] as ChaveLocal[]).map((chave) => (
+                <Field key={chave} label={ROTULO_CAMPO[chave]}>
+                  <Select value={local[chave] ?? ''} onChange={(e) => mudarLocal(chave, e.target.value)}>
+                    <option value="">{ROTULO_TODOS[chave]}</option>
+                    {opcoes[chave].map((o) => (
+                      <option key={o.valor} value={o.valor}>
+                        {o.valor === SEM_VALOR ? ROTULO_SEM[chave] : o.valor} ({o.quantidade})
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              ))}
+            </div>
+          </Card>
 
           <Card>
             <div className="space-y-4">
@@ -242,7 +330,7 @@ export default function PaginaAtivacao() {
             {lista.length === 0 ? (
               <EmptyState
                 titulo="Nenhum perfil encontrado"
-                descricao={busca || filtro !== 'todos' ? 'Nenhum perfil corresponde à busca ou ao filtro.' : 'Ainda não há perfis na campanha.'}
+                descricao={busca || filtro !== 'todos' || recorteAtivo ? 'Nenhum perfil corresponde à busca ou aos filtros.' : 'Ainda não há perfis na campanha.'}
               />
             ) : (
               <ul className="divide-y divide-slate-100">
@@ -301,7 +389,7 @@ function LinhaPerfil({ p, expandido, salvando, copiado, onExpand, onStatus, onCo
       >
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-pqf-ink">{nomeDoPerfil(p)}</p>
-          {p.slug && <p className="truncate text-xs text-pqf-muted">/{p.slug}</p>}
+          <p className="truncate text-xs text-pqf-muted">{descricaoDoLocal(p)}</p>
         </div>
         <Badge tom={st.tom}>{st.label}</Badge>
         {p.ativacao_enviado_em && (
@@ -318,6 +406,8 @@ function LinhaPerfil({ p, expandido, salvando, copiado, onExpand, onStatus, onCo
 
       {expandido && (
         <div className="space-y-4 pb-4 pt-1">
+          {p.slug && <p className="font-mono text-xs text-pqf-muted">/{p.slug}</p>}
+
           {/* Ações do WhatsApp */}
           <div className="flex flex-wrap gap-2">
             <Button
