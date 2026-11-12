@@ -14,6 +14,17 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Paleta da marca PQF. Nomes novos (pqf-*): não alteram classes já usadas no site público. */
+@theme {
+  --color-pqf-blue: #1a5cc8;
+  --color-pqf-blue-hover: #1549a8;
+  --color-pqf-blue-soft: #eaf1fc;
+  --color-pqf-yellow: #f5c518;
+  --color-pqf-ink: #0f172a;
+  --color-pqf-muted: #64748b;
+  --color-pqf-surface: #f8fafc;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
