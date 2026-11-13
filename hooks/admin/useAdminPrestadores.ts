@@ -8,7 +8,7 @@ const initialFilters: AdminPrestadoresFilters = { busca: '', origem: '', cidade:
 export function useAdminPrestadores() {
   const [tab, setTab] = useState<PrestadorTab>('todos')
   const [filters, setFilters] = useState(initialFilters)
-  const [data, setData] = useState<AdminPrestadoresResponse>({ prestadores: [], totais: { todos: 0, publico: 0, cadastro: 0, reivindicado: 0, ativo: 0, acompanhar: 0 } })
+  const [data, setData] = useState<AdminPrestadoresResponse>({ prestadores: [], totais: { todos: 0, publico: 0, cadastro: 0, reivindicado: 0, direto: 0, ativo: 0, acompanhar: 0 } })
   const [selected, setSelected] = useState<AdminPrestador | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

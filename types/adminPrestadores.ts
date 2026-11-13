@@ -1,4 +1,4 @@
-export type PrestadorStage = 'publico' | 'cadastro' | 'reivindicado' | 'ativo'
+export type PrestadorStage = 'publico' | 'cadastro' | 'reivindicado' | 'direto' | 'ativo'
 export type PrestadorTab = 'todos' | PrestadorStage | 'acompanhar'
 
 export interface AdminPrestador {
@@ -39,15 +39,23 @@ export interface AdminPrestadoresFilters {
   grupoCategoria: string
 }
 
+// Etapa de cada prestador no relacionamento com a plataforma. A origem (`origem_tipo`) decide quem é
+// "Reivindicado" (assumiu um perfil que a curadoria criou) e quem é "Cadastro direto" (criou o próprio
+// perfil). Ter conta não basta para ser "Reivindicado".
 export function getPrestadorStage(row: { user_id?: string | null; origem_tipo?: string | null; ativacao_status?: string | null; status?: string | null }): PrestadorStage {
-  if (row.user_id && ['perfil_completo', 'avaliacao_recebida'].includes(row.ativacao_status ?? '')) return 'ativo'
-  if (row.user_id) return 'reivindicado'
-  if (row.origem_tipo === 'registro_direto' || row.status === 'pendente') return 'cadastro'
-  return 'publico'
+  if (!row.user_id) {
+    return row.origem_tipo === 'registro_direto' || row.status === 'pendente' ? 'cadastro' : 'publico'
+  }
+  // Tem conta, mas o cadastro não foi concluído
+  if (row.status === 'pendente') return 'cadastro'
+  if (['perfil_completo', 'avaliacao_recebida'].includes(row.ativacao_status ?? '')) return 'ativo'
+  // 'curadoria_publica' com conta é o formato antigo de um perfil assumido
+  if (row.origem_tipo === 'reivindicado' || row.origem_tipo === 'curadoria_publica') return 'reivindicado'
+  return 'direto'
 }
 
 export function getEtapaLabel(etapa: PrestadorStage) {
-  return { publico: 'Perfil público', cadastro: 'Cadastro iniciado', reivindicado: 'Reivindicado', ativo: 'Ativo' }[etapa]
+  return { publico: 'Perfil público', cadastro: 'Cadastro iniciado', reivindicado: 'Reivindicado', direto: 'Cadastro direto', ativo: 'Ativo' }[etapa]
 }
 
 export function getCompletude(row: Record<string, unknown>) {
@@ -56,7 +64,7 @@ export function getCompletude(row: Record<string, unknown>) {
 }
 
 export function getProximaAcao(etapa: PrestadorStage) {
-  return { publico: 'Convidar a reivindicar', cadastro: 'Ajudar a concluir', reivindicado: 'Orientar ativação', ativo: 'Acompanhar desempenho' }[etapa]
+  return { publico: 'Convidar a reivindicar', cadastro: 'Ajudar a concluir', reivindicado: 'Orientar ativação', direto: 'Acompanhar os primeiros passos', ativo: 'Acompanhar desempenho' }[etapa]
 }
 
 export function normalizeAdminPrestador(row: Record<string, unknown>): AdminPrestador {
@@ -80,14 +88,16 @@ export function normalizeAdminPrestador(row: Record<string, unknown>): AdminPres
   }
 }
 
-export const TAB_LABELS: Record<PrestadorTab, string> = { todos: 'Todos', publico: 'Públicos', cadastro: 'Cadastro iniciado', reivindicado: 'Reivindicados', ativo: 'Ativos', acompanhar: 'Acompanhar' }
+export const TAB_LABELS: Record<PrestadorTab, string> = { todos: 'Todos', publico: 'Públicos', cadastro: 'Cadastro iniciado', reivindicado: 'Reivindicados', direto: 'Diretos', ativo: 'Ativos', acompanhar: 'Acompanhar' }
 
 export function matchesTab(item: AdminPrestador, tab: PrestadorTab) {
   return tab === 'todos' || tab === 'acompanhar' || item.etapa === tab
 }
 
 export function formatOrigem(origem: string | null) {
-  return origem === 'registro_direto' ? 'Cadastro direto' : 'Curadoria pública'
+  if (origem === 'registro_direto') return 'Cadastro direto'
+  if (origem === 'reivindicado') return 'Perfil assumido'
+  return 'Curadoria pública'
 }
 
 export function formatDate(date: string | null) {
@@ -97,7 +107,7 @@ export function formatDate(date: string | null) {
 
 export function getMensagem(etapa: PrestadorStage, nome: string | null) {
   const saudacao = nome ? `Olá, ${nome}!` : 'Olá!'
-  return { publico: `${saudacao} Encontramos seu perfil no ProcuroQuemFaça. Quer reivindicar e atualizar suas informações?`, cadastro: `${saudacao} Vimos que seu cadastro ficou incompleto. Posso ajudar você a finalizar seu perfil?`, reivindicado: `${saudacao} Seu perfil já está reivindicado. Vamos conferir os últimos passos para deixá-lo ativo?`, ativo: `${saudacao} Como está recebendo oportunidades pelo ProcuroQuemFaça?` }[etapa]
+  return { publico: `${saudacao} Encontramos seu perfil no ProcuroQuemFaça. Quer reivindicar e atualizar suas informações?`, cadastro: `${saudacao} Vimos que seu cadastro ficou incompleto. Posso ajudar você a finalizar seu perfil?`, reivindicado: `${saudacao} Seu perfil já está reivindicado. Vamos conferir os últimos passos para deixá-lo ativo?`, direto: `${saudacao} Seu perfil já está no ar no ProcuroQuemFaça. Posso ajudar a completá-lo para você receber mais contatos?`, ativo: `${saudacao} Como está recebendo oportunidades pelo ProcuroQuemFaça?` }[etapa]
 }
 
 export function buildEmail(email: string | null) { return email ? `mailto:${email}` : undefined }
