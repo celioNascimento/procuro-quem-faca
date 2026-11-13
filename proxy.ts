@@ -38,7 +38,10 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user && (isDashboard || isCadastro || isAcompanhamento || isAvaliar)) {
-    if (isAcompanhamento || isAvaliar) {
+    // O link pessoal de um perfil (/cadastro?reivindicar=...) também volta depois do login,
+    // senão quem não está logado perde o link e cria um perfil novo em vez de assumir o seu
+    const voltaDepoisDoLogin = isAcompanhamento || isAvaliar || (isCadastro && request.nextUrl.searchParams.has('reivindicar'))
+    if (voltaDepoisDoLogin) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('next', pathname + request.nextUrl.search)
       return NextResponse.redirect(loginUrl)
