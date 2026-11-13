@@ -5,6 +5,7 @@ import { Projeto } from '@/hooks/usePortfolioDashboard'
 import { useWizardCarrossel } from '@/hooks/useWizardCarrossel'
 import { useWizardWhatsappLinks } from '@/hooks/useWizardWhatsappLinks'
 import { FotoPortfolio, ComentarioPortfolio, ProjetoIdentificado } from '@/types/portfolio'
+import { limparDescricao } from '@/lib/trabalho/descricaoFotos'
 import {
   getPrestadorBaseInfo,
   getFotosDoProjeto,
@@ -18,6 +19,7 @@ import {
   atualizarDadosClienteProjeto,
   upsertFotoProjeto,
   atualizarLegendaFoto,
+  atualizarConsentimentoFoto,
   getStatusETokenProjeto,
   uploadImagemPortfolio
 } from '@/lib/services/uploadWizard.service'
@@ -59,6 +61,8 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     // fotos (true/default) ou sem fotos (false). Default true até carregar,
     // para não "piscar" o fluxo sem foto antes do fetch completar.
     portfolioObrigatorio: true,
+    // Exemplo de descrição da categoria do prestador (sugestão no campo "Depois").
+    exemploDescricao: null as string | null,
   })
   const [clienteWhatsapp, setClienteWhatsapp] = useState<string>(() => maskPhone(projeto?.cliente_whatsapp))
   const [clienteNome, setClienteNome] = useState<string>(projeto?.cliente_nome || '')
@@ -110,14 +114,21 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
   const isPhoneValid = phoneDigitado.length >= 10 && !isSelfNumber
   const isTitleValid = titulo.trim().length > 3
 
-  const canCloseZoom = isProjetoConcluido || comentariosZoom.length > 0 || hasLegendaSalva(zoomEtapa)
+  // A descrição das fotos é opcional: o modal de zoom sempre pode ser fechado.
+  const canCloseZoom = true
 
   // No fluxo sem_fotos, o link de avaliação é liberado quando o prestador
   // marca o serviço como concluído — equivalente a hasLegendaSalva(3) no
   // fluxo com fotos, que é o que hoje libera o botão "Enviar avaliação".
   const podeGerarLinkAvaliacao = semFotos
     ? !!marcadoConcluidoAt
-    : hasLegendaSalva(3)
+    : !!fotosUrls[3]
+
+  // Foto que mostra uma pessoa só segue com a autorização dela declarada pelo prestador.
+  const fotoComPessoaSemAutorizacao = [1, 2, 3].some((ordem) => {
+    const foto = fotosData[ordem]
+    return !!foto?.contem_pessoas && !foto?.consentimento_terceiros_confirmado
+  })
 
   // ── Efeitos ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -139,6 +150,7 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
           whatsapp: data.whatsapp || '',
           slug: data.slug || null,
           portfolioObrigatorio: data.portfolio_obrigatorio ?? true,
+          exemploDescricao: (Array.isArray(data.categorias) ? data.categorias[0] : data.categorias)?.exemplo_descricao ?? null,
         })
       }
     } catch (err) {
@@ -364,7 +376,6 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       setFotosUrls(prev => ({ ...prev, [ordem]: publicUrl }))
       setFotosData(prev => ({ ...prev, [ordem]: data }))
       setLegendaEdit(data.legenda || '')
-      setZoomEtapa(ordem)
 
       if (ordem === 3) {
         setAguardandoAvaliacao(true)
@@ -459,6 +470,52 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     }
   }
 
+  /** Grava a descrição de uma foto direto no cartão dela. Devolve false se não foi possível salvar. */
+  const salvarDescricaoFoto = async (ordem: number, texto: string): Promise<boolean> => {
+    const foto = fotosData[ordem]
+    if (!foto) return false
+    const limpo = limparDescricao(texto)
+    if (limpo === (foto.legenda ?? '').trim()) return true
+    try {
+      await atualizarLegendaFoto(foto.id, limpo)
+      setFotosData(prev => {
+        const atual = prev[ordem]
+        return atual ? { ...prev, [ordem]: { ...atual, legenda: limpo } } : prev
+      })
+      return true
+    } catch (err) {
+      console.error('Erro ao salvar a descrição da foto:', err)
+      return false
+    }
+  }
+
+  /** Declaração de pessoas na foto: "aparece alguém?" e, se sim, "tenho a autorização". */
+  const salvarAutorizacaoFoto = async (ordem: number, contemPessoas: boolean, autorizado: boolean): Promise<boolean> => {
+    const foto = fotosData[ordem]
+    if (!foto) return false
+    try {
+      await atualizarConsentimentoFoto(foto.id, { contemPessoas, autorizado })
+      setFotosData(prev => {
+        const atual = prev[ordem]
+        if (!atual) return prev
+        const confirmado = contemPessoas && autorizado
+        return {
+          ...prev,
+          [ordem]: {
+            ...atual,
+            contem_pessoas: contemPessoas,
+            consentimento_terceiros_confirmado: confirmado,
+            consentimento_terceiros_em: confirmado ? new Date().toISOString() : null,
+          },
+        }
+      })
+      return true
+    } catch (err) {
+      console.error('Erro ao salvar a autorização da foto:', err)
+      return false
+    }
+  }
+
   const handleAtualizarTitulo = async () => {
     if (!projetoId || !isTitleValid) return
     setStatusTitulo('salvando')
@@ -514,9 +571,10 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     }
   }
 
-  const { gerarLinkAceite, gerarLinkConclusao } = useWizardWhatsappLinks({
+  const { gerarLinkAceite, gerarLinkConclusao, copiarAceite, copiarConclusao } = useWizardWhatsappLinks({
     projetoId, projetoStatus, clienteWhatsapp, clienteNome, titulo,
     setLinkGerado, setProjetoStatus,
+    aoErrar: setErroUpload,
   })
 
   const selecionarProjeto = (proj: ProjetoIdentificado) => {
@@ -554,14 +612,16 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
   // Cada serviço permite escolher com ou sem registro fotográfico.
   // A preferência do perfil orienta o padrão visual, mas não bloqueia a escolha.
   mostrarEscolhaFluxo: !projetoId && escolhaSemFotos === null && isPhoneValid && isTitleValid,
-      podeGerarLinkAvaliacao,
+      podeGerarLinkAvaliacao, fotoComPessoaSemAutorizacao,
     },
     actions: {
       setErroUpload, setErroLegenda,
       setClienteWhatsapp: (v: string | null) => setClienteWhatsapp(maskPhone(v)),
       setClienteNome, setTitulo, setZoomEtapa, setLegendaEdit,
       handleShare, handleUpload, handleSalvarLegenda, handleAtualizarTitulo,
-      gerarLinkAceite, gerarLinkConclusao, selecionarProjeto, nextSlide, prevSlide, handleZoomClose,
+      gerarLinkAceite, gerarLinkConclusao, copiarAceite, copiarConclusao,
+      salvarDescricaoFoto, salvarAutorizacaoFoto,
+      selecionarProjeto, nextSlide, prevSlide, handleZoomClose,
       iniciarServicoSemFoto, marcarComoConcluido, escolherFluxo,
       iniciarEdicaoDadosCliente, cancelarEdicaoDadosCliente, salvarDadosCliente,
     }

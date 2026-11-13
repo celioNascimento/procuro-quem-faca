@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import {
+  atualizarExemploDaCategoria,
   criarCategoria,
   criarGrupo,
   fetchCategorias,
   fetchGrupos,
 } from '@/lib/services/categorias.service'
+import { validarExemploDeCategoria } from '@/lib/catalogo/exemploCategoria'
 import type { Categoria, Grupo } from '@/types/categorias'
 
 function toSlug(value: string) {
@@ -60,12 +62,15 @@ export function useHabilidades() {
     } finally { setSaving(false) }
   }, [carregarDados])
 
-  const adicionarCategoria = useCallback(async (nome: string, grupoId: string, destaque: boolean) => {
+  const adicionarCategoria = useCallback(async (nome: string, grupoId: string, destaque: boolean, exemplo: string) => {
     if (!nome.trim()) return { ok: false, error: 'Informe o nome da categoria.' }
     if (!grupoId) return { ok: false, error: 'Selecione um grupo.' }
+    // Regra do catálogo: toda categoria nova precisa do exemplo de descrição.
+    const exemploValido = validarExemploDeCategoria(exemplo)
+    if (!exemploValido.ok) return { ok: false, error: exemploValido.erro }
     setSaving(true)
     try {
-      await criarCategoria({ nome: nome.trim(), slug: toSlug(nome), grupo_id: grupoId, destaque })
+      await criarCategoria({ nome: nome.trim(), slug: toSlug(nome), grupo_id: grupoId, destaque, exemplo_descricao: exemploValido.valor })
       await carregarDados()
       return { ok: true, error: null }
     } catch (err) {
@@ -74,5 +79,19 @@ export function useHabilidades() {
     } finally { setSaving(false) }
   }, [carregarDados])
 
-  return { grupos, categorias, loading, saving, error, adicionarGrupo, adicionarCategoria, recarregar: carregarDados }
+  const salvarExemplo = useCallback(async (categoriaId: string | number, exemplo: string) => {
+    const exemploValido = validarExemploDeCategoria(exemplo)
+    if (!exemploValido.ok) return { ok: false, error: exemploValido.erro }
+    setSaving(true)
+    try {
+      await atualizarExemploDaCategoria(categoriaId, exemploValido.valor)
+      await carregarDados()
+      return { ok: true, error: null }
+    } catch (err) {
+      console.error('Erro ao salvar o exemplo da categoria:', err)
+      return { ok: false, error: getSaveError(err, 'categoria') }
+    } finally { setSaving(false) }
+  }, [carregarDados])
+
+  return { grupos, categorias, loading, saving, error, adicionarGrupo, adicionarCategoria, salvarExemplo, recarregar: carregarDados }
 }

@@ -3,6 +3,7 @@
 import { X, Loader2, Send } from 'lucide-react'
 import type { FotoOrdenada, Comentario, Projeto } from '@/types/avaliacao'
 import { ModalFotoBase } from '@/components/shared/ModalFotoBase'
+import { descricaoOuPadrao } from '@/lib/trabalho/descricaoFotos'
 
 type Props = {
   foto: FotoOrdenada
@@ -66,7 +67,7 @@ export function ModalDiscussao({
           </div>
           <div className="flex-1 bg-white p-4 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm">
             <p className="text-[13px] font-medium text-slate-600 leading-relaxed italic">
-              {foto.legenda || 'Nota técnica enviada pelo prestador.'}
+              {descricaoOuPadrao(foto.ordem, foto.legenda)}
             </p>
           </div>
         </div>

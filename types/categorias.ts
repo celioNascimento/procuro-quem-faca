@@ -13,6 +13,8 @@ export interface Categoria {
   slug: string
   grupo_id?: string | number | null
   destaque?: boolean
+  /** Frase do que foi feito, no tom do ofício; sugestão no campo "Depois" do trabalho. */
+  exemplo_descricao?: string | null
   created_at?: string | null
 }
 
