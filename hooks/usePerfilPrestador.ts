@@ -8,6 +8,7 @@ import { registrarVisitaPerfil } from '@/lib/db/visitasPerfil'
 import { sanitizarRotaInterna } from '@/lib/navegacao'
 import type { PerfilData, PrestadorPerfil, ProjetoPerfil, FotoProjeto, GarantiaPublica, FotoGarantiaPublica } from '@/types/perfil'
 import type { AvaliacaoPerfil } from '@/types/avaliacao'
+import { tituloDaVitrine } from '@/lib/vitrine/vitrine'
 
 interface UsePerfilPrestadorReturn {
   data: PerfilData | null
@@ -150,8 +151,9 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
           .abortSignal(controller.signal)
         if (indicError) throw indicError
 
-        prestadorRaw.sessao_fotos = prestadorRaw.sessao_fotos_titulo && Array.isArray(prestadorRaw.sessao_fotos_urls)
-          ? { titulo: prestadorRaw.sessao_fotos_titulo, fotos: prestadorRaw.sessao_fotos_urls.slice(0, 5) }
+        // A vitrine aparece mesmo sem nome: sem título escrito, usa o padrão ("Fotos do profissional").
+        prestadorRaw.sessao_fotos = Array.isArray(prestadorRaw.sessao_fotos_urls) && prestadorRaw.sessao_fotos_urls.length > 0
+          ? { titulo: tituloDaVitrine(prestadorRaw.sessao_fotos_titulo), fotos: prestadorRaw.sessao_fotos_urls.slice(0, 5) }
           : null
 
         const projetos: ProjetoPerfil[] = normalizarArray(prestadorRaw.portfolio_projetos)

@@ -8,6 +8,7 @@ import { DashboardHeader } from './DashboardHeader'
 import { EstadoVazio } from './EstadoVazio'
 import { ProjetoCard } from './ProjetoCard'
 import { UploadWizardContainer } from './wizard/UploadWizardContainer'
+import { VitrineDeFotos } from './VitrineDeFotos'
 
 export default function PortfolioDashboardTab() {
   const {
@@ -60,6 +61,15 @@ export default function PortfolioDashboardTab() {
                 <ExternalLink size={18} aria-hidden="true" />
                 Ver meu perfil público
               </Link>
+            )}
+            {meuPrestadorId !== null && (
+              <VitrineDeFotos
+                prestadorId={meuPrestadorId}
+                inicial={{
+                  titulo: perfilPrestador?.sessao_fotos_titulo ?? '',
+                  fotos: (perfilPrestador?.sessao_fotos_urls ?? []).slice(0, 5),
+                }}
+              />
             )}
             <DashboardHeader
               totalProjetos={projetos.length}
