@@ -98,7 +98,7 @@ export async function getOrigemEAtivacaoStats(): Promise<{ origem: OrigemStats; 
   const origem: OrigemStats = {
     curadoria: pDataAll?.filter(p => p.origem_tipo === 'curadoria_publica' && !p.user_id).length || 0,
     registrados: pDataAll?.filter(p => p.origem_tipo === 'registro_direto').length || 0,
-    reivindicados: pDataAll?.filter(p => p.user_id && p.origem_tipo === 'curadoria_publica').length || 0,
+    reivindicados: pDataAll?.filter(p => p.user_id && (p.origem_tipo === 'reivindicado' || p.origem_tipo === 'curadoria_publica')).length || 0,
   }
 
   const ativacao: AtivacaoStats = {
