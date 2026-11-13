@@ -46,7 +46,7 @@ export const helpArticles: HelpArticle[] = [
   },
   {
     id: 'portfolio-prestador', title: 'Como publicar projetos no portfólio', summary: 'Adicione fotos e informações de trabalhos realizados para apresentar sua experiência aos clientes.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador'],
-    steps: ['Acesse a aba Meus Projetos.', 'Envie fotos nítidas e escolha trabalhos que representem seu serviço.', 'Avise o cliente de que as fotos do serviço podem aparecer no seu portfólio público e evite mostrar rostos, documentos, placas e endereços completos.', 'Revise o conteúdo antes de publicar para manter seu portfólio atualizado.']
+    steps: ['Acesse a aba Meus Trabalhos.', 'Envie fotos nítidas e escolha trabalhos que representem seu serviço.', 'Avise o cliente de que as fotos do serviço podem aparecer no seu portfólio público e evite mostrar rostos, documentos, placas e endereços completos.', 'Revise o conteúdo antes de publicar para manter seu portfólio atualizado.']
   },
   {
     id: 'avaliacoes-prestador', title: 'Como consultar minhas avaliações', summary: 'Acompanhe as avaliações recebidas dos clientes diretamente no seu painel profissional.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador'],

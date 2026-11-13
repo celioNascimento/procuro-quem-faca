@@ -5,7 +5,7 @@
 // Não substitui os "Trabalhos": só eles passam pelo aceite e pela avaliação do cliente.
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { ImagePlus, Trash2 } from 'lucide-react'
 import { useVitrine } from '@/hooks/useVitrine'
@@ -14,12 +14,18 @@ import { fotosRestantes, MAX_FOTOS_VITRINE, MAX_TITULO_VITRINE, TITULO_PADRAO_VI
 interface Props {
   prestadorId: number
   inicial: Vitrine
+  /** Chamado quando a quantidade de fotos muda (o cartão "Primeiros passos" usa para marcar o passo). */
+  onFotosChange?: (total: number) => void
 }
 
-export function VitrineDeFotos({ prestadorId, inicial }: Props) {
+export function VitrineDeFotos({ prestadorId, inicial, onFotosChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const { titulo, setTitulo, fotos, enviando, mensagem, adicionar, remover, salvarTitulo } = useVitrine(prestadorId, inicial)
   const restantes = fotosRestantes(fotos)
+
+  useEffect(() => {
+    onFotosChange?.(fotos.length)
+  }, [fotos.length, onFotosChange])
 
   return (
     <section

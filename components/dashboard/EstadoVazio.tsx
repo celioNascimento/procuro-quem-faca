@@ -17,10 +17,10 @@ export function EstadoVazio({ onNovoProjeto }: Props) {
         <Camera size={28} aria-hidden="true" />
       </span>
       <span className="flex max-w-sm flex-col gap-1.5">
-        <span className="text-base font-black tracking-tight text-slate-700">Seu portfólio começa aqui</span>
-        <span className="text-sm font-medium leading-relaxed text-slate-400">Adicione fotos de um trabalho para mostrar sua experiência aos clientes.</span>
+        <span className="text-base font-black tracking-tight text-slate-700">Seus trabalhos começam aqui</span>
+        <span className="text-sm font-medium leading-relaxed text-slate-500">Registre um trabalho feito para um cliente. Ele aceita e avalia, e isso aparece no seu perfil.</span>
       </span>
-      <span className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-600">Adicionar primeiro projeto</span>
+      <span className="text-sm font-bold text-blue-600">Adicionar primeiro trabalho</span>
     </button>
   )
 }
