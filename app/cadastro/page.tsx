@@ -124,7 +124,7 @@ function FormularioCadastro() {
     userLogado, email, setEmail, senha, setSenha, confirmarSenha, setConfirmarSenha,
     aceitouTermos, setAceitouTermos, aceitouPrivacidade, setAceitouPrivacidade,
     errorModal, setErrorModal,
-    handleUploadFotoProcess, handleExcluirPerfil, calcularProgresso, handleSubmit, handleLogout,
+        handleUploadFotoProcess, handleExcluirPerfil, calcularProgresso, pendenciasCadastro, handleSubmit, handleLogout,
   } = useCadastroPrestador(reivindicarId, tokenReivindicacao)
 
   // Skeleton reflete apenas o carregamento inicial da página.
