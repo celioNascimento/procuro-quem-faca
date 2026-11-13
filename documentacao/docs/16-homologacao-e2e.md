@@ -71,7 +71,7 @@
 
 | Rota | Elemento / nome acessível | Pré-condição | Ação | Resultado esperado | Evidência | Persistência | Prioridade |
 |---|---|---|---|---|---|---|---|
-| `/dashboard` | Aba “Meus Projetos” | Prestador completo | Clicar | Exibe projetos e ações disponíveis | Aba/heading | Não | P0 |
+| `/dashboard` | Aba “Meus Trabalhos” | Prestador completo | Clicar | Exibe projetos e ações disponíveis | Aba/heading | Não | P0 |
 | `/dashboard` | Aba “Dados Profissionais” | Prestador autenticado | Clicar | Exibe edição do perfil | Aba/heading | Não | P0 |
 | `/dashboard` | “Ver meu perfil” | Slug existente | Clicar | Abre `/<slug>` | URL | Não | P1 |
 | `/dashboard` | Novo projeto/wizard | Prestador autenticado | Criar projeto, etapas, fotos e legendas | Salva o projeto e atualiza a visão sem duplicação | Requests, status e UI | Sim: projetos/fotos/Storage | P0 |

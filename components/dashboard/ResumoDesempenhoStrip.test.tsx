@@ -53,6 +53,22 @@ describe('ResumoDesempenhoStrip', () => {
     expect(botao.textContent).toContain('—')
   })
 
+  it('perfil novo, sem visita nem orçamento: a faixa não aparece zerada', () => {
+    estadoVisitas({ dados: { ...visitasBase, visitas7d: 0 } })
+    estadoCliques({ dados: { rastreando: true, ultimos7: 0, ultimos30: 0, total: 0 } })
+    const { container } = render(<ResumoDesempenhoStrip onAbrir={() => {}} />)
+
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('com ao menos uma visita, a faixa aparece mesmo sem orçamentos', () => {
+    estadoVisitas({ dados: { ...visitasBase, visitas7d: 1 } })
+    estadoCliques({ dados: { rastreando: true, ultimos7: 0, ultimos30: 0, total: 0 } })
+    render(<ResumoDesempenhoStrip onAbrir={() => {}} />)
+
+    expect(screen.getByRole('button', { name: /ver desempenho completo/i })).toBeTruthy()
+  })
+
   it('sem prestador vinculado: não renderiza nada', () => {
     estadoVisitas({ dados: null })
     const { container } = render(<ResumoDesempenhoStrip onAbrir={() => {}} />)

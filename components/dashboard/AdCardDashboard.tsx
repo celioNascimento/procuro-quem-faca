@@ -15,10 +15,10 @@ const POSICAO = 'dashboard_prestador'
 const FALLBACK_INCENTIVO_PORTFOLIO: AdFallback = {
   emoji: '📸',
   titulo: 'Seu portfólio é sua melhor propaganda',
-  subtitulo: 'Prestadores com projetos publicados recebem mais contato de clientes.',
+  subtitulo: 'Prestadores com trabalhos registrados recebem mais contato de clientes.',
   cta: 'Adicionar trabalho',
   cor: 'from-blue-600 to-indigo-600',
-  href: () => '/dashboard',
+  href: () => '/dashboard?novo=1',
 }
 
 /**

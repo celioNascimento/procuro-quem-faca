@@ -91,7 +91,7 @@ export function ProjetoCard({ projeto, onClick }: Props) {
         )}
 
         {fotos.length > 0 && (
-          <span className="absolute bottom-2 right-2 rounded-full bg-slate-900/70 px-2 py-0.5 text-[9px] font-black text-white backdrop-blur-sm">
+          <span className="absolute bottom-2 right-2 rounded-full bg-slate-900/70 px-2 py-0.5 text-xs font-bold text-white backdrop-blur-sm">
             {fotos.length}
           </span>
         )}
@@ -99,7 +99,7 @@ export function ProjetoCard({ projeto, onClick }: Props) {
 
       <span className="flex min-w-0 flex-1 flex-col justify-between gap-4 p-4 sm:p-5">
         <span className="flex flex-col gap-2">
-          <span className={`inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${cls}`}>
+          <span className={`inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold ${cls}`}>
             {icon}{label}
           </span>
           <span className="truncate text-sm font-black leading-tight text-slate-800 transition-colors group-hover:text-blue-600 sm:text-base">
@@ -108,12 +108,12 @@ export function ProjetoCard({ projeto, onClick }: Props) {
         </span>
 
         <span className="flex items-center justify-between gap-3">
-          <span className="text-[10px] font-medium text-slate-400">
+          <span className="text-xs font-medium text-slate-500">
             {semFotos
               ? 'Sem registro fotográfico'
               : `${fotos.length} ${fotos.length === 1 ? 'foto' : 'fotos'}`}
           </span>
-          <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">
+          <span className="text-sm font-bold text-blue-600">
             Editar
           </span>
         </span>

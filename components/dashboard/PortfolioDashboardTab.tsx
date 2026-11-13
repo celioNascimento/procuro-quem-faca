@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { usePortfolioDashboard } from '@/hooks/usePortfolioDashboard'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
@@ -9,6 +10,7 @@ import { EstadoVazio } from './EstadoVazio'
 import { ProjetoCard } from './ProjetoCard'
 import { UploadWizardContainer } from './wizard/UploadWizardContainer'
 import { VitrineDeFotos } from './VitrineDeFotos'
+import { PrimeirosPassos } from './PrimeirosPassos'
 
 export default function PortfolioDashboardTab() {
   const {
@@ -16,12 +18,29 @@ export default function PortfolioDashboardTab() {
     showWizard, projetoParaEdicao, totalConcluidos, totalAtivos,
     abrirEdicao, abrirNovo, fecharWizard,
   } = usePortfolioDashboard()
+  const searchParams = useSearchParams()
+  const pedidoNovoTrabalho = searchParams.get('novo') === '1'
+  const jaAbriuPeloLink = useRef(false)
+  const [fotosNaVitrine, setFotosNaVitrine] = useState<number | null>(null)
+  const mudouFotos = useCallback((total: number) => setFotosNaVitrine(total), [])
 
   useEffect(() => {
     if (showWizard) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }, [showWizard])
+
+  // Link "Adicionar trabalho" (banner do painel): abre direto a tela de novo trabalho, uma vez só.
+  useEffect(() => {
+    if (!pedidoNovoTrabalho || jaAbriuPeloLink.current || loading || meuPrestadorId === null) return
+    jaAbriuPeloLink.current = true
+    abrirNovo()
+    window.history.replaceState(null, '', '/dashboard')
+  }, [pedidoNovoTrabalho, loading, meuPrestadorId, abrirNovo])
+
+  const irParaVitrine = () => {
+    document.getElementById('vitrine-de-fotos')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   if (loading) {
     return (
@@ -62,14 +81,24 @@ export default function PortfolioDashboardTab() {
                 Ver meu perfil público
               </Link>
             )}
+            <PrimeirosPassos
+              slug={perfilPrestador?.slug}
+              temFotosNaVitrine={(fotosNaVitrine ?? (perfilPrestador?.sessao_fotos_urls ?? []).length) > 0}
+              temTrabalhos={projetos.length > 0}
+              onAdicionarFotos={irParaVitrine}
+              onAdicionarTrabalho={abrirNovo}
+            />
             {meuPrestadorId !== null && (
-              <VitrineDeFotos
-                prestadorId={meuPrestadorId}
-                inicial={{
-                  titulo: perfilPrestador?.sessao_fotos_titulo ?? '',
-                  fotos: (perfilPrestador?.sessao_fotos_urls ?? []).slice(0, 5),
-                }}
-              />
+              <div id="vitrine-de-fotos" className="scroll-mt-32">
+                <VitrineDeFotos
+                  prestadorId={meuPrestadorId}
+                  inicial={{
+                    titulo: perfilPrestador?.sessao_fotos_titulo ?? '',
+                    fotos: (perfilPrestador?.sessao_fotos_urls ?? []).slice(0, 5),
+                  }}
+                  onFotosChange={mudouFotos}
+                />
+              </div>
             )}
             <DashboardHeader
               totalProjetos={projetos.length}
@@ -90,7 +119,7 @@ export default function PortfolioDashboardTab() {
                     className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-[1.75rem] border-2 border-dashed border-slate-200 bg-white text-slate-400 transition-colors hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
                   >
                     <span className="text-2xl font-black leading-none" aria-hidden="true">+</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest">Novo projeto</span>
+                    <span className="text-sm font-bold">Novo trabalho</span>
                   </button>
                 )}
               </div>

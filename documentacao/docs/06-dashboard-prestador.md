@@ -6,13 +6,13 @@ Complementa `02-arquitetura.md`. Ver `00-glossario.md` para localizar um conceit
 
 ```
 layout.tsx    → DashboardLayout, header com botão voltar dinâmico via ?origem=
-page.tsx      → Dashboard raiz, abas "Meus Projetos"/"Desempenho"/"Divulgação"/"Dados Profissionais"
+page.tsx      → Dashboard raiz, abas "Meus Trabalhos"/"Desempenho"/"Divulgação"/"Dados Profissionais"
 perfil/page.tsx → redireciona para /dashboard?aba=perfil (ver nota abaixo)
 ```
 
 **`usePerfilStatus`** — gatekeeper: `cadastroCompleto = !!(nome && whatsapp && categoria_id)` (3 campos mínimos, mais permissivo que o form de cadastro completo). Usa `buscarPrestadorPorUserId` (`cadastroPrestador.service.ts`).
 
-**Abas** (em `page.tsx`): "Meus Projetos" (`PortfolioDashboardTab`, bloqueada se `!cadastroCompleto`) / "Desempenho" (`DesempenhoDashboardTab`, bloqueada se `!cadastroCompleto`) / "Divulgação" (`CentralDivulgacaoTab`, bloqueada se `!cadastroCompleto` ou perfil bloqueado) / "Dados Profissionais" (`EditarPerfilTab`, nunca bloqueada). Aba inicial controlável via `?aba=perfil` ou `?aba=desempenho` (com `&sub=avaliacoes` para abrir direto nas avaliações). `?aba=avaliacoes` é o nome antigo da aba e continua funcionando: abre Desempenho > Avaliações. "Ver meu perfil" (link `/${slug}`) só aparece com slug.
+**Abas** (em `page.tsx`): "Meus Trabalhos" (`PortfolioDashboardTab`, bloqueada se `!cadastroCompleto`) / "Desempenho" (`DesempenhoDashboardTab`, bloqueada se `!cadastroCompleto`) / "Divulgação" (`CentralDivulgacaoTab`, bloqueada se `!cadastroCompleto` ou perfil bloqueado) / "Dados Profissionais" (`EditarPerfilTab`, nunca bloqueada). Aba inicial controlável via `?aba=perfil` ou `?aba=desempenho` (com `&sub=avaliacoes` para abrir direto nas avaliações). `?aba=avaliacoes` é o nome antigo da aba e continua funcionando: abre Desempenho > Avaliações. "Ver meu perfil" (link `/${slug}`) só aparece com slug.
 
 **Faixa resumo** (`ResumoDesempenhoStrip`): entre o card de anúncio e a barra de abas, mostra visitas e pedidos de orçamento dos últimos 7 dias e leva à aba Desempenho. Só aparece com cadastro completo, perfil não bloqueado e fora da própria aba Desempenho. Usa `useMinhasVisitas` e `useMeusCliques`; sem contagem de cliques ativa mostra "—", nunca "0".
 
@@ -43,6 +43,16 @@ Todo o módulo é orquestrado por **`hooks/useUploadWizard.ts`** + **`lib/servic
 - `fotosCarrossel` estabilizado via `useMemo` (evita loop de re-render)
 - Sincronização de status usa `useRef` para status atual, evitando incluí-lo nas deps do `useEffect` (evitaria loop infinito de requisições)
 - `gerarLinkAceite`/`gerarLinkConclusao` montam link `wa.me` com mensagem pré-formatada; `gerarLinkConclusao` usa o `token` de avaliação no path (`/avaliar/${token}`), não o `projetoId`
+
+### Primeira tela do prestador: Primeiros passos e Vitrine (13/11/2026)
+
+A aba **Meus Trabalhos** abre, nesta ordem: botão "Ver meu perfil público", cartão **Primeiros passos**, **Vitrine de fotos** e o resumo dos trabalhos.
+
+- **Trabalho** é o ciclo com cliente (telefone e nome do cliente obrigatórios, aceite e avaliação por link). Só o trabalho conta como confirmado pelo cliente. É o único nome usado na tela para esse conceito ("projeto" e "portfólio" saíram dos textos do painel).
+- **Vitrine de fotos** (`VitrineDeFotos.tsx`, `useVitrine.ts`, `vitrine.service.ts`, regras em `lib/vitrine/vitrine.ts`): galeria de até 5 fotos, sem cliente, gravada na hora em `prestadores.sessao_fotos_titulo/urls`. No perfil público aparece com a linha "Fotos enviadas pelo profissional" (título padrão: "Fotos do profissional"), para não ser confundida com trabalho confirmado. O editor antigo ("sessão de fotos") saiu da aba Dados Profissionais.
+- **Primeiros passos** (`PrimeirosPassos.tsx`, regras em `lib/dashboard/primeirosPassos.ts`): 1) perfil no ar (sempre concluído; copiar link), 2) fotos na vitrine, 3) primeiro trabalho com cliente. Some sozinho quando os três terminam e pode ser dispensado ("Agora não", guardado em `localStorage`, dentro de `try/catch`).
+- O botão do banner do painel leva a `/dashboard?novo=1`, que abre a tela de novo trabalho uma vez e limpa o endereço.
+- A faixa de 7 dias (`ResumoDesempenhoStrip`) não aparece enquanto visitas e orçamentos estiverem zerados.
 
 ### `PrestadorSideCard.tsx`
 
