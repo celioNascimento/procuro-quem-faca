@@ -124,7 +124,7 @@ function FormularioCadastro() {
     userLogado, email, setEmail, senha, setSenha, confirmarSenha, setConfirmarSenha,
     aceitouTermos, setAceitouTermos, aceitouPrivacidade, setAceitouPrivacidade,
     errorModal, setErrorModal,
-    handleUploadFotoProcess, handleExcluirPerfil, calcularProgresso, handleSubmit, handleLogout,
+        handleUploadFotoProcess, handleExcluirPerfil, calcularProgresso, pendenciasCadastro, handleSubmit, handleLogout,
   } = useCadastroPrestador(reivindicarId, tokenReivindicacao)
 
   // Skeleton reflete apenas o carregamento inicial da página.
@@ -150,7 +150,10 @@ function FormularioCadastro() {
   // Validação estrita para habilitar o botão
   const faltamTermos = isPendente && (!aceitouTermos || !aceitouPrivacidade)
   const progressoTotal = calcularProgresso() === 100
-  const podeEnviar = progressoTotal && slugCheck.disponivel && !uploading && !enviando && !faltamTermos
+
+    const podeEnviar = progressoTotal && slugCheck.disponivel && !uploading && !enviando && !faltamTermos
+  // Enquanto o botão estiver cinza, a pessoa precisa saber o que falta
+  const faltando = podeEnviar ? [] : pendenciasCadastro()
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-20 font-sans antialiased overflow-x-hidden">
@@ -273,6 +276,15 @@ function FormularioCadastro() {
                   <div className={`w-full mb-4 p-4 rounded-2xl text-[10px] font-black text-center uppercase tracking-wider animate-in fade-in ${status.startsWith('❌') ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-600'
                     }`}>
                     {status}
+                  </div>
+                )}
+
+                {faltando.length > 0 && !enviando && !uploading && (
+                  <div role="status" className="w-full mb-4 p-4 rounded-2xl bg-amber-50 border border-amber-100 text-amber-900">
+                    <p className="text-[12px] font-bold mb-2">Para finalizar, falta:</p>
+                    <ul className="list-disc pl-5 space-y-1 text-[13px] font-medium">
+                      {faltando.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
                   </div>
                 )}
 

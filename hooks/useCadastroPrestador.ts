@@ -24,6 +24,7 @@ import {
 } from '@/lib/services/cadastroPrestador.service'
 import { reivindicarPerfilPorToken, tokenTemFormatoValido } from '@/lib/services/reivindicacao.service'
 import { registrarConsentimentos } from '@/lib/services/consentimento.service'
+import { listarPendenciasCadastro } from '@/lib/cadastro/pendencias'
 
 import type { PrestadorFormData } from '@/types/prestador'
 
@@ -260,6 +261,18 @@ export function useCadastroPrestador(reivindicarId: string | null, tokenReivindi
     return Math.round((campos.filter(Boolean).length / campos.length) * 100)
   }
 
+    // O que ainda falta para liberar o botão, em palavras simples
+  const pendenciasCadastro = () => listarPendenciasCadastro({
+    ...form.formData,
+    slugDisponivel: slugCheck.disponivel,
+    aceitouTermos,
+    aceitouPrivacidade,
+    logado: Boolean(userLogado),
+    email,
+    senha,
+    confirmarSenha,
+  })
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setTentouEnviar(true)
@@ -374,6 +387,6 @@ export function useCadastroPrestador(reivindicarId: string | null, tokenReivindi
     userLogado, email, setEmail, senha, setSenha, confirmarSenha, setConfirmarSenha,
     aceitouTermos, setAceitouTermos, aceitouPrivacidade, setAceitouPrivacidade,
     errorModal, setErrorModal,
-    handleUploadFotoProcess, handleExcluirPerfil, calcularProgresso, handleSubmit, handleLogout,
+        handleUploadFotoProcess, handleExcluirPerfil, calcularProgresso, pendenciasCadastro, handleSubmit, handleLogout,
   }
 }
