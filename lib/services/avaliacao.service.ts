@@ -3,6 +3,7 @@
 import { supabase } from '@/lib/supabase'
 import type { AvaliacaoRaw, AvaliacaoInsertPayload, Projeto } from '@/types/avaliacao'
 import { obterProjetoIdPorToken } from './projetoToken.service'
+import { nomeClientePorToken } from './dadosClienteProjeto.service'
 
 export async function fetchProjetoPorToken(token: string): Promise<Projeto | null> {
   // O token não é legível pela API: a função do banco resolve token -> id e o resto
@@ -14,7 +15,7 @@ export async function fetchProjetoPorToken(token: string): Promise<Projeto | nul
     .from('portfolio_projetos')
     .select(`
       id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio,
-      cliente_whatsapp, status, cliente_nome, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at,
+      status, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at,
       portfolio_fotos(*),
       prestadores(id, nome, slug, foto_perfil, whatsapp, garantia_dias, categoria:categorias(nome)),
       avaliacoes_clientes(id, nota, motivos, created_at)
@@ -23,7 +24,10 @@ export async function fetchProjetoPorToken(token: string): Promise<Projeto | nul
     .maybeSingle()                  // ← era .single(); nunca lança PGRST116
 
   if (error) throw error            // só lança erros reais (rede, permissão…)
-  return data ? ({ ...data, avaliacao_token: token } as unknown as Projeto) : null
+  if (!data) return null
+  // O nome do cliente (cabeçalho da tela) vem pelo link; o telefone nunca chega a esta tela.
+  const cliente_nome = await nomeClientePorToken(token)
+  return { ...data, cliente_nome, cliente_whatsapp: null, avaliacao_token: token } as unknown as Projeto
 }
 
 export type ResultadoReivindicacao =

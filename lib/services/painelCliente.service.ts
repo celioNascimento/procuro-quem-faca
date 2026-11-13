@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import type { Servico } from '@/types/painel'
 import { anexarTokens, obterProjetoIdPorToken } from './projetoToken.service'
+import { anexarDadosCliente, nomeClientePorToken } from './dadosClienteProjeto.service'
 
 // Adicionado o user_id no retorno de prestadores para permitir o filtro.
 // solicitacoes_garantia é LEFT JOIN (sem !inner) — traz o array vazio []
@@ -13,7 +14,7 @@ import { anexarTokens, obterProjetoIdPorToken } from './projetoToken.service'
 // máquina de estados, prazos e linguagem diferentes (ver garantia.service.ts).
 const SELECT_SERVICOS = `
   id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio,
-      cliente_whatsapp, status, cliente_nome, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at,
+      status, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at,
   prestadores (id, user_id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
   portfolio_fotos (*),
   solicitacoes_garantia (id, status, origem, tipo, prazo_resposta),
@@ -71,7 +72,11 @@ export async function getServicoPorToken(token: string): Promise<Servico[]> {
     .select(SELECT_SERVICOS)
     .eq('id', projetoId)
     .maybeSingle()
-  return data ? ((await anexarTokens([data])) as unknown as Servico[]) : []
+  if (!data) return []
+  // Quem abre o link ainda pode não estar vinculado ao projeto: o nome vem pelo próprio link.
+  const nome = await nomeClientePorToken(token)
+  const [comToken] = await anexarTokens([data])
+  return [{ ...comToken, cliente_nome: nome, cliente_whatsapp: null }] as unknown as Servico[]
 }
 
 export async function getServicosPorUserId(userId: string): Promise<Servico[]> {
@@ -81,7 +86,8 @@ export async function getServicosPorUserId(userId: string): Promise<Servico[]> {
     .eq('cliente_user_id', userId)
     .in('status', STATUS_VISIVEIS)
     .order('created_at', { ascending: false })
-  return (await anexarTokens(data ?? [])) as unknown as Servico[]
+  const comToken = await anexarTokens(data ?? [])
+  return (await anexarDadosCliente(comToken)) as unknown as Servico[]
 }
 
 /**

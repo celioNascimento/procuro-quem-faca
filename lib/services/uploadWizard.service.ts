@@ -41,12 +41,12 @@ export async function getComentariosDaFoto(fotoId: string) {
 }
 
 export async function buscarProjetosPorTelefone(prestadorId: number, clienteWhatsappLimpo: string) {
-  const { data, error } = await supabase
-    .from('portfolio_projetos')
-    .select('id, titulo, status, cliente_nome, created_at')
-    .eq('prestador_id', prestadorId)
-    .eq('cliente_whatsapp', clienteWhatsappLimpo)
-    .order('created_at', { ascending: false })
+  // O telefone do cliente não é filtrável pela API (dado pessoal): a função do banco só responde
+  // ao prestador dono e já devolve os projetos do mais novo para o mais antigo.
+  const { data, error } = await supabase.rpc('projetos_do_prestador_por_telefone', {
+    p_prestador_id: prestadorId,
+    p_whatsapp: clienteWhatsappLimpo,
+  })
 
   if (error) throw error
   return data as ProjetoIdentificado[]
@@ -66,11 +66,12 @@ export async function criarNovoProjeto(payload: {
     .insert(payload)
     // Colunas explícitas: `.select()` pediria avaliacao_token, que o navegador não pode ler.
     // O token é gerado aqui (payload) e devolvido junto.
-    .select('id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio, cliente_whatsapp, status, cliente_nome, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at')
+    .select('id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio, status, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at')
     .single()
 
   if (error) throw error
-  return { ...data, avaliacao_token: payload.avaliacao_token }
+  // Nome e telefone do cliente acabaram de ser digitados pelo prestador: voltam do payload, não da leitura.
+  return { ...data, cliente_whatsapp: payload.cliente_whatsapp, cliente_nome: payload.cliente_nome, avaliacao_token: payload.avaliacao_token }
 }
 
 /**
@@ -99,11 +100,11 @@ export async function iniciarProjetoSemFoto(payload: {
       sem_fotos: true,
       avaliacao_token,
     })
-    .select('id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio, cliente_whatsapp, status, cliente_nome, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at')
+    .select('id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio, status, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at')
     .single()
 
   if (error) throw error
-  return { ...data, avaliacao_token }
+  return { ...data, cliente_whatsapp: payload.cliente_whatsapp, cliente_nome: payload.cliente_nome, avaliacao_token }
 }
 
 /**

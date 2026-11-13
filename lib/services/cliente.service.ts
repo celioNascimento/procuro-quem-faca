@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import type { ClienteServico } from '@/types/clienteServicos'
 import { anexarTokens } from './projetoToken.service'
+import { anonimizarMeusDadosDeCliente } from './dadosClienteProjeto.service'
 
 // Status de solicitacoes_garantia considerados ativos — mesmo critério de
 // painelCliente.service.ts, centralizado aqui para evitar divergência.
@@ -139,13 +140,13 @@ export async function uploadClienteAvatar(
 
 // deleteClienteAccount cuida apenas da limpeza de dados de domínio.
 // A remoção do usuário de auth.users é feita pelo chamador via /api/delete-account.
-export async function deleteClienteAccount(userId: string, whatsapp: string) {
-  const numLimpo = whatsapp.replace(/\D/g, '')
-  if (numLimpo) {
-    await supabase
-      .from('portfolio_projetos')
-      .update({ cliente_nome: 'Cliente removido', cliente_whatsapp: null })
-      .eq('cliente_whatsapp', numLimpo)
+export async function deleteClienteAccount(userId: string) {
+  // Nome e WhatsApp nos projetos da conta são apagados pelo banco (a conta não tem permissão de
+  // escrever direto nesses projetos, então a limpeza antiga por update direto não surtia efeito).
+  try {
+    await anonimizarMeusDadosDeCliente()
+  } catch (e) {
+    console.error('Não foi possível limpar os dados do cliente nos projetos:', e)
   }
   await supabase.from('profiles').delete().eq('id', userId)
 }

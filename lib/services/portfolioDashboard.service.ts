@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
+import { anexarDadosCliente } from './dadosClienteProjeto.service'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Funções usadas pelo usePortfolioDashboard
@@ -24,7 +25,7 @@ export async function getPrestadorPerfilDoUsuario(userId: string) {
 // decidir o visual (badge "Sem registro fotográfico" em vez de contagem de fotos).
 const SELECT_PROJETO_COM_GARANTIA = `
   id, titulo, status, created_at, prestador_id,
-  cliente_nome, cliente_user_id, cliente_whatsapp,
+  cliente_user_id,
   sem_fotos, marcado_concluido_at,
   portfolio_fotos (id, url_foto, ordem),
   avaliacoes (id),
@@ -39,7 +40,8 @@ export async function getProjetosPorPrestador(prestadorId: number) {
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return (data ?? []) as Omit<Projeto, 'notifCount'>[]
+  // Nome e WhatsApp do cliente vêm de função do banco (dado pessoal; só o prestador dono recebe).
+  return (await anexarDadosCliente(data ?? [])) as unknown as Omit<Projeto, 'notifCount'>[]
 }
 
 export async function getProjetoAtualizado(projetoId: string): Promise<Projeto | null> {
@@ -51,7 +53,8 @@ export async function getProjetoAtualizado(projetoId: string): Promise<Projeto |
 
   if (error || !data) return null
 
-  return { ...data, notifCount: 0 } as Projeto
+  const [comCliente] = await anexarDadosCliente([data])
+  return { ...comCliente, notifCount: 0 } as unknown as Projeto
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
