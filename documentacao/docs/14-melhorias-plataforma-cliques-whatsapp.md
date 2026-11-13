@@ -143,7 +143,7 @@ Regras aplicadas hoje na rota (Tarefa 3):
 **Decisão (Célio):** mostrar nos dois lugares. Branch `feat/passo3-cliques-paineis`, que parte da branch unificada `fix/rastreio-cliques-whatsapp`; abrir o PR depois que o PR do passo 1 e 2 for mergeado (ou apontar o PR para a branch unificada).
 
 **Prestador** (`/dashboard`)
-- Card "Pedidos de orçamento pelo WhatsApp" abaixo do anúncio, com cliques dos últimos 7 dias, dos últimos 30 dias e o total registrado (inclui os registros históricos importados).
+- Card "Contatos pelo WhatsApp" (antes "Pedidos de orçamento pelo WhatsApp") abaixo do anúncio, com cliques dos últimos 7 dias, dos últimos 30 dias e o total registrado (inclui os registros históricos importados).
 - Rota `GET /api/prestadores/meus-cliques`: descobre o prestador pela sessão. Roda no servidor porque só ele sabe se o rastreio está ativo para aquele prestador. **Fora da amostra, o card mostra um aviso em vez de "0"**, para o prestador não achar que ninguém clicou.
 - O card só aparece com cadastro completo e perfil não bloqueado.
 

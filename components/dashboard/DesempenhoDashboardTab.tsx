@@ -1,7 +1,7 @@
 // components/dashboard/DesempenhoDashboardTab.tsx
 //
 // Aba "Desempenho" do dashboard do prestador. Reúne, em duas sub-abas:
-//   - Análises: visitas ao perfil e pedidos de orçamento pelo WhatsApp (antes fixos no topo);
+//   - Análises: visitas ao perfil e contatos pelo WhatsApp (antes fixos no topo);
 //   - Avaliações: reputação, distribuição das notas e comentários recebidos.
 //
 // "Análises" abre por padrão: avaliações são poucas e esporádicas, enquanto o prestador

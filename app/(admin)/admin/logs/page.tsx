@@ -72,7 +72,7 @@ export default function AdminLogs() {
               <option value="BUSCA_SEM_SUCESSO">Buscas vazias</option>
               <option value="DENUNCIA_PERFIL">Denúncias</option>
               <option value="CLIQUE_PERFIL">Cliques em perfis</option>
-              <option value="CLIQUE_WHATSAPP_ORCAMENTO">Solicitações de orçamento</option>
+              <option value="CLIQUE_WHATSAPP_ORCAMENTO">Cliques no WhatsApp</option>
             </Select>
           </Field>
         </div>

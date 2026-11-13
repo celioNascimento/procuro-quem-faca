@@ -1,6 +1,6 @@
 // components/dashboard/ResumoDesempenhoStrip.tsx
 //
-// Faixa compacta no topo do dashboard do prestador: visitas e pedidos de orçamento dos
+// Faixa compacta no topo do dashboard do prestador: visitas e contatos pelo WhatsApp dos
 // últimos 7 dias, com atalho para a aba "Desempenho". Mantém o sinal de valor da plataforma
 // visível sem ocupar a primeira dobra com os cards completos.
 
@@ -23,16 +23,16 @@ export function ResumoDesempenhoStrip({ onAbrir }: ResumoDesempenhoStripProps) {
 
   const carregando = visitas.carregando || cliques.carregando
   const visitas7d = !visitas.erro && visitas.dados ? visitas.dados.visitas7d : null
-  const orcamentos7d =
+  const contatos7d =
     !cliques.erro && cliques.dados && cliques.dados.rastreando ? cliques.dados.ultimos7 : null
 
-  // Para quem acabou de entrar, "0 visitas, 0 orçamentos" só desanima: a faixa espera ter o que mostrar.
-  if (!carregando && (visitas7d ?? 0) === 0 && (orcamentos7d ?? 0) === 0) return null
+  // Para quem acabou de entrar, "0 visitas, 0 contatos" só desanima: a faixa espera ter o que mostrar.
+  if (!carregando && (visitas7d ?? 0) === 0 && (contatos7d ?? 0) === 0) return null
 
   const textoValor = (valor: number | null) => (carregando || valor === null ? '—' : String(valor))
   const rotuloAcessivel = carregando
     ? 'Ver desempenho completo'
-    : `Ver desempenho completo: ${visitas7d ?? 'sem dado de'} visitas e ${orcamentos7d ?? 'sem dado de'} pedidos de orçamento nos últimos 7 dias`
+    : `Ver desempenho completo: ${visitas7d ?? 'sem dado de'} visitas e ${contatos7d ?? 'sem dado de'} contatos pelo WhatsApp nos últimos 7 dias`
 
   return (
     <button
@@ -50,8 +50,8 @@ export function ResumoDesempenhoStrip({ onAbrir }: ResumoDesempenhoStripProps) {
         </span>
         <span className="flex items-center gap-1.5">
           <MessageCircle className="size-4 text-emerald-600" aria-hidden="true" />
-          <span className="text-base font-black leading-none text-slate-900 tabular-nums">{textoValor(orcamentos7d)}</span>
-          <span className="text-xs font-bold text-slate-600">Orçamentos</span>
+          <span className="text-base font-black leading-none text-slate-900 tabular-nums">{textoValor(contatos7d)}</span>
+          <span className="text-xs font-bold text-slate-600">Contatos</span>
         </span>
       </span>
       <span className="flex shrink-0 items-center gap-1 text-sm font-bold text-blue-600">

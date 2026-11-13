@@ -14,7 +14,7 @@ perfil/page.tsx → redireciona para /dashboard?aba=perfil (ver nota abaixo)
 
 **Abas** (em `page.tsx`): "Meus Trabalhos" (`PortfolioDashboardTab`, bloqueada se `!cadastroCompleto`) / "Desempenho" (`DesempenhoDashboardTab`, bloqueada se `!cadastroCompleto`) / "Divulgação" (`CentralDivulgacaoTab`, bloqueada se `!cadastroCompleto` ou perfil bloqueado) / "Dados Profissionais" (`EditarPerfilTab`, nunca bloqueada). Aba inicial controlável via `?aba=perfil` ou `?aba=desempenho` (com `&sub=avaliacoes` para abrir direto nas avaliações). `?aba=avaliacoes` é o nome antigo da aba e continua funcionando: abre Desempenho > Avaliações. "Ver meu perfil" (link `/${slug}`) só aparece com slug.
 
-**Faixa resumo** (`ResumoDesempenhoStrip`): entre o card de anúncio e a barra de abas, mostra visitas e pedidos de orçamento dos últimos 7 dias e leva à aba Desempenho. Só aparece com cadastro completo, perfil não bloqueado e fora da própria aba Desempenho. Usa `useMinhasVisitas` e `useMeusCliques`; sem contagem de cliques ativa mostra "—", nunca "0".
+**Faixa resumo** (`ResumoDesempenhoStrip`): entre o card de anúncio e a barra de abas, mostra visitas e contatos pelo WhatsApp dos últimos 7 dias e leva à aba Desempenho. Só aparece com cadastro completo, perfil não bloqueado e fora da própria aba Desempenho. Usa `useMinhasVisitas` e `useMeusCliques`; sem contagem de cliques ativa mostra "—", nunca "0".
 
 **Selo "Novo"** na aba Desempenho: some na primeira vez que o prestador abre a aba. Estado em `localStorage` (`pqf:dashboard:desempenho-visto`), sempre dentro de `try/catch`; sem armazenamento disponível, o selo não aparece.
 
@@ -64,7 +64,7 @@ A aba **Meus Trabalhos** abre, nesta ordem: botão "Ver meu perfil público", ca
 - **Vitrine de fotos** (`VitrineDeFotos.tsx`, `useVitrine.ts`, `vitrine.service.ts`, regras em `lib/vitrine/vitrine.ts`): galeria de até 5 fotos, sem cliente, gravada na hora em `prestadores.sessao_fotos_titulo/urls`. No perfil público aparece com a linha "Fotos enviadas pelo profissional" (título padrão: "Fotos do profissional"), para não ser confundida com trabalho confirmado. O editor antigo ("sessão de fotos") saiu da aba Dados Profissionais.
 - **Primeiros passos** (`PrimeirosPassos.tsx`, regras em `lib/dashboard/primeirosPassos.ts`): 1) perfil no ar (sempre concluído; copiar link), 2) fotos na vitrine, 3) primeiro trabalho com cliente. Some sozinho quando os três terminam e pode ser dispensado ("Agora não", guardado em `localStorage`, dentro de `try/catch`).
 - O botão do banner do painel leva a `/dashboard?novo=1`, que abre a tela de novo trabalho uma vez e limpa o endereço.
-- A faixa de 7 dias (`ResumoDesempenhoStrip`) não aparece enquanto visitas e orçamentos estiverem zerados.
+- A faixa de 7 dias (`ResumoDesempenhoStrip`) não aparece enquanto visitas e contatos estiverem zerados.
 
 ### `PrestadorSideCard.tsx`
 
@@ -76,9 +76,9 @@ Card estático direcionando ao WhatsApp institucional (`lib/config/contato.ts`),
 
 ### Aba "Desempenho" — `DesempenhoDashboardTab.tsx`
 
-Antes, visitas ao perfil e pedidos de orçamento ficavam fixos no topo do dashboard e as avaliações tinham aba própria. Agora tudo vive em "Desempenho", com um seletor segmentado (`role="tablist"`, setas esquerda/direita alternam) em duas sub-abas:
+Antes, visitas ao perfil e contatos pelo WhatsApp ficavam fixos no topo do dashboard e as avaliações tinham aba própria. Agora tudo vive em "Desempenho", com um seletor segmentado (`role="tablist"`, setas esquerda/direita alternam) em duas sub-abas:
 
-- **Análises** (padrão ao abrir) — `VisitasPerfilCard` (visitas 7d, 30d e total, com variação) e `CliquesWhatsappCard` (pedidos de orçamento pelo WhatsApp, com a nota de contagem única a cada 24 h). Com zero pedidos, o card orienta a completar o perfil e adicionar trabalhos.
+- **Análises** (padrão ao abrir) — `VisitasPerfilCard` (visitas 7d, 30d e total, com variação) e `CliquesWhatsappCard` (contatos pelo WhatsApp, com a nota de contagem única a cada 24 h). Com zero contatos, o card orienta a completar o perfil e adicionar trabalhos.
 - **Avaliações** — `AvaliacoesDashboardTab` (nota média, distribuição, evolução e comentários recentes), sem alteração de conteúdo.
 
 "Análises" é o padrão porque avaliações são poucas e esporádicas, enquanto o prestador volta ao painel para ver se está recebendo contato.
@@ -89,7 +89,7 @@ Kit de divulgação do prestador, com os mesmos dados do perfil público (`lib/s
 
 - **Cartão digital & WhatsApp** — PNG em Quadrado 1:1 (1080²), 4:3 (1200×900) e Stories 9:16 (1080×1920). A **foto final ("Depois", maior `ordem`) do projeto concluído mais recente** é o destaque, mostrada inteira (sem corte; sobra esmaecida quando a proporção difere); abaixo, foto/inicial, nome, categoria • cidade; rodapé com chamada, link curto e QR. **Não leva dados voláteis** (indicações, concluídos, garantia, selo de verificação), porque a imagem circula por semanas. Botões "Baixar imagem" e "Copiar link do perfil".
 - **Adesivos & QR Code** — adesivo de veículo/baú 30×15 cm (200 dpi) e cartão de visita 90×50 mm frente/verso (300 dpi). "{Categoria} Verificado" só aparece se `verificado = true`. Saída: PNG ou impressão/"Salvar como PDF" via iframe com `@page` no tamanho físico. Sem sangria.
-- **Links & orçamentos** — link geral da vitrine e 4 mensagens prontas de WhatsApp (portfólio, orçamento, status, grupos), que citam apenas números existentes.
+- **Links & mensagens** — link geral da vitrine e 4 mensagens prontas de WhatsApp (portfólio, responder quem te chamou, status, grupos), que citam apenas números existentes.
 
 **Ajuda sobre Divulgação** (`lib/help/help-content.ts`, categoria "Divulgação", público `prestador`): 4 artigos — visão geral, cartão digital, adesivos e QR Code, links e mensagens prontas. A visão geral aparece no bloco de ajuda do painel (`dashboard-prestador`); os outros três aparecem num bloco `ContextualHelp` no fim da própria aba (contexto `divulgacao`), para não lotar os atalhos do painel. Ao mudar rótulos ou fluxos da aba, atualizar esses textos. `ContextualHelp` agora envia `publico=prestador` no link "Ver todas as respostas".
 
