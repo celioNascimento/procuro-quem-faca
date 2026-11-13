@@ -24,6 +24,7 @@ import {
 } from '@/lib/services/cadastroPrestador.service'
 import { reivindicarPerfilPorToken, tokenTemFormatoValido } from '@/lib/services/reivindicacao.service'
 import { registrarConsentimentos } from '@/lib/services/consentimento.service'
+import { listarPendenciasCadastro } from '@/lib/cadastro/pendencias'
 
 import type { PrestadorFormData } from '@/types/prestador'
 
