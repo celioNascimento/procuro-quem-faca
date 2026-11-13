@@ -52,7 +52,7 @@ export function useConfirmarExclusaoConta() {
         await deletarPrestadorPorUserId(userId)
       } else {
         const perfilCliente = await ClienteService.fetchClienteProfile(userId)
-        await ClienteService.deleteClienteAccount(userId, perfilCliente?.whatsapp || '')
+        await ClienteService.deleteClienteAccount(userId)
       }
 
       await fetch('/api/delete-account', { method: 'POST' })
