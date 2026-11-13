@@ -34,9 +34,13 @@ export function SessaoFotos({ sessao }: SessaoFotosProps) {
   return (
     <section className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white p-4 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.45)] sm:p-6" aria-labelledby="sessao-fotos-titulo">
       <div className="flex items-end justify-between gap-4">
-        <h2 id="sessao-fotos-titulo" className="max-w-[75%] text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 sm:text-[11px]">
-          {sessao.titulo}
-        </h2>
+        <div className="min-w-0 max-w-[75%]">
+          <h2 id="sessao-fotos-titulo" className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 sm:text-[11px]">
+            {sessao.titulo}
+          </h2>
+          {/* A vitrine é do próprio profissional: não passou pelo aceite nem pela avaliação de um cliente. */}
+          <p className="mt-1 text-xs font-medium text-slate-500">Fotos enviadas pelo profissional</p>
+        </div>
         <span className="shrink-0 text-[11px] font-bold tabular-nums text-slate-400">{String(fotoAtual + 1).padStart(2, '0')} / {String(fotos.length).padStart(2, '0')}</span>
       </div>
 

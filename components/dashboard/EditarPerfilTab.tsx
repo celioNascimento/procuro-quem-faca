@@ -19,7 +19,6 @@ import { SecaoDadosPessoais } from '@/components/perfil/SecaoDadosPessoais'
 import { SecaoLocalizacao } from '@/components/perfil/SecaoLocalizacao'
 import { SecaoGarantia } from '@/components/perfil/SecaoGarantia'
 import { PortfolioToggle } from '@/components/dashboard/PortfolioToggle'
-import SessaoFotosEditor from '@/components/perfil/SessaoFotosEditor'
 import EditarPerfilSkeleton from '@/components/skeletons/EditarPerfilSkeleton'
 
 // Hooks e Utils (Laboratório)
@@ -50,7 +49,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
   const [tentouEnviar, setTentouEnviar] = useState(false)
   const [userLogado, setUserLogado] = useState<User | null>(null)
   const [portfolioOb, setPortfolioOb] = useState(true) // Estado local sincronizado com DB
-  const [uploadingSessao, setUploadingSessao] = useState(false)
 
   const [errorModal, setErrorModal] = useState({ show: false, title: '', message: '' })
 
@@ -126,23 +124,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
     setUploading(false)
   }
 
-  const handleAdicionarFotosSessao = async (files: File[]) => {
-    if (!userLogado || !files.length) return
-    const atuais = form.formData.sessao_fotos_urls || []
-    if (atuais.length >= 5) return
-    setUploadingSessao(true)
-    try {
-      const novas: string[] = []
-      for (const file of files.slice(0, 5 - atuais.length)) {
-        const result = await fazerUploadFoto(file, `${userLogado.id}/sessao`, undefined, 'portfolios')
-        if (result.ok) novas.push(result.url)
-      }
-      form.set({ sessao_fotos_urls: [...atuais, ...novas].slice(0, 5) })
-      if (novas.length) setStatus('Fotos adicionadas. Salve o perfil para publicar.')
-    } finally {
-      setUploadingSessao(false)
-    }
-  }
 
   const handleSalvar = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -284,14 +265,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               </section>
             )}
 
-            <SessaoFotosEditor
-              titulo={form.formData.sessao_fotos_titulo || ''}
-              fotos={form.formData.sessao_fotos_urls || []}
-              uploading={uploadingSessao}
-              onTituloChange={(titulo) => form.set({ sessao_fotos_titulo: titulo })}
-              onAdicionar={handleAdicionarFotosSessao}
-              onRemover={(index) => form.set({ sessao_fotos_urls: (form.formData.sessao_fotos_urls || []).filter((_, itemIndex) => itemIndex !== index) })}
-            />
 
             <SecaoOQueVoceFaz
               grupoId={form.formData.grupo_id}
