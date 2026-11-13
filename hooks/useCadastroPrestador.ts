@@ -387,6 +387,6 @@ export function useCadastroPrestador(reivindicarId: string | null, tokenReivindi
     userLogado, email, setEmail, senha, setSenha, confirmarSenha, setConfirmarSenha,
     aceitouTermos, setAceitouTermos, aceitouPrivacidade, setAceitouPrivacidade,
     errorModal, setErrorModal,
-    handleUploadFotoProcess, handleExcluirPerfil, calcularProgresso, handleSubmit, handleLogout,
+        handleUploadFotoProcess, handleExcluirPerfil, calcularProgresso, pendenciasCadastro, handleSubmit, handleLogout,
   }
 }
