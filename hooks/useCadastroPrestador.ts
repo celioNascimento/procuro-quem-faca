@@ -261,6 +261,18 @@ export function useCadastroPrestador(reivindicarId: string | null, tokenReivindi
     return Math.round((campos.filter(Boolean).length / campos.length) * 100)
   }
 
+    // O que ainda falta para liberar o botão, em palavras simples
+  const pendenciasCadastro = () => listarPendenciasCadastro({
+    ...form.formData,
+    slugDisponivel: slugCheck.disponivel,
+    aceitouTermos,
+    aceitouPrivacidade,
+    logado: Boolean(userLogado),
+    email,
+    senha,
+    confirmarSenha,
+  })
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setTentouEnviar(true)
