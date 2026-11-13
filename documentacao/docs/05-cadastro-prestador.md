@@ -32,6 +32,8 @@ Mesmo que o usuário já possua uma sessão válida e caia no fluxo que o hook d
 2. Altera o texto do botão de submissão de "Salvar Alterações" para "Finalizar Cadastro", reduzindo a ambiguidade na UX.
 
 
+**Entrada no ar sem aprovação manual (13/11/2026).** Ao clicar em "Finalizar Cadastro", o perfil entra no ar na hora: o gatilho `prestadores_proteger_campos` aceita do dono os status `pendente` (rascunho) e `ativo` (no ar), marca `aprovado_em` na primeira ativação e continua protegendo `verificado`, `bloqueado` e `cliques_whatsapp`. Não existe fila de aprovação de cadastro: pela regra do plano de confiança (doc 19), revisão humana só onde há julgamento — selos/verificações, denúncias e bloqueio. O painel admin (Visão geral) lista os cadastros diretos dos últimos 7 dias para acompanhamento. Entre 11/11 e 13/11/2026 o gatilho forçava todo cadastro a `pendente` sem haver tela de aprovação, prendendo os cadastros novos fora do ar; cadastros presos desse período voltam ao ar quando o dono reabre o formulário e finaliza de novo.
+
 **Autenticação embutida no formulário:** diferente de `/login`, o cadastro de conta acontece no mesmo formulário (`SecaoAcessoCadastro`/`SecaoAcessoLogado`, ambos usando `components/auth/SenhaInput.tsx`). É um segundo ponto de criação de conta, além de `/login`.
 
 **Submit:** valida → `autenticarOuCriarConta` (= `criarContaEmail` com fallback `loginEmail`, se sem sessão) → `atualizarSenha` (se logado trocando) → limpa cidades duplicadas da sede → `deletarOutrosPrestadoresDoUsuario` (se reivindicando) → `upsertPrestador` → `loginEmail` (garante sessão) → `window.location.href = '/dashboard'` (hard redirect, força `useAuth` reprocessar do zero).

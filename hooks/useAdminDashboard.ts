@@ -6,10 +6,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   getContadoresGerais,
+  getNovosCadastros,
   getOrigemEAtivacaoStats,
   getRankingCategorias,
   getRadarRecente,
   type CategoriaRanking,
+  type NovoCadastro,
   type RadarItem,
 } from '@/lib/services/adminDashboard.service'
 
@@ -37,6 +39,7 @@ const STATS_INICIAL: Stats = {
 export function useAdminDashboard() {
   const [stats, setStats] = useState<Stats>(STATS_INICIAL)
   const [radar, setRadar] = useState<RadarItem[]>([])
+  const [novosCadastros, setNovosCadastros] = useState<NovoCadastro[]>([])
   const [refreshing, setRefreshing] = useState(false)
   const [notificacao, setNotificacao] = useState<string | null>(null)
   const [erro, setErro] = useState<string | null>(null)
@@ -46,11 +49,12 @@ export function useAdminDashboard() {
     if (isRefresh) { setRefreshing(true); hapticFeedback(15) }
     try {
       setErro(null)
-      const [contadores, { origem, ativacao }, topCategorias, radarRecente] = await Promise.all([
+      const [contadores, { origem, ativacao }, topCategorias, radarRecente, novos] = await Promise.all([
         getContadoresGerais(),
         getOrigemEAtivacaoStats(),
         getRankingCategorias(),
         getRadarRecente(),
+        getNovosCadastros(),
       ])
 
       setStats({
@@ -60,6 +64,7 @@ export function useAdminDashboard() {
         ativacao,
       })
       setRadar(radarRecente)
+      setNovosCadastros(novos)
     } catch (err) {
       console.error('Erro ao carregar dashboard admin:', err)
       setErro('Não foi possível atualizar os dados do painel.')
@@ -87,5 +92,5 @@ export function useAdminDashboard() {
     ? Math.round((stats.ativacao.enviados / stats.ativacao.total) * 100)
     : 0
 
-  return { stats, radar, refreshing, notificacao, erro, pctAtivacao, carregarDashboard }
+  return { stats, radar, novosCadastros, refreshing, notificacao, erro, pctAtivacao, carregarDashboard }
 }

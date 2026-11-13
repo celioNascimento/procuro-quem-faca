@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AlertCircle, ArrowRight, RefreshCw } from 'lucide-react'
 import { useAdminDashboard } from '@/hooks/useAdminDashboard'
+import { SITE_URL } from '@/lib/divulgacao/links'
 import { useAdminPendencias } from '@/hooks/admin/useAdminPendencias'
 import { Badge, Button, Card, EmptyState, PageHeader, StatCard } from '@/components/admin/ui'
 
@@ -16,7 +17,7 @@ interface ItemAtencao {
 }
 
 export default function AdminDashboard() {
-  const { stats, radar, refreshing, notificacao, erro, pctAtivacao, carregarDashboard } = useAdminDashboard()
+  const { stats, radar, novosCadastros, refreshing, notificacao, erro, pctAtivacao, carregarDashboard } = useAdminDashboard()
   const pendencias = useAdminPendencias()
 
   const naoContatados = Math.max(stats.ativacao.total - stats.ativacao.enviados, 0)
@@ -97,6 +98,43 @@ export default function AdminDashboard() {
                     <ArrowRight size={16} className="text-slate-400 group-hover:text-pqf-blue" aria-hidden="true" />
                   </div>
                 </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
+      <Card
+        titulo="Novos cadastros (7 dias)"
+        descricao="Profissionais que se cadastraram sozinhos. O perfil entra no ar sem aprovação; use a Moderação se algo estiver errado."
+      >
+        {novosCadastros.length === 0 ? (
+          <EmptyState titulo="Nenhum cadastro novo" descricao="Ninguém se cadastrou nos últimos 7 dias." />
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {novosCadastros.map((p) => (
+              <li key={p.id} className="flex items-center gap-3 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-pqf-ink">{p.nome || 'Sem nome'}</p>
+                  <p className="truncate text-xs text-pqf-muted">
+                    {[p.cidade, new Date(p.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </p>
+                </div>
+                <Badge tom={p.status === 'ativo' ? 'sucesso' : 'alerta'}>
+                  {p.status === 'ativo' ? 'No ar' : 'Incompleto'}
+                </Badge>
+                {p.status === 'ativo' && p.slug && (
+                  <a
+                    href={`${SITE_URL}/${p.slug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="shrink-0 text-sm font-semibold text-pqf-blue hover:underline"
+                  >
+                    Ver perfil
+                  </a>
+                )}
               </li>
             ))}
           </ul>

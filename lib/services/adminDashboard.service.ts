@@ -34,6 +34,34 @@ export interface AtivacaoStats {
   ativos: number
 }
 
+export interface NovoCadastro {
+  id: number
+  nome: string | null
+  slug: string | null
+  status: string | null
+  created_at: string
+  cidade: string | null
+}
+
+// Cadastros feitos pelo próprio profissional nos últimos dias (os perfis da curadoria e as
+// reivindicações têm acompanhamento próprio na tela de Ativação).
+export async function getNovosCadastros(dias = 7): Promise<NovoCadastro[]> {
+  const desde = new Date(Date.now() - dias * 24 * 60 * 60 * 1000).toISOString()
+  const { data, error } = await supabase
+    .from('prestadores')
+    .select('id, nome, slug, status, created_at, cidades(nome)')
+    .eq('origem_tipo', 'registro_direto')
+    .gte('created_at', desde)
+    .order('created_at', { ascending: false })
+    .limit(12)
+  if (error) throw error
+  type Linha = { id: number; nome: string | null; slug: string | null; status: string | null; created_at: string; cidades: { nome: string | null } | { nome: string | null }[] | null }
+  return ((data ?? []) as Linha[]).map(({ cidades, ...resto }) => ({
+    ...resto,
+    cidade: (Array.isArray(cidades) ? cidades[0] : cidades)?.nome ?? null,
+  }))
+}
+
 export async function getContadoresGerais(): Promise<ContadoresGerais> {
   const resultados = await Promise.all([
     supabase.from('cidades').select('*', { count: 'exact', head: true }),
