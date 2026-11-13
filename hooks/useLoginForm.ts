@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import { garantirRoleInicial, getPrestadorResumo } from '@/lib/services/auth.service'
 import { resolverDestinoPosLogin } from '@/lib/auth/resolverDestinoPosLogin'
+import { destinoReivindicacaoDaUrl } from '@/lib/auth/destinoReivindicacao'
 import { insertLog } from '@/lib/db/logs'
 
 // Esta tela de login é a "Área do Profissional" — qualquer conta criada
@@ -68,7 +69,8 @@ export function useLoginForm() {
       const prestador = await getPrestadorResumo(supabase, user.id)
       if (!isActive.current) return
 
-      const destino = resolverDestinoPosLogin(profile, prestador)
+      // Quem veio do link pessoal de um perfil volta para ele, em vez de cair num cadastro novo
+      const destino = destinoReivindicacaoDaUrl() ?? resolverDestinoPosLogin(profile, prestador)
 
       if (destino.startsWith('/cadastro') && typeof window !== 'undefined') {
         sessionStorage.setItem('pqf_prefill', JSON.stringify({ email, password }))
@@ -220,7 +222,7 @@ export function useLoginForm() {
       // de propagação que causava a queda em /auth/escolha. Como acabamos
       // de criar a conta, sabemos que não existe prestador vinculado ainda.
       const prestador = await getPrestadorResumo(supabase, novaConta.user.id)
-      const destino = resolverDestinoPosLogin(profileAtualizado, prestador)
+      const destino = destinoReivindicacaoDaUrl() ?? resolverDestinoPosLogin(profileAtualizado, prestador)
 
       if (destino.startsWith('/cadastro') && typeof window !== 'undefined') {
         sessionStorage.setItem('pqf_prefill', JSON.stringify({ email, password }))

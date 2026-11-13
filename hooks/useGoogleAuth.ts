@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { destinoReivindicacaoDaUrl } from '@/lib/auth/destinoReivindicacao'
 
 interface UseGoogleAuthParams {
   onLog?: (acao: string, detalhes?: Record<string, unknown>) => Promise<void> | void
@@ -29,6 +30,11 @@ export function useGoogleAuth({ onLog, roleDesejado }: UseGoogleAuthParams = {})
       const callbackUrl = new URL('/auth/callback', window.location.origin)
       if (roleDesejado) {
         callbackUrl.searchParams.set('role', roleDesejado)
+      }
+      // Quem veio do link pessoal de um perfil volta para ele depois de entrar com o Google
+      const destinoReivindicacao = destinoReivindicacaoDaUrl()
+      if (destinoReivindicacao) {
+        callbackUrl.searchParams.set('next', destinoReivindicacao)
       }
 
       const { error } = await supabase.auth.signInWithOAuth({
