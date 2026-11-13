@@ -8,6 +8,8 @@ Complementa `02-arquitetura.md`. Ver `00-glossario.md` para localizar um conceit
 
 ## `/admin` — Dashboard
 
+**Classificação dos prestadores (tela Prestadores, `types/adminPrestadores.ts`, revisada em 13/11/2026).** A etapa de cada prestador vem da origem (`origem_tipo`), do status e da conta, nesta ordem: sem conta → *Perfil público* (ou *Cadastro iniciado* se for rascunho); com conta e `status = 'pendente'` → *Cadastro iniciado*; com conta e funil de ativação completo (`perfil_completo`/`avaliacao_recebida`) → *Ativo*; origem `reivindicado` (ou o formato antigo, `curadoria_publica` com conta) → *Reivindicado*; origem `registro_direto` → *Cadastro direto*. Antes, qualquer perfil com conta era chamado de *Reivindicado*, inclusive quem criou o próprio cadastro, e a mensagem de WhatsApp sugerida dizia "seu perfil já está reivindicado" para quem nunca assumiu nada. A origem tem três nomes: *Curadoria pública*, *Perfil assumido* e *Cadastro direto*.
+
 `hooks/useAdminDashboard.ts` + `lib/services/adminDashboard.service.ts`. Métricas gerais (contadores de cidades/anúncios/prestadores/logs), origem de prestadores (curadoria/registrados/reivindicados), funil de ativação, ranking de categorias mais buscadas, radar de eventos recentes (clique WhatsApp, busca sem sucesso, denúncia), subscription Realtime em `logs_atividades` com notificação visual para denúncias.
 
 **Pendência:** o ranking de "categorias mais buscadas" depende de logs com `acao='FILTRO_CATEGORIA'` — nenhum ponto do frontend revisado até agora grava esse log explicitamente. Se essa gravação não existir de fato em algum lugar não revisado, o ranking fica sempre vazio (tratado com fallback "Sem dados ainda", não é erro visível, mas a métrica não reflete a realidade).
