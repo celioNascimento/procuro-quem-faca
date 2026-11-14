@@ -12,6 +12,21 @@ export function getIniciais(nome: string): string {
   return base[0][0].toUpperCase()
 }
 
+// Tons suaves da marca para o avatar de quem não tem foto. A cor sai do nome, então é sempre a mesma para o mesmo perfil.
+const CORES_INICIAIS = [
+  'bg-blue-50 text-blue-700 border-blue-100',
+  'bg-emerald-50 text-emerald-700 border-emerald-100',
+  'bg-amber-50 text-amber-700 border-amber-100',
+  'bg-rose-50 text-rose-700 border-rose-100',
+  'bg-violet-50 text-violet-700 border-violet-100',
+]
+
+export function corDasIniciais(nome: string): string {
+  let soma = 0
+  for (const letra of nome || '') soma += letra.charCodeAt(0)
+  return CORES_INICIAIS[soma % CORES_INICIAIS.length]
+}
+
 export function getLocalizacao(bairro?: string, cidadeNome?: string): string {
   return [bairro, cidadeNome].filter(Boolean).join(' • ')
 }

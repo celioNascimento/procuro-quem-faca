@@ -51,11 +51,12 @@ export function AdCard({ page, anuncio, categoria }: Props) {
   // "sem anúncio" antes da resposta real chegar. Reserva o mesmo espaço
   // visual do banner pra não saltar o layout quando o resultado chegar.
   if (carregando) {
-    return <div className="my-2 w-full h-[90px] md:h-[120px] lg:h-[140px] bg-zinc-50 border border-zinc-100 animate-pulse rounded-[2rem]" />
+    // O topo da lista usa a faixa fina; os demais reservam a altura do banner.
+    return <div className={`my-2 w-full bg-zinc-50 border border-zinc-100 animate-pulse ${page === 'lista_topo' ? 'h-14 rounded-2xl' : 'h-[90px] md:h-[120px] lg:h-[140px] rounded-[2rem]'}`} />
   }
 
   if (!anuncio || expirado || agendado) {
-    return <AdCardFallback fallback={fallback} contexto={contexto} />
+    return <AdCardFallback fallback={fallback} contexto={contexto} compacto={page === 'lista_topo'} />
   }
 
   if (anuncio.tipo === 'proprio' && anuncio.imagem_url) {
@@ -97,5 +98,5 @@ export function AdCard({ page, anuncio, categoria }: Props) {
     )
   }
 
-  return <AdCardFallback fallback={fallback} contexto={contexto} />
+  return <AdCardFallback fallback={fallback} contexto={contexto} compacto={page === 'lista_topo'} />
 }

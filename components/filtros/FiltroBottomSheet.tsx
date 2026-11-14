@@ -127,6 +127,16 @@ export function FiltroBottomSheet({
   const [aberto, setAberto] = useState(false)
   const sheetRef = useRef<HTMLDivElement>(null)
   const botaoAbrirRef = useRef<HTMLButtonElement>(null)
+  // Ao chegar no rodapé da página o botão flutuante sai de cena (antes ficava por cima dos links).
+  const [rodapeVisivel, setRodapeVisivel] = useState(false)
+
+  useEffect(() => {
+    const rodape = document.querySelector('footer')
+    if (!rodape || typeof IntersectionObserver === 'undefined') return
+    const observador = new IntersectionObserver(([entrada]) => setRodapeVisivel(entrada.isIntersecting))
+    observador.observe(rodape)
+    return () => observador.disconnect()
+  }, [])
 
   // Trava o scroll do body enquanto o sheet estiver aberto
   useEffect(() => {
@@ -154,7 +164,10 @@ export function FiltroBottomSheet({
   return (
     <>
       {/* Botão flutuante fixo no rodapé — só no mobile */}
-      <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 lg:hidden">
+      <div
+        inert={rodapeVisivel && !aberto}
+        className={`fixed bottom-6 left-1/2 z-40 -translate-x-1/2 transition-opacity duration-200 lg:hidden ${rodapeVisivel && !aberto ? 'pointer-events-none opacity-0' : ''}`}
+      >
         <button
           ref={botaoAbrirRef}
           onClick={() => setAberto(true)}

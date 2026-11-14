@@ -4,7 +4,7 @@ import {
   calcularFacetas, decidirCidade, filtrarExibidos, normalizarCidade, parsearBusca,
   type FiltrosAtivos, type ItemBusca,
 } from '@/lib/buscaFiltros'
-import { getIniciais, getTituloBusca } from '@/lib/prestadorUtils'
+import { corDasIniciais, getIniciais, getTituloBusca } from '@/lib/prestadorUtils'
 
 const sem: FiltrosAtivos = { estado: '', regiao: '', grupo: '', categoria: '', cidade: '' }
 
@@ -149,5 +149,17 @@ describe('getIniciais', () => {
     expect(getIniciais('Pedreiro')).toBe('P')
     expect(getIniciais('')).toBe('?')
     expect(getIniciais('de')).toBe('D')
+  })
+})
+
+describe('corDasIniciais', () => {
+  it('é sempre a mesma para o mesmo nome e vem da paleta da marca', () => {
+    expect(corDasIniciais('Maicon Dias')).toBe(corDasIniciais('Maicon Dias'))
+    expect(corDasIniciais('Maicon Dias')).toMatch(/^bg-\w+-50 text-\w+-700 border-\w+-100$/)
+    expect(corDasIniciais('')).toMatch(/^bg-/)
+  })
+  it('nomes diferentes não caem todos na mesma cor', () => {
+    const cores = new Set(['Ana', 'Bruno', 'Carla', 'Diego', 'Eva', 'Fábio'].map(corDasIniciais))
+    expect(cores.size).toBeGreaterThan(1)
   })
 })

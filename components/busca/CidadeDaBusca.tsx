@@ -18,7 +18,7 @@ type Props = {
 }
 
 const botao =
-  'min-h-11 rounded-lg px-2 text-sm font-semibold text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600'
+  '-my-2 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600'
 
 export function CidadeDaBusca({
   cidadeNome, origem, ampliar, cidadeSalvaNome, onVerOutrasCidades, onVoltarParaMinhaCidade,

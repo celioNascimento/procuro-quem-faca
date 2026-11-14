@@ -4,12 +4,10 @@ export default function PainelDoClienteSkeleton() {
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-32 font-sans antialiased" aria-busy="true" aria-label="Carregando painel do cliente">
       <nav className="fixed inset-x-0 top-0 z-[100] h-16 border-b border-slate-100 bg-white md:h-18">
-        <div className="mx-auto flex h-full max-w-5xl items-center justify-between px-5">
-          <div className="flex items-center gap-2 md:gap-4">
-            <Skeleton className="size-11 rounded-xl bg-slate-100" />
-            <Skeleton className="h-10 w-36 bg-slate-100 md:w-52" />
-          </div>
+        <div className="mx-auto grid h-full max-w-5xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-5 md:gap-4">
           <Skeleton className="size-11 rounded-xl bg-slate-100" />
+          <Skeleton className="h-10 w-36 bg-slate-100 md:w-52" />
+          <Skeleton className="ml-auto size-11 rounded-xl bg-slate-100" />
         </div>
       </nav>
       <div className="mx-auto max-w-5xl px-5 pb-10 pt-20 md:pt-26">
