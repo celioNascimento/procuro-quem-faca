@@ -98,3 +98,35 @@ export function consumirScrollSalvo(): number | null {
     return null
   }
 }
+
+// ─── Quantos resultados já estavam abertos ("Ver mais") ─────────────────────
+// Ao voltar do perfil, a lista precisa reabrir com a mesma quantidade de cards,
+// senão a rolagem restaurada cairia num lugar que ainda não existe.
+
+const CHAVE_QUANTIDADE = 'pqf:qtd:'
+
+function chaveQuantidade(): string {
+  return CHAVE_QUANTIDADE + window.location.pathname + window.location.search
+}
+
+export function salvarQuantidadeVisivel(quantidade: number): void {
+  try {
+    sessionStorage.setItem(chaveQuantidade(), String(quantidade))
+  } catch {
+    /* sessionStorage indisponível: segue com a quantidade padrão */
+  }
+}
+
+/** Só devolve valor quando a chegada foi por voltar/avançar (visita nova começa em 10). Não consome o marcador. */
+export function quantidadeVisivelSalva(): number | null {
+  if (typeof window === 'undefined') return null
+  const marcador = (window as unknown as { __pqfHistorico?: number }).__pqfHistorico
+  if (!marcador || Date.now() - marcador > JANELA_HISTORICO_MS) return null
+
+  try {
+    const n = Number(sessionStorage.getItem(chaveQuantidade()))
+    return Number.isInteger(n) && n > 0 ? n : null
+  } catch {
+    return null
+  }
+}

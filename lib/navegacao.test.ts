@@ -3,8 +3,11 @@
 // Regras do "voltar": só desfaz o histórico quando existe página anterior do app;
 // senão usa o fallback. E `from` nunca pode apontar para fora do site.
 
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { podeVoltarNoApp, sanitizarRotaInterna, voltarOuIr } from '@/lib/navegacao'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  marcarNavegacaoPorHistorico, podeVoltarNoApp, quantidadeVisivelSalva, salvarQuantidadeVisivel,
+  sanitizarRotaInterna, voltarOuIr,
+} from '@/lib/navegacao'
 
 function roteador() {
   return { back: vi.fn(), push: vi.fn(), replace: vi.fn() }
@@ -60,5 +63,33 @@ describe('podeVoltarNoApp', () => {
     expect(podeVoltarNoApp()).toBe(true)
     simularNavigationApi(false)
     expect(podeVoltarNoApp()).toBe(false)
+  })
+})
+
+describe('quantidade de resultados abertos', () => {
+  beforeEach(() => {
+    ;(window as unknown as { __pqfHistorico?: number }).__pqfHistorico = undefined
+  })
+
+  afterEach(() => {
+    sessionStorage.clear()
+    ;(window as unknown as { __pqfHistorico?: number }).__pqfHistorico = undefined
+  })
+
+  it('visita nova (sem voltar) começa do padrão, mesmo com valor guardado', () => {
+    salvarQuantidadeVisivel(30)
+    expect(quantidadeVisivelSalva()).toBeNull()
+  })
+
+  it('ao voltar pelo histórico, devolve a quantidade guardada', () => {
+    salvarQuantidadeVisivel(30)
+    marcarNavegacaoPorHistorico()
+    expect(quantidadeVisivelSalva()).toBe(30)
+  })
+
+  it('valor inválido é ignorado', () => {
+    sessionStorage.setItem('pqf:qtd:' + window.location.pathname + window.location.search, 'abc')
+    marcarNavegacaoPorHistorico()
+    expect(quantidadeVisivelSalva()).toBeNull()
   })
 })

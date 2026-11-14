@@ -148,7 +148,7 @@ lib/
 ├── ads/          # Segmentação de anúncios (categoria-segmento.ts, fallbacks.ts)
 ├── auth/         # resolverDestinoPosLogin.ts — decisão pura de destino pós-login
 ├── config/       # Contato institucional (contato.ts)
-├── contexts/     # React Contexts (LocationContext — não conectado)
+├── contexts/     # React Contexts (LocationContext — cidade atual, em uso)
 ├── db/           # Acesso a tabelas de infraestrutura (logs.ts, categorias.ts, geografia.ts, prestadores.ts)
 ├── scripts/      # Scripts auxiliares (ex: AdSense)
 ├── services/     # Camada de service — uma chamada Supabase por função

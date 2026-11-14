@@ -2,42 +2,34 @@
 // hooks/usePrestadores.ts
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { getPrestadoresAtivos, getMediasAvaliacoes } from '@/lib/db/prestadores'
 import { normalizarTermo, filtrarPrestadores } from '@/lib/buscaUtils'
 import { pesoOrdenacao } from '@/lib/ordenacao'
+import {
+  calcularFacetas,
+  decidirCidade,
+  filtrarExibidos,
+  normalizarCidade,
+  parsearBusca,
+} from '@/lib/buscaFiltros'
 import { insertLog } from '@/lib/db/logs'
 import { useFiltrosParams } from './useFiltrosParams'
 import { useLocation } from '@/lib/contexts/LocationContext'
 import type { Prestador } from '@/types/prestador'
 
-function calcularMedias(medias: { prestador_id: string; nota: number }[]) {
+// Mesma nota que o perfil público usa: a "efetiva" (ajustada por garantia) quando existe.
+function calcularMedias(medias: { prestador_id: string; nota: number; nota_efetiva?: number | null }[]) {
   const map: Record<string, { soma: number; total: number }> = {}
-  medias.forEach(({ prestador_id, nota }) => {
+  medias.forEach(({ prestador_id, nota, nota_efetiva }) => {
     if (!map[prestador_id]) map[prestador_id] = { soma: 0, total: 0 }
-    map[prestador_id].soma += nota
+    map[prestador_id].soma += nota_efetiva ?? nota
     map[prestador_id].total += 1
   })
   return map
 }
 
-function normalizarCidade(valor: string | null | undefined): string {
-  return (valor || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/\s+-\s+[a-z]{2}$/i, '')
-    .trim()
-}
-
 function normalizarId(valor: string | number | null | undefined): string {
   return valor == null ? '' : String(valor)
-}
-
-function parsearBusca(query: string): { termo: string; cidadeExtraida: string | null } {
-  const match = query.match(/^(.+?)\s+em\s+(.+)$/i)
-  if (match) return { termo: match[1].trim(), cidadeExtraida: match[2].trim() }
-  return { termo: query, cidadeExtraida: null }
 }
 
 // Cache em memória da lista (vive enquanto a aba estiver aberta). Ao voltar do perfil
@@ -45,8 +37,12 @@ function parsearBusca(query: string): { termo: string; cidadeExtraida: string | 
 const TTL_CACHE_LISTA_MS = 3 * 60 * 1000
 const cacheLista = new Map<string, { dados: Prestador[]; em: number }>()
 
+/** Esvazia o cache da lista (usado nos testes). */
+export function limparCacheLista() {
+  cacheLista.clear()
+}
+
 export function usePrestadores() {
-  const router = useRouter()
   const {
     queryBusca,
     filtroHab,
@@ -55,12 +51,16 @@ export function usePrestadores() {
     filtroRegiao,
     filtroGrupo,
     filtroCategoria,
+    ampliar,
   } = useFiltrosParams()
-  const { cidadeAtual, loading: locationLoading } = useLocation()
+  const { cidadeAtual } = useLocation()
+  const cidadeSalvaId = cidadeAtual?.id
+  const cidadeSalvaNome = cidadeAtual?.nome
 
   const [prestadoresBase, setPrestadoresBase] = useState<Prestador[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState(false)
+  const [tentativa, setTentativa] = useState(0)
   const buscasVaziasRegistradas = useRef(new Set<string>())
 
   // Fetch principal — só refaz quando a busca textual muda.
@@ -69,19 +69,19 @@ export function usePrestadores() {
     let ativo = true
 
     async function fetchDados() {
-      if (locationLoading) return
-
       try {
-        // A cidade salva é apenas um fallback. Quando a busca informa uma cidade
-        // ("serviço em cidade"), ou quando há filtros amplos, precisamos consultar
-        // o catálogo completo para que o filtro local encontre os resultados certos.
-        // Sem localização salva também consultamos o catálogo completo — a busca
-        // não pode depender da permissão de geolocalização/cookie do usuário.
+        // A cidade salva é só o ponto de partida. Consultamos APENAS a cidade dela (menos dados)
+        // quando é ela mesma que vale para a busca. Se a busca informa outra cidade, se há estado/
+        // região, ou se a pessoa pediu "Ver outras cidades", consultamos o catálogo todo e o filtro
+        // local faz o recorte. Sem cidade salva também é o catálogo todo: a lista nunca espera
+        // permissão de localização.
         const { cidadeExtraida } = parsearBusca(queryBusca)
-        const cidadeIdDaConsulta =
-          cidadeExtraida || filtroCidade || filtroEstado || filtroRegiao
-            ? undefined
-            : cidadeAtual?.id
+        const usaCidadeSalva = Boolean(
+          cidadeSalvaId &&
+          !ampliar && !cidadeExtraida && !filtroEstado && !filtroRegiao &&
+          (!filtroCidade || normalizarCidade(filtroCidade) === normalizarCidade(cidadeSalvaNome))
+        )
+        const cidadeIdDaConsulta = usaCidadeSalva ? cidadeSalvaId : undefined
 
         const chaveCache = JSON.stringify([queryBusca, filtroHab, cidadeIdDaConsulta ?? null])
         const emCache = cacheLista.get(chaveCache)
@@ -92,9 +92,10 @@ export function usePrestadores() {
           return
         }
 
+        // Mantém a lista anterior até a nova chegar: o menu de filtros não some a cada refiltragem
+        // (a página esconde os cards enquanto `loading`).
         setLoading(true)
         setErro(false)
-        setPrestadoresBase([])
 
         // O catálogo é público e stateless; não cancelamos o fetch manualmente.
         // Alguns navegadores, incluindo o Brave com Shields ativos, reportam o
@@ -105,14 +106,13 @@ export function usePrestadores() {
 
         if (pError) throw pError
 
-        const { data: medias, error: mediasError } = await getMediasAvaliacoes(
-          (pData || []).map(p => p.id)
-        )
+        const { data: medias, error: mediasError } = await getMediasAvaliacoes()
         if (mediasError) throw mediasError
 
         const mediaMap = calcularMedias(medias || [])
 
-        const normalizados: Prestador[] = (pData || []).map(p => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const normalizados: Prestador[] = ((pData || []) as any[]).map(p => {
           const cidadeRelacionada = Array.isArray(p.cidades) ? p.cidades[0] : p.cidades
           const categoriaRelacionada = Array.isArray(p.categorias) ? p.categorias[0] : p.categorias
           const regiaoRelacionada = Array.isArray(p.regioes) ? p.regioes[0] : p.regioes
@@ -159,6 +159,7 @@ export function usePrestadores() {
         const foiAbortado = erroAbort?.name === 'AbortError' || erroAbort?.message?.includes('aborted')
         if (foiAbortado) return
         console.error('[usePrestadores]', err)
+        setPrestadoresBase([])
         setErro(true)
       } finally {
         if (ativo) setLoading(false)
@@ -176,111 +177,44 @@ export function usePrestadores() {
     filtroCidade,
     filtroEstado,
     filtroRegiao,
-    cidadeAtual?.id,
-    locationLoading,
+    ampliar,
+    cidadeSalvaId,
+    cidadeSalvaNome,
+    tentativa,
   ])
 
-  // ─── Opções disponíveis em cascata ────────────────────────────────────────
+  // ─── Cidade, filtros e opções ─────────────────────────────────────────────
+  // Prioridade: cidade escrita na busca ("em X") > cidade da URL/filtro > cidade salva do usuário.
+  // Estado/região escolhidos soltam a cidade salva; "Ver outras cidades" (ampliar) também.
+  const cidadeDaBusca = parsearBusca(queryBusca).cidadeExtraida
+  const { nome: cidadeNome, origem: origemCidade } = decidirCidade({
+    cidadeDaBusca,
+    filtroCidade,
+    filtroEstado,
+    filtroRegiao,
+    ampliar,
+    cidadeSalva: cidadeSalvaNome,
+  })
+  const cidadeEfetivaNormalizada = normalizarCidade(cidadeNome)
 
-  const estadosDisponiveis = useMemo(() => {
-    const map = new Map<string, number>()
-    prestadoresBase.forEach(p => {
-      const s = p.estado_sigla
-      if (s) map.set(s, (map.get(s) ?? 0) + 1)
-    })
-    return Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([sigla, count]) => ({ sigla, count }))
-  }, [prestadoresBase])
+  const filtrosAtivos = useMemo(() => ({
+    estado: filtroEstado,
+    regiao: filtroRegiao,
+    grupo: filtroGrupo,
+    categoria: filtroCategoria,
+    cidade: cidadeEfetivaNormalizada,
+  }), [filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria, cidadeEfetivaNormalizada])
 
-  const regioesDisponiveis = useMemo(() => {
-    const map = new Map<string, { nome: string; count: number }>()
-    prestadoresBase
-      .filter(p => !filtroEstado || p.estado_sigla === filtroEstado)
-      .forEach(p => {
-        if (!p.regiao_id || !p.regiao_nome) return
-        const entry = map.get(p.regiao_id) ?? { nome: p.regiao_nome, count: 0 }
-        entry.count++
-        map.set(p.regiao_id, entry)
-      })
-    return Array.from(map.entries())
-      .sort((a, b) => b[1].count - a[1].count)
-      .map(([id, { nome, count }]) => ({ id, nome, count }))
-  }, [prestadoresBase, filtroEstado])
+  const prestadoresExibidos = useMemo(
+    () => filtrarExibidos(prestadoresBase, filtrosAtivos),
+    [prestadoresBase, filtrosAtivos],
+  )
 
-  const cidadesDisponiveis = useMemo(() => {
-    const contagem: Record<string, number> = {}
-    prestadoresBase
-      .filter(p =>
-        (!filtroEstado || p.estado_sigla === filtroEstado) &&
-        (!filtroRegiao || p.regiao_id    === filtroRegiao)
-      )
-      .forEach(p => {
-        if (p.cidade_nome) {
-          contagem[p.cidade_nome] = (contagem[p.cidade_nome] ?? 0) + 1
-        }
-      })
-    return Object.entries(contagem)
-      .sort((a, b) => b[1] - a[1])
-      .map(([nome, count]) => ({ nome, count }))
-  }, [prestadoresBase, filtroEstado, filtroRegiao])
-
-  const gruposDisponiveis = useMemo(() => {
-    const map = new Map<string, { nome: string; count: number }>()
-    prestadoresBase.forEach(p => {
-      if (!p.grupo_id || !p.grupo_nome) return
-      const entry = map.get(p.grupo_id) ?? { nome: p.grupo_nome, count: 0 }
-      entry.count++
-      map.set(p.grupo_id, entry)
-    })
-    return Array.from(map.entries())
-      .sort((a, b) => b[1].count - a[1].count)
-      .map(([id, { nome, count }]) => ({ id, nome, count }))
-  }, [prestadoresBase])
-
-  const categoriasDisponiveis = useMemo(() => {
-    const map = new Map<string, { nome: string; count: number }>()
-    prestadoresBase
-      .filter(p => !filtroGrupo || p.grupo_id === filtroGrupo)
-      .forEach(p => {
-        if (!p.categoria_id || !p.categoria) return
-        const entry = map.get(p.categoria_id) ?? { nome: p.categoria, count: 0 }
-        entry.count++
-        map.set(p.categoria_id, entry)
-      })
-    return Array.from(map.entries())
-      .sort((a, b) => b[1].count - a[1].count)
-      .map(([id, { nome, count }]) => ({ id, nome, count }))
-  }, [prestadoresBase, filtroGrupo])
-
-  // ─── Lista final com todos os filtros aplicados ───────────────────────────
-  // Ordem de prioridade: URL > query textual ("em X") > contexto do usuário
-  const cidadeDaBusca = queryBusca.match(/^(.+?)\s+em\s+(.+)$/i)?.[2]?.trim() || null
-  // A localização do contexto é apenas um fallback para a busca inicial.
-  // Quando o usuário escolhe estado ou região, esses filtros mais amplos
-  // devem permitir resultados fora da cidade atual.
-  const cidadeEfetiva =
-    filtroCidade ||
-    (!filtroEstado && !filtroRegiao
-      ? cidadeDaBusca || (!locationLoading ? cidadeAtual?.nome : null)
-      : null) ||
-    null
-  const cidadeEfetivaNormalizada = normalizarCidade(cidadeEfetiva)
-
-  const prestadoresExibidos = useMemo(() => {
-    return prestadoresBase.filter(p => {
-      if (filtroEstado    && p.estado_sigla  !== filtroEstado)    return false
-      if (filtroRegiao    && p.regiao_id     !== filtroRegiao)    return false
-      if (filtroGrupo     && p.grupo_id      !== filtroGrupo)     return false
-      if (filtroCategoria && p.categoria_id  !== filtroCategoria) return false
-
-      if (cidadeEfetivaNormalizada && normalizarCidade(p.cidade_nome) !== cidadeEfetivaNormalizada) {
-        return false
-      }
-
-      return true
-    })
-  }, [prestadoresBase, filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria, cidadeEfetivaNormalizada])
+  // Contagem de cada opção = o que sobraria ao escolhê-la (ver lib/buscaFiltros.ts)
+  const facetas = useMemo(
+    () => calcularFacetas(prestadoresBase, filtrosAtivos),
+    [prestadoresBase, filtrosAtivos],
+  )
 
   useEffect(() => {
     const termo = queryBusca.trim()
@@ -288,7 +222,7 @@ export function usePrestadores() {
       termo || filtroCidade || filtroEstado || filtroRegiao || filtroGrupo || filtroCategoria
     )
 
-    if (loading || erro || locationLoading || prestadoresExibidos.length > 0 || !temIntencaoDeBusca) return
+    if (loading || erro || prestadoresExibidos.length > 0 || !temIntencaoDeBusca) return
 
     const chaveBusca = JSON.stringify({
       termo,
@@ -299,6 +233,7 @@ export function usePrestadores() {
       filtroGrupo,
       filtroCategoria,
       cidadeEfetiva: cidadeEfetivaNormalizada,
+      ampliar,
     })
 
     if (buscasVaziasRegistradas.current.has(chaveBusca)) return
@@ -330,19 +265,24 @@ export function usePrestadores() {
     cidadeEfetivaNormalizada,
     loading,
     erro,
-    locationLoading,
+    ampliar,
     prestadoresExibidos.length,
   ])
 
   return {
     prestadoresBase,
     prestadoresExibidos,
-    estadosDisponiveis,
-    regioesDisponiveis,
-    cidadesDisponiveis,
-    gruposDisponiveis,
-    categoriasDisponiveis,
+    estadosDisponiveis: facetas.estados,
+    regioesDisponiveis: facetas.regioes,
+    cidadesDisponiveis: facetas.cidades,
+    gruposDisponiveis: facetas.grupos,
+    categoriasDisponiveis: facetas.categorias,
     loading,
     erro,
+    /** Cidade que está valendo para a busca (null = sem recorte de cidade) e de onde ela veio. */
+    cidadeNome,
+    origemCidade,
+    /** Tenta de novo depois de uma falha. */
+    recarregar: () => setTentativa(n => n + 1),
   }
 }

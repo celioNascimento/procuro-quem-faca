@@ -15,7 +15,7 @@ type Props = {
 
 // Largura estimada do badge "+N" (px), reservada de antemão para não
 // precisar de uma segunda passada de medição ao decidir o corte.
-const LARGURA_BADGE_EXTRA = 40
+const LARGURA_BADGE_EXTRA = 44
 // Espaço entre badges (gap-1.5 = 6px)
 const GAP_BADGES = 6
 
@@ -92,14 +92,14 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                 onError={() => setImgError(true)}
               />
             ) : (
-              <h3 className="text-pretty text-base font-bold leading-snug tracking-tight text-slate-900 line-clamp-2 md:text-lg">
+              <span aria-hidden="true" className="text-pretty text-lg font-bold leading-snug tracking-tight text-slate-700 md:text-xl">
                 {getIniciais(prestador.nome || '')}
-              </h3>
+              </span>
             )}
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h3 className="text-pretty text-base font-bold leading-snug tracking-tight text-slate-900 line-clamp-2 md:text-lg">
+            <h2 className="text-pretty text-base font-bold leading-snug tracking-tight text-slate-900 line-clamp-2 md:text-lg">
               <Link
                 href={perfilHref}
                 onClick={() => registrarLog?.('CLIQUE_PERFIL', { nome: prestador.nome })}
@@ -108,8 +108,8 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                 <span className="sr-only">Ver perfil de </span>
                 {prestador.nome}
               </Link>
-            </h3>
-            <span className="text-[11px] font-black uppercase leading-none tracking-widest text-blue-600 md:text-xs">
+            </h2>
+            <span className="text-xs font-black uppercase leading-none tracking-widest text-blue-600">
               {prestador.categoria}
             </span>
           </div>
@@ -128,7 +128,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
               {habilidadesTotais.map(hab => (
                 <span
                   key={hab}
-                  className="rounded-full border border-slate-100 bg-slate-50 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500"
+                  className="rounded-full border border-slate-100 bg-slate-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600"
                 >
                   {hab}
                 </span>
@@ -141,13 +141,13 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                 {habilidadesVisiveis.map(hab => (
                   <span
                     key={hab}
-                    className="rounded-full border border-slate-100 bg-slate-50 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500"
+                    className="rounded-full border border-slate-100 bg-slate-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600"
                   >
                     {hab}
                   </span>
                 ))}
                 {extras > 0 && (
-                  <span className="px-1 py-1 text-[9px] font-semibold text-slate-400">+{extras}</span>
+                  <span className="px-1 py-1 text-xs font-semibold text-slate-500">+{extras}</span>
                 )}
               </div>
             )}
@@ -160,14 +160,14 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
             {localizacao && (
               <div className="flex items-center gap-1">
                 <MapPin size={12} className="shrink-0 text-slate-300" />
-                <p className="text-[11px] font-medium tracking-tight text-slate-400">
+                <p className="text-xs font-medium tracking-tight text-slate-500">
                   {localizacao}
                 </p>
               </div>
             )}
             {isPublico && (
-              <span className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[9px] font-semibold text-slate-400">
-                <Globe size={9} /> Perfil público
+              <span className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-500">
+                <Globe size={11} aria-hidden="true" /> Perfil público
               </span>
             )}
           </div>
@@ -175,7 +175,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
           <div className="flex shrink-0 flex-col items-center gap-1 sm:items-end">
             <span
               aria-hidden="true"
-              className="flex min-h-10 w-full items-center justify-center gap-1 rounded-xl bg-blue-600 px-5 py-2.5 text-[11px] font-black uppercase tracking-wider text-white shadow-sm shadow-blue-200 transition-all group-hover:bg-blue-700 sm:w-auto sm:min-w-36">
+              className="flex min-h-11 w-full items-center justify-center gap-1 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-sm shadow-blue-200 transition-all group-hover:bg-blue-700 sm:w-auto sm:min-w-36">
               Ver perfil <ChevronRight size={12} strokeWidth={3} />
             </span>
             {isPublico && (

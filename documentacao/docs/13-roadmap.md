@@ -108,7 +108,13 @@ Explicar o diferencial do PQF (registro fotográfico + avaliação vinculada a p
 - [ ] Confirmar se `avaliacoes` tem constraint de unicidade por `projeto_id` (parece ser 1 por projeto pela UI, sem constraint explícita confirmada no schema)
 - [ ] Documentar formalmente o significado de negócio de `origem_tipo: 'vitrine'`
 - [ ] Padronizar nome do parâmetro de URL de retorno — `?from=` (perfil público) vs. `?origem=` (dashboard), mesma função, nomes diferentes
-- [ ] Avaliar se `usePrestadores` deveria usar a view `prestadores_ranqueados` em vez de recalcular médias no frontend
+- [ ] Busca no servidor: hoje a página baixa os perfis da cidade (ou do catálogo todo, ~950 em 14/11/2026) e filtra/pagina na tela. Quando passar de poucos milhares, mover termo, filtros, contagens e paginação (10 por vez) para o banco (RPC/view `prestadores_ranqueados`, que também resolveria as médias de avaliação calculadas no frontend)
+- [ ] Selo "Verificado" no card da lista — junto com a fase de qualificações do prestador (hoje `verificado` só pesa na ordenação e aparece no perfil)
+- [ ] Cidades homônimas em estados diferentes: o filtro de cidade compara só o nome (`?cidade=`); passar a usar o id da cidade quando houver duas com o mesmo nome
+- [ ] Decidir o que a "vitrine" (`origem_tipo = 'vitrine'`) faz com o termo buscado: hoje ela ignora o termo e aparece em qualquer busca (não existe nenhuma vitrine hoje)
+- [ ] Mover a consulta do anúncio de topo (`app/prestadores/page.tsx`) para um serviço público e parar de importar o serviço administrativo (`adminAnuncios.service`) na página pública
+- [ ] Convite de localização também na página inicial (hoje só na lista de resultados)
+- [ ] Etiqueta "Perfil público" no card (perfis vindos da curadoria): o texto confunde, pois parece que todos os perfis são públicos — definir o texto com o responsável pelo produto
 - [ ] Confirmar se tabela `perfis` (legado) tem dado real antes de remover do schema
 - [ ] Unificar `useAuth().role` com `profiles.role` — divergência hoje é de escopo pequeno (só durante o cadastro), mas ainda são duas fontes em paralelo
 - [ ] Avaliar se `useAdContext` deveria recalcular o fallback quando `categoria` muda (hoje usa `useState` com inicializador, não reage a mudanças)

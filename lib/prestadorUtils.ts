@@ -18,7 +18,18 @@ export function getPerfilHref(slug: string | null, id: string | number): string 
   return `/${slug || id}?from=${encodeURIComponent(from)}`
 }
 
-export function getTituloBusca(queryBusca: string, filtroCidNome: string): string {
-  if (queryBusca) return `Resultados para "${queryBusca}"`
-  return `Profissionais em ${filtroCidNome || 'sua região'}`
+// Título da página de resultados. Com cidade conhecida ela aparece; sem cidade, o título é genérico
+// (nunca "sua região" quando a lista traz o catálogo todo). Se a cidade já foi escrita na própria
+// busca ("pedreiro em Londrina"), não repete.
+export function getTituloBusca(
+  queryBusca: string,
+  cidadeNome: string | null,
+  cidadeJaNaBusca = false,
+): string {
+  if (queryBusca) {
+    return cidadeNome && !cidadeJaNaBusca
+      ? `Resultados para "${queryBusca}" em ${cidadeNome}`
+      : `Resultados para "${queryBusca}"`
+  }
+  return cidadeNome ? `Profissionais em ${cidadeNome}` : 'Profissionais cadastrados'
 }
