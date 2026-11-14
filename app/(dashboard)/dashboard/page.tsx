@@ -115,9 +115,9 @@ function PerfilPageContent() {
   return (
     <div className="mx-auto w-full max-w-6xl">
       {/* ── Cabeçalho ── */}
-      <header className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-6">
+      <header className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-6">
         <div className="flex max-w-2xl flex-col gap-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Área profissional</p>
+          <p className="text-xs font-semibold text-blue-700">Área profissional</p>
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Gerencie sua presença profissional</h1>
         </div>
       </header>
