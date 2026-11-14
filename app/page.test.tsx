@@ -5,7 +5,7 @@ const push = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 vi.mock('next/dynamic', () => ({ default: () => () => null }))
 vi.mock('@/hooks/useSugestoes', () => ({ useSugestoes: () => ({ sugestoes: [], carregado: true }) }))
-let auth: { session: unknown; role: string | null; roleLoading: boolean } = { session: null, role: null, roleLoading: false }
+let auth: { session: unknown; role: string | null; prestadorStatus?: string | null; roleLoading: boolean } = { session: null, role: null, roleLoading: false }
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => auth }))
 vi.mock('@/lib/supabase', () => ({ supabase: {} }))
 vi.mock('@/lib/db/logs', () => ({ insertLog: vi.fn() }))
@@ -76,9 +76,15 @@ describe('home — cartão de profissional', () => {
     expect(screen.getByRole('link', { name: /quer oferecer serviços/i }).getAttribute('href')).toBe('/cadastro')
   })
 
-  it('prestador logado não vê o cartão (o topo já leva ao painel)', () => {
-    auth = { session: {}, role: 'prestador', roleLoading: false }
+  it('prestador ativo vê "Área do Profissional" e vai ao painel', () => {
+    auth = { session: {}, role: 'prestador', prestadorStatus: 'ativo', roleLoading: false }
     render(<Home />)
-    expect(screen.queryByRole('link', { name: /área do profissional|cadastro em andamento|oferecer serviços/i })).toBeNull()
+    expect(screen.getByRole('link', { name: /área do profissional/i }).getAttribute('href')).toBe('/dashboard')
+  })
+
+  it('prestador com cadastro pendente vê "Cadastro em andamento" e volta ao cadastro', () => {
+    auth = { session: {}, role: 'prestador', prestadorStatus: 'pendente', roleLoading: false }
+    render(<Home />)
+    expect(screen.getByRole('link', { name: /cadastro em andamento/i }).getAttribute('href')).toBe('/cadastro')
   })
 })
