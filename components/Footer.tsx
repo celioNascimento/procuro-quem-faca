@@ -14,25 +14,25 @@ export default function Footer() {
         <nav className="flex flex-wrap justify-center gap-x-5">
           <Link 
             href="/privacidade" 
-            className="inline-flex min-h-9 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
+            className="inline-flex min-h-7 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
           >
             Privacidade
           </Link>
           <Link 
             href="/titular" 
-            className="inline-flex min-h-9 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
+            className="inline-flex min-h-7 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
           >
             Seus dados
           </Link>
           <Link 
             href="/termos" 
-            className="inline-flex min-h-9 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
+            className="inline-flex min-h-7 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
           >
             Termos
           </Link>
           <Link 
             href="/quem-somos" 
-            className="inline-flex min-h-9 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
+            className="inline-flex min-h-7 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
           >
             Quem somos
           </Link>
@@ -40,7 +40,7 @@ export default function Footer() {
           {/* Fale Conosco via E-mail */}
           <a 
             href={`mailto:${emailContato}?subject=Contato via Portal Procuro Quem Faça`}
-            className="inline-flex min-h-9 items-center text-blue-600 hover:text-blue-700 text-sm font-semibold transition-colors"
+            className="inline-flex min-h-7 items-center text-blue-600 hover:text-blue-700 text-sm font-semibold transition-colors"
             title={emailContato}
           >
             Fale Conosco
@@ -48,7 +48,7 @@ export default function Footer() {
         </nav>
 
         {/* Créditos e Copyright */}
-        <div className="mt-1 text-center">
+        <div className="mt-3 text-center">
           <p className="text-slate-500 text-xs font-medium">
             © {anoAtual} <span className="text-slate-900 font-black tracking-tight uppercase">Procuro Quem Faça</span>
           </p>

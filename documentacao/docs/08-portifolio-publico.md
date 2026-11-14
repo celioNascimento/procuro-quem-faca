@@ -18,7 +18,7 @@ Duas colunas: `PerfilHero`, `PerfilCTA` e `PerfilConfianca` à esquerda (fixa ao
 
 **Esqueleto** (`PerfilSkeleton`): segue a página (coluna do profissional, anúncio, Sobre, abas) com os mesmos recuos e larguras; mudou o layout, ajuste os dois.
 
-**`PerfilTabs.tsx`** — alterna entre as abas Portfólio (`PortfolioGrid`) e Avaliações (`PerfilAvaliacoes`) e hospeda o `ProjetoModal`. O conteúdo das abas fica dentro de um contêiner com `min-h-[320px]`, e ambas as abas têm estado vazio visível ("Nenhum registro de atividade ainda" / "Nenhuma avaliação ainda", mesma caixa tracejada). Isso mantém a altura da página estável ao trocar de aba — nenhuma aba pode renderizar `null`, pois isso causa salto de tela.
+**`PerfilTabs.tsx`** — alterna entre as abas Portfólio (`PortfolioGrid`) e Avaliações (`PerfilAvaliacoes`) e hospeda o `ProjetoModal`. O conteúdo das abas **não tem altura mínima** (tinha `min-h-[320px]`, que deixava ~100 px vazios sob um único trabalho). Ambas as abas têm estado vazio visível ("Nenhum registro de atividade ainda" / "Nenhuma avaliação ainda", mesma caixa tracejada) — nenhuma aba pode renderizar `null`, pois a página encolheria de uma vez ao trocar de aba.
 
 **`usePerfilPrestador`** — duas queries: `prestadores` com joins (`cidades`, `categorias`, `portfolio_projetos`+`portfolio_fotos`+`avaliacoes.indica`) filtrado por `slug`/`id`; e `avaliacoes` separada (`visivel=true`, limite 10). Só `em_execucao`/`finalizado` aparecem publicamente; finalizados primeiro. Isso vale também no banco: as fotos de trabalhos ainda não aceitos não são legíveis por visitantes (RLS de `portfolio_fotos`, doc 03). O prestador é avisado disso na tela de novo trabalho e na lista (`lib/trabalho/visibilidade.ts`).
 
