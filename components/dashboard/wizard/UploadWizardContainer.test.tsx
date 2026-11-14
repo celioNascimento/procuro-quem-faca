@@ -171,3 +171,35 @@ describe('UploadWizardContainer — sem fotos e concluído', () => {
     expect(onVoltar).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('UploadWizardContainer — quem vê as fotos', () => {
+  it('antes do aceite do cliente, avisa que as fotos não aparecem no perfil público', () => {
+    montar({ state: { projetoId: 'p1', projetoStatus: 'pendente' } })
+    render(<UploadWizardContainer prestadorId={1} onComplete={() => {}} />)
+
+    const aviso = screen.getByRole('complementary', { name: /quem vê as fotos/i })
+    expect(aviso.textContent).toMatch(/ainda não aparecem no seu perfil/i)
+    expect(aviso.textContent).toMatch(/depois que o cliente aceitar/i)
+  })
+
+  it('trabalho novo, ainda sem registro: o aviso já aparece antes da primeira foto', () => {
+    montar()
+    render(<UploadWizardContainer prestadorId={1} onComplete={() => {}} />)
+    expect(screen.getByRole('complementary', { name: /quem vê as fotos/i }).textContent).toMatch(/ainda não aparecem/i)
+  })
+
+  it('depois do aceite, o aviso muda e diz que as fotos já aparecem', () => {
+    montar({ state: { projetoId: 'p1', projetoStatus: 'em_execucao', linkGerado: true } })
+    render(<UploadWizardContainer prestadorId={1} onComplete={() => {}} />)
+    expect(screen.getByRole('complementary', { name: /quem vê as fotos/i }).textContent).toMatch(/já aparecem no seu perfil/i)
+  })
+
+  it('o envio do aceite explica que o trabalho só entra no perfil quando o cliente aceitar', () => {
+    montar({
+      state: { projetoId: 'p1', projetoStatus: 'pendente', fotosUrls: { 1: 'https://x.com/1.png', 2: null, 3: null }, fotosData: { 1: foto(), 2: null, 3: null } },
+      derived: { isPhoneValid: true, isTitleValid: true },
+    })
+    render(<UploadWizardContainer prestadorId={1} onComplete={() => {}} />)
+    expect(screen.getByText(/só aparecem no seu perfil quando ele aceitar/i)).toBeTruthy()
+  })
+})

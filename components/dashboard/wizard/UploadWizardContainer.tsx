@@ -17,6 +17,7 @@ import { PassosDoTrabalho } from './PassosDoTrabalho'
 import { DadosDoClienteCard } from './DadosDoClienteCard'
 import { CartaoDeFoto } from './CartaoDeFoto'
 import { EnvioAoCliente } from './EnvioAoCliente'
+import { AvisoDeVisibilidade } from './AvisoDeVisibilidade'
 import { passosDoTrabalho, proximaAcao, type SituacaoDoTrabalho } from '@/lib/trabalho/passos'
 import { seloDoTrabalho, type TomDoSelo } from '@/lib/trabalho/statusTrabalho'
 import { mensagemDeAceite, mensagemDeConclusao } from '@/lib/trabalho/mensagens'
@@ -40,7 +41,7 @@ const COR_DO_SELO: Record<TomDoSelo, string> = {
 }
 
 // Posição de cada foto na coluna única do celular (o aceite fica entre o antes e o durante).
-const ORDEM_DA_FOTO: Record<EtapaFoto, string> = { 1: 'order-2', 2: 'order-4', 3: 'order-5' }
+const ORDEM_DA_FOTO: Record<EtapaFoto, string> = { 1: 'order-3', 2: 'order-5', 3: 'order-6' }
 
 const MOTIVO_SEM_AUTORIZACAO = 'Uma das fotos mostra uma pessoa e falta confirmar a autorização dela. Confirme na foto ou troque a imagem.'
 
@@ -204,10 +205,10 @@ export function UploadWizardContainer({ prestadorId, projetoExistente = null, on
               <div className="order-1"><DadosDoClienteCard hookData={hookData} /></div>
 
               {mostrarAceiteComFotos && (
-                <div className="order-3">
+                <div className="order-4">
                   <EnvioAoCliente
                     titulo="Enviar o aceite ao cliente"
-                    explicacao="O cliente confirma o início do serviço pelo link. Depois disso, você libera as fotos do durante e do depois."
+                    explicacao="O cliente confirma o início do serviço pelo link. Depois do envio, você libera as fotos do durante e do depois. O trabalho e as fotos só aparecem no seu perfil quando ele aceitar."
                     rotuloEnviar="Enviar o aceite pelo WhatsApp"
                     previa={previaAceite}
                     onEnviar={gerarLinkAceite}
@@ -220,7 +221,7 @@ export function UploadWizardContainer({ prestadorId, projetoExistente = null, on
               )}
 
               {mostrarConclusaoComFotos && (
-                <div className="order-6">
+                <div className="order-7">
                   <EnvioAoCliente
                     titulo="Pedir a avaliação ao cliente"
                     explicacao="As três fotos estão registradas. Envie o link para o cliente conferir o resultado e avaliar."
@@ -236,6 +237,9 @@ export function UploadWizardContainer({ prestadorId, projetoExistente = null, on
             </div>
 
             <div className="contents lg:flex lg:flex-col lg:gap-4">
+              <div className="order-2">
+                <AvisoDeVisibilidade status={projetoId ? projetoStatus : 'em_registro'} />
+              </div>
               {ETAPAS.map((etapa) => {
                 const fotoUrl = fotosUrls[etapa] ?? null
                 const foto = fotosData[etapa]

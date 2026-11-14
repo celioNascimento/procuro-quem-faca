@@ -120,7 +120,7 @@ Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas
 | Tabela | Propósito |
 |---|---|
 | `portfolio_projetos` | Um projeto/serviço contratado — status, cliente (`cliente_whatsapp` e âncora forte `cliente_user_id`), token de avaliação |
-| `portfolio_fotos` | Fotos de um projeto, com legenda e comentário do cliente |
+| `portfolio_fotos` | Fotos de um projeto, com legenda e comentário do cliente. **Leitura (RLS):** qualquer pessoa só lê foto de trabalho `em_execucao`/`finalizado` (depois do aceite); o prestador dono, o cliente do trabalho (`cliente_user_id`) e o admin leem sempre. Função `foto_do_projeto_pode_ser_vista(projeto_id)`, migration `20261113220000`. O bucket `portfolios` segue público por url, mas sem listagem aberta: cada conta lista só o que ela mesma enviou. |
 | `portfolio_comentarios` | Comentários no projeto, de cliente ou prestador (`autor_tipo`) |
 | `portfolio_curtidas` | Curtidas de usuários autenticados em projetos (portfólio público) |
 | `projeto_logs` | Log de ações realizadas em um projeto (auditoria) |

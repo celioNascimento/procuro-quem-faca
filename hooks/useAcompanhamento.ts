@@ -42,23 +42,17 @@ export function useAcompanhamento(token: string) {
 
     async function carregar() {
       try {
+        // Reivindicação pelo token: a primeira conta logada que abre o link vira a dona do vínculo
+        // (cliente_user_id). Vem ANTES de carregar o trabalho: as fotos de um trabalho com aceite
+        // pendente só são legíveis pelo cliente dono, que ainda não é dono na primeira abertura.
+        const { data: userData } = await supabase.auth.getUser()
+        if (userData.user) setVinculo(await reivindicarProjetoPorToken(token))
+
         const projData = await fetchProjetoPorToken(token)
         if (!projData) { setLoading(false); return }
 
         const comData = await fetchComentariosPorProjeto(projData.id)
         setComentarios(comData)
-        // Reivindicação pelo token: a primeira conta logada que abre o link vira
-        // a dona do vínculo (cliente_user_id). Atualiza o objeto em memória —
-        // sem isso, a verificação de dono em abrirCasoGarantiaCliente só
-        // passaria a funcionar na visita SEGUINTE.
-        const { data: userData } = await supabase.auth.getUser()
-        if (userData.user) {
-          const resultado = await reivindicarProjetoPorToken(token)
-          setVinculo(resultado)
-          if (resultado === 'vinculado') {
-            projData.cliente_user_id = userData.user.id
-          }
-        }
 
         // Busca a avaliação depois da reivindicação para que clientes de
         // projetos legados também consigam enxergar o feedback salvo.
