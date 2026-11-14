@@ -6,7 +6,6 @@ import { useKitDivulgacao } from '@/hooks/useKitDivulgacao'
 import { CartaoDigitalPanel } from './divulgacao/CartaoDigitalPanel'
 import { MaterialFisicoPanel } from './divulgacao/MaterialFisicoPanel'
 import { LinksPanel } from './divulgacao/LinksPanel'
-import { ContextualHelp } from '@/components/help/HelpCenter'
 import { temPortfolio } from '@/lib/divulgacao/portfolio'
 
 type SubAba = 'cartao' | 'fisico' | 'links'
@@ -73,7 +72,6 @@ export default function CentralDivulgacaoTab({ prestadorId, onIrParaTrabalhos }:
         {aba === 'fisico' && <MaterialFisicoPanel dados={dados} imagens={imagens} />}
         {aba === 'links' && <LinksPanel dados={dados} />}
       </div>
-      <ContextualHelp context="divulgacao" audience="prestador" title="Dúvidas sobre divulgação?" />
     </div>
   )
 }

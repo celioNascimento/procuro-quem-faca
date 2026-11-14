@@ -9,6 +9,8 @@ interface Props {
   onZoom: (url: string) => void
   onAceitar: (servico: Servico) => void
   hidePrestador?: boolean
+  /** Enquanto uma ação (autorizar) está sendo enviada: trava o botão e mostra "Autorizando…". */
+  ocupado?: boolean
   modo?: 'pendente' | 'andamento' | 'concluido' | 'garantia'
   // Tipo do caso ativo (garantia formal ou reclamação sem garantia),
   // ou null quando não há caso ativo. Substitui o antigo booleano
@@ -32,6 +34,7 @@ export default function ServicoCard({
   onZoom,
   onAceitar,
   hidePrestador = false,
+  ocupado = false,
   modo = 'pendente',
   tipoGarantiaAtiva = null,
 }: Props) {
@@ -199,10 +202,12 @@ export default function ServicoCard({
           {/* PENDENTE — Autorizar */}
           {modo === 'pendente' && (
             <button
+              type="button"
               onClick={() => onAceitar(servico)}
-              className="flex-1 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all"
+              disabled={ocupado}
+              className="flex-1 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all disabled:cursor-wait disabled:opacity-70"
             >
-              Autorizar Serviço <ChevronRight size={16} />
+              {ocupado ? 'Autorizando…' : <>Autorizar Serviço <ChevronRight size={16} /></>}
             </button>
           )}
 

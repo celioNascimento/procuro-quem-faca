@@ -201,7 +201,10 @@ function PerfilPageContent() {
       </div>
 
       <div className="pt-6 sm:pt-8">
-        <ContextualHelp context="dashboard-prestador" audience="prestador" title="Encontre respostas para cuidar do seu perfil" />
+        {/* Um único bloco de ajuda por tela: na aba Divulgação ele traz os artigos de divulgação. */}
+        {abaAtiva === 'divulgacao'
+          ? <ContextualHelp context="divulgacao" audience="prestador" title="Dúvidas sobre divulgação?" />
+          : <ContextualHelp context="dashboard-prestador" audience="prestador" title="Encontre respostas para cuidar do seu perfil" />}
       </div>
     </div>
   )

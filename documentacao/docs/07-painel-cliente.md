@@ -25,7 +25,9 @@ default → /avaliar/[token]
 
 Acesso via `?token=` ou fallback por whatsapp salvo. `LoginGate` (`components/meus-servicos/LoginGate.tsx`) se sem sessão — usa `loginComGoogle` deste service (não passa por `useGoogleAuth`).
 
-Filtros: Todos/Pendentes/Em andamento/Concluídos. `handleAceitar` atualiza `status: 'em_execucao'` + feedback otimista local + `router.push` (sem hard reload).
+Filtros: Todos/Pendentes/Em andamento/Concluídos.
+
+**Autorizar Serviço (`handleAceitar`):** só a conta dona do serviço (`cliente_user_id`) pode autorizar — regra da função `aceitar_projeto` no banco. Quem abre o link com `?token=` vira dona ao entrar: `usePainelCliente` chama `reivindicarProjetoPorToken(token)` **antes** de buscar o serviço (sem isso o banco respondia `nao_e_dono` e o botão parecia não fazer nada). O botão trava e mostra "Autorizando…" enquanto envia; se o banco recusar ou a rede falhar, aparece um aviso em português simples no topo da coluna (`mensagemDeErroDaAcao`: outra conta, serviço já autorizado, sessão expirada, serviço não encontrado, falha de conexão). Em caso de sucesso: `router.push` para `/acompanhamento/[token]`. "Recusar serviço" segue a mesma regra e os mesmos avisos.
 
 **Query centralizada:** `STATUS_VISIVEIS = ['em_registro', 'pendente', 'em_execucao', 'finalizado']` — só os 4 valores reais.
 
