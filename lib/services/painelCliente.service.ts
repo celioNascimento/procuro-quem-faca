@@ -15,7 +15,7 @@ import { anexarDadosCliente, nomeClientePorToken } from './dadosClienteProjeto.s
 const SELECT_SERVICOS = `
   id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio,
       status, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at,
-  prestadores (id, user_id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
+  prestadores (id, user_id, nome, foto_perfil, whatsapp, categoria:categorias(nome, categorias_grupos(icone))),
   portfolio_fotos (*),
   solicitacoes_garantia (id, status, origem, tipo, prazo_resposta),
   avaliacoes_clientes (id, nota, motivos, created_at)
@@ -134,11 +134,11 @@ export function mensagemDeErroDaAcao(erro: unknown): string {
     case 'nao_autenticado':
       return 'Sua sessão expirou. Entre novamente para continuar.'
     case 'nao_e_dono':
-      return 'Este serviço está vinculado a outra conta. Entre com a conta que abriu o link enviado pelo prestador.'
+      return 'Este trabalho está vinculado a outra conta. Entre com a conta que abriu o link enviado pelo prestador.'
     case 'status_invalido':
-      return 'Este serviço não está mais aguardando autorização. Atualize a página para ver a situação atual.'
+      return 'Este trabalho não está mais aguardando sua resposta. Atualize a página para ver a situação atual.'
     case 'nao_encontrado':
-      return 'Não encontramos este serviço. Peça um novo link ao prestador.'
+      return 'Não encontramos este trabalho. Peça um novo link ao prestador.'
     default:
       return 'Não conseguimos concluir agora. Confira sua internet e tente de novo.'
   }

@@ -9,7 +9,7 @@ const content = {
   cliente: {
     label: 'Conta do cliente',
     title: 'Excluir minha conta',
-    description: 'Essa ação remove seus dados de acesso e informações do painel. Projetos já concluídos podem permanecer anonimizados para preservar o histórico da plataforma.',
+    description: 'Essa ação remove seus dados de acesso e informações do painel. Trabalhos já concluídos podem permanecer anonimizados para preservar o histórico da plataforma.',
   },
   prestador: {
     label: 'Conta profissional',

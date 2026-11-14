@@ -17,7 +17,7 @@ export async function fetchProjetoPorToken(token: string): Promise<Projeto | nul
       id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio,
       status, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at,
       portfolio_fotos(*),
-      prestadores(id, nome, slug, foto_perfil, whatsapp, garantia_dias, categoria:categorias(nome)),
+      prestadores(id, nome, slug, foto_perfil, whatsapp, garantia_dias, categoria:categorias(nome, categorias_grupos(icone))),
       avaliacoes_clientes(id, nota, motivos, created_at)
     `)
     .eq('id', projetoId)

@@ -17,9 +17,9 @@ Existem **contextos distintos** de avatar, cada um com sua própria fonte de dad
 | Cliente — header | `components/perfil/HeaderCliente.tsx` | — (só nome, não exibe avatar) | — |
 | Avatar do Google (fallback) | Usado em `usePerfilDados` e `useCadastroPrestador` | `user_metadata.picture`/`avatar_url` da sessão OAuth | Salvo automaticamente se ainda não houver avatar próprio |
 
-**Padrão de fallback de imagem quebrada:** `onError` trocando `src` (visto em `PrestadorCard`, `PortfolioGrid`) ou fallback de iniciais (`getIniciais` em `lib/prestadorUtils.ts`). Não há um componente `<Avatar>` genérico — cada consumidor implementa o próprio placeholder.
+**Padrão de fallback de imagem quebrada:** `onError` trocando `src` (visto em `PrestadorCard`, `PortfolioGrid`) ou fallback de iniciais (`getIniciais` em `lib/prestadorUtils.ts`). Na área do cliente existe `components/shared/AvatarPrestador.tsx` (foto → ícone da área → iniciais; ver `07-painel-cliente.md`); os demais consumidores ainda implementam o próprio placeholder.
 
-**Se for unificar:** o candidato natural a extrair seria um componente `<Avatar src={} nome={} tamanho={} />` compartilhado em `components/shared/`, usado pelos 6 pontos acima. Ainda não existe.
+**Se for unificar:** `AvatarPrestador` (já em `components/shared/`) é o candidato natural para os cards de prestador dos outros pontos acima; hoje só a área do cliente o usa.
 
 ---
 
@@ -139,7 +139,7 @@ Se for centralizar essa derivação, esses 6 pontos são os candidatos a converg
   1. **Desacoplamento de Acesso:** O `handleShare` (no hook `useAcompanhamento.ts`) foi refatorado para nunca compartilhar o token. A URL gerada passa a apontar exclusivamente para a vitrine pública do prestador (`/[slug]`).
   2. **Inclusão de Slug na Busca:** Atualização na query `fetchProjetoPorToken` (em `avaliacao.service.ts`) para incluir o campo `slug` de `prestadores`, garantindo a construção correta da URL pública.
   3. **Deep Linking (UX):** A URL de compartilhamento recebe o query parameter `?projeto=[ID]`. O componente `PortfolioGrid.tsx` intercepta este parâmetro usando `useSearchParams` e abre automaticamente o `ProjetoModal` correspondente. O mesmo mecanismo é usado pelo clique em avaliações em `PerfilAvaliacoes.tsx` — ambos fazem `router.push('?projeto=<id>')` e o `PortfolioGrid` resolve.
-  4. **URL como fonte única de verdade (modal):** `PortfolioGrid.tsx` não usa mais `useState`/`useEffect` para controlar o modal. O projeto aberto é derivado diretamente de `searchParams.get('projeto')`, e fechar o modal faz `router.push(pathname)` limpando o parâmetro. Isso elimina a dessincronização entre estado local e URL que causava travamento ao fechar e reabrir.
+  4. **URL como fonte única de verdade (modal):** `PortfolioGrid.tsx` não usa mais `useState`/`useEffect` para controlar o modal. O projeto aberto é derivado diretamente de `searchParams.get('projeto')`, e fechar o modal volta um passo no histórico (`router.back()`) quando foi aberto por toque, ou limpa o parâmetro com `router.replace(pathname)` quando a página foi aberta direto no link do trabalho (ver doc 18). Isso elimina a dessincronização entre estado local e URL que causava travamento ao fechar e reabrir.
   5. **Avaliações com `comentario` no modal:** A query de `portfolio_projetos` em `usePerfilPrestador` não inclui mais o join `avaliacoes(id, indica)` — sujeito a RLS e sem `comentario`. As avaliações de cada projeto são cruzadas no frontend a partir da query pública separada (`avaliacoesRaw`), filtrando por `projeto_id`. Isso garante que `comentario` e `indica` estejam disponíveis no `ProjetoModal`.
 
 * **Arquivos envolvidos:**

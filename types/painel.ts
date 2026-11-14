@@ -1,7 +1,11 @@
 //types/painel.ts
 
+// O banco devolve o grupo (área) como objeto ou como lista de um item, conforme a consulta.
+type GrupoDaCategoria = { icone: string | null } | { icone: string | null }[] | null
+
 export interface Categoria {
   nome: string
+  categorias_grupos?: GrupoDaCategoria
 }
 
 export interface Prestador {

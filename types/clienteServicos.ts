@@ -6,8 +6,12 @@
 // são hooks e queries paralelos e independentes, com formatos de retorno
 // diferentes — não a mesma fonte de dados.
 
+// O banco devolve o grupo (área) como objeto ou como lista de um item, conforme a consulta.
+type GrupoDaCategoria = { icone: string | null } | { icone: string | null }[] | null
+
 export interface CategoriaServico {
   nome: string
+  categorias_grupos?: GrupoDaCategoria
 }
 
 export interface PrestadorServico {

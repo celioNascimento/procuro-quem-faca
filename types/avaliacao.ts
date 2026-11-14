@@ -88,7 +88,7 @@ export interface Projeto {
     foto_perfil: string
     whatsapp: string
     slug: string | null
-    categoria: { nome: string }
+    categoria: { nome: string; categorias_grupos?: { icone: string | null } | { icone: string | null }[] | null }
   }
   // Fluxo sem foto obrigatória — travado na criação do projeto (ver
   // migration portfolio_projetos.sem_fotos). Quando true, prestador e

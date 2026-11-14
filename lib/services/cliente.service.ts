@@ -16,7 +16,7 @@ export const STATUS_GARANTIA_ATIVOS = ['aguardando_aceite_cliente', 'aberta', 'r
 const SELECT_CLIENTE_SERVICOS = `
   id, titulo, status, created_at, sem_fotos, marcado_concluido_at,
   portfolio_fotos(ordem),
-  prestadores!inner(id, nome, foto_perfil, whatsapp, categoria:categorias(nome)),
+  prestadores!inner(id, nome, foto_perfil, whatsapp, categoria:categorias(nome, categorias_grupos(icone))),
   avaliacoes(id),
   avaliacoes_clientes(id, nota, motivos, created_at),
   solicitacoes_garantia(id, status, origem, tipo, prazo_resposta)

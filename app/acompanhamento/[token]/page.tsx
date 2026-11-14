@@ -19,6 +19,7 @@ import { AdCardPainelCliente }      from '@/components/painel/AdCardPainelClient
 import AcompanhamentoSkeleton       from '@/components/skeletons/AcompanhamentoSkeleton'
 import { ContextualHelp }            from '@/components/help/HelpCenter'
 import { AvisoProjetoOutraConta }    from '@/components/acompanhamento/AvisoProjetoOutraConta'
+import { useRolagemNoTopo } from '@/hooks/useRolagemNoTopo'
 
 export default function PaginaAcompanhamento({
   params: paramsPromise,
@@ -27,16 +28,7 @@ export default function PaginaAcompanhamento({
 }) {
   const { token } = use(paramsPromise)
 
-  useEffect(() => {
-    window.history.scrollRestoration = 'manual'
-    const irParaTopo = () => window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-    irParaTopo()
-    const frame = requestAnimationFrame(() => {
-      irParaTopo()
-      requestAnimationFrame(irParaTopo)
-    })
-    return () => cancelAnimationFrame(frame)
-  }, [token])
+  useRolagemNoTopo(token)
 
   const {
     projeto, comentarios, fotosOrdenadas, temConclusao, labelEtapaAtual, vinculo,

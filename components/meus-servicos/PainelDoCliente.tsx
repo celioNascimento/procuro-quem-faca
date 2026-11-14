@@ -1,14 +1,18 @@
 // components/meus-servicos/PainelDoCliente.tsx
 
 'use client'
-import { useEffect } from 'react'
-import { User, Clock, ShieldAlert } from 'lucide-react'
+import { useState } from 'react'
+import { Clock, ShieldAlert } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import LoginGate from './LoginGate'
 import ServicoCard from './ServicoCard'
 import ServicoCardCompacto from './ServicoCardCompacto'
 import ZoomImageModal from './ZoomImageModal'
+import AvatarPrestador from '@/components/shared/AvatarPrestador'
+import { DialogoConfirmacao } from '@/components/ui/Dialogo'
+import { useRolagemNoTopo } from '@/hooks/useRolagemNoTopo'
+import { estaProntoParaAvaliar, statusVisualDoServico } from '@/lib/painel/statusDoServico'
 import { usePainelCliente } from '@/hooks/usePainelCliente'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 import { AdCardPainelCliente } from '@/components/painel/AdCardPainelCliente'
@@ -27,16 +31,8 @@ export default function PainelDoCliente() {
     acaoEmAndamento, erroAcao,
   } = usePainelCliente()
 
-  useEffect(() => {
-    window.history.scrollRestoration = 'manual'
-    const irParaTopo = () => window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-    irParaTopo()
-    const frame = requestAnimationFrame(() => {
-      irParaTopo()
-      requestAnimationFrame(irParaTopo)
-    })
-    return () => cancelAnimationFrame(frame)
-  }, [])
+  useRolagemNoTopo()
+  const [confirmandoRecusa, setConfirmandoRecusa] = useState(false)
 
   // ── Grupos por status ────────────────────────────────────────────────────────
   const emRegistro  = servicos.filter(s => s.status?.toLowerCase() === 'em_registro')
@@ -45,8 +41,6 @@ export default function PainelDoCliente() {
 
   const idsComGarantiaAtiva   = new Set(servicosGarantia.map(s => s.id))
   const idsComReclamacaoAtiva = new Set(servicosReclamacao.map(s => s.id))
-
-  const servicosFiltrados = servicos
 
   const tipoGarantiaAtivaDoServico = (servico: { id: string }): 'garantia' | 'reclamacao' | null => {
     if (idsComGarantiaAtiva.has(servico.id))   return 'garantia'
@@ -65,6 +59,8 @@ export default function PainelDoCliente() {
     const status = servico.status?.toLowerCase()
     if (tipoGarantiaAtivaDoServico(servico))
       return () => handleVerGarantia(servico)
+    if (status === 'em_execucao' && estaProntoParaAvaliar(servico))
+      return () => router.push(`/avaliar/${servico.avaliacao_token}`)
     if (status === 'em_execucao')
       return () => router.push(`/acompanhamento/${servico.avaliacao_token}`)
     if (status === 'finalizado')
@@ -73,21 +69,12 @@ export default function PainelDoCliente() {
   }
 
   // ── Status visual para ServicoCardCompacto ───────────────────────────────────
-  const getStatusInfo = (servico: (typeof servicos)[number]) => {
-    const s        = servico.status?.toLowerCase()
-    const temCaso  = tipoGarantiaAtivaDoServico(servico)
-    if (temCaso === 'garantia')
-      return { label: 'Garantia',     dot: 'bg-orange-400', badge: 'bg-orange-50 text-orange-700 border-orange-200', urgente: true  }
-    if (temCaso === 'reclamacao')
-      return { label: 'Reclamação',   dot: 'bg-orange-400', badge: 'bg-orange-50 text-orange-700 border-orange-200', urgente: true  }
-    if (s === 'pendente')
-      return { label: 'Aguardando',   dot: 'bg-amber-400',  badge: 'bg-amber-50 text-amber-700 border-amber-200',   urgente: false }
-    if (s === 'em_execucao')
-      return { label: 'Em andamento', dot: 'bg-blue-400',   badge: 'bg-blue-50 text-blue-700 border-blue-200',      urgente: false }
-    if (s === 'finalizado')
-      return { label: 'Concluído',    dot: 'bg-green-400',  badge: 'bg-green-50 text-green-700 border-green-200',   urgente: false }
-    return   { label: s ?? '',        dot: 'bg-slate-300',  badge: 'bg-slate-50 text-slate-500 border-slate-200',   urgente: false }
-  }
+  const getStatusInfo = (servico: (typeof servicos)[number]) =>
+    statusVisualDoServico({
+      status: servico.status,
+      pronto: estaProntoParaAvaliar(servico),
+      caso: tipoGarantiaAtivaDoServico(servico),
+    })
 
   // ── Loading / Auth ───────────────────────────────────────────────────────────
   if (loading) return <PainelDoClienteSkeleton />
@@ -105,11 +92,24 @@ export default function PainelDoCliente() {
           const prestadorId = projetoSelecionado.prestadores?.id
           return prestadorId == null || s.prestadores?.id === prestadorId
         })
-    : servicosFiltrados
+    : servicos
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-10 md:pb-20 font-sans antialiased">
       <HeaderCliente nomeCliente={nomeCliente} />
+
+      {projetoSelecionado && (
+        <DialogoConfirmacao
+          aberto={confirmandoRecusa}
+          titulo="Recusar este trabalho?"
+          mensagem="O prestador será avisado de que você não aceitou."
+          textoConfirmar="Sim, recusar"
+          textoCancelar="Voltar"
+          perigo
+          onCancelar={() => setConfirmandoRecusa(false)}
+          onConfirmar={() => { setConfirmandoRecusa(false); void handleRecusar(projetoSelecionado) }}
+        />
+      )}
 
       {zoomImage && (
         <ZoomImageModal url={zoomImage} onClose={() => setZoomImage(null)} />
@@ -126,13 +126,13 @@ export default function PainelDoCliente() {
 
               {prestador && (
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5 flex items-center gap-4 transition-all hover:shadow-md">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-[1.25rem] border border-slate-100 shadow-sm overflow-hidden bg-slate-50 flex items-center justify-center">
-                    {prestador.foto_perfil ? (
-                      <img src={prestador.foto_perfil} className="w-full h-full object-contain p-1" alt={prestador.nome} />
-                    ) : (
-                      <User size={24} className="text-slate-300" />
-                    )}
-                  </div>
+                  <AvatarPrestador
+                    foto={prestador.foto_perfil}
+                    nome={prestador.nome}
+                    categoria={prestador.categoria}
+                    className="size-14 rounded-[1.25rem] sm:size-16"
+                    iconeClassName="size-6 sm:size-7"
+                  />
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
                     {prestador.categoria?.nome && (
                       <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.2em] truncate">
@@ -148,12 +148,12 @@ export default function PainelDoCliente() {
 
               {totalPendentes > 0 && (
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ao autorizar o serviço</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ao aceitar o trabalho</p>
                   <div className="space-y-3">
                     {[
-                      { n: '01', texto: 'Você confirma que o prestador pode iniciar o trabalho' },
-                      { n: '02', texto: 'Um token único é gerado para rastrear o projeto'        },
-                      { n: '03', texto: 'Você poderá acompanhar e avaliar ao final'              },
+                      { n: '01', texto: 'Você confirma que o prestador pode começar' },
+                      { n: '02', texto: 'Você acompanha o andamento por aqui'        },
+                      { n: '03', texto: 'No final, você avalia o trabalho'              },
                     ].map(item => (
                       <div key={item.n} className="flex items-start gap-3">
                         <span className="text-[10px] font-black text-blue-600 bg-blue-50 rounded-lg px-2 py-1 shrink-0 mt-0.5">{item.n}</span>
@@ -183,7 +183,7 @@ export default function PainelDoCliente() {
                 <section className="flex flex-col gap-3" aria-labelledby="projeto-selecionado-title">
                   <div className="flex items-center justify-between px-1">
                     <h2 id="projeto-selecionado-title" className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-600">
-                      Projeto selecionado
+                      Trabalho selecionado
                     </h2>
                     <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-blue-600">
                       Em destaque
@@ -202,17 +202,15 @@ export default function PainelDoCliente() {
                     {projetoSelecionado.status?.toLowerCase() === 'pendente' && (
                       <div className="flex flex-col gap-3 px-3 pb-3 pt-1">
                         <p className="text-center text-[11px] font-medium leading-relaxed text-slate-500">
-                          Revise os detalhes da proposta antes de decidir. Você pode aceitar pelo WhatsApp ou diretamente aqui.
+                          Confira os detalhes antes de decidir. Você pode aceitar pelo WhatsApp ou direto aqui.
                         </p>
                         <button
                           type="button"
                           disabled={acaoEmAndamento}
-                          onClick={() => {
-                            if (window.confirm('Deseja recusar este serviço?')) void handleRecusar(projetoSelecionado)
-                          }}
+                          onClick={() => setConfirmandoRecusa(true)}
                           className="w-full rounded-2xl border border-red-100 bg-red-50 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-red-600 transition-colors hover:bg-red-100 disabled:cursor-wait disabled:opacity-60"
                         >
-                          Recusar serviço
+                          Recusar trabalho
                         </button>
                       </div>
                     )}
@@ -225,7 +223,7 @@ export default function PainelDoCliente() {
                 <section className="flex flex-col gap-2" aria-labelledby="outros-servicos-title">
                   <div className="flex items-center justify-between px-1">
                     <h2 id="outros-servicos-title" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-                      Outros serviços deste prestador
+                      Outros trabalhos deste prestador
                     </h2>
                     <span className="text-[10px] font-bold text-slate-400">{outrosServicos.length}</span>
                   </div>
@@ -249,7 +247,7 @@ export default function PainelDoCliente() {
                     )
                   })()}
 
-                  <div className="flex flex-col gap-2" role="list" aria-label="Outros serviços do prestador">
+                  <div className="flex flex-col gap-2" role="list" aria-label="Outros trabalhos do prestador">
                     {outrosServicos.map(servico => (
                       <div key={servico.id} role="listitem">
                         <ServicoCardCompacto
@@ -286,7 +284,7 @@ export default function PainelDoCliente() {
                   ) : (
                     <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-200 bg-white py-24 text-slate-300">
                       <Clock size={32} className="mb-3 opacity-40" />
-                      <p className="text-[11px] font-black uppercase tracking-widest">Nenhum projeto encontrado</p>
+                      <p className="text-[11px] font-black uppercase tracking-widest">Nenhum trabalho por aqui ainda</p>
                     </div>
                   )}
                 </section>
@@ -297,7 +295,7 @@ export default function PainelDoCliente() {
         </div>
 
         <div className="mt-6">
-          <ContextualHelp context="meus-servicos" title="Dúvidas sobre seus serviços?" />
+          <ContextualHelp context="meus-servicos" title="Dúvidas sobre seus trabalhos?" />
         </div>
       </div>
     </main>

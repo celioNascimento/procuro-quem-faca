@@ -22,11 +22,11 @@ export default function LoginGate({ tokenUrl }: { tokenUrl: string | null }) {
               <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto text-blue-600">
                 <Briefcase size={32} />
               </div>
-              <h2 className="text-2xl font-black italic uppercase text-slate-800 tracking-tighter">
-                Projeto<br />Identificado
+              <h2 className="text-2xl font-bold text-slate-800">
+                Encontramos<br />seu trabalho
               </h2>
-              <p className="text-xs font-medium text-slate-500 leading-relaxed px-2">
-                Para sua segurança, confirme sua identidade Google para vincular este projeto à sua conta.
+              <p className="text-sm font-medium text-slate-600 leading-relaxed px-2">
+                Para sua segurança, entre com sua conta Google. Assim este trabalho fica ligado a você.
               </p>
             </div>
           ) : (
@@ -34,18 +34,18 @@ export default function LoginGate({ tokenUrl }: { tokenUrl: string | null }) {
               <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto text-blue-600">
                 <ShieldCheck size={32} />
               </div>
-              <h2 className="text-2xl font-black italic uppercase text-slate-800 tracking-tighter">
-                Portal do<br />Cliente
+              <h2 className="text-2xl font-bold text-slate-800">
+                Área do<br />cliente
               </h2>
-              <p className="text-xs font-medium text-slate-500 leading-relaxed px-4">
-                Acesse seus contratos e acompanhe serviços em tempo real.
+              <p className="text-sm font-medium text-slate-600 leading-relaxed px-2">
+                Entre para acompanhar seus trabalhos e avaliar quando terminarem.
               </p>
             </div>
           )}
 
           <button
             onClick={() => loginComGoogle(tokenUrl)}
-            className="w-full py-6 bg-blue-600 text-white rounded-3xl font-black italic uppercase text-[12px] tracking-widest hover:bg-blue-700 transition-all active:scale-[0.98] shadow-2xl shadow-blue-200/60"
+            className="w-full min-h-14 py-4 bg-blue-600 text-white rounded-3xl font-bold text-base hover:bg-blue-700 transition-all active:scale-[0.98] shadow-2xl shadow-blue-200/60"
           >
             Acessar com Google
           </button>
