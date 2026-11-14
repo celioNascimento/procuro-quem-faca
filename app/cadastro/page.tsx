@@ -18,12 +18,13 @@ import { SecaoDadosPessoais } from '@/components/perfil/SecaoDadosPessoais'
 import { SecaoLocalizacao } from '@/components/perfil/SecaoLocalizacao'
 import { SecaoTermos } from '@/components/perfil/SecaoTermos'
 import { SecaoGarantia } from '@/components/perfil/SecaoGarantia'
+import { estiloCampo } from '@/components/perfil/CartaoSecao'
 import { PreferenciaFotos } from '@/components/perfil/PreferenciaFotos'
 
 import { useCadastroPrestador } from '@/hooks/useCadastroPrestador'
 import { useAuth } from '@/hooks/useAuth'
 
-const inputStyleBase = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-[14px] text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400`
+const inputStyleBase = estiloCampo
 
 function CadastroSkeleton() {
   const bloco = 'bg-white rounded-[2rem] border border-slate-100 shadow-sm'

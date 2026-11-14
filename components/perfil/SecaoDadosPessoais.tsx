@@ -1,6 +1,9 @@
-//components/perfil/SecaoDadosPessoais.tsx 
+// components/perfil/SecaoDadosPessoais.tsx
 
 'use client'
+
+import { Check, UserRound, X } from 'lucide-react'
+import { CartaoSecao, Campo } from '@/components/perfil/CartaoSecao'
 
 interface SecaoDadosPessoaisProps {
   nome: string
@@ -29,55 +32,68 @@ export function SecaoDadosPessoais({
   onWhatsappChange,
   onBioChange,
 }: SecaoDadosPessoaisProps) {
+  const mostrarSituacaoDoLink = !checandoSlug && !!slug && slug.length > 2
+
   return (
-    <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-5">
-      <div className="space-y-4">
-        <input
-          value={nome || ''}
-          placeholder="Nome Profissional"
-          onChange={e => onNomeChange(e.target.value)}
-          className={inputStyle}
-          required
-        />
+    <CartaoSecao
+      titulo="Seus dados"
+      descricao="É assim que os clientes vão te encontrar e falar com você."
+      icone={<UserRound size={20} />}
+    >
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Campo id="perfil-nome" rotulo="Nome profissional">
+          <input
+            id="perfil-nome"
+            value={nome || ''}
+            placeholder="Ex.: Elétrica Silva"
+            onChange={e => onNomeChange(e.target.value)}
+            className={inputStyle}
+            required
+          />
+        </Campo>
 
-        <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 relative overflow-hidden">
-          <label className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-2 block">
-            Link do seu perfil (slug)
-          </label>
-          <div className="flex items-center gap-1 font-bold text-sm">
-            <span className="text-slate-400 font-medium hidden md:inline">procuroquemfaca.com.br/</span>
-            <input
-              value={slug || ''}
-              onChange={e => onSlugChange(e.target.value)}
-              className="bg-transparent border-none outline-none text-blue-600 font-bold flex-1 min-w-0"
-              placeholder="seu-nome"
-            />
-            {checandoSlug
-              ? <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              : (slug && slug.length > 2) && (
-                  slugDisponivel
-                    ? <span className="text-green-500 text-xs">✅ Disponível</span>
-                    : <span className="text-red-500 text-xs">❌ Já existe</span>
-                )
-            }
-          </div>
-        </div>
-
-        <input
-          value={whatsapp || ''}
-          placeholder="Seu WhatsApp"
-          onChange={e => onWhatsappChange(e.target.value)}
-          className={inputStyle}
-          required
-        />
-
-        <textarea
-          value={bio || ''}
-          placeholder="Bio rápida: Conte o que você faz de melhor..."
-          onChange={e => onBioChange(e.target.value)}
-          className={`${inputStyle} h-32 resize-none`}
-        />
+        <Campo id="perfil-whatsapp" rotulo="Seu WhatsApp" dica="Os clientes vão chamar você por este número.">
+          <input
+            id="perfil-whatsapp"
+            type="tel"
+            inputMode="tel"
+            value={whatsapp || ''}
+            placeholder="(00) 00000-0000"
+            onChange={e => onWhatsappChange(e.target.value)}
+            className={inputStyle}
+            required
+          />
+        </Campo>
       </div>
-    </section>
+
+      <Campo id="perfil-slug" rotulo="Endereço do seu perfil" dica="É o link que você divulga. Use só letras, números e hífen.">
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-50">
+          <span className="hidden shrink-0 text-sm font-medium text-slate-400 md:inline">procuroquemfaca.com.br/</span>
+          <input
+            id="perfil-slug"
+            value={slug || ''}
+            onChange={e => onSlugChange(e.target.value)}
+            className="min-w-0 flex-1 bg-transparent py-1 text-base font-bold text-blue-600 outline-none placeholder:font-medium placeholder:text-slate-400 sm:text-[15px]"
+            placeholder="seu-nome"
+            autoCapitalize="none"
+            autoCorrect="off"
+          />
+          {checandoSlug && <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" role="status" aria-label="Verificando disponibilidade" />}
+          {mostrarSituacaoDoLink && (slugDisponivel
+            ? <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-emerald-600"><Check size={14} aria-hidden="true" />Disponível</span>
+            : <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-red-600"><X size={14} aria-hidden="true" />Já existe</span>)}
+        </div>
+      </Campo>
+
+      <Campo id="perfil-bio" rotulo="Apresentação" opcional dica="Duas ou três frases sobre o que você faz de melhor.">
+        <textarea
+          id="perfil-bio"
+          value={bio || ''}
+          placeholder="Ex.: Mais de 10 anos instalando e consertando redes elétricas residenciais."
+          onChange={e => onBioChange(e.target.value)}
+          className={`${inputStyle} h-28 resize-none`}
+        />
+      </Campo>
+    </CartaoSecao>
   )
 }

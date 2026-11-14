@@ -33,7 +33,7 @@ describe('gerarMensagens', () => {
 
   it('funciona sem cidade nem categoria', () => {
     const t = gerarMensagens({ ...base, cidade: null, categoria: null, totalIndicacoes: 0, totalConcluidos: 0, garantiaDias: 0 }, 'L')
-    expect(t[0].texto).toBe('Olá! Aqui está o meu portfólio completo de serviços e avaliações de clientes na região:\nL')
+    expect(t[0].texto).toBe('Olá! Aqui está o meu perfil profissional na região:\nL')
   })
 })
 
@@ -51,5 +51,33 @@ describe('links', () => {
     expect(formatarTelefone('5543999998888')).toBe('(43) 99999-8888')
     expect(formatarTelefone('4333334444')).toBe('(43) 3333-4444')
     expect(formatarTelefone(null)).toBe('')
+  })
+})
+
+describe('gerarMensagens — prestador ainda sem portfólio', () => {
+  const vazio: DadosDivulgacao = { ...base, totalIndicacoes: 0, totalConcluidos: 0, garantiaDias: 0, fotosPortfolio: [] }
+
+  it('nenhuma mensagem fala em portfólio ou fotos que ainda não existem', () => {
+    for (const m of gerarMensagens(vazio, 'L')) {
+      expect(m.texto).not.toMatch(/portf[óo]lio|fotos|indica/i)
+      expect(m.texto).toContain('L')
+    }
+  })
+
+  it('o título da primeira mensagem não promete portfólio', () => {
+    expect(gerarMensagens(vazio, 'L')[0].titulo).toBe('Meu perfil completo')
+    expect(gerarMensagens(base, 'L')[0].titulo).toBe('Portfólio completo')
+  })
+
+  it('só com indicações, cita as indicações e não as fotos', () => {
+    const t = gerarMensagens({ ...vazio, totalIndicacoes: 3 }, 'L').map(m => m.texto).join('\n')
+    expect(t).toMatch(/indicações de clientes/)
+    expect(t).not.toMatch(/portf[óo]lio|fotos/i)
+  })
+
+  it('só com trabalhos, cita as fotos e não as indicações', () => {
+    const t = gerarMensagens({ ...vazio, totalConcluidos: 2, fotosPortfolio: ['a'] }, 'L').map(m => m.texto).join('\n')
+    expect(t).toMatch(/fotos/)
+    expect(t).not.toMatch(/indicações de clientes|clientes dizem/)
   })
 })

@@ -1,17 +1,16 @@
 // components/perfil/SecaoGarantia.tsx
 //
 // Seletor de garantia_dias, reaproveitado por /cadastro (FormularioCadastro)
-// e EditarPerfilTab (dashboard). Segue o mesmo padrão visual das demais
-// seções (SecaoOQueVoceFaz, SecaoDadosPessoais, SecaoLocalizacao): card
-// branco arredondado com label uppercase.
+// e EditarPerfilTab (dashboard).
 //
 // Postura comercial declarada pelo prestador — não é a garantia legal do
-// CDC, que se aplica sempre independente deste valor. O tooltip/nota deixa
-// isso explícito para não criar falsa expectativa de que "sem garantia"
+// CDC, que se aplica sempre independente deste valor. A nota deixa isso
+// explícito para não criar falsa expectativa de que "sem garantia"
 // significa "sem direito nenhum" para o cliente.
 
 import { ShieldCheck } from 'lucide-react'
 import type { GarantiaDias } from '@/types/prestador'
+import { CartaoSecao } from '@/components/perfil/CartaoSecao'
 
 interface Props {
   garantiaDias: GarantiaDias | undefined
@@ -29,49 +28,43 @@ export function SecaoGarantia({ garantiaDias, onChange }: Props) {
   const valorAtual = garantiaDias ?? 0
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
-      <div className="flex items-center gap-2">
-        <ShieldCheck size={16} className="text-blue-600" />
-        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-          Garantia do seu serviço
-        </h3>
-      </div>
-
-      <p className="text-[12px] font-medium text-slate-500 leading-relaxed">
-        Ofereça um prazo de garantia para transmitir mais confiança aos clientes.
-        Prestadores com garantia declarada se destacam na busca.
-      </p>
-
-      <div className="grid grid-cols-4 gap-2">
+    <CartaoSecao
+      titulo="Garantia do seu serviço"
+      descricao="Um prazo de garantia passa confiança e ajuda você a se destacar na busca."
+      icone={<ShieldCheck size={20} />}
+    >
+      <div role="group" aria-label="Prazo de garantia" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {OPCOES.map((opcao) => {
           const ativo = valorAtual === opcao.valor
           return (
             <button
               key={opcao.valor}
               type="button"
+              aria-pressed={ativo}
               onClick={() => onChange(opcao.valor)}
-              className={`min-h-14 flex flex-col items-center justify-center rounded-2xl border transition-all text-center px-1 ${
+              className={`flex min-h-14 flex-col items-center justify-center rounded-xl border px-2 py-2 text-center transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${
                 ativo
                   ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                  : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600'
               }`}
             >
-              <span className="text-[11px] font-black">
-                {opcao.valor === 0 ? '—' : opcao.valor}
-              </span>
-              <span className="text-[8px] font-bold uppercase tracking-wide leading-tight mt-0.5">
-                {opcao.valor === 0 ? 'Nenhuma' : 'dias'}
-              </span>
+              {opcao.valor === 0 ? (
+                <span className="text-sm font-bold">Sem garantia</span>
+              ) : (
+                <>
+                  <span className="text-lg font-black leading-none">{opcao.valor}</span>
+                  <span className="mt-1 text-xs font-semibold">dias</span>
+                </>
+              )}
             </button>
           )
         })}
       </div>
 
-      <p className="text-[10px] text-slate-400 leading-relaxed border-t border-slate-50 pt-3">
-        Independente da garantia declarada aqui, o cliente tem direitos garantidos pelo
-        Código de Defesa do Consumidor. O PQF não se responsabiliza pela garantia
-        oferecida — atua apenas como facilitador de contato.
+      <p className="border-t border-slate-100 pt-4 text-xs leading-relaxed text-slate-500">
+        Independente da garantia declarada aqui, o cliente tem os direitos garantidos pelo Código de Defesa do
+        Consumidor. O PQF não se responsabiliza pela garantia oferecida — atua apenas como facilitador de contato.
       </p>
-    </div>
+    </CartaoSecao>
   )
 }

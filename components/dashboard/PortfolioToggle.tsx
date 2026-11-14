@@ -9,11 +9,10 @@ interface PortfolioToggleProps {
   onSuccess?: (novoValor: boolean) => void
 }
 
-export function PortfolioToggle({
-  prestadorId,
-  inicial,
-  onSuccess,
-}: PortfolioToggleProps) {
+/**
+ * Interruptor de "começar com fotos". Grava na hora (não espera o botão de salvar do perfil).
+ */
+export function PortfolioToggle({ prestadorId, inicial, onSuccess }: PortfolioToggleProps) {
   const [obrigatorio, setObrigatorio] = useState(inicial)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -28,36 +27,37 @@ export function PortfolioToggle({
       onSuccess?.(novoValor)
     } catch (erro) {
       console.error('Erro ao atualizar portfolio:', erro)
-      setErro('Erro ao atualizar configuração')
+      setErro('Não conseguimos salvar agora. Tente de novo.')
     } finally {
       setCarregando(false)
     }
   }
 
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg gap-4">
-      <div className="flex-1">
-        <h3 className="font-semibold text-lg">Fotos por padrão</h3>
-        <p className="text-sm text-gray-600 mt-1">
-          {obrigatorio
-            ? 'Ativado: ao criar um serviço, a opção de registro com fotos já vem selecionada. Você ainda pode trocar para sem fotos em cada serviço.'
-            : 'Desativado: ao criar um serviço, a opção sem fotos já vem selecionada. Você ainda pode escolher o registro com fotos quando quiser.'}
-        </p>
-        {erro && <p className="text-sm text-red-600 mt-2">{erro}</p>}
+    <div className="flex flex-col gap-2">
+      <div className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+        <div className="min-w-0">
+          <p id="toggle-fotos-rotulo" className="text-sm font-bold text-slate-800">Começar com registro de fotos</p>
+          <p id="toggle-fotos-descricao" className="mt-1 text-sm leading-relaxed text-slate-500">
+            {obrigatorio
+              ? 'Ligado: ao registrar um trabalho, a opção “com fotos” já vem marcada. Em cada trabalho você pode trocar para “sem fotos”.'
+              : 'Desligado: ao registrar um trabalho, a opção “sem fotos” já vem marcada. Em cada trabalho você pode escolher “com fotos”.'}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={obrigatorio}
+          aria-labelledby="toggle-fotos-rotulo"
+          aria-describedby="toggle-fotos-descricao"
+          onClick={handleToggle}
+          disabled={carregando}
+          className={`relative mt-0.5 inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:opacity-50 ${obrigatorio ? 'bg-blue-600' : 'bg-slate-300'}`}
+        >
+          <span className={`inline-block size-5 rounded-full bg-white shadow transition-transform ${obrigatorio ? 'translate-x-6' : 'translate-x-1'}`} />
+        </button>
       </div>
-      <button
-        onClick={handleToggle}
-        disabled={carregando}
-        className={`px-6 py-2 rounded font-medium transition whitespace-nowrap ${
-          obrigatorio
-            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-            : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
-        } ${
-          carregando ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-        }`}
-      >
-        {carregando ? 'Atualizando...' : obrigatorio ? 'Desativar' : 'Ativar'}
-      </button>
+      {erro && <p role="alert" className="text-sm font-semibold text-red-600">{erro}</p>}
     </div>
   )
 }

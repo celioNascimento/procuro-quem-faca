@@ -1,5 +1,8 @@
 'use client'
 
+import { Camera } from 'lucide-react'
+import { CartaoSecao } from '@/components/perfil/CartaoSecao'
+
 interface PreferenciaFotosProps {
   valor: boolean
   onChange: (valor: boolean) => void
@@ -8,20 +11,31 @@ interface PreferenciaFotosProps {
 
 export function PreferenciaFotos({ valor, onChange, modo = 'edicao' }: PreferenciaFotosProps) {
   return (
-    <section className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
-      <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Portfólio</p>
-      <h2 className="mt-2 text-xl font-black tracking-tight text-slate-900">Fotos por padrão</h2>
-      <p className="mt-3 text-sm leading-relaxed text-slate-600">
-        {valor
-          ? 'Ao criar um serviço, “com registro fotográfico” aparece selecionado. Você pode trocar para “sem fotos” em cada serviço.'
-          : 'Ao criar um serviço, “sem fotos” aparece selecionado. Você pode trocar para “com registro fotográfico” em cada serviço.'}
-      </p>
+    <CartaoSecao
+      titulo="Ao registrar um trabalho"
+      descricao="Escolha como você prefere começar. Dá para mudar em cada trabalho."
+      icone={<Camera size={20} />}
+    >
+      <div role="group" aria-label="Como começar um trabalho" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {[
+          { v: true, titulo: 'Com registro de fotos', texto: 'Mostra o seu trabalho no perfil.' },
+          { v: false, titulo: 'Sem fotos', texto: 'Só registra o serviço e o cliente.' },
+        ].map(op => (
+          <button
+            key={String(op.v)}
+            type="button"
+            aria-pressed={valor === op.v}
+            onClick={() => onChange(op.v)}
+            className={`flex min-h-16 flex-col items-start gap-0.5 rounded-xl border-2 p-3.5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${valor === op.v ? 'border-blue-600 bg-blue-50/60' : 'border-slate-200 bg-white hover:border-blue-300'}`}
+          >
+            <span className="text-sm font-bold text-slate-800">{op.titulo}</span>
+            <span className="text-xs text-slate-500">{op.texto}</span>
+          </button>
+        ))}
+      </div>
       {modo === 'cadastro' && (
-        <p className="mt-2 text-xs font-semibold text-slate-500">Essa é apenas a escolha inicial; ela não obriga fotos em nenhum serviço.</p>
+        <p className="text-xs text-slate-500">Essa é só a escolha inicial: não obriga fotos em nenhum trabalho.</p>
       )}
-      <button type="button" onClick={() => onChange(!valor)} className={`mt-5 rounded-xl px-5 py-3 text-sm font-bold transition ${valor ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-        {valor ? 'Começar com fotos' : 'Começar sem fotos'}
-      </button>
-    </section>
+    </CartaoSecao>
   )
 }
