@@ -77,8 +77,9 @@ export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio 
         />
       </div>
 
-      {/* min-h evita que a página encolha/pule ao alternar entre abas */}
-      <div className="min-h-[320px]">
+      {/* Sem altura mínima: com poucos trabalhos ela deixava um vazio grande antes do que vem abaixo.
+          As duas abas têm estado vazio visível, então a altura nunca cai a zero. */}
+      <div>
         {portfolioObrigatorio && aba === 'portfolio' && (
           <div className="animate-in fade-in duration-200">
             <PortfolioGrid
