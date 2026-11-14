@@ -58,18 +58,6 @@ export interface AvaliacoesStats {
   exibir: boolean
 }
 
-export interface AvaliacaoInsertPayload {
-  projeto_id: string
-  prestador_id: string
-  nota: number
-  comentario: string
-  indica: boolean
-  visivel: boolean
-  status: string
-  cliente_nome?: string | null
-  cliente_foto_url?: string | null
-}
-
 export interface FotoOrdenada {
   id: string
   url_foto: string

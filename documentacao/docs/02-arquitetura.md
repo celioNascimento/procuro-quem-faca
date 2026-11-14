@@ -60,11 +60,6 @@ Essa separação existe para:
 
 Componentes de página (`app/**/page.tsx`) tendem a ser wrappers finos que consomem um hook central; a lógica de estado e efeitos vive no hook; o I/O vive no service. Ver `00-glossario.md` para localizar rapidamente o hook/service correspondente a um conceito específico (ex: "avatar", "WhatsApp", "logout", "status de projeto").
 
-### Módulos com peças construídas mas não conectadas
-
-- **`lib/contexts/LocationContext.tsx` + `components/location/LocationModal.tsx`** — modal de seleção obrigatória de cidade via cookie. `LocationProvider` nunca envolve a árvore em `app/layout.tsx`. Decisão consciente de não conectar: a busca por texto livre (`"pedreiro em Londrina"`, via `usePrestadores`) já cobre a necessidade no estágio mono-região atual. Ver `00-glossario.md`, seção Localização.
-- **`components/profile/AvaliacoesTab.tsx`, `AvaliacaoCard.tsx`, `AvaliacoesResumo.tsx`** — conjunto de exibição de avaliações com distribuição por nota, não conectado a nenhuma tela. `calcularStats` (`lib/utils/avaliacao.utils.ts`) só marca `exibir: true` com 10+ avaliações — decisão de produto para não expor distribuição com baixo volume.
-
 ## Área Administrativa `(admin)`
 
 Route group `app/(admin)/`, com layout próprio (`app/(admin)/layout.tsx`) independente do layout raiz. Segue o mesmo padrão Hook→Service→Supabase das demais áreas.
@@ -129,14 +124,14 @@ components/
 └── ui/                # Primitivos de UI (modais, rating stars)
 ```
 
-`components/perfil/` e `components/profile/` **não são duplicação**: `perfil/` mistura componentes de área logada do cliente (`HeaderCliente`, `CardPerfilCliente`) com seções reutilizáveis do form de prestador (`SecaoDadosPessoais`, `SecaoLocalizacao`, `SecaoOQueVoceFaz`, `SecaoTermos`, `FotoUpload`), usadas tanto no Cadastro quanto na Edição. `profile/` é o perfil público e módulo de avaliação (`PerfilHero`, `PortfolioGrid`, `ProjetoModal`, `FormularioAvaliacao`, `AvaliacoesTab`). Nomenclatura inconsistente (PT vs EN) mas responsabilidades distintas.
+`components/perfil/` e `components/profile/` **não são duplicação**: `perfil/` mistura componentes de área logada do cliente (`HeaderCliente`, `CardPerfilCliente`) com seções reutilizáveis do form de prestador (`SecaoDadosPessoais`, `SecaoLocalizacao`, `SecaoOQueVoceFaz`, `SecaoTermos`, `FotoUpload`), usadas tanto no Cadastro quanto na Edição. `profile/` é o perfil público e módulo de avaliação (`PerfilHero`, `PortfolioGrid`, `ProjetoModal`, `PerfilAvaliacoes`). Nomenclatura inconsistente (PT vs EN) mas responsabilidades distintas.
 
 ## `hooks/` — Um hook por responsabilidade
 
 - **Autenticação/sessão:** `useAuth` (completo: session+role+prestadorStatus+sessionChecked), `useSession` (mínimo: só session), `useLoginForm`, `useLogout`, `useGoogleAuth`
 - **Perfil/prestador:** `usePerfilPrestador`, `usePerfilStatus`, `usePerfilUI`, `usePrestadorForm`, `usePrestadores`, `useCadastroPrestador`, `useSlugCheck`
 - **Cliente:** `usePerfilCliente`, `usePerfilDados`, `usePainelCliente`, `useServicosCliente`
-- **Portfólio/avaliação:** `useUploadWizard`, `usePortfolioDashboard`, `useAvaliar` (arquivo `useAvaliacao.ts`), `useAvaliacoes`, `useSubmitAvaliacao`, `useComentariosFoto`, `useAcompanhamento`
+- **Portfólio/avaliação:** `useUploadWizard`, `usePortfolioDashboard`, `useAvaliar` (arquivo `useAvaliacao.ts`), `useAvaliacoes`, `useComentariosFoto`, `useAcompanhamento`
 - **Suporte/UX:** `useCookieConsent`, `useSlides`, `useSugestoes`, `useCompartilharPerfil`
 - **Localização:** `useLocalizacao`, `useHeaderCliente`
 - **Categorias/anúncios:** `useCategorias`, `useAdContext`

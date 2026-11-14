@@ -45,15 +45,15 @@ Resumo no topo da seção exibe dois contadores independentes (indicações e n�
 **Estado vazio:** sem avaliações, o componente renderiza a caixa tracejada "Nenhuma avaliação ainda" (mesmo estilo e padding do estado vazio de `PortfolioGrid`). Antes retornava `null`, o que esvaziava a aba, encurtava a página e fazia a tela "pular" ao alternar de Portfólio para Avaliações.
 
 
-### `FormularioAvaliacao.tsx` (ativo, `components/profile/`)
+### Fluxo antigo de avaliação com contestação (removido em 14/11/2026)
 
-Delega a `useSubmitAvaliacao` (`lib/services/avaliacao.service.ts` + `uploadWizard.service.ts` para upload). O fluxo antigo de checkbox "Reportar problema/Solicitar Garantia" ainda contém referências a contestação (`contestacoes`) e precisa ser migrado para `solicitacoes_garantia`. A tabela `contestacoes` está desativada; novos casos devem usar a máquina de estados de garantia/reclamação documentada em `03-banco-de-dados.md`, sem sobrescrever a nota original.
+`FormularioAvaliacao`, `useSubmitAvaliacao` e `FotosEvidenciaPicker` (checkbox "Reportar problema" gravando em `contestacoes`) não eram usados por nenhuma tela e foram apagados, junto com as funções `inserirAvaliacao`, `finalizarProjeto` e `marcarProjetoEmDisputa` de `avaliacao.service.ts`. A tabela `contestacoes` está desativada; novos casos usam a máquina de estados de garantia/reclamação documentada em `03-banco-de-dados.md`, sem sobrescrever a nota original.
 
 A solicitação de garantia/reclamação deve ser tratada pelo fluxo `solicitacoes_garantia` (`garantia.service.ts`/`garantiaWizard.service.ts`), distinto do fluxo linear pós-serviço (`useAvaliar`). O legado de `contestacoes` permanece desativado.
 
-### `AvaliacoesTab`/`AvaliacaoCard`/`AvaliacoesResumo`
+### Avaliações no perfil público
 
-Não conectados a nenhuma tela. `PerfilAvaliacoes` (em produção) mostra o estado vazio "Nenhuma avaliação ainda" quando não há avaliações; `calcularStats` (`lib/utils/avaliacao.utils.ts`) só marca `exibir: true` com 10+ avaliações — decisão de produto para o volume atual.
+`PerfilAvaliacoes` (em produção) mostra o estado vazio "Nenhuma avaliação ainda" quando não há avaliações. `calcularStats` (`lib/utils/avaliacao.utils.ts`) só marca `exibir: true` com 10+ avaliações — decisão de produto para não expor distribuição com baixo volume. Os componentes `AvaliacoesTab`, `AvaliacaoCard` e `AvaliacoesResumo` (distribuição por nota no perfil público, nunca ligados a uma tela) foram removidos em 14/11/2026; quando houver volume, recriar sobre o visual atual.
 
 ## Acompanhamento do Cliente
 
@@ -114,7 +114,7 @@ Além disso, como a avaliação agora grava `cliente_id`, o trigger `check_auto_
 3. **Deploy do app** com `avaliarProjeto`.
 4. `20261104190100_fecha_escrita_aberta_avaliacao.sql`: só **depois** do deploy. Remove as policies que deixavam qualquer conta logada inserir avaliação (`"Clientes logados podem avaliar"`, `"Clientes podem avaliar"`) e qualquer visitante finalizar projeto (`"Clientes podem finalizar projetos via token"`). Se for aplicada antes do deploy, o fluxo de avaliar atual para de gravar. O arquivo traz o SQL de rollback.
 
-`inserirAvaliacao`, `finalizarProjeto` e `marcarProjetoEmDisputa` ficaram marcadas como `@deprecated`: após a migration 4 o banco recusa essas escritas diretas. Só o legado `FormularioAvaliacao`/`useSubmitAvaliacao` (hoje sem uso na aplicação) ainda as chama.
+`inserirAvaliacao`, `finalizarProjeto` e `marcarProjetoEmDisputa` foram removidas em 14/11/2026: após a migration 4 o banco recusa essas escritas diretas e só o fluxo antigo (também removido) as chamava.
 
 **Token secreto:** "dono" só é confiável se o token não vazar. As migrations `20261105190000` (funções, aditiva) e `20261105190100` (revoga leitura pública do token, remove vínculo por WhatsApp, trava `cliente_user_id`) fecham isso; aplicar na ordem: aditiva → deploy → restritiva. Limite residual: o modelo é de portador — quem recebe o link primeiro e loga vira dono (inclusive uma segunda conta do próprio prestador).
 

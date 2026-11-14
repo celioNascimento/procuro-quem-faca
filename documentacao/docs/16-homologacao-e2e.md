@@ -112,7 +112,7 @@
 
 1. **Documentação pública aponta para admin:** `app/documentacao/docs/[slug]/page.tsx` usa `/admin/documentacao` no link de retorno. Isso contradiz o escopo não-admin e deve ser corrigido ou explicitamente aceito como dependência antes da configuração E2E.
 2. **Catálogo incompleto:** `/reivindicar`, `/recuperar-senha`, `/ajuda`, `/quem-somos`, `/termos`, `/privacidade`, `/sucesso`, `/not-found` e `/error` precisam constar no inventário de rotas do catálogo.
-3. **Fluxo legado de avaliação:** `FormularioAvaliacao` ainda referencia `contestacoes`; a homologação deve tratar isso como pendência, não como comportamento aprovado, até migrar para `solicitacoes_garantia`.
+3. **Fluxo legado de avaliação:** o antigo `FormularioAvaliacao` (que usava `contestacoes`) foi removido em 14/11/2026; garantias seguem só por `solicitacoes_garantia`.
 4. **Compartilhamento em `/sucesso`:** a página usa texto genérico e não recebe contexto do projeto; o E2E deve validar o comportamento atual e manter a limitação visível.
 5. **Acessibilidade dos controles icônicos:** os controles de fechar/ampliar em alguns modais precisam de `aria-label` consistente para inspeção automática. Não devem ser ignorados silenciosamente.
 6. **Mutação isolada:** cadastro, upload, exclusão, denúncia, comentários e avaliação só podem usar fixtures/contas do ambiente de homologação; nenhum caso deve depender de dado produtivo.

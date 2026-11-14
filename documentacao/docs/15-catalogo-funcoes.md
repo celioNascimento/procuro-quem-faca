@@ -73,10 +73,10 @@ Todos os hooks abaixo são pontos de entrada de UI. O hook geralmente mantém es
 | Domínio | Hooks |
 |---|---|
 | Auth/sessão | [`useAuth`](../../hooks/useAuth.ts), [`useSession`](../../hooks/useSession.ts), [`useLoginForm`](../../hooks/useLoginForm.ts), [`useLogout`](../../hooks/useLogout.ts), [`useGoogleAuth`](../../hooks/useGoogleAuth.ts), [`useNovaSenha`](../../hooks/useNovaSenha.ts), [`useConfirmarExclusaoConta`](../../hooks/useConfirmarExclusaoConta.ts) |
-| Prestador/perfil | [`useCadastroPrestador`](../../hooks/useCadastroPrestador.ts), [`usePrestadorForm`](../../hooks/usePrestadorForm.ts), [`usePerfilPrestador`](../../hooks/usePerfilPrestador.ts), [`usePerfilStatus`](../../hooks/usePerfilStatus.ts), [`usePerfilUI`](../../hooks/usePerfilUI.ts), [`usePerfilDados`](../../hooks/usePerfilDados.ts), [`useEditarPerfilPrestador`](../../hooks/useEditarPerfilPrestador.ts), [`useSlugCheck`](../../hooks/useSlugCheck.ts), [`usePrestadores`](../../hooks/usePrestadores.ts) |
+| Prestador/perfil | [`useCadastroPrestador`](../../hooks/useCadastroPrestador.ts), [`usePrestadorForm`](../../hooks/usePrestadorForm.ts), [`usePerfilPrestador`](../../hooks/usePerfilPrestador.ts), [`usePerfilStatus`](../../hooks/usePerfilStatus.ts), [`usePerfilUI`](../../hooks/usePerfilUI.ts), [`usePerfilDados`](../../hooks/usePerfilDados.ts), [`useSlugCheck`](../../hooks/useSlugCheck.ts), [`usePrestadores`](../../hooks/usePrestadores.ts) |
 | Cliente | [`usePerfilCliente`](../../hooks/usePerfilCliente.ts), [`usePerfilDados`](../../hooks/usePerfilDados.ts), [`usePainelCliente`](../../hooks/usePainelCliente.ts), [`useServicosCliente`](../../hooks/useServicosCliente.ts), [`useHeaderCliente`](../../hooks/useHeaderCliente.ts) |
 | Portfólio/garantia | [`useUploadWizard`](../../hooks/useUploadWizard.ts), [`usePortfolioDashboard`](../../hooks/usePortfolioDashboard.ts), [`useGarantiaWizard`](../../hooks/useGarantiaWizard.ts), [`useCasoGarantiaDoProjeto`](../../hooks/useCasoGarantiaDoProjeto.ts), [`useComentariosFoto`](../../hooks/useComentariosFoto.ts), [`useAcompanhamento`](../../hooks/useAcompanhamento.ts) |
-| Avaliações | [`useAvaliar`](../../hooks/useAvaliacao.ts), [`useAvaliacoes`](../../hooks/useAvaliacoes.ts), [`useSubmitAvaliacao`](../../hooks/useSubmitAvaliacao.ts), [`useAvaliacaoDoProjeto`](../../hooks/useAvaliacaoDoProjeto.ts), [`useAvaliacaoClienteDoProjeto`](../../hooks/useAvaliacaoClienteDoProjeto.ts), [`useAvaliacoesRecebidasCliente`](../../hooks/useAvaliacoesRecebidasCliente.ts) |
+| Avaliações | [`useAvaliar`](../../hooks/useAvaliacao.ts), [`useAvaliacoes`](../../hooks/useAvaliacoes.ts), [`useAvaliacaoDoProjeto`](../../hooks/useAvaliacaoDoProjeto.ts), [`useAvaliacaoClienteDoProjeto`](../../hooks/useAvaliacaoClienteDoProjeto.ts), [`useAvaliacoesRecebidasCliente`](../../hooks/useAvaliacoesRecebidasCliente.ts) |
 | Busca/UX | [`useFiltrosPrestadores`](../../hooks/useFiltrosPrestadores.ts), [`useFiltrosParams`](../../hooks/useFiltrosParams.ts), [`useSugestoes`](../../hooks/useSugestoes.ts), [`useSlides`](../../hooks/useSlides.ts), [`useCompartilharPerfil`](../../hooks/useCompartilharPerfil.ts), [`useLocalizacao`](../../hooks/useLocalizacao.ts), [`useCategorias`](../../hooks/useCategorias.ts), [`useCookieConsent`](../../hooks/useCookieConsent.ts), [`useHaptic`](../../hooks/useHaptic.ts), [`useVoltar`](../../hooks/useVoltar.ts), [`useRestaurarScroll`](../../hooks/useRestaurarScroll.ts) |
 | Anúncios/ativação | [`useAdContext`](../../hooks/useAdContext.ts), [`useAdminAnuncios`](../../hooks/useAdminAnuncios.ts), [`useRastreamentoAtivacao`](../../hooks/useRastreamentoAtivacao.ts), [`useSegmentacaoReferencia`](../../hooks/useSegmentacaoReferencia.ts) |
 | Admin | [`useAdminAuth`](../../hooks/useAdminAuth.ts), [`useAdminDashboard`](../../hooks/useAdminDashboard.ts), [`useAdminLogs`](../../hooks/useAdminLogs.ts), [`useModeracao`](../../hooks/useModeracao.ts), [`useHabilidades`](../../hooks/useHabilidades.ts), [`usePovoar`](../../hooks/usePovoar.ts), [`useAdminPrestadores`](../../hooks/admin/useAdminPrestadores.ts), [`useGeografia`](../../app/(admin)/admin/geografia/hooks/useGeografia.ts) |
@@ -90,7 +90,6 @@ Todos os hooks abaixo são pontos de entrada de UI. O hook geralmente mantém es
 - `usePrestadores`: `calcularMedias`, `normalizarCidade`, `normalizarId`, `parsearBusca`, `fetchDados` — normalização, parsing e busca.
 - `useServicosCliente`: `estaProntoParaAvaliar`, `buscar` — regra de disponibilidade de avaliação e carregamento.
 - `useAvaliacao`/`useAcompanhamento`: `carregar` — leitura dos fluxos públicos por token.
-- `useSubmitAvaliacao`: `submit` — valida e envia avaliação.
 - `useNovaSenha`: `handleSubmit` — atualiza senha e finaliza sessão.
 - `useCookieConsent`: `verificar`, `aceitar` — persiste e lê consentimento.
 - `useFiltrosPrestadores`: `aplicar`, `limparFiltros` — altera estado dos filtros.
@@ -156,7 +155,7 @@ Os contratos compartilhados estão em [`types/`](../../types). Os principais sã
 
 ## Itens não conectados ou com atenção especial
 
-- `LocationProvider`/`LocationModal`: implementados, mas não envolvidos no layout raiz.
+- `LocationProvider`/`useLocation`: envolvem o layout raiz e guardam a cidade atual (cookie `pqf_cidade`).
 - Componentes novos do wizard e conjunto de avaliações em `components/profile`: existem, mas alguns não têm consumidor confirmado.
 - `lib/db/acessos.ts`: não tratar como dependência ativa sem confirmação do schema.
 - `app/(admin)/admin/ativacao/page.js`: variante JavaScript legada/independente; comparar antes de alterar o fluxo TSX.

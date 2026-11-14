@@ -1,7 +1,7 @@
 //lib/services/avaliacao.service.ts
 
 import { supabase } from '@/lib/supabase'
-import type { AvaliacaoRaw, AvaliacaoInsertPayload, Projeto } from '@/types/avaliacao'
+import type { AvaliacaoRaw, Projeto } from '@/types/avaliacao'
 import { obterProjetoIdPorToken } from './projetoToken.service'
 import { nomeClientePorToken } from './dadosClienteProjeto.service'
 
@@ -152,25 +152,6 @@ export async function avaliarProjeto(params: {
   return data as ResultadoAvaliacao
 }
 
-/** @deprecated Escrita direta bloqueada pelo banco após 20261104190100; use `avaliarProjeto`. */
-export async function inserirAvaliacao(payload: AvaliacaoInsertPayload) {
-  const { error } = await supabase.from('avaliacoes').insert(payload)
-  if (error) throw error
-}
-
-/** @deprecated Update direto de status bloqueado para clientes após 20261104190100; use `avaliarProjeto`. */
-export async function finalizarProjeto(projetoId: string) {
-  const { error } = await supabase
-    .from('portfolio_projetos')
-    .update({
-      status: 'finalizado',
-      data_conclusao: new Date().toISOString().split('T')[0],
-    })
-    .eq('id', projetoId)
-
-  if (error) throw error
-}
-
 export async function fetchAvaliacoesPorPrestador(prestadorId: number): Promise<AvaliacaoRaw[]> {
   const { data, error } = await supabase
     .from('avaliacoes')
@@ -198,12 +179,4 @@ export async function fetchAvaliacoesPorPrestador(prestadorId: number): Promise<
   }
 
   return data ?? []
-}
-
-export async function marcarProjetoEmDisputa(projetoId: string) {
-  const { error } = await supabase
-    .from('portfolio_projetos')
-    .update({ status: 'em_disputa' })
-    .eq('id', projetoId)
-  if (error) throw error
 }

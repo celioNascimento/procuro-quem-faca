@@ -186,7 +186,7 @@ Campo `indica` em `avaliacoes` e nos tipos relacionados. Representa a opinião e
 
 **Consumido por:** `hooks/useLocalizacao.ts` (cascata estado→região→cidade, usado no Cadastro/Edição de Prestador).
 
-**Módulo separado e não conectado:** `lib/contexts/LocationContext.tsx` + `components/location/LocationModal.tsx` — modal de seleção obrigatória de cidade via cookie (`pqf_cidade`), desenhado para bloquear navegação até o usuário escolher uma cidade. Nunca foi plugado no layout (`LocationProvider` não envolve a árvore em `app/layout.tsx`). Decisão: manter não conectado por ora — a busca por texto livre (`"pedreiro em Londrina"`, resolvida em `usePrestadores`) já cobre a necessidade no estágio atual do produto.
+**Cidade atual:** `lib/contexts/LocationContext.tsx` (`LocationProvider` em `app/layout.tsx`, hook `useLocation`, cookie `pqf_cidade`) guarda a cidade usada pela página inicial e por `usePrestadores`. O antigo modal de seleção obrigatória de cidade (`LocationModal`) nunca foi usado e foi removido em 14/11/2026; a busca por texto livre (`"pedreiro em Londrina"`) cobre a necessidade no estágio atual do produto.
 
 **Geolocalização silenciosa** (distinta do modal acima): `hooks/usePrestadores.ts`, via Nominatim/OpenStreetMap, só roda se não houver `?cidade=` na URL.
 

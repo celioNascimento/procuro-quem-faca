@@ -51,7 +51,7 @@ export default function PerfilCTA({ nome, whatsapp, onClique }: Props) {
                     className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-blue-100 hover:bg-blue-700 active:scale-[0.98] transition-all italic"
                 >
                     <WaIcon />
-                    Solicitar Orçamento
+                    Chamar no WhatsApp
                 </a>
             </div>
 
@@ -66,7 +66,7 @@ export default function PerfilCTA({ nome, whatsapp, onClique }: Props) {
                         })
                     }}
                     className="fixed bottom-6 right-5 z-50 w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl shadow-blue-300 hover:bg-blue-700 active:scale-90 transition-all animate-in zoom-in-50 duration-300"
-                    aria-label="Solicitar Orçamento via WhatsApp"
+                    aria-label={`Chamar ${nome} no WhatsApp`}
                 >
                     <WaIcon />
                 </a>

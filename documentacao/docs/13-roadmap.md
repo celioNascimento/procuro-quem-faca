@@ -84,7 +84,7 @@ Ainda **não lançado**. A plataforma usa "Contatos" (WhatsApp) e não fala em "
 - Até o lançamento, o acesso público às duas funções fica fechado (migração `20261114090000_revogar_funcoes_de_orcamento.sql`): um link de orçamento aberto a qualquer pessoa sem login seria uma porta desnecessária.
 - No lançamento: criar a tela, **devolver** o `execute` às funções numa migração nova (`anon` só para `obter_`/`responder_` se o cliente responder sem login) e revisar as regras (RLS da tabela, validade do link, texto ao usuário).
 - "Meus dados" (`lib/meusDados/resumo.ts`) mantém as linhas "Orçamentos enviados/recebidos": só aparecem quando a pessoa tem registros, e a transparência sobre dados pessoais (LGPD) não deve depender de a funcionalidade estar à venda. Hoje, com a tabela vazia, nada é exibido.
-- O botão público "Solicitar Orçamento" (`PerfilCTA.tsx`, `seo-service-page.tsx`) segue pendente de decisão de texto (sugestão: "Chamar no WhatsApp").
+- O botão do perfil público (`PerfilCTA.tsx`) passou a dizer "Chamar no WhatsApp" (14/11/2026). A mensagem que o cliente envia ainda pede "um orçamento" e as páginas de SEO de serviço (`seo-service-page.tsx`) e os Termos ainda usam a palavra: decidir à parte, porque "orçamento" também é o que as pessoas pesquisam no Google.
 
 ### SEO dinâmico por região
 
@@ -104,7 +104,7 @@ Explicar o diferencial do PQF (registro fotográfico + avaliação vinculada a p
 ## Pendências técnicas
 
 - [ ] Migrar `EditarPerfilTab.tsx` (Dashboard do Prestador) para usar `/confirmar-exclusao` — última implementação divergente do fluxo de exclusão de conta (ver `00-glossario.md`, seção Exclusão de conta)
-- [ ] Mapear/decidir sobre `LocationModal`/`LocationContext` — construído mas não conectado (modal obrigatório de seleção de cidade). Decisão atual: manter desconectado até haver clareza de que múltiplas regiões justificam essa fricção
+- [ ] Seleção de cidade obrigatória (antigo `LocationModal`, removido em 14/11/2026): só retomar se várias regiões justificarem essa fricção; `LocationContext` segue em uso
 - [ ] Confirmar se `avaliacoes` tem constraint de unicidade por `projeto_id` (parece ser 1 por projeto pela UI, sem constraint explícita confirmada no schema)
 - [ ] Documentar formalmente o significado de negócio de `origem_tipo: 'vitrine'`
 - [ ] Padronizar nome do parâmetro de URL de retorno — `?from=` (perfil público) vs. `?origem=` (dashboard), mesma função, nomes diferentes
