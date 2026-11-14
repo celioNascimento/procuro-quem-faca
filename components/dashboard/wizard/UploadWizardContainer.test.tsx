@@ -93,7 +93,7 @@ describe('UploadWizardContainer — com fotos', () => {
     render(<UploadWizardContainer prestadorId={1} onComplete={() => {}} />)
 
     expect(screen.getByRole('button', { name: /enviar o aceite pelo whatsapp/i })).toBeTruthy()
-    expect(screen.getAllByText(/envie o aceite ao cliente \(bloco acima\) para liberar esta foto/i)).toHaveLength(2)
+    expect(screen.getAllByText(/envie o aceite ao cliente para liberar esta foto/i)).toHaveLength(2)
     expect(screen.getByText('Rascunho: ainda não enviado ao cliente')).toBeTruthy()
     expect(screen.getByRole('status', { name: /o que fazer agora/i }).textContent).toMatch(/Envie o aceite ao cliente/)
   })

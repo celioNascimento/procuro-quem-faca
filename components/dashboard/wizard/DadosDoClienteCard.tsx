@@ -27,7 +27,7 @@ export function DadosDoClienteCard({ hookData }: Props) {
 
   if (emResumo) {
     return (
-      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-4 sm:p-5" aria-label="Dados do cliente e do serviço">
+      <section className="@container rounded-3xl border border-slate-200 bg-white p-4 sm:p-5" aria-label="Dados do cliente e do serviço">
         <div className="flex items-start justify-between gap-3">
           <h3 className="text-base font-black text-slate-900">Cliente e serviço</h3>
           {isProjetoPendente && (
@@ -36,7 +36,7 @@ export function DadosDoClienteCard({ hookData }: Props) {
             </button>
           )}
         </div>
-        <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+        <dl className="mt-3 grid gap-3 text-sm @md:grid-cols-3">
           <div><dt className="font-bold text-slate-500">Serviço</dt><dd className="mt-0.5 font-semibold text-slate-900">{titulo || '—'}</dd></div>
           <div><dt className="font-bold text-slate-500">Cliente</dt><dd className="mt-0.5 font-semibold text-slate-900">{clienteNome || 'Sem nome informado'}</dd></div>
           <div><dt className="font-bold text-slate-500">WhatsApp do cliente</dt><dd className="mt-0.5 font-semibold text-slate-900">{clienteWhatsapp || '—'}</dd></div>
@@ -46,7 +46,7 @@ export function DadosDoClienteCard({ hookData }: Props) {
   }
 
   return (
-    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-4 sm:p-5" aria-label="Dados do cliente e do serviço">
+    <section className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-5" aria-label="Dados do cliente e do serviço">
       <h3 className="text-base font-black text-slate-900">{editandoDadosCliente ? 'Corrigir dados' : 'Quem é o cliente e qual foi o serviço?'}</h3>
       <p className="mt-0.5 text-sm text-slate-600">O cliente recebe o link do acompanhamento pelo WhatsApp. É assim que o trabalho ganha aceite e avaliação.</p>
 

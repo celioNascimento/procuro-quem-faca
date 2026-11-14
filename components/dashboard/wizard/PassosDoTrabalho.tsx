@@ -13,13 +13,13 @@ interface Props {
 export function PassosDoTrabalho({ passos, proximaAcao }: Props) {
   const atual = passos.findIndex((p) => p.estado === 'atual')
   return (
-    <section aria-label="Passos do trabalho" className="flex flex-col gap-3">
-      <ol className="flex items-start gap-1 overflow-x-auto pb-1">
+    <section aria-label="Passos do trabalho" className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
+      <ol className="flex items-start gap-1 lg:w-[34rem] lg:shrink-0">
         {passos.map((passo, indice) => (
           <li
             key={passo.id}
             aria-current={passo.estado === 'atual' ? 'step' : undefined}
-            className="flex min-w-[4.5rem] flex-1 flex-col items-center gap-1 text-center"
+            className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center"
           >
             <span
               className={`flex size-8 items-center justify-center rounded-full text-sm font-black ${
@@ -32,14 +32,14 @@ export function PassosDoTrabalho({ passos, proximaAcao }: Props) {
             >
               {passo.estado === 'feito' ? <Check size={16} strokeWidth={3} aria-hidden="true" /> : indice + 1}
             </span>
-            <span className={`text-xs font-semibold leading-tight ${passo.estado === 'atual' ? 'text-blue-700' : passo.estado === 'feito' ? 'text-slate-600' : 'text-slate-400'}`}>
+            <span className={`text-[0.6875rem] font-semibold leading-tight [overflow-wrap:anywhere] sm:text-xs ${passo.estado === 'atual' ? 'text-blue-700' : passo.estado === 'feito' ? 'text-slate-600' : 'text-slate-400'}`}>
               {passo.rotulo}
               <span className="sr-only">{passo.estado === 'feito' ? ' (feito)' : passo.estado === 'atual' ? ' (passo atual)' : ' (ainda não)'}</span>
             </span>
           </li>
         ))}
       </ol>
-      <p role="status" aria-label="O que fazer agora" className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-900">
+      <p role="status" aria-label="O que fazer agora" className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-900 lg:flex-1">
         <span className="font-black">{atual >= 0 ? `Agora: ` : ''}</span>{proximaAcao}
       </p>
     </section>

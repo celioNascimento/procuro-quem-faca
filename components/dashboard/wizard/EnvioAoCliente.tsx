@@ -43,14 +43,14 @@ export function EnvioAoCliente({
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-[1.75rem] border border-emerald-200 bg-emerald-50/60 p-4 sm:p-5" aria-label={titulo}>
+    <section className="@container flex flex-col gap-4 rounded-3xl border border-emerald-200 bg-emerald-50/60 p-4 sm:p-5" aria-label={titulo}>
       <div>
         <h3 className="text-base font-black text-slate-900">{titulo}</h3>
         <p className="mt-0.5 text-sm text-slate-700">{explicacao}</p>
         {jaEnviado && <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold text-emerald-700"><Check size={14} aria-hidden="true" /> Já enviado. Você pode enviar de novo se precisar.</p>}
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-2 @md:flex-row">
         <button
           type="button"
           onClick={enviar}
