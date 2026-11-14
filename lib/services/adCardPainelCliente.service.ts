@@ -4,7 +4,7 @@
 // (components/painel/AdCardPainelCliente.tsx via hooks/useAdCardPainelCliente.ts).
 
 import { supabase } from '@/lib/supabase/client'
-import type { AnuncioComAnunciante } from '@/lib/services/adminAnuncios.service'
+import type { AnuncioComAnunciante } from '@/types/ads'
 
 export type AnuncioComMetrica = AnuncioComAnunciante & { segmentacao_id_ativa?: string }
 

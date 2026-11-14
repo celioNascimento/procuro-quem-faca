@@ -126,3 +126,78 @@ describe('usePrestadores — falha e nova tentativa', () => {
     erroConsole.mockRestore()
   })
 })
+
+describe('usePrestadores — cidade por id', () => {
+  it('?cidade=<id> filtra por essa cidade, mostra o nome e marca a opção do menu', async () => {
+    definirUrl({ q: 'pedreiro', cidade: 'c-Maringá' })
+    const { result } = renderHook(() => usePrestadores())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([3])
+    expect(result.current.cidadeNome).toBe('Maringá')
+    expect(result.current.cidadeFiltroId).toBe('c-Maringá')
+    expect(result.current.cidadesDisponiveis.map(c => c.id)).toContain('c-Londrina')
+  })
+
+  it('home com o id da cidade salva consulta só a cidade dela', async () => {
+    cidadeSalva = { id: 'c-Londrina', nome: 'Londrina' }
+    definirUrl({ q: 'pedreiro', cidade: 'c-Londrina' })
+    const { result } = renderHook(() => usePrestadores())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(getPrestadoresAtivos).toHaveBeenCalledWith('c-Londrina')
+    expect(result.current.cidadeNome).toBe('Londrina')
+  })
+
+  it('link antigo com o NOME da cidade continua funcionando', async () => {
+    definirUrl({ q: 'pedreiro', cidade: 'Maringá' })
+    const { result } = renderHook(() => usePrestadores())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([3])
+    expect(result.current.cidadeFiltroId).toBe('c-Maringá')
+  })
+
+  it('duas cidades com o mesmo nome não se misturam (cidade salva usa o id)', async () => {
+    const duas = [
+      linha(1, 'Santa Helena', { cidade_id: 'pr', cidades: { id: 'pr', nome: 'Santa Helena', estado_sigla: 'PR', regiao_id: 'r1', regioes: { id: 'r1', nome: 'Norte' } } }),
+      linha(2, 'Santa Helena', { cidade_id: 'sc', estado_sigla: 'SC', cidades: { id: 'sc', nome: 'Santa Helena', estado_sigla: 'SC', regiao_id: 'r9', regioes: { id: 'r9', nome: 'Sul' } } }),
+    ]
+    getPrestadoresAtivos.mockImplementation(async (cidadeId?: string) => ({
+      data: cidadeId ? duas.filter(p => p.cidade_id === cidadeId) : duas, error: null,
+    }))
+    definirUrl({ q: 'pedreiro', ampliar: '1' })
+    const { result, rerender } = renderHook(() => usePrestadores())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.cidadesDisponiveis.map(c => c.nome).sort()).toEqual(['Santa Helena - PR', 'Santa Helena - SC'])
+
+    definirUrl({ q: 'pedreiro', cidade: 'sc' })
+    rerender()
+    await waitFor(() => expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([2]))
+  })
+})
+
+describe('usePrestadores — vitrine', () => {
+  const vitrinePedreiro = linha(10, 'Londrina', { origem_tipo: 'vitrine' })
+  const vitrineEletricista = linha(11, 'Londrina', {
+    origem_tipo: 'vitrine', nome: 'Luz & Cia',
+    categorias: { id: 'k2', nome: 'Eletricista', grupo_id: 'g1', categorias_grupos: { id: 'g1', nome: 'Construção' } },
+  })
+
+  beforeEach(() => {
+    getPrestadoresAtivos.mockImplementation(async () => ({
+      data: [linha(1, 'Londrina'), vitrineEletricista, vitrinePedreiro], error: null,
+    }))
+  })
+
+  it('a vitrine que combina com o termo fica no topo; a que não combina some', async () => {
+    definirUrl({ q: 'pedreiro' })
+    const { result } = renderHook(() => usePrestadores())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([10, 1])
+  })
+
+  it('sem termo, todas as vitrines aparecem, antes dos demais', async () => {
+    definirUrl({})
+    const { result } = renderHook(() => usePrestadores())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([11, 10, 1])
+  })
+})

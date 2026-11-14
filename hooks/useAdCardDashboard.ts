@@ -12,7 +12,7 @@ import {
   listarAnunciosAtivosPorPraca,
   registrarMetricaAnuncio,
   type AnuncioComAnunciante,
-} from '@/lib/services/adminAnuncios.service'
+} from '@/lib/services/anunciosPublicos.service'
 
 type AnuncioComMetrica = AnuncioComAnunciante & { segmentacao_id_ativa?: string }
 

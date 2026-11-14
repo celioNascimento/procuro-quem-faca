@@ -10,7 +10,7 @@ const sem: FiltrosAtivos = { estado: '', regiao: '', grupo: '', categoria: '', c
 
 function item(extra: Partial<ItemBusca>): ItemBusca {
   return {
-    estado_sigla: 'PR', regiao_id: 'r1', regiao_nome: 'Norte', cidade_nome: 'Londrina',
+    estado_sigla: 'PR', regiao_id: 'r1', regiao_nome: 'Norte', cidade_id: 'cid-lon', cidade_nome: 'Londrina',
     grupo_id: 'g1', grupo_nome: 'Construção', categoria_id: 'c1', categoria: 'Pedreiro', ...extra,
   }
 }
@@ -19,8 +19,8 @@ const base: ItemBusca[] = [
   item({}), item({}),
   item({ categoria_id: 'c2', categoria: 'Eletricista' }),
   item({ grupo_id: 'g2', grupo_nome: 'Beleza', categoria_id: 'c3', categoria: 'Manicure' }),
-  item({ cidade_nome: 'Maringá', regiao_id: 'r1' }),
-  item({ estado_sigla: 'SP', regiao_id: 'r2', regiao_nome: 'Capital', cidade_nome: 'São Paulo' }),
+  item({ cidade_id: 'cid-mar', cidade_nome: 'Maringá', regiao_id: 'r1' }),
+  item({ estado_sigla: 'SP', regiao_id: 'r2', regiao_nome: 'Capital', cidade_id: 'cid-sp', cidade_nome: 'São Paulo' }),
 ]
 
 describe('parsearBusca / normalizarCidade', () => {
@@ -76,7 +76,7 @@ describe('calcularFacetas — a contagem é o que sobra ao escolher a opção', 
 
   it('Cidade respeita a Área escolhida', () => {
     const { cidades } = calcularFacetas(base, { ...sem, grupo: 'g2' })
-    expect(cidades).toEqual([{ nome: 'Londrina', count: 1 }])
+    expect(cidades).toEqual([{ id: 'cid-lon', nome: 'Londrina', count: 1 }])
   })
 
   it('Estado ignora a cidade escolhida, para dar para trocar de estado', () => {
@@ -109,5 +109,32 @@ describe('getTituloBusca', () => {
   })
   it('não repete a cidade que já está escrita na busca', () => {
     expect(getTituloBusca('pedreiro em Maringá', 'Maringá', true)).toBe('Resultados para "pedreiro em Maringá"')
+  })
+})
+
+describe('cidades com o mesmo nome', () => {
+  const homonimas: ItemBusca[] = [
+    item({ cidade_id: 'pr', cidade_nome: 'Santa Helena', estado_sigla: 'PR' }),
+    item({ cidade_id: 'pr', cidade_nome: 'Santa Helena', estado_sigla: 'PR' }),
+    item({ cidade_id: 'sc', cidade_nome: 'Santa Helena', estado_sigla: 'SC' }),
+    item({ cidade_id: 'lon', cidade_nome: 'Londrina', estado_sigla: 'PR' }),
+  ]
+
+  it('filtrar pelo id não mistura as duas', () => {
+    expect(filtrarExibidos(homonimas, { ...sem, cidadeId: 'pr' })).toHaveLength(2)
+    expect(filtrarExibidos(homonimas, { ...sem, cidadeId: 'sc' })).toHaveLength(1)
+  })
+
+  it('só pelo nome (texto digitado, link antigo) ainda acha as duas', () => {
+    expect(filtrarExibidos(homonimas, { ...sem, cidade: 'santa helena' })).toHaveLength(3)
+  })
+
+  it('as opções ganham a sigla do estado só quando o nome se repete', () => {
+    const { cidades } = calcularFacetas(homonimas, sem)
+    expect(cidades).toEqual([
+      { id: 'pr', nome: 'Santa Helena - PR', count: 2 },
+      { id: 'lon', nome: 'Londrina', count: 1 },
+      { id: 'sc', nome: 'Santa Helena - SC', count: 1 },
+    ])
   })
 })

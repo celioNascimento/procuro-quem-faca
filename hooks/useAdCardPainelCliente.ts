@@ -5,7 +5,8 @@
 // undefined = carregando · null = sem anúncio (cai no fallback).
 
 import { useEffect, useState } from 'react'
-import { registrarMetricaAnuncio, type AnuncioComAnunciante } from '@/lib/services/adminAnuncios.service'
+import { registrarMetricaAnuncio } from '@/lib/services/anunciosPublicos.service'
+import type { AnuncioComAnunciante } from '@/types/ads'
 import {
   buscarAnuncioDaPraca,
   buscarCidadeIdDoPrestador,

@@ -86,7 +86,7 @@ type Props = {
   totalAtivos:      number
   estadosDisponiveis:    { sigla: string; count: number }[]
   regioesDisponiveis:    { id: string; nome: string; count: number }[]
-  cidadesDisponiveis:    { nome: string; count: number }[]
+  cidadesDisponiveis:    { id: string; nome: string; count: number }[]
   gruposDisponiveis:     { id: string; nome: string; count: number }[]
   categoriasDisponiveis: { id: string; nome: string; count: number }[]
   onAplicar:  (chave: string, valor: string) => void
@@ -140,7 +140,7 @@ export function FiltroSidebar({
       />
       <SecaoFiltro
         titulo="Cidade"
-        opcoes={cidadesDisponiveis.map(c => ({ id: c.nome, label: c.nome, count: c.count }))}
+        opcoes={cidadesDisponiveis.map(c => ({ id: c.id, label: c.nome, count: c.count }))}
         valorAtivo={filtroCidade}
         onToggle={v => onAplicar('cidade', v)}
       />

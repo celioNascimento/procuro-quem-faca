@@ -1,13 +1,14 @@
 'use client'
 // app/page.tsx
 
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSugestoes } from '@/hooks/useSugestoes'
 import { insertLog } from '@/lib/db/logs'
 import SearchForm from '@/components/home/SearchForm'
+import { ConviteLocalizacao } from '@/components/busca/ConviteLocalizacao'
 import CTAPrestadorSkeleton from '@/components/home/CTAPrestadorSkeleton'
 import { ArrowRight, Briefcase } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
@@ -22,6 +23,9 @@ export default function Home() {
   const [erro, setErro] = useState(false)
   const { sugestoes, carregado } = useSugestoes(busca)
   const { cidadeAtual } = useLocation()
+  // A cidade salva vem de um cookie e a dispensa do convite, do navegador: nenhuma existe no servidor.
+  // Só mostramos o convite depois de carregar no navegador, para não dar diferença na hidratação.
+  const noNavegador = useSyncExternalStore(() => () => {}, () => true, () => false)
   const { session, role, prestadorStatus, roleLoading } = useAuth()
 
   let hrefCTA = '/login'
@@ -69,7 +73,7 @@ export default function Home() {
     // Uma cidade escrita na busca tem prioridade sobre a cidade salva do usuário.
     // Ex.: “massoterapia em Maringá” não deve ser sobrescrita por Londrina.
     const cidadeInformada = termoFinal.match(/^.+?\s+em\s+.+$/i)
-    if (!cidadeInformada && cidadeAtual?.nome) params.set('cidade', cidadeAtual.nome)
+    if (!cidadeInformada && cidadeAtual?.id) params.set('cidade', cidadeAtual.id)
     router.push(`/prestadores?${params.toString()}`)
   }
 
@@ -120,6 +124,12 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {noNavegador && !cidadeAtual && (
+            <div className="w-full text-left">
+              <ConviteLocalizacao />
+            </div>
+          )}
         </div>
       </div>
 
