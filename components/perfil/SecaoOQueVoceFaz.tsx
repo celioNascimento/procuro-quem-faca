@@ -1,10 +1,11 @@
-//components/perfil/SecaoOQueVoceFaz.tsx 
+// components/perfil/SecaoOQueVoceFaz.tsx
 
 'use client'
 
-import { MessageCircle } from 'lucide-react'
+import { Briefcase, MessageCircle } from 'lucide-react'
 import type { Grupo, Categoria } from '@/types/categorias'
 import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
+import { CartaoSecao, Campo } from '@/components/perfil/CartaoSecao'
 
 interface SecaoOQueVoceFazProps {
   grupoId: string | number
@@ -34,30 +35,66 @@ export function SecaoOQueVoceFaz({
     .map(cat => cat.nome)
 
   return (
-    <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-4">
-      <h2 className="font-bold uppercase text-[11px] tracking-widest text-slate-400 mb-4">O que você faz?</h2>
+    <CartaoSecao
+      titulo="O que você faz?"
+      descricao="Escolha a sua área de atuação e a profissão principal."
+      icone={<Briefcase size={20} />}
+    >
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Campo id="perfil-grupo" rotulo="Área de atuação">
+          <select
+            id="perfil-grupo"
+            value={grupoId || ''}
+            onChange={e => onGrupoChange(e.target.value)}
+            className={inputStyle}
+            required
+          >
+            <option value="">Selecione</option>
+            {listaGrupos.map(g => <option key={g.id} value={g.id}>{g.nome}</option>)}
+          </select>
+        </Campo>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <select
-          value={grupoId || ''}
-          onChange={e => onGrupoChange(e.target.value)}
-          className={inputStyle}
-          required
-        >
-          <option value="">Grupo de Atuação</option>
-          {listaGrupos.map(g => <option key={g.id} value={g.id}>{g.nome}</option>)}
-        </select>
-
-        <select
-          value={categoriaId || ''}
-          onChange={e => onCategoriaChange(e.target.value)}
-          className={inputStyle}
-          required
-        >
-          <option value="">Profissão Principal</option>
-          {listaCategorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-        </select>
+        <Campo id="perfil-categoria" rotulo="Profissão principal">
+          <select
+            id="perfil-categoria"
+            value={categoriaId || ''}
+            onChange={e => onCategoriaChange(e.target.value)}
+            className={inputStyle}
+            required
+          >
+            <option value="">Selecione</option>
+            {listaCategorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+        </Campo>
       </div>
+
+      {categoriaId && habilidadesExtras.length > 0 && (
+        <div className="flex flex-col gap-2.5">
+          <p id="perfil-habilidades" className="text-sm font-bold text-slate-700">
+            Outros serviços que você também faz <span className="ml-1 text-xs font-semibold text-slate-400">(opcional)</span>
+          </p>
+          <div role="group" aria-labelledby="perfil-habilidades" className="flex flex-wrap gap-2">
+            {habilidadesExtras.map(h => {
+              const marcada = !!habilidades?.includes(h)
+              return (
+                <button
+                  key={h}
+                  type="button"
+                  aria-pressed={marcada}
+                  onClick={() => onToggleHabilidade(h)}
+                  className={`min-h-9 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${
+                    marcada
+                      ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600'
+                  }`}
+                >
+                  {h}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <a
         href={`https://wa.me/${NUMERO_WHATSAPP_PQF}?text=${encodeURIComponent(
@@ -65,35 +102,11 @@ export function SecaoOQueVoceFaz({
         )}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-100"
+        className="inline-flex min-h-9 items-center gap-2 self-start text-sm font-semibold text-slate-500 underline-offset-4 transition-colors hover:text-blue-600 hover:underline"
       >
-        <MessageCircle data-icon="inline-start" aria-hidden="true" />
-        Não encontrou sua categoria? Sugira uma nova pelo WhatsApp
+        <MessageCircle size={16} aria-hidden="true" />
+        Não encontrou sua profissão? Sugira pelo WhatsApp
       </a>
-
-      {categoriaId && habilidadesExtras.length > 0 && (
-        <div className="pt-2">
-          <label className="text-slate-400 font-bold text-[10px] uppercase block mb-3 tracking-widest">
-            Habilidades extras:
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {habilidadesExtras.map(h => (
-              <button
-                key={h}
-                type="button"
-                onClick={() => onToggleHabilidade(h)}
-                className={`px-3 py-1.5 rounded-full text-[10px] font-semibold uppercase transition-all border ${
-                  habilidades?.includes(h)
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                {h}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </section>
+    </CartaoSecao>
   )
 }

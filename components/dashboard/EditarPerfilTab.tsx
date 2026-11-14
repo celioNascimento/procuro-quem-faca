@@ -8,7 +8,7 @@ import type { User } from '@supabase/supabase-js'
 import type { PrestadorFormData } from '@/types/prestador'
 
 // UI Components
-import { Loader2 } from 'lucide-react'
+import { ExternalLink, Loader2, Camera } from 'lucide-react'
 import DangerZone from '@/components/account/DangerZone'
 import { ErrorModal } from '@/components/ui/ErrorModal'
 
@@ -19,6 +19,7 @@ import { SecaoDadosPessoais } from '@/components/perfil/SecaoDadosPessoais'
 import { SecaoLocalizacao } from '@/components/perfil/SecaoLocalizacao'
 import { SecaoGarantia } from '@/components/perfil/SecaoGarantia'
 import { PortfolioToggle } from '@/components/dashboard/PortfolioToggle'
+import { CartaoSecao, estiloCampo } from '@/components/perfil/CartaoSecao'
 import EditarPerfilSkeleton from '@/components/skeletons/EditarPerfilSkeleton'
 
 // Hooks e Utils (Laboratório)
@@ -28,7 +29,7 @@ import { useLocalizacao } from '@/hooks/useLocalizacao'
 import { useSlugCheck } from '@/hooks/useSlugCheck'
 import { fazerUploadFoto } from '@/lib/uploadFoto'
 
-const inputStyleBase = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-[14px] text-slate-800 bg-white shadow-sm placeholder-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400`
+const inputStyleBase = estiloCampo
 
 export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } = {}) {
   const router = useRouter()
@@ -215,9 +216,23 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
       />
 
       <div className="flex flex-col gap-6 animate-in fade-in duration-500 sm:gap-8">
-        <header className="flex flex-col gap-1.5">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Dados profissionais</p>
-          <h2 id="profile-settings-title" className="text-balance text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Configurações do perfil</h2>
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex min-w-0 flex-col gap-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Dados profissionais</p>
+            <h2 id="profile-settings-title" className="text-balance text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Seu perfil na vitrine</h2>
+            <p className="max-w-xl text-sm leading-relaxed text-slate-500">Mantenha seus dados em dia: é com eles que os clientes encontram e chamam você.</p>
+          </div>
+          {form.formData.id && form.formData.slug && (
+            <Link
+              href={`/${form.formData.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
+            >
+              <ExternalLink size={16} aria-hidden="true" />
+              Ver meu perfil público
+            </Link>
+          )}
         </header>
 
         <form onSubmit={handleSalvar} className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12 lg:gap-8">
@@ -229,43 +244,21 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               onChange={handleUploadFotoProcess}
               variant="dashboard"
             />
-          </div>
 
-          <div className="flex min-w-0 flex-col gap-6 lg:col-span-8">
             {userLogado && (
-              <section className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6" aria-label="Conta conectada">
-                <div className="min-w-0 text-left">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Conta conectada</p>
-                  <p className="mt-1 truncate text-sm font-bold text-slate-700">{userLogado.email}</p>
+              <section className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm" aria-label="Conta conectada">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-500">Conta conectada</p>
+                  <p className="mt-0.5 truncate text-sm font-bold text-slate-800">{userLogado.email}</p>
                 </div>
-                <Link href="/login" className="flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100">
-                  Trocar acesso
+                <Link href="/login" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-600 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100">
+                  Trocar de conta
                 </Link>
               </section>
             )}
+          </div>
 
-            {/* Seção de configuração de portfólio */}
-            {form.formData.id && (
-              <section className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-label="Configuração de portfólio">
-                <div className="flex flex-col gap-1.5">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Portfólio</p>
-                  <h3 className="text-sm font-black text-slate-900">Fotos por padrão</h3>
-                  <p className="text-[13px] font-medium leading-relaxed text-slate-500">Escolha qual opção aparece marcada por padrão ao criar um serviço. Ative para começar com “com registro fotográfico” ou deixe desativado para começar com “sem fotos”. Em cada serviço, você pode trocar essa escolha e decidir se as imagens formarão um projeto do portfólio.</p>
-                </div>
-                <PortfolioToggle
-                  prestadorId={form.formData.id}
-                  inicial={portfolioOb}
-                  onSuccess={(novoValor) => {
-                    // Atualizar estado LOCAL imediatamente após sucesso no Supabase
-                    setPortfolioOb(novoValor)
-                    setStatus(`Configuração de fotos ${novoValor ? 'ativada' : 'desativada'} com sucesso!`)
-                    setTimeout(() => setStatus(''), 3000)
-                  }}
-                />
-              </section>
-            )}
-
-
+          <div className="flex min-w-0 flex-col gap-6 lg:col-span-8">
             <SecaoOQueVoceFaz
               grupoId={form.formData.grupo_id}
               categoriaId={form.formData.categoria_id}
@@ -292,11 +285,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               onBioChange={(v) => form.set({ bio: v })}
             />
 
-            <SecaoGarantia
-              garantiaDias={form.formData.garantia_dias}
-              onChange={(dias) => form.set({ garantia_dias: dias })}
-            />
-
             <SecaoLocalizacao
               estadoSigla={form.formData.estado_sigla}
               regiaoId={form.formData.regiao_id ?? ''}
@@ -315,14 +303,39 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               onToggleCidade={(nome) => form.toggleItem(nome, 'cidades_atendidas')}
             />
 
-            <div className="flex flex-col gap-4 pt-2">
+            <SecaoGarantia
+              garantiaDias={form.formData.garantia_dias}
+              onChange={(dias) => form.set({ garantia_dias: dias })}
+            />
+
+            {form.formData.id && (
+              <CartaoSecao
+                titulo="Ao registrar um trabalho"
+                descricao="Escolha como prefere começar. Essa opção é salva na hora."
+                icone={<Camera size={20} />}
+              >
+                <PortfolioToggle
+                  prestadorId={form.formData.id}
+                  inicial={portfolioOb}
+                  onSuccess={(novoValor) => {
+                    // Atualizar estado LOCAL imediatamente após sucesso no Supabase
+                    setPortfolioOb(novoValor)
+                    setStatus(`Registro com fotos ${novoValor ? 'ligado' : 'desligado'} como opção inicial.`)
+                    setTimeout(() => setStatus(''), 3000)
+                  }}
+                />
+              </CartaoSecao>
+            )}
+
+            {/* Barra de salvar sempre ao alcance, mesmo no fim de um formulário longo */}
+            <div className="sticky bottom-3 z-30 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg shadow-slate-200/60 backdrop-blur">
               {status && (
                 <div
                   role="status"
-                  className={`w-full rounded-2xl border p-4 text-center text-xs font-bold leading-relaxed animate-in fade-in ${
+                  className={`w-full rounded-xl border px-4 py-3 text-center text-sm font-bold leading-relaxed animate-in fade-in ${
                     status.startsWith('Erro:')
-                      ? 'border-red-100 bg-red-50 text-red-600'
-                      : 'border-blue-100 bg-blue-50 text-blue-600'
+                      ? 'border-red-100 bg-red-50 text-red-700'
+                      : 'border-blue-100 bg-blue-50 text-blue-700'
                   }`}
                 >
                   {status}
@@ -332,15 +345,13 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               <button
                 type="submit"
                 disabled={salvando || uploading}
-                className="flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-[11px] font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-blue-100 transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-6 py-3 text-base font-black text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {salvando ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Salvando...</> : 'Atualizar meu perfil'}
+                {salvando ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> Salvando...</> : 'Salvar alterações'}
               </button>
-
             </div>
 
             <DangerZone audience="prestador" />
-
           </div>
         </form>
       </div>
