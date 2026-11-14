@@ -23,7 +23,8 @@ const botaoPrimario =
 const botaoSecundario =
   'min-h-11 rounded-xl px-4 text-sm font-semibold text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600'
 
-export function ConviteLocalizacao() {
+// `compacto`: versão curta para a home, onde o convite não pode disputar espaço com a busca.
+export function ConviteLocalizacao({ compacto = false }: { compacto?: boolean }) {
   const { estadoLocalizacao, solicitarLocalizacao } = useLocation()
   const [dispensado, setDispensado] = useState(() => conviteDispensado())
 
@@ -40,9 +41,10 @@ export function ConviteLocalizacao() {
   return (
     <section
       aria-label="Usar a sua localização"
-      className="flex gap-3 rounded-3xl border border-blue-100 bg-blue-50/60 p-4 md:p-5"
+      className={`flex gap-3 rounded-3xl border border-blue-100 bg-blue-50/60 ${compacto ? 'p-3 md:p-4' : 'p-4 md:p-5'}`}
     >
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-600">
+      {/* Na versão curta, o ícone some no celular para os dois botões caberem lado a lado */}
+      <div className={`${compacto ? 'hidden sm:flex' : 'flex'} size-10 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-600`}>
         <MapPin size={20} aria-hidden="true" />
       </div>
 
@@ -60,15 +62,25 @@ export function ConviteLocalizacao() {
         ) : (
           <>
             <h2 className="text-base font-bold text-slate-800">Ver quem atende perto de você?</h2>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600">
-              Com a sua localização, mostramos primeiro os profissionais da sua cidade e o resultado fica mais certo
-              para você. Usamos só para descobrir a cidade: não guardamos a sua posição exata.{' '}
-              <Link href="/privacidade" className="font-semibold text-blue-600 underline underline-offset-4">
-                Como tratamos seus dados
-              </Link>
-              .
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            {compacto ? (
+              <p className="mt-0.5 text-sm leading-relaxed text-slate-600">
+                Usamos só para descobrir a cidade; não guardamos a sua posição.{' '}
+                <Link href="/privacidade" className="font-semibold text-blue-600 underline underline-offset-4">
+                  Como tratamos seus dados
+                </Link>
+                .
+              </p>
+            ) : (
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                Com a sua localização, mostramos primeiro os profissionais da sua cidade e o resultado fica mais certo
+                para você. Usamos só para descobrir a cidade: não guardamos a sua posição exata.{' '}
+                <Link href="/privacidade" className="font-semibold text-blue-600 underline underline-offset-4">
+                  Como tratamos seus dados
+                </Link>
+                .
+              </p>
+            )}
+            <div className={`${compacto ? 'mt-2' : 'mt-3'} flex flex-wrap gap-2`}>
               <button type="button" onClick={solicitarLocalizacao} disabled={pedindo} className={botaoPrimario}>
                 {pedindo ? 'Procurando a sua cidade…' : 'Usar minha localização'}
               </button>

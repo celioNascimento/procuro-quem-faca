@@ -58,15 +58,16 @@ export function HeaderBotoes() {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
           }
-          <span className="hidden sm:inline">{loading ? 'Entrando...' : 'Área do cliente'}</span>
+          {/* Texto visível em qualquer celular comum; só abaixo de 360 px fica o ícone (o nome continua para leitores de tela) */}
+          <span className="sr-only min-[360px]:not-sr-only">{loading ? 'Entrando...' : 'Área do cliente'}</span>
         </button>
         <Link
           href="/login"
           onClick={() => insertLog({ acao: 'CLIQUE_SOU_PROFISSIONAL' })}
           className={btnPrimary}
         >
-          <LogIn size={16} />
-          <span className="hidden sm:inline">Sou </span>Profissional
+          <LogIn size={16} aria-hidden="true" />
+          <span><span className="hidden sm:inline">Sou </span>Profissional</span>
         </Link>
       </>
     )
