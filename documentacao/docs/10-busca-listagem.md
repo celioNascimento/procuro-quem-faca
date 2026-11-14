@@ -78,13 +78,13 @@ Limite: a página ainda baixa os perfis da cidade (ou do catálogo todo) de uma 
 
 ## Home (`app/page.tsx`)
 
-Porta de entrada: logo, o que o site faz, busca e sugestões. Tom igual ao da lista e do perfil (texto de no mínimo 14 px nos elementos de ação, sem itálico nem caixa-alta, contraste a partir de 4,5:1).
+Porta de entrada: **limpa, só logo → busca → sugestões** (decisão do dono, 14/11/2026: uma versão com título e frase visíveis foi testada no celular e descartada por ficar mais pesada). Não recolocar texto entre a logo e a busca sem alinhar antes.
 
-- **Título e frase:** um único `<h1>` ("Encontre profissionais perto de você") e a frase de apoio "Veja o perfil e chame direto no WhatsApp." A logo não é link (já estamos na home).
-- **Busca (`components/home/SearchForm.tsx`):** campo com nome acessível ("O que você procura?"), teclado de busca e placeholder fixo. **Foco automático só em computador** (`pointer: fine`); no celular o teclado não abre sozinho nem rola a página. Busca vazia mostra um aviso em texto (`role="alert"`, some em 4 s), sem trocar o placeholder. No celular o botão "Buscar" ocupa a largura toda.
-- **Sugestões:** chips de 44 px de altura, vindas de `useSugestoes` (fallback em `config/categorias.ts`).
+- **Título para o Google e leitores de tela:** um único `<h1>` ("Encontre profissionais perto de você") e a frase de apoio ficam dentro de um bloco `sr-only`: existem na página, não aparecem. A logo não é link (já estamos na home).
+- **Busca (`components/home/SearchForm.tsx`):** campo com nome acessível ("O que você procura?"), teclado de busca e placeholder fixo. **Foco automático só em computador** (`pointer: fine`); no celular o teclado não abre sozinho nem rola a página. Busca vazia mostra um aviso em texto (`role="alert"`, some em 4 s), sem trocar o placeholder. Botão "BUSCAR": pílula curta e centralizada no celular, dentro do campo no desktop (12 px, caixa-alta).
+- **Sugestões:** rótulo e botões pequenos em caixa-alta, como no desenho original, mas com **12 px** (eram 9–10 px) e contraste a partir de 4,5:1; botões com 36 px de altura. Vêm de `useSugestoes` (fallback em `config/categorias.ts`).
 - **Topo (`HeaderBotoes`):** "Área do cliente" mostra o texto também no celular (só abaixo de 360 px fica o ícone do Google, com o nome para leitores de tela). O botão dispara o login com Google direto. Altura do cabeçalho: 64 px (celular) e 72 px (`md`), como nas outras telas.
-- **Cartão "É prestador de serviços?":** aparece para visitante e cliente logado ("Quer oferecer serviços?"). **Prestador logado não vê o cartão**: "Meu Painel"/"Completar Cadastro" no topo já leva ao mesmo lugar.
+- **Cartão "É prestador de serviços?":** rótulo em caixa-alta (12 px) e frase abaixo, como no original. Aparece para visitante e cliente logado ("Quer oferecer serviços?"). **Prestador logado não vê o cartão**: "Meu Painel"/"Completar Cadastro" no topo já leva ao mesmo lugar.
 - Testes: `app/page.test.tsx`, `components/home/SearchForm.test.tsx`, `components/home/HeaderBotoes.test.tsx`.
 
 ## Navegação e voltar

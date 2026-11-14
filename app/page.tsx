@@ -81,18 +81,15 @@ export default function Home() {
       <HeroSection />
 
       {/* Bloco principal */}
-      <div className="relative z-10 flex flex-col items-center px-6 pt-[12vh] md:pt-[18vh]">
-        <div className="w-full max-w-3xl flex flex-col items-center text-center gap-5">
+      <div className="relative z-10 flex flex-col items-center px-6 pt-[20vh] md:pt-[26vh]">
+        <div className="w-full max-w-3xl flex flex-col items-center text-center gap-6">
 
           <Logo variant="hero" priority className="drop-shadow-sm" />
 
-          <div className="flex flex-col items-center gap-1.5">
-            <h1 className="text-balance text-xl font-bold leading-snug text-slate-800 md:text-2xl">
-              Encontre profissionais perto de você
-            </h1>
-            <p className="text-balance text-base text-slate-600">
-              Veja o perfil e chame direto no WhatsApp.
-            </p>
+          {/* Título da página para o Google e leitores de tela; a tela fica limpa: logo → busca */}
+          <div className="sr-only">
+            <h1>Encontre profissionais perto de você</h1>
+            <p>Veja o perfil e chame direto no WhatsApp.</p>
           </div>
 
           <div className="w-full">
@@ -107,15 +104,15 @@ export default function Home() {
           <div className="min-h-[72px] flex flex-col items-center justify-start gap-3 w-full">
             {carregado && sugestoes.length > 0 && (
               <div className="flex flex-col items-center gap-3 w-full animate-in fade-in duration-300">
-                <span className="text-sm font-semibold text-slate-600">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-[0.25em] italic">
                   {temBuscaReal ? 'Encontramos para você' : 'Sugestões em destaque'}
                 </span>
-                <div className="flex flex-wrap justify-center gap-2">
+                <div className="flex flex-wrap justify-center gap-1.5 md:gap-2">
                   {sugestoes.map(item => (
                     <button
                       key={item}
                       onClick={() => dispararBusca(null, item)}
-                      className="min-h-11 bg-white text-slate-700 px-4 md:px-5 rounded-full text-sm font-semibold border border-slate-200 hover:border-blue-400 hover:text-blue-700 transition-all active:scale-95 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                      className="min-h-9 bg-white text-slate-600 px-4 md:px-5 rounded-full text-xs font-bold border border-slate-100 hover:border-blue-400 hover:text-blue-700 transition-all active:scale-95 shadow-sm uppercase tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                     >
                       {item}
                     </button>
@@ -147,14 +144,14 @@ export default function Home() {
                 className="group flex min-h-16 items-center justify-between gap-3 w-full px-5 py-4 md:px-8 md:py-5 rounded-[2rem] border border-slate-200/80 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:border-blue-600 transition-all duration-300">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:border-blue-600 transition-all duration-300">
                     <Briefcase size={16} aria-hidden="true" className="text-blue-500 group-hover:text-white transition-colors duration-300" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-bold text-slate-800">
+                    <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-0.5">
                       {tituloCTA}
                     </p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-xs md:text-sm font-bold text-slate-700">
                       {subtituloCTA}
                     </p>
                   </div>
