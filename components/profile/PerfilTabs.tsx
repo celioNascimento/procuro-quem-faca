@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Images, Star } from 'lucide-react'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
@@ -35,12 +35,24 @@ export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio 
     ? projetos.find(p => String(p.id) === projetoId) ?? null
     : null
 
+  // Abrir o modal cria uma entrada no histórico (o "voltar" do celular fecha o modal).
+  // Fechar tem de DESFAZER essa entrada; empilhar outra faria o "voltar" reabrir o modal
+  // em vez de ir para a busca. Se o modal veio de um link (?projeto= já na URL), não há
+  // entrada nossa para desfazer: só limpa a URL.
+  const abertoPorToque = useRef(false)
+
   function abrirModal(projetoId: string | number) {
+    abertoPorToque.current = true
     router.push(`${pathname}?projeto=${projetoId}`, { scroll: false })
   }
 
   function fecharModal() {
-    router.push(pathname, { scroll: false })
+    if (abertoPorToque.current) {
+      abertoPorToque.current = false
+      router.back()
+      return
+    }
+    router.replace(pathname, { scroll: false })
   }
 
   return (

@@ -49,6 +49,15 @@ Antes, a seta do `Header` era um `<Link href>`: o "voltar" do navegador levava d
 - Filtros/abas que só refinam a tela: `router.replace`. Navegação para outra tela: `push`/`<Link>`.
 - Qualquer valor de URL usado como destino passa por `sanitizarRotaInterna`.
 
+## Modais que vivem na URL (`?projeto=` do perfil)
+
+O modal do trabalho no perfil público tem uma entrada própria no histórico: tocar na capa faz `push` de `?projeto=<id>`, e o "voltar" do celular fecha o modal e continua no perfil.
+
+- **Fechar (X, Esc, toque no fundo) desfaz a entrada** com `router.back()`. Nunca `push` da URL limpa: isso empilharia outra entrada e o "voltar" reabriria o modal em vez de ir para a busca (histórico `busca → perfil → perfil?projeto → perfil`).
+- **Link direto com `?projeto=` na URL** (link compartilhado): não há entrada nossa para desfazer; fechar usa `router.replace(pathname)`. `PerfilTabs` sabe qual dos dois casos é pelo `abertoPorToque` (ref marcada só ao abrir por toque).
+- Os demais wizards e modais (novo trabalho no painel, cadastro, avaliação, zoom de fotos, filtros) guardam o estado só em memória: não criam entrada no histórico, então não têm esse laço. Em contrapartida, o "voltar" do celular com um deles aberto sai da página (decisão: manter assim por ora).
+- Teste: [`components/profile/PerfilTabs.test.tsx`](../../components/profile/PerfilTabs.test.tsx).
+
 ## Testes
 
 [`lib/navegacao.test.ts`](../../lib/navegacao.test.ts) cobre sanitização e a decisão voltar × fallback. Verificação manual: busca → rolar → perfil → seta e "voltar" do navegador; perfil em nova aba → seta; perfil pelo dashboard → seta.
