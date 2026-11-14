@@ -196,7 +196,7 @@ function PerfilPageContent() {
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Verificando seu perfil</p>
           </div>
         ) : (
-          abaAtiva === 'perfil' ? <EditarPerfilTab /> : abaAtiva === 'desempenho' ? <DesempenhoDashboardTab prestadorId={prestadorId} subAbaInicial={subAbaInicial} /> : abaAtiva === 'divulgacao' ? <CentralDivulgacaoTab prestadorId={prestadorId} /> : <PortfolioDashboardTab />
+          abaAtiva === 'perfil' ? <EditarPerfilTab /> : abaAtiva === 'desempenho' ? <DesempenhoDashboardTab prestadorId={prestadorId} subAbaInicial={subAbaInicial} /> : abaAtiva === 'divulgacao' ? <CentralDivulgacaoTab prestadorId={prestadorId} onIrParaTrabalhos={() => abrirAba('portfolio')} /> : <PortfolioDashboardTab />
         )}
       </div>
 

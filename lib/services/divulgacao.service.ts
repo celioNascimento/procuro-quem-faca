@@ -78,7 +78,11 @@ export async function fetchDadosDivulgacao(prestadorId: number): Promise<DadosDi
   }
 }
 
-export type AcaoDivulgacao = 'BAIXAR_MATERIAL_DIVULGACAO' | 'COPIAR_LINK_DIVULGACAO' | 'COPIAR_MENSAGEM_DIVULGACAO'
+export type AcaoDivulgacao =
+  | 'BAIXAR_MATERIAL_DIVULGACAO'
+  | 'COPIAR_LINK_DIVULGACAO'
+  | 'COPIAR_MENSAGEM_DIVULGACAO'
+  | 'COMPARTILHAR_WHATSAPP_DIVULGACAO'
 
 /** Fire-and-forget: medir uso não pode atrapalhar o prestador. */
 export function registrarUsoDivulgacao(prestadorId: number, acao: AcaoDivulgacao, detalhe: string) {

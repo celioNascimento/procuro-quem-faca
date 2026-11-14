@@ -50,13 +50,13 @@ export function MaterialFisicoPanel({ dados, imagens }: { dados: DadosDivulgacao
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Adesivos e cartão de visita</h3>
-        <p className="mt-1 text-sm text-slate-600">Arte com QR Code do seu perfil, pronta para levar à gráfica. O cliente escaneia e vê seu portfólio e as indicações.</p>
+        <h3 className="text-base font-black text-slate-900">Adesivos e cartão de visita</h3>
+        <p className="mt-1 text-sm text-slate-600">Arte com QR Code do seu perfil, pronta para levar à gráfica. O cliente escaneia e chega direto ao seu perfil.</p>
       </div>
       <div role="radiogroup" aria-label="Tipo de material" className="flex gap-2">
         {([['adesivo', 'Adesivo veículo / baú'], ['cartao', 'Cartão de visita']] as const).map(([id, rotulo]) => (
           <button key={id} type="button" role="radio" aria-checked={material === id} onClick={() => setMaterial(id)}
-            className={`min-h-11 rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${material === id ? 'bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
+            className={`min-h-11 rounded-xl px-4 py-2.5 text-sm font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${material === id ? 'bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
             {rotulo}
           </button>
         ))}
@@ -72,10 +72,10 @@ export function MaterialFisicoPanel({ dados, imagens }: { dados: DadosDivulgacao
       )}
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <button type="button" onClick={imprimir} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
+        <button type="button" onClick={imprimir} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
           <Printer size={15} aria-hidden="true" /> Imprimir / salvar PDF
         </button>
-        <button type="button" onClick={baixar} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100">
+        <button type="button" onClick={baixar} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100">
           <Download size={15} aria-hidden="true" /> Baixar PNG
         </button>
       </div>

@@ -5,6 +5,7 @@
 import { gerarMatrizQr, type MatrizQr } from '@/lib/qr/qrcode'
 import { formatarTelefone, urlCanonicaPerfil, urlCurta } from './links'
 import type { DadosDivulgacao, FormatoCartao } from './tipos'
+import { temPortfolio } from './portfolio'
 
 type Ctx = CanvasRenderingContext2D
 
@@ -239,6 +240,90 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
   const iw = cw - q * 2
   const foto = imgs.fotos[0] ?? null
 
+  // Rodapé (chamada + QR), igual nos dois caminhos.
+  const desenharRodape = () => {
+    const qrTam = Math.round(rodapeH * 0.8)
+    const qrX = w - p - qrTam
+    const qrY = h - rodapeH + Math.round((rodapeH - qrTam) / 2) - Math.round(p * 0.1)
+    ctx.save()
+    ctx.shadowColor = 'rgba(15,23,42,0.12)'
+    ctx.shadowBlur = 16
+    ctx.shadowOffsetY = 5
+    desenharQr(ctx, matriz, qrX, qrY, qrTam, 18)
+    ctx.restore()
+    const textoW = qrX - p - Math.round(p * 0.6)
+    const chamada = temPortfolio(dados)
+      ? (vertical ? 'Escaneie e veja o portfólio completo' : 'Veja o portfólio completo e as indicações')
+      : (vertical ? 'Escaneie e conheça meu trabalho' : 'Conheça meu trabalho e fale comigo')
+    const chPx = ajustarFonte(ctx, chamada, textoW, rodapeH * 0.17, 14, 600)
+    fonte(ctx, chPx, 600)
+    ctx.fillStyle = '#64748b'
+    ctx.fillText(chamada, p, qrY + qrTam * 0.38)
+    const curta = urlCurta(url)
+    const urlPx = ajustarFonte(ctx, curta, textoW, rodapeH * 0.26, 18, 900)
+    fonte(ctx, urlPx, 800)
+    ctx.fillStyle = AZUL
+    ctx.fillText(curta, p, qrY + qrTam * 0.78, textoW)
+  }
+
+  // Sem foto de serviço (prestador ainda sem trabalho concluído): em vez de um cartão branco vazio com a
+  // identidade perdida no canto, a apresentação ocupa o centro — foto de perfil grande, nome e especialidade.
+  if (!foto) {
+    const lado = Math.round(Math.min(iw * (vertical ? 0.55 : 0.4), regiaoH * 0.4))
+    const gap = Math.round(q * 0.9)
+    const sub = [dados.categoria, dados.cidade].filter(Boolean).join('  •  ').toUpperCase()
+    const nomePx = ajustarFonte(ctx, dados.nome, iw * 0.92, lado * 0.2, 30, 700)
+    fonte(ctx, nomePx, 700)
+    const linhasNome = quebrarLinhas(ctx, dados.nome, iw * 0.92, 2)
+    const subPx = sub ? ajustarFonte(ctx, sub, iw * 0.92, nomePx * 0.55, 16, 600) : 0
+    const hNome = nomePx * 0.88 + (linhasNome.length - 1) * nomePx * 1.1
+    const hTexto = hNome + (sub ? nomePx * 0.35 + subPx : 0)
+    const grupoH = lado + gap + hTexto
+    const ch = Math.min(regiaoH, grupoH + q * 2.4)
+    const cy = regiaoY + (regiaoH - ch) / 2
+    ctx.save()
+    ctx.shadowColor = 'rgba(15,23,42,0.12)'
+    ctx.shadowBlur = 40
+    ctx.shadowOffsetY = 14
+    preencher(ctx, cx, cy, cw, ch, 44, '#ffffff')
+    ctx.restore()
+    caminhoArredondado(ctx, cx + 0.5, cy + 0.5, cw - 1, ch - 1, 44)
+    ctx.strokeStyle = '#e2e8f0'
+    ctx.lineWidth = 2
+    ctx.stroke()
+
+    const ax = cx + (cw - lado) / 2
+    const ay = cy + (ch - grupoH) / 2
+    preencher(ctx, ax, ay, lado, lado, Math.round(lado * 0.16), '#f1f5f9')
+    if (imgs.perfil) {
+      ctx.save()
+      caminhoArredondado(ctx, ax, ay, lado, lado, Math.round(lado * 0.16))
+      ctx.clip()
+      imagemContida(ctx, imgs.perfil, ax + 6, ay + 6, lado - 12, lado - 12)
+      ctx.restore()
+    } else {
+      fonte(ctx, lado * 0.42, 900)
+      ctx.fillStyle = '#475569'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText((dados.nome.trim()[0] ?? '?').toUpperCase(), ax + lado / 2, ay + lado / 2)
+      ctx.textBaseline = 'alphabetic'
+    }
+    ctx.textAlign = 'center'
+    fonte(ctx, nomePx, 700)
+    ctx.fillStyle = AZUL
+    const ny = ay + lado + gap + nomePx * 0.88
+    linhasNome.forEach((l, i) => ctx.fillText(l, cx + cw / 2, ny + i * nomePx * 1.1))
+    if (sub) {
+      fonte(ctx, subPx, 600)
+      ctx.fillStyle = '#64748b'
+      ctx.fillText(sub, cx + cw / 2, ny + (linhasNome.length - 1) * nomePx * 1.1 + nomePx * 0.35 + subPx)
+    }
+    ctx.textAlign = 'left'
+    desenharRodape()
+    return
+  }
+
   // Só entram dados estáveis (foto, nome, nicho, cidade, link). Números que mudam — indicações,
   // concluídos, garantia, verificação — ficam de fora: a imagem circula por semanas e envelhece.
   const lado = Math.round(vertical ? iw * 0.2 : Math.min(regiaoH * 0.22, iw * 0.17))
@@ -310,27 +395,7 @@ export function desenharCartaoDigital(canvas: HTMLCanvasElement, formato: Format
     ctx.fillText(sub, tx, ty + folgaNome + subPx)
   }
 
-  // rodapé: chamada + QR
-  const qrTam = Math.round(rodapeH * 0.8)
-  const qrX = w - p - qrTam
-  const qrY = h - rodapeH + Math.round((rodapeH - qrTam) / 2) - Math.round(p * 0.1)
-  ctx.save()
-  ctx.shadowColor = 'rgba(15,23,42,0.12)'
-  ctx.shadowBlur = 16
-  ctx.shadowOffsetY = 5
-  desenharQr(ctx, matriz, qrX, qrY, qrTam, 18)
-  ctx.restore()
-  const textoW = qrX - p - Math.round(p * 0.6)
-  const chamada = vertical ? 'Escaneie e veja o portfólio completo' : 'Veja o portfólio completo e as indicações'
-  const chPx = ajustarFonte(ctx, chamada, textoW, rodapeH * 0.17, 14, 600)
-  fonte(ctx, chPx, 600)
-  ctx.fillStyle = '#64748b'
-  ctx.fillText(chamada, p, qrY + qrTam * 0.38)
-  const curta = urlCurta(url)
-  const urlPx = ajustarFonte(ctx, curta, textoW, rodapeH * 0.26, 18, 900)
-  fonte(ctx, urlPx, 800)
-  ctx.fillStyle = AZUL
-  ctx.fillText(curta, p, qrY + qrTam * 0.78, textoW)
+  desenharRodape()
 }
 
 // ── Adesivo de veículo / baú de moto (30 × 15 cm) ─────────────────────────
@@ -354,7 +419,7 @@ export function desenharAdesivo(canvas: HTMLCanvasElement, dados: DadosDivulgaca
   const qrTam = Math.round(h * 0.7)
   const qrX = w - painelW + Math.round((painelW - qrTam) / 2)
   const qrY = Math.round(h * 0.2)
-  const eq = 'ESCANEIE E VEJA MEU PORTFÓLIO'
+  const eq = temPortfolio(dados) ? 'ESCANEIE E VEJA MEU PORTFÓLIO' : 'ESCANEIE E CONHEÇA MEU TRABALHO'
   fonte(ctx, ajustarFonte(ctx, eq, painelW * 0.9, h * 0.075, 12, 900), 900)
   ctx.fillStyle = '#ffffff'
   ctx.textAlign = 'center'
@@ -424,7 +489,7 @@ export function desenharCartaoVisita(canvas: HTMLCanvasElement, lado: 'frente' |
     const tw = w - tx - seguro
     fonte(ctx, h * 0.085, 900)
     ctx.fillStyle = AZUL_ESCURO
-    const chamada = quebrarLinhas(ctx, 'ESCANEIE E VEJA MEU PORTFÓLIO', tw, 3)
+    const chamada = quebrarLinhas(ctx, temPortfolio(dados) ? 'ESCANEIE E VEJA MEU PORTFÓLIO' : 'ESCANEIE E CONHEÇA MEU TRABALHO', tw, 3)
     let y = qrY + h * 0.1
     for (const l of chamada) {
       ctx.fillText(l, tx, y)
@@ -432,7 +497,7 @@ export function desenharCartaoVisita(canvas: HTMLCanvasElement, lado: 'frente' |
     }
     fonte(ctx, h * 0.055, 600)
     ctx.fillStyle = CINZA
-    const sub = quebrarLinhas(ctx, 'Fotos de serviços reais e indicações de clientes', tw, 3)
+    const sub = quebrarLinhas(ctx, temPortfolio(dados) ? 'Fotos de serviços reais e indicações de clientes' : 'Meu perfil profissional no Procuro Quem Faça', tw, 3)
     y += h * 0.02
     for (const l of sub) {
       ctx.fillText(l, tx, y)
