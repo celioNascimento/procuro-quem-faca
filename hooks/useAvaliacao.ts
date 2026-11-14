@@ -59,14 +59,15 @@ export function useAvaliar(token: string) {
 
     async function carregar() {
       try {
+        // Primeira conta logada que abre o link vira a dona do vínculo do projeto. Vem ANTES de carregar
+        // o trabalho, porque as fotos de um trabalho ainda não aceito só são legíveis pelo cliente dono.
+        const { data: userData } = await supabase.auth.getUser()
+        if (userData.user) setVinculo(await reivindicarProjetoPorToken(token))
+
         const projData = await fetchProjetoPorToken(token)
         if (!projData) { setLoading(false); return }
 
         setProjeto(projData)
-
-        // Primeira conta logada que abre o link vira a dona do vínculo do projeto.
-        const { data: userData } = await supabase.auth.getUser()
-        if (userData.user) setVinculo(await reivindicarProjetoPorToken(token))
 
         const avalData = await fetchAvaliacaoPorProjeto(projData.id)
         if (avalData) setAvaliacaoExistente(avalData)

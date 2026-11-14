@@ -378,6 +378,7 @@ O feed não cria um canal novo de contato nem altera o ciclo de orçamento.
 - **Dados trabalhistas:** fora da plataforma.
 - **Região do Supabase:** não bloqueia o lançamento no Brasil. Um banco único atende agora; a decisão de bancos por região fica para a expansão.
 - **Ordem de exibição:** nunca vendida, nem no feed nem na vitrine.
+- **Fotos antes do aceite (13/11/2026):** o prestador pode enviar as fotos depois de enviar o aceite, mas elas só ficam legíveis ao público depois que o cliente aceita. A regra é do banco (RLS de `portfolio_fotos`) e não só da tela; a listagem aberta do bucket `portfolios` foi fechada. Resíduo conhecido: a url direta de um arquivo abre sem login para quem a tiver (nome aleatório); fechar isso exigiria bucket privado com url assinada, fica como melhoria futura.
 
 ## Decisões em aberto e riscos
 

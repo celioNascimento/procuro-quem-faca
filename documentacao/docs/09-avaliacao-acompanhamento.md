@@ -77,7 +77,7 @@ Acesso via `avaliacao_token`, sem login. Duas colunas: `CardPrestador`+`StatusMi
 
 ## Reivindicação do projeto pelo token
 
-Os links `/acompanhamento/[token]` e `/avaliar/[token]` exigem login (o `proxy.ts` manda para `/login?next=...`). Ao carregar o projeto, `useAcompanhamento` e `useAvaliar` chamam `reivindicarProjetoPorToken(token)` (`lib/services/avaliacao.service.ts`), que executa a função `reivindicar_projeto_por_token` do banco: **a primeira conta logada que abre o link vira a dona do vínculo** (`portfolio_projetos.cliente_user_id`).
+Os links `/acompanhamento/[token]` e `/avaliar/[token]` exigem login (o `proxy.ts` manda para `/login?next=...`). Ao carregar o projeto, `useAcompanhamento` e `useAvaliacao` chamam `reivindicarProjetoPorToken(token)` **antes** de ler o trabalho (desde 13/11/2026): as fotos de um trabalho com aceite pendente só são legíveis pelo cliente dono (ver regra em doc 03), e na primeira abertura ele ainda não é dono até a reivindicação rodar (`lib/services/avaliacao.service.ts`), que executa a função `reivindicar_projeto_por_token` do banco: **a primeira conta logada que abre o link vira a dona do vínculo** (`portfolio_projetos.cliente_user_id`).
 
 | Resultado | Significado | Efeito na tela |
 |---|---|---|

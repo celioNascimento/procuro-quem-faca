@@ -1,5 +1,6 @@
 //components/dashboard/ProjetoCard.tsx
 
+import { visibilidadeDasFotos } from '@/lib/trabalho/visibilidade'
 import { ImageOff, CheckCircle2, Clock, AlertCircle, Pencil, ShieldAlert, MessageCircle } from 'lucide-react'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
 
@@ -111,7 +112,7 @@ export function ProjetoCard({ projeto, onClick }: Props) {
           <span className="text-xs font-medium text-slate-500">
             {semFotos
               ? 'Sem registro fotográfico'
-              : `${fotos.length} ${fotos.length === 1 ? 'foto' : 'fotos'}`}
+              : `${fotos.length} ${fotos.length === 1 ? 'foto' : 'fotos'}${fotos.length > 0 ? ` · ${visibilidadeDasFotos(projeto.status).resumo}` : ''}`}
           </span>
           <span className="text-sm font-bold text-blue-600">
             Editar
