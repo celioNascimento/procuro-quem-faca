@@ -21,7 +21,7 @@ import { MapPin, AlertCircle } from 'lucide-react'
 import { getTituloBusca } from '@/lib/prestadorUtils'
 import { quantidadeVisivelSalva } from '@/lib/navegacao'
 import { useLocation } from '@/lib/contexts/LocationContext'
-import { ListaSkeleton } from '@/components/skeletons/ListaSkeletonPrestadores'
+import { CardsSkeleton, ListaSkeleton } from '@/components/skeletons/ListaSkeletonPrestadores'
 import { buscarAnuncioTopoBusca } from '@/lib/services/anunciosPublicos.service'
 import type { Anuncio } from '@/types/ads'
 
@@ -174,14 +174,7 @@ function ListaConteudo() {
 
           {/* Skeleton */}
           {loading ? (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2" aria-busy="true" aria-label="Carregando profissionais">
-              {[1, 2, 3, 4].map(i => (
-                <div
-                  key={i}
-                  className="w-full min-h-[110px] bg-white rounded-[2rem] border border-slate-100 animate-pulse"
-                />
-              ))}
-            </div>
+            <CardsSkeleton />
           ) : (
             prestadoresExibidos.length > 0 && (
               <>
