@@ -41,17 +41,21 @@ export function ResumoDesempenhoStrip({ onAbrir }: ResumoDesempenhoStripProps) {
       aria-label={rotuloAcessivel}
       className="group flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition-colors hover:border-blue-200 hover:bg-blue-50/40 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
     >
-      <span className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1">
+      {/* Celular: o título fica numa linha e as duas medidas lado a lado na de baixo (nunca quebram no meio).
+          Telas maiores: tudo em uma linha só. */}
+      <span className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-6">
         <span className="text-xs font-bold text-slate-500">Últimos 7 dias</span>
-        <span className="flex items-center gap-1.5">
-          <Eye className="size-4 text-blue-600" aria-hidden="true" />
-          <span className="text-base font-black leading-none text-slate-900 tabular-nums">{textoValor(visitas7d)}</span>
-          <span className="text-xs font-bold text-slate-600">Visitas</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <MessageCircle className="size-4 text-emerald-600" aria-hidden="true" />
-          <span className="text-base font-black leading-none text-slate-900 tabular-nums">{textoValor(contatos7d)}</span>
-          <span className="text-xs font-bold text-slate-600">Contatos</span>
+        <span className="flex items-center gap-5 whitespace-nowrap">
+          <span className="flex items-center gap-1.5">
+            <Eye className="size-4 shrink-0 text-blue-600" aria-hidden="true" />
+            <span className="text-base font-black leading-none text-slate-900 tabular-nums">{textoValor(visitas7d)}</span>
+            <span className="text-xs font-bold text-slate-600">Visitas</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <MessageCircle className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
+            <span className="text-base font-black leading-none text-slate-900 tabular-nums">{textoValor(contatos7d)}</span>
+            <span className="text-xs font-bold text-slate-600">Contatos</span>
+          </span>
         </span>
       </span>
       <span className="flex shrink-0 items-center gap-1 text-sm font-bold text-blue-600">

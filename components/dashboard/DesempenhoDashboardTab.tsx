@@ -51,7 +51,7 @@ export default function DesempenhoDashboardTab({
   return (
     <section className="flex flex-col gap-5" aria-labelledby="desempenho-titulo">
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Desempenho</p>
+        <p className="text-xs font-black uppercase tracking-[0.22em] text-blue-600">Desempenho</p>
         <h2 id="desempenho-titulo" className="mt-1 text-2xl font-black tracking-tight text-slate-900">
           Como o seu perfil está indo
         </h2>
@@ -78,7 +78,7 @@ export default function DesempenhoDashboardTab({
               tabIndex={ativa ? 0 : -1}
               onClick={() => setSubAba(id)}
               onKeyDown={aoTeclar}
-              className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-5 py-2 text-[10px] font-black uppercase tracking-widest transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 sm:flex-none ${
+              className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-5 py-2 text-xs font-black uppercase tracking-widest transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 sm:flex-none ${
                 ativa ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-blue-600'
               }`}
             >

@@ -54,7 +54,7 @@ export function useVitrine(prestadorId: number, inicial: Vitrine) {
       let falhas = 0
       let grande: number | null = null
       for (const arquivo of arquivos.slice(0, livres)) {
-        const resultado = await fazerUploadFoto(arquivo, `${user.id}/sessao`, undefined, 'portfolios')
+        const resultado = await fazerUploadFoto(arquivo, `${user.id}/sessao`, 'portfolios')
         if (resultado.ok) novas.push(resultado.url)
         else if (resultado.error === 'TOO_LARGE') grande = resultado.sizeMB
         else falhas += 1

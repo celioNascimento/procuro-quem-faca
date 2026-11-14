@@ -27,7 +27,7 @@ import { usePrestadorForm } from '@/hooks/usePrestadorForm'
 import { useCategorias } from '@/hooks/useCategorias'
 import { useLocalizacao } from '@/hooks/useLocalizacao'
 import { useSlugCheck } from '@/hooks/useSlugCheck'
-import { fazerUploadFoto } from '@/lib/uploadFoto'
+import { fazerUploadFoto, removerFotoAntiga } from '@/lib/uploadFoto'
 
 const inputStyleBase = estiloCampo
 
@@ -41,6 +41,8 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
   const slugCheck = useSlugCheck({ slug: form.formData.slug || '', idAtual: form.formData.id })
 
   const inicializadoRef = useRef(false)
+  // Foto que está gravada no perfil agora. A anterior só é apagada do storage depois de salvar a nova.
+  const fotoGravadaRef = useRef<string | null>(null)
 
   // ── Estados Locais ───────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true)
@@ -89,6 +91,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
             )
           ])
           form.carregarPerfil(perfilCarregado)
+          fotoGravadaRef.current = perfilCarregado.foto_perfil || null
           // Carregar configuração de portfólio do Supabase
           const portfolioValue = (perfilCarregado as { portfolio_obrigatorio?: unknown }).portfolio_obrigatorio
           setPortfolioOb(typeof portfolioValue === 'boolean' ? portfolioValue : true)
@@ -111,7 +114,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
   // ── Handlers de Ação ─────────────────────────────────────────────────────
   const handleUploadFotoProcess = async (file: File) => {
     setUploading(true)
-    const res = await fazerUploadFoto(file, userLogado?.id || 'temp', form.formData.foto_perfil || undefined)
+    const res = await fazerUploadFoto(file, userLogado?.id || 'temp')
 
     if (res.ok) {
       form.set({ foto_perfil: res.url })
@@ -183,6 +186,11 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         .single()
 
       if (error) throw error
+
+      // Perfil salvo com a foto nova: agora sim a antiga pode sair do storage.
+      const fotoAnterior = fotoGravadaRef.current
+      fotoGravadaRef.current = form.formData.foto_perfil || null
+      if (fotoAnterior && fotoAnterior !== fotoGravadaRef.current) void removerFotoAntiga(fotoAnterior)
 
       // O funil de ativação é interno (tabela só do admin): quem avança é uma função do banco, que só
       // muda "não enviado" para "perfil completo". Falha aqui não pode impedir o salvamento do perfil.
