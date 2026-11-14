@@ -24,6 +24,7 @@ export default function PainelDoCliente() {
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente,
     handleAceitar, handleRecusar, handleVerGarantia,
+    acaoEmAndamento, erroAcao,
   } = usePainelCliente()
 
   useEffect(() => {
@@ -170,6 +171,13 @@ export default function PainelDoCliente() {
           <div className="w-full lg:w-2/3 flex flex-col gap-4">
             <div className="mt-1 flex flex-col gap-5">
 
+              {erroAcao && (
+                <div role="alert" className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-900">
+                  <ShieldAlert size={18} className="mt-0.5 shrink-0 text-red-600" aria-hidden="true" />
+                  <p className="text-sm font-semibold leading-relaxed">{erroAcao}</p>
+                </div>
+              )}
+
               {/* Projeto em destaque — card completo */}
               {projetoSelecionado && (
                 <section className="flex flex-col gap-3" aria-labelledby="projeto-selecionado-title">
@@ -187,6 +195,7 @@ export default function PainelDoCliente() {
                       onZoom={setZoomImage}
                       onAceitar={getOnAceitar(projetoSelecionado)}
                       hidePrestador
+                      ocupado={acaoEmAndamento}
                       modo={getModo(projetoSelecionado)}
                       tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(projetoSelecionado)}
                     />
@@ -197,10 +206,11 @@ export default function PainelDoCliente() {
                         </p>
                         <button
                           type="button"
+                          disabled={acaoEmAndamento}
                           onClick={() => {
                             if (window.confirm('Deseja recusar este serviço?')) void handleRecusar(projetoSelecionado)
                           }}
-                          className="w-full rounded-2xl border border-red-100 bg-red-50 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-red-600 transition-colors hover:bg-red-100"
+                          className="w-full rounded-2xl border border-red-100 bg-red-50 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-red-600 transition-colors hover:bg-red-100 disabled:cursor-wait disabled:opacity-60"
                         >
                           Recusar serviço
                         </button>
@@ -266,6 +276,7 @@ export default function PainelDoCliente() {
                             onZoom={setZoomImage}
                             onAceitar={getOnAceitar(servico)}
                             hidePrestador
+                            ocupado={acaoEmAndamento}
                             modo={getModo(servico)}
                             tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(servico)}
                           />

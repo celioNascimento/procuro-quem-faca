@@ -14,7 +14,9 @@ import {
   filtrarComReclamacaoAtiva,
   aceitarServico,
   recusarServico,
+  mensagemDeErroDaAcao,
 } from '../lib/services/painelCliente.service'
+import { reivindicarProjetoPorToken } from '../lib/services/avaliacao.service'
 
 export function usePainelCliente() {
   const router       = useRouter()
@@ -27,6 +29,9 @@ export function usePainelCliente() {
   const [servicos, setServicos] = useState<Servico[]>([])
   const [loading, setLoading]   = useState(true)
   const [zoomImage, setZoomImage] = useState<string | null>(null)
+  // Autorizar/recusar: trava o botão enquanto envia e explica em palavras simples quando não dá certo.
+  const [acaoEmAndamento, setAcaoEmAndamento] = useState(false)
+  const [erroAcao, setErroAcao] = useState<string | null>(null)
 
   // Rastreia qual user já foi carregado para evitar re-fetch desnecessário
   // quando onAuthStateChange dispara após getSession já ter resolvido.
@@ -42,6 +47,10 @@ export function usePainelCliente() {
     setLoading(true)
     setServicos([])
     try {
+      // Quem abre o link vira o dono do serviço (cliente_user_id). Tem que vir ANTES de qualquer coisa:
+      // sem esse vínculo o banco recusa a autorização ("não é o dono") e o botão parece não fazer nada.
+      if (token) await reivindicarProjetoPorToken(token)
+
       const [prof, projetosIniciais, projetosDoCliente] = await Promise.all([
         getProfile(user.id),
         token ? getServicoPorToken(token) : getServicosPorUserId(user.id),
@@ -140,19 +149,39 @@ export function usePainelCliente() {
   // Só a conta dona do projeto (vinculada ao abrir o link com o token) aceita; a regra
   // é imposta pela função aceitar_projeto no banco.
   const handleAceitar = async (servico: Servico) => {
-    const nome =
-      profile?.full_name ||
-      session?.user?.user_metadata?.full_name ||
-      servico.cliente_nome
+    if (acaoEmAndamento) return
+    setErroAcao(null)
+    setAcaoEmAndamento(true)
+    try {
+      const nome =
+        profile?.full_name ||
+        session?.user?.user_metadata?.full_name ||
+        servico.cliente_nome
 
-    await aceitarServico(servico.id, nome)
+      await aceitarServico(servico.id, nome)
 
-    router.push(`/acompanhamento/${servico.avaliacao_token}`)
+      router.push(`/acompanhamento/${servico.avaliacao_token}`)
+    } catch (erro) {
+      console.error('Erro ao autorizar serviço:', erro)
+      setErroAcao(mensagemDeErroDaAcao(erro))
+      setAcaoEmAndamento(false)
+    }
+    // Em caso de sucesso a tela já está indo para o acompanhamento: o botão continua travado até lá.
   }
 
   const handleRecusar = async (servico: Servico) => {
-    await recusarServico(servico.id)
-    setServicos(prev => prev.filter(s => s.id !== servico.id))
+    if (acaoEmAndamento) return
+    setErroAcao(null)
+    setAcaoEmAndamento(true)
+    try {
+      await recusarServico(servico.id)
+      setServicos(prev => prev.filter(s => s.id !== servico.id))
+    } catch (erro) {
+      console.error('Erro ao recusar serviço:', erro)
+      setErroAcao(mensagemDeErroDaAcao(erro))
+    } finally {
+      setAcaoEmAndamento(false)
+    }
   }
 
   const handleVerGarantia = (servico: Servico) => {
@@ -169,5 +198,6 @@ export function usePainelCliente() {
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente, avatarUrl,
     handleAceitar, handleRecusar, handleVerGarantia,
+    acaoEmAndamento, erroAcao,
   }
 }

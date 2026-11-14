@@ -113,8 +113,35 @@ export function filtrarComReclamacaoAtiva<T extends { solicitacoes_garantia?: { 
 
 type ResultadoAcao = 'ok' | 'nao_autenticado' | 'nao_encontrado' | 'nao_e_dono' | 'status_invalido'
 
+/** O banco respondeu, mas recusou a ação (ex.: a conta não é a dona do serviço). Leva o código junto. */
+export class AcaoRecusadaError extends Error {
+  readonly codigo: string
+  constructor(codigo: string) {
+    super(`Ação recusada pelo banco: ${codigo}`)
+    this.name = 'AcaoRecusadaError'
+    this.codigo = codigo
+  }
+}
+
 function exigirOk(resultado: unknown) {
-  if (resultado !== 'ok') throw new Error(`Ação recusada pelo banco: ${String(resultado)}`)
+  if (resultado !== 'ok') throw new AcaoRecusadaError(String(resultado))
+}
+
+/** Frase simples, em português, para mostrar ao cliente quando autorizar/recusar não deu certo. */
+export function mensagemDeErroDaAcao(erro: unknown): string {
+  const codigo = erro instanceof AcaoRecusadaError ? erro.codigo : null
+  switch (codigo) {
+    case 'nao_autenticado':
+      return 'Sua sessão expirou. Entre novamente para continuar.'
+    case 'nao_e_dono':
+      return 'Este serviço está vinculado a outra conta. Entre com a conta que abriu o link enviado pelo prestador.'
+    case 'status_invalido':
+      return 'Este serviço não está mais aguardando autorização. Atualize a página para ver a situação atual.'
+    case 'nao_encontrado':
+      return 'Não encontramos este serviço. Peça um novo link ao prestador.'
+    default:
+      return 'Não conseguimos concluir agora. Confira sua internet e tente de novo.'
+  }
 }
 
 /** Somente a conta dona do projeto (vinculada pelo token) aceita. Regra na função do banco. */
