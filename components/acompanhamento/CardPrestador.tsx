@@ -2,6 +2,7 @@
 
 import { Phone, Share2, ShieldAlert } from 'lucide-react'
 import type { Projeto } from '@/types/avaliacao'
+import AvatarPrestador from '@/components/shared/AvatarPrestador'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 
 type Props = {
@@ -19,8 +20,8 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
   const statusLabel = temGarantiaAtiva
     ? 'Garantia em andamento'
     : isConcluido
-    ? 'Serviço concluído'
-    : 'Serviço em andamento'
+    ? 'Trabalho concluído'
+    : 'Trabalho em andamento'
 
   const statusColor = temGarantiaAtiva ? 'bg-orange-500' : isConcluido ? 'bg-green-500'  : 'bg-blue-500'
   const statusBg    = temGarantiaAtiva ? 'bg-orange-50'  : isConcluido ? 'bg-green-50'   : 'bg-blue-50'
@@ -31,13 +32,13 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
 
       {/* ── Topo: Avatar e Informações ── */}
       <div className="flex items-center gap-3">
-        <div className="flex size-16 sm:size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-          <img
-            src={prestador?.foto_perfil || '/placeholder-avatar.png'}
-            className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:scale-[1.02]"
-            alt={prestador?.nome}
-          />
-        </div>
+        <AvatarPrestador
+          foto={prestador?.foto_perfil}
+          nome={prestador?.nome}
+          categoria={prestador?.categoria}
+          className="size-16 rounded-2xl sm:size-24"
+          iconeClassName="size-7 sm:size-10"
+        />
 
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.2em] truncate">
@@ -73,7 +74,8 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
             <button
               onClick={onShare}
               className="w-10 h-10 rounded-[1rem] border border-slate-100 bg-white flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-100 hover:bg-blue-50 transition-all active:scale-95"
-              title="Compartilhar projeto"
+              title="Compartilhar este profissional"
+              aria-label="Compartilhar este profissional"
             >
               <Share2 size={16} />
             </button>

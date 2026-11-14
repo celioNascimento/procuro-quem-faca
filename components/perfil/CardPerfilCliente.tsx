@@ -84,7 +84,7 @@ export default function CardPerfilCliente({
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-500">
           <Clock size={11} aria-hidden="true" />
-          {totalCount} projeto{totalCount !== 1 ? 's' : ''}
+          {totalCount} trabalho{totalCount !== 1 ? 's' : ''}
         </span>
       </div>
     </section>

@@ -28,7 +28,7 @@ export default function HeaderCliente({ nomeCliente }: HeaderClienteProps) {
         <>
           {nome && (
             <div className="hidden min-w-0 flex-col items-end md:flex">
-              <span className="text-xs text-slate-500">Painel</span>
+              <span className="text-xs text-slate-500">Área do cliente</span>
               <span className="max-w-40 truncate text-sm font-semibold leading-tight text-slate-900">{nome}</span>
             </div>
           )}

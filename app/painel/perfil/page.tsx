@@ -2,11 +2,9 @@
 
 'use client'
 import { useState } from 'react'
-import type { MouseEvent as ReactMouseEvent } from 'react'
-import Link from 'next/link'
 import {
   MapPin, Briefcase, Loader2, CheckCircle2,
-  Save, AlertCircle, Star, ArrowRight, ShieldAlert, MessageCircleWarning
+  Save, AlertCircle, Star, ArrowRight, ShieldAlert, MessageCircleWarning,
 } from 'lucide-react'
 import HeaderCliente from '@/components/perfil/HeaderCliente'
 import CardPerfilCliente from '@/components/perfil/CardPerfilCliente'
@@ -17,6 +15,7 @@ import { usePerfilCliente } from '@/hooks/usePerfilCliente'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 import { ContextualHelp } from '@/components/help/HelpCenter'
 import DangerZone from '@/components/account/DangerZone'
+import { DialogoAviso, DialogoConfirmacao } from '@/components/ui/Dialogo'
 
 export default function PerfilDoCliente() {
   const {
@@ -38,7 +37,7 @@ export default function PerfilDoCliente() {
     listaCidades,
     perfil,
     aplicarMascara,
-    handleNavigation,
+    irPara,
     handleChangePerfil,
     handleUploadFoto,
     atualizar,
@@ -51,15 +50,23 @@ export default function PerfilDoCliente() {
     ativosCount,
     garantiaCount,
     reclamacaoCount,
+    pendentesCount,
+    andamentoCount,
+    finalizadosCount,
   } = usePerfilCliente()
 
   const [temAvaliacoesRecebidas, setTemAvaliacoesRecebidas] = useState(false)
 
-  if (loading || !perfilCarregado || loadingServicos) {
+  // `loading` NÃO entra aqui: ele liga ao salvar, e a tela inteira virava esqueleto no meio do salvamento.
+  if (!perfilCarregado || loadingServicos) {
     return <PainelDoClienteSkeleton />
   }
 
-  const inputStyle = `w-full px-5 py-4 rounded-2xl border border-slate-100 outline-none transition-all font-medium text-slate-800 bg-white shadow-sm placeholder-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400 text-[14px] md:text-[15px]`
+  // Quantos cartões de aviso existem de fato (para só dizer "deslize" quando há o que deslizar).
+  const quantidadeDeAvisos =
+    (avaliarCount > 0 ? 1 : 0) + (garantiaCount > 0 ? 1 : 0) + (reclamacaoCount > 0 ? 1 : 0) + (temAvaliacoesRecebidas ? 1 : 0)
+
+  const inputStyle = `w-full px-5 py-4 rounded-2xl border border-slate-200 outline-none transition-all font-medium text-slate-800 bg-white shadow-sm placeholder:text-slate-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 disabled:bg-slate-50 disabled:text-slate-400 text-[14px] md:text-[15px]`
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-12 font-sans antialiased">
@@ -67,46 +74,26 @@ export default function PerfilDoCliente() {
 
       <input type="file" ref={fileInputRef} onChange={handleUploadFoto} accept="image/*" className="hidden" />
 
-      {confirmLeaveModal.show && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95">
-            <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mx-auto border border-amber-100">
-              <AlertCircle size={32} />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-black italic uppercase text-slate-800 tracking-tighter">Sair sem salvar?</h3>
-              <p className="text-[13px] font-medium text-slate-500 leading-relaxed">Suas alterações serão perdidas.</p>
-            </div>
-            <div className="flex gap-3">
-              <button onClick={cancelarSaida} className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold uppercase text-[11px] tracking-wide hover:bg-slate-100 transition-all active:scale-95">Cancelar</button>
-              <button onClick={confirmarSaida} className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black uppercase text-[11px] tracking-wide hover:bg-red-600 transition-all active:scale-95 shadow-lg shadow-red-200">Sair</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DialogoConfirmacao
+        aberto={confirmLeaveModal.show}
+        titulo="Sair sem salvar?"
+        mensagem="Suas alterações serão perdidas."
+        textoCancelar="Continuar editando"
+        textoConfirmar="Sair sem salvar"
+        perigo
+        onCancelar={cancelarSaida}
+        onConfirmar={confirmarSaida}
+      />
 
-      {errorModal.show && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95">
-            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto border border-red-100">
-              <AlertCircle size={32} />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-black italic uppercase text-slate-800 tracking-tighter">{errorModal.title}</h3>
-              <p className="text-[13px] font-medium text-slate-500 leading-relaxed">{errorModal.message}</p>
-            </div>
-            <button
-              onClick={() => setErrorModal({ ...errorModal, show: false })}
-              className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest italic hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-100"
-            >
-              Entendido
-            </button>
-          </div>
-        </div>
-      )}
+      <DialogoAviso
+        aberto={errorModal.show}
+        titulo={errorModal.title}
+        mensagem={errorModal.message}
+        onFechar={() => setErrorModal({ ...errorModal, show: false })}
+      />
 
       {showSuccess && (
-        <div className="fixed top-20 left-0 right-0 z-[100] flex justify-center px-6 animate-in slide-in-from-top-10 duration-500">
+        <div role="status" className="fixed top-20 left-0 right-0 z-[100] flex justify-center px-6 animate-in slide-in-from-top-10 duration-500">
           <div className="bg-white border border-green-100 shadow-2xl rounded-full px-6 py-3 flex items-center gap-3">
             <div className="bg-green-500 rounded-full p-1"><CheckCircle2 className="text-white" size={14} /></div>
             <p className="text-[12px] font-bold text-slate-800">Salvo com sucesso</p>
@@ -114,10 +101,10 @@ export default function PerfilDoCliente() {
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-24 animate-in fade-in duration-500 sm:px-6 sm:pt-32 md:pt-26 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-24 animate-in fade-in duration-500 sm:px-6 md:pt-26 lg:px-8">
         <header className="mb-6 flex max-w-2xl flex-col gap-2 sm:mb-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área do cliente</p>
-          <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Acompanhe seus projetos</h1>
+          <p className="text-xs font-semibold text-blue-700">Área do cliente</p>
+          <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Acompanhe seus trabalhos</h1>
         </header>
 
         <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[20rem_minmax(0,1fr)]">
@@ -158,10 +145,10 @@ export default function PerfilDoCliente() {
                       <Star size={22} className="text-white" fill="white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
-                        {avaliarCount === 1 ? '1 serviço aguarda avaliação' : `${avaliarCount} serviços aguardam avaliação`}
+                      <p className="text-white font-bold text-base leading-tight">
+                        {avaliarCount === 1 ? '1 trabalho aguarda sua avaliação' : `${avaliarCount} trabalhos aguardam sua avaliação`}
                       </p>
-                      <p className="text-blue-200 text-[11px] font-medium mt-1">Toque para avaliar e concluir</p>
+                      <p className="text-blue-50 text-xs font-medium mt-1">Toque para avaliar e concluir</p>
                     </div>
                     <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
                   </button>
@@ -170,16 +157,16 @@ export default function PerfilDoCliente() {
                 {garantiaCount > 0 && (
                   <button
                     onClick={() => { setAba('servicos'); setFiltroStatus('garantia') }}
-                    className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
+                    className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-700 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
                   >
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
                       <ShieldAlert size={22} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
+                      <p className="text-white font-bold text-base leading-tight">
                         {garantiaCount === 1 ? '1 caso de garantia em aberto' : `${garantiaCount} casos de garantia em aberto`}
                       </p>
-                      <p className="text-orange-200 text-[11px] font-medium mt-1">Toque para acompanhar</p>
+                      <p className="text-orange-50 text-xs font-medium mt-1">Toque para acompanhar</p>
                     </div>
                     <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
                   </button>
@@ -188,16 +175,16 @@ export default function PerfilDoCliente() {
                 {reclamacaoCount > 0 && (
                   <button
                     onClick={() => { setAba('servicos'); setFiltroStatus('reclamacao') }}
-                    className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-600 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
+                    className="group flex min-h-24 w-[calc(100vw-2.5rem)] shrink-0 snap-start items-center gap-3 rounded-2xl bg-orange-700 p-4 sm:w-full sm:shrink text-left shadow-md shadow-orange-100 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-100 active:translate-y-0 animate-in fade-in duration-500 sm:p-5"
                   >
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20 sm:size-11">
                       <MessageCircleWarning size={22} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
+                      <p className="text-white font-bold text-base leading-tight">
                         {reclamacaoCount === 1 ? '1 reclamação em aberto' : `${reclamacaoCount} reclamações em aberto`}
                       </p>
-                      <p className="text-orange-200 text-[11px] font-medium mt-1">Toque para acompanhar</p>
+                      <p className="text-orange-50 text-xs font-medium mt-1">Toque para acompanhar</p>
                     </div>
                     <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
                   </button>
@@ -210,21 +197,23 @@ export default function PerfilDoCliente() {
               </div>
             )}
 
-            <p className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 sm:hidden">
-              Deslize para ver mais alertas
-            </p>
+            {quantidadeDeAvisos >= 2 && (
+              <p className="text-center text-xs font-medium text-slate-500 sm:hidden">
+                Deslize para ver mais avisos
+              </p>
+            )}
 
             <nav
               className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-18"
               aria-label="Seções do painel"
             >
-              {[{ id: 'servicos', label: 'Meus projetos' }, { id: 'dados', label: 'Minha conta' }].map(a => (
+              {[{ id: 'servicos', label: 'Meus trabalhos' }, { id: 'dados', label: 'Minha conta' }].map(a => (
                 <button
                   key={a.id}
                   type="button"
                   onClick={() => setAba(a.id)}
                   aria-current={aba === a.id ? 'page' : undefined}
-                  className={`min-h-11 flex-1 rounded-xl px-3 py-2.5 text-[11px] font-black uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${
+                  className={`min-h-11 flex-1 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${
                     aba === a.id ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-white hover:text-blue-600'
                   }`}
                 >
@@ -234,7 +223,7 @@ export default function PerfilDoCliente() {
             </nav>
 
             {aba === 'servicos' ? (
-              <section className="flex flex-col gap-4 pb-4" aria-label="Projetos contratados">
+              <section className="flex flex-col gap-4 pb-4" aria-label="Seus trabalhos">
 
                 {/* ── Filtros ── */}
                 <div
@@ -244,10 +233,10 @@ export default function PerfilDoCliente() {
                 >
                   {[
                     { id: 'todos',       label: `Todos (${servicos.length})` },
-                    { id: 'pendente',    label: `Aceitar (${servicos.filter(s => s.status?.toLowerCase() === 'pendente').length})` },
-                    { id: 'andamento',   label: `Em andamento (${servicos.filter(s => s.status === 'em_execucao').length})` },
+                    { id: 'pendente',    label: `Para aceitar (${pendentesCount})` },
+                    { id: 'andamento',   label: `Em andamento (${andamentoCount})` },
                     { id: 'avaliar',     label: `Avaliar (${avaliarCount})` },
-                    { id: 'finalizados', label: `Concluídos (${servicos.filter(s => s.status === 'finalizado').length})` },
+                    { id: 'finalizados', label: `Concluídos (${finalizadosCount})` },
                     ...(garantiaCount > 0 ? [{ id: 'garantia', label: `Garantia (${garantiaCount})` }] : []),
                     ...(reclamacaoCount > 0 ? [{ id: 'reclamacao', label: `Reclamação (${reclamacaoCount})` }] : []),
                   ].map(f => {
@@ -258,13 +247,13 @@ export default function PerfilDoCliente() {
                         onClick={() => setFiltroStatus(f.id)}
                         type="button"
                         aria-pressed={filtroStatus === f.id}
-                        className={`min-h-10 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 ${
+                        className={`min-h-10 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-4 ${
                           filtroStatus === f.id
                             ? ehCasoAtivo
-                              ? 'border-orange-600 bg-orange-600 text-white shadow-sm focus-visible:ring-orange-100'
+                              ? 'border-orange-700 bg-orange-700 text-white shadow-sm focus-visible:ring-orange-100'
                               : 'border-blue-600 bg-blue-600 text-white shadow-sm focus-visible:ring-blue-100'
                             : ehCasoAtivo
-                              ? 'border-orange-200 bg-white text-orange-500 hover:border-orange-300 focus-visible:ring-orange-100'
+                              ? 'border-orange-200 bg-white text-orange-700 hover:border-orange-300 focus-visible:ring-orange-100'
                               : 'border-slate-200 bg-white text-slate-500 hover:border-blue-200 hover:text-blue-600 focus-visible:ring-blue-100'
                         }`}
                       >
@@ -275,20 +264,14 @@ export default function PerfilDoCliente() {
                 </div>
 
                 {/* ── Lista ── */}
-                {loadingServicos ? (
-                  <div className="flex flex-col gap-3" role="status" aria-label="Carregando projetos">
-                    {[1, 2, 3].map(i => (
-                      <div key={i} className="h-24 animate-pulse rounded-[1.75rem] bg-slate-100" />
-                    ))}
-                  </div>
-                ) : servicosFiltrados.length === 0 ? (
+                {servicosFiltrados.length === 0 ? (
                   <div className="flex min-h-64 flex-col items-center justify-center gap-4 rounded-[2rem] border-2 border-dashed border-slate-200 bg-white px-8 py-12 text-center">
                     <div className="flex size-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
                       <Briefcase size={24} aria-hidden="true" />
                     </div>
                     <div className="flex max-w-xs flex-col gap-1">
-                      <p className="text-sm font-black text-slate-700">Nenhum projeto nesta categoria</p>
-                      <p className="text-xs font-medium leading-relaxed text-slate-400">Quando houver uma atualização, ela aparecerá aqui.</p>
+                      <p className="text-sm font-black text-slate-700">Nenhum trabalho nesta categoria</p>
+                      <p className="text-sm font-medium leading-relaxed text-slate-500">Quando houver uma atualização, ela aparecerá aqui.</p>
                     </div>
                   </div>
                 ) : (
@@ -303,12 +286,10 @@ export default function PerfilDoCliente() {
                           : idsComReclamacaoAtiva.has(s.id) ? 'reclamacao'
                           : null
                         }
-                        onClick={() => handleNavigation(
-                          new MouseEvent('click') as unknown as ReactMouseEvent<Element>,
-                          getRota(s).startsWith('/meus-servicos')
-                            ? `${getRota(s)}&origem=perfil`
-                            : getRota(s),
-                        )}
+                        onClick={() => {
+                          const rota = getRota(s)
+                          irPara(rota.startsWith('/meus-servicos') ? `${rota}&origem=perfil` : rota)
+                        }}
                       />
                     ))}
                   </div>
@@ -319,55 +300,55 @@ export default function PerfilDoCliente() {
               <div className="grid gap-4 pb-8 animate-in fade-in duration-300 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
                 <section className="flex flex-col gap-5 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7" aria-labelledby="account-data-title">
                   <div className="flex flex-col gap-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Dados pessoais</p>
+                    <p className="text-xs font-semibold text-blue-700">Dados pessoais</p>
                     <h2 id="account-data-title" className="text-xl font-black tracking-tight text-slate-900">Informações da conta</h2>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Nome Completo</label>
-                    <input value={perfil.full_name} onChange={e => handleChangePerfil('full_name', e.target.value)} className={inputStyle} />
+                    <label htmlFor="perfil-nome" className="block text-xs font-semibold text-slate-600 mb-1.5">Nome completo</label>
+                    <input id="perfil-nome" autoComplete="name" value={perfil.full_name} onChange={e => handleChangePerfil('full_name', e.target.value)} className={inputStyle} />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">WhatsApp</label>
-                    <input value={perfil.whatsapp} onChange={e => handleChangePerfil('whatsapp', aplicarMascara(e.target.value))} className={inputStyle} placeholder="(00) 00000-0000" />
+                    <label htmlFor="perfil-whatsapp" className="block text-xs font-semibold text-slate-600 mb-1.5">WhatsApp</label>
+                    <input id="perfil-whatsapp" type="tel" inputMode="tel" autoComplete="tel" value={perfil.whatsapp} onChange={e => handleChangePerfil('whatsapp', aplicarMascara(e.target.value))} className={inputStyle} placeholder="(00) 00000-0000" />
                   </div>
 
                   <div className="border-t border-slate-50 pt-5 space-y-4">
                     <div className="flex items-center gap-2">
                       <MapPin size={14} className="text-blue-600" />
-                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Endereço</h3>
+                      <h3 className="text-sm font-semibold text-slate-700">Endereço</h3>
                     </div>
                     <div className="flex gap-3">
                       <div className="flex-[3]">
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Logradouro</label>
-                        <input placeholder="Rua / Avenida" value={perfil.logradouro} onChange={e => handleChangePerfil('logradouro', e.target.value)} className={inputStyle} />
+                        <label htmlFor="perfil-logradouro" className="block text-xs font-semibold text-slate-600 mb-1.5">Logradouro</label>
+                        <input id="perfil-logradouro" autoComplete="address-line1" placeholder="Rua / Avenida" value={perfil.logradouro} onChange={e => handleChangePerfil('logradouro', e.target.value)} className={inputStyle} />
                       </div>
                       <div className="w-24 shrink-0">
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Nº</label>
-                        <input placeholder="123" value={perfil.numero} onChange={e => handleChangePerfil('numero', e.target.value)} className={inputStyle} />
+                        <label htmlFor="perfil-numero" className="block text-xs font-semibold text-slate-600 mb-1.5">Nº</label>
+                        <input id="perfil-numero" placeholder="123" value={perfil.numero} onChange={e => handleChangePerfil('numero', e.target.value)} className={inputStyle} />
                       </div>
                     </div>
                     <div className="flex gap-3">
                       <div className="flex-1">
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Bairro</label>
-                        <input placeholder="Centro" value={perfil.bairro} onChange={e => handleChangePerfil('bairro', e.target.value)} className={inputStyle} />
+                        <label htmlFor="perfil-bairro" className="block text-xs font-semibold text-slate-600 mb-1.5">Bairro</label>
+                        <input id="perfil-bairro" placeholder="Centro" value={perfil.bairro} onChange={e => handleChangePerfil('bairro', e.target.value)} className={inputStyle} />
                       </div>
                       <div className="flex-1">
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Complemento</label>
-                        <input placeholder="Apto 12" value={perfil.complemento} onChange={e => handleChangePerfil('complemento', e.target.value)} className={inputStyle} />
+                        <label htmlFor="perfil-complemento" className="block text-xs font-semibold text-slate-600 mb-1.5">Complemento</label>
+                        <input id="perfil-complemento" autoComplete="address-line2" placeholder="Apto 12" value={perfil.complemento} onChange={e => handleChangePerfil('complemento', e.target.value)} className={inputStyle} />
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">UF</label>
-                        <select value={perfil.uf} onChange={e => handleChangePerfil('uf', e.target.value)} className={inputStyle}>
-                          <option value="">--</option>
+                        <label htmlFor="perfil-uf" className="block text-xs font-semibold text-slate-600 mb-1.5">UF</label>
+                        <select id="perfil-uf" value={perfil.uf} onChange={e => handleChangePerfil('uf', e.target.value)} className={inputStyle}>
+                          <option value="">UF</option>
                           {listaEstados.map(e => <option key={e.sigla} value={e.sigla}>{e.sigla}</option>)}
                         </select>
                       </div>
                       <div className="col-span-2">
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Cidade</label>
-                        <select disabled={!perfil.uf} value={perfil.cidade} onChange={e => handleChangePerfil('cidade', e.target.value)} className={inputStyle}>
-                          <option value="">Selecione...</option>
+                        <label htmlFor="perfil-cidade" className="block text-xs font-semibold text-slate-600 mb-1.5">Cidade</label>
+                        <select id="perfil-cidade" disabled={!perfil.uf} value={perfil.cidade} onChange={e => handleChangePerfil('cidade', e.target.value)} className={inputStyle}>
+                          <option value="">Selecione a cidade</option>
                           {listaCidades.map(c => <option key={c.nome} value={c.nome}>{c.nome}</option>)}
                         </select>
                       </div>
@@ -375,14 +356,14 @@ export default function PerfilDoCliente() {
                   </div>
 
                   {isDirty && !showSuccess && (
-                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest flex items-center justify-center gap-1.5 animate-in fade-in duration-300">
+                    <p className="text-xs font-semibold text-amber-700 flex items-center justify-center gap-1.5 animate-in fade-in duration-300">
                       <AlertCircle size={12} /> Alterações não salvas
                     </p>
                   )}
                   <button
                     onClick={atualizar}
                     disabled={loading}
-                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black italic uppercase text-[11px] tracking-widest shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-blue-100 disabled:opacity-60"
+                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-bold text-base shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-blue-100 disabled:opacity-60"
                   >
                     {loading ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} /> Salvar alterações</>}
                   </button>
@@ -393,7 +374,7 @@ export default function PerfilDoCliente() {
             )}
 
             <div className="pt-2 sm:pt-4">
-              <ContextualHelp context="dashboard-cliente" audience="cliente" title="Precisa de ajuda com seus projetos?" />
+              <ContextualHelp context="dashboard-cliente" audience="cliente" title="Precisa de ajuda com seus trabalhos?" />
             </div>
           </div>
         </div>

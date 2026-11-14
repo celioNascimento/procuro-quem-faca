@@ -1,6 +1,7 @@
 //components/meus-servicos/ServicoCard.tsx
 'use client'
-import { Clock, User, Phone, ChevronRight, ZoomIn, Briefcase, CheckCircle2, ShieldAlert } from 'lucide-react'
+import { Clock, Phone, ChevronRight, ZoomIn, Briefcase, CheckCircle2, ShieldAlert } from 'lucide-react'
+import AvatarPrestador from '@/components/shared/AvatarPrestador'
 import { Servico } from '@/types/painel'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 
@@ -9,7 +10,7 @@ interface Props {
   onZoom: (url: string) => void
   onAceitar: (servico: Servico) => void
   hidePrestador?: boolean
-  /** Enquanto uma ação (autorizar) está sendo enviada: trava o botão e mostra "Autorizando…". */
+  /** Enquanto uma ação (autorizar) está sendo enviada: trava o botão e mostra "Aceitando…". */
   ocupado?: boolean
   modo?: 'pendente' | 'andamento' | 'concluido' | 'garantia'
   // Tipo do caso ativo (garantia formal ou reclamação sem garantia),
@@ -24,8 +25,8 @@ interface Props {
 // tem texto fixo pré-definido — é calculado dentro do componente porque
 // depende de ehReclamacao (só disponível após saber tipoGarantiaAtiva).
 const BADGE_BASE = {
-  pendente:  { texto: 'Aguardando Início', cor: 'text-blue-600'    },
-  andamento: { texto: 'Em Andamento',      cor: 'text-amber-500'   },
+  pendente:  { texto: 'Aguardando aceite', cor: 'text-blue-600'    },
+  andamento: { texto: 'Em andamento',      cor: 'text-amber-500'   },
   concluido: { texto: 'Concluído',         cor: 'text-emerald-600' },
 }
 
@@ -52,7 +53,7 @@ export default function ServicoCard({
   const labelTag = ehReclamacao ? 'Reclamação' : 'Garantia'
 
   const badge = modo === 'garantia'
-    ? { texto: ehReclamacao ? 'Em Reclamação' : 'Em Garantia', cor: 'text-orange-600' }
+    ? { texto: ehReclamacao ? 'Em reclamação' : 'Em garantia', cor: 'text-orange-600' }
     : BADGE_BASE[modo]
 
   return (
@@ -62,17 +63,13 @@ export default function ServicoCard({
       {!hidePrestador && (
         <div className="flex items-center justify-between px-2 mb-4">
           <div className="flex items-center gap-3">
-            {servico.prestadores?.foto_perfil ? (
-              <img
-                src={servico.prestadores.foto_perfil}
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-50"
-                alt="Prestador"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                <User size={18} className="text-slate-300" />
-              </div>
-            )}
+            <AvatarPrestador
+              foto={servico.prestadores?.foto_perfil}
+              nome={servico.prestadores?.nome}
+              categoria={servico.prestadores?.categoria}
+              className="size-10 rounded-full"
+              iconeClassName="size-[18px]"
+            />
             <div>
               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
                 Prestador
@@ -101,7 +98,7 @@ export default function ServicoCard({
               <img
                 src={fotoInicio.url_foto}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                alt="Foto do serviço"
+                alt="Foto do trabalho"
               />
 
               {/* Badge de status sobre a foto (canto superior esquerdo) */}
@@ -207,7 +204,7 @@ export default function ServicoCard({
               disabled={ocupado}
               className="flex-1 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all disabled:cursor-wait disabled:opacity-70"
             >
-              {ocupado ? 'Autorizando…' : <>Autorizar Serviço <ChevronRight size={16} /></>}
+              {ocupado ? 'Aceitando…' : <>Aceitar trabalho <ChevronRight size={16} /></>}
             </button>
           )}
 

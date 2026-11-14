@@ -12,9 +12,9 @@ const FALLBACK_PADRAO: AdFallback = {
   emoji: '🤝',
   titulo: 'Procuro Quem Faça é 100% gratuito pra você',
   subtitulo: 'Sem taxas escondidas — encontre, contrate e avalie seus profissionais de confiança.',
-  cta: 'Ver meus projetos',
+  cta: 'Buscar profissionais',
   cor: 'from-blue-600 to-indigo-600',
-  href: () => '/painel/perfil',
+  href: () => '/',
 }
 
 export function AdCardPainelCliente({

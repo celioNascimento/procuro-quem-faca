@@ -22,3 +22,13 @@ export function visualDaArea(icone?: string | null): VisualDaArea | null {
   if (!icone) return null
   return VISUAL_POR_ICONE[icone.trim().toLowerCase()] ?? null
 }
+
+// O banco devolve `categorias_grupos` como objeto ou como lista de um item, conforme a consulta.
+type GrupoRel = { icone?: string | null } | { icone?: string | null }[] | null | undefined
+
+/** Nome do ícone da área a partir de `categoria` já com o join `categorias_grupos(icone)`. */
+export function iconeDaCategoria(categoria?: { categorias_grupos?: GrupoRel } | null): string | null {
+  const grupo = categoria?.categorias_grupos
+  const item = Array.isArray(grupo) ? grupo[0] : grupo
+  return item?.icone ?? null
+}

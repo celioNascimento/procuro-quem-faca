@@ -19,8 +19,8 @@ export function usePerfilUI(isDirty: boolean) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [isDirty])
 
-  const handleNavigation = (e: React.MouseEvent, destino: string) => {
-    e.preventDefault()
+  /** Vai para outra tela; se há alterações não salvas, pergunta antes. */
+  const irPara = (destino: string) => {
     if (isDirty) {
       setConfirmLeaveModal({ show: true, destination: destino })
     } else {
@@ -42,7 +42,7 @@ export function usePerfilUI(isDirty: boolean) {
   return {
     aba, setAba,
     confirmLeaveModal,
-    handleNavigation,
+    irPara,
     confirmarSaida,
     cancelarSaida,
   }

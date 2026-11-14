@@ -6,23 +6,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import * as ClienteService from '@/lib/services/cliente.service'
 import type { ClienteServico } from '@/types/clienteServicos'
-
-/**
- * Deriva se um serviço em execução já está pronto para o cliente avaliar.
- *
- * Fluxo com fotos: equivalente a ter a foto 3 (etapa "Depois") enviada.
- * Fluxo sem_fotos: equivalente ao prestador ter clicado em "Marcar como
- * concluído" (marcado_concluido_at preenchido) — não há foto 3 para checar,
- * já que portfolio_fotos é sempre vazio nesse fluxo.
- *
- * Centralizada aqui porque a mesma checagem era repetida em 4 lugares
- * deste hook usando só a condição do fluxo com fotos, o que fazia
- * projetos sem_fotos nunca aparecerem como prontos para avaliar.
- */
-function estaProntoParaAvaliar(s: ClienteServico): boolean {
-  if (s.sem_fotos) return !!s.marcado_concluido_at
-  return s.portfolio_fotos?.some(f => f.ordem === 3) ?? false
-}
+import { estaProntoParaAvaliar, statusVisualDoServico } from '@/lib/painel/statusDoServico'
 
 export function useServicosCliente(perfilCarregado: boolean) {
   const router    = useRouter()
@@ -82,6 +66,12 @@ export function useServicosCliente(perfilCarregado: boolean) {
   const garantiaCount = servicosGarantia.length
   const reclamacaoCount = servicosReclamacao.length
 
+  // Números dos filtros: saem da mesma regra que monta a lista, para o número do botão
+  // ser sempre igual ao que aparece ao tocar nele.
+  const pendentesCount   = servicos.filter(s => s.status?.toLowerCase() === 'pendente').length
+  const andamentoCount   = servicos.filter(s => s.status?.toLowerCase() === 'em_execucao' && !estaProntoParaAvaliar(s)).length
+  const finalizadosCount = servicos.filter(s => s.status?.toLowerCase() === 'finalizado').length
+
   // ── Filtro de lista ─────────────────────────────────────────────────────────
   const servicosFiltrados = filtroStatus === 'garantia'
     ? servicosGarantia
@@ -99,23 +89,13 @@ export function useServicosCliente(perfilCarregado: boolean) {
       })
 
   // ── Status visual ───────────────────────────────────────────────────────────
-  const getStatusInfo = (servico: ClienteServico) => {
-    const s          = servico?.status?.toLowerCase()
-    const pronto      = estaProntoParaAvaliar(servico)
-    const jaAvaliado = servico?.avaliacoes?.length > 0
-
-    if (s === 'pendente')
-      return { label: 'Aguardando aceite', dot: 'bg-amber-400',  badge: 'bg-amber-50 text-amber-700 border-amber-200',   urgente: false }
-    if (s === 'em_execucao' && pronto)
-      return { label: 'Avaliar agora',     dot: 'bg-blue-500',   badge: 'bg-blue-600 text-white border-blue-600',         urgente: true  }
-    if (s === 'em_execucao')
-      return { label: 'Em andamento',      dot: 'bg-blue-400',   badge: 'bg-blue-50 text-blue-700 border-blue-200',       urgente: false }
-    if (s === 'finalizado' && jaAvaliado)
-      return { label: 'Concluído',         dot: 'bg-green-400',  badge: 'bg-green-50 text-green-700 border-green-200',    urgente: false }
-    if (s === 'finalizado')
-      return { label: 'Finalizado',        dot: 'bg-green-400',  badge: 'bg-green-50 text-green-700 border-green-200',    urgente: false }
-    return   { label: s ?? '',             dot: 'bg-slate-300',  badge: 'bg-slate-50 text-slate-500 border-slate-200',    urgente: false }
-  }
+  const getStatusInfo = (servico: ClienteServico) =>
+    statusVisualDoServico({
+      status: servico.status,
+      pronto: estaProntoParaAvaliar(servico),
+      jaAvaliado: servico.avaliacoes?.length > 0,
+      caso: idsComGarantiaAtiva.has(servico.id) ? 'garantia' : idsComReclamacaoAtiva.has(servico.id) ? 'reclamacao' : null,
+    })
 
   // ── Rotas ───────────────────────────────────────────────────────────────────
   const getRotaDestino = (s: ClienteServico) => {
@@ -177,6 +157,9 @@ export function useServicosCliente(perfilCarregado: boolean) {
     ativosCount,
     garantiaCount,
     reclamacaoCount,
+    pendentesCount,
+    andamentoCount,
+    finalizadosCount,
     getStatusInfo,
     getRotaDestino,
     getRotaGarantia,

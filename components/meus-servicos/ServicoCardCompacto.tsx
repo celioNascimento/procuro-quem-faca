@@ -7,6 +7,7 @@
 
 'use client'
 import { ChevronRight, ShieldAlert, Star } from 'lucide-react'
+import AvatarPrestador from '@/components/shared/AvatarPrestador'
 import type { ClienteServico } from '@/types/clienteServicos'
 
 interface StatusInfo {
@@ -72,13 +73,12 @@ export default function ServicoCardCompacto({
     >
       {/* Foto do prestador com dot de status */}
       <div className={`relative shrink-0 rounded-2xl p-0.5 ${fotoRingClass}`}>
-        <div className="w-14 h-14 rounded-[14px] overflow-hidden">
-          <img
-            src={servico.prestadores?.foto_perfil || '/placeholder-avatar.png'}
-            className="w-full h-full object-contain p-1"
-            alt={servico.prestadores?.nome ?? 'Prestador'}
-          />
-        </div>
+        <AvatarPrestador
+          foto={servico.prestadores?.foto_perfil}
+          nome={servico.prestadores?.nome}
+          categoria={servico.prestadores?.categoria}
+          className="size-14 rounded-[14px]"
+        />
         <span
           className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${dotClass} ${isUrgente ? 'animate-pulse' : ''}`}
         />

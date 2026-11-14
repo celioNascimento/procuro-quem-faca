@@ -19,7 +19,7 @@ export function usePerfilCliente() {
     aba:               ui.aba,
     setAba:            ui.setAba,
     confirmLeaveModal: ui.confirmLeaveModal,
-    handleNavigation:  ui.handleNavigation,
+    irPara:            ui.irPara,
     confirmarSaida:    ui.confirmarSaida,
     cancelarSaida:     ui.cancelarSaida,
     irParaAvaliar:     () => servicos.irParaAvaliar(ui.setAba),
@@ -54,6 +54,9 @@ export function usePerfilCliente() {
     ativosCount:             servicos.ativosCount,
     garantiaCount:           servicos.garantiaCount,
     reclamacaoCount:         servicos.reclamacaoCount,         // novo
+    pendentesCount:          servicos.pendentesCount,
+    andamentoCount:          servicos.andamentoCount,
+    finalizadosCount:        servicos.finalizadosCount,
     getStatusInfo:           servicos.getStatusInfo,
     getRotaDestino:          servicos.getRotaDestino,
     getRotaGarantia:         servicos.getRotaGarantia,
