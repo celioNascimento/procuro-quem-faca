@@ -1,22 +1,28 @@
 //lib/contexts/LocationContext.tsx
+//
+// Cidade atual do usuário (cookie `pqf_cidade`, 30 dias).
+// A localização do aparelho NUNCA é pedida sozinha: só quando a pessoa toca em
+// "Usar minha localização" (ver ConviteLocalizacao). Assim a lista de resultados
+// não fica esperando uma pergunta do navegador e o pedido vem com explicação.
 
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react'
+import { descobrirCidade, type CidadeSelecionada } from '@/lib/localizacao'
 
-interface CidadeSelecionada {
-  id: string
-  nome: string
-}
+export type EstadoLocalizacao =
+  | 'parado'
+  | 'pedindo'        // esperando o navegador / procurando a cidade
+  | 'negado'         // a pessoa não permitiu
+  | 'sem_cidade'     // permitiu, mas não há cidade atendida por perto
+  | 'indisponivel'   // aparelho sem localização
+  | 'erro'           // não conseguiu agora (sem sinal, tempo esgotado)
 
 interface LocationContextData {
   cidadeAtual: CidadeSelecionada | null
-  isModalOpen: boolean
-  abrirModal: () => void
-  fecharModal: () => void
+  estadoLocalizacao: EstadoLocalizacao
+  solicitarLocalizacao: () => void
   salvarLocalizacao: (cidade: CidadeSelecionada) => void
-  loading: boolean
 }
 
 function lerCidadeDoCookie(): CidadeSelecionada | null {
@@ -44,90 +50,63 @@ function lerCidadeDoCookie(): CidadeSelecionada | null {
   return null
 }
 
-const LocationContext = createContext<LocationContextData>({} as LocationContextData)
+const LocationContext = createContext<LocationContextData>({
+  cidadeAtual: null,
+  estadoLocalizacao: 'parado',
+  solicitarLocalizacao: () => {},
+  salvarLocalizacao: () => {},
+})
 
 export function LocationProvider({ children }: { children: ReactNode }) {
   const [cidadeAtual, setCidadeAtual] = useState<CidadeSelecionada | null>(() => lerCidadeDoCookie())
-  const [isModalOpen, setIsModalOpen] = useState(() => lerCidadeDoCookie() === null)
-  const [loading, setLoading] = useState(() =>
-    lerCidadeDoCookie() === null && typeof navigator !== 'undefined' && Boolean(navigator.geolocation)
-  )
-
-  const salvarLocalizacao = (cidade: CidadeSelecionada) => {
-    // Salva por 30 dias (Cookie Essencial)
-    const expires = new Date()
-    expires.setDate(expires.getDate() + 30)
-
-    document.cookie = `pqf_cidade=${encodeURIComponent(JSON.stringify(cidade))}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`
-
-    setCidadeAtual(cidade)
-    setIsModalOpen(false)
-    window.location.reload()
-  }
+  const [estadoLocalizacao, setEstadoLocalizacao] = useState<EstadoLocalizacao>('parado')
+  const montado = useRef(true)
 
   useEffect(() => {
-    if (cidadeAtual || typeof navigator === 'undefined' || !navigator.geolocation) {
+    montado.current = true
+    return () => { montado.current = false }
+  }, [])
+
+  const salvarLocalizacao = useCallback((cidade: CidadeSelecionada) => {
+    // Salva por 30 dias (Cookie Essencial). Sem recarregar a página: quem usa a cidade reage ao estado.
+    const expires = new Date()
+    expires.setDate(expires.getDate() + 30)
+    document.cookie = `pqf_cidade=${encodeURIComponent(JSON.stringify(cidade))}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`
+    setCidadeAtual(cidade)
+  }, [])
+
+  const solicitarLocalizacao = useCallback(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setEstadoLocalizacao('indisponivel')
       return
     }
 
-    let ativo = true
-
+    setEstadoLocalizacao('pedindo')
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         try {
-          const params = new URLSearchParams({
-            format: 'json',
-            lat: String(coords.latitude),
-            lon: String(coords.longitude),
-            zoom: '10',
-          })
-          const resposta = await fetch(`https://nominatim.openstreetmap.org/reverse?${params}`)
-          const local = await resposta.json()
-          const nome = local.address?.city || local.address?.town || local.address?.municipality
-          const estado = local.address?.state_code?.replace('BR-', '') || local.address?.['ISO3166-2-lvl4']?.replace('BR-', '')
-
-          if (!ativo || !nome) return
-
-          let consulta = supabase
-            .from('cidades')
-            .select('id, nome, estado_sigla')
-            .eq('ativa', true)
-            .ilike('nome', nome)
-            .limit(5)
-
-          if (estado) consulta = consulta.eq('estado_sigla', estado)
-          const { data } = await consulta
-          const cidade = data?.[0]
-
-          if (cidade && ativo) {
-            salvarLocalizacao({ id: String(cidade.id), nome: cidade.nome })
+          const cidade = await descobrirCidade(coords.latitude, coords.longitude)
+          if (!montado.current) return
+          if (cidade) {
+            salvarLocalizacao(cidade)
+            setEstadoLocalizacao('parado')
+          } else {
+            setEstadoLocalizacao('sem_cidade')
           }
         } catch {
-          // A busca continua disponível mesmo sem permissão ou geocodificação.
-        } finally {
-          if (ativo) setLoading(false)
+          if (montado.current) setEstadoLocalizacao('erro')
         }
       },
-      () => setLoading(false),
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+      (falha) => {
+        if (!montado.current) return
+        setEstadoLocalizacao(falha.code === 1 ? 'negado' : 'erro')
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
     )
-
-    return () => {
-      ativo = false
-    }
-  }, [cidadeAtual])
+  }, [salvarLocalizacao])
 
   return (
-    <LocationContext.Provider 
-      value={{ 
-        cidadeAtual, 
-        isModalOpen, 
-        abrirModal: () => setIsModalOpen(true), 
-        fecharModal: () => setIsModalOpen(false), 
-        salvarLocalizacao,
-        loading
-      }}
-    >
+    <LocationContext.Provider value={{ cidadeAtual, estadoLocalizacao, solicitarLocalizacao, salvarLocalizacao }}>
       {children}
     </LocationContext.Provider>
   )

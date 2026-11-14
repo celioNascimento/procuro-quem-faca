@@ -30,7 +30,7 @@ Antes, a seta do `Header` era um `<Link href>`: o "voltar" do navegador levava d
 
 - **Filtros** usam `router.replace` (refinam a mesma tela). Um filtro não cria entrada no histórico.
 - **Cache** em memória (`cacheLista` em `usePrestadores`, TTL 3 min, chave = termo + habilidade + cidade da consulta): voltar do perfil não mostra skeleton.
-- **Rolagem**: `useRestaurarScroll(!loading)` salva `scrollY` por URL em `sessionStorage` e restaura só quando a chegada foi por voltar/avançar. `NavegacaoTracker` (layout raiz) marca `popstate`; o marcador vale 15 s e é consumido uma vez. Visita nova começa no topo.
+- **Rolagem**: `useRestaurarScroll(!loading)` salva `scrollY` por URL em `sessionStorage` e restaura só quando a chegada foi por voltar/avançar. `NavegacaoTracker` (layout raiz) marca `popstate`; o marcador vale 15 s e é consumido uma vez. Visita nova começa no topo. A quantidade de cards abertos ("Ver mais") é guardada junto (`salvarQuantidadeVisivel`) e só é devolvida na chegada por voltar/avançar, para a rolagem restaurada cair no lugar certo.
 
 ## Fallbacks por tela
 

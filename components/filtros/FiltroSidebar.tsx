@@ -12,12 +12,15 @@ function SecaoFiltro({
   valorAtivo,
   onToggle,
   disabled,
+  dica,
 }: {
   titulo: string
   opcoes: OpcaoBase[]
   valorAtivo: string
   onToggle: (val: string) => void
   disabled?: boolean
+  /** Explica por que a seção está desligada. */
+  dica?: string
 }) {
   const [aberto, setAberto] = useState(true)
 
@@ -28,9 +31,10 @@ function SecaoFiltro({
       <button
         onClick={() => setAberto(v => !v)}
         disabled={disabled}
-        className={`flex w-full items-center justify-between py-2 ${disabled ? 'cursor-not-allowed opacity-40' : ''}`}
+        aria-expanded={aberto && !disabled}
+        className={`flex min-h-11 w-full items-center justify-between py-2 ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
       >
-        <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+        <span className="text-xs font-black uppercase tracking-widest text-slate-600">
           {titulo}
         </span>
         <ChevronDown
@@ -40,6 +44,8 @@ function SecaoFiltro({
         />
       </button>
 
+      {disabled && dica && <p className="pb-1 text-xs text-slate-500">{dica}</p>}
+
       {aberto && !disabled && (
         <div className="mt-1.5 flex flex-col gap-1.5">
           {opcoes.map(op => {
@@ -48,7 +54,7 @@ function SecaoFiltro({
               <button
                 key={op.id}
                 onClick={() => onToggle(op.id)}
-                className={`flex w-full items-center justify-between gap-2 rounded-2xl border px-3 py-2 text-[12px] font-bold transition-all ${
+                className={`flex min-h-10 w-full items-center justify-between gap-2 rounded-2xl border px-3 py-2 text-sm font-bold transition-all ${
                   ativo
                     ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-100'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600'
@@ -56,7 +62,7 @@ function SecaoFiltro({
               >
                 <span className="truncate text-left">{op.label}</span>
                 <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black ${
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-black ${
                     ativo ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
                   }`}
                 >
@@ -100,11 +106,11 @@ export function FiltroSidebar({
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Filter size={14} className="text-slate-500" />
-          <span className="text-[11px] font-black uppercase tracking-widest text-slate-600">
+          <span className="text-xs font-black uppercase tracking-widest text-slate-700">
             Filtros
           </span>
           {totalAtivos > 0 && (
-            <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-black text-white">
+            <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs font-black text-white">
               {totalAtivos}
             </span>
           )}
@@ -112,7 +118,7 @@ export function FiltroSidebar({
         {totalAtivos > 0 && (
           <button
             onClick={onLimpar}
-            className="flex items-center gap-1 text-[11px] font-bold text-slate-400 transition-colors hover:text-red-500"
+            className="flex min-h-11 items-center gap-1 px-2 text-xs font-bold text-slate-500 transition-colors hover:text-red-500"
           >
             <X size={11} strokeWidth={3} /> Limpar
           </button>
@@ -150,6 +156,7 @@ export function FiltroSidebar({
         valorAtivo={filtroCategoria}
         onToggle={v => onAplicar('categoria', v)}
         disabled={!filtroGrupo}
+        dica="Escolha uma área primeiro."
       />
     </div>
   )

@@ -133,7 +133,7 @@ Todos os hooks abaixo são pontos de entrada de UI. O hook geralmente mantém es
 | [`lib/auth/resolverDestinoPosLogin.ts`](../../lib/auth/resolverDestinoPosLogin.ts) | `isPrestadorCompleto`, `resolverDestinoPosLogin`: única decisão de redirecionamento. |
 | [`lib/ads/*.ts`](../../lib/ads) | `resolverSegmento`, `getFallbackPorSegmento`: segmentação e fallback de anúncios. |
 | [`lib/cookies.ts`](../../lib/cookies.ts) | `setCookie`, `getCookie`: cookies simples, usado pela localização/UX. |
-| [`lib/contexts/LocationContext.tsx`](../../lib/contexts/LocationContext.tsx) | `LocationProvider`, `useLocation`; módulo pronto, porém não montado no layout raiz. |
+| [`lib/contexts/LocationContext.tsx`](../../lib/contexts/LocationContext.tsx) | `LocationProvider`, `useLocation`; monta no layout raiz. A localização do aparelho só é pedida ao tocar em "Usar minha localização" (`solicitarLocalizacao`), sem recarregar a página. |
 | [`lib/db/visitasPerfil.ts`](../../lib/db/visitasPerfil.ts) | registro/consulta de visita; `cookieKeyVisita` é helper interno. |
 
 ## Componentes e callbacks locais

@@ -27,6 +27,9 @@ export function useFiltrosPrestadores() {
   function aplicar(chave: string, valor: string) {
     const params = new URLSearchParams(window.location.search)
 
+    // Escolher uma cidade é o contrário de "ver outras cidades"
+    if (chave === 'cidade') params.delete('ampliar')
+
     // Toggle: mesmo valor remove, valor diferente substitui
     if (params.get(chave) === valor) {
       params.delete(chave)
@@ -61,6 +64,22 @@ export function useFiltrosPrestadores() {
     router.replace(`/prestadores?${params.toString()}`, { scroll: false })
   }
 
+  // Tira o recorte de cidade (a cidade salva do usuário deixa de valer) e mostra todas.
+  function verOutrasCidades() {
+    const params = new URLSearchParams(window.location.search)
+    params.delete('cidade')
+    params.set('ampliar', '1')
+    router.replace(`/prestadores?${params.toString()}`, { scroll: false })
+  }
+
+  // Volta ao padrão: cidade salva do usuário.
+  function voltarParaMinhaCidade() {
+    const params = new URLSearchParams(window.location.search)
+    params.delete('cidade')
+    params.delete('ampliar')
+    router.replace(`/prestadores?${params.toString()}`, { scroll: false })
+  }
+
   return {
     filtroEstado,
     filtroRegiao,
@@ -70,5 +89,7 @@ export function useFiltrosPrestadores() {
     totalAtivos,
     aplicar,
     limparFiltros,
+    verOutrasCidades,
+    voltarParaMinhaCidade,
   }
 }

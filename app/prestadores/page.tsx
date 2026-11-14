@@ -3,149 +3,52 @@
 
 export const dynamic = 'force-dynamic'
 
-import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { usePrestadores } from '@/hooks/usePrestadores'
 import { useFiltrosParams } from '@/hooks/useFiltrosParams'
 import { useFiltrosPrestadores } from '@/hooks/useFiltrosPrestadores'
 import { useSession } from '@/hooks/useSession'
 import { useRestaurarScroll } from '@/hooks/useRestaurarScroll'
 import Header from '@/components/Header'
-import PrestadorCard from '@/components/cards/PrestadorCard'
 import { AdCard } from '@/components/ads/AdCard'
 import { FiltroSidebar } from '@/components/filtros/FiltroSidebar'
 import { FiltroBottomSheet } from '@/components/filtros/FiltroBottomSheet'
+import { CidadeDaBusca } from '@/components/busca/CidadeDaBusca'
+import { ConviteLocalizacao } from '@/components/busca/ConviteLocalizacao'
+import { ResultadosPaginados, RESULTADOS_POR_VEZ } from '@/components/busca/ResultadosPaginados'
 import { MapPin, AlertCircle } from 'lucide-react'
 import { getTituloBusca } from '@/lib/prestadorUtils'
+import { quantidadeVisivelSalva } from '@/lib/navegacao'
+import { useLocation } from '@/lib/contexts/LocationContext'
 import { ListaSkeleton } from '@/components/skeletons/ListaSkeletonPrestadores'
 import { supabase } from '@/lib/supabase/client'
-import {
-  listarAnunciosAtivosPorPraca,
-  verificarInventarioSegmento,
-  type AnuncioComAnunciante,
-} from '@/lib/services/adminAnuncios.service'
-import type { Prestador } from '@/types/prestador'
 import type { Anuncio } from '@/types/ads'
 
-// ─── Utilitários de anúncio ────────────────────────────────────────────────
-
-function shuffleArray<T>(array: T[]): T[] {
-  const newArray = [...array]
-  for (let i = newArray.length - 1; i > 0; i--) {
+function embaralhar<T>(array: T[]): T[] {
+  const novo = [...array]
+  for (let i = novo.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[newArray[i], newArray[j]] = [newArray[j], newArray[i]]
+    ;[novo[i], novo[j]] = [novo[j], novo[i]]
   }
-  return newArray
-}
-
-function criarSorteador<T>(itens: T[]) {
-  let ciclo: T[] = []
-  let ponteiro = 0
-  return function proximo(): T | null {
-    if (itens.length === 0) return null
-    if (ponteiro >= ciclo.length) {
-      ciclo = shuffleArray(itens)
-      ponteiro = 0
-    }
-    return ciclo[ponteiro++]
-  }
-}
-
-type ChavePraca = string // `${cidadeId}::${categoriaId}`
-
-function chavePracaDe(prestador: Prestador): ChavePraca | null {
-  const cidadeId    = prestador.cidade_id    ? String(prestador.cidade_id)    : null
-  const categoriaId = prestador.categoria_id ? String(prestador.categoria_id) : null
-  return cidadeId && categoriaId ? `${cidadeId}::${categoriaId}` : null
-}
-
-const PISO_TAXA_EXIBICAO = 0.65
-
-function calcularPosicoesComAnuncio(
-  totalPosicoesNaPraca: number,
-  ocupados: number,
-  vagasTotais: number
-): Set<number> {
-  if (ocupados <= 0 || vagasTotais <= 0 || totalPosicoesNaPraca === 0) return new Set()
-  const indices   = Array.from({ length: totalPosicoesNaPraca }, (_, i) => i)
-  const ocupacao  = Math.min(1, ocupados / vagasTotais)
-  const taxa      = PISO_TAXA_EXIBICAO + (1 - PISO_TAXA_EXIBICAO) * ocupacao
-  const quantidade = Math.min(totalPosicoesNaPraca, Math.max(1, Math.round(totalPosicoesNaPraca * taxa)))
-  return new Set(shuffleArray(indices).slice(0, quantidade))
-}
-
-// ─── AdCardEntreCards ──────────────────────────────────────────────────────
-
-function AdCardEntreCards({
-  prestadorAncora,
-  categoriaFallback,
-  mostrarAnuncio,
-  cachePracaRef,
-  sorteadoresRef,
-}: {
-  prestadorAncora:   Prestador
-  categoriaFallback: string
-  mostrarAnuncio:    boolean | undefined
-  cachePracaRef:     React.MutableRefObject<Map<string, AnuncioComAnunciante[]>>
-  sorteadoresRef:    React.MutableRefObject<Map<string, () => AnuncioComAnunciante | null>>
-}) {
-  const cidadeId    = prestadorAncora.cidade_id    ? String(prestadorAncora.cidade_id)    : null
-  const categoriaId = prestadorAncora.categoria_id ? String(prestadorAncora.categoria_id) : null
-  const chavePraca  = cidadeId && categoriaId ? `${cidadeId}::${categoriaId}` : null
-
-  const [anuncio, setAnuncio] = useState<AnuncioComAnunciante | null | undefined>(undefined)
-
-  useEffect(() => {
-    if (mostrarAnuncio === undefined) {
-      const timer = setTimeout(() => setAnuncio(undefined), 0)
-      return () => clearTimeout(timer)
-    }
-    if (!mostrarAnuncio || !chavePraca || !cidadeId || !categoriaId) {
-      const timer = setTimeout(() => setAnuncio(null), 0)
-      return () => clearTimeout(timer)
-    }
-
-    let cancelado = false
-    const resetTimer = setTimeout(() => setAnuncio(undefined), 0)
-
-    async function resolver() {
-      const cache = cachePracaRef.current
-      let anunciosDaPraca = cache.get(chavePraca!)
-      if (!anunciosDaPraca) {
-        anunciosDaPraca = await listarAnunciosAtivosPorPraca(cidadeId!, categoriaId!, 'entre_cards')
-        cache.set(chavePraca!, anunciosDaPraca)
-      }
-      if (cancelado) return
-
-      let sortear = sorteadoresRef.current.get(chavePraca!)
-      if (!sortear) {
-        sortear = criarSorteador(anunciosDaPraca)
-        sorteadoresRef.current.set(chavePraca!, sortear)
-      }
-      setAnuncio(sortear())
-    }
-
-    resolver().catch(() => { if (!cancelado) setAnuncio(null) })
-    return () => {
-      cancelado = true
-      clearTimeout(resetTimer)
-    }
-  }, [mostrarAnuncio, chavePraca, cidadeId, categoriaId, cachePracaRef, sorteadoresRef])
-
-  const anuncioParaExibir: Anuncio | null | undefined =
-    mostrarAnuncio === undefined ? undefined
-    : !mostrarAnuncio            ? null
-    : anuncio === undefined      ? undefined
-    : anuncio === null           ? null
-    : (anuncio as Anuncio)
-
-  return <AdCard page="prestadores" anuncio={anuncioParaExibir} categoria={categoriaFallback} />
+  return novo
 }
 
 // ─── ListaConteudo ─────────────────────────────────────────────────────────
 
+function SidebarCarregando() {
+  return (
+    <div className="space-y-3" aria-hidden="true">
+      {[0, 1, 2].map(i => (
+        <div key={i} className="h-12 animate-pulse rounded-2xl border border-slate-100 bg-white" />
+      ))}
+    </div>
+  )
+}
+
 function ListaConteudo() {
-  const { queryBusca, filtroHab, filtroCidade, filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria } =
-    useFiltrosParams()
+  const {
+    queryBusca, filtroHab, filtroCidade, filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria, ampliar,
+  } = useFiltrosParams()
 
   const {
     prestadoresBase,
@@ -157,15 +60,29 @@ function ListaConteudo() {
     categoriasDisponiveis,
     loading,
     erro,
+    cidadeNome,
+    origemCidade,
+    recarregar,
   } = usePrestadores()
 
-  const { totalAtivos, aplicar, limparFiltros } = useFiltrosPrestadores()
+  const { totalAtivos, aplicar, limparFiltros, verOutrasCidades, voltarParaMinhaCidade } = useFiltrosPrestadores()
+  const { cidadeAtual } = useLocation()
 
   // Voltar do perfil devolve o usuário ao ponto da lista onde estava.
   useRestaurarScroll(!loading)
 
   const session   = useSession()
   const temFiltro = totalAtivos > 0
+
+  // Muda sempre que a busca muda: a lista (ResultadosPaginados) recomeça nos 10 primeiros.
+  const assinaturaBusca = JSON.stringify([
+    queryBusca, filtroHab, filtroCidade, filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria,
+    ampliar, cidadeAtual?.id ?? null,
+  ])
+  // Ao voltar do perfil, reabre com a quantidade que estava aberta (só para a mesma busca).
+  const [aoEntrar] = useState(() => ({ assinatura: assinaturaBusca, quantidade: quantidadeVisivelSalva() }))
+  const quantidadeInicial =
+    aoEntrar.assinatura === assinaturaBusca && aoEntrar.quantidade ? aoEntrar.quantidade : RESULTADOS_POR_VEZ
 
   const [anuncioTopo, setAnuncioTopo] = useState<Anuncio | null | undefined>(undefined)
 
@@ -182,63 +99,17 @@ function ListaConteudo() {
         .or(`data_inicio.is.null,data_inicio.lte.${agora}`)
         .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`)
       if (cancelado) return
-      setAnuncioTopo(!error && data && data.length > 0 ? shuffleArray(data as Anuncio[])[0] : null)
+      setAnuncioTopo(!error && data && data.length > 0 ? embaralhar(data as Anuncio[])[0] : null)
     }
     carregarAnunciosTopo()
     return () => { cancelado = true }
   }, [])
 
-  const cachePracaRef   = useRef<Map<string, AnuncioComAnunciante[]>>(new Map())
-  const sorteadoresRef  = useRef<Map<string, () => AnuncioComAnunciante | null>>(new Map())
-
-  useEffect(() => {
-    cachePracaRef.current  = new Map()
-    sorteadoresRef.current = new Map()
-  }, [queryBusca, filtroHab, filtroCidade, filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria])
-
-  const posicoesPorPraca = useMemo(() => {
-    const grupos = new Map<ChavePraca, number[]>()
-    let contador = 0
-    prestadoresExibidos.forEach((p, index) => {
-      if ((index + 1) % 4 !== 0) return
-      const chave = chavePracaDe(p)
-      if (!chave) return
-      const lista = grupos.get(chave) ?? []
-      lista.push(contador++)
-      grupos.set(chave, lista)
-    })
-    return grupos
-  }, [prestadoresExibidos])
-
-  const [posicoesComAnuncioPorPraca, setPosicoesComAnuncioPorPraca] =
-    useState<Map<ChavePraca, Set<number>>>(new Map())
-
-  useEffect(() => {
-    if (posicoesPorPraca.size === 0) {
-      const timer = setTimeout(() => setPosicoesComAnuncioPorPraca(new Map()), 0)
-      return () => clearTimeout(timer)
-    }
-    let cancelado = false
-    async function calcular() {
-      const resultado = new Map<ChavePraca, Set<number>>()
-      await Promise.all(
-        Array.from(posicoesPorPraca.entries()).map(async ([chave, indices]) => {
-          const [cidadeId, categoriaId] = chave.split('::')
-          try {
-            const inventario = await verificarInventarioSegmento(cidadeId, categoriaId, 'entre_cards')
-            resultado.set(chave, calcularPosicoesComAnuncio(indices.length, inventario.ocupados, inventario.vagasTotais))
-          } catch {
-            resultado.set(chave, new Set())
-          }
-        })
-      )
-      if (!cancelado) setPosicoesComAnuncioPorPraca(resultado)
-    }
-    calcular()
-    return () => { cancelado = true }
-  }, [posicoesPorPraca])
-
-  const tituloBusca = getTituloBusca(queryBusca, filtroCidade)
+  const tituloBusca = getTituloBusca(queryBusca, cidadeNome, origemCidade === 'texto')
+  const restritoACidade = Boolean(cidadeNome) && origemCidade !== 'texto'
+  // Convite de localização: só quando não sabemos a cidade da pessoa e ela não escolheu nenhum recorte.
+  const convidarLocalizacao =
+    !cidadeAtual && !cidadeNome && !filtroEstado && !filtroRegiao && !filtroCidade
 
   const filtrosProps = {
     filtroEstado,
@@ -256,6 +127,9 @@ function ListaConteudo() {
     onLimpar: limparFiltros,
   }
 
+  // Na primeira carga ainda não há opções; depois, mantém as antigas enquanto recarrega (o menu não some).
+  const sidebarPronta = !loading || prestadoresBase.length > 0
+
   return (
     <>
       {/* Bottom sheet mobile — botão flutuante + drawer */}
@@ -263,12 +137,10 @@ function ListaConteudo() {
 
       <div className="max-w-6xl mx-auto px-5 md:px-6 pt-3 lg:grid lg:grid-cols-[260px_1fr] lg:gap-6">
 
-        {/* Sidebar desktop */}
-        {!loading && (
-          <aside className="hidden lg:block">
-            <FiltroSidebar {...filtrosProps} />
-          </aside>
-        )}
+        {/* Sidebar desktop: a coluna existe sempre, para a lista não "pular" de lugar ao carregar */}
+        <aside className="hidden lg:block">
+          {sidebarPronta ? <FiltroSidebar {...filtrosProps} /> : <SidebarCarregando />}
+        </aside>
 
         {/* Coluna principal */}
         <div className="flex min-w-0 flex-col gap-4">
@@ -276,17 +148,17 @@ function ListaConteudo() {
           {/* Título + contagem */}
           <div className="flex items-center justify-between border-l-4 border-blue-600 pl-4 py-1">
             <div>
-              <h1 className="text-[15px] md:text-[16px] font-bold text-slate-800 leading-none text-balance">
+              <h1 className="text-base md:text-lg font-bold text-slate-800 leading-tight text-balance">
                 {tituloBusca}
               </h1>
-              <p className="text-[12px] text-slate-400 mt-1.5 uppercase tracking-widest font-medium">
+              <p className="text-xs text-slate-500 mt-1.5 uppercase tracking-widest font-medium">
                 Resultados da busca
               </p>
             </div>
             {!loading && prestadoresExibidos.length > 0 && (
               <span
                 role="status"
-                className="text-[13px] font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 shrink-0"
+                className="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 shrink-0"
               >
                 {prestadoresExibidos.length}{' '}
                 {prestadoresExibidos.length === 1 ? 'encontrado' : 'encontrados'}
@@ -294,106 +166,107 @@ function ListaConteudo() {
             )}
           </div>
 
+          <CidadeDaBusca
+            cidadeNome={cidadeNome}
+            origem={origemCidade}
+            ampliar={ampliar}
+            cidadeSalvaNome={cidadeAtual?.nome ?? null}
+            onVerOutrasCidades={verOutrasCidades}
+            onVoltarParaMinhaCidade={voltarParaMinhaCidade}
+          />
+
+          {!loading && !erro && convidarLocalizacao && <ConviteLocalizacao />}
+
           {/* Erro */}
           {erro && (
-            <div className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-3xl px-6 py-4">
+            <div role="alert" className="flex flex-wrap items-center gap-3 bg-red-50 border border-red-100 rounded-3xl px-6 py-4">
               <AlertCircle size={18} className="text-red-400 shrink-0" />
-              <p className="text-[13px] font-medium text-red-600">
-                Não foi possível carregar os profissionais. Verifique sua conexão e recarregue a página.
+              <p className="flex-1 text-sm font-medium text-red-600">
+                Não foi possível carregar os profissionais. Verifique sua conexão e tente de novo.
               </p>
+              <button
+                type="button"
+                onClick={recarregar}
+                className="min-h-11 rounded-xl bg-white border border-red-200 px-5 text-sm font-bold text-red-600 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 active:scale-95"
+              >
+                Tentar de novo
+              </button>
             </div>
           )}
 
           {/* Skeleton */}
           {loading ? (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2" aria-busy="true" aria-label="Carregando profissionais">
               {[1, 2, 3, 4].map(i => (
                 <div
                   key={i}
-                  className="w-full h-32 bg-white rounded-[2rem] border border-slate-100 animate-pulse"
+                  className="w-full min-h-[190px] bg-white rounded-[2rem] border border-slate-100 animate-pulse"
                 />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-              {/* Anúncio de topo */}
-              {prestadoresExibidos.length > 0 && (
-                <div className="lg:col-span-2">
-                  <AdCard
-                    page="lista_topo"
-                    anuncio={anuncioTopo}
-                    categoria={queryBusca || filtroHab || ''}
-                  />
-                </div>
-              )}
+            prestadoresExibidos.length > 0 && (
+              <>
+                {/* Anúncio de topo */}
+                <AdCard
+                  page="lista_topo"
+                  anuncio={anuncioTopo}
+                  categoria={queryBusca || filtroHab || ''}
+                />
 
-              {/* Grid de cards */}
-              {(() => {
-                const contadorPorPraca = new Map<ChavePraca, number>()
-
-                return prestadoresExibidos.map((p: Prestador, index: number) => {
-                  const ehPosicaoDeAnuncio = (index + 1) % 4 === 0
-                  const chave = ehPosicaoDeAnuncio ? chavePracaDe(p) : null
-
-                  let mostrarAnuncio: boolean | undefined = false
-                  if (ehPosicaoDeAnuncio && chave) {
-                    const indiceNaPraca = contadorPorPraca.get(chave) ?? 0
-                    contadorPorPraca.set(chave, indiceNaPraca + 1)
-                    const posicoesDaPraca = posicoesComAnuncioPorPraca.get(chave)
-                    mostrarAnuncio =
-                      posicoesDaPraca === undefined ? undefined : posicoesDaPraca.has(indiceNaPraca)
-                  }
-
-                  return (
-                    <Fragment key={p.id}>
-                      <PrestadorCard prestador={p} session={session} />
-
-                      {ehPosicaoDeAnuncio && (
-                        <div className="lg:col-span-2">
-                          <AdCardEntreCards
-                            prestadorAncora={p}
-                            categoriaFallback={queryBusca || filtroHab || p.categoria || ''}
-                            mostrarAnuncio={mostrarAnuncio}
-                            cachePracaRef={cachePracaRef}
-                            sorteadoresRef={sorteadoresRef}
-                          />
-                        </div>
-                      )}
-                    </Fragment>
-                  )
-                })
-              })()}
-            </div>
+                <ResultadosPaginados
+                  key={assinaturaBusca}
+                  prestadores={prestadoresExibidos}
+                  quantidadeInicial={quantidadeInicial}
+                  session={session}
+                  contextoAnuncio={queryBusca || filtroHab}
+                />
+              </>
+            )
           )}
 
           {/* Empty state */}
           {!loading && !erro && prestadoresExibidos.length === 0 && (
             <div className="py-20 lg:py-28 flex flex-col items-center justify-center text-center min-h-[50vh] lg:min-h-[55vh]">
               <div className="w-20 h-20 lg:w-28 lg:h-28 bg-slate-50 rounded-3xl lg:rounded-[2rem] flex items-center justify-center border border-slate-100 shadow-inner mb-5 lg:mb-7">
-                <MapPin size={32} className="text-slate-200 lg:hidden" />
-                <MapPin size={44} className="text-slate-200 hidden lg:block" />
+                <MapPin size={32} className="text-slate-300 lg:hidden" />
+                <MapPin size={44} className="text-slate-300 hidden lg:block" />
               </div>
-              <div className="max-w-[240px] lg:max-w-sm">
-                <h2 className="text-base lg:text-xl font-bold text-slate-700 mb-1 lg:mb-2">
-                  Nenhum profissional encontrado
+              <div className="max-w-xs lg:max-w-sm">
+                <h2 className="text-lg lg:text-xl font-bold text-slate-700 mb-1 lg:mb-2">
+                  {restritoACidade ? `Nenhum profissional em ${cidadeNome}` : 'Nenhum profissional encontrado'}
                 </h2>
-                <p className="text-[13px] lg:text-[15px] text-slate-400 font-medium leading-relaxed">
-                  Tente remover os filtros ou buscar por uma categoria diferente.
+                <p className="text-sm lg:text-base text-slate-500 font-medium leading-relaxed">
+                  {restritoACidade
+                    ? 'Veja os profissionais de outras cidades ou tente buscar por outro serviço.'
+                    : 'Tente remover os filtros ou buscar por uma categoria diferente.'}
                 </p>
               </div>
-              {temFiltro && (
-                <button
-                  onClick={limparFiltros}
-                  className="mt-5 lg:mt-7 px-5 lg:px-6 py-2.5 lg:py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[12px] lg:text-[13px] font-bold uppercase tracking-wide hover:border-blue-400 hover:text-blue-600 transition-all active:scale-95 shadow-sm"
-                >
-                  Remover filtros
-                </button>
-              )}
+              <div className="mt-5 lg:mt-7 flex flex-wrap items-center justify-center gap-3">
+                {restritoACidade && (
+                  <button
+                    type="button"
+                    onClick={verOutrasCidades}
+                    className="min-h-11 px-6 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all active:scale-95 shadow-sm shadow-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  >
+                    Ver outras cidades
+                  </button>
+                )}
+                {temFiltro && (
+                  <button
+                    type="button"
+                    onClick={limparFiltros}
+                    className="min-h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-2xl text-sm font-bold hover:border-blue-400 hover:text-blue-600 transition-all active:scale-95 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  >
+                    Remover filtros
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
           {/* Espaço extra no mobile para não sobrepor o botão flutuante */}
-          <div className="h-4 lg:hidden" />
+          <div className="h-16 lg:hidden" />
         </div>
       </div>
     </>
