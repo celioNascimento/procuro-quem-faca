@@ -19,8 +19,8 @@ export default function PortfolioGrid({ projetos, projetoAbertoId, onAbrirProjet
 
   if (projetosComFoto.length === 0) {
     return (
-      <div className="bg-slate-50 border-2 border-dashed border-slate-100 rounded-[3rem] p-12 text-center">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 italic">
+      <div className="rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+        <p className="text-sm font-medium text-slate-500">
           Nenhum registro de atividade ainda
         </p>
       </div>
@@ -65,14 +65,14 @@ export default function PortfolioGrid({ projetos, projetoAbertoId, onAbrirProjet
               />
 
               {temIndicacao && (
-                <div className="absolute top-1.5 left-1.5 bg-blue-600 text-white text-[7px] font-black tracking-wide px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
+                <div className="absolute top-1.5 left-1.5 bg-blue-600 text-white text-[11px] font-bold tracking-wide px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
                   ✦ Indico
                 </div>
               )}
 
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2.5">
-                <p className="text-white font-black italic uppercase text-[8px] leading-tight flex items-center gap-1">
-                  <Camera size={8} /> Ver
+                <p className="text-white font-bold text-xs leading-tight flex items-center gap-1">
+                  <Camera size={12} aria-hidden="true" /> Ver
                 </p>
               </div>
             </div>
@@ -80,8 +80,8 @@ export default function PortfolioGrid({ projetos, projetoAbertoId, onAbrirProjet
             <div className="flex items-center gap-1 mt-1.5 px-0.5">
               {isConcluido ? (
                 <>
-                  <CheckCircle2 size={9} className="text-green-500 shrink-0" />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                  <CheckCircle2 size={12} className="text-green-500 shrink-0" />
+                  <span className="text-xs font-semibold text-slate-500 truncate">
                     Concluído
                   </span>
                 </>
@@ -91,14 +91,14 @@ export default function PortfolioGrid({ projetos, projetoAbertoId, onAbrirProjet
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
                   </span>
-                  <span className="text-[8px] font-bold text-blue-500 uppercase tracking-wider truncate">
+                  <span className="text-xs font-semibold text-blue-600 truncate">
                     Em andamento
                   </span>
                 </>
               )}
             </div>
 
-            <p className="text-[11px] font-semibold text-slate-500 truncate mt-0.5 px-0.5">
+            <p className="text-sm font-semibold text-slate-700 truncate mt-0.5 px-0.5">
               {projeto.titulo}
             </p>
           </div>

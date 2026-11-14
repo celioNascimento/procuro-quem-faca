@@ -49,7 +49,7 @@ export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio 
           <TabButton
             active={aba === 'portfolio'}
             onClick={() => setAba('portfolio')}
-            icon={<Images size={13} strokeWidth={2.5} />}
+            icon={<Images size={15} strokeWidth={2.5} />}
             label="Portfólio"
             count={projetosComFoto.length}
           />
@@ -57,7 +57,7 @@ export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio 
         <TabButton
           active={aba === 'avaliacoes'}
           onClick={() => setAba('avaliacoes')}
-          icon={<Star size={13} strokeWidth={2.5} />}
+          icon={<Star size={15} strokeWidth={2.5} />}
           label="Avaliações"
           count={avaliacoes.length}
         />
@@ -111,18 +111,18 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={[
-        'flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-wider transition-all duration-200',
+        'flex flex-1 items-center justify-center gap-2 min-h-11 rounded-xl px-4 py-2.5 text-sm font-bold transition-all duration-200',
         active
           ? 'bg-white text-slate-800 shadow-sm'
-          : 'text-slate-400 hover:text-slate-600',
+          : 'text-slate-500 hover:text-slate-700',
       ].join(' ')}
     >
       {icon}
       {label}
       {count > 0 && (
         <span className={[
-          'rounded-full px-1.5 py-0.5 text-[9px] font-black tabular-nums transition-colors',
-          active ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400',
+          'rounded-full px-2 py-0.5 text-xs font-bold tabular-nums transition-colors',
+          active ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600',
         ].join(' ')}>
           {count}
         </span>

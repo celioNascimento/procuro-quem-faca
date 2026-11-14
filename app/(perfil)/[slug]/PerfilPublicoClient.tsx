@@ -8,6 +8,7 @@ import Header from '@/components/Header'
 import PerfilSkeleton from '@/components/skeletons/PerfilSkeleton'
 import PerfilHero from '@/components/profile/PerfilHero'
 import PerfilConfianca from '@/components/profile/PerfilConfianca'
+import AvisoPerfilPublico from '@/components/profile/AvisoPerfilPublico'
 import PerfilSobre from '@/components/profile/PerfilSobre'
 import PerfilCTA from '@/components/profile/PerfilCTA'
 import PerfilTabs from '@/components/profile/PerfilTabs'
@@ -17,7 +18,6 @@ import { AdCard } from '@/components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
 import { useCompartilharPerfil } from '@/hooks/useCompartilharPerfil'
-import { BadgeCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
 import type { Anuncio } from '@/types/ads'
@@ -78,6 +78,13 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
       <Header href={urlRetorno} />
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 md:pt-26 lg:px-8 lg:pb-8 2xl:max-w-[96rem] 2xl:px-12">
+        {/* Perfil montado com dados públicos: avisa de onde vêm as informações e oferece assumir o perfil */}
+        {isPublico && (
+          <div className="mb-5 lg:mb-6">
+            <AvisoPerfilPublico prestadorId={prestador.id} nome={prestador.nome || ''} />
+          </div>
+        )}
+
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] xl:gap-14 2xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
           {/* Coluna do profissional sempre visível ao rolar (lg+): fixa abaixo do header de 112px e limitada
             à altura da tela; em telas muito baixas ela rola por dentro, sem barra visível. */}
@@ -124,25 +131,6 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
                   }}
                 />
               </div>
-
-              {isPublico && (
-                <Link
-                  href={`/reivindicar?id=${prestador.id}&nome=${encodeURIComponent(prestador.nome || '')}`}
-                  className="group order-4 flex items-center gap-3 rounded-[1.75rem] border border-indigo-100 bg-indigo-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-[...]"
-                >
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm transition-transform group-hover:scale-105">
-                    <BadgeCheck size={20} aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[11px] font-black uppercase tracking-wide text-indigo-900 transition-colors group-hover:text-white">
-                      Este é o seu perfil?
-                    </span>
-                    <span className="mt-0.5 block text-[10px] font-semibold leading-relaxed text-indigo-600/75 transition-colors group-hover:text-white/80">
-                      Reivindique para editar suas informações.
-                    </span>
-                  </span>
-                </Link>
-              )}
             </div>
           </aside>
 

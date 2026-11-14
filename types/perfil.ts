@@ -57,7 +57,11 @@ type CamposInternos = 'user_id' | 'cliques_whatsapp'
 
 export interface PrestadorPerfil extends Omit<Prestador, 'cidades' | 'categorias' | CamposInternos> {
   cidades?: { nome: string; estado_sigla: string } | null
-  categorias?: { nome: string } | null
+  categorias?: {
+    nome: string
+    /** Área da categoria; só o ícone interessa ao perfil. */
+    categorias_grupos?: { icone?: string | null } | { icone?: string | null }[] | null
+  } | null
   portfolio_projetos?: ProjetoPerfil[]
   sessao_fotos?: { titulo: string; fotos: string[] } | null
 }

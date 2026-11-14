@@ -93,7 +93,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
           .select(`
             ${COLUNAS_PRESTADOR_PUBLICO},
             cidades(nome, estado_sigla),
-            categorias(nome),
+            categorias(nome, categorias_grupos(icone)),
             portfolio_projetos(
               id, titulo, descricao, status, created_at, sem_fotos,
               portfolio_fotos(id, url_foto, ordem, legenda),
@@ -115,6 +115,11 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
         if (prestadorRaw.bloqueado === true) {
           throw new Error('PERFIL_BLOQUEADO')
         }
+
+        // Ícone da área (martelo, casa…) para o avatar de quem não tem foto.
+        const grupoRel = prestadorRaw.categorias?.categorias_grupos
+        const grupo = Array.isArray(grupoRel) ? grupoRel[0] : grupoRel
+        prestadorRaw.grupo_icone = grupo?.icone ?? null
 
         const { data: avaliacoesRaw, error: avalError } = await supabase
           .from('avaliacoes')

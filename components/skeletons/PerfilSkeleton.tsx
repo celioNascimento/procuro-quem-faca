@@ -1,94 +1,79 @@
 //components/skeletons/PerfilSkeleton.tsx
+//
+// Esqueleto do perfil público. Segue a página de verdade (PerfilPublicoClient): na esquerda o cartão do
+// profissional, as ações e o botão do WhatsApp; na direita a faixa de anúncio, "Sobre" e as abas.
+// Mesmas larguras de coluna, mesmos recuos do topo e mesmos raios, para nada pular quando o perfil chega.
+// Mudou o layout da página? Ajuste aqui também.
 
 import Header from '@/components/Header'
+import { Skeleton } from '@/components/skeletons/Skeleton'
 
 export default function PerfilSkeleton() {
   return (
-    <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800 overflow-hidden" aria-busy="true" aria-label="Carregando perfil público">
+    <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800" aria-busy="true" aria-label="Carregando perfil público">
       <Header href="/prestadores" />
 
-      <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 lg:px-8 md:pt-26 lg:pt-26">
-        {/* AdCard Skeleton - Espelhando o banner arredondado vermelho/laranja */}
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-center animate-pulse">
-          <div className="w-full h-[140px] md:h-[160px] rounded-[2.5rem] bg-slate-200/70" />
-        </div>
+      <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 md:pt-26 lg:px-8 lg:pb-8 2xl:max-w-[96rem] 2xl:px-12">
+        <div className="grid items-start gap-6 motion-safe:animate-pulse lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] xl:gap-14 2xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
 
-        <div className="mt-5 grid items-start gap-6 lg:mt-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] xl:gap-14">
-          
-          {/* Coluna Esquerda - Hero (Sticky) */}
-          <aside className="min-w-0 lg:sticky lg:top-26">
-            <div className="flex flex-col gap-4 animate-pulse">
-              
-              {/* Card Hero (Avatar à esquerda, info à direita) */}
-              <div className="w-full rounded-[2.5rem] border border-slate-50 bg-white p-5 sm:p-7 shadow-sm flex flex-col gap-5">
-                <div className="flex items-center gap-4">
-                  {/* Avatar box */}
-                  <div className="h-24 w-24 sm:h-28 sm:w-28 shrink-0 rounded-[1.5rem] bg-slate-200 border-4 border-white shadow-sm" />
-                  
-                  {/* Textos: Nome, Slug, Localização */}
-                  <div className="flex-1 flex flex-col gap-2.5">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="h-5 w-full rounded-md bg-slate-200" />
-                      <div className="h-5 w-2/3 rounded-md bg-slate-200" />
+          {/* Coluna do profissional */}
+          <aside className="min-w-0">
+            <div className="flex flex-col gap-4 lg:gap-5">
+              {/* Cartão: foto/ícone e nome lado a lado no celular, empilhados no desktop */}
+              <div className="flex flex-col gap-3">
+                <div className="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm">
+                  <div className="flex items-center gap-4 bg-slate-50 px-5 py-5 lg:flex-col lg:items-stretch lg:px-6">
+                    <Skeleton className="h-28 w-32 shrink-0 rounded-2xl md:h-36 md:w-44 lg:h-[clamp(6rem,19vh,13rem)] lg:w-full" />
+                    <div className="flex min-w-0 flex-1 flex-col gap-2 lg:items-center">
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-1/2 bg-slate-100" />
                     </div>
-                    <div className="h-3 w-full rounded-md bg-slate-100 mt-1" />
-                    <div className="h-3 w-2/3 rounded-md bg-slate-100" />
+                  </div>
+                  <div className="flex items-center border-t border-slate-100 px-5 py-3 lg:justify-center">
+                    <Skeleton className="h-4 w-24 bg-slate-100" />
                   </div>
                 </div>
-                
-                {/* Badge (Ex: Pedreiro) */}
-                <div className="h-9 w-28 rounded-full bg-slate-100" />
+
+                {/* Denunciar / Compartilhar */}
+                <div className="flex gap-2">
+                  <div className="h-11 flex-1 rounded-[1.5rem] border border-slate-100 bg-white shadow-sm" />
+                  <div className="h-11 flex-1 rounded-[1.5rem] border border-slate-100 bg-white shadow-sm" />
+                </div>
               </div>
 
-              {/* Botões de Ação (Denunciar / Compartilhar) */}
-              <div className="flex gap-3">
-                <div className="flex-1 h-[3.25rem] rounded-full border border-slate-100 bg-white shadow-sm" />
-                <div className="flex-1 h-[3.25rem] rounded-full border border-slate-100 bg-white shadow-sm" />
-              </div>
+              {/* Botão do WhatsApp */}
+              <Skeleton className="h-14 w-full rounded-[2rem] bg-blue-100/60" />
 
+              {/* Confiança */}
+              <div className="hidden flex-col gap-3 rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm sm:flex">
+                <Skeleton className="h-5 w-2/3" />
+                <Skeleton className="h-3 w-1/2 bg-slate-100" />
+                <Skeleton className="h-3 w-3/5 bg-slate-100" />
+              </div>
             </div>
           </aside>
 
-          {/* Coluna Direita - Conteúdo */}
+          {/* Coluna de conteúdo */}
           <div className="flex min-w-0 flex-col gap-7 sm:gap-8 lg:gap-10">
-            
-            {/* Sobre o Profissional + Botão WhatsApp */}
-            <div className="w-full rounded-[2.5rem] border border-slate-50 bg-white p-6 sm:p-8 shadow-sm flex justify-between items-end gap-4 animate-pulse">
-              <div className="flex-1 flex flex-col gap-3">
-                <div className="h-3 w-32 rounded-md bg-blue-100/50 mb-1" />
-                <div className="h-4 w-full rounded-md bg-slate-100" />
-                <div className="h-4 w-4/5 rounded-md bg-slate-100" />
-              </div>
-              {/* Círculo do botão WhatsApp */}
-              <div className="h-14 w-14 shrink-0 rounded-full bg-blue-100/50" />
+            {/* Faixa de anúncio */}
+            <div className="h-14 w-full rounded-2xl border border-zinc-100 bg-zinc-50" />
+
+            {/* Sobre */}
+            <div className="flex flex-col gap-3 rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+              <Skeleton className="h-5 w-44" />
+              <Skeleton className="h-4 w-full bg-slate-100" />
+              <Skeleton className="h-4 w-4/5 bg-slate-100" />
             </div>
 
-            {/* Portfolio Grid Skeleton */}
-            <section className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                 <div className="h-3 w-24 rounded-md bg-blue-100/50 animate-pulse" />
-                 <div className="h-6 w-56 rounded-lg bg-slate-200 animate-pulse" />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Abas + conteúdo */}
+            <div className="flex flex-col gap-5">
+              <div className="h-14 rounded-2xl bg-slate-100" />
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:gap-3 xl:grid-cols-4">
                 {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="aspect-[4/3] w-full rounded-[2rem] bg-white border border-slate-50 shadow-sm animate-pulse" />
+                  <div key={i} className="aspect-square rounded-2xl border border-slate-100 bg-white shadow-sm" />
                 ))}
               </div>
-            </section>
-
-            {/* Avaliações Skeleton */}
-            <section className="flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                 <div className="h-8 w-8 rounded-full bg-slate-200 animate-pulse" />
-                 <div className="h-6 w-40 rounded-lg bg-slate-200 animate-pulse" />
-              </div>
-              <div className="flex flex-col gap-4">
-                {[1, 2].map(i => (
-                  <div key={i} className="w-full h-40 rounded-[2.5rem] bg-white border border-slate-50 shadow-sm animate-pulse" />
-                ))}
-              </div>
-            </section>
-            
+            </div>
           </div>
         </div>
       </div>

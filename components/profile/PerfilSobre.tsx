@@ -1,22 +1,26 @@
-// components/profile/PerfilSobre.tsx 
+// components/profile/PerfilSobre.tsx
 
 import type { PrestadorPerfil } from '@/types/perfil'
+import { bioParaExibir } from '@/lib/bioPerfil'
 
 interface Props {
   prestador: PrestadorPerfil
 }
 
 export default function PerfilSobre({ prestador }: Props) {
+  // Bio padrão do cadastro automático não diz nada sobre a pessoa: vira uma frase com a categoria e a cidade.
+  const bio = bioParaExibir({
+    bio: prestador.bio,
+    categoria: prestador.categorias?.nome || prestador.categoria,
+    cidade: prestador.cidades?.nome,
+  })
+
+  if (!bio) return null
+
   return (
-    <div className="space-y-4">
-      <section className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
-        <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-3">
-          Sobre o Profissional
-        </h2>
-        <p className="text-slate-600 text-[14px] leading-relaxed whitespace-pre-wrap">
-          {prestador.bio || 'Este profissional ainda não escreveu sua apresentação.'}
-        </p>
-      </section>
-    </div>
+    <section className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+      <h2 className="mb-2 text-base font-bold text-slate-900">Sobre o profissional</h2>
+      <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-600">{bio.texto}</p>
+    </section>
   )
 }

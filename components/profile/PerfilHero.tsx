@@ -4,6 +4,8 @@
 import Link from 'next/link'
 import { MapPin, ShieldCheck, Flag, Share2, CheckCircle, Wrench } from 'lucide-react'
 import type { PrestadorPerfil } from '@/types/perfil'
+import { visualDaArea } from '@/lib/areaVisual'
+import { corDasIniciais, getIniciais } from '@/lib/prestadorUtils'
 
 interface Props {
   prestador: PrestadorPerfil
@@ -16,8 +18,9 @@ export default function PerfilHero({ prestador, compartilhando, onCompartilhar }
     .filter(v => v?.trim())
     .join(', ')
 
-  const slug             = prestador.slug
   const categoria        = prestador.categorias?.nome || prestador.categoria
+  // Sem foto (a maioria dos perfis): o ícone da área, como na lista; sem ícone conhecido, as iniciais.
+  const visualArea       = visualDaArea(prestador.grupo_icone)
 
   return (
     <section className="flex flex-col gap-3">
@@ -38,10 +41,14 @@ export default function PerfilHero({ prestador, compartilhando, onCompartilhar }
                   alt={`Logo de ${prestador.nome}`}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-slate-100">
-                  <span className="text-slate-300 font-black text-[8px] uppercase tracking-widest text-center px-1">
-                    Sem Logo
-                  </span>
+                <div className={`flex h-full w-full items-center justify-center ${visualArea ? visualArea.cores : corDasIniciais(prestador.nome || '')}`}>
+                  {visualArea ? (
+                    <visualArea.Icone aria-hidden="true" strokeWidth={1.5} className="size-12 lg:size-16" />
+                  ) : (
+                    <span aria-hidden="true" className="text-3xl font-bold tracking-tight lg:text-4xl">
+                      {getIniciais(prestador.nome || '')}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -54,17 +61,12 @@ export default function PerfilHero({ prestador, compartilhando, onCompartilhar }
 
           {/* Nome + slug + localização no banner */}
           <div className="flex-1 min-w-0 lg:text-center">
-            <h1 className="font-black text-[15px] text-slate-800 leading-tight tracking-tight uppercase italic break-words lg:text-2xl">
+            <h1 className="break-words text-xl font-bold leading-tight tracking-tight text-slate-900 lg:text-2xl">
               {prestador.nome}
             </h1>
-            {slug && (
-              <p className="text-[10px] text-blue-400 font-bold truncate mt-0.5 tracking-wide lg:text-xs">
-                @{slug}
-              </p>
-            )}
             {localizacao && (
-              <p className="flex items-center gap-1 text-[10px] font-medium text-slate-400 mt-1.5 lg:justify-center lg:text-sm">
-                <MapPin size={11} className="shrink-0" />
+              <p className="mt-1.5 flex items-center gap-1.5 text-sm font-medium text-slate-600 lg:justify-center">
+                <MapPin size={14} className="shrink-0 text-slate-400" aria-hidden="true" />
                 {localizacao}
               </p>
             )}
@@ -73,7 +75,7 @@ export default function PerfilHero({ prestador, compartilhando, onCompartilhar }
         </div>
 
         {categoria && (
-          <div className="flex items-center gap-4 px-5 py-3 border-t border-slate-100 text-[12px] lg:justify-center lg:text-sm">
+          <div className="flex items-center gap-4 border-t border-slate-100 px-5 py-3 text-sm lg:justify-center">
             <span className="inline-flex items-center gap-1.5 text-blue-600 font-bold uppercase tracking-wide min-w-0">
               <Wrench size={14} className="shrink-0" />
               <span className="truncate">{categoria}</span>
@@ -86,19 +88,19 @@ export default function PerfilHero({ prestador, compartilhando, onCompartilhar }
       <div className="flex items-center gap-2">
         <Link
           href={`/denunciar/${prestador.id}`}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white border border-slate-100 rounded-[1.5rem] text-[10px] font-bold text-slate-400 shadow-sm hover:text-red-500 hover:border-red-100 transition-all active:scale-95"
+          className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[1.5rem] border border-slate-100 bg-white px-3 text-sm font-semibold text-slate-600 shadow-sm transition-all hover:border-red-100 hover:text-red-600 active:scale-95"
         >
-          <Flag size={12} />
+          <Flag size={14} aria-hidden="true" />
           Denunciar
         </Link>
 
         <button
           onClick={onCompartilhar}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white border border-slate-100 rounded-[1.5rem] text-[10px] font-bold text-slate-400 shadow-sm hover:text-blue-600 hover:border-blue-100 transition-all active:scale-95"
+          className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[1.5rem] border border-slate-100 bg-white px-3 text-sm font-semibold text-slate-600 shadow-sm transition-all hover:border-blue-100 hover:text-blue-600 active:scale-95"
         >
           {compartilhando
-            ? <><CheckCircle size={12} className="text-green-500" /> Copiado!</>
-            : <><Share2 size={12} /> Compartilhar</>
+            ? <><CheckCircle size={14} className="text-green-500" aria-hidden="true" /> Copiado!</>
+            : <><Share2 size={14} aria-hidden="true" /> Compartilhar</>
           }
         </button>
       </div>
