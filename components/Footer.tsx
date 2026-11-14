@@ -7,8 +7,8 @@ export default function Footer() {
   const emailContato = 'procuroquemfaca@gmail.com'
 
   return (
-    <footer className="w-full bg-white border-t border-slate-100 py-2 mt-auto">
-      <div className="max-w-5xl mx-auto px-6 flex flex-col items-center">
+    <footer className="w-full bg-white border-t border-slate-100 pt-1 mt-auto">
+      <div className="max-w-5xl mx-auto px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col items-center">
         
         {/* Navegação Principal */}
         <nav className="flex flex-wrap justify-center gap-x-5">
@@ -48,7 +48,7 @@ export default function Footer() {
         </nav>
 
         {/* Créditos e Copyright */}
-        <div className="text-center pb-1">
+        <div className="mt-1 text-center">
           <p className="text-slate-500 text-xs font-medium">
             © {anoAtual} <span className="text-slate-900 font-black tracking-tight uppercase">Procuro Quem Faça</span>
           </p>
