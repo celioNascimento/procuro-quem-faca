@@ -1,8 +1,7 @@
 // components/dashboard/CliquesWhatsappCard.tsx
 //
-// Card do dashboard do prestador: quantas pessoas clicaram em "Solicitar
-// Orçamento" (botão de WhatsApp) no perfil público. Não mostra "0" quando a contagem ainda não
-// está ativa para o perfil (teste por amostra).
+// Card do dashboard do prestador: quantas pessoas tocaram no botão de WhatsApp do perfil
+// público. Não mostra "0" quando a contagem ainda não está ativa para o perfil (teste por amostra).
 
 'use client'
 
@@ -19,7 +18,7 @@ export function CliquesWhatsappCard() {
     >
       <div className="flex items-center gap-2">
         <MessageCircle className="size-4 text-emerald-600" aria-hidden="true" />
-        <h2 id="cliques-whatsapp-titulo" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+        <h2 id="cliques-whatsapp-titulo" className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
           Contatos pelo WhatsApp
         </h2>
       </div>
@@ -52,7 +51,7 @@ export function CliquesWhatsappCard() {
               portfólio para receber mais contatos de clientes.
             </p>
           )}
-          <p className="mt-3 text-[11px] leading-4 text-slate-400">
+          <p className="mt-3 text-xs leading-4 text-slate-400">
             Cada pessoa conta uma vez a cada 24 horas no mesmo perfil, mesmo que clique várias
             vezes. Seus próprios cliques não entram.
           </p>
@@ -66,7 +65,7 @@ function Numero({ valor, rotulo }: { valor: number; rotulo: string }) {
   return (
     <div className="rounded-xl bg-slate-50 px-3 py-3">
       <p className="text-2xl font-black leading-none text-slate-900 tabular-nums">{valor}</p>
-      <p className="mt-1.5 text-[9px] font-bold uppercase tracking-wide text-slate-400">{rotulo}</p>
+      <p className="mt-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">{rotulo}</p>
     </div>
   )
 }

@@ -53,6 +53,8 @@ export type Projeto = {
 export function usePortfolioDashboard() {
   const [projetos, setProjetos]               = useState<Projeto[]>([])
   const [loading, setLoading]                 = useState(true)
+  // Falha ao carregar não pode parecer "nenhum trabalho": a pessoa acharia que perdeu o que registrou.
+  const [erro, setErro]                       = useState(false)
   const [meuPrestadorId, setMeuPrestadorId]   = useState<number | null>(null)
   const [perfilPrestador, setPerfilPrestador] = useState<Prestador | null>(null)
   const [showWizard, setShowWizard]           = useState(false)
@@ -60,6 +62,7 @@ export function usePortfolioDashboard() {
 
   const carregarDados = useCallback(async () => {
     try {
+      setErro(false)
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
@@ -75,6 +78,7 @@ export function usePortfolioDashboard() {
       setProjetos(meusProjetos.map(p => ({ ...p, notifCount: 0 })))
     } catch (err) {
       console.error('Erro dashboard:', err)
+      setErro(true)
     } finally {
       setLoading(false)
     }
@@ -129,6 +133,8 @@ export function usePortfolioDashboard() {
   return {
     projetos,
     loading,
+    erro,
+    recarregar: carregarDados,
     meuPrestadorId,
     perfilPrestador,
     showWizard,

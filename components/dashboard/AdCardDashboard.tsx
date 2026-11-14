@@ -72,7 +72,7 @@ export function AdCardDashboard() {
         className="w-full object-cover object-center h-[120px] md:h-[160px] lg:h-[200px]"
       />
       <div className="pointer-events-none absolute right-3 top-3 z-10">
-        <span className="rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
+        <span className="rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
           Publicidade
         </span>
       </div>

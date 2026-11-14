@@ -14,7 +14,7 @@ import { PrimeirosPassos } from './PrimeirosPassos'
 
 export default function PortfolioDashboardTab() {
   const {
-    projetos, loading, meuPrestadorId, perfilPrestador,
+    projetos, loading, erro, recarregar, meuPrestadorId, perfilPrestador,
     showWizard, projetoParaEdicao, totalConcluidos, totalAtivos,
     abrirEdicao, abrirNovo, fecharWizard,
   } = usePortfolioDashboard()
@@ -100,13 +100,26 @@ export default function PortfolioDashboardTab() {
                 />
               </div>
             )}
-            <DashboardHeader
+            {erro && (
+              <div role="alert" className="flex flex-col gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-900 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-semibold leading-relaxed">Não conseguimos carregar seus trabalhos agora. Eles continuam salvos: confira sua internet e tente de novo.</p>
+                <button
+                  type="button"
+                  onClick={() => void recarregar()}
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-red-600 px-4 text-sm font-bold text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200"
+                >
+                  Tentar de novo
+                </button>
+              </div>
+            )}
+            {/* Sem trabalhos: o cartão tracejado abaixo já convida a adicionar; o bloco azul só repetiria o mesmo botão. */}
+            {projetos.length > 0 && <DashboardHeader
               totalProjetos={projetos.length}
               totalConcluidos={totalConcluidos}
               totalAtivos={totalAtivos}
               onNovoProjeto={abrirNovo}
-            />
-            {projetos.length === 0 && <EstadoVazio onNovoProjeto={abrirNovo} />}
+            />}
+            {projetos.length === 0 && !erro && <EstadoVazio onNovoProjeto={abrirNovo} />}
             {projetos.length > 0 && (
               <div className="grid gap-4 xl:grid-cols-2">
                 {projetos.map(proj => (

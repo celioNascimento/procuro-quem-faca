@@ -33,6 +33,24 @@ function PerfilPageContent() {
   const { cadastroCompleto, validando, slug, prestadorId, bloqueado, motivoBloqueio } = usePerfilStatus()
   const linkSuporte = `https://wa.me/${NUMERO_WHATSAPP_PQF}?text=${encodeURIComponent(`Olá, equipe Procuro Quem Faça. Meu perfil ${slug ? `(${slug}) ` : ''}foi bloqueado e gostaria de solicitar esclarecimentos.\n\n${mensagemSuporte.trim()}`)}`
 
+  // Links internos para o próprio /dashboard (ex.: banner "Adicionar trabalho" → ?novo=1) só mudam a URL:
+  // o estado da aba não muda sozinho. Sem isso o clique parecia não fazer nada e o "novo trabalho"
+  // abria de surpresa mais tarde, quando a pessoa entrasse em Meus Trabalhos.
+  const pedidoNovoTrabalho = searchParams.get('novo') === '1'
+  useEffect(() => {
+    if (validando || !cadastroCompleto) return
+    if (pedidoNovoTrabalho) {
+      const timer = setTimeout(() => setAbaAtiva('portfolio'), 0)
+      return () => clearTimeout(timer)
+    }
+  }, [pedidoNovoTrabalho, validando, cadastroCompleto])
+
+  useEffect(() => {
+    if (!abaParam || validando || !cadastroCompleto) return
+    const timer = setTimeout(() => setAbaAtiva(abaInicial), 0)
+    return () => clearTimeout(timer)
+  }, [abaParam, abaInicial, validando, cadastroCompleto])
+
   useEffect(() => {
     if (!validando && !cadastroCompleto) {
       const timer = setTimeout(() => setAbaAtiva('perfil'), 0)
@@ -193,7 +211,7 @@ function PerfilPageContent() {
         {validando ? (
           <div className="flex min-h-64 flex-col items-center justify-center gap-4" role="status">
             <Loader2 className="size-8 animate-spin text-blue-600" aria-hidden="true" />
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Verificando seu perfil</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Verificando seu perfil</p>
           </div>
         ) : (
           abaAtiva === 'perfil' ? <EditarPerfilTab /> : abaAtiva === 'desempenho' ? <DesempenhoDashboardTab prestadorId={prestadorId} subAbaInicial={subAbaInicial} /> : abaAtiva === 'divulgacao' ? <CentralDivulgacaoTab prestadorId={prestadorId} onIrParaTrabalhos={() => abrirAba('portfolio')} /> : <PortfolioDashboardTab />

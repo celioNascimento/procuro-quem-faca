@@ -211,7 +211,7 @@ export function useCadastroPrestador(reivindicarId: string | null, tokenReivindi
   const handleUploadFotoProcess = async (file: File) => {
     setUploading(true)
     setStatus('Subindo foto...')
-    const res = await fazerUploadFoto(file, userLogado?.id || 'temp', form.formData.foto_perfil || undefined)
+    const res = await fazerUploadFoto(file, userLogado?.id || 'temp')
 
     if (res.ok) {
       form.set({ foto_perfil: res.url })
