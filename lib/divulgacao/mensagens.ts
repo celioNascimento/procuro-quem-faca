@@ -35,7 +35,7 @@ export function gerarMensagens(dados: DadosDivulgacao, link: string): MensagemPr
     },
     {
       id: 'orcamento',
-      titulo: 'Responder pedido de orçamento',
+      titulo: 'Responder quem te chamou',
       quando: 'Logo depois do primeiro contato, antes de combinar valores.',
       texto: `Olá! Obrigado pelo contato. Antes de combinarmos, vale conhecer meu trabalho: fotos de serviços reais e indicações de clientes${local}.\n${link}\n\nMe conta o que você precisa que eu já te passo uma ideia de prazo e valor.`,
     },

@@ -1,7 +1,7 @@
 // components/dashboard/CliquesWhatsappCard.tsx
 //
 // Card do dashboard do prestador: quantas pessoas clicaram em "Solicitar
-// Orçamento" no perfil público. Não mostra "0" quando a contagem ainda não
+// Orçamento" (botão de WhatsApp) no perfil público. Não mostra "0" quando a contagem ainda não
 // está ativa para o perfil (teste por amostra).
 
 'use client'
@@ -20,7 +20,7 @@ export function CliquesWhatsappCard() {
       <div className="flex items-center gap-2">
         <MessageCircle className="size-4 text-emerald-600" aria-hidden="true" />
         <h2 id="cliques-whatsapp-titulo" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
-          Pedidos de orçamento pelo WhatsApp
+          Contatos pelo WhatsApp
         </h2>
       </div>
 
@@ -48,7 +48,7 @@ export function CliquesWhatsappCard() {
           </div>
           {dados.total === 0 && (
             <p className="mt-3 text-xs leading-5 text-slate-500">
-              Ainda não há pedidos de orçamento. Complete seu perfil e adicione trabalhos ao
+              Ainda ninguém tocou no seu WhatsApp. Complete seu perfil e adicione trabalhos ao
               portfólio para receber mais contatos de clientes.
             </p>
           )}

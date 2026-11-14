@@ -24,6 +24,10 @@ Existem **contextos distintos** de avatar, cada um com sua própria fonte de dad
 
 ---
 
+## Orçamento (ainda não existe para o usuário)
+
+A plataforma **não trabalha com orçamento** por enquanto (a tabela `orcamentos` existe no banco, sem uso no frontend). Por isso, nenhum texto voltado ao prestador ou ao cliente deve prometer ou contar "orçamentos". O que medimos é **contato pelo WhatsApp** (clique no botão do perfil) e usamos a palavra **"Contatos"**. O nome interno `CLIQUE_WHATSAPP_ORCAMENTO` (log) e o rótulo do botão público "Solicitar Orçamento" ficam como estão até haver decisão de produto; quando orçamento passar a existir, rever os dois juntos.
+
 ## Contato via WhatsApp
 
 **Util centralizado:** `lib/utils/whatsapp.ts`

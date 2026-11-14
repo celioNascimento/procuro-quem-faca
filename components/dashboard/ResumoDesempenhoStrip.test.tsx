@@ -27,13 +27,13 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('ResumoDesempenhoStrip', () => {
-  it('mostra visitas e orçamentos dos últimos 7 dias', () => {
+  it('mostra visitas e contatos dos últimos 7 dias', () => {
     render(<ResumoDesempenhoStrip onAbrir={() => {}} />)
 
     const botao = screen.getByRole('button', { name: /ver desempenho completo/i })
     expect(botao.textContent).toContain('12')
     expect(botao.textContent).toContain('3')
-    expect(botao.getAttribute('aria-label')).toMatch(/12 visitas e 3 pedidos de orçamento/i)
+    expect(botao.getAttribute('aria-label')).toMatch(/12 visitas e 3 contatos pelo WhatsApp/i)
   })
 
   it('carregando: mostra traços no lugar dos números', () => {
@@ -44,7 +44,7 @@ describe('ResumoDesempenhoStrip', () => {
     expect(screen.getByRole('button', { name: /ver desempenho completo/i }).textContent).toContain('—')
   })
 
-  it('contagem de cliques ainda não ativa: não inventa zero para os orçamentos', () => {
+  it('contagem de cliques ainda não ativa: não inventa zero para os contatos', () => {
     estadoCliques({ dados: { rastreando: false } })
     render(<ResumoDesempenhoStrip onAbrir={() => {}} />)
 
@@ -53,7 +53,7 @@ describe('ResumoDesempenhoStrip', () => {
     expect(botao.textContent).toContain('—')
   })
 
-  it('perfil novo, sem visita nem orçamento: a faixa não aparece zerada', () => {
+  it('perfil novo, sem visita nem contato: a faixa não aparece zerada', () => {
     estadoVisitas({ dados: { ...visitasBase, visitas7d: 0 } })
     estadoCliques({ dados: { rastreando: true, ultimos7: 0, ultimos30: 0, total: 0 } })
     const { container } = render(<ResumoDesempenhoStrip onAbrir={() => {}} />)
@@ -61,7 +61,7 @@ describe('ResumoDesempenhoStrip', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('com ao menos uma visita, a faixa aparece mesmo sem orçamentos', () => {
+  it('com ao menos uma visita, a faixa aparece mesmo sem contatos', () => {
     estadoVisitas({ dados: { ...visitasBase, visitas7d: 1 } })
     estadoCliques({ dados: { rastreando: true, ultimos7: 0, ultimos30: 0, total: 0 } })
     render(<ResumoDesempenhoStrip onAbrir={() => {}} />)
