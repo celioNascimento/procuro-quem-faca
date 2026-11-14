@@ -26,20 +26,33 @@ export default function Home() {
   // A cidade salva vem de um cookie e a dispensa do convite, do navegador: nenhuma existe no servidor.
   // Só mostramos o convite depois de carregar no navegador, para não dar diferença na hidratação.
   const noNavegador = useSyncExternalStore(() => () => {}, () => true, () => false)
-  const { session, role, roleLoading } = useAuth()
+  const { session, role, prestadorStatus, roleLoading } = useAuth()
 
   let hrefCTA = '/login'
   let tituloCTA = 'É prestador de serviços?'
   let subtituloCTA = 'Cadastre-se e apareça para quem precisa de você'
   let acaoLogCTA = 'CLIQUE_CTA_PRESTADOR'
 
-  if (session && role !== 'prestador') {
-    hrefCTA = '/cadastro'
-    tituloCTA = 'Quer oferecer serviços?'
-    subtituloCTA = 'Crie seu perfil profissional agora mesmo'
-    acaoLogCTA = 'CLIQUE_CTA_VIRAR_PRESTADOR'
+  if (session) {
+    if (role === 'prestador') {
+      if (prestadorStatus === 'pendente') {
+        hrefCTA = '/cadastro'
+        tituloCTA = 'Cadastro em andamento'
+        subtituloCTA = 'Finalize seu perfil e apareça nas buscas'
+        acaoLogCTA = 'CLIQUE_CTA_CONTINUAR_CADASTRO'
+      } else {
+        hrefCTA = '/dashboard'
+        tituloCTA = 'Área do Profissional'
+        subtituloCTA = 'Acesse seu painel e gerencie seus serviços'
+        acaoLogCTA = 'CLIQUE_CTA_ACESSAR_PAINEL'
+      }
+    } else {
+      hrefCTA = '/cadastro'
+      tituloCTA = 'Quer oferecer serviços?'
+      subtituloCTA = 'Crie seu perfil profissional agora mesmo'
+      acaoLogCTA = 'CLIQUE_CTA_VIRAR_PRESTADOR'
+    }
   }
-  const souPrestador = !!session && role === 'prestador'
 
   const mostrarSkeletonCTA = !!session && roleLoading
   const temBuscaReal = busca.trim().length > 0
@@ -104,7 +117,7 @@ export default function Home() {
           <div className="min-h-[72px] flex flex-col items-center justify-start gap-3 w-full">
             {carregado && sugestoes.length > 0 && (
               <div className="flex flex-col items-center gap-3 w-full animate-in fade-in duration-300">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-[0.25em] italic">
+                <span className="text-xs font-semibold md:font-bold text-slate-500 uppercase tracking-[0.25em] italic">
                   {temBuscaReal ? 'Encontramos para você' : 'Sugestões em destaque'}
                 </span>
                 <div className="flex flex-wrap justify-center gap-1.5 md:gap-2">
@@ -112,7 +125,7 @@ export default function Home() {
                     <button
                       key={item}
                       onClick={() => dispararBusca(null, item)}
-                      className="min-h-9 bg-white text-slate-600 px-4 md:px-5 rounded-full text-xs font-bold border border-slate-100 hover:border-blue-400 hover:text-blue-700 transition-all active:scale-95 shadow-sm uppercase tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                      className="min-h-8 md:min-h-9 bg-white text-slate-600 px-4 md:px-5 rounded-full text-xs font-semibold md:font-bold border border-slate-100 hover:border-blue-400 hover:text-blue-700 transition-all active:scale-95 shadow-sm uppercase tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                     >
                       {item}
                     </button>
@@ -130,42 +143,40 @@ export default function Home() {
         </div>
       </div>
 
-      {/* CTA para prestadores. Quem já é prestador tem "Meu Painel"/"Completar Cadastro" no topo,
-          que leva ao mesmo lugar; repetir o cartão aqui era redundante. */}
-      {!souPrestador && (
-        <div className="relative z-10 flex-1 flex items-end justify-center pt-6 pb-12 px-6">
-          <div className="w-full max-w-3xl">
-            {mostrarSkeletonCTA ? (
-              <CTAPrestadorSkeleton />
-            ) : (
-              <Link
-                href={hrefCTA}
-                onClick={() => insertLog({ acao: acaoLogCTA, entidadeTipo: 'home' })}
-                className="group flex min-h-16 items-center justify-between gap-3 w-full px-5 py-4 md:px-8 md:py-5 rounded-[2rem] border border-slate-200/80 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:border-blue-600 transition-all duration-300">
-                    <Briefcase size={16} aria-hidden="true" className="text-blue-500 group-hover:text-white transition-colors duration-300" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-0.5">
-                      {tituloCTA}
-                    </p>
-                    <p className="text-xs md:text-sm font-bold text-slate-700">
-                      {subtituloCTA}
-                    </p>
-                  </div>
+      {/* CTA para prestadores. Aparece para todos, inclusive quem já é prestador (leva ao painel): ele ancora o
+          fim da tela; sem ele sobrava um vazio grande embaixo das sugestões. */}
+      <div className="relative z-10 flex-1 flex items-end justify-center pt-6 pb-12 px-6">
+        <div className="w-full max-w-3xl">
+          {mostrarSkeletonCTA ? (
+            <CTAPrestadorSkeleton />
+          ) : (
+            <Link
+              href={hrefCTA}
+              onClick={() => insertLog({ acao: acaoLogCTA, entidadeTipo: 'home' })}
+              className="group flex min-h-16 items-center justify-between gap-3 w-full px-5 py-4 md:px-8 md:py-5 rounded-[2rem] border border-slate-200/80 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:border-blue-600 transition-all duration-300">
+                  <Briefcase size={16} aria-hidden="true" className="text-blue-500 group-hover:text-white transition-colors duration-300" />
                 </div>
-                <ArrowRight
-                  size={18}
-                  aria-hidden="true"
-                  className="text-slate-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300 shrink-0"
-                />
-              </Link>
-            )}
-          </div>
+                <div className="text-left">
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-0.5">
+                    {tituloCTA}
+                  </p>
+                  <p className="text-xs md:text-sm font-bold text-slate-700">
+                    {subtituloCTA}
+                  </p>
+                </div>
+              </div>
+              <ArrowRight
+                size={18}
+                aria-hidden="true"
+                className="text-slate-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300 shrink-0"
+              />
+            </Link>
+          )}
         </div>
-      )}
+      </div>
 
     </main>
   )
