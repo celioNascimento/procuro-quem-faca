@@ -30,6 +30,8 @@ export interface Prestador {
   cidade_nome?: string | null
   regiao_nome?: string | null
   grupo_nome?: string | null
+  /** Nome do ícone da área (ex.: "hammer"); vem de categorias_grupos.icone. */
+  grupo_icone?: string | null
   media_nota?: number | null
   total_avals?: number | null
   garantia_dias: number

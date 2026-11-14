@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { MapPin, ChevronRight } from 'lucide-react'
 import type { Prestador } from '@/types/prestador'
 import { corDasIniciais, getIniciais, getLocalizacao, getPerfilHref } from '@/lib/prestadorUtils'
+import { visualDaArea } from '@/lib/areaVisual'
 
 type Props = {
   prestador: Prestador
@@ -65,6 +66,9 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
 
   if (!prestador) return null
 
+  const temFoto = Boolean(prestador.foto_perfil) && !imgError
+  // Sem foto: o ícone da área diz o que a pessoa faz; sem ícone conhecido, iniciais coloridas.
+  const visualArea = visualDaArea(prestador.grupo_icone)
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
   const perfilHref = getPerfilHref(prestador.slug, prestador.id ?? '')
   const localizacao = getLocalizacao(prestador.bairro ?? undefined, prestador.cidades?.nome)
@@ -83,14 +87,16 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
       <div className="flex flex-col gap-3 px-4 py-4 md:px-5">
         {/* Identidade: foto, nome, categoria e onde atende — tudo junto, sem blocos vazios */}
         <div className="flex min-w-0 items-center gap-4">
-          <div className={`flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border md:size-20 ${prestador.foto_perfil && !imgError ? 'border-slate-100 bg-slate-50' : corDasIniciais(prestador.nome || '')}`}>
-            {prestador.foto_perfil && !imgError ? (
+          <div className={`flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border md:size-20 ${temFoto ? 'border-slate-100 bg-slate-50' : visualArea ? visualArea.cores : corDasIniciais(prestador.nome || '')}`}>
+            {temFoto ? (
               <img
                 src={prestador.foto_perfil ?? undefined}
                 className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:scale-[1.02]"
                 alt={prestador.nome || 'Prestador'}
                 onError={() => setImgError(true)}
               />
+            ) : visualArea ? (
+              <visualArea.Icone aria-hidden="true" strokeWidth={1.75} className="size-7 md:size-9" />
             ) : (
               <span aria-hidden="true" className="text-lg font-bold tracking-tight md:text-xl">
                 {getIniciais(prestador.nome || '')}
@@ -125,7 +131,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                   <Link
                     href={reivindicarHref}
                     title="Este perfil foi montado com dados públicos de contato. Se for o seu, assuma o perfil."
-                    className="relative z-20 -my-2 inline-flex min-h-11 items-center rounded-lg text-sm font-semibold text-blue-600 underline-offset-4 transition-colors hover:text-blue-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                    className="relative z-20 -my-2 inline-flex min-h-11 items-center rounded-lg text-sm font-medium text-slate-500 underline decoration-slate-300 underline-offset-4 transition-colors hover:text-blue-700 hover:decoration-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                   >
                     Este perfil é seu?
                   </Link>

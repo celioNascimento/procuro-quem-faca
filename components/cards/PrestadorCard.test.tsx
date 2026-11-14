@@ -100,4 +100,28 @@ describe('PrestadorCard', () => {
     expect(screen.getByText('AL')).toBeTruthy()
     expect(screen.getByRole('link', { name: /antonio landim reformas/i })).toBeTruthy()
   })
+
+  it('sem foto e com área conhecida, mostra o ícone da área no lugar das iniciais', () => {
+    const { container } = render(
+      <PrestadorCard prestador={prestador({ grupo_icone: 'hammer' })} session={null} />,
+    )
+
+    expect(container.querySelector('svg.lucide-hammer')).toBeTruthy()
+    expect(screen.queryByText('AL')).toBeNull()
+  })
+
+  it('com ícone de área desconhecido, volta para as iniciais', () => {
+    render(<PrestadorCard prestador={prestador({ grupo_icone: 'nao-existe' })} session={null} />)
+
+    expect(screen.getByText('AL')).toBeTruthy()
+  })
+
+  it('com foto, a foto vale mais que o ícone da área', () => {
+    const { container } = render(
+      <PrestadorCard prestador={prestador({ grupo_icone: 'hammer', foto_perfil: 'https://x.test/a.jpg' })} session={null} />,
+    )
+
+    expect(container.querySelector('img')).toBeTruthy()
+    expect(container.querySelector('svg.lucide-hammer')).toBeNull()
+  })
 })

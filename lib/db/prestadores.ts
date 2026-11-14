@@ -13,7 +13,7 @@ const COLUNAS_LISTA = [
   'origem_tipo', 'verificado',
   'estado_sigla', 'cidade_id', 'regiao_id', 'grupo_id', 'categoria_id',
   'cidades(id, nome, estado_sigla, regiao_id, regioes(id, nome))',
-  'categorias(id, nome, grupo_id, categorias_grupos(id, nome))',
+  'categorias(id, nome, grupo_id, categorias_grupos(id, nome, icone))',
   'regioes(id, nome)',
 ].join(', ')
 

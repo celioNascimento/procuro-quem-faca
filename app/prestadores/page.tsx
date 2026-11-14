@@ -14,6 +14,7 @@ import { AdCard } from '@/components/ads/AdCard'
 import { FiltroSidebar } from '@/components/filtros/FiltroSidebar'
 import { FiltroBottomSheet } from '@/components/filtros/FiltroBottomSheet'
 import { CidadeDaBusca } from '@/components/busca/CidadeDaBusca'
+import { DicaDaLista } from '@/components/busca/DicaDaLista'
 import { ConviteLocalizacao } from '@/components/busca/ConviteLocalizacao'
 import { ResultadosPaginados, RESULTADOS_POR_VEZ } from '@/components/busca/ResultadosPaginados'
 import { MapPin, AlertCircle } from 'lucide-react'
@@ -126,35 +127,31 @@ function ListaConteudo() {
         {/* Coluna principal */}
         <div className="flex min-w-0 flex-col gap-4">
 
-          {/* Título + contagem; a frase de orientação ocupa a largura toda, abaixo */}
+          {/* Título; embaixo, a cidade à esquerda e o contador à direita, numa linha só */}
           <div className="border-l-4 border-blue-600 pl-4 py-1">
-            <div className="flex items-start justify-between gap-3">
-              <h1 className="text-base md:text-lg font-bold text-slate-800 leading-tight text-balance">
-                {tituloBusca}
-              </h1>
+            <h1 className="text-base md:text-lg font-bold text-slate-800 leading-tight text-balance">
+              {tituloBusca}
+            </h1>
+            <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3">
+              <CidadeDaBusca
+                cidadeNome={cidadeNome}
+                origem={origemCidade}
+                ampliar={ampliar}
+                cidadeSalvaNome={cidadeAtual?.nome ?? null}
+                onVerOutrasCidades={verOutrasCidades}
+                onVoltarParaMinhaCidade={voltarParaMinhaCidade}
+              />
               {!loading && prestadoresExibidos.length > 0 && (
                 <span
                   role="status"
-                  className="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 shrink-0"
+                  className="ml-auto shrink-0 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600"
                 >
                   {prestadoresExibidos.length}{' '}
                   {prestadoresExibidos.length === 1 ? 'encontrado' : 'encontrados'}
                 </span>
               )}
             </div>
-            <p className="mt-1.5 text-sm leading-snug text-slate-600">
-              Toque em um profissional para ver fotos e avaliações e chamar pelo WhatsApp. Pedir orçamento não custa nada.
-            </p>
           </div>
-
-          <CidadeDaBusca
-            cidadeNome={cidadeNome}
-            origem={origemCidade}
-            ampliar={ampliar}
-            cidadeSalvaNome={cidadeAtual?.nome ?? null}
-            onVerOutrasCidades={verOutrasCidades}
-            onVoltarParaMinhaCidade={voltarParaMinhaCidade}
-          />
 
           {!loading && !erro && convidarLocalizacao && <ConviteLocalizacao />}
 
@@ -188,6 +185,8 @@ function ListaConteudo() {
           ) : (
             prestadoresExibidos.length > 0 && (
               <>
+                <DicaDaLista />
+
                 {/* Anúncio de topo */}
                 <AdCard
                   page="lista_topo"
