@@ -230,10 +230,10 @@ export async function getStatusETokenProjeto(projetoId: string) {
   return { ...data, avaliacao_token: tokens[projetoId] ?? '' }
 }
 
-export async function uploadImagemPortfolio(filePath: string, file: File) {
+export async function uploadImagemPortfolio(filePath: string, file: File, contentType?: string) {
   const { error: uploadError } = await supabase.storage
     .from('portfolios')
-    .upload(filePath, file)
+    .upload(filePath, file, contentType ? { contentType } : undefined)
 
   if (uploadError) throw uploadError
 

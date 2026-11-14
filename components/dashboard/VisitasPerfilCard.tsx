@@ -32,7 +32,7 @@ export function VisitasPerfilCard() {
     >
       <div className="flex items-center gap-2">
         <Eye className="size-4 text-blue-600" aria-hidden="true" />
-        <h2 id="visitas-perfil-titulo" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+        <h2 id="visitas-perfil-titulo" className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
           Visitas ao seu perfil
         </h2>
       </div>
@@ -89,9 +89,9 @@ function Numero({
   return (
     <div className="min-h-[92px] rounded-xl bg-slate-50 px-3 py-3">
       <p className="text-2xl font-black leading-none text-slate-900 tabular-nums">{valor}</p>
-      <p className="mt-1.5 text-[9px] font-bold uppercase tracking-wide text-slate-400">{rotulo}</p>
+      <p className="mt-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">{rotulo}</p>
       {/* Linha sempre reservada, para os três quadros terem a mesma altura. */}
-      <p className="mt-1 h-4 text-[11px] font-bold leading-4">
+      <p className="mt-1 h-4 text-xs font-bold leading-4">
         {variacao && <Variacao variacao={variacao} periodo={periodo} />}
       </p>
     </div>

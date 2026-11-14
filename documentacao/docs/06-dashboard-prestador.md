@@ -103,3 +103,21 @@ Kit de divulgação do prestador, com os mesmos dados do perfil público (`lib/s
 **Ajuda sobre Divulgação** (`lib/help/help-content.ts`, categoria "Divulgação", público `prestador`): 4 artigos — visão geral, cartão digital, adesivos e QR Code, links e mensagens prontas. O painel mostra **um único** bloco `ContextualHelp` por tela, no fim da página (`app/(dashboard)/dashboard/page.tsx`): nas abas Meus Trabalhos, Desempenho e Dados Profissionais ele usa o contexto `dashboard-prestador`; na aba Divulgação troca para o contexto `divulgacao` (visão geral + os outros três artigos, que têm os dois contextos). Não colocar outro `ContextualHelp` dentro das abas: já aconteceu de a Divulgação mostrar dois cards "Central de ajuda" empilhados. Ao mudar rótulos ou fluxos da aba, atualizar esses textos. `ContextualHelp` agora envia `publico=prestador` no link "Ver todas as respostas".
 
 Detalhes técnicos: QR próprio em `lib/qr/qrcode.ts` (byte, EC M, versões 1–10, sem dependências); artes em canvas (`lib/divulgacao/canvas.ts`); todo material usa o domínio canônico `SITE_URL` (`lib/divulgacao/links.ts`), nunca o de preview. Imagens externas carregam com `crossOrigin='anonymous'`; se o CORS falhar, a arte sai sem a foto. Uso registrado em `logs_atividades` (`BAIXAR_MATERIAL_DIVULGACAO`, `COPIAR_LINK_DIVULGACAO`, `COPIAR_MENSAGEM_DIVULGACAO`).
+
+
+## Revisão final do dashboard (14/11/2026)
+
+**Corrigido**
+- **Faixa "Últimos 7 dias"** (`ResumoDesempenhoStrip`): no celular o título fica numa linha e "Visitas" e "Contatos" lado a lado na de baixo (antes quebravam no meio); em telas maiores, tudo em uma linha.
+- **Abas × URL** (`app/(dashboard)/dashboard/page.tsx`): links para o próprio `/dashboard` (`?novo=1` do banner "Adicionar trabalho", `?aba=...`) agora trocam a aba. Antes só a URL mudava e o clique parecia não fazer nada (e o wizard abria de surpresa depois). Trocar de aba manualmente não é desfeito pela URL.
+- **Meus Trabalhos**: falha ao carregar mostra aviso com "Tentar de novo" (antes parecia "nenhum trabalho"). Sem trabalhos, o bloco azul repetido some e fica só o cartão "Seus trabalhos começam aqui".
+- **Envio de fotos** (`lib/uploadFoto.ts`, wizard): a foto antiga do perfil não é mais apagada *antes* de a nova ser salva (se o envio falhasse ou a pessoa saísse sem salvar, o perfil ficava com foto quebrada); ela só sai do storage depois que o perfil é salvo (`EditarPerfilTab`). Só imagens são aceitas e a extensão vem do tipo do arquivo, não do nome. Aparelhos que entregam a foto sem tipo continuam funcionando (vale a extensão, se for de imagem).
+- Logs de depuração (`console.log` com emoji) removidos de `prestadorPerfil.service.ts`; textos de 9–11 px dos cartões do dashboard passaram para 12 px.
+
+**Conferido e OK**: o dono do perfil não consegue se auto-verificar, se desbloquear nem mexer em contagens (trigger `prestadores_proteger_campos`); a rota `/api/prestadores/meus-cliques` exige login e só devolve os números do próprio prestador; funções `admin_*` checam `is_admin()`; todas as tabelas têm RLS.
+
+**Pendências conhecidas (decisão do dono do produto)**
+- Funções públicas do módulo de orçamentos (`obter_orcamento_publico`, `responder_orcamento_publico`) sem uso no código — migração `20261114090000_revogar_funcoes_de_orcamento.sql` tira o acesso; a tabela `orcamentos` (vazia) e as funções podem ser apagadas depois. "Meus dados" ainda lista "Orçamentos enviados/recebidos" (`lib/meusDados/resumo.ts`).
+- Componentes sem uso: `PrestadorSideCard.tsx`, `PrestadorCardHorizontal.tsx`, `AnunciosTab.tsx` (a doc os trata como roadmap).
+- Proteção contra senhas vazadas (Supabase Auth) desligada — é um interruptor no painel do Supabase.
+- Desempenho do banco (avisos do Supabase, sem impacto com o volume atual): 136 casos de políticas permissivas repetidas (só `prestadores` tem 10), 54 políticas que reavaliam `auth.uid()` por linha (trocar por `(select auth.uid())`), 32 chaves estrangeiras sem índice.

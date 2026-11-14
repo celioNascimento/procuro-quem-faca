@@ -24,6 +24,7 @@ import {
   getStatusETokenProjeto,
   uploadImagemPortfolio
 } from '@/lib/services/uploadWizard.service'
+import { EXTENSOES, tipoDaImagem } from '@/lib/uploadFoto'
 
 type ProjetoCompleto = Projeto & {
   cliente_whatsapp?: string | null
@@ -341,15 +342,21 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
       e.target.value = ''
       return
     }
+    // Só imagem de verdade; a extensão vem do tipo do arquivo, não do nome.
+    const tipoImagem = tipoDaImagem(file)
+    if (!tipoImagem) {
+      setErroUpload('Esse arquivo não é uma foto. Escolha uma imagem em JPG, PNG ou WEBP.')
+      e.target.value = ''
+      return
+    }
     setErroUpload(null)
     setLoadingEtapa(prev => ({ ...prev, [ordem]: true }))
 
     try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random()}.${fileExt}`
+      const fileName = `${Math.random()}.${EXTENSOES[tipoImagem]}`
       const filePath = `${prestadorId}/${fileName}`
 
-      const publicUrl = await uploadImagemPortfolio(filePath, file)
+      const publicUrl = await uploadImagemPortfolio(filePath, file, tipoImagem)
 
       let currentProjId: string = projetoId || ''
 
