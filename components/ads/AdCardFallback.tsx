@@ -1,8 +1,12 @@
 // components/ads/AdCardFallback.tsx
+//
+// Divulgação do próprio PQF (para lojistas) quando não há anúncio de cliente na praça.
+// Mesmo visual dos cards da lista: fundo branco, cantos de 2rem e letras legíveis (nada abaixo de 14px).
+// A cor do campo `cor` de cada fallback (lib/ads/fallbacks.ts) deixou de ser usada aqui.
 
 'use client'
 import Link from 'next/link'
-import type { AdFallback } from '@/types/ads' 
+import type { AdFallback } from '@/types/ads'
 
 type Props = {
   fallback: AdFallback
@@ -13,28 +17,25 @@ export function AdCardFallback({ fallback, contexto = '' }: Props) {
   return (
     <Link
       href={fallback.href(contexto)}
-      className={`block w-full my-0 bg-gradient-to-r ${fallback.cor} rounded-2xl p-4 text-white shadow-sm hover:opacity-95 active:scale-[0.98] transition-all`}
+      className="group block w-full rounded-[2rem] border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md active:scale-[0.99] md:px-5"
     >
-      <div className="flex items-start gap-3.5">
-        <div className="w-10 h-10 md:w-12 md:h-12 bg-white/15 rounded-xl flex items-center justify-center text-xl shrink-0">
-          {fallback.emoji}
-        </div>
-        <div className="flex-1 min-w-0">
-          {/* Textos com wrap natural, mas usando leading-tight para evitar altura excessiva */}
-          <p className="font-black text-[12px] md:text-[13px] uppercase italic tracking-tight leading-tight">
-            {fallback.titulo}
-          </p>
-          <p className="text-white/80 text-[10px] md:text-[11px] font-medium mt-0.5 leading-tight line-clamp-2">
-            {fallback.subtitulo}
-          </p>
-          
-          {/* Botão reposicionado, mas com margem (mt-2.5) bem menor que a original */}
-          <div className="mt-2.5 flex justify-end md:justify-start">
-            <span className="bg-white/20 border border-white/30 text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full whitespace-nowrap">
-              {fallback.cta} →
-            </span>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
+          <div
+            aria-hidden="true"
+            className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 text-2xl md:size-14"
+          >
+            {fallback.emoji}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Anúncio</p>
+            <p className="text-pretty text-base font-bold leading-snug text-slate-900">{fallback.titulo}</p>
+            <p className="mt-0.5 line-clamp-2 text-sm leading-snug text-slate-600">{fallback.subtitulo}</p>
           </div>
         </div>
+        <span className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-xl border border-blue-200 bg-blue-50 px-5 text-sm font-bold text-blue-700 transition-colors group-hover:bg-blue-100 sm:shrink-0">
+          {fallback.cta} →
+        </span>
       </div>
     </Link>
   )

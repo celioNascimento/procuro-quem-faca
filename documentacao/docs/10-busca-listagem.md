@@ -81,9 +81,13 @@ Limite: a página ainda baixa os perfis da cidade (ou do catálogo todo) de uma 
 - `usePrestadores` mantém cache em memória por 3 min; `useRestaurarScroll` devolve a rolagem ao voltar do perfil.
 - Regras completas em [18-navegacao-voltar.md](18-navegacao-voltar.md).
 
-## Vitrine, anúncio de topo e etiqueta "Ainda não cadastrado"
+## Vitrine, anúncio de topo, card e filtros
 
 - **Vitrine (`origem_tipo = 'vitrine'`)**: fica sempre no topo (peso -1 em `lib/ordenacao.ts`), mas passa pelo mesmo filtro de termo dos demais perfis: uma vitrine de eletricista não aparece numa busca por pedreiro. Sem termo, todas aparecem. Local e Área filtram todos igualmente.
 - **Cidades com o mesmo nome**: o menu "Cidade" lista uma opção por id; se houver nomes repetidos o rótulo ganha a sigla ("Santa Helena - PR"). Regra em `opcoesDeCidade` (`lib/buscaFiltros.ts`).
 - **Anúncios nas páginas públicas** vêm de `lib/services/anunciosPublicos.service.ts` (anúncio de topo, anúncios entre cards, inventário da praça, métricas). `adminAnuncios.service.ts` reexporta essas funções para o painel admin; páginas públicas não importam mais o serviço administrativo.
-- **Etiqueta no card**: perfis vindos da curadoria (dados públicos de contato) mostram "Ainda não cadastrado" (antes "Perfil público", que parecia valer para todos), com o link "Este perfil é seu?". O texto é um ajuste simples: se o produto preferir outro, é uma linha em `PrestadorCard.tsx`.
+- **Card (`PrestadorCard`)**: compacto (~110 px): foto/iniciais, nome, categoria e cidade juntos, uma seta à direita e, abaixo, as habilidades em uma linha. O card inteiro é o link do perfil. Perfis da curadoria (dados públicos de contato) não têm selo; só o link "Este perfil é seu?" ao lado da cidade (área de toque de 44 px). As iniciais ignoram palavras de ligação (`getIniciais`: "Construções e Reformas" → "CR").
+- **Anúncio entre cards (`AdCardFallback`)**: mesma linguagem dos cards (fundo branco, cantos de 2rem, letras de 14 px ou mais, rótulo "Anúncio"). O campo `cor` dos fallbacks em `lib/ads/fallbacks.ts` não é mais usado. O mesmo componente aparece nos painéis.
+- **Filtros de opção única**: um filtro com uma só opção que não está marcada não aparece (não muda nada). Se só há uma Área, a Categoria já fica liberada.
+- **Cidade escrita na busca**: "Mostrando profissionais de Maringá · Ver outras cidades" aparece também nesse caso. O botão tira "em Maringá" do texto (`?q=pedreiro`) e amplia. A tela vazia com cidade em vigor oferece o mesmo botão.
+- **Cabeçalho**: `<Header larga />` usa `max-w-6xl` (alinhado ao conteúdo da lista); as demais páginas seguem em `max-w-5xl`. O fundo do cabeçalho agora é sólido.

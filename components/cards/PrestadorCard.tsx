@@ -3,7 +3,7 @@
 'use client'
 import { useState, useRef, useLayoutEffect } from 'react'
 import Link from 'next/link'
-import { MapPin, ChevronRight, Globe } from 'lucide-react'
+import { MapPin, ChevronRight } from 'lucide-react'
 import type { Prestador } from '@/types/prestador'
 import { getIniciais, getLocalizacao, getPerfilHref } from '@/lib/prestadorUtils'
 
@@ -80,10 +80,10 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
   // do teclado e cada um tem o próprio nome para leitores de tela.
   return (
     <div className="group relative bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
-      <div className="flex min-h-[190px] flex-col gap-4 px-5 py-5 md:px-6 md:py-6">
-        {/* Primeira linha: identidade do prestador */}
-        <div className="flex min-w-0 items-center gap-4 md:gap-5">
-          <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 md:size-28">
+      <div className="flex flex-col gap-3 px-4 py-4 md:px-5">
+        {/* Identidade: foto, nome, categoria e onde atende — tudo junto, sem blocos vazios */}
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 md:size-20">
             {prestador.foto_perfil && !imgError ? (
               <img
                 src={prestador.foto_perfil ?? undefined}
@@ -92,13 +92,13 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                 onError={() => setImgError(true)}
               />
             ) : (
-              <span aria-hidden="true" className="text-pretty text-lg font-bold leading-snug tracking-tight text-slate-700 md:text-xl">
+              <span aria-hidden="true" className="text-lg font-bold tracking-tight text-slate-700 md:text-xl">
                 {getIniciais(prestador.nome || '')}
               </span>
             )}
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
             <h2 className="text-pretty text-base font-bold leading-snug tracking-tight text-slate-900 line-clamp-2 md:text-lg">
               <Link
                 href={perfilHref}
@@ -109,20 +109,48 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                 {prestador.nome}
               </Link>
             </h2>
-            <span className="text-xs font-black uppercase leading-none tracking-widest text-blue-600">
+            <span className="text-xs font-bold uppercase leading-tight tracking-wide text-blue-600">
               {prestador.categoria}
             </span>
+            {(localizacao || isPublico) && (
+              <div className="flex flex-wrap items-center gap-x-3">
+                {localizacao && (
+                  <p className="flex items-center gap-1 text-sm text-slate-600">
+                    <MapPin size={14} className="shrink-0 text-slate-400" aria-hidden="true" />
+                    {localizacao}
+                  </p>
+                )}
+                {isPublico && (
+                  // A área de toque tem 44px de altura sem aumentar a linha (margem negativa).
+                  <Link
+                    href={reivindicarHref}
+                    title="Este perfil foi montado com dados públicos de contato. Se for o seu, assuma o perfil."
+                    className="relative z-20 -my-2 inline-flex min-h-11 items-center rounded-lg text-sm font-semibold text-blue-600 underline-offset-4 transition-colors hover:text-blue-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  >
+                    Este perfil é seu?
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Só a seta: o card inteiro já é o link, e um botão com texto tirava espaço do nome nos cards de 2 colunas */}
+          <span
+            aria-hidden="true"
+            className="hidden size-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white sm:flex"
+          >
+            <ChevronRight size={18} strokeWidth={2.5} />
+          </span>
         </div>
 
-        {/* Segunda linha: habilidades (linha própria, medida dinamicamente) */}
+        {/* Habilidades (uma linha, medida dinamicamente) */}
         {habilidadesTotais.length > 0 && (
-          <div ref={containerRef} className="relative min-h-6 border-t border-slate-100 pt-4">
+          <div ref={containerRef} className="relative min-h-6 border-t border-slate-100 pt-3">
             {/* Medidor invisível: todas as habilidades numa linha sem quebrar,
                 usado só para calcular larguras reais. Nunca visível ao usuário. */}
             <div
               ref={medidorRef}
-              className="pointer-events-none absolute left-0 top-4 flex gap-1.5 whitespace-nowrap opacity-0"
+              className="pointer-events-none absolute left-0 top-3 flex gap-1.5 whitespace-nowrap opacity-0"
               aria-hidden="true"
             >
               {habilidadesTotais.map(hab => (
@@ -153,44 +181,6 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
             )}
           </div>
         )}
-
-        {/* Terceira linha: localização + ação */}
-        <div className={`mt-auto flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ${habilidadesTotais.length > 0 ? '' : 'border-t border-slate-100 pt-4'}`}>
-          <div className="flex flex-wrap items-center gap-2">
-            {localizacao && (
-              <div className="flex items-center gap-1">
-                <MapPin size={12} className="shrink-0 text-slate-300" />
-                <p className="text-xs font-medium tracking-tight text-slate-500">
-                  {localizacao}
-                </p>
-              </div>
-            )}
-            {isPublico && (
-              <span
-                title="Perfil montado com dados públicos de contato. O profissional ainda não criou a própria conta."
-                className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-500"
-              >
-                <Globe size={11} aria-hidden="true" /> Ainda não cadastrado
-              </span>
-            )}
-          </div>
-
-          <div className="flex shrink-0 flex-col items-center gap-1 sm:items-end">
-            <span
-              aria-hidden="true"
-              className="flex min-h-11 w-full items-center justify-center gap-1 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-sm shadow-blue-200 transition-all group-hover:bg-blue-700 sm:w-auto sm:min-w-36">
-              Ver perfil <ChevronRight size={12} strokeWidth={3} />
-            </span>
-            {isPublico && (
-              <Link
-                href={reivindicarHref}
-                className="relative z-20 inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-[13px] font-semibold text-blue-600 underline-offset-4 transition-colors hover:text-blue-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-              >
-                Este perfil é seu?
-              </Link>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   )

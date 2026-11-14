@@ -87,7 +87,7 @@ function ListaConteudo() {
   }, [])
 
   const tituloBusca = getTituloBusca(queryBusca, cidadeNome, origemCidade === 'texto')
-  const restritoACidade = Boolean(cidadeNome) && origemCidade !== 'texto'
+  const restritoACidade = Boolean(cidadeNome)
   // Convite de localização: só quando não sabemos a cidade da pessoa e ela não escolheu nenhum recorte.
   const convidarLocalizacao =
     !cidadeAtual && !cidadeNome && !filtroEstado && !filtroRegiao && !filtroCidade
@@ -181,7 +181,7 @@ function ListaConteudo() {
               {[1, 2, 3, 4].map(i => (
                 <div
                   key={i}
-                  className="w-full min-h-[190px] bg-white rounded-[2rem] border border-slate-100 animate-pulse"
+                  className="w-full min-h-[110px] bg-white rounded-[2rem] border border-slate-100 animate-pulse"
                 />
               ))}
             </div>
@@ -259,7 +259,7 @@ function ListaConteudo() {
 export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-slate-50 pb-4 antialiased selection:bg-blue-100">
-      <Header href="/" />
+      <Header href="/" larga />
       {/* O Header é fixo e mede h-16 (64px) no celular e md:h-28 (112px) daí em diante.
           Este espaço precisa acompanhar essas alturas; com menos, o título da busca
           e o contador de resultados ficam por baixo do cabeçalho. */}

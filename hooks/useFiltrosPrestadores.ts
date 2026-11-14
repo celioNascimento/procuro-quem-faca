@@ -4,6 +4,7 @@
 // Lê os parâmetros via useFiltrosParams (fonte única).
 
 import { useRouter } from 'next/navigation'
+import { parsearBusca } from '@/lib/buscaFiltros'
 import { useFiltrosParams } from './useFiltrosParams'
 
 export function useFiltrosPrestadores() {
@@ -65,9 +66,16 @@ export function useFiltrosPrestadores() {
   }
 
   // Tira o recorte de cidade (a cidade salva do usuário deixa de valer) e mostra todas.
+  // Se a cidade foi escrita na busca ("pedreiro em Maringá"), ela sai do texto: fica só "pedreiro".
   function verOutrasCidades() {
     const params = new URLSearchParams(window.location.search)
     params.delete('cidade')
+    const texto = params.get('q') || params.get('profissao') || ''
+    const { termo, cidadeExtraida } = parsearBusca(texto)
+    if (cidadeExtraida) {
+      params.delete('profissao')
+      params.set('q', termo)
+    }
     params.set('ampliar', '1')
     router.replace(`/prestadores?${params.toString()}`, { scroll: false })
   }

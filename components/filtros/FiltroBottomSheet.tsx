@@ -26,7 +26,8 @@ function GrupoFiltro({
   const temAtivo = Boolean(valorAtivo)
   const labelAtivo = opcoes.find(o => o.id === valorAtivo)?.label
 
-  if (opcoes.length === 0) return null
+  // Sem opções, ou com uma única opção que não está marcada: o filtro não muda nada, então não ocupa espaço.
+  if (opcoes.length === 0 || (opcoes.length === 1 && opcoes[0].id !== valorAtivo)) return null
 
   return (
     <div
@@ -82,7 +83,7 @@ function GrupoFiltro({
                       : 'border-slate-100 bg-white text-slate-700 active:bg-slate-50'
                   }`}
                 >
-                  <span className="truncate text-left">{op.label}</span>
+                  <span className="truncate text-left" title={op.label}>{op.label}</span>
                   <span
                     className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-black ${
                       ativo ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
@@ -256,7 +257,7 @@ export function FiltroBottomSheet({
               opcoes={categoriasDisponiveis.map(c => ({ id: c.id, label: c.nome, count: c.count }))}
               valorAtivo={filtroCategoria}
               onToggle={v => onAplicar('categoria', v)}
-              disabled={!filtroGrupo}
+              disabled={!filtroGrupo && gruposDisponiveis.length > 1}
               dica="Escolha uma área primeiro."
             />
           </div>

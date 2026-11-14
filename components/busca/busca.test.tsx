@@ -64,10 +64,16 @@ describe('CidadeDaBusca', () => {
     expect(onVoltar).toHaveBeenCalledTimes(1)
   })
 
-  it('não aparece quando a cidade foi escrita na própria busca ou não há cidade', () => {
-    const { container, rerender } = render(<CidadeDaBusca {...base} cidadeNome="Maringá" origem="texto" />)
-    expect(container.firstChild).toBeNull()
-    rerender(<CidadeDaBusca {...base} cidadeNome={null} origem={null} />)
+  it('também oferece "Ver outras cidades" quando a cidade foi escrita na busca', () => {
+    const onVer = vi.fn()
+    render(<CidadeDaBusca {...base} cidadeNome="Maringá" origem="texto" onVerOutrasCidades={onVer} />)
+    expect(screen.getByText('Maringá')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Ver outras cidades' }))
+    expect(onVer).toHaveBeenCalledTimes(1)
+  })
+
+  it('não aparece quando não há cidade', () => {
+    const { container } = render(<CidadeDaBusca {...base} cidadeNome={null} origem={null} />)
     expect(container.firstChild).toBeNull()
   })
 })

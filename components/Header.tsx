@@ -8,10 +8,10 @@ import { HeaderAuthButton } from './HeaderAuthButton'
 import type { HeaderProps } from './Header.types'
 import Logo from './Logo'
 
-export default function Header({ href }: HeaderProps) {
+export default function Header({ href, larga = false }: HeaderProps) {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md font-sans border-b border-slate-100">
-      <div className="max-w-5xl mx-auto px-4 h-16 md:h-28 flex items-center justify-between">
+    <nav className="fixed top-0 left-0 right-0 z-[100] bg-white font-sans border-b border-slate-100">
+      <div className={`mx-auto flex h-16 items-center justify-between md:h-28 ${larga ? 'max-w-6xl px-5 md:px-6' : 'max-w-5xl px-4'}`}>
 
         {/* Esquerda — voltar */}
         <div className="w-10 md:w-32 flex justify-start items-center shrink-0">
