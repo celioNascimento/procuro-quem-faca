@@ -4,7 +4,7 @@ import {
   calcularFacetas, decidirCidade, filtrarExibidos, normalizarCidade, parsearBusca,
   type FiltrosAtivos, type ItemBusca,
 } from '@/lib/buscaFiltros'
-import { getTituloBusca } from '@/lib/prestadorUtils'
+import { getIniciais, getTituloBusca } from '@/lib/prestadorUtils'
 
 const sem: FiltrosAtivos = { estado: '', regiao: '', grupo: '', categoria: '', cidade: '' }
 
@@ -136,5 +136,18 @@ describe('cidades com o mesmo nome', () => {
       { id: 'lon', nome: 'Londrina', count: 1 },
       { id: 'sc', nome: 'Santa Helena - SC', count: 1 },
     ])
+  })
+})
+
+describe('getIniciais', () => {
+  it('ignora palavras de ligação', () => {
+    expect(getIniciais('Construções e Reformas')).toBe('CR')
+    expect(getIniciais('Maria da Silva')).toBe('MS')
+    expect(getIniciais('Waneza Marques Vieira')).toBe('WM')
+  })
+  it('uma palavra só, vazio e só ligação', () => {
+    expect(getIniciais('Pedreiro')).toBe('P')
+    expect(getIniciais('')).toBe('?')
+    expect(getIniciais('de')).toBe('D')
   })
 })

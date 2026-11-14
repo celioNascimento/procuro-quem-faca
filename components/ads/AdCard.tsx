@@ -51,7 +51,7 @@ export function AdCard({ page, anuncio, categoria }: Props) {
   // "sem anúncio" antes da resposta real chegar. Reserva o mesmo espaço
   // visual do banner pra não saltar o layout quando o resultado chegar.
   if (carregando) {
-    return <div className="my-2 w-full h-[90px] md:h-[120px] lg:h-[140px] bg-zinc-50 border border-zinc-100 animate-pulse rounded-2xl" />
+    return <div className="my-2 w-full h-[90px] md:h-[120px] lg:h-[140px] bg-zinc-50 border border-zinc-100 animate-pulse rounded-[2rem]" />
   }
 
   if (!anuncio || expirado || agendado) {
@@ -65,7 +65,7 @@ export function AdCard({ page, anuncio, categoria }: Props) {
         target="_blank" 
         rel="noopener noreferrer" 
         onClick={handleClickAnuncioProprio}
-        className="relative block my-2 w-full overflow-hidden rounded-2xl shadow-sm hover:opacity-95 transition-opacity"
+        className="relative block my-2 w-full overflow-hidden rounded-[2rem] shadow-sm hover:opacity-95 transition-opacity"
       >
         {/* ALTURA CONTROLADA: Ajustada para um formato de faixa horizontal (leaderboard) para não empurrar a lista */}
         <img 
@@ -74,7 +74,7 @@ export function AdCard({ page, anuncio, categoria }: Props) {
           className="w-full object-cover object-center h-[90px] md:h-[120px] lg:h-[140px]" 
         />
         <div className="pointer-events-none absolute right-3 top-3 z-10">
-          <span className="rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
+          <span className="rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
             Publicidade
           </span>
         </div>

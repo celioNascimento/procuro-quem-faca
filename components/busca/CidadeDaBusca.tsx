@@ -23,8 +23,9 @@ const botao =
 export function CidadeDaBusca({
   cidadeNome, origem, ampliar, cidadeSalvaNome, onVerOutrasCidades, onVoltarParaMinhaCidade,
 }: Props) {
-  // Cidade escrita na própria busca ("pedreiro em Maringá") já aparece no título.
-  if (cidadeNome && (origem === 'salva' || origem === 'filtro')) {
+  // Vale para a cidade salva, a escolhida nos filtros e a escrita na busca ("pedreiro em Maringá"):
+  // em todos os casos a pessoa precisa de um caminho para ver as outras cidades.
+  if (cidadeNome && (origem === 'salva' || origem === 'filtro' || origem === 'texto')) {
     return (
       <div className="flex flex-wrap items-center gap-x-2 text-sm text-slate-600">
         <MapPin size={16} className="shrink-0 text-blue-600" aria-hidden="true" />

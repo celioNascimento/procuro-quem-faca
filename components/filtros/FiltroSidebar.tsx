@@ -24,7 +24,8 @@ function SecaoFiltro({
 }) {
   const [aberto, setAberto] = useState(true)
 
-  if (opcoes.length === 0) return null
+  // Sem opções, ou com uma única opção que não está marcada: o filtro não muda nada, então não ocupa espaço.
+  if (opcoes.length === 0 || (opcoes.length === 1 && opcoes[0].id !== valorAtivo)) return null
 
   return (
     <div className="border-b border-slate-100 pb-3 last:border-b-0">
@@ -60,7 +61,7 @@ function SecaoFiltro({
                     : 'border-slate-200 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600'
                 }`}
               >
-                <span className="truncate text-left">{op.label}</span>
+                <span className="truncate text-left" title={op.label}>{op.label}</span>
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-black ${
                     ativo ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
@@ -155,7 +156,7 @@ export function FiltroSidebar({
         opcoes={categoriasDisponiveis.map(c => ({ id: c.id, label: c.nome, count: c.count }))}
         valorAtivo={filtroCategoria}
         onToggle={v => onAplicar('categoria', v)}
-        disabled={!filtroGrupo}
+        disabled={!filtroGrupo && gruposDisponiveis.length > 1}
         dica="Escolha uma área primeiro."
       />
     </div>

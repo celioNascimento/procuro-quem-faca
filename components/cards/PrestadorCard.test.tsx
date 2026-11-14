@@ -72,13 +72,13 @@ describe('PrestadorCard', () => {
     }
   })
 
-  it('perfil de dados públicos mostra o selo "Ainda não cadastrado"; perfil comum não mostra selo nem o link de reivindicação', () => {
+  it('perfil de dados públicos só mostra o link "Este perfil é seu?" (sem selo); perfil comum não mostra nem o link', () => {
     const { unmount } = render(<PrestadorCard prestador={prestador()} session={null} />)
-    expect(screen.getByText('Ainda não cadastrado')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Este perfil é seu?' })).toBeTruthy()
+    expect(screen.queryByText(/ainda não cadastrado|perfil público/i)).toBeNull()
     unmount()
 
     render(<PrestadorCard prestador={prestador({ origem_tipo: 'cadastro' })} session={null} />)
-    expect(screen.queryByText('Ainda não cadastrado')).toBeNull()
     expect(screen.queryByRole('link', { name: 'Este perfil é seu?' })).toBeNull()
     expect(screen.getAllByRole('link')).toHaveLength(1)
   })
