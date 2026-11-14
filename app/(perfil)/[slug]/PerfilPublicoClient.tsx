@@ -43,6 +43,23 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
   })
 
   const isPublico = prestador.origem_tipo === 'curadoria_publica'
+
+  // Usada pelo botão do perfil e pelo botão dentro do modal do trabalho.
+  // keepalive: no celular o link abre o app do WhatsApp e a página pode ser suspensa;
+  // com isso o navegador conclui a requisição. O log de auditoria é gravado pela própria
+  // rota, só quando o clique é contado.
+  const registrarCliqueWhatsapp = async () => {
+    const resposta = await fetch('/api/prestadores/clique-whatsapp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prestadorId: prestador.id }),
+      keepalive: true,
+    })
+
+    if (!resposta.ok) {
+      throw new Error('Não foi possível registrar o clique no perfil.')
+    }
+  }
   const [anuncioTopo, setAnuncioTopo] = useState<Anuncio | null | undefined>(undefined)
 
   useEffect(() => {
@@ -113,22 +130,7 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
                 <PerfilCTA
                   nome={prestador.nome || ''}
                   whatsapp={prestador.whatsapp || ''}
-                  onClique={async () => {
-                    // keepalive: no celular o link abre o app do WhatsApp e a página
-                    // pode ser suspensa; com isso o navegador conclui a requisição.
-                    // O log de auditoria é gravado pela própria rota, só quando o
-                    // clique é contado.
-                    const resposta = await fetch('/api/prestadores/clique-whatsapp', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ prestadorId: prestador.id }),
-                      keepalive: true,
-                    })
-
-                    if (!resposta.ok) {
-                      throw new Error('Não foi possível registrar o clique no perfil.')
-                    }
-                  }}
+                  onClique={registrarCliqueWhatsapp}
                 />
               </div>
             </div>
@@ -160,6 +162,7 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
               projetos={projetos}
               avaliacoes={avaliacoes}
               portfolioObrigatorio={prestador.portfolio_obrigatorio}
+              contato={{ nome: prestador.nome || '', whatsapp: prestador.whatsapp || '', onClique: registrarCliqueWhatsapp }}
             />
 
             <ContextualHelp context="perfil-publico" title="Dúvidas sobre este perfil?" />

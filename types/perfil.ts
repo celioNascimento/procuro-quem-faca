@@ -42,7 +42,7 @@ export interface ProjetoPerfil {
   status: 'em_execucao' | 'finalizado'
   created_at: string
   portfolio_fotos: FotoProjeto[]
-  avaliacoes: { id: string; indica: boolean; comentario?: string | null }[]
+  avaliacoes: { id: string; indica: boolean; comentario?: string | null; cliente_nome?: string | null }[]
   // LEFT JOIN — array vazio quando não há garantia
   solicitacoes_garantia: GarantiaPublica[]
   // Fluxo sem foto obrigatória — travado na criação do projeto (ver

@@ -3,8 +3,12 @@
 import { useState } from 'react'
 import type { FotoProjeto } from '@/types/perfil'
 
-export function useSlides(fotos: FotoProjeto[]) {
-  const [current, setCurrent] = useState(0)
+/**
+ * Fotos de um trabalho em ordem (Antes, Durante, Depois).
+ * `comecarNaUltima`: abre na última foto, que é a que aparece na capa do portfólio.
+ */
+export function useSlides(fotos: FotoProjeto[], comecarNaUltima = false) {
+  const [current, setCurrent] = useState(() => (comecarNaUltima ? Math.max(fotos.length - 1, 0) : 0))
 
   const sorted = [...fotos].sort((a, b) => a.ordem - b.ordem)
   const fotoAtual = sorted[current] ?? null
@@ -19,5 +23,10 @@ export function useSlides(fotos: FotoProjeto[]) {
     setCurrent(p => (p - 1 + sorted.length) % sorted.length)
   }
 
-  return { sorted, fotoAtual, current, next, prev }
+  const ir = (indice: number) => {
+    if (sorted.length === 0) return
+    setCurrent(Math.min(Math.max(indice, 0), sorted.length - 1))
+  }
+
+  return { sorted, fotoAtual, current, next, prev, ir }
 }
