@@ -21,6 +21,8 @@ export function AdCard({ page, anuncio, categoria }: Props) {
   const { fallback, contexto } = useAdContext(page, categoria)
 
   const carregando = anuncio === undefined
+  // Topo da lista e topo do perfil: faixa fina (a divulgação continua visível, sem empurrar o conteúdo).
+  const compacto = page === 'lista_topo' || page === 'perfil_prestador'
 
   const { expirado, agendado, handleClickAnuncioProprio } = useAdCardMetricas(anuncio)
 
@@ -51,12 +53,12 @@ export function AdCard({ page, anuncio, categoria }: Props) {
   // "sem anúncio" antes da resposta real chegar. Reserva o mesmo espaço
   // visual do banner pra não saltar o layout quando o resultado chegar.
   if (carregando) {
-    // O topo da lista usa a faixa fina; os demais reservam a altura do banner.
-    return <div className={`my-2 w-full bg-zinc-50 border border-zinc-100 animate-pulse ${page === 'lista_topo' ? 'h-14 rounded-2xl' : 'h-[90px] md:h-[120px] lg:h-[140px] rounded-[2rem]'}`} />
+    // As faixas finas reservam 56 px; os demais reservam a altura do banner.
+    return <div className={`my-2 w-full bg-zinc-50 border border-zinc-100 animate-pulse ${compacto ? 'h-14 rounded-2xl' : 'h-[90px] md:h-[120px] lg:h-[140px] rounded-[2rem]'}`} />
   }
 
   if (!anuncio || expirado || agendado) {
-    return <AdCardFallback fallback={fallback} contexto={contexto} compacto={page === 'lista_topo'} />
+    return <AdCardFallback fallback={fallback} contexto={contexto} compacto={compacto} />
   }
 
   if (anuncio.tipo === 'proprio' && anuncio.imagem_url) {
@@ -98,5 +100,5 @@ export function AdCard({ page, anuncio, categoria }: Props) {
     )
   }
 
-  return <AdCardFallback fallback={fallback} contexto={contexto} compacto={page === 'lista_topo'} />
+  return <AdCardFallback fallback={fallback} contexto={contexto} compacto={compacto} />
 }

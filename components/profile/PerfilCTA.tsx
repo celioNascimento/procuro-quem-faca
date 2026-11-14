@@ -48,7 +48,7 @@ export default function PerfilCTA({ nome, whatsapp, onClique }: Props) {
                             console.error('[PerfilCTA] Falha ao registrar clique:', error)
                         })
                     }}
-                    className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-blue-100 hover:bg-blue-700 active:scale-[0.98] transition-all italic"
+                    className="flex min-h-14 w-full items-center justify-center gap-3 rounded-[2rem] bg-blue-600 py-4 text-base font-bold text-white shadow-xl shadow-blue-100 transition-all hover:bg-blue-700 active:scale-[0.98]"
                 >
                     <WaIcon />
                     Chamar no WhatsApp

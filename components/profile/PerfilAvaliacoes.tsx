@@ -15,8 +15,8 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
   // retornar null encolhia a página ao trocar de aba e causava "pulo" de tela.
   if (avaliacoes.length === 0) {
     return (
-      <div className="bg-slate-50 border-2 border-dashed border-slate-100 rounded-[3rem] p-12 text-center">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 italic">
+      <div className="rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+        <p className="text-sm font-medium text-slate-500">
           Nenhuma avaliação ainda
         </p>
       </div>
@@ -39,17 +39,17 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
     <section className="space-y-4">
       {/* Cabeçalho com contadores */}
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-[10px] font-black uppercase tracking-widest text-blue-600">
+        <h2 className="text-base font-bold text-slate-900">
           Avaliações
         </h2>
         <div className="flex items-center gap-2">
           {totalIndica > 0 && (
-            <span className="flex items-center gap-1 bg-blue-50 text-blue-600 text-[9px] font-black tracking-wide px-2.5 py-1 rounded-full border border-blue-100">
+            <span className="flex items-center gap-1 bg-blue-50 text-blue-600 text-xs font-bold px-2.5 py-1 rounded-full border border-blue-100">
               👍 {totalIndica} {totalIndica === 1 ? 'indicação' : 'indicações'}
             </span>
           )}
           {totalNaoIndica > 0 && (
-            <span className="flex items-center gap-1 bg-slate-100 text-slate-500 text-[9px] font-black tracking-wide px-2.5 py-1 rounded-full border border-slate-200">
+            <span className="flex items-center gap-1 bg-slate-100 text-slate-500 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-200">
               👎 {totalNaoIndica} não {totalNaoIndica === 1 ? 'indica' : 'indicam'}
             </span>
           )}
@@ -91,11 +91,11 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
                   </div>
 
                   <div>
-                    <p className="text-[12px] font-bold text-slate-800 tracking-tight">
+                    <p className="text-sm font-bold text-slate-800 tracking-tight">
                       {av.cliente_nome ?? 'Cliente Verificado'}
                     </p>
                     {av.created_at && (
-                      <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5 capitalize">
+                      <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5 capitalize">
                         <Calendar size={10} /> {formatarData(av.created_at)}
                       </p>
                     )}
@@ -103,12 +103,12 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
                 </div>
 
                 {av.indica === true && (
-                  <span className="flex items-center gap-1 bg-blue-600 text-white text-[9px] font-black tracking-wide px-2.5 py-1.5 rounded-xl shrink-0 shadow-sm shadow-blue-200">
+                  <span className="flex items-center gap-1 bg-blue-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl shrink-0 shadow-sm shadow-blue-200">
                     👍 Indico
                   </span>
                 )}
                 {av.indica === false && (
-                  <span className="flex items-center gap-1 bg-slate-700 text-white text-[9px] font-black tracking-wide px-2.5 py-1.5 rounded-xl shrink-0">
+                  <span className="flex items-center gap-1 bg-slate-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl shrink-0">
                     👎 Não indico
                   </span>
                 )}
@@ -116,7 +116,7 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
 
               {/* Comentário */}
               {av.comentario && (
-                <p className="text-[13px] font-medium text-slate-600 leading-relaxed italic bg-slate-50/50 p-4 rounded-[1.25rem] border border-slate-50">
+                <p className="text-sm font-medium text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-[1.25rem] border border-slate-50">
                   &quot;{av.comentario}&quot;
                 </p>
               )}
@@ -135,7 +135,7 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
                       <div className="w-6 h-6 bg-blue-50 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-blue-600 transition-colors duration-300">
                         <Wrench size={12} className="text-blue-500 group-hover:text-white transition-colors" />
                       </div>
-                      <p className="text-[10px] font-black text-slate-400 truncate uppercase tracking-widest group-hover:text-blue-600 transition-colors duration-300">
+                      <p className="text-xs font-bold text-slate-500 truncate group-hover:text-blue-600 transition-colors duration-300">
                         {projetoTitulo}
                       </p>
                     </div>
@@ -146,7 +146,7 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
                     <div className="w-6 h-6 bg-slate-50 rounded-lg flex items-center justify-center shrink-0">
                       <Wrench size={12} className="text-slate-300" />
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 truncate uppercase tracking-widest">
+                    <p className="text-xs font-bold text-slate-500 truncate">
                       {projetoTitulo}
                     </p>
                   </div>
