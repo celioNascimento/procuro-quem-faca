@@ -3,6 +3,7 @@
 'use client'
 import { User, Calendar, Wrench, ArrowRight } from 'lucide-react'
 import type { AvaliacaoPerfil, ProjetoPerfil } from '@/types/perfil'
+import { nomePublicoDoCliente } from '@/lib/nomeDoCliente'
 
 interface Props {
   avaliacoes: AvaliacaoPerfil[]
@@ -83,7 +84,7 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
                     {av.cliente_foto_url
                       ? <img
                         src={av.cliente_foto_url}
-                        alt={av.cliente_nome ?? 'Cliente'}
+                        alt={nomePublicoDoCliente(av.cliente_nome)}
                         className="w-full h-full object-cover"
                       />
                       : <User size={16} className="text-slate-300" />
@@ -92,7 +93,7 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
 
                   <div>
                     <p className="text-sm font-bold text-slate-800 tracking-tight">
-                      {av.cliente_nome ?? 'Cliente Verificado'}
+                      {nomePublicoDoCliente(av.cliente_nome)}
                     </p>
                     {av.created_at && (
                       <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5 capitalize">

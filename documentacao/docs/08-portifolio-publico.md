@@ -28,7 +28,14 @@ Duas colunas: `PerfilHero`, `PerfilCTA` e `PerfilConfianca` à esquerda (fixa ao
 
 **`PerfilCTA.tsx`** — botão de WhatsApp (link + botão flutuante persistente via `IntersectionObserver`), usa `buildLinkWhatsapp` com mensagem de orçamento.
 
-**`ProjetoModal.tsx`** — abre a partir de `PortfolioGrid`, usa `ModalFotoBase`, navegação via `useSlides`, comentários via `useComentariosFoto` (usa `getComentariosDaFoto` de `uploadWizard.service.ts`).
+**`ProjetoModal.tsx`** — o que abre ao tocar na capa de um trabalho do portfólio. Calmo e feito para o celular:
+- **Foto inicial** é a da capa tocada (em geral o "Depois"), via `useSlides(fotos, true)`. Abas **Antes | Durante | Depois** (só aparecem com mais de uma foto) e arrastar a foto com o dedo troca de etapa.
+- **Ordem do conteúdo:** título + "Concluído/Em andamento" e "Teve garantia" → foto → "Sobre esta foto" (descrição, ou frase padrão) → "O que o cliente comentou" (só se houver comentários, via `useComentariosFoto`) → "Avaliação do cliente" → "Depois do serviço" (garantia em palavras simples).
+- **Cliente:** nunca o nome completo. Regra em `lib/nomeDoCliente.ts`: primeiro nome, ou "Cliente deste serviço" quando não há nome (ou o nome é o padrão "Cliente"). Vale também na aba Avaliações (`PerfilAvaliacoes`), que antes mostrava o nome completo e "Cliente Verificado" (a identidade não é verificada).
+- **Rodapé:** "Chamar no WhatsApp" (mensagem de orçamento citando o trabalho; conta o clique pelo mesmo registro do `PerfilCTA`, `registrarCliqueWhatsapp`) e **Compartilhar** só com o ícone ao lado (texto fica para leitores de tela). Sem WhatsApp, o Compartilhar ocupa a largura toda.
+- Sem "#id" nem "Fase 01"; trabalho sem fotos mostra "Este trabalho ainda não tem fotos." com botão Fechar.
+
+**`ModalFotoBase.tsx`** (`components/shared/`) — base de todos os modais de foto (também usada por `SessaoFotos`, `ModalDiscussao` e `WizardZoomModal`). Acessível: `role="dialog"` + `aria-modal` + nome (`titulo`), fecha com Esc ou toque no fundo, um botão "Fechar" de 44px que recebe o foco ao abrir, foco preso dentro (Tab) e devolvido ao fechar, rolagem da página travada, setas ← → trocam de foto e arrastar com o dedo (≥50px na horizontal) também. Foto limitada a ~34% da altura no celular para sobrar espaço ao texto.
 
 **`useCompartilharPerfil`** + `lib/services/compartilharPerfil.service.ts`: funções puras de URL/texto (`buildUrlPerfil`, `buildTextoPadrao`, `buildTextoWhatsApp`) + efeitos (`compartilharViaNative` — restrito a mobile via `pointer: coarse`, `compartilharViaWhatsApp`, `registrarCompartilhamento` via `insertLog`).
 

@@ -5,7 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Images, Star } from 'lucide-react'
 import PortfolioGrid from '@/components/profile/PortfolioGrid'
 import PerfilAvaliacoes from '@/components/profile/PerfilAvaliacoes'
-import ProjetoModal from '@/components/profile/ProjetoModal'
+import ProjetoModal, { type ContatoDoModal } from '@/components/profile/ProjetoModal'
 import type { ProjetoPerfil, AvaliacaoPerfil } from '@/types/perfil'
 
 type Tab = 'portfolio' | 'avaliacoes'
@@ -14,9 +14,11 @@ interface Props {
   projetos: ProjetoPerfil[]
   avaliacoes: AvaliacaoPerfil[]
   portfolioObrigatorio?: boolean // NEW: controlar visibilidade da aba
+  /** Contato do profissional para o botão de WhatsApp dentro do modal do trabalho. */
+  contato?: ContatoDoModal
 }
 
-export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio = true }: Props) {
+export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio = true, contato }: Props) {
   // Contagem da aba Portfólio exclui projetos sem_fotos — eles nunca
   // aparecem na grade (ver PortfolioGrid), então não devem inflar o badge.
   const projetosComFoto = projetos.filter(p => !p.sem_fotos)
@@ -91,6 +93,7 @@ export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio 
         <ProjetoModal
           projeto={projetoAberto}
           onClose={fecharModal}
+          contato={contato}
         />
       )}
     </section>

@@ -178,6 +178,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
                 id:         av.id,
                 indica:     av.indica ?? false,
                 comentario: av.comentario ?? null,
+                cliente_nome: av.cliente_nome ?? null,
               })),
             solicitacoes_garantia: normalizarArray<GarantiaRaw>(p.solicitacoes_garantia)
               .filter(g => STATUS_GARANTIA_PUBLICA.includes(g.status))
