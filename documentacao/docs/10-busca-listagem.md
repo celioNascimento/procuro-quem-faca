@@ -33,6 +33,7 @@ Sem cidade salva, a página de resultados **e a página inicial** mostram o conv
 - Sem recarregar a página (antes havia um `window.location.reload()`).
 - Estados tratados: pedindo, negado, sem cidade atendida por perto, erro (com "Tentar de novo") e aparelho sem localização. "Agora não" some por 30 dias (`localStorage`).
 - Coordenadas vão ao OpenStreetMap (Nominatim) só para achar a cidade e não são guardadas (`lib/localizacao.ts`).
+- Na **home** o convite usa a versão curta (`<ConviteLocalizacao compacto />`: mesmo aviso de privacidade em uma frase, ícone escondido no celular para os dois botões caberem na mesma linha), para não disputar a primeira tela com a busca.
 
 ## Filtros e contagens
 
@@ -74,6 +75,17 @@ Limite: a página ainda baixa os perfis da cidade (ou do catálogo todo) de uma 
 - `hooks/usePrestadores.ts`, `hooks/useFiltrosParams.ts`, `hooks/useFiltrosPrestadores.ts`, `hooks/useRestaurarScroll.ts`
 - `lib/buscaFiltros.ts`, `lib/ordenacao.ts`, `lib/prestadorUtils.ts` (`getTituloBusca`), `lib/anunciosEntreCards.ts`, `lib/localizacao.ts`, `lib/contexts/LocationContext.tsx`
 - `components/busca/*`, `components/filtros/*`, `components/cards/PrestadorCard.tsx`
+
+## Home (`app/page.tsx`)
+
+Porta de entrada: logo, o que o site faz, busca e sugestões. Tom igual ao da lista e do perfil (texto de no mínimo 14 px nos elementos de ação, sem itálico nem caixa-alta, contraste a partir de 4,5:1).
+
+- **Título e frase:** um único `<h1>` ("Encontre profissionais perto de você") e a frase de apoio "Veja o perfil e chame direto no WhatsApp." A logo não é link (já estamos na home).
+- **Busca (`components/home/SearchForm.tsx`):** campo com nome acessível ("O que você procura?"), teclado de busca e placeholder fixo. **Foco automático só em computador** (`pointer: fine`); no celular o teclado não abre sozinho nem rola a página. Busca vazia mostra um aviso em texto (`role="alert"`, some em 4 s), sem trocar o placeholder. No celular o botão "Buscar" ocupa a largura toda.
+- **Sugestões:** chips de 44 px de altura, vindas de `useSugestoes` (fallback em `config/categorias.ts`).
+- **Topo (`HeaderBotoes`):** "Área do cliente" mostra o texto também no celular (só abaixo de 360 px fica o ícone do Google, com o nome para leitores de tela). O botão dispara o login com Google direto. Altura do cabeçalho: 64 px (celular) e 72 px (`md`), como nas outras telas.
+- **Cartão "É prestador de serviços?":** aparece para visitante e cliente logado ("Quer oferecer serviços?"). **Prestador logado não vê o cartão**: "Meu Painel"/"Completar Cadastro" no topo já leva ao mesmo lugar.
+- Testes: `app/page.test.tsx`, `components/home/SearchForm.test.tsx`, `components/home/HeaderBotoes.test.tsx`.
 
 ## Navegação e voltar
 

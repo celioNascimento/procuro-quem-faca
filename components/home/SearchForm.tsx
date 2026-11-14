@@ -1,7 +1,10 @@
-//components/home/SearchForm.tsx 
+//components/home/SearchForm.tsx
+//
+// Campo de busca da home. Sem foco automático no celular: ele abria o teclado na hora, cobria as
+// sugestões e rolava a página. Em computador (mouse), o foco continua automático.
 
 'use client'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 type Props = {
   busca: string
@@ -13,6 +16,13 @@ type Props = {
 export default function SearchForm({ busca, setBusca, onSubmit, temErro }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    // pointer: fine = mouse/trackpad (computador). Celular e tablet (toque) não recebem foco automático.
+    if (window.matchMedia?.('(pointer: fine)').matches) {
+      inputRef.current?.focus({ preventScroll: true })
+    }
+  }, [])
+
   function handleSubmitInterno(e: React.FormEvent) {
     e.preventDefault()
     const valorReal = inputRef.current?.value || ''
@@ -20,7 +30,7 @@ export default function SearchForm({ busca, setBusca, onSubmit, temErro }: Props
   }
 
   return (
-    <form onSubmit={handleSubmitInterno} className="w-full flex flex-col items-center gap-4 group">
+    <form onSubmit={handleSubmitInterno} role="search" className="w-full flex flex-col items-center gap-3 group">
       <div className="w-full relative">
         <div className={`absolute -inset-1 rounded-[2.2rem] blur opacity-10 transition-opacity duration-500 ${
           temErro ? 'bg-red-500' : 'bg-blue-600'
@@ -28,31 +38,43 @@ export default function SearchForm({ busca, setBusca, onSubmit, temErro }: Props
 
         <input
           ref={inputRef}
-          autoFocus
           type="text"
-          placeholder={temErro ? 'Digite algo para buscar...' : 'Ex: pedreiro em Londrina'}
+          name="q"
+          inputMode="search"
+          enterKeyHint="search"
+          autoComplete="off"
+          aria-label="O que você procura?"
+          aria-invalid={temErro}
+          aria-describedby={temErro ? 'erro-busca' : undefined}
+          placeholder="Ex: pedreiro em Londrina"
           value={busca || ''}
           onChange={e => setBusca(e.target.value)}
-          className={`relative w-full h-16 md:h-[72px] pl-8 pr-8 md:pr-48 rounded-[2.2rem] border shadow-2xl outline-none text-lg md:text-xl transition-all duration-300 font-medium ${
+          className={`relative w-full h-16 md:h-[72px] pl-8 pr-8 md:pr-48 rounded-[2.2rem] border shadow-2xl outline-none text-lg md:text-xl transition-all duration-300 font-medium placeholder:text-slate-500 ${
             temErro
-              ? 'border-red-400 bg-white placeholder:text-red-400 shadow-red-100'
+              ? 'border-red-400 bg-white text-slate-700 shadow-red-100'
               : 'border-slate-200 bg-white text-slate-700 focus:border-blue-500 shadow-blue-900/5'
           }`}
         />
 
         <button
           type="submit"
-          className="hidden md:block absolute right-3 top-3 bottom-3 bg-blue-600 text-white px-12 text-xs rounded-[1.7rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-blue-700 transition-all active:scale-95"
+          className="hidden md:block absolute right-3 top-3 bottom-3 bg-blue-600 text-white px-12 rounded-[1.7rem] font-bold text-sm hover:bg-blue-700 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
-          BUSCAR
+          Buscar
         </button>
       </div>
 
+      {temErro && (
+        <p id="erro-busca" role="alert" className="text-sm font-semibold text-red-700">
+          Digite o que você procura. Por exemplo: pedreiro.
+        </p>
+      )}
+
       <button
         type="submit"
-        className="md:hidden w-40 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-blue-200 active:scale-95"
+        className="md:hidden w-full min-h-14 bg-blue-600 text-white rounded-2xl font-bold text-base shadow-lg shadow-blue-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
       >
-        BUSCAR
+        Buscar
       </button>
     </form>
   )
