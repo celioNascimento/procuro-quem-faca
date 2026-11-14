@@ -82,12 +82,12 @@ export default function PaginaAcompanhamento({
         AJUSTE 1: pt-16 → pt-24 no mobile.
         O header fixo tem ~56-64px de altura; com pt-16 (64px) o card ficava
         colado. pt-24 (96px) abre o respiro necessário sem mexer no desktop
-        (md:pt-28 permanece igual).
+        (no desktop, md:pt-24: o cabeçalho tem 72px).
       */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-24 md:pt-28 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-24 md:pt-24 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex flex-col lg:flex-row lg:items-start gap-3 lg:gap-6">
 
-          <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-32 space-y-4">
+          <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-22 space-y-4">
             <CardPrestador
               projeto={projeto}
               onShare={handleShare}

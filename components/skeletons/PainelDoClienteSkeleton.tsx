@@ -3,14 +3,16 @@ import { Skeleton } from './Skeleton'
 export default function PainelDoClienteSkeleton() {
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-32 font-sans antialiased" aria-busy="true" aria-label="Carregando painel do cliente">
-      <nav className="fixed inset-x-0 top-0 z-[100] h-16 border-b border-slate-100 bg-white/95 backdrop-blur-md md:h-28">
+      <nav className="fixed inset-x-0 top-0 z-[100] h-16 border-b border-slate-100 bg-white md:h-18">
         <div className="mx-auto flex h-full max-w-5xl items-center justify-between px-5">
-          <Skeleton className="size-10 rounded-xl bg-slate-100 md:size-11" />
-          <Skeleton className="h-10 w-40 bg-slate-100 md:h-14 md:w-56" />
-          <Skeleton className="size-10 rounded-xl bg-slate-100 md:size-11" />
+          <div className="flex items-center gap-2 md:gap-4">
+            <Skeleton className="size-11 rounded-xl bg-slate-100" />
+            <Skeleton className="h-10 w-36 bg-slate-100 md:w-52" />
+          </div>
+          <Skeleton className="size-11 rounded-xl bg-slate-100" />
         </div>
       </nav>
-      <div className="mx-auto max-w-5xl px-5 pb-10 pt-20 md:pt-36">
+      <div className="mx-auto max-w-5xl px-5 pb-10 pt-20 md:pt-26">
         <div className="mb-6 flex flex-col gap-3 sm:mb-8">
           <Skeleton className="h-3 w-24 bg-blue-100" />
           <Skeleton className="h-8 w-72 rounded-lg" />

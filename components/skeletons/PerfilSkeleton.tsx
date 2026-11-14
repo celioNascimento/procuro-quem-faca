@@ -7,7 +7,7 @@ export default function PerfilSkeleton() {
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800 overflow-hidden" aria-busy="true" aria-label="Carregando perfil público">
       <Header href="/prestadores" />
 
-      <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 lg:px-8 lg:pt-32">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 lg:px-8 md:pt-26 lg:pt-26">
         {/* AdCard Skeleton - Espelhando o banner arredondado vermelho/laranja */}
         <div className="mx-auto flex w-full max-w-3xl items-center justify-center animate-pulse">
           <div className="w-full h-[140px] md:h-[160px] rounded-[2.5rem] bg-slate-200/70" />
@@ -16,7 +16,7 @@ export default function PerfilSkeleton() {
         <div className="mt-5 grid items-start gap-6 lg:mt-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] xl:gap-14">
           
           {/* Coluna Esquerda - Hero (Sticky) */}
-          <aside className="min-w-0 lg:sticky lg:top-28">
+          <aside className="min-w-0 lg:sticky lg:top-26">
             <div className="flex flex-col gap-4 animate-pulse">
               
               {/* Card Hero (Avatar à esquerda, info à direita) */}

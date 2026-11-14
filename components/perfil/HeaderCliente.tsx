@@ -1,10 +1,9 @@
-//components/perfil/HeaderCliente.tsx 
+//components/perfil/HeaderCliente.tsx
 
 'use client'
-import Link from 'next/link'
 import { LogOut, ChevronLeft } from 'lucide-react'
 import { useHeaderCliente } from '@/hooks/useHeaderCliente'
-import Logo from '@/components/Logo'
+import HeaderBase from '@/components/HeaderBase'
 
 interface HeaderClienteProps {
   nomeCliente?: string
@@ -15,54 +14,39 @@ export default function HeaderCliente({ nomeCliente }: HeaderClienteProps) {
   const nome = nomeCliente || ''
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md font-sans border-b border-slate-100 overflow-hidden">
-      <div className="max-w-5xl mx-auto px-4 h-16 md:h-28 flex items-center justify-between">
-
-        {/* Esquerda — voltar */}
-        <div className="w-10 md:w-32 flex justify-start items-center shrink-0">
-          <button
-            onClick={handleBack}
-            className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 hover:text-blue-600 hover:border-blue-100 hover:shadow-sm transition-all active:scale-95"
-            title="Voltar"
-          >
-            <ChevronLeft size={20} strokeWidth={3} />
-          </button>
-        </div>
-
-        {/* Centro — logo (idêntico ao Header público) */}
-        <div className="flex-1 flex justify-center items-center px-2">
-          <Link href="/" className="transition-all hover:opacity-80 active:scale-95">
-            <Logo variant="header" priority />
-          </Link>
-        </div>
-
-        {/* Direita — nome + logout */}
-        <div className="w-10 md:w-32 flex justify-end items-center gap-2 shrink-0">
+    <HeaderBase
+      voltar={
+        <button
+          onClick={handleBack}
+          aria-label="Voltar"
+          className="flex size-11 items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 transition-all hover:border-blue-100 hover:text-blue-600 hover:shadow-sm active:scale-95"
+        >
+          <ChevronLeft size={20} strokeWidth={3} />
+        </button>
+      }
+      direita={
+        <>
           {nome && (
-            <div className="hidden md:flex flex-col items-end min-w-0">
-              <span className="text-[9px] font-black uppercase text-slate-400 leading-none tracking-widest whitespace-nowrap">
-                Painel
-              </span>
-              <span className="text-[12px] font-black italic uppercase text-slate-900 tracking-tighter text-right max-w-[100px] leading-tight mt-0.5 truncate">
-                {nome}
-              </span>
+            <div className="hidden min-w-0 flex-col items-end md:flex">
+              <span className="text-xs text-slate-500">Painel</span>
+              <span className="max-w-40 truncate text-sm font-semibold leading-tight text-slate-900">{nome}</span>
             </div>
           )}
 
           <button
             onClick={handleLogout}
             disabled={saindo}
-            className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all active:scale-95 disabled:opacity-50 shrink-0"
+            aria-label="Sair da conta"
             title="Sair da conta"
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 transition-all hover:border-red-100 hover:bg-red-50 hover:text-red-500 active:scale-95 disabled:opacity-50"
           >
             {saindo
-              ? <div className="w-4 h-4 border-2 border-red-300 border-t-transparent rounded-full animate-spin" />
+              ? <div className="size-4 animate-spin rounded-full border-2 border-red-300 border-t-transparent" />
               : <LogOut size={18} />
             }
           </button>
-        </div>
-
-      </div>
-    </nav>
+        </>
+      }
+    />
   )
 }

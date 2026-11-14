@@ -25,7 +25,7 @@ export default function MeusDados() {
   const { dados, resumo, carregando, precisaLogin, erro, baixar } = useMeusDados()
 
   return (
-    <main className="min-h-screen bg-[#FDFDFD] pt-32 font-sans">
+    <main className="min-h-screen bg-[#FDFDFD] pt-32 md:pt-22 font-sans">
       <Header href="/" />
       <div className="mx-auto max-w-2xl space-y-6 px-6 pb-16 pt-6">
         <div className="space-y-3">

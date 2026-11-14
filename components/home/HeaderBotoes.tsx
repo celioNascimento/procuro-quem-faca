@@ -7,9 +7,11 @@ import { useAuth } from '@/hooks/useAuth'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { insertLog } from '@/lib/db/logs'
 
-const btnGhost   = 'flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full whitespace-nowrap bg-white/80 backdrop-blur-sm border border-slate-200/70 text-slate-500 text-[10px] md:text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md hover:bg-white hover:text-slate-700 transition-all duration-200 active:scale-95'
-const btnPrimary = 'flex items-center gap-1.5 px-4 py-2 md:px-5 md:py-2.5 rounded-full whitespace-nowrap bg-blue-600 text-white text-[10px] md:text-xs font-black uppercase tracking-wider shadow-md hover:bg-blue-700 transition-all duration-200 active:scale-95'
-const skeleton   = 'h-8 md:h-9 rounded-full animate-pulse bg-slate-100'
+// Mesmo estilo dos botões do cabeçalho das outras telas: texto normal (não caixa-alta), 14px, área de toque de 44px.
+const btnBase    = 'flex min-h-11 items-center gap-2 rounded-xl whitespace-nowrap px-4 text-sm font-semibold transition-all duration-200 active:scale-95 md:px-5'
+const btnGhost   = `${btnBase} border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-blue-200 hover:bg-blue-50`
+const btnPrimary = `${btnBase} bg-blue-600 text-white shadow-sm shadow-blue-200 hover:bg-blue-700`
+const skeleton   = 'h-11 rounded-xl animate-pulse bg-slate-100'
 
 export function HeaderBotoes() {
   const { session, role, prestadorStatus, roleLoading, loading, erroLogin, loginGoogle } = useAuth()
@@ -38,7 +40,7 @@ export function HeaderBotoes() {
     return (
       <>
         {erroLogin && (
-          <span className="text-[9px] font-semibold text-red-400 mr-1 animate-in fade-in">
+          <span className="text-xs font-semibold text-red-600 mr-1 animate-in fade-in">
             Falha. Tente novamente.
           </span>
         )}
@@ -63,7 +65,7 @@ export function HeaderBotoes() {
           onClick={() => insertLog({ acao: 'CLIQUE_SOU_PROFISSIONAL' })}
           className={btnPrimary}
         >
-          <LogIn size={13} />
+          <LogIn size={16} />
           <span className="hidden sm:inline">Sou </span>Profissional
         </Link>
       </>
@@ -73,12 +75,12 @@ export function HeaderBotoes() {
   return (
     <>
       <Link href="/painel/perfil" className={btnGhost}>
-        <User size={13} className="text-blue-500 shrink-0" />
+        <User size={16} className="text-blue-500 shrink-0" />
         <span>Cliente</span>
       </Link>
       
       <Link href={painelHref} className={btnPrimary}>
-        <LayoutDashboard size={13} className="shrink-0" />
+        <LayoutDashboard size={16} className="shrink-0" />
         <span className="hidden sm:inline">
           {cadastroPendente ? 'Completar Cadastro' : 'Meu Painel'}
         </span>

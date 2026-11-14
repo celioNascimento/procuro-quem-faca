@@ -85,7 +85,7 @@ export default function PaginaDenuncia() {
   return (
     <main className="min-h-screen bg-[#F8FAFC]">
       <Header href="/" />
-      <div className="max-w-xl mx-auto pt-32 md:pt-40 px-6">
+      <div className="max-w-xl mx-auto pt-32 md:pt-28 px-6">
         
         <header className="mb-10 text-center md:text-left">
           <span className="bg-red-50 text-red-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-4 inline-block">

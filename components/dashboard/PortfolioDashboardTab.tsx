@@ -89,7 +89,7 @@ export default function PortfolioDashboardTab() {
               onAdicionarTrabalho={abrirNovo}
             />
             {meuPrestadorId !== null && (
-              <div id="vitrine-de-fotos" className="scroll-mt-32">
+              <div id="vitrine-de-fotos" className="scroll-mt-22">
                 <VitrineDeFotos
                   prestadorId={meuPrestadorId}
                   inicial={{

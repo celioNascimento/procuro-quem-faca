@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function QuemSomos() {
   return (
-    <main className="min-h-screen bg-slate-50 px-6 pb-16 pt-24 text-slate-800 md:px-20 md:pb-20 md:pt-36">
+    <main className="min-h-screen bg-slate-50 px-6 pb-16 pt-24 text-slate-800 md:px-20 md:pb-20 md:pt-26">
       <Header href="/" />
 
       <div className="mx-auto max-w-3xl rounded-[3rem] border border-slate-100 bg-white p-8 shadow-sm md:p-16">
