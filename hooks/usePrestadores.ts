@@ -134,6 +134,7 @@ export function usePrestadores() {
             regiao_nome:   regiaoRelacionada?.nome                    || regiaoDaCidade?.nome || '',
             grupo_id:      normalizarId(p.grupo_id                     || categoriaRelacionada?.grupo_id || grupoRelacionado?.id),
             grupo_nome:    grupoRelacionado?.nome                    || '',
+            grupo_icone:   grupoRelacionado?.icone                   || null,
             media_nota:    mediaMap[p.id] ? mediaMap[p.id].soma / mediaMap[p.id].total : 0,
             total_avals:   mediaMap[p.id]?.total                    || 0,
           }

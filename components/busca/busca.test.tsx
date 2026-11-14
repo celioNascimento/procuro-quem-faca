@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import type { ComponentProps } from 'react'
 import type { Prestador } from '@/types/prestador'
+import { CHAVE_DICA_LISTA, DicaDaLista } from '@/components/busca/DicaDaLista'
 
 vi.mock('next/link', () => ({
   default: ({ href, children, ...resto }: ComponentProps<'a'> & { href: string }) => <a href={href} {...resto}>{children}</a>,
@@ -48,10 +49,9 @@ describe('CidadeDaBusca', () => {
     onVerOutrasCidades: vi.fn(), onVoltarParaMinhaCidade: vi.fn(),
   }
 
-  it('mostra a cidade e oferece "Ver outras cidades"', () => {
+  it('oferece "Ver outras cidades" (a cidade em si já está no título da página)', () => {
     const onVer = vi.fn()
     render(<CidadeDaBusca {...base} cidadeNome="Londrina" origem="salva" onVerOutrasCidades={onVer} />)
-    expect(screen.getByText('Londrina')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Ver outras cidades' }))
     expect(onVer).toHaveBeenCalledTimes(1)
   })
@@ -59,7 +59,7 @@ describe('CidadeDaBusca', () => {
   it('com todas as cidades, oferece voltar para a cidade salva', () => {
     const onVoltar = vi.fn()
     render(<CidadeDaBusca {...base} cidadeNome={null} origem={null} ampliar onVoltarParaMinhaCidade={onVoltar} />)
-    expect(screen.getByText('todas as cidades')).toBeTruthy()
+    expect(screen.getByText('Todas as cidades')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Voltar para Londrina' }))
     expect(onVoltar).toHaveBeenCalledTimes(1)
   })
@@ -67,7 +67,6 @@ describe('CidadeDaBusca', () => {
   it('também oferece "Ver outras cidades" quando a cidade foi escrita na busca', () => {
     const onVer = vi.fn()
     render(<CidadeDaBusca {...base} cidadeNome="Maringá" origem="texto" onVerOutrasCidades={onVer} />)
-    expect(screen.getByText('Maringá')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Ver outras cidades' }))
     expect(onVer).toHaveBeenCalledTimes(1)
   })
@@ -166,5 +165,24 @@ describe('ResultadosPaginados', () => {
     render(<ResultadosPaginados prestadores={lista(25)} quantidadeInicial={10} session={null} contextoAnuncio="" />)
     fireEvent.click(screen.getByRole('button', { name: 'Ver mais 10' }))
     expect(sessionStorage.getItem('pqf:qtd:' + window.location.pathname + window.location.search)).toBe('20')
+  })
+})
+
+describe('DicaDaLista', () => {
+  it('na primeira visita mostra a dica, inclusive o aviso sobre perfis de dados públicos', () => {
+    render(<DicaDaLista />)
+    expect(screen.getByText(/pedir orçamento não custa nada/i)).toBeTruthy()
+    expect(screen.getByText(/dados públicos de contato/i)).toBeTruthy()
+  })
+
+  it('"Entendi" fecha a dica e lembra disso neste aparelho', () => {
+    const { unmount } = render(<DicaDaLista />)
+    fireEvent.click(screen.getByRole('button', { name: 'Entendi' }))
+    expect(screen.queryByRole('complementary')).toBeNull()
+    expect(localStorage.getItem(CHAVE_DICA_LISTA)).toBe('1')
+
+    unmount()
+    render(<DicaDaLista />)
+    expect(screen.queryByRole('complementary')).toBeNull()
   })
 })

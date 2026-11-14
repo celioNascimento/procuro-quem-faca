@@ -29,7 +29,7 @@ function linha(id: number, cidade: string, extra: Record<string, unknown> = {}) 
     id, nome: `Prof ${id}`, slug: `prof-${id}`, origem_tipo: 'registro_direto', verificado: false, habilidades: [],
     cidade_id: `c-${cidade}`, categoria_id: 'k1', estado_sigla: 'PR',
     cidades: { id: `c-${cidade}`, nome: cidade, estado_sigla: 'PR', regiao_id: 'r1', regioes: { id: 'r1', nome: 'Norte' } },
-    categorias: { id: 'k1', nome: 'Pedreiro', grupo_id: 'g1', categorias_grupos: { id: 'g1', nome: 'Construção' } },
+    categorias: { id: 'k1', nome: 'Pedreiro', grupo_id: 'g1', categorias_grupos: { id: 'g1', nome: 'Construção', icone: 'hammer' } },
     regioes: { id: 'r1', nome: 'Norte' },
     ...extra,
   }
@@ -61,6 +61,7 @@ describe('usePrestadores — cidade', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(getPrestadoresAtivos).toHaveBeenCalledWith(undefined)
     expect(result.current.prestadoresExibidos).toHaveLength(3)
+    expect(result.current.prestadoresExibidos[0].grupo_icone).toBe('hammer')
     expect(result.current.cidadeNome).toBeNull()
   })
 
