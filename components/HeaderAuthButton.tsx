@@ -63,8 +63,8 @@ export function HeaderAuthButton() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-400 bg-white">
-                  <User size={14} />
+                <div className="flex h-full w-full items-center justify-center bg-blue-50 text-blue-600">
+                  <User size={16} />
                 </div>
               )}
             </div>
@@ -90,7 +90,7 @@ export function HeaderAuthButton() {
             onClick={() => setAberto(v => !v)}
             aria-label="Abrir menu da conta"
             aria-expanded={aberto}
-            className="size-11 overflow-hidden rounded-full border-2 border-slate-100 shadow-sm transition-all active:scale-95"
+            className="size-11 overflow-hidden rounded-full border-2 border-blue-100 shadow-sm transition-all active:scale-95"
           >
             {session.user.user_metadata?.avatar_url ? (
               <img
@@ -99,8 +99,8 @@ export function HeaderAuthButton() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-400 bg-slate-50">
-                <User size={14} />
+              <div className="flex h-full w-full items-center justify-center bg-blue-50 text-blue-600">
+                <User size={18} />
               </div>
             )}
           </button>

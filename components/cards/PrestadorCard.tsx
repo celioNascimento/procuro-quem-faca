@@ -5,7 +5,7 @@ import { useState, useRef, useLayoutEffect } from 'react'
 import Link from 'next/link'
 import { MapPin, ChevronRight } from 'lucide-react'
 import type { Prestador } from '@/types/prestador'
-import { getIniciais, getLocalizacao, getPerfilHref } from '@/lib/prestadorUtils'
+import { corDasIniciais, getIniciais, getLocalizacao, getPerfilHref } from '@/lib/prestadorUtils'
 
 type Props = {
   prestador: Prestador
@@ -83,7 +83,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
       <div className="flex flex-col gap-3 px-4 py-4 md:px-5">
         {/* Identidade: foto, nome, categoria e onde atende — tudo junto, sem blocos vazios */}
         <div className="flex min-w-0 items-center gap-4">
-          <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 md:size-20">
+          <div className={`flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border md:size-20 ${prestador.foto_perfil && !imgError ? 'border-slate-100 bg-slate-50' : corDasIniciais(prestador.nome || '')}`}>
             {prestador.foto_perfil && !imgError ? (
               <img
                 src={prestador.foto_perfil ?? undefined}
@@ -92,7 +92,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                 onError={() => setImgError(true)}
               />
             ) : (
-              <span aria-hidden="true" className="text-lg font-bold tracking-tight text-slate-700 md:text-xl">
+              <span aria-hidden="true" className="text-lg font-bold tracking-tight md:text-xl">
                 {getIniciais(prestador.nome || '')}
               </span>
             )}

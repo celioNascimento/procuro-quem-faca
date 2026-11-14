@@ -7,32 +7,32 @@ export default function Footer() {
   const emailContato = 'procuroquemfaca@gmail.com'
 
   return (
-    <footer className="w-full bg-white border-t border-slate-100 py-6 mt-auto">
-      <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-4">
+    <footer className="w-full bg-white border-t border-slate-100 py-4 mt-auto">
+      <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-2">
         
         {/* Navegação Principal */}
-        <nav className="flex flex-wrap justify-center gap-4 md:gap-6">
+        <nav className="flex flex-wrap justify-center gap-x-6 gap-y-1">
           <Link 
             href="/privacidade" 
-            className="text-slate-400 hover:text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] transition-colors"
+            className="inline-flex min-h-11 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
           >
             Privacidade
           </Link>
           <Link 
             href="/titular" 
-            className="text-slate-400 hover:text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] transition-colors"
+            className="inline-flex min-h-11 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
           >
             Seus dados
           </Link>
           <Link 
             href="/termos" 
-            className="text-slate-400 hover:text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] transition-colors"
+            className="inline-flex min-h-11 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
           >
             Termos
           </Link>
           <Link 
             href="/quem-somos" 
-            className="text-slate-400 hover:text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] transition-colors"
+            className="inline-flex min-h-11 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
           >
             Quem somos
           </Link>
@@ -40,7 +40,7 @@ export default function Footer() {
           {/* Fale Conosco via E-mail */}
           <a 
             href={`mailto:${emailContato}?subject=Contato via Portal Procuro Quem Faça`}
-            className="text-blue-500 hover:text-blue-700 text-[10px] font-black uppercase tracking-[0.2em] transition-colors"
+            className="inline-flex min-h-11 items-center text-blue-600 hover:text-blue-700 text-sm font-semibold transition-colors"
             title={emailContato}
           >
             Fale Conosco

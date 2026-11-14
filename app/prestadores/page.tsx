@@ -126,25 +126,25 @@ function ListaConteudo() {
         {/* Coluna principal */}
         <div className="flex min-w-0 flex-col gap-4">
 
-          {/* Título + contagem */}
-          <div className="flex items-center justify-between border-l-4 border-blue-600 pl-4 py-1">
-            <div>
+          {/* Título + contagem; a frase de orientação ocupa a largura toda, abaixo */}
+          <div className="border-l-4 border-blue-600 pl-4 py-1">
+            <div className="flex items-start justify-between gap-3">
               <h1 className="text-base md:text-lg font-bold text-slate-800 leading-tight text-balance">
                 {tituloBusca}
               </h1>
-              <p className="text-xs text-slate-500 mt-1.5 uppercase tracking-widest font-medium">
-                Resultados da busca
-              </p>
+              {!loading && prestadoresExibidos.length > 0 && (
+                <span
+                  role="status"
+                  className="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 shrink-0"
+                >
+                  {prestadoresExibidos.length}{' '}
+                  {prestadoresExibidos.length === 1 ? 'encontrado' : 'encontrados'}
+                </span>
+              )}
             </div>
-            {!loading && prestadoresExibidos.length > 0 && (
-              <span
-                role="status"
-                className="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 shrink-0"
-              >
-                {prestadoresExibidos.length}{' '}
-                {prestadoresExibidos.length === 1 ? 'encontrado' : 'encontrados'}
-              </span>
-            )}
+            <p className="mt-1.5 text-sm leading-snug text-slate-600">
+              Toque em um profissional para ver fotos e avaliações e chamar pelo WhatsApp. Pedir orçamento não custa nada.
+            </p>
           </div>
 
           <CidadeDaBusca
@@ -246,8 +246,6 @@ function ListaConteudo() {
             </div>
           )}
 
-          {/* Espaço extra no mobile para não sobrepor o botão flutuante */}
-          <div className="h-16 lg:hidden" />
         </div>
       </div>
     </>
@@ -258,7 +256,15 @@ function ListaConteudo() {
 
 export default function PaginaPrestadores() {
   return (
-    <div className="min-h-screen bg-slate-50 pb-4 antialiased selection:bg-blue-100">
+    <div
+      className="min-h-screen bg-slate-50 pb-4 antialiased selection:bg-blue-100"
+      // Mesmo clima da página inicial: um brilho azul suave no topo em vez do cinza liso
+      style={{
+        backgroundImage: 'radial-gradient(ellipse 90% 70% at 50% -5%, rgba(219,234,254,0.9) 0%, transparent 70%)',
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: '100% 28rem',
+      }}
+    >
       <Header href="/" larga />
       {/* O Header é fixo e mede h-16 (64px) no celular e md:h-18 (72px) daí em diante.
           Este espaço precisa acompanhar essas alturas; com menos, o título da busca

@@ -11,9 +11,29 @@ import type { AdFallback } from '@/types/ads'
 type Props = {
   fallback: AdFallback
   contexto?: string
+  /** Faixa fina (uma linha): usada no topo da lista, para os profissionais aparecerem na primeira tela. */
+  compacto?: boolean
 }
 
-export function AdCardFallback({ fallback, contexto = '' }: Props) {
+export function AdCardFallback({ fallback, contexto = '', compacto = false }: Props) {
+  if (compacto) {
+    return (
+      <Link
+        href={fallback.href(contexto)}
+        className="group flex min-h-14 w-full items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-2 shadow-sm transition-all hover:shadow-md active:scale-[0.99]"
+      >
+        <span aria-hidden="true" className="text-xl">{fallback.emoji}</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs font-semibold uppercase tracking-wide text-slate-500">Anúncio</span>
+          <span className="block truncate text-sm font-bold text-slate-900">{fallback.titulo}</span>
+        </span>
+        <span className="shrink-0 whitespace-nowrap text-sm font-bold text-blue-700 group-hover:underline">
+          {fallback.cta} →
+        </span>
+      </Link>
+    )
+  }
+
   return (
     <Link
       href={fallback.href(contexto)}

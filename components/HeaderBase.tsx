@@ -1,7 +1,7 @@
 //components/HeaderBase.tsx
 //
 // Casca única dos cabeçalhos do app (Header público e HeaderCliente): mesma altura, mesma sombra,
-// logo à esquerda ao lado do botão de voltar e as ações à direita.
+// logo centralizada entre o botão de voltar (esquerda) e as ações (direita).
 //
 // ALTURA: h-16 (64px) no celular e md:h-18 (72px) a partir de 768px. As páginas reservam esse espaço
 // no topo (pt-*) e os elementos "sticky" usam o mesmo valor (top-16 / md:top-18, ou 72px + folga).
@@ -26,19 +26,20 @@ export default function HeaderBase({ voltar, direita, larga = false }: Props) {
       {/* Fio com as cores da marca (azul e amarelo da logo) */}
       <div aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-blue-700 via-blue-500 via-80% to-amber-400" />
 
-      <div className={`mx-auto flex h-16 items-center justify-between gap-3 md:h-18 ${larga ? 'max-w-6xl px-5 md:px-6' : 'max-w-5xl px-4'}`}>
-        <div className="flex min-w-0 items-center gap-2 md:gap-4">
-          {voltar}
-          <Link
-            href="/"
-            aria-label="Procuro Quem Faça — página inicial"
-            className="shrink-0 rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 active:scale-95"
-          >
-            <Logo variant="header" priority />
-          </Link>
-        </div>
+      {/* Três colunas: as laterais dividem o espaço igualmente, então a logo fica no centro de verdade
+          mesmo quando a direita é mais larga que a esquerda (ex.: "Meu painel" + sair). */}
+      <div className={`mx-auto grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-2 md:h-18 md:gap-4 ${larga ? 'max-w-6xl px-5 md:px-6' : 'max-w-5xl px-4'}`}>
+        <div className="flex min-w-0 items-center justify-start">{voltar}</div>
 
-        {direita && <div className="flex shrink-0 items-center gap-2">{direita}</div>}
+        <Link
+          href="/"
+          aria-label="Procuro Quem Faça — página inicial"
+          className="rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 active:scale-95"
+        >
+          <Logo variant="header" priority />
+        </Link>
+
+        <div className="flex min-w-0 items-center justify-end gap-2">{direita}</div>
       </div>
     </nav>
   )
