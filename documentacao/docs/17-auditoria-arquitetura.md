@@ -15,7 +15,7 @@
 
 ## 1. 🔴 Bug crítico — JSX quebrado em `AnunciosTab.tsx`
 
-**Arquivo:** `components/dashboard/AnunciosTab.tsx`
+**Arquivo:** `components/dashboard/AnunciosTab.tsx` _(arquivo removido em 14/11/2026 por não ter uso)_
 **Status:** resolvido
 
 **Verificação:** no `main` o `<a href={linkWhatsapp} ...>Ver Planos</a>` já estava com a tag de abertura correta (corrigido antes desta rodada). Nenhuma alteração necessária.

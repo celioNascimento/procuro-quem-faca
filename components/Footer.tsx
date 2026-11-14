@@ -51,12 +51,9 @@ export default function Footer() {
         <div className="w-12 h-[1px] bg-slate-100"></div>
 
         {/* Créditos e Copyright */}
-        <div className="text-center space-y-1">
+        <div className="text-center">
           <p className="text-slate-500 text-xs font-medium">
             © {anoAtual} <span className="text-slate-900 font-black tracking-tight uppercase">Procuro Quem Faça</span>
-          </p>
-          <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold">
-            Desenvolvido por <span className="text-blue-600">CRR Nascimento</span>
           </p>
         </div>
 

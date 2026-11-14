@@ -76,7 +76,15 @@ prestadores.vitrine_pago_ate timestamp with time zone
 
 ### Card de destaque de perfil do prestador nos resultados de busca
 
-Hoje `AnunciosTab.tsx` (dashboard) só direciona o prestador ao WhatsApp institucional para manifestar interesse — não há um fluxo de contratação nem um card real de destaque nos resultados de `/prestadores`. Este item converge com o design de "Vitrine paga" descrito no item acima (Geolocalização/Login obrigatório/Vitrine) — a mecânica de lance e desempate já está desenhada ali; falta o fluxo de contratação/billing e a UI do card em si.
+Hoje não há tela de contratação nem um card real de destaque nos resultados de `/prestadores` (a antiga aba `AnunciosTab`, que só levava ao WhatsApp institucional, foi removida em 14/11/2026 por não ser usada). Este item converge com o design de "Vitrine paga" descrito no item acima (Geolocalização/Login obrigatório/Vitrine) — a mecânica de lance e desempate já está desenhada ali; falta o fluxo de contratação/billing e a UI do card em si.
+
+### Orçamento (módulo guardado para o futuro)
+
+Ainda **não lançado**. A plataforma usa "Contatos" (WhatsApp) e não fala em "orçamento" para o usuário. No banco ficam, guardados: a tabela `orcamentos` (vazia) e as funções `obter_orcamento_publico(uuid)` e `responder_orcamento_publico(uuid, text)`. Não existe tela nem código no app que as use.
+- Até o lançamento, o acesso público às duas funções fica fechado (migração `20261114090000_revogar_funcoes_de_orcamento.sql`): um link de orçamento aberto a qualquer pessoa sem login seria uma porta desnecessária.
+- No lançamento: criar a tela, **devolver** o `execute` às funções numa migração nova (`anon` só para `obter_`/`responder_` se o cliente responder sem login) e revisar as regras (RLS da tabela, validade do link, texto ao usuário).
+- "Meus dados" (`lib/meusDados/resumo.ts`) mantém as linhas "Orçamentos enviados/recebidos": só aparecem quando a pessoa tem registros, e a transparência sobre dados pessoais (LGPD) não deve depender de a funcionalidade estar à venda. Hoje, com a tabela vazia, nada é exibido.
+- O botão público "Solicitar Orçamento" (`PerfilCTA.tsx`, `seo-service-page.tsx`) segue pendente de decisão de texto (sugestão: "Chamar no WhatsApp").
 
 ### SEO dinâmico por região
 
@@ -97,7 +105,6 @@ Explicar o diferencial do PQF (registro fotográfico + avaliação vinculada a p
 
 - [ ] Migrar `EditarPerfilTab.tsx` (Dashboard do Prestador) para usar `/confirmar-exclusao` — última implementação divergente do fluxo de exclusão de conta (ver `00-glossario.md`, seção Exclusão de conta)
 - [ ] Mapear/decidir sobre `LocationModal`/`LocationContext` — construído mas não conectado (modal obrigatório de seleção de cidade). Decisão atual: manter desconectado até haver clareza de que múltiplas regiões justificam essa fricção
-- [ ] Finalizar refatoração do wizard do prestador — integrar `WizardForm.tsx`/`WizardTimeline.tsx`/`PrestadorCardHorizontal.tsx` em `UploadWizardContainer.tsx` (hoje ainda com hero/form/timeline inline)
 - [ ] Confirmar se `avaliacoes` tem constraint de unicidade por `projeto_id` (parece ser 1 por projeto pela UI, sem constraint explícita confirmada no schema)
 - [ ] Documentar formalmente o significado de negócio de `origem_tipo: 'vitrine'`
 - [ ] Padronizar nome do parâmetro de URL de retorno — `?from=` (perfil público) vs. `?origem=` (dashboard), mesma função, nomes diferentes
@@ -114,7 +121,6 @@ Explicar o diferencial do PQF (registro fotográfico + avaliação vinculada a p
 - [ ] Se for centralizar a derivação de rótulo/cor a partir de `portfolio_projetos.status`, ver `00-glossario.md` para os 6 pontos hoje implementados independentemente
 - [ ] Testes automatizados (Vitest) cobrindo fluxos críticos (upload, legenda, autenticação) além dos já existentes
 - [ ] Documentar módulo de gestão de geografia (`app/(admin)/admin/geografia`, `lib/db/geografia.ts`) — não mapeado em detalhe ainda
-- [ ] Confirmar `AnunciosTab.tsx` está de fato renderizado em algum ponto do dashboard (não localizado em revisão anterior)
 
 ## Decisões de escopo já tomadas
 

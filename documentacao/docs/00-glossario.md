@@ -12,7 +12,6 @@ Existem **contextos distintos** de avatar, cada um com sua própria fonte de dad
 |---|---|---|---|
 | Prestador — form de cadastro/edição | `components/perfil/FotoUpload.tsx` (variants `cadastro`/`dashboard`) | `prestadores.foto_perfil` | `lib/uploadFoto.ts` → `fazerUploadFoto` |
 | Prestador — card em listagem | `components/cards/PrestadorCard.tsx` (com fallback de iniciais via `getIniciais`) | `prestador.foto_perfil` | — (somente leitura) |
-| Prestador — sidebar do dashboard | `components/dashboard/PrestadorSideCard.tsx` | `foto_perfil` (prop) | — |
 | Prestador — perfil público (hero) | `components/profile/PerfilHero.tsx` | `prestador.foto_perfil` | — |
 | Cliente — card de perfil | `components/perfil/CardPerfilCliente.tsx` (upload clicável direto no avatar) | `profiles.avatar_url` | `ClienteService.uploadClienteAvatar` (`lib/services/cliente.service.ts`) |
 | Cliente — header | `components/perfil/HeaderCliente.tsx` | — (só nome, não exibe avatar) | — |
@@ -45,7 +44,7 @@ Monta `https://wa.me/55<numero>` (prefixo Brasil fixo), com mensagem opcional pr
 **Consumidores que montam o link manualmente, sem usar o util** (candidatos a migrar, se for auditar todos de uma vez):
 - `hooks/useWizardWhatsappLinks.ts` (usado por `useUploadWizard`) — `gerarLinkAceite`/`gerarLinkConclusao` montam `https://wa.me/55${numTelefone}?text=...` diretamente
 - `lib/services/compartilharPerfil.service.ts` — `compartilharViaWhatsApp` monta o link manualmente
-- `lib/ads/fallbacks.ts` e `components/dashboard/AnunciosTab.tsx` — usam `lib/config/contato.ts` (`NUMERO_WHATSAPP_PQF`), propósito diferente (contato institucional, não com um prestador/cliente específico)
+- `lib/ads/fallbacks.ts` — usa `lib/config/contato.ts` (`NUMERO_WHATSAPP_PQF`), propósito diferente (contato institucional, não com um prestador/cliente específico)
 
 **Número institucional do PQF** (canal comercial, distinto de qualquer prestador/cliente): `lib/config/contato.ts` → `NUMERO_WHATSAPP_PQF`.
 
@@ -122,7 +121,7 @@ Todo registro de evento no sistema passa por aqui — não existe mais nenhuma t
 
 **Pontos que derivam rótulo/cor visual a partir do status** (cada um implementa a própria derivação — não há uma função utilitária compartilhada):
 - `components/dashboard/ProjetoCard.tsx` → `getStatusConfig`
-- `components/dashboard/wizard/UploadWizardContainer.tsx` e `WizardForm.tsx` → badge inline
+- `components/dashboard/wizard/UploadWizardContainer.tsx` → badge inline
 - `components/acompanhamento/LinhaDeTempo.tsx` → badge inline
 - `components/acompanhamento/CardPrestador.tsx` → `statusLabel` inline
 - `components/meus-servicos/ServicoCard.tsx` → prop `modo` (`pendente`/`andamento`/`concluido` — nomenclatura de UI, mapeada a partir do status real por quem chama)
@@ -199,7 +198,7 @@ Campo `indica` em `avaliacoes` e nos tipos relacionados. Representa a opinião e
 
 1. **Anúncio para lojistas/fornecedores** (ex: loja de material de construção anunciando na busca) — `components/ads/AdCard.tsx` + `AdCardFallback.tsx` + `hooks/useAdContext.ts` + `lib/ads/fallbacks.ts` + `lib/ads/categoria-segmento.ts`. Hoje sempre em modo fallback (`anuncio={null}`), direcionando para WhatsApp institucional via `lib/config/contato.ts`.
 
-2. **Destaque de perfil do prestador** — `components/dashboard/AnunciosTab.tsx`, também direciona ao WhatsApp institucional, mas com mensagem própria (prestador interessado em destaque, não lojista). Conceitualmente relacionado a `prestadores.origem_tipo = 'vitrine'` (prioridade máxima na busca), mas não há hoje um fluxo de contratação real conectando os dois — é uma pendência de design, registrada no roadmap.
+2. **Destaque de perfil do prestador** — ainda não existe na aplicação (a antiga aba `AnunciosTab` foi removida em 14/11/2026 por não ser usada em nenhuma tela). Conceitualmente relacionado a `prestadores.origem_tipo = 'vitrine'` (prioridade máxima na busca); falta o fluxo de contratação e a tela — pendência de design, registrada no roadmap.
 
 **Infraestrutura de anúncios** (`anunciantes`, `anuncios`, `anuncios_segmentacoes`, `anuncios_metricas_diarias`, `anuncios_eventos_sessao`, `transacoes_carteira`) — schema, índices e RLS estão presentes; rastreamento CPC em tempo real, carteira e leilão ainda não foram confirmados como ativos no frontend (ver `03-banco-de-dados.md`).
 
@@ -224,7 +223,7 @@ Três dimensões independentes — não confundir:
 - **Geração/normalização:** `lib/mascaras.ts` → `formatarParaSlug`
 - **Verificação de disponibilidade:** `lib/services/cadastroPrestador.service.ts` → `verificarSlugDisponivel`, consumida por `hooks/useSlugCheck.ts` (debounce de 500ms)
 - **Uso na URL pública:** `app/[slug]/page.tsx`
-- **Uso em links internos:** `components/dashboard/PrestadorSideCard.tsx` (`/${slug}`), `components/cards/PrestadorCard.tsx` (via `getPerfilHref`, `lib/prestadorUtils.ts`)
+- **Uso em links internos:** `components/cards/PrestadorCard.tsx` (via `getPerfilHref`, `lib/prestadorUtils.ts`)
 
 ---
 

@@ -63,7 +63,6 @@ Componentes de página (`app/**/page.tsx`) tendem a ser wrappers finos que conso
 ### Módulos com peças construídas mas não conectadas
 
 - **`lib/contexts/LocationContext.tsx` + `components/location/LocationModal.tsx`** — modal de seleção obrigatória de cidade via cookie. `LocationProvider` nunca envolve a árvore em `app/layout.tsx`. Decisão consciente de não conectar: a busca por texto livre (`"pedreiro em Londrina"`, via `usePrestadores`) já cobre a necessidade no estágio mono-região atual. Ver `00-glossario.md`, seção Localização.
-- **`components/dashboard/WizardForm.tsx`, `WizardTimeline.tsx`, `PrestadorCardHorizontal.tsx`** — peças de uma refatoração do wizard do prestador, prontas mas não integradas em `UploadWizardContainer.tsx` (que ainda tem hero/form/timeline inline).
 - **`components/profile/AvaliacoesTab.tsx`, `AvaliacaoCard.tsx`, `AvaliacoesResumo.tsx`** — conjunto de exibição de avaliações com distribuição por nota, não conectado a nenhuma tela. `calcularStats` (`lib/utils/avaliacao.utils.ts`) só marca `exibir: true` com 10+ avaliações — decisão de produto para não expor distribuição com baixo volume.
 
 ## Área Administrativa `(admin)`

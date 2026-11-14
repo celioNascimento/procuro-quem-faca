@@ -28,7 +28,7 @@ Reaproveita hooks/seções do Cadastro. Promove `ativacao_status` automaticament
 
 ### `PortfolioDashboardTab.tsx`
 
-Orquestra `usePortfolioDashboard` (usa `portfolioDashboard.service.ts`). Alterna entre visão lista (`PrestadorSideCard` + `DashboardHeader` + grid de `ProjetoCard`/`EstadoVazio`) e visão wizard (`UploadWizardContainer`, `key` por projeto para reset de estado).
+Orquestra `usePortfolioDashboard` (usa `portfolioDashboard.service.ts`). Alterna entre visão lista (`DashboardHeader` + grid de `ProjetoCard`/`EstadoVazio`) e visão wizard (`UploadWizardContainer`, `key` por projeto para reset de estado).
 
 **`ProjetoCard.getStatusConfig`** — mapeia `status` + presença de avaliação em 5 rótulos: Rascunho, Aguard. cliente, Em progresso, Concluído, Aguard. avaliação. Derivação de UI, não status de banco.
 
@@ -37,7 +37,6 @@ Orquestra `usePortfolioDashboard` (usa `portfolioDashboard.service.ts`). Alterna
 - **`UploadWizardContainer.tsx`** — tela guiada de criar e acompanhar um trabalho com cliente (ver "Tela de novo trabalho" abaixo). Usa `PassosDoTrabalho`, `DadosDoClienteCard`, `CartaoDeFoto` e `EnvioAoCliente`.
 - **`WizardCompleted.tsx`** — exibido quando `isProjetoConcluido`, mostra fotos + comentários do cliente + compartilhar
 - **`WizardZoomModal.tsx`** — foto ampliada com a descrição e os comentários do cliente. Só para olhar: a descrição se edita no cartão da foto e o modal sempre pode ser fechado. Usa `ModalFotoBase` (`components/shared/`)
-- **`WizardForm.tsx`, `WizardTimeline.tsx`** — peças de refatoração antigas, não usadas pelo `UploadWizardContainer`
 
 #### Tela de novo trabalho (repaginada em 13/11/2026)
 
@@ -73,14 +72,6 @@ Layout em duas colunas no computador (foto + conta conectada à esquerda, fixas 
 - O botão do banner do painel leva a `/dashboard?novo=1`, que abre a tela de novo trabalho uma vez e limpa o endereço.
 - A faixa de 7 dias (`ResumoDesempenhoStrip`) não aparece enquanto visitas e contatos estiverem zerados.
 
-### `PrestadorSideCard.tsx`
-
-Card de identidade + dados profissionais na sidebar. Link "Ver meu perfil" → `/${slug}` (rota raiz, não `/p/${slug}`).
-
-### `AnunciosTab.tsx`
-
-Card estático direcionando ao WhatsApp institucional (`lib/config/contato.ts`), com mensagem própria de prestador interessado em destaque de perfil — distinto do módulo de anúncios para lojistas (ver `11-anuncios.md`).
-
 ### Aba "Desempenho" — `DesempenhoDashboardTab.tsx`
 
 Antes, visitas ao perfil e contatos pelo WhatsApp ficavam fixos no topo do dashboard e as avaliações tinham aba própria. Agora tudo vive em "Desempenho", com um seletor segmentado (`role="tablist"`, setas esquerda/direita alternam) em duas sub-abas:
@@ -114,10 +105,11 @@ Detalhes técnicos: QR próprio em `lib/qr/qrcode.ts` (byte, EC M, versões 1–
 - **Envio de fotos** (`lib/uploadFoto.ts`, wizard): a foto antiga do perfil não é mais apagada *antes* de a nova ser salva (se o envio falhasse ou a pessoa saísse sem salvar, o perfil ficava com foto quebrada); ela só sai do storage depois que o perfil é salvo (`EditarPerfilTab`). Só imagens são aceitas e a extensão vem do tipo do arquivo, não do nome. Aparelhos que entregam a foto sem tipo continuam funcionando (vale a extensão, se for de imagem).
 - Logs de depuração (`console.log` com emoji) removidos de `prestadorPerfil.service.ts`; textos de 9–11 px dos cartões do dashboard passaram para 12 px.
 
+- **Código sem uso removido (14/11/2026):** `PrestadorSideCard`, `PrestadorCardHorizontal`, `AnunciosTab`, `WizardForm` e `WizardTimeline` — nenhuma tela os usava. Ficam no histórico do Git se um dia forem necessários.
+- **Rodapé** (`components/Footer.tsx`): saiu a linha "Desenvolvido por …"; ficam só o © com o nome da plataforma e os links institucionais.
+
 **Conferido e OK**: o dono do perfil não consegue se auto-verificar, se desbloquear nem mexer em contagens (trigger `prestadores_proteger_campos`); a rota `/api/prestadores/meus-cliques` exige login e só devolve os números do próprio prestador; funções `admin_*` checam `is_admin()`; todas as tabelas têm RLS.
 
 **Pendências conhecidas (decisão do dono do produto)**
-- Funções públicas do módulo de orçamentos (`obter_orcamento_publico`, `responder_orcamento_publico`) sem uso no código — migração `20261114090000_revogar_funcoes_de_orcamento.sql` tira o acesso; a tabela `orcamentos` (vazia) e as funções podem ser apagadas depois. "Meus dados" ainda lista "Orçamentos enviados/recebidos" (`lib/meusDados/resumo.ts`).
-- Componentes sem uso: `PrestadorSideCard.tsx`, `PrestadorCardHorizontal.tsx`, `AnunciosTab.tsx` (a doc os trata como roadmap).
-- Proteção contra senhas vazadas (Supabase Auth) desligada — é um interruptor no painel do Supabase.
+- Módulo de orçamentos: **guardado para o futuro** (ver `13-roadmap.md`). A tabela `orcamentos` (vazia) e as duas funções públicas ficam no banco, mas sem acesso público até o lançamento (migração `20261114090000_revogar_funcoes_de_orcamento.sql`). "Meus dados" continua listando "Orçamentos enviados/recebidos" só quando a pessoa tem registros (transparência LGPD) — hoje nada aparece.
 - Desempenho do banco (avisos do Supabase, sem impacto com o volume atual): 136 casos de políticas permissivas repetidas (só `prestadores` tem 10), 54 políticas que reavaliam `auth.uid()` por linha (trocar por `(select auth.uid())`), 32 chaves estrangeiras sem índice.
