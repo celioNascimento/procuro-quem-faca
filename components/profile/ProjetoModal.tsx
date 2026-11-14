@@ -6,6 +6,7 @@ import type { ProjetoPerfil, GarantiaPublica } from '@/types/perfil'
 import { useSlides } from '@/hooks/useSlides'
 import { useComentariosFoto } from '@/hooks/useComentariosFoto'
 import { ModalFotoBase } from '@/components/shared/ModalFotoBase'
+import { descricaoOuPadrao } from '@/lib/trabalho/descricaoFotos'
 
 interface Props {
   projeto: ProjetoPerfil
@@ -171,7 +172,7 @@ export default function ProjetoModal({ projeto, onClose }: Props) {
             <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest italic">Nota Técnica</span>
           </div>
           <p className="text-[14px] text-slate-600 leading-relaxed italic pl-4 border-l-2 border-slate-100 font-medium">
-            {fotoAtual.legenda || 'Acompanhamento técnico em andamento.'}
+            {descricaoOuPadrao(fotoAtual.ordem, fotoAtual.legenda)}
           </p>
         </div>
 

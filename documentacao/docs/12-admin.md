@@ -38,9 +38,21 @@ Complementa `02-arquitetura.md`. Ver `00-glossario.md` para localizar um conceit
 
 ## `/admin/habilidades`
 
-`hooks/useHabilidades.ts` + `lib/services/habilidades.service.ts`. CRUD simples de habilidades (nome + categoria), log de criação via `insertLog` (`lib/db/logs.ts`).
+`app/(admin)/admin/habilidades/page.tsx` + `hooks/useHabilidades.ts` + `lib/services/categorias.service.ts`. Gerencia o catálogo de serviços: **grupos** (nome, ícone, ordem) e **categorias** (nome, grupo, destaque e **exemplo de descrição**). A tabela `habilidades` (nome + categoria, poucas linhas) tem serviço próprio em `lib/services/habilidades.service.ts`, com log de criação via `insertLog` (`lib/db/logs.ts`).
 
 **Bug corrigido:** o insert de log gravava `usuario_email: 'admin@teste.com'` hardcoded, independente de quem estivesse logado — corrigido usando `insertLog`, que captura a sessão real automaticamente.
+
+### Regra do catálogo: toda categoria nova precisa de exemplo de descrição (13/11/2026)
+
+Na tela de novo trabalho, o campo de descrição da foto do "Depois" mostra uma sugestão no tom do ofício de cada prestador (`categorias.exemplo_descricao`). Um eletricista vê um exemplo de eletricista; quem faz doces vê um exemplo de doces. Um exemplo de outro ofício passa a impressão de que a plataforma não foi feita para aquela pessoa, por isso **toda categoria nova precisa do seu exemplo**.
+
+Checklist ao criar uma categoria:
+1. Criar o grupo, se ele ainda não existir.
+2. Criar a categoria em `/admin/habilidades` preenchendo **Exemplo de descrição do trabalho**. O campo é obrigatório, com 15 a 140 letras (`lib/catalogo/exemploCategoria.ts`). Escreva uma frase do que foi feito, como alguém da área escreveria. Ex.: para Eletricista, "Troca da fiação do quadro e instalação de disjuntor novo."
+3. Conferir na lista se a categoria não aparece com o selo "Sem exemplo" (o cabeçalho da lista mostra quantas faltam). O exemplo pode ser corrigido a qualquer momento em "Editar exemplo".
+4. Se a categoria for criada por SQL (migração), incluir `exemplo_descricao` no `insert`. O formulário do admin é quem exige o campo; o banco aceita nulo.
+
+Uma categoria sem exemplo não quebra nada: a tela mostra a frase neutra "Conte em uma frase o que foi feito.". Só administradores editam categorias (política `admins podem atualizar categorias`).
 
 ## `/admin/geografia`
 

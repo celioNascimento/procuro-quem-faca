@@ -4,7 +4,8 @@ import { useState, type FormEvent } from 'react'
 import { Layers3, Plus, RefreshCw, Sparkles, Star, Wrench, Home, Hammer, BriefcaseBusiness, Heart, Car } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useHabilidades } from '@/hooks/useHabilidades'
-import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Select } from '@/components/admin/ui'
+import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Select, Textarea } from '@/components/admin/ui'
+import { categoriasSemExemplo, MAX_EXEMPLO } from '@/lib/catalogo/exemploCategoria'
 
 const iconMap: Record<string, LucideIcon> = { sparkles: Sparkles, home: Home, hammer: Hammer, wrench: Wrench, briefcase: BriefcaseBusiness, heart: Heart, car: Car }
 
@@ -14,14 +15,17 @@ function GroupIcon({ name, className = '' }: { name?: string | null; className?:
 }
 
 export default function GestaoHabilidades() {
-  const { grupos, categorias, loading, saving, error, adicionarGrupo, adicionarCategoria, recarregar } = useHabilidades()
+  const { grupos, categorias, loading, saving, error, adicionarGrupo, adicionarCategoria, salvarExemplo, recarregar } = useHabilidades()
   const [grupoNome, setGrupoNome] = useState('')
   const [grupoIcone, setGrupoIcone] = useState('')
   const [grupoOrdem, setGrupoOrdem] = useState('0')
   const [categoriaNome, setCategoriaNome] = useState('')
   const [categoriaGrupo, setCategoriaGrupo] = useState('')
   const [destaque, setDestaque] = useState(false)
+  const [categoriaExemplo, setCategoriaExemplo] = useState('')
+  const [editando, setEditando] = useState<{ id: string; texto: string } | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const semExemplo = categoriasSemExemplo(categorias)
 
   async function submitGrupo(event: FormEvent) {
     event.preventDefault(); setFeedback(null)
@@ -31,8 +35,15 @@ export default function GestaoHabilidades() {
 
   async function submitCategoria(event: FormEvent) {
     event.preventDefault(); setFeedback(null)
-    const result = await adicionarCategoria(categoriaNome, categoriaGrupo, destaque)
-    if (result.ok) { setCategoriaNome(''); setCategoriaGrupo(''); setDestaque(false); setFeedback('Categoria cadastrada com sucesso.') } else setFeedback(result.error)
+    const result = await adicionarCategoria(categoriaNome, categoriaGrupo, destaque, categoriaExemplo)
+    if (result.ok) { setCategoriaNome(''); setCategoriaGrupo(''); setDestaque(false); setCategoriaExemplo(''); setFeedback('Categoria cadastrada com sucesso.') } else setFeedback(result.error)
+  }
+
+  async function submitExemplo(event: FormEvent) {
+    event.preventDefault(); setFeedback(null)
+    if (!editando) return
+    const result = await salvarExemplo(editando.id, editando.texto)
+    if (result.ok) { setEditando(null); setFeedback('Exemplo salvo.') } else setFeedback(result.error)
   }
 
   return (
@@ -80,6 +91,19 @@ export default function GestaoHabilidades() {
                   {grupos.map(grupo => <option key={grupo.id} value={String(grupo.id)}>{grupo.nome}</option>)}
                 </Select>
               </Field>
+              <Field label="Exemplo de descrição do trabalho">
+                <Textarea
+                  required
+                  rows={3}
+                  maxLength={MAX_EXEMPLO}
+                  value={categoriaExemplo}
+                  onChange={e => setCategoriaExemplo(e.target.value)}
+                  placeholder="Uma frase do que foi feito, no tom do ofício"
+                />
+                <span className="text-xs text-pqf-muted">
+                  Obrigatório em toda categoria nova. Aparece como sugestão no campo &quot;Depois&quot; do trabalho do prestador. Escreva como alguém dessa área escreveria, por exemplo: &quot;Troca da fiação do quadro e instalação de disjuntor novo.&quot; para eletricista.
+                </span>
+              </Field>
               <label className="flex items-center gap-2 text-sm font-medium text-pqf-ink">
                 <input type="checkbox" checked={destaque} onChange={e => setDestaque(e.target.checked)} className="size-4 accent-pqf-blue" />
                 <Star size={16} aria-hidden="true" className="text-pqf-yellow" /> Marcar como destaque
@@ -96,7 +120,12 @@ export default function GestaoHabilidades() {
         <Card
           titulo="Grupos e categorias"
           descricao="Estrutura atual do catálogo"
-          acoes={<Badge tom="marca">{categorias.length} categorias</Badge>}
+          acoes={
+            <div className="flex flex-wrap items-center gap-2">
+              {semExemplo.length > 0 && <Badge tom="alerta">{semExemplo.length} sem exemplo</Badge>}
+              <Badge tom="marca">{categorias.length} categorias</Badge>
+            </div>
+          }
           className="min-w-0"
         >
           {loading ? (
@@ -125,13 +154,48 @@ export default function GestaoHabilidades() {
                     </div>
                     {items.length > 0 && (
                       <div className="mt-4 grid grid-cols-1 gap-2 border-t border-slate-100 pt-4 sm:grid-cols-2">
-                        {items.map(item => (
-                          <div key={item.id} className="flex min-w-0 items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-pqf-ink">
-                            <span className="size-1.5 shrink-0 rounded-full bg-pqf-blue" aria-hidden="true" />
-                            <span className="truncate">{item.nome}</span>
-                            {item.destaque && <Star aria-label="Categoria em destaque" className="ml-auto size-4 shrink-0 text-pqf-yellow" />}
-                          </div>
-                        ))}
+                        {items.map(item => {
+                          const emEdicao = editando?.id === String(item.id)
+                          const temExemplo = !!(item.exemplo_descricao ?? '').trim()
+                          return (
+                            <div key={item.id} className={`min-w-0 rounded-lg bg-slate-50 px-3 py-2 text-sm text-pqf-ink ${emEdicao ? 'sm:col-span-2' : ''}`}>
+                              <div className="flex min-w-0 items-center gap-2">
+                                <span className="size-1.5 shrink-0 rounded-full bg-pqf-blue" aria-hidden="true" />
+                                <span className="truncate">{item.nome}</span>
+                                {item.destaque && <Star aria-label="Categoria em destaque" className="ml-auto size-4 shrink-0 text-pqf-yellow" />}
+                              </div>
+                              {emEdicao ? (
+                                <form onSubmit={submitExemplo} className="mt-2 flex flex-col gap-2">
+                                  <Textarea
+                                    required
+                                    rows={3}
+                                    maxLength={MAX_EXEMPLO}
+                                    aria-label={`Exemplo de descrição de ${item.nome}`}
+                                    value={editando.texto}
+                                    onChange={e => setEditando({ id: editando.id, texto: e.target.value })}
+                                  />
+                                  <div className="flex gap-2">
+                                    <Button type="submit" variante="primario" disabled={saving}>Salvar exemplo</Button>
+                                    <Button type="button" variante="secundario" onClick={() => setEditando(null)}>Cancelar</Button>
+                                  </div>
+                                </form>
+                              ) : (
+                                <div className="mt-1 flex items-start justify-between gap-2">
+                                  {temExemplo
+                                    ? <p className="text-xs text-pqf-muted">{item.exemplo_descricao}</p>
+                                    : <Badge tom="alerta">Sem exemplo</Badge>}
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditando({ id: String(item.id), texto: item.exemplo_descricao ?? '' })}
+                                    className="shrink-0 text-xs font-semibold text-pqf-blue hover:underline"
+                                  >
+                                    {temExemplo ? 'Editar exemplo' : 'Escrever exemplo'}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
                   </article>
