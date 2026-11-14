@@ -84,7 +84,7 @@ Até este ponto, todo o PQF opera client-side. Criar uma conta Auth em nome de o
 
 ### `lib/services/adminAnuncios.service.ts`
 
-Segue o padrão de service já usado no projeto — uma função por operação Supabase. Contém também o cálculo lógico de vagas disponíveis e a validação do formulário contra o inventário (`verificarInventarioSegmento`, `validarSegmentacoesContraInventario`).
+Segue o padrão de service já usado no projeto — uma função por operação Supabase. Contém a validação do formulário contra o inventário (`validarSegmentacoesContraInventario`). O cálculo de vagas (`verificarInventarioSegmento`), a lista de anúncios no ar por praça e o registro de métricas moram em `lib/services/anunciosPublicos.service.ts` (usados também pelas páginas públicas) e são reexportados daqui.
 
 ### `hooks/useAdminAnuncios.ts`
 

@@ -79,7 +79,7 @@ export function usePrestadores() {
         const usaCidadeSalva = Boolean(
           cidadeSalvaId &&
           !ampliar && !cidadeExtraida && !filtroEstado && !filtroRegiao &&
-          (!filtroCidade || normalizarCidade(filtroCidade) === normalizarCidade(cidadeSalvaNome))
+          (!filtroCidade || filtroCidade === cidadeSalvaId || normalizarCidade(filtroCidade) === normalizarCidade(cidadeSalvaNome))
         )
         const cidadeIdDaConsulta = usaCidadeSalva ? cidadeSalvaId : undefined
 
@@ -142,14 +142,10 @@ export function usePrestadores() {
         const { termo } = parsearBusca(queryBusca)
         const termoNorm = normalizarTermo(termo, filtroHab)
 
-        const vitrines = normalizados.filter(p => p.origem_tipo === 'vitrine')
-        const demais   = normalizados.filter(p => p.origem_tipo !== 'vitrine')
-        const filtrados = filtrarPrestadores(demais, termoNorm)
-
-        const listaFinal = [
-          ...vitrines,
-          ...[...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b)),
-        ]
+        // A vitrine fica no topo, mas só quando combina com o que foi buscado (como qualquer perfil);
+        // sem termo, todas entram. Local e área são filtrados depois, para todos igualmente.
+        const filtrados = filtrarPrestadores(normalizados, termoNorm)
+        const listaFinal = [...filtrados].sort((a, b) => pesoOrdenacao(a) - pesoOrdenacao(b))
         cacheLista.set(chaveCache, { dados: listaFinal, em: Date.now() })
         setPrestadoresBase(listaFinal)
 
@@ -187,9 +183,20 @@ export function usePrestadores() {
   // Prioridade: cidade escrita na busca ("em X") > cidade da URL/filtro > cidade salva do usuário.
   // Estado/região escolhidos soltam a cidade salva; "Ver outras cidades" (ampliar) também.
   const cidadeDaBusca = parsearBusca(queryBusca).cidadeExtraida
+
+  // `?cidade=` traz o id da cidade (os filtros e a home gravam o id). Links antigos traziam o nome,
+  // e continuam valendo. É id quando bate com a cidade salva ou com alguma cidade da lista.
+  const cidadeDoFiltro = prestadoresBase.find(p => p.cidade_id && p.cidade_id === filtroCidade)
+  const filtroCidadeEhId = Boolean(filtroCidade) && (filtroCidade === cidadeSalvaId || Boolean(cidadeDoFiltro))
+  const nomeDoFiltro = !filtroCidade
+    ? ''
+    : filtroCidadeEhId
+      ? (cidadeDoFiltro?.cidade_nome || cidadeSalvaNome || '')
+      : filtroCidade
+
   const { nome: cidadeNome, origem: origemCidade } = decidirCidade({
     cidadeDaBusca,
-    filtroCidade,
+    filtroCidade: nomeDoFiltro,
     filtroEstado,
     filtroRegiao,
     ampliar,
@@ -197,13 +204,27 @@ export function usePrestadores() {
   })
   const cidadeEfetivaNormalizada = normalizarCidade(cidadeNome)
 
+  // Quando sabemos o id da cidade (filtro por id ou cidade salva), filtramos por ele; só pelo nome
+  // quando a cidade veio escrita na busca ou num link antigo.
+  let cidadeEfetivaId = ''
+  if (origemCidade === 'filtro' && filtroCidadeEhId) cidadeEfetivaId = filtroCidade
+  else if (origemCidade === 'salva' && cidadeSalvaId) cidadeEfetivaId = cidadeSalvaId
+
+  // Qual opção do menu "Cidade" está marcada (link antigo com nome: a primeira de mesmo nome).
+  const cidadeFiltroId = origemCidade !== 'filtro'
+    ? ''
+    : filtroCidadeEhId
+      ? filtroCidade
+      : prestadoresBase.find(p => normalizarCidade(p.cidade_nome) === cidadeEfetivaNormalizada)?.cidade_id || ''
+
   const filtrosAtivos = useMemo(() => ({
     estado: filtroEstado,
     regiao: filtroRegiao,
     grupo: filtroGrupo,
     categoria: filtroCategoria,
     cidade: cidadeEfetivaNormalizada,
-  }), [filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria, cidadeEfetivaNormalizada])
+    cidadeId: cidadeEfetivaId,
+  }), [filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria, cidadeEfetivaNormalizada, cidadeEfetivaId])
 
   const prestadoresExibidos = useMemo(
     () => filtrarExibidos(prestadoresBase, filtrosAtivos),
@@ -282,6 +303,8 @@ export function usePrestadores() {
     /** Cidade que está valendo para a busca (null = sem recorte de cidade) e de onde ela veio. */
     cidadeNome,
     origemCidade,
+    /** Id da opção marcada no menu "Cidade" ('' = nenhuma). */
+    cidadeFiltroId,
     /** Tenta de novo depois de uma falha. */
     recarregar: () => setTentativa(n => n + 1),
   }

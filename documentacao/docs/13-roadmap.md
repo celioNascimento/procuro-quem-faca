@@ -84,7 +84,7 @@ Ainda **não lançado**. A plataforma usa "Contatos" (WhatsApp) e não fala em "
 - Até o lançamento, o acesso público às duas funções fica fechado (migração `20261114090000_revogar_funcoes_de_orcamento.sql`): um link de orçamento aberto a qualquer pessoa sem login seria uma porta desnecessária.
 - No lançamento: criar a tela, **devolver** o `execute` às funções numa migração nova (`anon` só para `obter_`/`responder_` se o cliente responder sem login) e revisar as regras (RLS da tabela, validade do link, texto ao usuário).
 - "Meus dados" (`lib/meusDados/resumo.ts`) mantém as linhas "Orçamentos enviados/recebidos": só aparecem quando a pessoa tem registros, e a transparência sobre dados pessoais (LGPD) não deve depender de a funcionalidade estar à venda. Hoje, com a tabela vazia, nada é exibido.
-- O botão do perfil público (`PerfilCTA.tsx`) passou a dizer "Chamar no WhatsApp" (14/11/2026). A mensagem que o cliente envia ainda pede "um orçamento" e as páginas de SEO de serviço (`seo-service-page.tsx`) e os Termos ainda usam a palavra: decidir à parte, porque "orçamento" também é o que as pessoas pesquisam no Google.
+- O botão do perfil público (`PerfilCTA.tsx`) passou a dizer "Chamar no WhatsApp" (14/11/2026). A mensagem que o cliente envia continua pedindo "um orçamento" e os Termos seguem usando a palavra (decisão: "orçamento" é o que as pessoas pesquisam e o que de fato pedem pelo WhatsApp). As páginas de SEO de serviço (`seo-service-page.tsx`) também mantêm a palavra, mas deixaram de prometer o que a plataforma não faz ("profissionais verificados", "CPF verificado", "receba respostas em minutos"); o botão "Pedir orçamento grátis" apontava para `/solicitar`, rota que não existe, e agora é "Ver profissionais" e leva à busca (`/prestadores?q=<serviço> em <cidade>`). O texto visível e o JSON-LD (FAQPage) saem da mesma lista (`montarFaqs`).
 
 ### SEO dinâmico por região
 
@@ -108,13 +108,9 @@ Explicar o diferencial do PQF (registro fotográfico + avaliação vinculada a p
 - [ ] Confirmar se `avaliacoes` tem constraint de unicidade por `projeto_id` (parece ser 1 por projeto pela UI, sem constraint explícita confirmada no schema)
 - [ ] Documentar formalmente o significado de negócio de `origem_tipo: 'vitrine'`
 - [ ] Padronizar nome do parâmetro de URL de retorno — `?from=` (perfil público) vs. `?origem=` (dashboard), mesma função, nomes diferentes
+- [ ] Páginas de SEO de serviço (`seo-service-page.tsx`): as faixas de preço por serviço (`dadosServico`) e os bairros por cidade (`dadosCidade`) são texto fixo, não vêm do banco, e o `priceRange` do JSON-LD usa as mesmas faixas. Trocar por dados reais (ou retirar) antes de investir em SEO local; os bairros só aparecem para as 5 cidades com lista própria
 - [ ] Busca no servidor: hoje a página baixa os perfis da cidade (ou do catálogo todo, ~950 em 14/11/2026) e filtra/pagina na tela. Quando passar de poucos milhares, mover termo, filtros, contagens e paginação (10 por vez) para o banco (RPC/view `prestadores_ranqueados`, que também resolveria as médias de avaliação calculadas no frontend)
 - [ ] Selo "Verificado" no card da lista — junto com a fase de qualificações do prestador (hoje `verificado` só pesa na ordenação e aparece no perfil)
-- [ ] Cidades homônimas em estados diferentes: o filtro de cidade compara só o nome (`?cidade=`); passar a usar o id da cidade quando houver duas com o mesmo nome
-- [ ] Decidir o que a "vitrine" (`origem_tipo = 'vitrine'`) faz com o termo buscado: hoje ela ignora o termo e aparece em qualquer busca (não existe nenhuma vitrine hoje)
-- [ ] Mover a consulta do anúncio de topo (`app/prestadores/page.tsx`) para um serviço público e parar de importar o serviço administrativo (`adminAnuncios.service`) na página pública
-- [ ] Convite de localização também na página inicial (hoje só na lista de resultados)
-- [ ] Etiqueta "Perfil público" no card (perfis vindos da curadoria): o texto confunde, pois parece que todos os perfis são públicos — definir o texto com o responsável pelo produto
 - [ ] Confirmar se tabela `perfis` (legado) tem dado real antes de remover do schema
 - [ ] Unificar `useAuth().role` com `profiles.role` — divergência hoje é de escopo pequeno (só durante o cadastro), mas ainda são duas fontes em paralelo
 - [ ] Avaliar se `useAdContext` deveria recalcular o fallback quando `categoria` muda (hoje usa `useState` com inicializador, não reage a mudanças)

@@ -33,7 +33,7 @@ const dadosCidade: Record<string, { bairros: string[]; regiao: string }> = {
     regiao: "capital do Paraná",
   },
   "sao-paulo": {
-    bairros: ["Pinheiros", "Moema", "Tatuapé", "Santo André", "Itaquera"],
+    bairros: ["Pinheiros", "Moema", "Tatuapé", "Vila Mariana", "Itaquera"],
     regiao: "maior cidade do Brasil",
   },
   "belo-horizonte": {
@@ -64,7 +64,7 @@ function parseSlug(slug: string): PageData | null {
   const cidadeSlug = match[2];
 
   const cidadeData = dadosCidade[cidadeSlug] ?? {
-    bairros: ["Centro", "Zona Sul", "Zona Norte", "Zona Leste", "Zona Oeste"],
+    bairros: [],
     regiao: "região",
   };
 
@@ -98,8 +98,8 @@ export function getServicoMetadata(slug: string): Metadata {
   if (!data) return { title: "Página não encontrada" };
 
   const { servicoCapital, cidadeCapital } = data;
-  const title = `${servicoCapital} em ${cidadeCapital} — Profissionais Avaliados | ProcuroQuemFaça`;
-  const description = `Encontre ${servicoCapital.toLowerCase()} em ${cidadeCapital} com avaliações reais de clientes. Compare preços, veja perfis e contrate com segurança pelo ProcuroQuemFaça.`;
+  const title = `${servicoCapital} em ${cidadeCapital} — Profissionais | ProcuroQuemFaça`;
+  const description = `Encontre ${servicoCapital.toLowerCase()} em ${cidadeCapital}. Veja perfis, fotos de trabalhos e avaliações de clientes e fale direto com o profissional pelo WhatsApp.`;
 
   return {
     title,
@@ -118,6 +118,39 @@ export function getServicoMetadata(slug: string): Metadata {
   };
 }
 
+// ─── Perguntas frequentes ─────────────────────────────────────────────────────
+// Um só lugar: o texto da página e o JSON-LD (que o Google compara com o texto visível)
+// saem da mesma lista e nunca divergem. Só afirmamos o que a plataforma realmente faz:
+// perfis com fotos e avaliações, e contato direto com o profissional pelo WhatsApp.
+
+function montarFaqs(data: PageData) {
+  const { servicoCapital, cidadeCapital, precoMin, precoMax } = data;
+  const servico = servicoCapital.toLowerCase();
+
+  return [
+    {
+      q: `Qual o preço médio de ${servico} em ${cidadeCapital}?`,
+      a: `Como referência, o valor costuma ficar entre R$${precoMin} e R$${precoMax}, mas depende do serviço, dos materiais e do profissional. O valor final é combinado direto com ele, pelo WhatsApp.`,
+    },
+    {
+      q: `Como encontrar ${servico} de confiança em ${cidadeCapital}?`,
+      a: `No ProcuroQuemFaça você vê o perfil de cada profissional, com fotos de trabalhos e avaliações de clientes que contrataram o serviço, e conversa direto com ele pelo WhatsApp antes de decidir. Combine valor e prazo antes de fechar.`,
+    },
+    {
+      q: `${servicoCapital} em ${cidadeCapital} atende quais bairros?`,
+      a: `Cada profissional informa a cidade em que atua. Confira no perfil e combine com ele o atendimento no seu bairro.`,
+    },
+    {
+      q: `Quanto tempo leva um serviço de ${servico} em ${cidadeCapital}?`,
+      a: `O prazo varia conforme o serviço. Pergunte ao profissional na conversa pelo WhatsApp e combine antes de contratar.`,
+    },
+    {
+      q: `${servicoCapital} em ${cidadeCapital} trabalha fins de semana?`,
+      a: `Depende de cada profissional. Pergunte sobre dias e horários na conversa pelo WhatsApp.`,
+    },
+  ];
+}
+
 // ─── Schema JSON-LD ───────────────────────────────────────────────────────────
 
 function SchemaJsonLd({ data, slug }: { data: PageData; slug: string }) {
@@ -130,7 +163,7 @@ function SchemaJsonLd({ data, slug }: { data: PageData; slug: string }) {
       {
         "@type": "LocalBusiness",
         name: `${servicoCapital} em ${cidadeCapital} — ProcuroQuemFaça`,
-        description: `Encontre profissionais de ${servicoCapital.toLowerCase()} em ${cidadeCapital} com avaliações verificadas.`,
+        description: `Encontre profissionais de ${servicoCapital.toLowerCase()} em ${cidadeCapital} e fale direto com o profissional pelo WhatsApp.`,
         url,
         areaServed: {
           "@type": "City",
@@ -141,48 +174,11 @@ function SchemaJsonLd({ data, slug }: { data: PageData; slug: string }) {
       },
       {
         "@type": "FAQPage",
-        mainEntity: [
-          {
-            "@type": "Question",
-            name: `Qual o preço médio de ${servicoCapital.toLowerCase()} em ${cidadeCapital}?`,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: `O preço médio de ${servicoCapital.toLowerCase()} em ${cidadeCapital} varia entre R$${precoMin} e R$${precoMax}, dependendo da complexidade do serviço e da disponibilidade do profissional.`,
-            },
-          },
-          {
-            "@type": "Question",
-            name: `Como encontrar ${servicoCapital.toLowerCase()} de confiança em ${cidadeCapital}?`,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: `No ProcuroQuemFaça você encontra profissionais verificados em ${cidadeCapital} com avaliações reais de clientes anteriores, fotos de trabalhos realizados e histórico completo.`,
-            },
-          },
-          {
-            "@type": "Question",
-            name: `${servicoCapital} em ${cidadeCapital} atende quais bairros?`,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: `Nossos profissionais de ${servicoCapital.toLowerCase()} atendem em toda ${cidadeCapital}, incluindo ${bairros.slice(0, 3).join(", ")} e demais regiões.`,
-            },
-          },
-          {
-            "@type": "Question",
-            name: `${servicoCapital} em ${cidadeCapital} trabalha fins de semana?`,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: `Sim, muitos profissionais de ${servicoCapital.toLowerCase()} em ${cidadeCapital} disponíveis no ProcuroQuemFaça atendem aos sábados e domingos. Verifique a disponibilidade no perfil de cada profissional.`,
-            },
-          },
-          {
-            "@type": "Question",
-            name: `Quanto tempo leva um serviço de ${servicoCapital.toLowerCase()} em ${cidadeCapital}?`,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: `O tempo varia conforme o serviço solicitado. Serviços simples de ${servicoCapital.toLowerCase()} em ${cidadeCapital} podem ser concluídos em poucas horas, enquanto projetos maiores podem levar dias. O profissional informa o prazo no orçamento.`,
-            },
-          },
-        ],
+        mainEntity: montarFaqs(data).map(({ q, a }) => ({
+          "@type": "Question",
+          name: q,
+          acceptedAnswer: { "@type": "Answer", text: a },
+        })),
       },
     ],
   };
@@ -211,28 +207,7 @@ export default async function ServicoPage({ params }: PageParams) {
 
   const { servicoCapital, cidadeCapital, precoMin, precoMax, bairros } = data;
 
-  const faqs = [
-    {
-      q: `Qual o preço médio de ${servicoCapital.toLowerCase()} em ${cidadeCapital}?`,
-      a: `O preço médio varia entre R$${precoMin} e R$${precoMax}, dependendo da complexidade do serviço, materiais necessários e disponibilidade do profissional na região de ${cidadeCapital}.`,
-    },
-    {
-      q: `Como encontrar ${servicoCapital.toLowerCase()} de confiança em ${cidadeCapital}?`,
-      a: `No ProcuroQuemFaça, todos os profissionais passam por verificação de identidade. Você pode ler avaliações reais, ver fotos de trabalhos anteriores e comparar orçamentos antes de contratar.`,
-    },
-    {
-      q: `${servicoCapital} em ${cidadeCapital} atende quais bairros?`,
-      a: `Atendemos em toda a cidade de ${cidadeCapital}, incluindo ${bairros.join(", ")}. Ao solicitar um orçamento, informe seu bairro para encontrar o profissional mais próximo.`,
-    },
-    {
-      q: `Quanto tempo leva um serviço de ${servicoCapital.toLowerCase()} em ${cidadeCapital}?`,
-      a: `O prazo varia conforme o escopo do trabalho. Serviços simples costumam ser concluídos no mesmo dia, enquanto projetos maiores podem levar de 2 a 5 dias. O profissional informa o prazo exato no orçamento.`,
-    },
-    {
-      q: `${servicoCapital} em ${cidadeCapital} trabalha fins de semana?`,
-      a: `Sim! Muitos profissionais de ${servicoCapital.toLowerCase()} em ${cidadeCapital} atendem aos sábados e domingos. Filtre por disponibilidade na busca para encontrar quem atende no horário que você precisa.`,
-    },
-  ];
+  const faqs = montarFaqs(data);
 
   return (
     <>
@@ -244,16 +219,15 @@ export default async function ServicoPage({ params }: PageParams) {
         <h1 className="text-3xl font-bold leading-tight mb-3">
           {servicoCapital} em {cidadeCapital}
           <span className="block text-lg font-normal text-gray-500 mt-1">
-            Profissionais verificados e avaliados por clientes reais
+            Veja perfis, fotos e avaliações e fale direto com o profissional
           </span>
         </h1>
 
         <p className="text-base leading-relaxed mb-8 text-gray-700">
           Contratar {servicoCapital.toLowerCase()} em {cidadeCapital} ficou mais simples.
-          No ProcuroQuemFaça você compara profissionais locais com avaliações verificadas,
-          solicita orçamentos gratuitos e contrata com segurança — sem intermediários e
-          sem complicação. Nossa plataforma conecta moradores de {cidadeCapital} a
-          especialistas avaliados da própria região.
+          No ProcuroQuemFaça você encontra profissionais de {cidadeCapital}, vê fotos de
+          trabalhos e avaliações de clientes e chama direto pelo WhatsApp para pedir um
+          orçamento — sem intermediários e sem pagar nada para procurar.
         </p>
 
         {/* Preço */}
@@ -263,7 +237,7 @@ export default async function ServicoPage({ params }: PageParams) {
             R${precoMin} – R${precoMax}
           </p>
           <p className="text-xs text-blue-500 mt-1">
-            Valores estimados. Solicite orçamento gratuito para sua necessidade específica.
+            Valores de referência. Peça um orçamento ao profissional para o seu caso.
           </p>
         </div>
 
@@ -273,29 +247,27 @@ export default async function ServicoPage({ params }: PageParams) {
             Por que contratar {servicoCapital.toLowerCase()} em {cidadeCapital} pelo ProcuroQuemFaça?
           </h2>
           <p className="mb-3 leading-relaxed">
-            {cidadeCapital} tem um mercado ativo de serviços, mas encontrar um profissional
-            de confiança sem indicação pessoal pode ser arriscado. Nossa plataforma resolve
-            isso: todos os profissionais de {servicoCapital.toLowerCase()} em {cidadeCapital}
-            são cadastrados com CPF verificado, histórico de trabalhos e avaliações reais
-            de clientes anteriores.
+            Encontrar um profissional de confiança sem indicação pessoal pode ser
+            arriscado. No ProcuroQuemFaça cada perfil mostra a cidade de atuação, fotos de
+            trabalhos realizados e as avaliações de clientes que já contrataram o serviço,
+            para você escolher com mais segurança.
           </p>
           <p className="mb-3 leading-relaxed">
-            Ao solicitar um orçamento, você recebe respostas de profissionais disponíveis
-            na sua região em {cidadeCapital} — incluindo bairros como {bairros.slice(0, 2).join(" e ")}.
-            Compare preços, leia comentários e escolha com segurança, sem pagar nada
-            para pedir o orçamento.
+            Para pedir um orçamento, chame o profissional pelo WhatsApp direto do perfil
+            dele. Converse com mais de um, compare valores e prazos e escolha quem
+            fizer mais sentido para você. Pedir orçamento não custa nada.
           </p>
           <p className="leading-relaxed">
-            Após o serviço, você avalia o profissional e sua nota fica visível para
-            outros moradores de {cidadeCapital}. Esse sistema de reputação é o que garante
-            a qualidade dos {servicoCapital.toLowerCase()} disponíveis na plataforma.
+            Depois do serviço, você pode avaliar o profissional, e a nota fica visível
+            para outros moradores de {cidadeCapital}.
           </p>
         </section>
 
-        {/* Bairros */}
+        {/* Bairros: só para cidades de que temos a lista; não inventamos bairros para as demais */}
+        {bairros.length > 0 && (
         <section className="mb-10">
           <h2 className="text-xl font-bold mb-3">
-            Bairros atendidos em {cidadeCapital}
+            Bairros de {cidadeCapital}
           </h2>
           <div className="flex flex-wrap gap-2">
             {bairros.map((b) => (
@@ -311,6 +283,7 @@ export default async function ServicoPage({ params }: PageParams) {
             </span>
           </div>
         </section>
+        )}
 
         {/* FAQ */}
         <section className="mb-10">
@@ -333,13 +306,13 @@ export default async function ServicoPage({ params }: PageParams) {
             Precisa de {servicoCapital.toLowerCase()} em {cidadeCapital}?
           </p>
           <p className="text-green-700 text-sm mb-4">
-            Solicite orçamentos gratuitos agora e receba respostas em minutos.
+            Veja os profissionais e peça um orçamento direto pelo WhatsApp.
           </p>
           <a
-            href={`/solicitar?servico=${data.servico}&cidade=${data.cidade}`}
+            href={`/prestadores?q=${encodeURIComponent(`${servicoCapital.toLowerCase()} em ${cidadeCapital}`)}`}
             className="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
           >
-            Pedir orçamento grátis
+            Ver profissionais
           </a>
         </div>
       </main>

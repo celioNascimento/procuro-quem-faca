@@ -7,8 +7,8 @@ Página de resultados: `app/prestadores/page.tsx`. As regras puras ficam em `lib
 A busca combina o serviço com a cidade. Prioridade (quem vale primeiro):
 
 1. Cidade escrita no texto: `Massoterapia em Maringá`.
-2. Cidade escolhida nos filtros ou já na URL (`?cidade=`).
-3. Cidade salva do usuário (cookie `pqf_cidade`, 30 dias). É só o ponto de partida.
+2. Cidade escolhida nos filtros ou já na URL (`?cidade=`). O parâmetro leva o **id da cidade** (duas cidades de estados diferentes podem ter o mesmo nome); links antigos com o nome continuam funcionando.
+3. Cidade salva do usuário (cookie `pqf_cidade`, 30 dias, com id e nome). É só o ponto de partida e filtra pelo id.
 
 Escolher **Estado** ou **Região** solta a cidade salva (são recortes mais amplos). A busca **não** usa `cidades_atendidas` para ampliar resultados.
 
@@ -26,7 +26,7 @@ Escolher **Estado** ou **Região** solta a cidade salva (são recortes mais ampl
 
 ## Localização do aparelho (convite)
 
-Sem cidade salva, a página mostra o convite `components/busca/ConviteLocalizacao.tsx`: explica que, com a localização, mostramos primeiro quem atende na cidade da pessoa, que usamos só para descobrir a cidade e não guardamos a posição (texto igual ao da Política de Privacidade, seção 8).
+Sem cidade salva, a página de resultados **e a página inicial** mostram o convite `components/busca/ConviteLocalizacao.tsx`: explica que, com a localização, mostramos primeiro quem atende na cidade da pessoa, que usamos só para descobrir a cidade e não guardamos a posição (texto igual ao da Política de Privacidade, seção 8).
 
 - O navegador **só é consultado depois do toque em "Usar minha localização"**. Antes, a localização era pedida sozinha em qualquer página e a lista ficava em "carregando" até a pessoa responder.
 - A lista **não espera** a localização: carrega na hora; ao chegar a cidade, ela é refinada.
@@ -80,3 +80,10 @@ Limite: a página ainda baixa os perfis da cidade (ou do catálogo todo) de uma 
 - Filtros da lista atualizam a URL com `router.replace` (não criam entrada no histórico).
 - `usePrestadores` mantém cache em memória por 3 min; `useRestaurarScroll` devolve a rolagem ao voltar do perfil.
 - Regras completas em [18-navegacao-voltar.md](18-navegacao-voltar.md).
+
+## Vitrine, anúncio de topo e etiqueta "Ainda não cadastrado"
+
+- **Vitrine (`origem_tipo = 'vitrine'`)**: fica sempre no topo (peso -1 em `lib/ordenacao.ts`), mas passa pelo mesmo filtro de termo dos demais perfis: uma vitrine de eletricista não aparece numa busca por pedreiro. Sem termo, todas aparecem. Local e Área filtram todos igualmente.
+- **Cidades com o mesmo nome**: o menu "Cidade" lista uma opção por id; se houver nomes repetidos o rótulo ganha a sigla ("Santa Helena - PR"). Regra em `opcoesDeCidade` (`lib/buscaFiltros.ts`).
+- **Anúncios nas páginas públicas** vêm de `lib/services/anunciosPublicos.service.ts` (anúncio de topo, anúncios entre cards, inventário da praça, métricas). `adminAnuncios.service.ts` reexporta essas funções para o painel admin; páginas públicas não importam mais o serviço administrativo.
+- **Etiqueta no card**: perfis vindos da curadoria (dados públicos de contato) mostram "Ainda não cadastrado" (antes "Perfil público", que parecia valer para todos), com o link "Este perfil é seu?". O texto é um ajuste simples: se o produto preferir outro, é uma linha em `PrestadorCard.tsx`.

@@ -166,8 +166,11 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
               </div>
             )}
             {isPublico && (
-              <span className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-500">
-                <Globe size={11} aria-hidden="true" /> Perfil público
+              <span
+                title="Perfil montado com dados públicos de contato. O profissional ainda não criou a própria conta."
+                className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-500"
+              >
+                <Globe size={11} aria-hidden="true" /> Ainda não cadastrado
               </span>
             )}
           </div>

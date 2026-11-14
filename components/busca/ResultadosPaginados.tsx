@@ -16,7 +16,7 @@ import {
   listarAnunciosAtivosPorPraca,
   verificarInventarioSegmento,
   type AnuncioComAnunciante,
-} from '@/lib/services/adminAnuncios.service'
+} from '@/lib/services/anunciosPublicos.service'
 import type { Prestador } from '@/types/prestador'
 import type { Anuncio } from '@/types/ads'
 

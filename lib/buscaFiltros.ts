@@ -7,6 +7,7 @@ export interface ItemBusca {
   estado_sigla?: string | null
   regiao_id?: string | null
   regiao_nome?: string | null
+  cidade_id?: string | null
   cidade_nome?: string | null
   grupo_id?: string | null
   grupo_nome?: string | null
@@ -19,8 +20,12 @@ export interface FiltrosAtivos {
   regiao: string
   grupo: string
   categoria: string
-  /** Cidade já normalizada (sem acento, minúscula, sem "- UF"). Vazia = sem restrição. */
+  /** Cidade já normalizada (sem acento, minúscula, sem "- UF"). Usada quando só temos o nome
+   *  (cidade escrita na busca, link antigo). Vazia = sem restrição. */
   cidade: string
+  /** Id da cidade. Quando existe, vale no lugar do nome: duas cidades de estados diferentes
+   *  podem ter o mesmo nome e não podem se misturar. */
+  cidadeId?: string
 }
 
 export function normalizarCidade(valor: string | null | undefined): string {
@@ -67,7 +72,9 @@ type Condicao = (p: ItemBusca) => boolean
 function condicoes(f: FiltrosAtivos) {
   const estado: Condicao    = p => !f.estado    || p.estado_sigla === f.estado
   const regiao: Condicao    = p => !f.regiao    || p.regiao_id === f.regiao
-  const cidade: Condicao    = p => !f.cidade    || normalizarCidade(p.cidade_nome) === f.cidade
+  const cidade: Condicao    = p => f.cidadeId
+    ? p.cidade_id === f.cidadeId
+    : !f.cidade || normalizarCidade(p.cidade_nome) === f.cidade
   const grupo: Condicao     = p => !f.grupo     || p.grupo_id === f.grupo
   const categoria: Condicao = p => !f.categoria || p.categoria_id === f.categoria
   return { estado, regiao, cidade, grupo, categoria }
@@ -98,6 +105,32 @@ function contar<T extends ItemBusca, K extends string>(
 }
 
 /**
+ * Opções do filtro de cidade, uma por cidade (pelo id). Se duas cidades têm o mesmo nome,
+ * o rótulo ganha a sigla do estado ("Santa Helena - PR") para a pessoa saber qual é qual.
+ */
+export function opcoesDeCidade<T extends ItemBusca>(lista: T[]) {
+  const porId = new Map<string, { nome: string; uf: string; count: number }>()
+  for (const p of lista) {
+    if (!p.cidade_id || !p.cidade_nome) continue
+    const atual = porId.get(p.cidade_id) ?? { nome: p.cidade_nome, uf: p.estado_sigla || '', count: 0 }
+    atual.count++
+    porId.set(p.cidade_id, atual)
+  }
+  const vezes = new Map<string, number>()
+  porId.forEach(({ nome }) => {
+    const k = normalizarCidade(nome)
+    vezes.set(k, (vezes.get(k) ?? 0) + 1)
+  })
+  return Array.from(porId.entries())
+    .map(([id, { nome, uf, count }]) => ({
+      id,
+      nome: (vezes.get(normalizarCidade(nome)) ?? 0) > 1 && uf ? `${nome} - ${uf}` : nome,
+      count,
+    }))
+    .sort((a, b) => b.count - a.count || a.nome.localeCompare(b.nome))
+}
+
+/**
  * Opções de cada filtro com a contagem do que REALMENTE sobraria ao escolhê-la.
  * Segue a hierarquia: o "pai" ignora os filtros dos "filhos" (para dar para trocar de estado
  * mesmo com uma cidade escolhida), e os filhos respeitam os pais.
@@ -121,11 +154,7 @@ export function calcularFacetas<T extends ItemBusca>(base: T[], f: FiltrosAtivos
     p => p.regiao_nome,
   )
 
-  const cidades = contar(
-    base.filter(p => c.estado(p) && c.regiao(p) && area(p)),
-    p => p.cidade_nome,
-    p => p.cidade_nome,
-  ).map(({ nome, count }) => ({ nome, count }))
+  const cidades = opcoesDeCidade(base.filter(p => c.estado(p) && c.regiao(p) && area(p)))
 
   const grupos = contar(
     base.filter(local),

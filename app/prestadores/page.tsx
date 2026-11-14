@@ -21,17 +21,8 @@ import { getTituloBusca } from '@/lib/prestadorUtils'
 import { quantidadeVisivelSalva } from '@/lib/navegacao'
 import { useLocation } from '@/lib/contexts/LocationContext'
 import { ListaSkeleton } from '@/components/skeletons/ListaSkeletonPrestadores'
-import { supabase } from '@/lib/supabase/client'
+import { buscarAnuncioTopoBusca } from '@/lib/services/anunciosPublicos.service'
 import type { Anuncio } from '@/types/ads'
-
-function embaralhar<T>(array: T[]): T[] {
-  const novo = [...array]
-  for (let i = novo.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[novo[i], novo[j]] = [novo[j], novo[i]]
-  }
-  return novo
-}
 
 // ─── ListaConteudo ─────────────────────────────────────────────────────────
 
@@ -62,6 +53,7 @@ function ListaConteudo() {
     erro,
     cidadeNome,
     origemCidade,
+    cidadeFiltroId,
     recarregar,
   } = usePrestadores()
 
@@ -88,20 +80,9 @@ function ListaConteudo() {
 
   useEffect(() => {
     let cancelado = false
-    async function carregarAnunciosTopo() {
-      const agora = new Date().toISOString()
-      const { data, error } = await supabase
-        .from('anuncios')
-        .select('*')
-        .eq('status', true)
-        .eq('status_aprovacao', 'aprovado')
-        .eq('posicao', 'topo_busca')
-        .or(`data_inicio.is.null,data_inicio.lte.${agora}`)
-        .or(`data_expiracao.is.null,data_expiracao.gte.${agora}`)
-      if (cancelado) return
-      setAnuncioTopo(!error && data && data.length > 0 ? embaralhar(data as Anuncio[])[0] : null)
-    }
-    carregarAnunciosTopo()
+    buscarAnuncioTopoBusca()
+      .then(anuncio => { if (!cancelado) setAnuncioTopo(anuncio) })
+      .catch(() => { if (!cancelado) setAnuncioTopo(null) })
     return () => { cancelado = true }
   }, [])
 
@@ -114,7 +95,7 @@ function ListaConteudo() {
   const filtrosProps = {
     filtroEstado,
     filtroRegiao,
-    filtroCidade,
+    filtroCidade: cidadeFiltroId,
     filtroGrupo,
     filtroCategoria,
     totalAtivos,

@@ -25,7 +25,7 @@ vi.mock('@/components/ads/AdCard', () => ({
 vi.mock('@/components/cards/PrestadorCard', () => ({
   default: ({ prestador }: { prestador: Prestador }) => <article data-testid="card">{prestador.nome}</article>,
 }))
-vi.mock('@/lib/services/adminAnuncios.service', () => ({
+vi.mock('@/lib/services/anunciosPublicos.service', () => ({
   listarAnunciosAtivosPorPraca: vi.fn().mockResolvedValue([]),
   verificarInventarioSegmento: vi.fn().mockResolvedValue({ ocupados: 0, vagasTotais: 0 }),
 }))

@@ -6,7 +6,7 @@
 // vigência também acontecem no servidor.
 
 import { useEffect } from 'react'
-import { registrarMetricaAnuncio } from '@/lib/services/adminAnuncios.service'
+import { registrarMetricaAnuncio } from '@/lib/services/anunciosPublicos.service'
 import type { Anuncio } from '@/types/ads'
 
 export function useAdCardMetricas(anuncio: Anuncio | null | undefined) {
