@@ -34,10 +34,22 @@ Orquestra `usePortfolioDashboard` (usa `portfolioDashboard.service.ts`). Alterna
 
 ### `components/dashboard/wizard/`
 
-- **`UploadWizardContainer.tsx`** — ativo, hero azul + form + timeline inline (não usa os subcomponentes abaixo ainda)
+- **`UploadWizardContainer.tsx`** — tela guiada de criar e acompanhar um trabalho com cliente (ver "Tela de novo trabalho" abaixo). Usa `PassosDoTrabalho`, `DadosDoClienteCard`, `CartaoDeFoto` e `EnvioAoCliente`.
 - **`WizardCompleted.tsx`** — exibido quando `isProjetoConcluido`, mostra fotos + comentários do cliente + compartilhar
-- **`WizardZoomModal.tsx`** — edição de legenda + upload de foto por etapa, usa `ModalFotoBase` (`components/shared/`)
-- **`WizardForm.tsx`, `WizardTimeline.tsx`** — peças de refatoração prontas mas não integradas em `UploadWizardContainer`
+- **`WizardZoomModal.tsx`** — foto ampliada com a descrição e os comentários do cliente. Só para olhar: a descrição se edita no cartão da foto e o modal sempre pode ser fechado. Usa `ModalFotoBase` (`components/shared/`)
+- **`WizardForm.tsx`, `WizardTimeline.tsx`** — peças de refatoração antigas, não usadas pelo `UploadWizardContainer`
+
+#### Tela de novo trabalho (repaginada em 13/11/2026)
+
+Mesmas regras de negócio, outro jeito de conduzir. O telefone do cliente continua obrigatório; o aceite e a avaliação vão por link; as fotos Durante e Depois só liberam depois que o aceite é gerado.
+
+- **Passos e "Agora:"** (`lib/trabalho/passos.ts`): com fotos são 5 passos (Cliente e serviço, Foto do antes, Aceite do cliente, Durante e depois, Avaliação) e sem fotos são 4 (Cliente e serviço, Aceite do cliente, Concluir, Avaliação). Uma frase diz o que fazer agora.
+- **Descrição de cada foto é opcional** (decisão de 13/11/2026). Fica no cartão da foto e é salva ao sair do campo; nada trava. Não há mais modal que prende nem "Legenda obrigatória". O "Enviar aceite" libera depois da foto do antes e o "Pedir avaliação" depois da foto do depois, com ou sem descrição. A dica do campo "Depois" vem da categoria do prestador (`categorias.exemplo_descricao`, ver `12-admin.md`); "Antes" e "Durante" usam convites neutros (`lib/trabalho/descricaoFotos.ts`).
+- **Foto sem descrição** aparece como "Antes do serviço", "Durante o serviço" ou "Depois do serviço" no perfil público, no acompanhamento do cliente e no resumo do trabalho (`descricaoOuPadrao`).
+- **Pessoas na foto**: cada foto pergunta "Aparece o rosto de alguma pessoa?" e, se sim, "Tenho a autorização dessa pessoa". Grava `portfolio_fotos.contem_pessoas`, `consentimento_terceiros_confirmado` e `consentimento_terceiros_em`. Foto com pessoa sem autorização bloqueia o envio do aceite e da avaliação ao cliente. Trocar a foto zera a declaração.
+- **Envio ao cliente** (`EnvioAoCliente`, `useWizardWhatsappLinks`): a janela do WhatsApp é aberta no clique, antes de consultar o banco, porque o navegador do celular bloqueia janelas abertas depois de uma espera. Há "Copiar mensagem" para quem prefere outro aplicativo e a prévia do texto que o cliente recebe (`lib/trabalho/mensagens.ts`).
+- **Status em palavras simples** (`lib/trabalho/statusTrabalho.ts`): "Rascunho: ainda não enviado ao cliente", "Aguardando o cliente aceitar", "Em andamento", "Aguardando a avaliação do cliente", "Concluído e avaliado", mais "Garantia acionada" e "Reclamação recebida". O status do banco não aparece na tela.
+- Clientes que já têm trabalho com o prestador aparecem como botões "Continuar" ao digitar o telefone.
 
 Todo o módulo é orquestrado por **`hooks/useUploadWizard.ts`** + **`lib/services/uploadWizard.service.ts`**. Pontos de atenção do hook:
 - `fotosCarrossel` estabilizado via `useMemo` (evita loop de re-render)

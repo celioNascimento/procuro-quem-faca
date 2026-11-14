@@ -10,7 +10,7 @@ export async function getPrestadorBaseInfo(prestadorId: number) {
     // portfolio_obrigatorio adicionado: define se este prestador opera no
     // fluxo com fotos (true/default) ou sem fotos (false). Consumido pelo
     // useUploadWizard para decidir qual jornada expor no wizard.
-    .select('nome, foto_perfil, whatsapp, slug, portfolio_obrigatorio')
+    .select('nome, foto_perfil, whatsapp, slug, portfolio_obrigatorio, categorias(nome, exemplo_descricao)')
     .eq('id', prestadorId)
     .single()
 
@@ -170,9 +170,13 @@ export async function upsertFotoProjeto(payload: {
   ordem: number
   prestador_id: number
 }) {
+  // Foto nova (ou trocada) começa sem declaração de pessoas: a pergunta é refeita para cada imagem.
   const { data, error } = await supabase
     .from('portfolio_fotos')
-    .upsert(payload, { onConflict: 'projeto_id, ordem' })
+    .upsert(
+      { ...payload, contem_pessoas: false, consentimento_terceiros_confirmado: false, consentimento_terceiros_em: null },
+      { onConflict: 'projeto_id, ordem' },
+    )
     .select()
     .single()
 
@@ -184,6 +188,27 @@ export async function atualizarLegendaFoto(fotoId: string, legenda: string) {
   const { error } = await supabase
     .from('portfolio_fotos')
     .update({ legenda })
+    .eq('id', fotoId)
+
+  if (error) throw error
+}
+
+/**
+ * Declaração do prestador sobre pessoas na foto. Se aparece alguém, ele confirma que tem a autorização
+ * dessa pessoa para publicar a imagem; a data da confirmação fica registrada.
+ */
+export async function atualizarConsentimentoFoto(
+  fotoId: string,
+  { contemPessoas, autorizado }: { contemPessoas: boolean; autorizado: boolean },
+) {
+  const confirmado = contemPessoas && autorizado
+  const { error } = await supabase
+    .from('portfolio_fotos')
+    .update({
+      contem_pessoas: contemPessoas,
+      consentimento_terceiros_confirmado: confirmado,
+      consentimento_terceiros_em: confirmado ? new Date().toISOString() : null,
+    })
     .eq('id', fotoId)
 
   if (error) throw error

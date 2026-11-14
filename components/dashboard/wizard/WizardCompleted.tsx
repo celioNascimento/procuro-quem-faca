@@ -7,6 +7,7 @@ import { useAvaliacaoClienteDoProjeto } from '@/hooks/useAvaliacaoClienteDoProje
 import { supabase } from '@/lib/supabase'
 import { AvaliacaoClienteRapida } from '../AvaliacoesDashboardTab'
 import { useState } from 'react'
+import { descricaoOuPadrao } from '@/lib/trabalho/descricaoFotos'
 
 interface Props {
   hookData: ReturnType<typeof useUploadWizard>
@@ -174,7 +175,7 @@ export function WizardCompleted({ hookData, prestadorId }: Props) {
                 <span className="font-black text-slate-900 uppercase text-[10px] tracking-widest italic">Legenda</span>
               </div>
               <p className="text-xs font-medium text-slate-600 leading-relaxed italic pl-4 border-l-2 border-slate-100">
-                {fotosData[fotoAtual.etapa]?.legenda || "Nenhum detalhamento."}
+                {descricaoOuPadrao(fotoAtual.etapa, fotosData[fotoAtual.etapa]?.legenda)}
               </p>
             </div>
             <div className="space-y-4 pt-4 border-t border-slate-50">

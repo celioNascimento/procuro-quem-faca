@@ -112,7 +112,7 @@ Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas
 | Tabela | Propósito |
 |---|---|
 | `categorias_grupos` | Agrupamento de alto nível (ex: "Casa", "Tecnologia"), ícone, ordem |
-| `categorias` | Categoria específica de serviço, vinculada a um grupo, flag `destaque` |
+| `categorias` | Categoria específica de serviço, vinculada a um grupo, flag `destaque` e `exemplo_descricao` (frase de exemplo do campo "Depois" do trabalho; obrigatória em categoria nova, ver `12-admin.md`) |
 | `habilidades` | Catálogo de habilidades (nome + categoria) — tabela pequena, 5 linhas atualmente |
 
 ### Portfólio e execução de serviço
