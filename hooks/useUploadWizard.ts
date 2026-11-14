@@ -6,6 +6,7 @@ import { useWizardCarrossel } from '@/hooks/useWizardCarrossel'
 import { useWizardWhatsappLinks } from '@/hooks/useWizardWhatsappLinks'
 import { FotoPortfolio, ComentarioPortfolio, ProjetoIdentificado } from '@/types/portfolio'
 import { limparDescricao } from '@/lib/trabalho/descricaoFotos'
+import { planoDeGravacaoDaAutorizacao } from '@/lib/trabalho/autorizacaoFoto'
 import {
   getPrestadorBaseInfo,
   getFotosDoProjeto,
@@ -494,7 +495,15 @@ export function useUploadWizard(prestadorId: string | number, projetoExistente: 
     const foto = fotosData[ordem]
     if (!foto) return false
     try {
-      await atualizarConsentimentoFoto(foto.id, { contemPessoas, autorizado })
+      // O banco recusa "pessoa na foto" sem a autorização junto (ver lib/trabalho/autorizacaoFoto.ts):
+      // enquanto estiver incompleto, o estado fica só na tela e já bloqueia o envio ao cliente.
+      const plano = planoDeGravacaoDaAutorizacao(
+        { contemPessoas, autorizado },
+        !!foto.consentimento_terceiros_confirmado,
+      )
+      if (plano.gravar) {
+        await atualizarConsentimentoFoto(foto.id, { contemPessoas: plano.contemPessoas, autorizado: plano.autorizado })
+      }
       setFotosData(prev => {
         const atual = prev[ordem]
         if (!atual) return prev
