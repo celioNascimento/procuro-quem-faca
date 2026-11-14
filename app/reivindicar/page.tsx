@@ -181,7 +181,7 @@ function ReivindicarConteudo() {
 
 export default function PaginaReivindicar() {
   return (
-    <main className="min-h-screen bg-[#FDFDFD] font-sans pt-32">
+    <main className="min-h-screen bg-[#FDFDFD] font-sans pt-32 md:pt-22">
       <Header href="/" />
       <Suspense fallback={
         <div className="text-center p-20 font-black text-slate-300 animate-pulse uppercase tracking-widest italic text-[10px]">

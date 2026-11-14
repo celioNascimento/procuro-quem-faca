@@ -260,10 +260,10 @@ export default function PaginaPrestadores() {
   return (
     <div className="min-h-screen bg-slate-50 pb-4 antialiased selection:bg-blue-100">
       <Header href="/" larga />
-      {/* O Header é fixo e mede h-16 (64px) no celular e md:h-28 (112px) daí em diante.
+      {/* O Header é fixo e mede h-16 (64px) no celular e md:h-18 (72px) daí em diante.
           Este espaço precisa acompanhar essas alturas; com menos, o título da busca
           e o contador de resultados ficam por baixo do cabeçalho. */}
-      <div className="pt-16 md:pt-28">
+      <div className="pt-16 md:pt-18">
         <Suspense fallback={<ListaSkeleton />}>
           <ListaConteudo />
         </Suspense>

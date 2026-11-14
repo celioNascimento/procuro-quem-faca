@@ -4,35 +4,28 @@ export default function AcompanhamentoSkeleton() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans" aria-busy="true" aria-label="Carregando acompanhamento">
 
-      {/* Header Skeleton — espelha o HeaderCliente fixo (mesma altura/estrutura) */}
-      <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-md border-b border-slate-100 overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 h-16 md:h-28 flex items-center justify-between animate-pulse">
-          {/* Botão voltar */}
-          <div className="w-10 md:w-32 flex justify-start items-center shrink-0">
-            <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-slate-100" />
+      {/* Header Skeleton — espelha o HeaderCliente fixo (components/HeaderBase.tsx) */}
+      <nav className="fixed top-0 left-0 right-0 z-[100] border-b border-slate-100 bg-white">
+        <div className="mx-auto flex h-16 max-w-5xl animate-pulse items-center justify-between px-4 md:h-18">
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="size-11 rounded-xl bg-slate-100" />
+            <div className="aspect-[3/1] w-36 rounded-md bg-slate-100 md:w-52" />
           </div>
-
-          {/* Logo central */}
-          <div className="flex-1 flex justify-center items-center px-2">
-            <div className="aspect-[3/1] w-40 md:w-64 rounded-md bg-slate-100" />
-          </div>
-
-          {/* Nome + logout */}
-          <div className="w-10 md:w-32 flex justify-end items-center gap-2 shrink-0">
-            <div className="hidden md:flex flex-col items-end gap-1.5">
+          <div className="flex items-center gap-2">
+            <div className="hidden flex-col items-end gap-1.5 md:flex">
               <div className="h-2 w-10 rounded bg-slate-100" />
               <div className="h-3 w-16 rounded bg-slate-100" />
             </div>
-            <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-slate-100" />
+            <div className="size-11 rounded-xl bg-slate-100" />
           </div>
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 md:pt-36 pb-20">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 md:pt-26 pb-20">
         <div className="flex flex-col lg:flex-row lg:items-start gap-6">
 
           {/* Aside — CardPrestador + StatusMini + RodapeSeguranca */}
-          <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-32 space-y-4">
+          <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-22 space-y-4">
 
             {/* CardPrestador skeleton */}
             <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-5 sm:p-6 space-y-4 animate-pulse">

@@ -20,8 +20,8 @@ export type LogoVariant = 'header' | 'nav' | 'hero' | 'auth' | 'card' | 'erro'
 // `size`  → classes Tailwind de largura (mobile → tablet → desktop)
 // `sizes` → dica para o next/image escolher a imagem otimizada certa (mesmos valores, em px)
 const VARIANTS: Record<LogoVariant, { size: string; sizes: string }> = {
-  // Header fixo (h-16 no mobile / h-28 no desktop): 176px → 288px
-  header: { size: 'w-44 md:w-72', sizes: '(min-width: 768px) 288px, 176px' },
+  // Header fixo (h-16 no mobile / h-18 no desktop): 144px → 208px (a altura do ícone cabe nos 72px)
+  header: { size: 'w-36 md:w-52', sizes: '(min-width: 768px) 208px, 144px' },
   // Barras mais baixas (cadastro, ajuda): 160px → 208px
   nav: { size: 'w-40 md:w-52', sizes: '(min-width: 768px) 208px, 160px' },
   // Home: logo em destaque acima da busca: 256px → 320px → 416px

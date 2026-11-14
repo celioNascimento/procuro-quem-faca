@@ -15,7 +15,7 @@ export default function BackButton({ href }: BackButtonProps) {
       type="button"
       onClick={voltar}
       aria-label="Voltar"
-      className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 hover:text-blue-600 hover:border-blue-100 hover:shadow-sm transition-all active:scale-95"
+      className="size-11 flex items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-500 hover:text-blue-600 hover:border-blue-100 hover:shadow-sm transition-all active:scale-95"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

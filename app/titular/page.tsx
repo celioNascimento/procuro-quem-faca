@@ -32,7 +32,7 @@ function Conteudo() {
 
 export default function PaginaTitular() {
   return (
-    <main className="min-h-screen bg-[#FDFDFD] pt-32 font-sans">
+    <main className="min-h-screen bg-[#FDFDFD] pt-32 md:pt-22 font-sans">
       <Header href="/" />
       <Suspense fallback={null}>
         <Conteudo />

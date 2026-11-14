@@ -102,7 +102,7 @@ export function FiltroSidebar({
   onAplicar, onLimpar,
 }: Props) {
   return (
-    <div className="sticky top-32 space-y-1">
+    <div className="sticky top-22 space-y-1">
       {/* Cabeçalho */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">

@@ -114,14 +114,14 @@ export default function PerfilDoCliente() {
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-24 animate-in fade-in duration-500 sm:px-6 sm:pt-32 md:pt-36 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-24 animate-in fade-in duration-500 sm:px-6 sm:pt-32 md:pt-26 lg:px-8">
         <header className="mb-6 flex max-w-2xl flex-col gap-2 sm:mb-8">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">Área do cliente</p>
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Acompanhe seus projetos</h1>
         </header>
 
         <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[20rem_minmax(0,1fr)]">
-          <aside className="min-w-0 lg:sticky lg:top-32">
+          <aside className="min-w-0 lg:sticky lg:top-22">
             <div className="flex flex-col gap-4">
               <CardPerfilCliente
                 nome={perfil.full_name}
@@ -215,7 +215,7 @@ export default function PerfilDoCliente() {
             </p>
 
             <nav
-              className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-28"
+              className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-18"
               aria-label="Seções do painel"
             >
               {[{ id: 'servicos', label: 'Meus projetos' }, { id: 'dados', label: 'Minha conta' }].map(a => (
