@@ -30,7 +30,7 @@ export default function SearchForm({ busca, setBusca, onSubmit, temErro }: Props
   }
 
   return (
-    <form onSubmit={handleSubmitInterno} role="search" className="w-full flex flex-col items-center gap-3 group">
+    <form onSubmit={handleSubmitInterno} role="search" className="w-full flex flex-col items-center gap-4 group">
       <div className="w-full relative">
         <div className={`absolute -inset-1 rounded-[2.2rem] blur opacity-10 transition-opacity duration-500 ${
           temErro ? 'bg-red-500' : 'bg-blue-600'
@@ -58,7 +58,7 @@ export default function SearchForm({ busca, setBusca, onSubmit, temErro }: Props
 
         <button
           type="submit"
-          className="hidden md:block absolute right-3 top-3 bottom-3 bg-blue-600 text-white px-12 rounded-[1.7rem] font-bold text-sm hover:bg-blue-700 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+          className="hidden md:block absolute right-3 top-3 bottom-3 bg-blue-600 text-white px-12 rounded-[1.7rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-700 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         >
           Buscar
         </button>
@@ -72,7 +72,7 @@ export default function SearchForm({ busca, setBusca, onSubmit, temErro }: Props
 
       <button
         type="submit"
-        className="md:hidden w-full min-h-14 bg-blue-600 text-white rounded-2xl font-bold text-base shadow-lg shadow-blue-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        className="md:hidden w-40 min-h-12 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-blue-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
       >
         Buscar
       </button>
