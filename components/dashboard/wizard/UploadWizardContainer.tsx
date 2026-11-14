@@ -39,6 +39,9 @@ const COR_DO_SELO: Record<TomDoSelo, string> = {
   sucesso: 'bg-emerald-100 text-emerald-800',
 }
 
+// Posição de cada foto na coluna única do celular (o aceite fica entre o antes e o durante).
+const ORDEM_DA_FOTO: Record<EtapaFoto, string> = { 1: 'order-2', 2: 'order-4', 3: 'order-5' }
+
 const MOTIVO_SEM_AUTORIZACAO = 'Uma das fotos mostra uma pessoa e falta confirmar a autorização dela. Confirme na foto ou troque a imagem.'
 
 export function UploadWizardContainer({ prestadorId, projetoExistente = null, onVoltar }: UploadWizardContainerProps) {
@@ -84,7 +87,7 @@ export function UploadWizardContainer({ prestadorId, projetoExistente = null, on
 
   return (
     <>
-      <div className="flex w-full flex-col gap-5 rounded-[2rem] border border-slate-200 bg-[#F8FAFC] p-4 sm:p-6">
+      <div className="flex w-full flex-col gap-4 sm:gap-5 sm:rounded-[2rem] sm:border sm:border-slate-200 sm:bg-[#F8FAFC] sm:p-6">
         {/* ── Cabeçalho ── */}
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -112,11 +115,9 @@ export function UploadWizardContainer({ prestadorId, projetoExistente = null, on
           </div>
         )}
 
-        {/* ── Passo 1: cliente e serviço ── */}
-        <DadosDoClienteCard hookData={hookData} />
-
         {isProjetoConcluido ? (
           <>
+            <DadosDoClienteCard hookData={hookData} />
             <WizardCompleted hookData={hookData} prestadorId={prestadorId} />
             {projetoId && (
               <GarantiaSecaoWizard prestadorId={prestadorId} caso={casoGarantia} loadingCaso={loadingCaso} recarregar={recarregarCaso} />
@@ -124,30 +125,34 @@ export function UploadWizardContainer({ prestadorId, projetoExistente = null, on
           </>
         ) : mostrarEscolhaFluxo ? (
           /* ── Escolha: com ou sem fotos ── */
-          <section className="rounded-[1.75rem] border border-slate-200 bg-white p-4 sm:p-5" aria-label="Como registrar o trabalho">
-            <h3 className="text-base font-black text-slate-900">Como você quer registrar este trabalho?</h3>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => escolherFluxo(false)}
-                className={`flex min-h-24 flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-colors hover:border-blue-400 ${prestadorInfo.portfolioObrigatorio ? 'border-blue-300 bg-blue-50/50' : 'border-slate-200 bg-white'}`}
-              >
-                <span className="text-base font-black text-slate-900">Com fotos</span>
-                <span className="text-sm text-slate-600">Antes, durante e depois. Mostra o seu trabalho no perfil.</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => escolherFluxo(true)}
-                className={`flex min-h-24 flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-colors hover:border-blue-400 ${!prestadorInfo.portfolioObrigatorio ? 'border-blue-300 bg-blue-50/50' : 'border-slate-200 bg-white'}`}
-              >
-                <span className="text-base font-black text-slate-900">Sem fotos</span>
-                <span className="text-sm text-slate-600">Só o aceite e a avaliação do cliente.</span>
-              </button>
-            </div>
-          </section>
+          <div className="flex flex-col gap-4 lg:max-w-3xl">
+            <DadosDoClienteCard hookData={hookData} />
+            <section className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-5" aria-label="Como registrar o trabalho">
+              <h3 className="text-base font-black text-slate-900">Como você quer registrar este trabalho?</h3>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => escolherFluxo(false)}
+                  className={`flex min-h-24 flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-colors hover:border-blue-400 ${prestadorInfo.portfolioObrigatorio ? 'border-blue-300 bg-blue-50/50' : 'border-slate-200 bg-white'}`}
+                >
+                  <span className="text-base font-black text-slate-900">Com fotos</span>
+                  <span className="text-sm text-slate-600">Antes, durante e depois. Mostra o seu trabalho no perfil.</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => escolherFluxo(true)}
+                  className={`flex min-h-24 flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-colors hover:border-blue-400 ${!prestadorInfo.portfolioObrigatorio ? 'border-blue-300 bg-blue-50/50' : 'border-slate-200 bg-white'}`}
+                >
+                  <span className="text-base font-black text-slate-900">Sem fotos</span>
+                  <span className="text-sm text-slate-600">Só o aceite e a avaliação do cliente.</span>
+                </button>
+              </div>
+            </section>
+          </div>
         ) : semFotos ? (
           /* ── Caminho sem fotos ── */
-          <>
+          <div className="flex flex-col gap-4 lg:max-w-3xl">
+            <DadosDoClienteCard hookData={hookData} />
             {!projetoId ? (
               <button
                 type="button"
@@ -167,7 +172,7 @@ export function UploadWizardContainer({ prestadorId, projetoExistente = null, on
                 onCopiar={copiarAceite}
               />
             ) : !marcadoConcluidoAt ? (
-              <section className="flex flex-col gap-3 rounded-[1.75rem] border border-slate-200 bg-white p-4 sm:p-5" aria-label="Concluir o serviço">
+              <section className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 sm:p-5" aria-label="Concluir o serviço">
                 <h3 className="text-base font-black text-slate-900">Serviço em andamento</h3>
                 <p className="text-sm text-slate-600">Quando terminar, marque como concluído para poder pedir a avaliação ao cliente.</p>
                 <button
@@ -189,67 +194,79 @@ export function UploadWizardContainer({ prestadorId, projetoExistente = null, on
                 onCopiar={copiarConclusao}
               />
             )}
-          </>
+          </div>
         ) : (
-          /* ── Caminho com fotos: Antes → aceite → Durante → Depois → avaliação ── */
-          <>
-            {ETAPAS.map((etapa) => {
-              const fotoUrl = fotosUrls[etapa] ?? null
-              const foto = fotosData[etapa]
-              const dadosOk = isPhoneValid && isTitleValid
-              const bloqueada = etapa === 1 ? !dadosOk : !aceiteEnviado
-              const motivo = etapa === 1
-                ? 'Preencha o WhatsApp do cliente e o nome do serviço para liberar esta foto.'
-                : 'Envie o aceite ao cliente (bloco acima) para liberar esta foto.'
-              return (
-                <div key={etapa} className="flex flex-col gap-5">
-                  <CartaoDeFoto
-                    key={`${etapa}-${fotoUrl ?? 'vazia'}`}
-                    etapa={etapa}
-                    fotoUrl={fotoUrl}
-                    descricaoInicial={foto?.legenda ?? ''}
-                    exemploDaCategoria={prestadorInfo.exemploDescricao}
-                    bloqueada={bloqueada}
-                    motivoBloqueio={motivo}
-                    enviando={!!loadingEtapa[etapa]}
-                    contemPessoas={!!foto?.contem_pessoas}
-                    autorizado={!!foto?.consentimento_terceiros_confirmado}
-                    onEscolherArquivo={(e) => handleUpload(e, etapa)}
-                    onSalvarDescricao={(texto) => salvarDescricaoFoto(etapa, texto)}
-                    onAutorizacao={(pessoas, ok) => salvarAutorizacaoFoto(etapa, pessoas, ok)}
-                    onAmpliar={() => setZoomEtapa(etapa)}
+          /* ── Caminho com fotos. No celular, uma coluna na ordem do passo a passo (dados → antes → aceite →
+               durante → depois → avaliação). No computador, duas colunas: à esquerda os dados e os envios ao
+               cliente, à direita as três fotos. As colunas viram "contents" no celular para o `order` valer. ── */
+          <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start lg:gap-6">
+            <div className="contents lg:flex lg:flex-col lg:gap-4">
+              <div className="order-1"><DadosDoClienteCard hookData={hookData} /></div>
+
+              {mostrarAceiteComFotos && (
+                <div className="order-3">
+                  <EnvioAoCliente
+                    titulo="Enviar o aceite ao cliente"
+                    explicacao="O cliente confirma o início do serviço pelo link. Depois disso, você libera as fotos do durante e do depois."
+                    rotuloEnviar="Enviar o aceite pelo WhatsApp"
+                    previa={previaAceite}
+                    onEnviar={gerarLinkAceite}
+                    onCopiar={copiarAceite}
+                    desabilitado={fotoComPessoaSemAutorizacao}
+                    motivoDesabilitado={MOTIVO_SEM_AUTORIZACAO}
+                    jaEnviado={aceiteEnviado}
                   />
-
-                  {etapa === 1 && mostrarAceiteComFotos && (
-                    <EnvioAoCliente
-                      titulo="Enviar o aceite ao cliente"
-                      explicacao="O cliente confirma o início do serviço pelo link. Depois disso, você libera as fotos do durante e do depois."
-                      rotuloEnviar="Enviar o aceite pelo WhatsApp"
-                      previa={previaAceite}
-                      onEnviar={gerarLinkAceite}
-                      onCopiar={copiarAceite}
-                      desabilitado={fotoComPessoaSemAutorizacao}
-                      motivoDesabilitado={MOTIVO_SEM_AUTORIZACAO}
-                      jaEnviado={aceiteEnviado}
-                    />
-                  )}
                 </div>
-              )
-            })}
+              )}
 
-            {mostrarConclusaoComFotos && (
-              <EnvioAoCliente
-                titulo="Pedir a avaliação ao cliente"
-                explicacao="As três fotos estão registradas. Envie o link para o cliente conferir o resultado e avaliar."
-                rotuloEnviar="Pedir a avaliação pelo WhatsApp"
-                previa={previaConclusao}
-                onEnviar={gerarLinkConclusao}
-                onCopiar={copiarConclusao}
-                desabilitado={fotoComPessoaSemAutorizacao}
-                motivoDesabilitado={MOTIVO_SEM_AUTORIZACAO}
-              />
-            )}
-          </>
+              {mostrarConclusaoComFotos && (
+                <div className="order-6">
+                  <EnvioAoCliente
+                    titulo="Pedir a avaliação ao cliente"
+                    explicacao="As três fotos estão registradas. Envie o link para o cliente conferir o resultado e avaliar."
+                    rotuloEnviar="Pedir a avaliação pelo WhatsApp"
+                    previa={previaConclusao}
+                    onEnviar={gerarLinkConclusao}
+                    onCopiar={copiarConclusao}
+                    desabilitado={fotoComPessoaSemAutorizacao}
+                    motivoDesabilitado={MOTIVO_SEM_AUTORIZACAO}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="contents lg:flex lg:flex-col lg:gap-4">
+              {ETAPAS.map((etapa) => {
+                const fotoUrl = fotosUrls[etapa] ?? null
+                const foto = fotosData[etapa]
+                const dadosOk = isPhoneValid && isTitleValid
+                const bloqueada = etapa === 1 ? !dadosOk : !aceiteEnviado
+                const motivo = etapa === 1
+                  ? 'Preencha o WhatsApp do cliente e o nome do serviço para liberar esta foto.'
+                  : 'Envie o aceite ao cliente para liberar esta foto.'
+                return (
+                  <div key={etapa} className={ORDEM_DA_FOTO[etapa]}>
+                    <CartaoDeFoto
+                      key={`${etapa}-${fotoUrl ?? 'vazia'}`}
+                      etapa={etapa}
+                      fotoUrl={fotoUrl}
+                      descricaoInicial={foto?.legenda ?? ''}
+                      exemploDaCategoria={prestadorInfo.exemploDescricao}
+                      bloqueada={bloqueada}
+                      motivoBloqueio={motivo}
+                      enviando={!!loadingEtapa[etapa]}
+                      contemPessoas={!!foto?.contem_pessoas}
+                      autorizado={!!foto?.consentimento_terceiros_confirmado}
+                      onEscolherArquivo={(e) => handleUpload(e, etapa)}
+                      onSalvarDescricao={(texto) => salvarDescricaoFoto(etapa, texto)}
+                      onAutorizacao={(pessoas, ok) => salvarAutorizacaoFoto(etapa, pessoas, ok)}
+                      onAmpliar={() => setZoomEtapa(etapa)}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         )}
       </div>
 
