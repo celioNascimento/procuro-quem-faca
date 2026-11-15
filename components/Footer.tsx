@@ -31,6 +31,12 @@ export default function Footer() {
             Termos
           </Link>
           <Link 
+            href="/ajuda" 
+            className="inline-flex min-h-7 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
+          >
+            Ajuda
+          </Link>
+          <Link 
             href="/quem-somos" 
             className="inline-flex min-h-7 items-center text-slate-600 hover:text-blue-600 text-sm font-semibold transition-colors"
           >

@@ -40,3 +40,8 @@ Duas colunas: `PerfilHero`, `PerfilCTA` e `PerfilConfianca` à esquerda (fixa ao
 **`useCompartilharPerfil`** + `lib/services/compartilharPerfil.service.ts`: funções puras de URL/texto (`buildUrlPerfil`, `buildTextoPadrao`, `buildTextoWhatsApp`) + efeitos (`compartilharViaNative` — restrito a mobile via `pointer: coarse`, `compartilharViaWhatsApp`, `registrarCompartilhamento` via `insertLog`).
 
 **`RastreamentoAtivacaoProvider`** — Suspense wrapper invocando `useRastreamentoAtivacao` a partir de `?src=`.
+
+
+## Mensagem do WhatsApp
+
+O texto pré-preenchido do botão do perfil (`PerfilCTA`) é "Olá {nome}, vi seu perfil no Procuro Quem Faça e gostaria de conversar sobre um trabalho." e o do modal de um trabalho (`ProjetoModal`) termina em "…gostaria de conversar sobre um trabalho como esse." Não falam em orçamento (ver glossário).

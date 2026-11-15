@@ -22,8 +22,8 @@ export function GarantiaComentarios({ wizard }: Props) {
   return (
     <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
       <div className="flex items-center gap-2 px-1">
-        <MessageSquare size={12} className="text-slate-400" />
-        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+        <MessageSquare size={12} className="text-slate-500" />
+        <p className="text-xs font-bold text-slate-500">
           Conversa
         </p>
       </div>
@@ -33,8 +33,8 @@ export function GarantiaComentarios({ wizard }: Props) {
           {derived.comentariosGerais.map((c) => (
             <div
               key={c.id}
-              className={`text-[11px] rounded-xl px-3 py-2 max-w-[85%] ${
-                c.autor_tipo === 'prestador'
+              className={`text-xs rounded-xl px-3 py-2 max-w-[85%] ${
+ c.autor_tipo === 'prestador'
                   ? 'bg-blue-600 text-white ml-auto'
                   : 'bg-white text-slate-700 border border-slate-100'
               }`}
@@ -56,7 +56,7 @@ export function GarantiaComentarios({ wizard }: Props) {
             }
           }}
           placeholder="Escrever mensagem..."
-          className="flex-1 text-[11px] bg-white border border-slate-200 rounded-full px-4 py-2.5 outline-none focus:border-blue-300"
+          className="flex-1 text-xs bg-white border border-slate-200 rounded-full px-4 py-2.5 outline-none focus:border-blue-300"
         />
         <button
           onClick={() => actions.handleEnviarComentario(null)}

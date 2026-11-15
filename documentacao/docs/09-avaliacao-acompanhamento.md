@@ -190,3 +190,7 @@ No modal de um trabalho concluído, sem caso aberto, `GarantiaOferecerReparo` ap
 ## Chat em tempo real
 
 **Decisão de produto: não implementado.** WhatsApp já cumpre esse papel. Nenhum código ativo referencia `projeto_mensagens`. Comentários pontuais por foto (`portfolio_comentarios`, via `ModalDiscussao`/`WizardZoomModal`) são o mecanismo de feedback assíncrono do produto.
+
+### Tom das telas de garantia do prestador
+
+`components/dashboard/wizard/garantia/*` (aguardando aceite, aberta, respondida, finalizada, comentários, carrossel e seção do wizard) seguem a mesma regra da Área do cliente: texto ≥12px, sem itálico nem caixa-alta, contraste ≥4,5:1 (sem opacidade em cima de texto colorido).

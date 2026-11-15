@@ -18,8 +18,9 @@ describe('Footer', () => {
 
   it('mantém os links institucionais', () => {
     render(<Footer />)
-    for (const nome of ['Privacidade', 'Termos', 'Quem somos']) {
+    for (const nome of ['Privacidade', 'Termos', 'Quem somos', 'Ajuda']) {
       expect(screen.getByText(new RegExp(nome, 'i'))).toBeTruthy()
     }
+    expect(screen.getByRole('link', { name: 'Ajuda' }).getAttribute('href')).toBe('/ajuda')
   })
 })

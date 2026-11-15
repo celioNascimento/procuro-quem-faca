@@ -75,18 +75,18 @@ export function GarantiaAberta({ caso, onAtualizado }: Props) {
       {/* Prazo + descrição do problema */}
       <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5">
         <div className="flex items-start gap-3">
-          <AlertTriangle size={18} className="text-orange-500 shrink-0 mt-0.5" />
+          <AlertTriangle size={18} className="text-orange-700 shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-[11px] font-black uppercase tracking-wide text-orange-700 leading-none mb-1.5">
+            <p className="text-xs font-bold text-orange-700 leading-none mb-1.5">
               {ehReclamacao ? 'Cliente relatou um problema' : 'Cliente acionou a garantia'}
             </p>
             {prazoFormatado && (
-              <p className="text-[10px] font-bold text-orange-600 mb-2">
+              <p className="text-xs font-bold text-orange-700 mb-2">
                 Responda até {prazoFormatado} — após esse prazo, o caso é marcado
                 automaticamente como sem resposta.
               </p>
             )}
-            <p className="text-[11px] font-medium text-orange-700/80 leading-snug">
+            <p className="text-xs font-medium text-orange-700 leading-snug">
               {caso.descricao_problema}
             </p>
           </div>
@@ -101,7 +101,7 @@ export function GarantiaAberta({ caso, onAtualizado }: Props) {
 
       {/* Proposta de solução — compromisso formal que muda o status */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5">
-        <p className="text-[10px] font-black uppercase tracking-wide text-slate-600 mb-2">
+        <p className="text-xs font-bold text-slate-600 mb-2">
           Registrar proposta de solução
         </p>
         <textarea
@@ -110,24 +110,24 @@ export function GarantiaAberta({ caso, onAtualizado }: Props) {
           placeholder="Descreva como você vai resolver o problema (ex: data para visita, o que será reparado)..."
           rows={3}
           maxLength={2000}
-          className="w-full text-[12px] text-slate-700 placeholder:text-slate-300 outline-none border border-slate-100 rounded-xl p-3 resize-none focus:border-orange-300 transition-colors"
+          className="w-full text-[12px] text-slate-700 placeholder:text-slate-500 outline-none border border-slate-100 rounded-xl p-3 resize-none focus:border-orange-300 transition-colors"
         />
         <div className="flex items-center justify-between mt-2">
           <span
-            className={`text-[9px] font-bold ${
-              propostaValida ? 'text-green-500' : 'text-slate-300'
+            className={`text-xs font-bold ${
+ propostaValida ? 'text-green-700' : 'text-slate-500'
             }`}
           >
             {proposta.trim().length}/{MIN_CARACTERES_PROPOSTA} caracteres mínimos
           </span>
         </div>
         {erroProposta && (
-          <p className="text-[10px] text-red-500 font-medium mt-1">{erroProposta}</p>
+          <p className="text-xs text-red-700 font-medium mt-1">{erroProposta}</p>
         )}
         <button
           onClick={handleRegistrarProposta}
           disabled={!propostaValida || enviandoProposta}
-          className="w-full mt-3 bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl font-black uppercase text-[11px] tracking-[0.15em] italic flex items-center justify-center gap-2 py-3 hover:bg-orange-700 active:scale-[0.98] transition-all"
+          className="w-full mt-3 bg-orange-600 disabled:bg-slate-200 disabled:text-slate-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 py-3 hover:bg-orange-700 active:scale-[0.98] transition-all"
         >
           {enviandoProposta ? (
             <Loader2 size={14} className="animate-spin" />
