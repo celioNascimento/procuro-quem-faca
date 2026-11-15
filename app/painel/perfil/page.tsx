@@ -16,6 +16,7 @@ import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkele
 import { ContextualHelp } from '@/components/help/HelpCenter'
 import DangerZone from '@/components/account/DangerZone'
 import { DialogoAviso, DialogoConfirmacao } from '@/components/ui/Dialogo'
+import { ConvitePrestador } from '@/components/painel/ConvitePrestador'
 
 export default function PerfilDoCliente() {
   const {
@@ -108,6 +109,10 @@ export default function PerfilDoCliente() {
           <p className="text-xs font-semibold text-blue-700">Área do cliente</p>
           <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Acompanhe seus trabalhos</h1>
         </header>
+
+        <div className="mb-6 sm:mb-8">
+          <ConvitePrestador />
+        </div>
 
         <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[20rem_minmax(0,1fr)]">
           <aside className="min-w-0 lg:sticky lg:top-22">

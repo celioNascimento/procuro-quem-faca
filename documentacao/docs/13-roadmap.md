@@ -4,6 +4,12 @@ Funcionalidades planejadas ou em avaliação, e pendências técnicas conhecidas
 
 ## Em avaliação
 
+### Troca entre área do cliente e área do prestador
+
+**Andamento (15/11/2026):** implementado. Quem está na área do cliente (`/painel/perfil`) vê um convite: "Quero ser prestador" leva a `/cadastro` quando ainda não há cadastro profissional; "Concluir cadastro" aparece quando o cadastro está pendente; "Acessar painel profissional" leva a `/dashboard` quando o cadastro está completo. No painel profissional (`/dashboard`), o botão "Ir para a área do cliente" leva a `/painel/perfil`. A decisão usa a mesma regra do cabeçalho (`useAuth`: `role` e `prestadorStatus`). Componentes: `components/painel/ConvitePrestador.tsx` e `components/dashboard/AcessoAreaCliente.tsx`.
+
+**Pendência:** o convite de prestador não aparece em outras telas da área do cliente (`/meus-servicos`, por exemplo). Avaliar se vale repetir o convite nelas.
+
 ### Avaliação bidirecional (prestador avalia cliente)
 
 **Andamento (15/11/2026):** implementado (nota 1–5 + até 3 pontos positivos, sem texto livre). Regra definida: as duas avaliações podem ser feitas em qualquer ordem e o cliente só vê a que recebeu depois de avaliar também (detalhes em `03-banco-de-dados.md`). Abaixo, o texto original da proposta.
