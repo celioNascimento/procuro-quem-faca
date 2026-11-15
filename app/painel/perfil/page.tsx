@@ -108,11 +108,8 @@ export default function PerfilDoCliente() {
       <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-24 animate-in fade-in duration-500 sm:px-6 md:pt-26 lg:px-8">
         <header className="mb-6 sm:mb-8">
           <TituloArea area="Área do cliente" titulo="Meus trabalhos" />
-        </header>
-
-        <div className="mb-6 sm:mb-8">
           <ConvitePrestador />
-        </div>
+        </header>
 
         <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[20rem_minmax(0,1fr)]">
           <aside className="min-w-0 lg:sticky lg:top-22">
