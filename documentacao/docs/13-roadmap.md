@@ -6,9 +6,14 @@ Funcionalidades planejadas ou em avaliação, e pendências técnicas conhecidas
 
 ### Troca entre área do cliente e área do prestador
 
-**Andamento (15/11/2026):** implementado. Quem está na área do cliente (`/painel/perfil`) vê um convite: "Quero ser prestador" leva a `/cadastro` quando ainda não há cadastro profissional; "Concluir cadastro" aparece quando o cadastro está pendente; "Acessar painel profissional" leva a `/dashboard` quando o cadastro está completo. No painel profissional (`/dashboard`), o botão "Ir para a área do cliente" leva a `/painel/perfil`. A decisão usa a mesma regra do cabeçalho (`useAuth`: `role` e `prestadorStatus`). Componentes: `components/painel/ConvitePrestador.tsx` e `components/dashboard/AcessoAreaCliente.tsx`.
+**Andamento (15/11/2026):** implementado, com destaque discreto. A troca entre áreas fica no cabeçalho (`components/HeaderAuthButton.tsx`), que usa a mesma regra de `useAuth` (`role` e `prestadorStatus`):
+- Cliente: "Minha Conta" (`/painel/perfil`).
+- Prestador com cadastro completo: "Meu Painel" (`/dashboard`) como botão principal, com atalho "Minha Conta" ao lado. No celular, o menu lista as duas.
+- Prestador com cadastro pendente: "Concluir Cadastro" (`/cadastro`), com atalho "Minha Conta".
 
-**Pendência:** o convite de prestador não aparece em outras telas da área do cliente (`/meus-servicos`, por exemplo). Avaliar se vale repetir o convite nelas.
+Na área do cliente sobrou só um link de texto, "Cadastre-se como prestador", para quem ainda não tem perfil profissional (`components/painel/ConvitePrestador.tsx`).
+
+**Pendência:** o link de texto não aparece em outras telas da área do cliente (`/meus-servicos`, por exemplo). Avaliar se vale repetir o convite nelas.
 
 ### Avaliação bidirecional (prestador avalia cliente)
 
