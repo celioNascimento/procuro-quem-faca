@@ -24,11 +24,13 @@ export default function Login() {
     registrarLogAuth
   } = useLoginForm()
 
+  // Tom calmo do restante da plataforma: texto de no mínimo 12px, sem caixa-alta,
+  // contraste mínimo 4,5:1 e alvos de toque de 44px.
   const inputClass = (erro: boolean | string) =>
-    `w-full p-4 lg:p-5 rounded-[1.25rem] border transition-all duration-300 outline-none text-slate-800 bg-slate-50/50 placeholder-slate-400 font-semibold text-sm lg:text-base ${
+    `w-full p-4 lg:p-5 rounded-[1.25rem] border transition-all duration-300 outline-none text-slate-800 bg-slate-50/50 placeholder-slate-500 font-semibold text-sm lg:text-base ${
       erro
         ? 'border-red-500 bg-red-50 ring-4 ring-red-100'
-        : 'border-slate-100 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 shadow-sm'
+        : 'border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 shadow-sm'
     }`
 
   return (
@@ -51,13 +53,13 @@ export default function Login() {
             Entrar ou Criar Conta
           </h1>
 
-          <p className="text-slate-400 text-[10px] lg:text-[11px] font-black uppercase tracking-[0.2em] mb-2 lg:mb-3">
+          <p className="text-slate-500 text-[13px] lg:text-[14px] font-semibold mb-2 lg:mb-3">
             Área do Profissional
           </p>
 
-          <p className="text-slate-500 text-[12px] lg:text-[14px] font-medium mb-7 lg:mb-9 leading-relaxed">
+          <p className="text-slate-600 text-[13px] lg:text-[14px] font-medium mb-7 lg:mb-9 leading-relaxed">
             Use seu e-mail e senha abaixo.{' '}
-            <span className="text-blue-600 font-semibold block md:inline mt-1 md:mt-0">Primeira vez? Sua conta será criada automaticamente.</span>
+            <span className="text-blue-700 font-semibold block md:inline mt-1 md:mt-0">Primeira vez? Sua conta será criada automaticamente.</span>
           </p>
 
           {/* Google — tela dedicada a profissionais: conta nova nasce como prestador */}
@@ -65,16 +67,16 @@ export default function Login() {
 
           {/* Divisor */}
           <div className="flex items-center gap-4 my-6 lg:my-8">
-            <div className="h-px flex-grow bg-slate-100" />
-            <span className="text-[10px] lg:text-[11px] font-bold text-slate-300 uppercase tracking-widest">ou e-mail</span>
-            <div className="h-px flex-grow bg-slate-100" />
+            <div className="h-px flex-grow bg-slate-200" />
+            <span className="text-[12px] lg:text-[13px] font-medium text-slate-500">ou e-mail</span>
+            <div className="h-px flex-grow bg-slate-200" />
           </div>
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4 lg:gap-5 text-left">
 
             {/* E-mail */}
             <div className="flex flex-col gap-1.5 lg:gap-2">
-              <label className="text-slate-500 font-bold text-[10px] lg:text-[11px] uppercase ml-1 tracking-widest">E-mail</label>
+              <label className="text-slate-600 font-semibold text-[12px] lg:text-[13px] ml-1">E-mail</label>
               <input
                 type="email"
                 placeholder="seu@email.com"
@@ -89,11 +91,11 @@ export default function Login() {
             {/* Senha */}
             <div className="flex flex-col gap-1.5 lg:gap-2">
               <div className="flex justify-between items-center ml-1 mr-1">
-                <label className="text-slate-500 font-bold text-[10px] lg:text-[11px] uppercase tracking-widest">Senha</label>
+                <label className="text-slate-600 font-semibold text-[12px] lg:text-[13px]">Senha</label>
                 <button
                   type="button"
                   onClick={handleEsqueciSenha}
-                  className="text-[10px] lg:text-[11px] font-bold text-blue-600 uppercase hover:text-blue-700 transition-colors tracking-wider"
+                  className="inline-flex items-center min-h-[44px] text-[12px] lg:text-[13px] font-semibold text-blue-700 hover:text-blue-800 transition-colors"
                 >
                   Redefinir senha
                 </button>
@@ -111,7 +113,8 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 lg:right-5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-blue-600 transition-colors p-1"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  className="absolute right-2 lg:right-3 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 hover:text-blue-700 transition-colors rounded-full"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +129,7 @@ export default function Login() {
                 </button>
               </div>
               {!touched.password && (
-                <p className="text-[10px] lg:text-[11px] text-slate-400 ml-1 font-medium">
+                <p className="text-[12px] lg:text-[13px] text-slate-500 ml-1 font-medium">
                   Primeiro acesso? Escolha uma senha nova aqui.
                 </p>
               )}
@@ -134,11 +137,14 @@ export default function Login() {
 
             {/* Feedback */}
             {mensagem && (
-              <div className={`p-4 lg:p-5 rounded-2xl text-[11px] lg:text-[12px] font-bold text-center uppercase tracking-wider animate-in fade-in duration-300 ${
-                mensagem.includes('Erro')
-                  ? 'bg-red-50 text-red-500 border border-red-100'
-                  : 'bg-blue-50 text-blue-600 border border-blue-100'
-              }`}>
+              <div
+                role="status"
+                className={`p-4 lg:p-5 rounded-2xl text-[13px] lg:text-[14px] font-semibold text-center animate-in fade-in duration-300 ${
+                  mensagem.includes('Erro')
+                    ? 'bg-red-50 text-red-700 border border-red-100'
+                    : 'bg-blue-50 text-blue-700 border border-blue-100'
+                }`}
+              >
                 {mensagem}
               </div>
             )}
@@ -147,7 +153,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 lg:py-5 bg-blue-600 text-white rounded-[1.5rem] font-black shadow-lg shadow-blue-100 hover:bg-blue-700 hover:-translate-y-0.5 active:scale-[0.98] transition-all mt-2 lg:mt-4 uppercase tracking-[0.15em] text-[11px] lg:text-[12px] flex items-center justify-center gap-2"
+              className="w-full min-h-[44px] py-4 lg:py-5 bg-blue-600 text-white rounded-[1.5rem] font-semibold shadow-lg shadow-blue-100 hover:bg-blue-700 hover:-translate-y-0.5 active:scale-[0.98] transition-all mt-2 lg:mt-4 text-[15px] lg:text-[16px] flex items-center justify-center gap-2"
             >
               {loading
                 ? <div className="w-5 h-5 lg:w-6 lg:h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -158,7 +164,7 @@ export default function Login() {
 
           <Link
             href="/"
-            className="inline-block mt-8 lg:mt-10 text-slate-300 font-bold text-[10px] lg:text-[11px] uppercase tracking-[0.2em] hover:text-blue-600 transition-colors"
+            className="inline-flex items-center justify-center min-h-[44px] mt-6 lg:mt-8 text-slate-600 font-semibold text-[13px] lg:text-[14px] hover:text-blue-700 transition-colors"
           >
             ← Voltar para a busca
           </Link>
