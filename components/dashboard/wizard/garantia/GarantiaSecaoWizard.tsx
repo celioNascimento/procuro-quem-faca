@@ -26,7 +26,7 @@ export function GarantiaSecaoWizard({ projetoId, prestadorId, caso, loadingCaso,
   if (loadingCaso) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 size={20} className="animate-spin text-slate-300" />
+        <Loader2 size={20} className="animate-spin text-slate-500" />
       </div>
     )
   }
@@ -39,10 +39,10 @@ export function GarantiaSecaoWizard({ projetoId, prestadorId, caso, loadingCaso,
   return (
     <div className="mt-4 pt-4 border-t-2 border-dashed border-orange-100">
       <div className="flex items-center gap-2 mb-4 px-1">
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">
+        <span className="text-xs font-bold text-orange-700">
           {ehReclamacao ? 'Reclamação' : 'Garantia'}
         </span>
-        <span className="text-[9px] font-medium text-slate-400">
+        <span className="text-xs font-medium text-slate-500">
           Continuação deste projeto
         </span>
       </div>

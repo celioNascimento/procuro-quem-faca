@@ -37,12 +37,12 @@ export function GarantiaRespondida({ caso, prestadorId }: Props) {
   return (
     <div className="space-y-4">
       <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-start gap-3">
-        <Clock size={18} className="text-blue-500 shrink-0 mt-0.5" />
+        <Clock size={18} className="text-blue-600 shrink-0 mt-0.5" />
         <div>
-          <p className="text-[11px] font-black uppercase tracking-wide text-blue-700 leading-none mb-1.5">
+          <p className="text-xs font-bold text-blue-700 leading-none mb-1.5">
             Aguardando confirmação do cliente
           </p>
-          <p className="text-[11px] font-medium text-blue-700/80 leading-snug">
+          <p className="text-xs font-medium text-blue-700 leading-snug">
             Sua proposta foi registrada. O caso fecha quando o cliente confirmar que
             o problema foi resolvido.
           </p>
@@ -52,8 +52,8 @@ export function GarantiaRespondida({ caso, prestadorId }: Props) {
       {caso.resposta_prestador_garantia && (
         <div className="bg-white border border-slate-100 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 size={12} className="text-green-500" />
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+            <CheckCircle2 size={12} className="text-green-700" />
+            <p className="text-xs font-bold text-slate-500">
               Sua proposta registrada
             </p>
           </div>

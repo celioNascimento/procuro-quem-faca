@@ -122,7 +122,7 @@ export default function ProjetoModal({ projeto, onClose, contato }: Props) {
   const garantias   = projeto.solicitacoes_garantia ?? []
 
   const linkWhatsapp = contato
-    ? buildLinkWhatsapp(contato.whatsapp, `Olá ${contato.nome}, vi seu trabalho "${projeto.titulo}" no Procuro Quem Faça e gostaria de um orçamento.`)
+    ? buildLinkWhatsapp(contato.whatsapp, `Olá ${contato.nome}, vi seu trabalho "${projeto.titulo}" no Procuro Quem Faça e gostaria de conversar sobre um trabalho como esse.`)
     : undefined
 
   const handleShare = async () => {

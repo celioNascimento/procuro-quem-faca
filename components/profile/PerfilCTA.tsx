@@ -19,7 +19,7 @@ interface Props {
 export default function PerfilCTA({ nome, whatsapp, onClique }: Props) {
     const waLink = buildLinkWhatsapp(
         whatsapp,
-        `Olá ${nome}, vi seu perfil no Procuro Quem Faça e gostaria de um orçamento.`
+        `Olá ${nome}, vi seu perfil no Procuro Quem Faça e gostaria de conversar sobre um trabalho.`
     ) ?? null
 
     const ctaRef = useRef<HTMLDivElement>(null)

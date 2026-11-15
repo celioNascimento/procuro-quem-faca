@@ -35,7 +35,7 @@ export function GarantiaCarrossel({ wizard, podeEnviar, autorTipo, fase = 'todas
       <div className="space-y-4">
         {fotosProblema.length > 0 && (
           <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">
+            <p className="text-xs font-bold text-slate-500 mb-2 px-1">
               Fotos do problema
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -59,7 +59,7 @@ export function GarantiaCarrossel({ wizard, podeEnviar, autorTipo, fase = 'todas
 
         {fotosResolucao.length > 0 && (
           <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">
+            <p className="text-xs font-bold text-slate-500 mb-2 px-1">
               Fotos da resolução
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -87,9 +87,9 @@ export function GarantiaCarrossel({ wizard, podeEnviar, autorTipo, fase = 'todas
               {state.enviandoFoto ? (
                 <Loader2 size={16} className="animate-spin text-orange-400" />
               ) : (
-                <Camera size={16} className="text-slate-400" />
+                <Camera size={16} className="text-slate-500" />
               )}
-              <span className="text-[10px] font-bold uppercase text-slate-400">
+              <span className="text-xs font-bold text-slate-500">
                 {state.enviandoFoto ? 'Enviando...' : labelUpload}
               </span>
               <input
@@ -101,7 +101,7 @@ export function GarantiaCarrossel({ wizard, podeEnviar, autorTipo, fase = 'todas
               />
             </label>
             {state.erroUpload && (
-              <p className="text-[10px] text-red-500 font-medium mt-1">{state.erroUpload}</p>
+              <p className="text-xs text-red-700 font-medium mt-1">{state.erroUpload}</p>
             )}
           </div>
         )}

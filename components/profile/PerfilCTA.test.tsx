@@ -17,6 +17,7 @@ describe('PerfilCTA', () => {
     const link = screen.getByRole('link', { name: /chamar no whatsapp/i })
     expect(link.getAttribute('href')).toContain('wa.me/')
     expect(document.body.textContent).not.toMatch(/orçamento/i)
+    expect(decodeURIComponent(link.getAttribute('href') ?? '')).toContain('gostaria de conversar sobre um trabalho')
   })
 
   it('registra o clique ao tocar no botão', () => {
