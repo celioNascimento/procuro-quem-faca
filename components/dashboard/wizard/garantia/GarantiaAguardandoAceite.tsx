@@ -15,16 +15,16 @@ interface Props {
 export function GarantiaAguardandoAceite({ caso }: Props) {
   return (
     <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
-      <Clock size={18} className="text-amber-500 shrink-0 mt-0.5" />
+      <Clock size={18} className="text-amber-700 shrink-0 mt-0.5" />
       <div>
-        <p className="text-[11px] font-black uppercase tracking-wide text-amber-700 leading-none mb-1.5">
+        <p className="text-xs font-bold text-amber-700 leading-none mb-1.5">
           Aguardando resposta do cliente
         </p>
-        <p className="text-[11px] font-medium text-amber-700/80 leading-snug">
+        <p className="text-xs font-medium text-amber-700 leading-snug">
           Você ofereceu reparo para esta avaliação. Assim que o cliente aceitar,
           o caso é aberto aqui e você poderá responder.
         </p>
-        <p className="text-[10px] text-amber-600/70 mt-2 italic">
+        <p className="text-xs text-amber-700 mt-2">
           &quot;{caso.descricao_problema}&quot;
         </p>
       </div>

@@ -66,11 +66,11 @@ export function GarantiaFinalizada({ caso, prestadorId }: Props) {
       <div className={`rounded-2xl p-5 border flex items-start gap-3 ${config.cor}`}>
         <Icon size={18} className="shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <p className="text-[11px] font-black uppercase tracking-wide leading-none">
+          <p className="text-xs font-bold leading-none">
             {config.titulo}
           </p>
           {textoDescricao && (
-            <p className="text-[11px] font-medium leading-snug opacity-80">
+            <p className="text-xs font-medium leading-snug opacity-80">
               {textoDescricao}
             </p>
           )}
@@ -81,10 +81,10 @@ export function GarantiaFinalizada({ caso, prestadorId }: Props) {
       <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3">
         <AlertTriangle size={14} className="text-orange-400 shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <p className="text-[9px] font-black uppercase tracking-widest text-orange-500">
+          <p className="text-xs font-bold text-orange-700">
             Problema relatado
           </p>
-          <p className="text-[11px] font-medium text-orange-700/80 leading-snug">
+          <p className="text-xs font-medium text-orange-700 leading-snug">
             {caso.descricao_problema}
           </p>
         </div>
@@ -94,8 +94,8 @@ export function GarantiaFinalizada({ caso, prestadorId }: Props) {
       {caso.resposta_prestador_garantia && (
         <div className="bg-white border border-slate-100 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 size={12} className="text-blue-400" />
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+            <CheckCircle2 size={12} className="text-blue-600" />
+            <p className="text-xs font-bold text-slate-500">
               Sua proposta registrada
             </p>
           </div>
@@ -117,15 +117,15 @@ export function GarantiaFinalizada({ caso, prestadorId }: Props) {
           novas mensagens após o encerramento. */}
       {wizard.derived.comentariosGerais.length > 0 && (
         <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">
+          <p className="text-xs font-bold text-slate-500 px-1">
             Conversa
           </p>
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {wizard.derived.comentariosGerais.map((c) => (
               <div
                 key={c.id}
-                className={`text-[11px] rounded-xl px-3 py-2 max-w-[85%] ${
-                  c.autor_tipo === 'prestador'
+                className={`text-xs rounded-xl px-3 py-2 max-w-[85%] ${
+ c.autor_tipo === 'prestador'
                     ? 'bg-blue-600 text-white ml-auto'
                     : 'bg-white text-slate-700 border border-slate-100'
                 }`}

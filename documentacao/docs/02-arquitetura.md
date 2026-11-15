@@ -223,7 +223,7 @@ Os ids `acompanhar-servico` e `avaliar-servico` mantêm o nome antigo de propós
 
 **Como adicionar um artigo:** criar o objeto em `helpArticles` (id novo, `audiences`, `contexts`, passos curtos de uma ação cada) → se for atalho de uma tela, usar o contexto dela da tabela acima → rodar `npx vitest run lib/help`.
 
-**Pendências conhecidas:** a rota `/ajuda` só é alcançada pelos blocos `ContextualHelp` (e pelo sitemap): não há link "Ajuda" no menu/rodapé do site. O texto do cabeçalho de `/ajuda` e os rótulos dos cartões ainda usam o visual antigo (caixa-alta pequena); entra no refinamento de tom da Área do cliente.
+**Acesso à Ajuda:** além dos blocos `ContextualHelp` e do sitemap, o rodapé do site (`components/Footer.tsx`) tem o link "Ajuda" para `/ajuda`. O site não tem menu de navegação (o cabeçalho só tem os botões de entrada/área), então o rodapé é o único lugar fixo. O cabeçalho de `/ajuda` e os rótulos dos cartões seguem o tom calmo (sem caixa-alta pequena).
 
 ## Testes
 
