@@ -150,7 +150,26 @@ Mensagens de erro das funções (código `P0001`) já são em português e vão 
 
 `/api/cron/garantia-prazos` (cron da Vercel, 09:00 UTC = 06:00 em São Paulo; exige `CRON_SECRET`) executa `garantia_processar_vencidos`: caso `aberta` com prazo vencido → `sem_resposta` (nota 1 na avaliação); oferta sem aceite há 15 dias → `recusada`. É seguro rodar mais de uma vez por dia.
 
-**Ainda não coberto:** caso `respondida` que o cliente nunca confirma nem reabre fica parado (não há prazo definido para isso).
+**Ainda não coberto:** caso `respondida` que o cliente nunca confirma nem reabre fica parado — decisão de 15/11/2026: **não encerrar sozinho** (isso mudaria nota e perfil sem o cliente confirmar). O lembrete é o aviso permanente da Área do cliente.
+
+### Avisos (só dentro do app)
+
+Não há e-mail ao cliente nem ao prestador sobre garantia (decisão de 15/11/2026; o e-mail do projeto só chega ao administrador). As regras ficam em `lib/garantia/avisos.ts`:
+
+| Quem precisa agir | Estado do caso | Onde aparece |
+|---|---|---|
+| Prestador | `aberta` | `AvisoGarantiaPrestador`, no topo de Meus Trabalhos: "N casos esperando sua resposta", prazo do mais urgente, toque abre esse trabalho |
+| Cliente | `respondida`, `aguardando_aceite_cliente` | Cartão laranja da Área do cliente: "Falta a sua resposta. Toque para decidir" (senão "Aguardando o prestador") |
+
+Prazos usam o horário de São Paulo (`hojeEmSaoPaulo`), o mesmo do banco.
+
+### Oferta de reparo (prestador)
+
+No modal de um trabalho concluído, sem caso aberto, `GarantiaOferecerReparo` aparece quando a avaliação é negativa (não indica **ou** nota ≤ 3), o prestador tem `garantia_dias` > 0 e a avaliação ainda não foi resolvida (`lib/garantia/oferta.ts` espelha o banco; quem decide é `garantia_oferecer_reparo`). 1 oferta por avaliação. O cliente aceita ou recusa; se confirmar a resolução, a nota passa a valer 3 em `nota_efetiva` (usada no ranking). A avaliação **não** é escondida do perfil: `oculta_por_garantia` é gravado, mas nenhuma tela usa esse campo hoje.
+
+### Formulário do cliente
+
+`GarantiaFormAbertura` avisa que o texto do problema e a resposta do prestador podem aparecer no perfil público depois que o caso encerrar, e pede para não escrever telefone nem endereço.
 
 ## Reivindicação de Perfil
 

@@ -70,7 +70,7 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, tipo, onAberto 
     return (
       <div className="space-y-4">
         <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-          <p className="text-[11px] font-bold text-green-700">
+          <p className="text-sm font-semibold text-green-800">
             {ehReclamacao ? 'Reclamação registrada.' : 'Caso aberto.'} Anexe fotos do
             problema para o prestador entender melhor.
           </p>
@@ -92,7 +92,7 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, tipo, onAberto 
           ) : (
             <Camera size={16} className="text-slate-400" />
           )}
-          <span className="text-[10px] font-bold uppercase text-slate-400">
+          <span className="text-sm font-semibold text-slate-700">
             {wizard.state.enviandoFoto ? 'Enviando...' : 'Anexar foto do problema'}
           </span>
           <input
@@ -106,7 +106,7 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, tipo, onAberto 
 
         <button
           onClick={onAberto}
-          className="w-full bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest py-3 rounded-xl transition-all active:scale-95"
+          className="min-h-12 w-full rounded-xl bg-blue-600 text-base font-bold text-white transition-all hover:bg-blue-700 active:scale-95"
         >
           Concluir abertura
         </button>
@@ -117,9 +117,13 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, tipo, onAberto 
   // Etapa 1: descrição do problema
   return (
     <div className="space-y-3">
-      <p className="text-[11px] text-slate-500 leading-snug">
-        Teve algum problema com este serviço? Descreva o que aconteceu — o
+      <p className="text-sm leading-relaxed text-slate-700">
+        Teve algum problema com este trabalho? Descreva o que aconteceu — o
         prestador terá 5 dias úteis para responder.
+      </p>
+      <p className="rounded-xl bg-slate-50 p-3 text-sm leading-relaxed text-slate-700">
+        Quando o caso for encerrado, o que você escrever aqui e a resposta do prestador
+        podem aparecer no perfil público dele. Evite dados pessoais, como telefone e endereço.
       </p>
       <textarea
         value={descricao}
@@ -127,24 +131,25 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, tipo, onAberto 
         placeholder="Ex: A calha que foi consertada voltou a vazar durante a chuva de ontem..."
         rows={4}
         maxLength={2000}
-        className="w-full text-[12px] font-medium text-slate-700 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-300 resize-none"
+        aria-label="Descreva o problema"
+        className="w-full resize-none rounded-xl border border-slate-300 p-3 text-base text-slate-800 outline-none placeholder:text-slate-500 focus:border-blue-600"
       />
       <div className="flex items-center justify-between">
-        <span className={`text-[9px] font-bold ${descricaoValida ? 'text-green-500' : 'text-slate-300'}`}>
+        <span className={`text-sm font-medium ${descricaoValida ? 'text-green-700' : 'text-slate-600'}`}>
           {descricao.trim().length}/{MIN_CARACTERES_DESCRICAO} caracteres mínimos
         </span>
         <button
           onClick={handleAbrirCaso}
           disabled={!descricaoValida || enviando}
-          className="flex items-center gap-2 bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all active:scale-95"
+          className="flex min-h-11 items-center gap-2 rounded-xl bg-orange-700 px-4 text-sm font-bold text-white transition-all hover:bg-orange-800 active:scale-95 disabled:bg-slate-200 disabled:text-slate-500"
         >
           {enviando ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
           {ehReclamacao ? 'Enviar reclamação' : 'Abrir garantia'}
         </button>
       </div>
       {erro && (
-        <p className="text-[10px] font-bold text-red-500 flex items-center gap-1">
-          <AlertCircle size={10} /> {erro}
+        <p role="alert" className="flex items-start gap-1.5 text-sm font-semibold text-red-700">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" /> {erro}
         </p>
       )}
     </div>

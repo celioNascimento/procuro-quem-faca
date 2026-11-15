@@ -28,6 +28,7 @@ function base(extra: Record<string, unknown> = {}) {
     getStatusInfo: () => ({ label: 'x', dot: '', badge: '', urgente: false }), getRota: () => '/x',
     idsComGarantiaAtiva: new Set(), idsComReclamacaoAtiva: new Set(),
     servicosFiltrados: [], avaliarCount: 0, ativosCount: 0, garantiaCount: 0, reclamacaoCount: 0,
+    garantiaPedeRetornoCount: 0, reclamacaoPedeRetornoCount: 0,
     pendentesCount: 0, andamentoCount: 0, finalizadosCount: 0,
     ...extra,
   }
@@ -64,6 +65,16 @@ describe('/painel/perfil', () => {
     expect(screen.getByRole('button', { name: 'Para aceitar (1)' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Em andamento (0)' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Avaliar (1)' })).toBeTruthy()
+  })
+
+  it('o aviso de garantia diz quando a decisão é do cliente e quando é do prestador', () => {
+    estado.valor = base({ garantiaCount: 1, garantiaPedeRetornoCount: 1 })
+    const { unmount } = render(<PerfilDoCliente />)
+    expect(screen.getByText('Falta a sua resposta. Toque para decidir')).toBeTruthy()
+    unmount()
+    estado.valor = base({ garantiaCount: 1, garantiaPedeRetornoCount: 0 })
+    render(<PerfilDoCliente />)
+    expect(screen.getByText('Aguardando o prestador. Toque para acompanhar')).toBeTruthy()
   })
 
   it('na aba Minha conta os campos têm rótulo ligado', () => {

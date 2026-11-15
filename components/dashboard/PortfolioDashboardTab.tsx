@@ -11,6 +11,7 @@ import { ProjetoCard } from './ProjetoCard'
 import { UploadWizardContainer } from './wizard/UploadWizardContainer'
 import { VitrineDeFotos } from './VitrineDeFotos'
 import { PrimeirosPassos } from './PrimeirosPassos'
+import { AvisoGarantiaPrestador } from './AvisoGarantiaPrestador'
 
 export default function PortfolioDashboardTab() {
   const {
@@ -81,6 +82,7 @@ export default function PortfolioDashboardTab() {
                 Ver meu perfil público
               </Link>
             )}
+            <AvisoGarantiaPrestador projetos={projetos} onAbrir={abrirEdicao} />
             <PrimeirosPassos
               slug={perfilPrestador?.slug}
               temFotosNaVitrine={(fotosNaVitrine ?? (perfilPrestador?.sessao_fotos_urls ?? []).length) > 0}

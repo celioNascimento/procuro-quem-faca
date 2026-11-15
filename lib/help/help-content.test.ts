@@ -94,6 +94,14 @@ describe('ajuda: cliente', () => {
     }
   })
 
+  it('o prestador tem artigo sobre garantia na tela dele e ele fala só do que existe', () => {
+    expect(getHelpArticles('prestador', 'dashboard-prestador').map((a) => a.id)).toContain('responder-garantia')
+    const texto = (findHelpArticle('responder-garantia')?.steps ?? []).join(' ')
+    expect(texto).toMatch(/5 dias úteis/)
+    expect(texto).toMatch(/Oferecer reparo/)
+    expect(texto).not.toMatch(/e-?mail/i) // avisos são só dentro do app
+  })
+
   it('a busca do cliente acha os artigos novos', () => {
     expect(searchHelpArticles('recusar', 'cliente').map((a) => a.id)).toContain('aceitar-trabalho')
     expect(searchHelpArticles('foto', 'cliente').map((a) => a.id)).toContain('minha-conta-cliente')
