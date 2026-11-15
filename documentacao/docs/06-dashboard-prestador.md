@@ -18,7 +18,7 @@ perfil/page.tsx → redireciona para /dashboard?aba=perfil (ver nota abaixo)
 
 **Selo "Novo"** na aba Desempenho: some na primeira vez que o prestador abre a aba. Estado em `localStorage` (`pqf:dashboard:desempenho-visto`), sempre dentro de `try/catch`; sem armazenamento disponível, o selo não aparece.
 
-**`perfil/page.tsx`** não renderiza mais UI própria — é um redirecionamento client-side para `/dashboard?aba=perfil` (preservando `?origem=` se presente). Existe só por compatibilidade com links antigos (ex: "Minha Conta" em `HeaderAuthButton`); antes duplicava UI/gatekeeping de forma inconsistente com `/dashboard`.
+**`perfil/page.tsx`** não renderiza mais UI própria — é um redirecionamento client-side para `/dashboard?aba=perfil` (preservando `?origem=` se presente). Existe só por compatibilidade com links antigos (ex: o antigo nome "Minha Conta" do menu em `HeaderAuthButton`); antes duplicava UI/gatekeeping de forma inconsistente com `/dashboard`.
 
 ### `EditarPerfilTab.tsx`
 

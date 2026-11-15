@@ -7,11 +7,11 @@ Funcionalidades planejadas ou em avaliação, e pendências técnicas conhecidas
 ### Troca entre área do cliente e área do prestador
 
 **Andamento (15/11/2026):** implementado, com destaque discreto. A troca entre áreas fica no cabeçalho (`components/HeaderAuthButton.tsx`), que usa a mesma regra de `useAuth` (`role` e `prestadorStatus`):
-- Cliente: "Minha Conta" (`/painel/perfil`).
-- Prestador com cadastro completo: "Meu Painel" (`/dashboard`) como botão principal, com atalho "Minha Conta" ao lado. No celular, o menu lista as duas.
-- Prestador com cadastro pendente: "Concluir Cadastro" (`/cadastro`), com atalho "Minha Conta".
+- Cliente: "Área do cliente" (`/painel/perfil`).
+- Profissional com cadastro completo: "Área do profissional" (`/dashboard`) como botão principal, com atalho "Área do cliente" ao lado. No celular, o menu lista as duas.
+- Profissional com cadastro pendente: "Concluir cadastro" (`/cadastro`), com atalho "Área do cliente".
 
-Na área do cliente sobrou só um link de texto, "Cadastre-se como prestador", para quem ainda não tem perfil profissional (`components/painel/ConvitePrestador.tsx`).
+Os nomes das áreas são os mesmos no cabeçalho, nos botões da home e no título de cada tela (componente `components/shared/TituloArea.tsx`). A área do cliente usa o mesmo controle de conta do cabeçalho profissional (`HeaderCliente`). Na área do cliente sobrou só um link de texto, "Cadastre-se como prestador", para quem ainda não tem perfil profissional (`components/painel/ConvitePrestador.tsx`).
 
 **Pendência:** o link de texto não aparece em outras telas da área do cliente (`/meus-servicos`, por exemplo). Avaliar se vale repetir o convite nelas.
 

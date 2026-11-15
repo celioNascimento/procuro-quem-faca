@@ -14,6 +14,7 @@ import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, A
 import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 import { ContextualHelp } from '@/components/help/HelpCenter'
+import { TituloArea } from '@/components/shared/TituloArea'
 
 // Selo "Novo" da aba Desempenho: some assim que o prestador abre a aba pela primeira vez.
 const CHAVE_DESEMPENHO_VISTO = 'pqf:dashboard:desempenho-visto'
@@ -116,10 +117,7 @@ function PerfilPageContent() {
     <div className="mx-auto w-full max-w-6xl">
       {/* ── Cabeçalho ── */}
       <header className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-6">
-        <div className="flex max-w-2xl flex-col gap-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Área profissional</p>
-          <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Gerencie sua presença profissional</h1>
-        </div>
+        <TituloArea area="Área do profissional" titulo="Meu painel" />
       </header>
 
       {/* ── Alerta de bloqueio ── */}

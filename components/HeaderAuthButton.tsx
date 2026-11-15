@@ -3,7 +3,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { LogIn, Loader2, User, AlertCircle, LogOut, LayoutDashboard, CheckCircle } from 'lucide-react'
+import { LogIn, Loader2, User, AlertCircle, LogOut, Briefcase, CheckCircle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useLogout } from '@/hooks/useLogout'
 
@@ -35,13 +35,14 @@ export function HeaderAuthButton() {
     const safeRole = role || 'cliente'
     const ehPrestador = safeRole === 'prestador'
 
+    // Os nomes das áreas são os mesmos em todo o app (cabeçalho e título de cada área).
     // Área do cliente: sempre disponível.
-    const areaCliente = { href: '/painel/perfil', label: 'Minha Conta', Icone: User }
+    const areaCliente = { href: '/painel/perfil', label: 'Área do cliente', Icone: User }
 
-    // Área do prestador: só existe para quem tem perfil profissional (ou começou o cadastro).
+    // Área do profissional: só existe para quem tem perfil profissional (ou começou o cadastro).
     const areaProfissional = prestadorStatus === 'pendente'
-      ? { href: '/cadastro', label: 'Concluir Cadastro', Icone: CheckCircle }
-      : { href: '/dashboard', label: 'Meu Painel', Icone: LayoutDashboard }
+      ? { href: '/cadastro', label: 'Concluir cadastro', Icone: CheckCircle }
+      : { href: '/dashboard', label: 'Área do profissional', Icone: Briefcase }
 
     // Botão principal segue a área em que a pessoa mais atua; prestador ganha atalho para a outra.
     const principal = ehPrestador ? areaProfissional : areaCliente

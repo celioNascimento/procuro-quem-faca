@@ -26,7 +26,7 @@ export default function PainelDoCliente() {
   const {
     session, servicos, servicosGarantia, servicosReclamacao, loading,
     zoomImage, setZoomImage,
-    tokenUrl, nomeCliente,
+    tokenUrl,
     handleAceitar, handleRecusar, handleVerGarantia,
     acaoEmAndamento, erroAcao,
   } = usePainelCliente()
@@ -96,7 +96,7 @@ export default function PainelDoCliente() {
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-10 md:pb-20 font-sans antialiased">
-      <HeaderCliente nomeCliente={nomeCliente} />
+      <HeaderCliente />
 
       {projetoSelecionado && (
         <DialogoConfirmacao

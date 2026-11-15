@@ -47,7 +47,7 @@ describe('/painel/perfil', () => {
     estado.valor = base({ loading: true }) // salvando
     render(<PerfilDoCliente />)
     expect(screen.queryByTestId('esqueleto')).toBeNull()
-    expect(screen.getByRole('heading', { name: /acompanhe seus trabalhos/i })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /meus trabalhos/i })).toBeTruthy()
   })
 
   it('só pede para deslizar quando há mais de um aviso', () => {

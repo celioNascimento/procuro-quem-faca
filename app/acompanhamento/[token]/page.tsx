@@ -68,7 +68,7 @@ export default function PaginaAcompanhamento({
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased">
-      <HeaderCliente nomeCliente={projeto.cliente_nome} />
+      <HeaderCliente />
 
       {/*
         AJUSTE 1: pt-16 → pt-24 no mobile.

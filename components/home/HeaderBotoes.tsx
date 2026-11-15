@@ -2,7 +2,7 @@
 
 'use client'
 import Link from 'next/link'
-import { LogIn, User, LayoutDashboard } from 'lucide-react'
+import { LogIn, User, Briefcase } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { insertLog } from '@/lib/db/logs'
@@ -83,20 +83,23 @@ export function HeaderBotoes() {
     )
   }
 
+  // Mesmos nomes do cabeçalho: "Área do cliente" e "Área do profissional".
+  // No celular, rótulos curtos para caber nas duas faixas.
   return (
     <>
       <Link href="/painel/perfil" className={btnGhost}>
         <User size={16} className="text-blue-500 shrink-0" />
-        <span>Cliente</span>
+        <span className="hidden sm:inline">Área do cliente</span>
+        <span className="sm:hidden">Cliente</span>
       </Link>
-      
+
       <Link href={painelHref} className={btnPrimary}>
-        <LayoutDashboard size={16} className="shrink-0" />
+        <Briefcase size={16} className="shrink-0" />
         <span className="hidden sm:inline">
-          {cadastroPendente ? 'Completar Cadastro' : 'Meu Painel'}
+          {cadastroPendente ? 'Concluir cadastro' : 'Área do profissional'}
         </span>
         <span className="sm:hidden">
-          {cadastroPendente ? 'Cadastro' : 'Painel'}
+          {cadastroPendente ? 'Cadastro' : 'Profissional'}
         </span>
       </Link>
     </>
