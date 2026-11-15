@@ -52,7 +52,7 @@ export function AdCardPainelCliente({
             className="w-full h-full object-cover object-center"
           />
           <div className="pointer-events-none absolute right-3 top-3 z-10">
-            <span className="rounded-full bg-black/55 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
+            <span className="rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
               Publicidade
             </span>
           </div>

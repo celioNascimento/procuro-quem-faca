@@ -41,13 +41,13 @@ export function ModalDiscussao({
       <div className="p-6 border-b border-slate-50 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-4 bg-blue-600 rounded-full" />
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-800 italic">
+          <h3 className="text-xs font-bold text-slate-800">
             Discussão Técnica
           </h3>
         </div>
         <button
           onClick={onClose}
-          className="text-slate-300 hover:text-slate-600 transition-colors"
+          className="text-slate-500 hover:text-slate-600 transition-colors"
         >
           <X size={22} />
         </button>
@@ -66,7 +66,7 @@ export function ModalDiscussao({
             />
           </div>
           <div className="flex-1 bg-white p-4 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm">
-            <p className="text-[13px] font-medium text-slate-600 leading-relaxed italic">
+            <p className="text-[13px] font-medium text-slate-600 leading-relaxed">
               {descricaoOuPadrao(foto.ordem, foto.legenda)}
             </p>
           </div>
@@ -80,7 +80,7 @@ export function ModalDiscussao({
           >
             <div
               className={`flex-1 p-4 rounded-2xl border ${
-                com.autor_tipo === 'cliente'
+ com.autor_tipo === 'cliente'
                   ? 'bg-blue-600 text-white border-blue-500 rounded-tr-none shadow-md'
                   : 'bg-white text-slate-700 border-slate-100 rounded-tl-none shadow-sm'
               }`}

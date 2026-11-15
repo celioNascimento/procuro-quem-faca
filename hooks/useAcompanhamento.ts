@@ -20,6 +20,7 @@ export function useAcompanhamento(token: string) {
   const [novoComentario, setNovoComentario]   = useState('')
   const [enviandoComentario, setEnviandoComentario] = useState(false)
   const [vinculo, setVinculo] = useState<ResultadoReivindicacao | null>(null)
+  const [avisoLink, setAvisoLink] = useState<string | null>(null)
 
   const fotosOrdenadas: FotoOrdenada[] =
     projeto?.portfolio_fotos?.sort((a, b) => a.ordem - b.ordem) ?? []
@@ -30,7 +31,7 @@ export function useAcompanhamento(token: string) {
     projeto?.status === 'em_execucao'
       ? temConclusao ? 'Aguardando sua avaliação' : 'Registrando etapas'
       : projeto?.status === 'finalizado'
-      ? 'Serviço concluído'
+      ? 'Trabalho concluído'
       : 'Em andamento'
 
   useEffect(() => {
@@ -79,8 +80,8 @@ export function useAcompanhamento(token: string) {
       : window.location.origin
 
     const shareData = {
-      title: `Serviço de ${projeto?.prestadores?.nome || 'Prestador'}`,
-      text: `Confira este serviço no portfólio de ${projeto?.prestadores?.nome || 'Prestador'} no Procuro Quem Faça.`,
+      title: `Trabalho de ${projeto?.prestadores?.nome || 'Prestador'}`,
+      text: `Confira este trabalho no portfólio de ${projeto?.prestadores?.nome || 'Prestador'} no Procuro Quem Faça.`,
       url: urlPublica,
     }
 
@@ -89,10 +90,15 @@ export function useAcompanhamento(token: string) {
         await navigator.share(shareData)
       } else {
         await navigator.clipboard.writeText(urlPublica)
-        alert('Link do projeto copiado com sucesso!')
+        setAvisoLink('Link copiado. Agora é só colar onde quiser compartilhar.')
+        setTimeout(() => setAvisoLink(null), 4000)
       }
     } catch (err) {
+      // Quem fecha a janela de compartilhar não deve ver erro; só avisamos quando era cópia.
+      if (err instanceof Error && err.name === 'AbortError') return
       console.error(err)
+      setAvisoLink('Não deu para copiar o link. Tente de novo.')
+      setTimeout(() => setAvisoLink(null), 4000)
     }
   }
 
@@ -119,6 +125,6 @@ export function useAcompanhamento(token: string) {
     projeto, comentarios, fotosOrdenadas, temConclusao, labelEtapaAtual, vinculo,
     loading, mounted, fotoSelecionada, setFotoSelecionada,
     novoComentario, setNovoComentario, enviandoComentario,
-    handleShare, handleEnviarComentario,
+    handleShare, handleEnviarComentario, avisoLink,
   }
 }

@@ -38,7 +38,7 @@ export default function CarrosselFinalizacao({
               className="w-full h-full rounded-full object-cover border-2 border-white"
             />
           </div>
-          <p className="text-xs font-black text-slate-800 uppercase">
+          <p className="text-xs font-bold text-slate-800">
             {projeto.prestadores?.nome}
           </p>
         </div>
@@ -52,7 +52,7 @@ export default function CarrosselFinalizacao({
             />
 
             {/* Badge de fase */}
-            <div className="absolute top-5 right-5 bg-black/60 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/20">
+            <div className="absolute top-5 right-5 bg-black/60 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs font-bold border border-white/20">
               {fotoAtual?.label}
             </div>
 
@@ -78,12 +78,12 @@ export default function CarrosselFinalizacao({
 
         {/* Rodapé do card */}
         <div className="p-6 text-center bg-white">
-          <h4 className="text-sm font-black text-slate-800 uppercase tracking-tight">
+          <h4 className="text-sm font-bold text-slate-800 tracking-tight">
             {projeto.titulo}
           </h4>
           <div className="flex items-center justify-center gap-2 mt-3">
             <div className="h-[2px] w-8 bg-blue-100 rounded-full" />
-            <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">
+            <p className="text-xs font-bold text-blue-600">
               Entrega Finalizada
             </p>
             <div className="h-[2px] w-8 bg-blue-100 rounded-full" />
@@ -97,14 +97,14 @@ export default function CarrosselFinalizacao({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Star size={16} fill="white" className="text-white" />
-              <span className="text-[10px] font-black uppercase tracking-widest">
+              <span className="text-xs font-bold">
                 Feedback do Cliente
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               {avaliacaoExistente.indica && (
-                <span className="flex items-center gap-1 bg-white/20 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/30">
+                <span className="flex items-center gap-1 bg-white/20 text-white text-xs font-bold px-2.5 py-1 rounded-full border border-white/30">
                   ✦ Indico
                 </span>
               )}
@@ -122,8 +122,8 @@ export default function CarrosselFinalizacao({
             </div>
           </div>
 
-          <p className="text-sm font-medium leading-relaxed opacity-90 italic">
-            &quot;{avaliacaoExistente.comentario || 'Serviço finalizado com sucesso.'}&quot;
+          <p className="text-sm font-medium leading-relaxed opacity-90">
+            &quot;{avaliacaoExistente.comentario || 'Trabalho finalizado com sucesso.'}&quot;
           </p>
         </div>
       )}

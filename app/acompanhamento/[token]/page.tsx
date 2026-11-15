@@ -34,7 +34,7 @@ export default function PaginaAcompanhamento({
     projeto, comentarios, fotosOrdenadas, temConclusao, labelEtapaAtual, vinculo,
     loading, mounted, fotoSelecionada, setFotoSelecionada,
     novoComentario, setNovoComentario, enviandoComentario,
-    handleShare, handleEnviarComentario,
+    handleShare, handleEnviarComentario, avisoLink,
   } = useAcompanhamento(token)
 
   const semFotos = projeto?.sem_fotos ?? false
@@ -76,6 +76,11 @@ export default function PaginaAcompanhamento({
         colado. pt-24 (96px) abre o respiro necessário sem mexer no desktop
         (no desktop, md:pt-24: o cabeçalho tem 72px).
       */}
+      {avisoLink && (
+        <div role="status" className="fixed inset-x-0 top-20 z-[100] flex justify-center px-4">
+          <p className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-lg">{avisoLink}</p>
+        </div>
+      )}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-24 md:pt-24 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex flex-col lg:flex-row lg:items-start gap-3 lg:gap-6">
 
@@ -141,10 +146,10 @@ export default function PaginaAcompanhamento({
                   <Star size={22} className="text-white" fill="white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
+                  <p className="text-white font-bold text-sm tracking-tight leading-none">
                     Serviço concluído
                   </p>
-                  <p className="text-blue-200 text-[11px] font-medium mt-1">Toque para avaliar e concluir</p>
+                  <p className="text-blue-200 text-xs font-medium mt-1">Toque para avaliar e concluir</p>
                 </div>
                 <ArrowRight size={20} className="text-white/70 shrink-0" />
               </Link>
@@ -154,8 +159,8 @@ export default function PaginaAcompanhamento({
               <section className="rounded-[2rem] border border-emerald-100 bg-emerald-50/70 p-6" aria-labelledby="feedback-prestador">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700">Feedback do prestador</p>
-                    <h2 id="feedback-prestador" className="mt-1 text-lg font-black uppercase italic tracking-tight text-slate-800">Avaliação sobre o cliente</h2>
+                    <p className="text-xs font-bold text-emerald-700">Feedback do prestador</p>
+                    <h2 id="feedback-prestador" className="mt-1 text-lg font-bold tracking-tight text-slate-800">Avaliação sobre o cliente</h2>
                   </div>
                   <div className="flex items-center gap-1 rounded-full bg-white px-3 py-2 text-emerald-700 shadow-sm" aria-label={`Nota ${projeto.avaliacoes_clientes[0].nota} de 5`}>
                     {Array.from({ length: 5 }, (_, index) => (
@@ -166,11 +171,11 @@ export default function PaginaAcompanhamento({
                 {projeto.avaliacoes_clientes[0].motivos?.length > 0 && (
                   <div className="mt-4 flex flex-wrap gap-2">
                     {projeto.avaliacoes_clientes[0].motivos.map((motivo) => (
-                      <span key={motivo} className="rounded-full border border-emerald-100 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-600">{motivo}</span>
+                      <span key={motivo} className="rounded-full border border-emerald-100 bg-white px-3 py-1.5 text-xs font-bold text-slate-600">{motivo}</span>
                     ))}
                   </div>
                 )}
-                <p className="mt-4 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                <p className="mt-4 text-xs font-medium text-slate-500">
                   Registrada em {new Date(projeto.avaliacoes_clientes[0].created_at).toLocaleDateString('pt-BR')}
                 </p>
               </section>

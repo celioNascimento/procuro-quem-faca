@@ -35,7 +35,7 @@ export default function PaginaAvaliar({
 
   if (!mounted || loading) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center font-bold text-slate-300 uppercase tracking-widest animate-pulse">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center font-bold text-slate-500 animate-pulse">
         Carregando avaliação...
       </div>
     )
@@ -73,7 +73,7 @@ export default function PaginaAvaliar({
             ) : !avaliacaoFinalizada ? (
               <>
               {erroEnvio && (
-                <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[11px] font-bold text-red-700">
+                <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-bold text-red-700">
                   {erroEnvio}
                 </p>
               )}
@@ -102,18 +102,18 @@ export default function PaginaAvaliar({
               >
                 <div className="flex items-center gap-3 text-left">
                   <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
-                    <ShieldCheck size={18} className="text-blue-500" />
+                    <ShieldCheck size={18} className="text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-[11px] font-black uppercase tracking-wide text-slate-800 leading-none mb-1">
+                    <p className="text-xs font-bold text-slate-800 leading-none mb-1">
                       Acompanhamento e Garantia
                     </p>
-                    <p className="text-[10px] text-slate-400 font-medium">
+                    <p className="text-xs text-slate-500 font-medium">
                       Teve algum problema depois do serviço? Acesse aqui.
                     </p>
                   </div>
                 </div>
-                <ChevronRight size={18} className="text-slate-300 shrink-0" />
+                <ChevronRight size={18} className="text-slate-500 shrink-0" />
               </button>
             )}
 

@@ -26,7 +26,7 @@ interface Props {
 // depende de ehReclamacao (só disponível após saber tipoGarantiaAtiva).
 const BADGE_BASE = {
   pendente:  { texto: 'Aguardando aceite', cor: 'text-blue-600'    },
-  andamento: { texto: 'Em andamento',      cor: 'text-amber-500'   },
+  andamento: { texto: 'Em andamento',      cor: 'text-amber-700'   },
   concluido: { texto: 'Concluído',         cor: 'text-emerald-600' },
 }
 
@@ -71,16 +71,16 @@ export default function ServicoCard({
               iconeClassName="size-[18px]"
             />
             <div>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+              <p className="text-xs font-bold text-slate-500 leading-none mb-1">
                 Prestador
               </p>
-              <h3 className="text-xs font-black uppercase text-slate-800">
+              <h3 className="text-xs font-bold text-slate-800">
                 {servico.prestadores?.nome}
               </h3>
             </div>
           </div>
           <div className="px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100">
-            <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">
+            <span className="text-xs font-bold text-slate-500">
               {servico.prestadores?.categoria?.nome || 'Serviço'}
             </span>
           </div>
@@ -103,7 +103,7 @@ export default function ServicoCard({
 
               {/* Badge de status sobre a foto (canto superior esquerdo) */}
               <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
-                <p className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 ${badge.cor}`}>
+                <p className={`text-xs font-bold flex items-center gap-1.5 ${badge.cor}`}>
                   {modo === 'concluido'  && <CheckCircle2 size={10} />}
                   {modo === 'garantia'   && <ShieldAlert  size={10} />}
                   {(modo === 'pendente' || modo === 'andamento') && <Clock size={10} />}
@@ -117,7 +117,7 @@ export default function ServicoCard({
                   sem sobrescrever o badge de status principal. */}
               {mostrarTagGarantia && (
                 <div className="absolute top-4 right-4 bg-orange-500/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
-                  <p className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white">
+                  <p className="text-xs font-bold flex items-center gap-1.5 text-white">
                     <ShieldAlert size={10} />
                     {labelTag}
                   </p>
@@ -132,14 +132,14 @@ export default function ServicoCard({
               </div>
             </div>
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-300">
+            <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-500">
               <Briefcase size={32} opacity={0.5} />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Sem foto de capa</span>
+              <span className="text-xs font-bold">Sem foto de capa</span>
 
               {/* Tag de garantia/reclamação mesmo sem foto de capa */}
               {mostrarTagGarantia && (
                 <div className="absolute top-4 right-4 bg-orange-500/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
-                  <p className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-white">
+                  <p className="text-xs font-bold flex items-center gap-1.5 text-white">
                     <ShieldAlert size={10} />
                     {labelTag}
                   </p>
@@ -154,14 +154,14 @@ export default function ServicoCard({
           o que normalmente fica sobre a foto) ── */}
       {semFotos && (
         <div className="flex items-center gap-2 px-2 pt-1">
-          <span className={`inline-flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${badge.cor}`}>
+          <span className={`inline-flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-full text-xs font-bold ${badge.cor}`}>
             {modo === 'concluido'  && <CheckCircle2 size={10} />}
             {modo === 'garantia'   && <ShieldAlert  size={10} />}
             {(modo === 'pendente' || modo === 'andamento') && <Clock size={10} />}
             {badge.texto}
           </span>
           {mostrarTagGarantia && (
-            <span className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-100 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-orange-600">
+            <span className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-100 px-3 py-1.5 rounded-full text-xs font-bold text-orange-600">
               <ShieldAlert size={10} />
               {labelTag}
             </span>
@@ -172,12 +172,12 @@ export default function ServicoCard({
       {/* ── Informações e ações ── */}
       <div className="mt-5 px-2 space-y-5">
         <div>
-          <h4 className="text-xl font-black italic uppercase text-slate-800 leading-tight tracking-tight line-clamp-2">
+          <h4 className="text-xl font-bold text-slate-800 leading-tight tracking-tight line-clamp-2">
             {servico.titulo}
           </h4>
-          <div className="flex items-center gap-2 mt-2 text-slate-400">
+          <div className="flex items-center gap-2 mt-2 text-slate-500">
             <Clock size={12} />
-            <p className="text-[10px] font-medium uppercase tracking-wide">
+            <p className="text-xs font-medium">
               Criado em {new Date(servico.created_at).toLocaleDateString('pt-BR')}
             </p>
           </div>
@@ -191,7 +191,7 @@ export default function ServicoCard({
             href={buildLinkWhatsapp(servico.prestadores?.whatsapp)}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-14 h-14 rounded-2xl border-2 border-slate-100 flex items-center justify-center text-slate-400 hover:text-green-600 hover:border-green-100 hover:bg-green-50 transition-all"
+            className="w-14 h-14 rounded-2xl border-2 border-slate-100 flex items-center justify-center text-slate-500 hover:text-green-600 hover:border-green-100 hover:bg-green-50 transition-all"
           >
             <Phone size={20} />
           </a>
@@ -202,7 +202,7 @@ export default function ServicoCard({
               type="button"
               onClick={() => onAceitar(servico)}
               disabled={ocupado}
-              className="flex-1 bg-blue-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all disabled:cursor-wait disabled:opacity-70"
+              className="flex-1 bg-blue-600 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all disabled:cursor-wait disabled:opacity-70"
             >
               {ocupado ? 'Aceitando…' : <>Aceitar trabalho <ChevronRight size={16} /></>}
             </button>
@@ -212,7 +212,7 @@ export default function ServicoCard({
           {modo === 'andamento' && (
             <button
               onClick={() => onAceitar(servico)}
-              className="flex-1 bg-slate-800 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 hover:bg-slate-700 active:scale-[0.98] transition-all"
+              className="flex-1 bg-slate-800 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-slate-700 active:scale-[0.98] transition-all"
             >
               Acompanhar <ChevronRight size={16} />
             </button>
@@ -223,7 +223,7 @@ export default function ServicoCard({
           {modo === 'concluido' && (
             <button
               onClick={() => onAceitar(servico)}
-              className={`flex-1 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${
+              className={`flex-1 text-white rounded-2xl font-bold text-xs   flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${
                 mostrarTagGarantia
                   ? 'bg-orange-500 hover:bg-orange-600 shadow-lg shadow-orange-100'
                   : 'bg-emerald-600 hover:bg-emerald-700'
@@ -242,7 +242,7 @@ export default function ServicoCard({
           {modo === 'garantia' && (
             <button
               onClick={() => onAceitar(servico)}
-              className="flex-1 bg-orange-600 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] italic flex items-center justify-center gap-2 shadow-lg shadow-orange-200 hover:bg-orange-700 active:scale-[0.98] transition-all"
+              className="flex-1 bg-orange-600 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-orange-200 hover:bg-orange-700 active:scale-[0.98] transition-all"
             >
               Ver {ehReclamacao ? 'Reclamação' : 'Garantia'} <ChevronRight size={16} />
             </button>

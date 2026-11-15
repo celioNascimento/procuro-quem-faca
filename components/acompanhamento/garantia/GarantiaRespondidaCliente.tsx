@@ -93,10 +93,10 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
   return (
     <div className="space-y-4">
       <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4">
-        <p className="text-[9px] font-black uppercase tracking-widest text-orange-500 mb-2">
+        <p className="text-xs font-bold text-orange-700 mb-2">
           Problema relatado
         </p>
-        <p className="text-[11px] font-medium text-orange-700/80 leading-snug">
+        <p className="text-xs font-medium text-orange-700/80 leading-snug">
           {caso.descricao_problema}
         </p>
       </div>
@@ -105,7 +105,7 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
 
       {caso.resposta_prestador_garantia && (
         <div className="bg-white border border-slate-100 rounded-2xl p-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
+          <p className="text-xs font-bold text-slate-500 mb-2">
             Proposta do prestador
           </p>
           <p className="text-[12px] font-medium text-slate-700 leading-snug">
@@ -121,7 +121,7 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
         <div className="flex gap-2">
           <button
             onClick={() => setModo('confirmando')}
-            className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all active:scale-95"
+            className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white text-xs font-bold py-3 rounded-xl transition-all active:scale-95"
           >
             <CheckCircle2 size={14} />
             Foi resolvido
@@ -129,7 +129,7 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
           <button
             onClick={handleAindaNaoResolveu}
             disabled={processando}
-            className="flex-1 flex items-center justify-center gap-2 bg-white border border-slate-200 disabled:bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all active:scale-95"
+            className="flex-1 flex items-center justify-center gap-2 bg-white border border-slate-200 disabled:bg-slate-100 text-slate-500 text-xs font-bold py-3 rounded-xl transition-all active:scale-95"
           >
             {processando ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
             Ainda não resolveu
@@ -140,14 +140,14 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
       {modo === 'confirmando' && (
         <div className="bg-white border-2 border-green-100 rounded-2xl p-5 space-y-4">
           {caso.origem === 'prestador' ? (
-            <p className="text-[11px] text-slate-500 leading-snug">
+            <p className="text-xs text-slate-500 leading-snug">
               Este caso surgiu de uma oferta do prestador para reparar um problema já
               avaliado. A nota fica marcada como neutra automaticamente — não é possível
               dar 5 estrelas aqui, já que o prestador está corrigindo o próprio erro.
             </p>
           ) : (
             <>
-              <p className="text-[11px] font-black uppercase tracking-wide text-slate-700">
+              <p className="text-xs font-bold text-slate-700">
                 Como você avalia a resolução?
               </p>
               <div className="flex items-center justify-center gap-2">
@@ -174,14 +174,14 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
           <button
             onClick={handleConfirmarResolvido}
             disabled={(caso.origem !== 'prestador' && notaNova < 1) || processando}
-            className="w-full flex items-center justify-center gap-2 bg-green-600 disabled:bg-slate-200 disabled:text-slate-400 text-white text-[11px] font-black uppercase tracking-widest py-3 rounded-xl transition-all active:scale-95"
+            className="w-full flex items-center justify-center gap-2 bg-green-600 disabled:bg-slate-200 disabled:text-slate-500 text-white text-xs font-bold py-3 rounded-xl transition-all active:scale-95"
           >
             {processando ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
             Confirmar
           </button>
 
           {erro && (
-            <p className="text-[10px] font-bold text-red-500 flex items-center gap-1">
+            <p className="text-xs font-bold text-red-700 flex items-center gap-1">
               <AlertCircle size={10} /> {erro}
             </p>
           )}

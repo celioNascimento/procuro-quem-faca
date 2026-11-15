@@ -32,14 +32,14 @@ export function LinhaDeTempo({
       ? 'Aguardando o prestador iniciar os registros.'
       : fotosOrdenadas.length === 3
       ? temGarantiaAtiva
-        ? 'Serviço concluído. Acompanhe o caso de garantia abaixo.'
+        ? 'Trabalho concluído. Acompanhe o caso de garantia abaixo.'
         : 'Todos os registros enviados. Avalie abaixo para concluir.'
       : `${3 - fotosOrdenadas.length} registro${3 - fotosOrdenadas.length > 1 ? 's' : ''} pendente${3 - fotosOrdenadas.length > 1 ? 's' : ''} — toque nas fotos para discutir.`
 
   // Em garantia, o badge principal vira neutro/cinza — o serviço está
   // concluído e o que está ativo agora é o fluxo de garantia (seção abaixo).
   const badgeClass = temGarantiaAtiva
-    ? 'bg-slate-50 text-slate-400 border-slate-100'
+    ? 'bg-slate-50 text-slate-500 border-slate-100'
     : status === 'finalizado'
     ? 'bg-green-50 text-green-600 border-green-100'
     : status === 'em_execucao'
@@ -67,19 +67,19 @@ export function LinhaDeTempo({
         <>
           <div className="flex items-start justify-between gap-3 mb-3">
             <div>
-              <p className={`text-[11px] font-black uppercase tracking-wide leading-none ${
-                concluida ? (atual ? 'text-blue-600' : 'text-green-600') : 'text-slate-300'
+              <p className={`text-xs font-bold leading-none ${
+                concluida ? (atual ? 'text-blue-600' : 'text-green-600') : 'text-slate-500'
               }`}>
                 {etapa.label}
               </p>
-              <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
                 {etapa.sublabel}
               </p>
             </div>
             {foto && countComentarios > 0 && (
               <div className="flex items-center gap-1 bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
                 <MessageSquare size={9} />
-                <span className="text-[8px] font-black">{countComentarios}</span>
+                <span className="text-[8px] font-bold">{countComentarios}</span>
               </div>
             )}
           </div>
@@ -88,7 +88,7 @@ export function LinhaDeTempo({
             onClick={() => foto && onFotoClick(foto)}
             disabled={!foto}
             className={`w-full rounded-2xl overflow-hidden border-2 transition-all active:scale-[0.98] group ${
-              foto
+ foto
                 ? atual
                   ? 'border-blue-300 shadow-lg shadow-blue-100 ring-2 ring-blue-100 ring-offset-1'
                   : 'border-green-100 shadow-sm hover:shadow-md'
@@ -103,7 +103,7 @@ export function LinhaDeTempo({
                   alt={etapa.label}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
-                  <span className="text-white text-[10px] font-black uppercase tracking-widest">
+                  <span className="text-white text-xs font-bold">
                     Toque para discutir
                   </span>
                 </div>
@@ -111,7 +111,7 @@ export function LinhaDeTempo({
             ) : (
               <div className="aspect-video flex flex-col items-center justify-center gap-2">
                 <Camera size={24} className="text-slate-200" />
-                <span className="text-[9px] font-medium text-slate-300 uppercase tracking-wider">
+                <span className="text-xs font-medium text-slate-500">
                   Aguardando registro
                 </span>
               </div>
@@ -125,17 +125,17 @@ export function LinhaDeTempo({
   return (
     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-          {temGarantiaAtiva ? 'Registros do Serviço' : 'Progresso da Obra'}
+        <h3 className="text-xs font-bold text-slate-500">
+          {temGarantiaAtiva ? 'Registros do trabalho' : 'Andamento do trabalho'}
         </h3>
-        <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border ${badgeClass}`}>
+        <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${badgeClass}`}>
           {badgeLabel}
         </span>
       </div>
 
       <TimelineVertical nos={nos} />
 
-      <p className="text-center text-[10px] font-medium text-slate-400 pt-1 border-t border-slate-50">
+      <p className="text-center text-xs font-medium text-slate-500 pt-1 border-t border-slate-50">
         {instrucao}
       </p>
     </div>

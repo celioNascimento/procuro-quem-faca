@@ -41,13 +41,13 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
         />
 
         <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.2em] truncate">
+          <p className="text-xs font-bold text-blue-600 truncate">
             {prestador?.categoria?.nome}
           </p>
-          <h2 className="text-[13px] sm:text-sm font-black text-slate-900 uppercase tracking-tight truncate mt-0.5">
+          <h2 className="text-[13px] sm:text-sm font-bold text-slate-900 tracking-tight truncate mt-0.5">
             {prestador?.nome}
           </h2>
-          <p className="text-[11px] text-slate-500 truncate mt-0.5 italic font-medium">
+          <p className="text-xs text-slate-500 truncate mt-0.5 font-medium">
             {projeto.titulo}
           </p>
         </div>
@@ -63,8 +63,8 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
             )}
             <span className={`relative inline-flex rounded-full h-2 w-2 ${statusColor}`} />
           </div>
-          {temGarantiaAtiva && <ShieldAlert size={11} className="text-orange-500" />}
-          <span className={`text-[9px] font-black uppercase tracking-widest ${statusText}`}>
+          {temGarantiaAtiva && <ShieldAlert size={11} className="text-orange-700" />}
+          <span className={`text-xs font-bold ${statusText}`}>
             {statusLabel}
           </span>
         </div>
@@ -73,7 +73,7 @@ export function CardPrestador({ projeto, onShare, temGarantiaAtiva = false }: Pr
           {onShare && (
             <button
               onClick={onShare}
-              className="w-10 h-10 rounded-[1rem] border border-slate-100 bg-white flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-100 hover:bg-blue-50 transition-all active:scale-95"
+              className="w-10 h-10 rounded-[1rem] border border-slate-100 bg-white flex items-center justify-center text-slate-500 hover:text-blue-600 hover:border-blue-100 hover:bg-blue-50 transition-all active:scale-95"
               title="Compartilhar este profissional"
               aria-label="Compartilhar este profissional"
             >
