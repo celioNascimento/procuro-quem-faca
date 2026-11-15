@@ -91,7 +91,7 @@ Detalhes que importam:
 - A chamada é **não-bloqueante**: se falhar, o service devolve `null`. O vínculo por WhatsApp do perfil foi removido (forjável: `profiles.whatsapp` é editável); o aceite no painel `/meus-servicos` também deixou de pedir confirmação de WhatsApp — só o dono aceita (`aceitar_projeto`).
 - O token não é lido pela API: `fetchProjetoPorToken` resolve token → id por `projeto_id_por_token` e lê o resto por id; listas de projetos recebem o token por `tokens_projetos` (`lib/services/projetoToken.service.ts`).
 - O token funciona como segredo de portador: se o link for repassado, a primeira pessoa que entrar com uma conta vira a dona. É o comportamento decidido no roadmap (decisão 1), não um descuido.
-- Quem está vinculado a outra conta ainda **vê** o andamento (a leitura continua por token). A **avaliação** é bloqueada também no banco (seção seguinte); a garantia ainda depende só da interface e da policy própria de `solicitacoes_garantia`.
+- Quem está vinculado a outra conta ainda **vê** o andamento (a leitura continua por token). A **avaliação** é bloqueada também no banco (seção seguinte); a garantia também é validada no banco (seção "Garantia e reclamação" abaixo).
 
 ## Quem pode avaliar: somente o dono do projeto
 
@@ -117,6 +117,40 @@ Além disso, como a avaliação agora grava `cliente_id`, o trigger `check_auto_
 `inserirAvaliacao`, `finalizarProjeto` e `marcarProjetoEmDisputa` foram removidas em 14/11/2026: após a migration 4 o banco recusa essas escritas diretas e só o fluxo antigo (também removido) as chamava.
 
 **Token secreto:** "dono" só é confiável se o token não vazar. As migrations `20261105190000` (funções, aditiva) e `20261105190100` (revoga leitura pública do token, remove vínculo por WhatsApp, trava `cliente_user_id`) fecham isso; aplicar na ordem: aditiva → deploy → restritiva. Limite residual: o modelo é de portador — quem recebe o link primeiro e loga vira dono (inclusive uma segunda conta do próprio prestador).
+
+## Garantia e reclamação
+
+Casos ficam em `solicitacoes_garantia`. O cliente abre um caso depois do trabalho concluído; o prestador responde; o cliente confirma a resolução ou reabre.
+
+**Estados:** `aberta` → `respondida` → `resolvida` (ou volta a `aberta` se o cliente reabrir); `aberta` → `sem_resposta` (prazo estourado). Oferta de reparo do prestador: `aguardando_aceite_cliente` → `aberta` (cliente aceita) ou `recusada`.
+
+**Tipo e prazo:** `garantia` quando o prestador configurou `garantia_dias` > 0 (janela = esses dias a partir de `data_conclusao`); senão `reclamacao`, janela fixa de 15 dias. O prazo de resposta do prestador é de **5 dias úteis** (seg–sex, horário de São Paulo, `garantia_prazo_uteis`; feriados não contam como folga).
+
+### Segurança: quem decide é o banco (migração `20261115195534_garantia_funcoes_seguras`)
+
+A tabela **não aceita INSERT/UPDATE/DELETE do navegador**; só leitura. Toda mudança passa por funções que conferem quem chama, o estado do caso e o tamanho dos textos:
+
+| Função | Quem pode | Regra principal |
+|---|---|---|
+| `garantia_abrir_caso` | cliente dono do projeto | projeto finalizado, dentro da janela, descrição de 20 a 2000 caracteres, sem outro caso em andamento |
+| `garantia_oferecer_reparo` | prestador dono da avaliação | exige garantia configurada; só avaliação negativa (nota ≤ 3 ou não indica); 1 oferta por avaliação |
+| `garantia_aceitar_oferta` / `garantia_recusar_oferta` | cliente do caso | só em `aguardando_aceite_cliente` |
+| `garantia_responder` | prestador dono do caso | só em `aberta`; texto de até 2000 caracteres |
+| `garantia_confirmar_resolucao` | cliente do caso | só em `respondida`; grava caso e avaliação **na mesma operação**; reparo oferecido pelo prestador vale sempre nota 3 |
+| `garantia_reabrir` | cliente do caso | só em `respondida`; novo prazo de 5 dias úteis; apaga a resposta anterior |
+| `garantia_processar_vencidos` | **só o servidor** (`service_role`) | rotina diária de prazos |
+
+Mensagens de erro das funções (código `P0001`) já são em português e vão direto para a tela; qualquer outro erro vira "Não foi possível concluir agora."
+
+**Leitura pública** (perfil do prestador, visitante sem login): só 9 colunas — `id, projeto_id, origem, tipo, status, descricao_problema, resposta_prestador_garantia, resolucao_descricao, nota_resultante` — e só de casos já encerrados (`resolvida`, `sem_resposta`, `recusada`). Não expõe `cliente_user_id`, `prestador_id`, `avaliacao_id` nem fotos privadas. **Atenção:** o texto que o cliente escreve como problema e a resposta do prestador aparecem no perfil público desses casos.
+
+**Rotas de API:** `/api/garantia/responder` foi **removida** (não conferia quem chamava; a resposta agora vai direto à função do banco). `/api/garantia/promover-fotos` exige login, ser o cliente do caso, caso `resolvida` e arquivos da pasta do próprio caso.
+
+### Prazos automáticos
+
+`/api/cron/garantia-prazos` (cron da Vercel, 09:00 UTC = 06:00 em São Paulo; exige `CRON_SECRET`) executa `garantia_processar_vencidos`: caso `aberta` com prazo vencido → `sem_resposta` (nota 1 na avaliação); oferta sem aceite há 15 dias → `recusada`. É seguro rodar mais de uma vez por dia.
+
+**Ainda não coberto:** caso `respondida` que o cliente nunca confirma nem reabre fica parado (não há prazo definido para isso).
 
 ## Reivindicação de Perfil
 

@@ -105,26 +105,8 @@ export async function inserirFotoGarantia(input: {
   return data
 }
 
-/**
- * Promove as fotos de resolução (fase='resolucao') de um caso para exibição
- * pública, marcando publica=true. Chamado quando o caso fecha como 'resolvida'.
- * Fotos de fase='problema' NUNCA são promovidas — permanecem privadas.
- *
- * Nota: isto marca a flag no banco; a cópia física do arquivo do bucket
- * privado 'garantia' para um bucket/pasta pública (ou geração de URL pública)
- * deve ser feita à parte, conforme a política de storage adotada.
- */
-export async function promoverFotosResolucao(casoId: string) {
-  const { data, error } = await supabase
-    .from('garantia_fotos')
-    .update({ publica: true })
-    .eq('caso_id', casoId)
-    .eq('fase', 'resolucao')
-    .select()
-
-  if (error) throw error
-  return data ?? []
-}
+// A promoção de fotos de resolução para o bucket público é feita só no servidor, em
+// app/api/garantia/promover-fotos/route.ts (o navegador não pode mais marcar publica=true).
 
 export async function atualizarLegendaFotoGarantia(fotoId: string, legenda: string) {
   const { error } = await supabase

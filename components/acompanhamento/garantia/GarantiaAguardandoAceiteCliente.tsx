@@ -23,7 +23,7 @@ export function GarantiaAguardandoAceiteCliente({ caso, onAtualizado }: Props) {
   const handleAceitar = async () => {
     setProcessando('aceitar')
     try {
-      await aceitarOfertaReparo(caso.id, caso.cliente_user_id)
+      await aceitarOfertaReparo(caso.id)
       onAtualizado()
     } catch (err) {
       console.error('Erro ao aceitar oferta de reparo:', err)
@@ -35,7 +35,7 @@ export function GarantiaAguardandoAceiteCliente({ caso, onAtualizado }: Props) {
   const handleRecusar = async () => {
     setProcessando('recusar')
     try {
-      await recusarOfertaReparo(caso.id, caso.cliente_user_id)
+      await recusarOfertaReparo(caso.id)
       onAtualizado()
     } catch (err) {
       console.error('Erro ao recusar oferta de reparo:', err)

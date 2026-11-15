@@ -10,7 +10,7 @@
 //   registra qual dos dois caminhos originou o caso — mesma máquina de
 //   estados, só muda o prazo de elegibilidade e a linguagem exibida.
 //   status: aberta -> respondida -> resolvida
-//                   -> sem_resposta (prazo de 5 dias úteis estourado, via cron)
+//                   -> sem_resposta (prazo de 5 dias úteis estourado, via rotina diária)
 //
 // origem='prestador': prestador reage a avaliação negativa oferecendo reparo.
 //   Só existe no fluxo 'garantia' — reclamação nunca tem essa origem, já
@@ -18,6 +18,12 @@
 //   status: aguardando_aceite_cliente -> (cliente aceita) -> aberta -> ...
 //                                     -> (cliente recusa) -> recusada
 //   Limite: 1 oferta por avaliação (constraint uq_solicitacoes_garantia_oferta_unica_por_avaliacao).
+//
+// SEGURANÇA: toda mudança de estado passa por funções do banco (garantia_*), que conferem
+// quem está chamando, o estado atual do caso e os limites de texto. A tabela
+// solicitacoes_garantia NÃO aceita INSERT/UPDATE direto do navegador (só SELECT), então
+// nada aqui monta payload de status/nota: o banco decide. Ver migração
+// 20261115195534_garantia_funcoes_seguras e documentacao/docs/09-avaliacao-acompanhamento.md.
 //
 // Efeito em avaliação resolvida com sucesso: seta avaliacoes.oculta_por_garantia = true
 // e avaliacoes.resolvido_via_garantia_id. NÃO toca em visivel/status/nota/indica
@@ -48,36 +54,54 @@ const DIAS_RECLAMACAO = 15;
 
 interface AbrirCasoClienteInput {
   projetoId: string;
-  clienteUserId: string;
   descricaoProblema: string;
   // Fotos NÃO entram aqui — são anexadas depois via garantia_fotos
   // (inserirFotoGarantia em garantiaWizard.service.ts), já que a tabela
-  // exige caso_id, que só existe após este insert retornar.
+  // exige caso_id, que só existe após a abertura retornar.
 }
 
 interface OferecerReparoPrestadorInput {
   avaliacaoId: string;
-  projetoId: string;
-  prestadorId: number;
-  clienteUserId: string;
   descricaoProblema: string; // proposta do prestador
 }
 
+export type CasoGarantiaRetorno = {
+  id: string;
+  projeto_id: string;
+  prestador_id: number;
+  cliente_user_id: string;
+  origem: OrigemGarantia;
+  tipo: TipoGarantia;
+  status: StatusGarantia;
+  prazo_resposta: string | null;
+  descricao_problema: string;
+  resposta_prestador_garantia: string | null;
+  data_resposta: string | null;
+  resolucao_descricao: string | null;
+  data_resolucao: string | null;
+  avaliacao_id: string | null;
+  nota_resultante: number | null;
+  created_at: string;
+};
+
+const MENSAGEM_PADRAO = 'Não foi possível concluir agora. Tente novamente em instantes.';
+
 /**
- * Calcula data limite somando N dias úteis (seg-sex) a partir de hoje.
- * Não considera feriados (nacional/municipal) — decisão consciente, ver docs.
+ * As funções do banco avisam o motivo com `raise exception` (código P0001) e em português
+ * ("O prazo para abrir este caso já terminou."): essas mensagens são feitas para a pessoa ler.
+ * Qualquer outro erro (rede, permissão) vira uma frase genérica — nunca texto técnico na tela.
  */
-function calcularPrazoUteis(diasUteis: number, base: Date = new Date()): Date {
-  const data = new Date(base);
-  let restantes = diasUteis;
-  while (restantes > 0) {
-    data.setDate(data.getDate() + 1);
-    const diaSemana = data.getDay(); // 0 = domingo, 6 = sábado
-    if (diaSemana !== 0 && diaSemana !== 6) {
-      restantes--;
-    }
-  }
-  return data;
+function erroDaFuncao(error: { code?: string; message?: string }): Error {
+  return new Error(error.code === 'P0001' && error.message ? error.message : MENSAGEM_PADRAO);
+}
+
+async function chamar(
+  funcao: string,
+  args: Record<string, unknown>,
+): Promise<CasoGarantiaRetorno> {
+  const { data, error } = await supabase.rpc(funcao, args);
+  if (error) throw erroDaFuncao(error);
+  return data as CasoGarantiaRetorno;
 }
 
 /**
@@ -90,6 +114,9 @@ function calcularPrazoUteis(diasUteis: number, base: Date = new Date()): Date {
  *
  * O 'tipo' retornado ('garantia' ou 'reclamacao') é decidido aqui, a
  * partir de garantia_dias do prestador — não é uma escolha do cliente.
+ *
+ * Esta função só serve para a TELA decidir o que mostrar. Quem vale de verdade é
+ * garantia_abrir_caso, no banco, que refaz a conta (e confere o dono do projeto).
  */
 export async function verificarElegibilidadeGarantia(projetoId: string) {
 
@@ -140,335 +167,73 @@ export async function verificarElegibilidadeGarantia(projetoId: string) {
   };
 }
 
-/**
- * Cliente abre um caso de garantia ou reclamação — fluxo padrão.
- * O tipo é decidido por verificarElegibilidadeGarantia, não recebido
- * como parâmetro — evita que o cliente (ou um bug de UI) force o tipo
- * errado no insert.
- */
-export async function abrirCasoGarantiaCliente(input: AbrirCasoClienteInput) {
-
-  const elegibilidade = await verificarElegibilidadeGarantia(input.projetoId);
-  if (!elegibilidade.elegivel || !elegibilidade.projeto || !elegibilidade.tipo) {
-    throw new Error(`Projeto não elegível para garantia: ${elegibilidade.motivo}`);
-  }
-
-  // Confere que o solicitante é de fato o cliente do projeto
-  if (elegibilidade.projeto.cliente_user_id !== input.clienteUserId) {
-    throw new Error('Apenas o cliente vinculado a este projeto pode abrir este caso.');
-  }
-
-  const prazoResposta = calcularPrazoUteis(5);
-
-  const { data, error } = await supabase
-    .from('solicitacoes_garantia')
-    .insert({
-      projeto_id: input.projetoId,
-      prestador_id: elegibilidade.projeto.prestador_id,
-      cliente_user_id: input.clienteUserId,
-      origem: 'cliente',
-      tipo: elegibilidade.tipo,
-      status: 'aberta',
-      prazo_resposta: prazoResposta.toISOString().slice(0, 10),
-      descricao_problema: input.descricaoProblema,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  // TODO: notificar prestador (reaproveitar padrão QStash usado nos lembretes do Lev)
-
-  return data;
+/** Cliente abre um caso de garantia ou reclamação. O tipo e o prazo (5 dias úteis) são decididos no banco. */
+export function abrirCasoGarantiaCliente(input: AbrirCasoClienteInput) {
+  return chamar('garantia_abrir_caso', {
+    p_projeto_id: input.projetoId,
+    p_descricao: input.descricaoProblema,
+  });
 }
 
 /**
- * Prestador oferece reparo em reação a avaliação negativa.
- * Cria caso em status 'aguardando_aceite_cliente' — NÃO fica ativo até o cliente aceitar.
+ * Prestador oferece reparo em reação a avaliação negativa. O caso nasce em
+ * 'aguardando_aceite_cliente' e só fica ativo quando o cliente aceita. Sempre tipo='garantia'
+ * (exige garantia configurada no perfil — o banco confere).
+ */
+export function oferecerReparoPrestador(input: OferecerReparoPrestadorInput) {
+  return chamar('garantia_oferecer_reparo', {
+    p_avaliacao_id: input.avaliacaoId,
+    p_descricao: input.descricaoProblema,
+  });
+}
+
+/** Cliente aceita a oferta de reparo do prestador — ativa o caso e inicia o prazo. */
+export function aceitarOfertaReparo(casoId: string) {
+  return chamar('garantia_aceitar_oferta', { p_caso_id: casoId });
+}
+
+/** Cliente recusa a oferta — não conta como "sem resposta" para o prestador. */
+export function recusarOfertaReparo(casoId: string) {
+  return chamar('garantia_recusar_oferta', { p_caso_id: casoId });
+}
+
+/** Prestador responde a um caso aberto. Só o prestador dono do caso consegue (o banco confere). */
+export function responderCasoGarantia(casoId: string, resposta: string) {
+  return chamar('garantia_responder', { p_caso_id: casoId, p_resposta: resposta });
+}
+
+/**
+ * Cliente confirma que o problema foi resolvido — fecha o caso com sucesso, em UMA operação no
+ * banco (caso + avaliação juntos: ou grava tudo ou nada).
  *
- * Sempre tipo='garantia': esta origem só existe quando o prestador tem
- * garantia formal configurada (é o próprio prestador oferecendo reparo
- * dentro do compromisso que ele assumiu) — reclamação nunca passa por aqui.
- */
-export async function oferecerReparoPrestador(input: OferecerReparoPrestadorInput) {
-
-  // valida que a avaliação pertence de fato a esse prestador/projeto
-  const { data: avaliacao, error: avaliacaoError } = await supabase
-    .from('avaliacoes')
-    .select('id, prestador_id, projeto_id, cliente_id, indica, oculta_por_garantia')
-    .eq('id', input.avaliacaoId)
-    .single();
-
-  if (avaliacaoError || !avaliacao) {
-    throw new Error('Avaliação não encontrada.');
-  }
-
-  if (avaliacao.prestador_id !== input.prestadorId) {
-    throw new Error('Avaliação não pertence a este prestador.');
-  }
-
-  if (avaliacao.oculta_por_garantia) {
-    throw new Error('Esta avaliação já foi resolvida via garantia anteriormente.');
-  }
-
-  // a unique constraint (avaliacao_id, origem) já impede duplicidade no banco,
-  // mas validamos antes pra dar um erro amigável
-  const { data: ofertaExistente } = await supabase
-    .from('solicitacoes_garantia')
-    .select('id')
-    .eq('avaliacao_id', input.avaliacaoId)
-    .eq('origem', 'prestador')
-    .maybeSingle();
-
-  if (ofertaExistente) {
-    throw new Error('Você já ofereceu reparo para esta avaliação anteriormente.');
-  }
-
-  const { data, error } = await supabase
-    .from('solicitacoes_garantia')
-    .insert({
-      projeto_id: input.projetoId,
-      prestador_id: input.prestadorId,
-      cliente_user_id: input.clienteUserId,
-      avaliacao_id: input.avaliacaoId,
-      origem: 'prestador',
-      tipo: 'garantia',
-      status: 'aguardando_aceite_cliente',
-      descricao_problema: input.descricaoProblema,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  // TODO: notificar cliente que o prestador quer oferecer reparo
-
-  return data;
-}
-
-/**
- * Cliente aceita a oferta de reparo do prestador — ativa o caso e inicia o prazo.
- */
-export async function aceitarOfertaReparo(casoId: string, clienteUserId: string) {
-
-  const prazoResposta = calcularPrazoUteis(5);
-
-  const { data, error } = await supabase
-    .from('solicitacoes_garantia')
-    .update({
-      status: 'aberta',
-      prazo_resposta: prazoResposta.toISOString().slice(0, 10),
-    })
-    .eq('id', casoId)
-    .eq('cliente_user_id', clienteUserId)
-    .eq('status', 'aguardando_aceite_cliente')
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Cliente recusa a oferta — tira o peso do prestador (não conta como sem_resposta).
- */
-export async function recusarOfertaReparo(casoId: string, clienteUserId: string) {
-
-  const { data, error } = await supabase
-    .from('solicitacoes_garantia')
-    .update({ status: 'recusada' })
-    .eq('id', casoId)
-    .eq('cliente_user_id', clienteUserId)
-    .eq('status', 'aguardando_aceite_cliente')
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Prestador responde a um caso aberto (dentro do prazo).
- */
-export async function responderCasoGarantia(
-  casoId: string,
-  prestadorId: number,
-  resposta: string,
-) {
-
-  const { data, error } = await supabase
-    .from('solicitacoes_garantia')
-    .update({
-      status: 'respondida',
-      resposta_prestador_garantia: resposta,
-      data_resposta: new Date().toISOString(),
-    })
-    .eq('id', casoId)
-    .eq('prestador_id', prestadorId)
-    .eq('status', 'aberta')
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-const NOTA_NEUTRA_REPARO_PRESTADOR = 3;
-const NOTA_AUTOMATICA_SEM_RESPOSTA = 1;
-
-/**
- * Cliente confirma que o problema foi resolvido — fecha o caso com sucesso.
- *
- * Regras de nota_efetiva/nota_resultante:
- *  - origem='cliente': cliente informa uma nota nova (novaNota), que passa
- *    a valer como nota_efetiva da avaliação vinculada, se houver. Vale
- *    tanto para tipo='garantia' quanto tipo='reclamacao'.
- *  - origem='prestador': nota é sempre NOTA_NEUTRA_REPARO_PRESTADOR (3),
- *    nunca a critério do prestador — não pode "comprar" 5 estrelas
- *    resolvendo o próprio erro. Só ocorre em tipo='garantia' (reclamação
- *    nunca tem origem='prestador').
- *
+ * Nota resultante:
+ *  - origem='cliente': a nota nova (1-5) informada pelo cliente passa a valer como nota_efetiva.
+ *  - origem='prestador': sempre 3 — o prestador não pode "comprar" 5 estrelas resolvendo o
+ *    próprio erro. Quem garante isso agora é o banco, não a tela.
  * avaliacoes.nota NUNCA é sobrescrita — só nota_efetiva muda.
  */
-export async function confirmarResolucaoGarantia(
+export function confirmarResolucaoGarantia(
   casoId: string,
-  clienteUserId: string,
   resolucaoDescricao: string,
   fotosResolucao: string[],
   novaNota?: number, // obrigatório quando origem='cliente'; ignorado quando origem='prestador'
 ) {
-
-  const { data: casoAtual, error: casoAtualError } = await supabase
-    .from('solicitacoes_garantia')
-    .select('id, origem, avaliacao_id, status')
-    .eq('id', casoId)
-    .eq('cliente_user_id', clienteUserId)
-    .single();
-
-  if (casoAtualError || !casoAtual) throw new Error('Caso não encontrado.');
-  if (casoAtual.status !== 'respondida') {
-    throw new Error('Só é possível confirmar resolução de um caso que já foi respondido.');
-  }
-
-  let notaResultante: number;
-  if (casoAtual.origem === 'prestador') {
-    notaResultante = NOTA_NEUTRA_REPARO_PRESTADOR;
-  } else {
-    if (!novaNota || novaNota < 1 || novaNota > 5) {
-      throw new Error('É necessário informar uma nota válida (1-5) ao confirmar a resolução.');
-    }
-    notaResultante = novaNota;
-  }
-
-  const { data: caso, error: casoError } = await supabase
-    .from('solicitacoes_garantia')
-    .update({
-      status: 'resolvida',
-      resolucao_descricao: resolucaoDescricao,
-      fotos_resolucao: fotosResolucao,
-      data_resolucao: new Date().toISOString(),
-      nota_resultante: notaResultante,
-    })
-    .eq('id', casoId)
-    .select()
-    .single();
-
-  if (casoError) throw casoError;
-
-  // Se há avaliação vinculada, atualiza nota_efetiva (nunca avaliacoes.nota).
-  // Para origem='prestador', também oculta a avaliação original da vitrine pública.
-  if (caso.avaliacao_id) {
-    const updatePayload: Record<string, unknown> = {
-      nota_efetiva: notaResultante,
-    };
-
-    if (caso.origem === 'prestador') {
-      updatePayload.oculta_por_garantia = true;
-      updatePayload.resolvido_via_garantia_id = caso.id;
-    }
-
-    const { error: avaliacaoError } = await supabase
-      .from('avaliacoes')
-      .update(updatePayload)
-      .eq('id', caso.avaliacao_id);
-
-    if (avaliacaoError) throw avaliacaoError;
-  }
-
-  return caso;
+  return chamar('garantia_confirmar_resolucao', {
+    p_caso_id: casoId,
+    p_descricao: resolucaoDescricao,
+    p_fotos: fotosResolucao,
+    p_nova_nota: novaNota ?? null,
+  });
 }
 
 /**
- * Cliente indica que a resposta do prestador NÃO resolveu o problema.
- * Reabre o caso: volta para status 'aberta' e reinicia o prazo de 5 dias
- * úteis — o prestador precisa responder de novo, como se fosse um novo ciclo.
- * Não altera nota_resultante nem mexe em avaliação vinculada; isso só
- * acontece quando o caso finalmente fecha (resolvida ou sem_resposta).
+ * Cliente indica que a resposta do prestador NÃO resolveu: o caso volta para 'aberta' com novo
+ * prazo de 5 dias úteis e a resposta anterior é apagada (o prestador precisa registrar outra).
  */
-export async function reabrirCasoGarantia(casoId: string, clienteUserId: string) {
-  const prazoResposta = calcularPrazoUteis(5);
-
-  const { data, error } = await supabase
-    .from('solicitacoes_garantia')
-    .update({
-      status: 'aberta',
-      prazo_resposta: prazoResposta.toISOString().slice(0, 10),
-      // Limpa a resposta anterior — o prestador precisa registrar uma nova
-      // proposta, não deixar a antiga "pendurada" como se ainda valesse.
-      resposta_prestador_garantia: null,
-      data_resposta: null,
-    })
-    .eq('id', casoId)
-    .eq('cliente_user_id', clienteUserId)
-    .eq('status', 'respondida')
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  // TODO: notificar prestador que o caso foi reaberto
-
-  return data;
+export function reabrirCasoGarantia(casoId: string) {
+  return chamar('garantia_reabrir', { p_caso_id: casoId });
 }
 
-/**
- * Job de cron — marca como 'sem_resposta' casos abertos cujo prazo estourou.
- * Aplica nota_resultante = 1 automaticamente e, se houver avaliação vinculada,
- * atualiza nota_efetiva também. Isso vale tanto para origem='cliente' quanto
- * origem='prestador' (prestador ignorar a própria oferta de reparo é ainda pior),
- * e para ambos os tipos (garantia e reclamacao) — o prazo de resposta do
- * prestador (5 dias úteis) é o mesmo independente do tipo do caso.
- */
-export async function processarCasosVencidos() {
-  const hoje = new Date().toISOString().slice(0, 10);
-
-  const { data: vencidos, error } = await supabase
-    .from('solicitacoes_garantia')
-    .update({
-      status: 'sem_resposta',
-      nota_resultante: NOTA_AUTOMATICA_SEM_RESPOSTA,
-    })
-    .eq('status', 'aberta')
-    .lt('prazo_resposta', hoje)
-    .select('id, prestador_id, avaliacao_id');
-
-  if (error) throw error;
-
-  // Propaga nota_efetiva=1 para avaliações vinculadas, quando houver
-  const comAvaliacao = (vencidos ?? []).filter((c) => c.avaliacao_id);
-  if (comAvaliacao.length > 0) {
-    await Promise.all(
-      comAvaliacao.map((c) =>
-        supabase
-          .from('avaliacoes')
-          .update({ nota_efetiva: NOTA_AUTOMATICA_SEM_RESPOSTA })
-          .eq('id', c.avaliacao_id as string),
-      ),
-    );
-  }
-
-  // TODO: aplicar selo negativo visível no perfil por prestador_id
-  // TODO: notificar cliente do resultado
-
-  return vencidos;
-}
+// A rotina que marca "sem resposta" quando o prazo estoura NÃO fica mais aqui: ela precisa rodar
+// sem ninguém logado. É a função garantia_processar_vencidos() do banco, chamada todos os dias por
+// app/api/cron/garantia-prazos/route.ts (ver doc 09).

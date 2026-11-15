@@ -53,13 +53,13 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, tipo, onAberto 
     try {
       const caso = await abrirCasoGarantiaCliente({
         projetoId,
-        clienteUserId,
         descricaoProblema: descricao.trim(),
       })
       setCasoIdRecemCriado(caso.id)
     } catch (err) {
       console.error('Erro ao abrir caso:', err)
-      setErro('Não foi possível abrir o caso. Tente novamente.')
+      // A mensagem vem do banco em português (ex.: "O prazo para abrir este caso já terminou.")
+      setErro(err instanceof Error ? err.message : 'Não foi possível abrir o caso. Tente novamente.')
     } finally {
       setEnviando(false)
     }
@@ -126,6 +126,7 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, tipo, onAberto 
         onChange={(e) => setDescricao(e.target.value)}
         placeholder="Ex: A calha que foi consertada voltou a vazar durante a chuva de ontem..."
         rows={4}
+        maxLength={2000}
         className="w-full text-[12px] font-medium text-slate-700 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-300 resize-none"
       />
       <div className="flex items-center justify-between">
