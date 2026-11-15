@@ -18,27 +18,39 @@ export const helpArticles: HelpArticle[] = [
   },
   {
     id: 'ler-perfil-publico', title: 'Como consultar um perfil público', summary: 'Veja especialidades, fotos, avaliações e formas de contato antes de decidir.', category: 'Encontrar ajuda', audiences: ['cliente', 'publico'], contexts: ['perfil-publico'],
-    steps: ['Confira a descrição e as especialidades do profissional.', 'Veja o portfólio e as avaliações de outros clientes. Se o profissional ainda não tiver fotos ou avaliações, a aba mostra um aviso — isso é normal para perfis novos.', 'Toque em "Chamar no WhatsApp" para pedir um orçamento diretamente ao prestador.'], related: ['entrar-em-contato', 'avaliar-servico']
+    steps: ['Confira a descrição e as especialidades do profissional.', 'Veja o portfólio e as avaliações de outros clientes. Se o profissional ainda não tiver fotos ou avaliações, a aba mostra um aviso — isso é normal para perfis novos.', 'Toque em "Chamar no WhatsApp" para falar diretamente com o prestador.'], related: ['entrar-em-contato', 'avaliar-servico']
   },
   {
     id: 'entrar-em-contato', title: 'Como entrar em contato', summary: 'O contato acontece pelo WhatsApp informado no perfil do prestador.', category: 'Contratar', audiences: ['cliente', 'publico'], contexts: ['perfil-publico'],
     steps: ['Abra o perfil do prestador escolhido.', 'Toque em "Chamar no WhatsApp" e diga o que você precisa.', 'Combine detalhes, prazo e valores diretamente com o profissional.']
   },
   {
-    id: 'acompanhar-servico', title: 'Como acompanhar um serviço', summary: 'O painel do cliente reúne os serviços pendentes, em andamento, concluídos e casos de garantia.', category: 'Meus serviços', audiences: ['cliente'], contexts: ['meus-servicos', 'dashboard', 'dashboard-cliente'],
-    steps: ['Acesse Meus serviços com a mesma conta usada no contato.', 'Use os filtros para encontrar o serviço desejado.', 'Abra o cartão para aceitar, acompanhar ou consultar uma garantia/reclamação.'], related: ['avaliar-servico', 'garantia']
+    id: 'acompanhar-servico', title: 'Como acompanhar meus trabalhos', summary: 'A Área do cliente reúne todos os seus trabalhos: para aceitar, em andamento, para avaliar, concluídos e casos de garantia.', category: 'Meus trabalhos', audiences: ['cliente'], contexts: ['meus-servicos', 'dashboard', 'dashboard-cliente'],
+    steps: ['Abra a Área do cliente e entre com a mesma conta Google que você usou ao abrir o link enviado pelo prestador.', 'Use os filtros (Todos, Para aceitar, Em andamento, Avaliar e Concluídos) para achar o trabalho. Garantia e Reclamação aparecem só quando há um caso aberto.', 'Toque no cartão do trabalho para aceitar, acompanhar o andamento, avaliar ou consultar uma garantia ou reclamação.'], related: ['status-do-trabalho', 'avaliar-servico', 'garantia']
   },
   {
-    id: 'acompanhar-atualizacoes', title: 'Como acompanhar atualizações, fotos e comentários', summary: 'Veja o andamento do serviço na linha do tempo e participe da conversa em cada atualização publicada.', category: 'Acompanhamento', audiences: ['cliente'], contexts: ['acompanhamento', 'meus-servicos', 'dashboard-cliente'],
-    steps: ['Abra o acompanhamento pelo cartão do serviço em Meus serviços.', 'Consulte as fotos e etapas publicadas pelo prestador na linha do tempo.', 'Toque em uma atualização para ler comentários ou enviar uma nova mensagem.'], related: ['avaliar-servico', 'garantia']
+    id: 'aceitar-trabalho', title: 'Como aceitar ou recusar um trabalho', summary: 'Quando o prestador registra um trabalho para você, ele só começa depois do seu aceite.', category: 'Meus trabalhos', audiences: ['cliente'], contexts: ['meus-servicos', 'dashboard-cliente'],
+    steps: ['Abra o link que o prestador enviou e entre com sua conta Google. É ela que fica ligada a esse trabalho.', 'Confira os detalhes do trabalho antes de decidir. Você pode aceitar pelo WhatsApp ou direto na tela.', 'Toque em "Aceitar trabalho" para o prestador poder começar, ou em "Recusar trabalho" (o app pede uma confirmação antes e o prestador é avisado).', 'Depois de aceitar, você é levado ao acompanhamento e passa a ver as atualizações do prestador.', 'Se aparecer o aviso de que o trabalho está ligado a outra conta, entre com a conta que abriu o link.'], related: ['status-do-trabalho', 'acompanhar-atualizacoes']
   },
   {
-    id: 'avaliar-servico', title: 'Como avaliar um serviço', summary: 'Após a conclusão, use o link de avaliação para registrar sua experiência.', category: 'Meus serviços', audiences: ['cliente'], contexts: ['meus-servicos', 'avaliacao', 'acompanhamento'],
-    steps: ['Abra o acompanhamento do serviço concluído.', 'Acesse o link de avaliação recebido ou o botão de avaliação exibido na página.', 'Escolha a nota e escreva um comentário honesto antes de enviar.']
+    id: 'status-do-trabalho', title: 'O que significa cada situação do meu trabalho', summary: 'Entenda os nomes que aparecem nos cartões: Aguardando aceite, Em andamento, Avaliar agora, Concluído, Garantia e Reclamação.', category: 'Meus trabalhos', audiences: ['cliente'], contexts: ['meus-servicos', 'dashboard-cliente'],
+    steps: ['Em preparo: o prestador ainda está montando o registro do trabalho.', 'Aguardando aceite: falta você aceitar para o prestador começar.', 'Em andamento: o prestador está executando e publicando atualizações.', 'Avaliar agora: o prestador terminou e falta a sua avaliação para concluir.', 'Concluído: o trabalho foi finalizado.', 'Garantia ou Reclamação: há um caso aberto sobre esse trabalho (o aviso laranja leva direto a ele).'], related: ['acompanhar-servico', 'garantia']
   },
   {
-    id: 'garantia', title: 'Como funciona a garantia ou reclamação', summary: 'Use o acompanhamento para registrar uma situação relacionada a um serviço concluído.', category: 'Meus serviços', audiences: ['cliente'], contexts: ['meus-servicos', 'acompanhamento'],
-    steps: ['Abra o serviço no painel do cliente.', 'Entre na seção Garantia ou Reclamação.', 'Descreva o ocorrido e, quando solicitado, envie fotos para contextualizar o caso.']
+    id: 'acompanhar-atualizacoes', title: 'Como acompanhar atualizações, fotos e comentários', summary: 'Veja o andamento do trabalho na linha do tempo e participe da conversa em cada atualização publicada.', category: 'Acompanhamento', audiences: ['cliente'], contexts: ['acompanhamento', 'meus-servicos'],
+    steps: ['Abra o acompanhamento pelo cartão do trabalho na Área do cliente.', 'Consulte as fotos e etapas publicadas pelo prestador na linha do tempo. Em trabalhos sem fotos, a linha do tempo mostra só aceite, execução e conclusão.', 'Toque em uma atualização para ler comentários ou enviar uma nova mensagem.'], related: ['avaliar-servico', 'garantia']
+  },
+  {
+    id: 'avaliar-servico', title: 'Como avaliar um trabalho', summary: 'Quando o prestador termina, o trabalho fica marcado como "Avaliar agora". Sua avaliação ajuda outros clientes a escolher.', category: 'Meus trabalhos', audiences: ['cliente'], contexts: ['meus-servicos', 'avaliacao', 'acompanhamento', 'dashboard-cliente'],
+    steps: ['Na Área do cliente, toque no aviso azul de avaliação ou no filtro "Avaliar".', 'Abra o trabalho e confira o resultado final nas fotos.', 'Escolha a nota, diga se indica o profissional e escreva um comentário honesto antes de enviar.'], related: ['status-do-trabalho', 'garantia']
+  },
+  {
+    id: 'garantia', title: 'Como funciona a garantia ou reclamação', summary: 'Teve algum problema depois do trabalho? Registre o caso no acompanhamento e acompanhe a resposta do prestador.', category: 'Meus trabalhos', audiences: ['cliente'], contexts: ['meus-servicos', 'acompanhamento'],
+    steps: ['Abra o trabalho na Área do cliente e vá até a seção Garantia (ou Reclamação, quando o prestador não oferece garantia).', 'Descreva o ocorrido e, quando for pedido, envie fotos para contextualizar o caso. Respeite o prazo mostrado na tela.', 'Acompanhe a resposta do prestador. Se ele oferecer um reparo, você pode aceitar ou recusar.', 'Quando o problema for resolvido, confirme a resolução. Se não foi, reabra o caso.', 'Casos que ficam sem retorno são encerrados automaticamente e isso fica registrado no perfil público do prestador.'], related: ['status-do-trabalho', 'acompanhar-atualizacoes']
+  },
+  {
+    id: 'minha-conta-cliente', title: 'Como atualizar meus dados e minha foto', summary: 'Na aba Minha conta você mantém nome, WhatsApp, endereço e foto atualizados.', category: 'Minha conta', audiences: ['cliente'], contexts: ['dashboard-cliente', 'perfil-cliente'],
+    steps: ['Abra a Área do cliente e toque na aba Minha conta.', 'Para trocar a foto, toque no seu avatar no cartão de perfil (até 10 MB).', 'Atualize nome, WhatsApp (com DDD) e endereço e toque em Salvar alterações.', 'Se tentar sair com alterações não salvas, o app pergunta antes de descartar.'], related: ['conta-e-seguranca']
   },
   {
     id: 'editar-perfil-prestador', title: 'Como editar meu perfil profissional', summary: 'Mantenha seus dados, especialidades e formas de contato atualizados para aparecer melhor nas buscas.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador'],
@@ -74,7 +86,7 @@ export const helpArticles: HelpArticle[] = [
   },
   {
     id: 'conta-e-seguranca', title: 'Conta, privacidade e segurança', summary: 'Mantenha seus dados atualizados e use somente os canais oficiais do projeto.', category: 'Conta', audiences: ['cliente', 'publico'], contexts: ['login', 'cadastro', 'perfil-cliente'],
-    steps: ['Entre com seu e-mail para acessar a conta.', 'Use a recuperação de senha caso não consiga entrar.', 'Para excluir a conta, siga o fluxo de confirmação e leia a política de privacidade.', 'Se aparecer em uma foto que não autorizou, use o botão de denúncia do perfil para pedir a remoção.']
+    steps: ['Entre com seu e-mail para acessar a conta.', 'Use a recuperação de senha caso não consiga entrar.', 'Para ver e baixar uma cópia dos seus dados, use o link "ver e baixar seus dados" na aba Minha conta (ou a página Meus dados).', 'Para excluir a conta, siga o fluxo de confirmação e leia a política de privacidade.', 'Se aparecer em uma foto que não autorizou, use o botão de denúncia do perfil para pedir a remoção.']
   },
 ]
 
