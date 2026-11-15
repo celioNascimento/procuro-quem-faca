@@ -46,7 +46,6 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
 
       await confirmarResolucaoGarantia(
         caso.id,
-        clienteUserId,
         descricaoResolucao.trim(),
         fotosResolucao,
         caso.origem === 'prestador' ? undefined : notaNova,
@@ -70,7 +69,7 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
       onAtualizado()
     } catch (err) {
       console.error('Erro ao confirmar resolução:', err)
-      setErro('Não foi possível confirmar. Tente novamente.')
+      setErro(err instanceof Error ? err.message : 'Não foi possível confirmar. Tente novamente.')
     } finally {
       setProcessando(false)
     }
@@ -81,11 +80,11 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
     setProcessando(true)
     setErro(null)
     try {
-      await reabrirCasoGarantia(caso.id, clienteUserId)
+      await reabrirCasoGarantia(caso.id)
       onAtualizado()
     } catch (err) {
       console.error('Erro ao reabrir caso:', err)
-      setErro('Não foi possível reabrir o caso. Tente novamente.')
+      setErro(err instanceof Error ? err.message : 'Não foi possível reabrir o caso. Tente novamente.')
     } finally {
       setProcessando(false)
     }

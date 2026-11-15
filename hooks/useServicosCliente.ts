@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import * as ClienteService from '@/lib/services/cliente.service'
 import type { ClienteServico } from '@/types/clienteServicos'
 import { estaProntoParaAvaliar, statusVisualDoServico } from '@/lib/painel/statusDoServico'
+import { pedeRetornoDoCliente } from '@/lib/garantia/avisos'
 
 export function useServicosCliente(perfilCarregado: boolean) {
   const router    = useRouter()
@@ -65,6 +66,11 @@ export function useServicosCliente(perfilCarregado: boolean) {
 
   const garantiaCount = servicosGarantia.length
   const reclamacaoCount = servicosReclamacao.length
+
+  // Quantos desses casos esperam uma decisão do CLIENTE (prestador respondeu ou ofereceu reparo).
+  // O aviso do painel muda de "toque para acompanhar" para "falta a sua resposta".
+  const garantiaPedeRetornoCount = servicosGarantia.filter(s => { const c = casoAtivoDoServico(s); return !!c && pedeRetornoDoCliente(c) }).length
+  const reclamacaoPedeRetornoCount = servicosReclamacao.filter(s => { const c = casoAtivoDoServico(s); return !!c && pedeRetornoDoCliente(c) }).length
 
   // Números dos filtros: saem da mesma regra que monta a lista, para o número do botão
   // ser sempre igual ao que aparece ao tocar nele.
@@ -157,6 +163,8 @@ export function useServicosCliente(perfilCarregado: boolean) {
     ativosCount,
     garantiaCount,
     reclamacaoCount,
+    garantiaPedeRetornoCount,
+    reclamacaoPedeRetornoCount,
     pendentesCount,
     andamentoCount,
     finalizadosCount,

@@ -58,8 +58,8 @@ As páginas exportam o componente default descrito abaixo. Handlers `GET`/`POST`
 | [`app/error.tsx`](../../app/error.tsx) | Estado de erro e callback `reset` para recuperação. |
 | [`app/auth/callback/route.ts`](../../app/auth/callback/route.ts) | Callback OAuth; troca o código e resolve destino pós-login. |
 | [`app/api/delete-account/route.ts`](../../app/api/delete-account/route.ts) | Route Handler de exclusão via cliente administrativo. |
-| [`app/api/garantia/responder/route.ts`](../../app/api/garantia/responder/route.ts) | Handler de resposta de garantia; `calcularPrazoUteis` calcula prazo de dias úteis. |
-| [`app/api/garantia/promover-fotos/route.ts`](../../app/api/garantia/promover-fotos/route.ts) | Promove evidências para portfólio; `extrairPathDoBucket` converte URL pública em path de Storage. |
+| [`app/api/cron/garantia-prazos/route.ts`](../../app/api/cron/garantia-prazos/route.ts) | Cron diário (exige `CRON_SECRET`): chama `garantia_processar_vencidos` — caso sem resposta no prazo vira `sem_resposta`; oferta de reparo sem aceite em 15 dias vira `recusada`. |
+| [`app/api/garantia/promover-fotos/route.ts`](../../app/api/garantia/promover-fotos/route.ts) | Promove as fotos de resolução para o bucket público. Exige login, ser o **cliente do caso**, caso já `resolvida` e arquivo dentro da pasta do próprio caso (`caminhoPertenceAoCaso`, `lib/garantia/caminho.ts`). |
 | [`app/api/anuncios/metricas/route.ts`](../../app/api/anuncios/metricas/route.ts) | Recebe métricas; `createServiceClient` cria cliente privilegiado controlado. |
 | [`app/api/admin/prestadores/route.ts`](../../app/api/admin/prestadores/route.ts) | API administrativa de prestadores. |
 | [`app/api/admin/anunciantes/route.ts`](../../app/api/admin/anunciantes/route.ts) | API de anunciantes; `gerarSenhaTemporaria` cria credencial inicial. |
@@ -108,7 +108,7 @@ Todos os hooks abaixo são pontos de entrada de UI. O hook geralmente mantém es
 | [`lib/services/avaliacao.service.ts`](../../lib/services/avaliacao.service.ts) | Busca por token/projeto, criação de avaliação e comentários. |
 | [`lib/services/uploadWizard.service.ts`](../../lib/services/uploadWizard.service.ts) | Projetos, fotos, legendas e upload do portfólio. |
 | [`lib/services/portfolioDashboard.service.ts`](../../lib/services/portfolioDashboard.service.ts) | Reexporta operações usadas pelo dashboard de portfólio. |
-| [`lib/services/garantia.service.ts`](../../lib/services/garantia.service.ts) | Casos de garantia; `calcularPrazoUteis` exclui fins de semana. |
+| [`lib/services/garantia.service.ts`](../../lib/services/garantia.service.ts) | Casos de garantia: cada ação (`abrirCasoGarantiaCliente`, `oferecerReparoPrestador`, `aceitar/recusarOfertaReparo`, `responderCasoGarantia`, `confirmarResolucaoGarantia`, `reabrirCasoGarantia`) chama uma função `garantia_*` do banco, que decide tudo; `verificarElegibilidadeGarantia` só orienta a tela. |
 | [`lib/services/painelCliente.service.ts`](../../lib/services/painelCliente.service.ts) | Serviços do cliente; `temGarantiaAtiva`, `temReclamacaoAtiva`, `filtrarComGarantiaAtiva`, `filtrarComReclamacaoAtiva`. |
 | [`lib/services/localizacao.service.ts`](../../lib/services/localizacao.service.ts) | Estados, regiões, cidades e vitrine por cidade. |
 | [`lib/services/categorias.service.ts`](../../lib/services/categorias.service.ts) | Grupos, categorias e habilidades. |

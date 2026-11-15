@@ -50,6 +50,8 @@ export default function PerfilDoCliente() {
     ativosCount,
     garantiaCount,
     reclamacaoCount,
+    garantiaPedeRetornoCount,
+    reclamacaoPedeRetornoCount,
     pendentesCount,
     andamentoCount,
     finalizadosCount,
@@ -166,7 +168,7 @@ export default function PerfilDoCliente() {
                       <p className="text-white font-bold text-base leading-tight">
                         {garantiaCount === 1 ? '1 caso de garantia em aberto' : `${garantiaCount} casos de garantia em aberto`}
                       </p>
-                      <p className="text-orange-50 text-xs font-medium mt-1">Toque para acompanhar</p>
+                      <p className="text-orange-50 text-xs font-medium mt-1">{garantiaPedeRetornoCount > 0 ? 'Falta a sua resposta. Toque para decidir' : 'Aguardando o prestador. Toque para acompanhar'}</p>
                     </div>
                     <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
                   </button>
@@ -184,7 +186,7 @@ export default function PerfilDoCliente() {
                       <p className="text-white font-bold text-base leading-tight">
                         {reclamacaoCount === 1 ? '1 reclamação em aberto' : `${reclamacaoCount} reclamações em aberto`}
                       </p>
-                      <p className="text-orange-50 text-xs font-medium mt-1">Toque para acompanhar</p>
+                      <p className="text-orange-50 text-xs font-medium mt-1">{reclamacaoPedeRetornoCount > 0 ? 'Falta a sua resposta. Toque para decidir' : 'Aguardando o prestador. Toque para acompanhar'}</p>
                     </div>
                     <ArrowRight size={20} className="shrink-0 text-white/70 transition-transform group-hover:translate-x-1" />
                   </button>

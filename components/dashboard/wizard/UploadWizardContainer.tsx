@@ -121,7 +121,7 @@ export function UploadWizardContainer({ prestadorId, projetoExistente = null, on
             <DadosDoClienteCard hookData={hookData} />
             <WizardCompleted hookData={hookData} prestadorId={prestadorId} />
             {projetoId && (
-              <GarantiaSecaoWizard prestadorId={prestadorId} caso={casoGarantia} loadingCaso={loadingCaso} recarregar={recarregarCaso} />
+              <GarantiaSecaoWizard projetoId={projetoId} prestadorId={prestadorId} caso={casoGarantia} loadingCaso={loadingCaso} recarregar={recarregarCaso} />
             )}
           </>
         ) : mostrarEscolhaFluxo ? (

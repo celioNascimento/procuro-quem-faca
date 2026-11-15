@@ -10,17 +10,19 @@ import { GarantiaAguardandoAceite } from './GarantiaAguardandoAceite'
 import { GarantiaAberta }           from './GarantiaAberta'
 import { GarantiaRespondida }       from './GarantiaRespondida'
 import { GarantiaFinalizada }       from './GarantiaFinalizada'
+import { GarantiaOferecerReparo }   from './GarantiaOferecerReparo'
 import { Loader2 }                  from 'lucide-react'
 import type { CasoGarantia }       from '@/hooks/useCasoGarantiaDoProjeto'
 
 interface Props {
+  projetoId: string
   prestadorId: number
   caso: CasoGarantia | null
   loadingCaso: boolean
   recarregar: () => void
 }
 
-export function GarantiaSecaoWizard({ prestadorId, caso, loadingCaso, recarregar }: Props) {
+export function GarantiaSecaoWizard({ projetoId, prestadorId, caso, loadingCaso, recarregar }: Props) {
   if (loadingCaso) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -29,7 +31,8 @@ export function GarantiaSecaoWizard({ prestadorId, caso, loadingCaso, recarregar
     )
   }
 
-  if (!caso) return null
+  // Sem caso: se a avaliação foi negativa, o prestador pode oferecer reparo (o formulário se esconde sozinho quando não pode).
+  if (!caso) return <GarantiaOferecerReparo projetoId={projetoId} prestadorId={prestadorId} onEnviado={recarregar} />
 
   const ehReclamacao = caso.tipo === 'reclamacao'
 

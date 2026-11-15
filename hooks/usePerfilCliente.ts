@@ -54,6 +54,8 @@ export function usePerfilCliente() {
     ativosCount:             servicos.ativosCount,
     garantiaCount:           servicos.garantiaCount,
     reclamacaoCount:         servicos.reclamacaoCount,         // novo
+    garantiaPedeRetornoCount:    servicos.garantiaPedeRetornoCount,
+    reclamacaoPedeRetornoCount:  servicos.reclamacaoPedeRetornoCount,
     pendentesCount:          servicos.pendentesCount,
     andamentoCount:          servicos.andamentoCount,
     finalizadosCount:        servicos.finalizadosCount,

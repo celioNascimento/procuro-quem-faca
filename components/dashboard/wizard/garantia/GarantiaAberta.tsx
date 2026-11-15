@@ -6,8 +6,8 @@
 // Duas camadas distintas de interação, propositalmente separadas:
 //  1. Comentários (conversa livre, via useGarantiaWizard) — não muda status
 //  2. "Registrar proposta de solução" (texto mínimo obrigatório + botão) —
-//     é o que efetivamente chama /api/garantia/responder e move o caso para
-//     'respondida'. Comentar não é o mesmo que se comprometer a resolver.
+//     é o que efetivamente chama garantia_responder (banco, via
+//     garantia.service) e move o caso para 'respondida'. Comentar não é o mesmo que se comprometer a resolver.
 
 'use client'
 
@@ -16,6 +16,7 @@ import { AlertTriangle, Send, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { CasoGarantia } from '@/hooks/useCasoGarantiaDoProjeto'
 import { useGarantiaWizard } from '@/hooks/useGarantiaWizard'
+import { responderCasoGarantia } from '@/lib/services/garantia.service'
 import { GarantiaCarrossel } from './GarantiaCarrossel'
 import { GarantiaComentarios } from './GarantiaComentarios'
 
@@ -27,7 +28,7 @@ interface Props {
 
 const MIN_CARACTERES_PROPOSTA = 20
 
-export function GarantiaAberta({ caso, prestadorId, onAtualizado }: Props) {
+export function GarantiaAberta({ caso, onAtualizado }: Props) {
   const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -57,25 +58,13 @@ export function GarantiaAberta({ caso, prestadorId, onAtualizado }: Props) {
     setEnviandoProposta(true)
     setErroProposta(null)
     try {
-      const res = await fetch('/api/garantia/responder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          casoId: caso.id,
-          prestadorId,
-          resposta: proposta.trim(),
-        }),
-      })
-
-      if (!res.ok) {
-        const { error } = await res.json()
-        throw new Error(error)
-      }
+      // Só o prestador dono do caso consegue responder: quem confere é o banco (garantia_responder).
+      await responderCasoGarantia(caso.id, proposta.trim())
 
       onAtualizado() // recarrega o caso no orquestrador, troca para GarantiaRespondida
     } catch (err) {
       console.error('Erro ao registrar proposta de solução:', err)
-      setErroProposta('Não foi possível registrar sua proposta. Tente novamente.')
+      setErroProposta(err instanceof Error ? err.message : 'Não foi possível registrar sua proposta. Tente novamente.')
     } finally {
       setEnviandoProposta(false)
     }
@@ -120,6 +109,7 @@ export function GarantiaAberta({ caso, prestadorId, onAtualizado }: Props) {
           onChange={(e) => setProposta(e.target.value)}
           placeholder="Descreva como você vai resolver o problema (ex: data para visita, o que será reparado)..."
           rows={3}
+          maxLength={2000}
           className="w-full text-[12px] text-slate-700 placeholder:text-slate-300 outline-none border border-slate-100 rounded-xl p-3 resize-none focus:border-orange-300 transition-colors"
         />
         <div className="flex items-center justify-between mt-2">
