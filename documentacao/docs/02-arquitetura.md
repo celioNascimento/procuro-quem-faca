@@ -173,6 +173,58 @@ Um arquivo de tipos por área de produto: `ads.ts`, `avaliacao.ts`, `categorias.
 
 `categorias.ts` — taxonomia de serviço + `SUGESTOES_FALLBACK` (autocomplete da busca).
 
+## Central de ajuda
+
+**O que é:** artigos curtos, em passos, que explicam o produto para cliente, visitante e prestador. O conteúdo é público e do usuário final; a documentação técnica fica nestes arquivos `.md` e na área administrativa.
+
+**Arquivos**
+- `lib/help/help-content.ts` — **fonte única do conteúdo**: `helpArticles` (lista), `getHelpArticles(público, contexto?)`, `searchHelpArticles(texto, público)`, `findHelpArticle(id)`, `helpCategories`.
+- `components/help/HelpCenter.tsx` — `HelpCenter` (busca + categorias + cartões), `HelpArticle` (um artigo com passos numerados) e `ContextualHelp` (bloco "Central de ajuda" que as telas embutem no rodapé).
+- `app/ajuda/page.tsx` — rota `/ajuda`: sem parâmetros lista os artigos; `?artigo=<id>` abre um artigo; `?contexto=<contexto>` lista só os artigos daquela tela; `&publico=prestador` troca o público (qualquer outro valor cai em `cliente`).
+- `lib/help/help-content.test.ts` — protege o conteúdo (ver "Regras" abaixo).
+
+**Modelo de um artigo** (`HelpArticle`): `id` (estável — vira link `/ajuda?artigo=<id>`), `title`, `summary`, `category`, `audiences` (`cliente` · `publico` · `prestador` · `admin`), `contexts` (em quais telas ele aparece como atalho), `steps` (passos) e `related` (ids de outros artigos).
+
+**Onde cada contexto aparece hoje**
+
+| Contexto | Tela | Público |
+|---|---|---|
+| `dashboard-cliente` | `/painel/perfil` (Área do cliente) | cliente |
+| `meus-servicos` | `/meus-servicos` (`PainelDoCliente`) | cliente |
+| `acompanhamento` | `/acompanhamento/[token]` | cliente |
+| `perfil-publico` | `/[slug]` (perfil público) | cliente/visitante |
+| `dashboard-prestador` | `/dashboard` (abas Meus Trabalhos, Desempenho, Dados Profissionais) | prestador |
+| `divulgacao` | `/dashboard`, aba Divulgação | prestador |
+
+Contextos que existem no conteúdo mas ainda **sem bloco de ajuda na tela** (só aparecem em `/ajuda`): `home`, `prestadores`, `dashboard`, `avaliacao`, `login`, `cadastro`, `perfil-cliente`.
+
+**Artigos do cliente (Área do cliente)**
+
+| id | Título |
+|---|---|
+| `acompanhar-servico` | Como acompanhar meus trabalhos |
+| `aceitar-trabalho` | Como aceitar ou recusar um trabalho |
+| `status-do-trabalho` | O que significa cada situação do meu trabalho |
+| `acompanhar-atualizacoes` | Como acompanhar atualizações, fotos e comentários |
+| `avaliar-servico` | Como avaliar um trabalho |
+| `garantia` | Como funciona a garantia ou reclamação |
+| `minha-conta-cliente` | Como atualizar meus dados e minha foto |
+| `conta-e-seguranca` | Conta, privacidade e segurança (inclui "ver e baixar seus dados") |
+
+Os ids `acompanhar-servico` e `avaliar-servico` mantêm o nome antigo de propósito: já existem links `/ajuda?artigo=...` em circulação. Mudou só o título.
+
+**Regras ao escrever ou mudar um artigo**
+1. **Vocabulário igual ao da tela:** "Área do cliente", "trabalho" (não "projeto"/"serviço"), "Aceitar trabalho", "Recusar trabalho", e os nomes de status de `lib/painel/statusDoServico.ts` (ver doc 07). Se a tela mudar de nome, o artigo muda no mesmo PR.
+2. **Nada de "orçamento":** a plataforma ainda não trabalha com orçamento (ver glossário). O contato é pelo WhatsApp.
+3. **Só afirme o que a tela faz.** Em caso de dúvida sobre um comportamento, descreva o resultado, não o mecanismo (ex.: não explicar o que o status `em_disputa` significa — ele não é usado no fluxo normal).
+4. **Bloco da tela enxuto:** `ContextualHelp` mostra **todos** os artigos do contexto como atalhos. Em `dashboard-cliente` o limite é 5 (o teste falha acima disso); o resto fica acessível em `/ajuda`.
+5. **`related` só aponta para ids existentes** (testado).
+6. Mantenha os ids existentes; para renomear um artigo, mude o `title`, não o `id`.
+
+**Como adicionar um artigo:** criar o objeto em `helpArticles` (id novo, `audiences`, `contexts`, passos curtos de uma ação cada) → se for atalho de uma tela, usar o contexto dela da tabela acima → rodar `npx vitest run lib/help`.
+
+**Pendências conhecidas:** a rota `/ajuda` só é alcançada pelos blocos `ContextualHelp` (e pelo sitemap): não há link "Ajuda" no menu/rodapé do site. O texto do cabeçalho de `/ajuda` e os rótulos dos cartões ainda usam o visual antigo (caixa-alta pequena); entra no refinamento de tom da Área do cliente.
+
 ## Testes
 
 - **Vitest** (`vitest.config.ts`, `tests/`) → testes unitários, principalmente hooks e services

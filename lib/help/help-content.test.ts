@@ -37,3 +37,65 @@ describe('ajuda: Divulgação (prestador)', () => {
     expect(findHelpArticle('divulgacao-visao-geral')).toBeTruthy()
   })
 })
+
+describe('ajuda: cliente', () => {
+  const doCliente = helpArticles.filter((a) => a.audiences.includes('cliente'))
+
+  it('cada tela com bloco de ajuda tem artigos para o público dela', () => {
+    // contexto + público usados pelos <ContextualHelp> do app
+    const usos: Array<[Parameters<typeof getHelpArticles>[0], string]> = [
+      ['cliente', 'dashboard-cliente'], // /painel/perfil
+      ['cliente', 'meus-servicos'],     // /meus-servicos
+      ['cliente', 'acompanhamento'],    // /acompanhamento/[token]
+      ['cliente', 'perfil-publico'],    // /[slug]
+      ['prestador', 'dashboard-prestador'],
+      ['prestador', 'divulgacao'],
+    ]
+    for (const [publico, contexto] of usos) {
+      expect(getHelpArticles(publico, contexto).length, `${publico}/${contexto}`).toBeGreaterThan(0)
+    }
+  })
+
+  it('o bloco de ajuda da Área do cliente não vira uma parede de atalhos (máx. 5)', () => {
+    const ids = getHelpArticles('cliente', 'dashboard-cliente').map((a) => a.id)
+    expect(ids.length).toBeLessThanOrEqual(5)
+    expect(ids).toEqual(expect.arrayContaining(['acompanhar-servico', 'aceitar-trabalho', 'status-do-trabalho', 'avaliar-servico', 'minha-conta-cliente']))
+  })
+
+  it('usa o vocabulário da Área do cliente: "trabalho", não "serviço/projeto" nem o nome antigo da área', () => {
+    const textos = doCliente.flatMap((a) => [a.title, a.summary, a.category, ...(a.steps ?? [])])
+    for (const t of textos) {
+      expect(t, t).not.toMatch(/Meus serviços/i)
+      expect(t, t).not.toMatch(/Portal do Cliente/i)
+    }
+    // os artigos do painel falam de "trabalho"
+    for (const id of ['acompanhar-servico', 'aceitar-trabalho', 'status-do-trabalho', 'avaliar-servico', 'garantia']) {
+      const a = findHelpArticle(id)!
+      expect([a.title, a.summary, ...(a.steps ?? [])].join(' ')).toMatch(/trabalho/i)
+    }
+  })
+
+  it('os status explicados batem com os nomes mostrados nos cartões', () => {
+    const passos = (findHelpArticle('status-do-trabalho')?.steps ?? []).join(' ')
+    for (const nome of ['Aguardando aceite', 'Em andamento', 'Avaliar agora', 'Concluído', 'Garantia', 'Reclamação']) {
+      expect(passos).toContain(nome)
+    }
+  })
+
+  it('nenhum texto promete "orçamento" (a plataforma ainda não trabalha com orçamento)', () => {
+    for (const a of helpArticles) {
+      expect([a.title, a.summary, ...(a.steps ?? [])].join(' ')).not.toMatch(/orçamento/i)
+    }
+  })
+
+  it('ids antigos continuam válidos (links /ajuda?artigo=... já compartilhados)', () => {
+    for (const id of ['acompanhar-servico', 'acompanhar-atualizacoes', 'avaliar-servico', 'garantia', 'conta-e-seguranca']) {
+      expect(findHelpArticle(id), id).toBeTruthy()
+    }
+  })
+
+  it('a busca do cliente acha os artigos novos', () => {
+    expect(searchHelpArticles('recusar', 'cliente').map((a) => a.id)).toContain('aceitar-trabalho')
+    expect(searchHelpArticles('foto', 'cliente').map((a) => a.id)).toContain('minha-conta-cliente')
+  })
+})

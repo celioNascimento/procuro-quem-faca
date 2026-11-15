@@ -80,3 +80,7 @@ Foto do Google do **prestador** não é usada de propósito: 940 dos 950 prestad
 ## Vocabulário na área do cliente
 
 "Área do cliente" (nome da área — não "Painel" nem "Portal do Cliente") e **"trabalho"** (não "projeto" nem "serviço") para o que o prestador fez/faz. "Aceitar trabalho" / "Recusar trabalho" (não "autorizar serviço"). O botão do anúncio padrão é "Buscar profissionais" e leva à home.
+
+## Ajuda dentro da Área do cliente
+
+Cada tela termina com um bloco `ContextualHelp` (ver "Central de ajuda" em `02-arquitetura.md`): `/painel/perfil` usa o contexto `dashboard-cliente` ("Precisa de ajuda com seus trabalhos?"), `/meus-servicos` usa `meus-servicos` e `/acompanhamento/[token]` usa `acompanhamento`. Os artigos (`lib/help/help-content.ts`) seguem o mesmo vocabulário desta tela — quando um nome de status, filtro ou botão mudar aqui, o artigo correspondente (`status-do-trabalho`, `aceitar-trabalho`, `acompanhar-servico`, `avaliar-servico`) muda junto.
