@@ -3,14 +3,12 @@
 'use client'
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import * as ClienteService from '@/lib/services/cliente.service'
 import type { ClienteServico } from '@/types/clienteServicos'
 import { estaProntoParaAvaliar, statusVisualDoServico } from '@/lib/painel/statusDoServico'
 import { pedeRetornoDoCliente } from '@/lib/garantia/avisos'
 
 export function useServicosCliente(perfilCarregado: boolean) {
-  const router    = useRouter()
   const filtroRef = useRef<HTMLDivElement>(null)
 
   const [servicos,        setServicos]        = useState<ClienteServico[]>([])

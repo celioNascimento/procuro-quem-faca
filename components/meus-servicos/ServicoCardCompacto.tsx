@@ -63,7 +63,7 @@ export default function ServicoCardCompacto({
     ? 'bg-orange-500 text-white'
     : isUrgente
       ? 'bg-blue-600 text-white'
-      : 'bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white'
+      : 'bg-slate-50 text-slate-500 group-hover:bg-blue-600 group-hover:text-white'
 
   return (
     <button
@@ -87,12 +87,12 @@ export default function ServicoCardCompacto({
       {/* Conteúdo */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border tracking-wider shrink-0 flex items-center gap-1 ${badgeClass}`}>
+          <span className={`text-xs font-bold px-2 py-0.5 rounded-full border  shrink-0 flex items-center gap-1 ${badgeClass}`}>
             {temCasoAtivo && <ShieldAlert size={8} />}
             {badgeLabel}
           </span>
           {servico.prestadores?.categoria?.nome && (
-            <span className="text-[9px] text-slate-400 truncate">
+            <span className="text-xs text-slate-500 truncate">
               {servico.prestadores.categoria.nome}
             </span>
           )}
@@ -104,7 +104,7 @@ export default function ServicoCardCompacto({
           {servico.prestadores?.nome}
         </p>
         {servico.avaliacoes_clientes?.[0] && (
-          <div className="mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-blue-700">
+          <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-blue-700">
             <span className="flex items-center gap-0.5" aria-label={`Nota ${servico.avaliacoes_clientes[0].nota} de 5`}>
               {Array.from({ length: 5 }, (_, index) => (
                 <Star key={index} size={11} fill={index < servico.avaliacoes_clientes![0].nota ? 'currentColor' : 'none'} />

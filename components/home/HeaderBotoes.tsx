@@ -73,6 +73,16 @@ export function HeaderBotoes() {
     )
   }
 
+  // Quem só é cliente tem um único lugar para ir: a Área do cliente.
+  if (role !== 'prestador') {
+    return (
+      <Link href="/painel/perfil" className={btnPrimary}>
+        <User size={16} className="shrink-0" aria-hidden="true" />
+        <span>Área do cliente</span>
+      </Link>
+    )
+  }
+
   return (
     <>
       <Link href="/painel/perfil" className={btnGhost}>

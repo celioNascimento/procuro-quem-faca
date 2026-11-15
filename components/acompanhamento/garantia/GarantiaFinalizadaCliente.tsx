@@ -60,12 +60,12 @@ export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
     <div className="space-y-4">
 
       <section className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4" aria-labelledby="relato-garantia">
-        <p id="relato-garantia" className="mb-3 text-[9px] font-black uppercase tracking-widest text-orange-500">
+        <p id="relato-garantia" className="mb-3 text-xs font-bold text-orange-700">
           Relato do problema
         </p>
         <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3">
           <AlertTriangle size={14} className="text-orange-400 shrink-0 mt-0.5" />
-          <p className="text-[11px] font-medium text-orange-700/80 leading-snug">
+          <p className="text-xs font-medium text-orange-700/80 leading-snug">
             {caso.descricao_problema}
           </p>
         </div>
@@ -78,14 +78,14 @@ export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
       </section>
 
       <section className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4" aria-labelledby="resolucao-garantia">
-        <p id="resolucao-garantia" className="mb-3 text-[9px] font-black uppercase tracking-widest text-emerald-600">
+        <p id="resolucao-garantia" className="mb-3 text-xs font-bold text-emerald-600">
           Resolução do caso
         </p>
         {caso.resposta_prestador_garantia && (
           <div className="bg-white border border-slate-100 rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle2 size={12} className="text-blue-400" />
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+              <CheckCircle2 size={12} className="text-blue-600" />
+              <p className="text-xs font-bold text-slate-500">
                 Proposta do prestador
               </p>
             </div>
@@ -105,15 +105,15 @@ export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
       {/* Histórico de conversa — somente leitura */}
       {wizard.derived.comentariosGerais.length > 0 && (
         <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">
+          <p className="text-xs font-bold text-slate-500 px-1">
             Conversa
           </p>
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {wizard.derived.comentariosGerais.map((c) => (
               <div
                 key={c.id}
-                className={`text-[11px] rounded-xl px-3 py-2 max-w-[85%] ${
-                  c.autor_tipo === 'cliente'
+                className={`text-xs rounded-xl px-3 py-2 max-w-[85%] ${
+ c.autor_tipo === 'cliente'
                     ? 'bg-blue-600 text-white ml-auto'
                     : 'bg-white text-slate-700 border border-slate-100'
                 }`}
@@ -129,11 +129,11 @@ export function GarantiaFinalizadaCliente({ caso, clienteUserId }: Props) {
       <div className={`rounded-2xl p-5 border flex items-start gap-3 ${config.cor}`}>
         <Icon size={18} className="shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <p className="text-[11px] font-black uppercase tracking-wide leading-none">
+          <p className="text-xs font-bold leading-none">
             {config.titulo}
           </p>
           {textoDescricao && (
-            <p className="text-[11px] font-medium leading-snug opacity-80">
+            <p className="text-xs font-medium leading-snug opacity-80">
               {textoDescricao}
             </p>
           )}

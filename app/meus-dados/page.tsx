@@ -15,7 +15,7 @@ const formatarData = (iso: string | null | undefined) =>
 function Cartao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section className="space-y-4 rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm md:p-8">
-      <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400">{titulo}</h2>
+      <h2 className="text-xs font-bold text-slate-500">{titulo}</h2>
       {children}
     </section>
   )
@@ -25,23 +25,23 @@ export default function MeusDados() {
   const { dados, resumo, carregando, precisaLogin, erro, baixar } = useMeusDados()
 
   return (
-    <main className="min-h-screen bg-[#FDFDFD] pt-32 md:pt-22 font-sans">
+    <main className="min-h-screen bg-[#F8FAFC] pt-24 md:pt-26 font-sans">
       <Header href="/" />
-      <div className="mx-auto max-w-2xl space-y-6 px-6 pb-16 pt-6">
+      <div className="mx-auto max-w-2xl space-y-6 px-6 pb-16 pt-4">
         <div className="space-y-3">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">Meus dados</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Meus dados</h1>
           <p className="text-sm leading-relaxed text-slate-500">
             Veja o que o PQF guarda sobre você e baixe uma cópia. Como tratamos esses dados está na{' '}
             <Link href="/privacidade" className="font-bold text-blue-600 underline">Política de Privacidade</Link>.
           </p>
         </div>
 
-        {carregando && <p role="status" className="text-sm text-slate-400">Carregando seus dados...</p>}
+        {carregando && <p role="status" className="text-sm text-slate-500">Carregando seus dados...</p>}
 
         {precisaLogin && (
           <Cartao titulo="Entre na sua conta">
             <p className="text-sm text-slate-600">Para ver e baixar seus dados, entre na sua conta.</p>
-            <Link href="/login" className="inline-block rounded-2xl bg-blue-600 px-6 py-3 text-[12px] font-bold uppercase tracking-widest text-white">
+            <Link href="/login" className="inline-block rounded-2xl bg-blue-600 px-6 py-3 text-[12px] font-bold text-white">
               Entrar
             </Link>
           </Cartao>
@@ -53,8 +53,8 @@ export default function MeusDados() {
           <>
             <Cartao titulo="Sua conta">
               <dl className="space-y-1 text-sm text-slate-700">
-                <div className="flex justify-between gap-4"><dt className="text-slate-400">E-mail</dt><dd className="font-semibold">{dados.conta?.email ?? '—'}</dd></div>
-                <div className="flex justify-between gap-4"><dt className="text-slate-400">Conta criada em</dt><dd className="font-semibold">{formatarData(dados.conta?.criada_em)}</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-slate-500">E-mail</dt><dd className="font-semibold">{dados.conta?.email ?? '—'}</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-slate-500">Conta criada em</dt><dd className="font-semibold">{formatarData(dados.conta?.criada_em)}</dd></div>
               </dl>
             </Cartao>
 
@@ -66,12 +66,12 @@ export default function MeusDados() {
                   {resumo.map(item => (
                     <li key={item.chave} className="flex items-center justify-between py-2.5">
                       <span>{item.rotulo}</span>
-                      <span className="rounded-full bg-slate-50 px-2.5 py-0.5 text-[11px] font-bold text-slate-500">{item.quantidade}</span>
+                      <span className="rounded-full bg-slate-50 px-2.5 py-0.5 text-xs font-bold text-slate-500">{item.quantidade}</span>
                     </li>
                   ))}
                 </ul>
               )}
-              <p className="text-[11px] leading-relaxed text-slate-400">
+              <p className="text-xs leading-relaxed text-slate-500">
                 Dados de outras pessoas, como nome e WhatsApp dos clientes dos seus projetos, não entram na cópia, porque pertencem a elas.
               </p>
             </Cartao>
@@ -84,7 +84,7 @@ export default function MeusDados() {
                   {dados.consentimentos.map((c, i) => (
                     <li key={`${c.tipo}-${c.aceito_em}-${i}`} className="flex items-center justify-between gap-3 py-2.5">
                       <span>{ROTULO_CONSENTIMENTO[c.tipo] ?? c.tipo}</span>
-                      <span className="text-[11px] text-slate-400">versão {c.versao_documento} · {formatarData(c.aceito_em)}</span>
+                      <span className="text-xs text-slate-500">versão {c.versao_documento} · {formatarData(c.aceito_em)}</span>
                     </li>
                   ))}
                 </ul>
@@ -95,7 +95,7 @@ export default function MeusDados() {
               <button
                 type="button"
                 onClick={baixar}
-                className="w-full rounded-[2rem] bg-blue-600 py-5 text-[12px] font-bold uppercase tracking-widest text-white shadow-xl shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95"
+                className="w-full rounded-[2rem] bg-blue-600 py-5 text-[12px] font-bold text-white shadow-xl shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95"
               >
                 Baixar meus dados (JSON)
               </button>

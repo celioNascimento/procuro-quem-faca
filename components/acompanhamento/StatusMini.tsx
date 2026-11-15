@@ -31,7 +31,7 @@ export function StatusMini({
     : <Activity size={16} />
 
   const corProgresso = temGarantiaAtiva
-    ? 'bg-orange-50 text-orange-500'
+    ? 'bg-orange-50 text-orange-700'
     : 'bg-blue-50 text-blue-600'
 
   return (
@@ -42,10 +42,10 @@ export function StatusMini({
           {iconProgresso}
         </div>
         <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">
+          <p className="text-xs font-bold text-slate-500">
             {temGarantiaAtiva ? 'Garantia' : 'Progresso'}
           </p>
-          <p className="text-[11px] font-black text-slate-800 uppercase truncate">
+          <p className="text-xs font-bold text-slate-800 truncate">
             {labelProgresso}
           </p>
         </div>
@@ -53,12 +53,12 @@ export function StatusMini({
 
       {/* Registros — mantido igual */}
       <div className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-3 shadow-sm">
-        <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 shrink-0">
           <LayoutGrid size={16} />
         </div>
         <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Registros</p>
-          <p className="text-[11px] font-black text-slate-800 uppercase">{totalFotos} de 3</p>
+          <p className="text-xs font-bold text-slate-500">Registros</p>
+          <p className="text-xs font-bold text-slate-800">{totalFotos} de 3</p>
         </div>
       </div>
     </div>

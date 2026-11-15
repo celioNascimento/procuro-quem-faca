@@ -35,10 +35,10 @@ export function BlocoAvaliacao({
             <CheckCircle2 size={24} strokeWidth={2.5} />
           </div>
           <div>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.24em] text-blue-600">
+            <p className="mb-1 text-xs font-bold text-blue-600">
               Etapa final
             </p>
-            <h3 className="text-2xl font-black uppercase italic tracking-tight text-slate-800">
+            <h3 className="text-2xl font-bold tracking-tight text-slate-800">
               Assinar entrega
             </h3>
             <p className="mt-1 text-sm leading-6 text-slate-500">
@@ -50,7 +50,7 @@ export function BlocoAvaliacao({
 
       <div className="space-y-7 p-6 sm:p-8">
         <div className="rounded-3xl border border-blue-100 bg-white/80 px-4 py-5 text-center shadow-sm">
-          <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+          <p className="mb-4 text-xs font-bold text-slate-500">
             Como você avalia esta experiência?
           </p>
           <div className="flex justify-center gap-1.5 sm:gap-2">
@@ -76,12 +76,12 @@ export function BlocoAvaliacao({
         </div>
 
         <div>
-          <label htmlFor="comentario-avaliacao" className="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+          <label htmlFor="comentario-avaliacao" className="mb-2 block text-xs font-bold text-slate-500">
             Seu depoimento
           </label>
           <textarea
             id="comentario-avaliacao"
-            className="min-h-[120px] w-full resize-none rounded-3xl border border-slate-200 bg-white p-5 text-sm font-medium leading-6 text-slate-700 outline-none transition-all placeholder:text-slate-300 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+            className="min-h-[120px] w-full resize-none rounded-3xl border border-slate-200 bg-white p-5 text-sm font-medium leading-6 text-slate-700 outline-none transition-all placeholder:text-slate-500 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
             placeholder="Conte brevemente como foi sua experiência..."
             value={comentarioGeral}
             onChange={(e) => setComentarioGeral(e.target.value)}
@@ -90,17 +90,17 @@ export function BlocoAvaliacao({
 
         {nota > 0 && (
           <div className="space-y-3">
-            <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            <p className="text-center text-xs font-bold text-slate-500">
               Você indicaria este profissional?
             </p>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setIndica(true)}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border py-4 text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border py-4 text-xs font-bold transition-all ${
                   indica === true
                     ? 'border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-100'
-                    : 'border-slate-200 bg-white text-slate-400 hover:border-blue-300 hover:text-blue-600'
+                    : 'border-slate-200 bg-white text-slate-500 hover:border-blue-300 hover:text-blue-600'
                 }`}
               >
                 <ThumbsUp size={16} /> Indico
@@ -108,10 +108,10 @@ export function BlocoAvaliacao({
               <button
                 type="button"
                 onClick={() => setIndica(false)}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border py-4 text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border py-4 text-xs font-bold transition-all ${
                   indica === false
                     ? 'border-slate-700 bg-slate-700 text-white shadow-lg shadow-slate-100'
-                    : 'border-slate-200 bg-white text-slate-400 hover:border-slate-400 hover:text-slate-700'
+                    : 'border-slate-200 bg-white text-slate-500 hover:border-slate-400 hover:text-slate-700'
                 }`}
               >
                 <ThumbsDown size={16} /> Não indico
@@ -123,7 +123,7 @@ export function BlocoAvaliacao({
         <button
           disabled={nota === 0 || submitting}
           onClick={onSubmit}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 py-4 text-[11px] font-black uppercase italic tracking-[0.2em] text-white shadow-xl shadow-blue-200 transition-all hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 py-4 text-xs font-bold text-white shadow-xl shadow-blue-200 transition-all hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {submitting ? <Loader2 className="animate-spin" size={20} /> : <><CheckCircle2 size={18} strokeWidth={2.5} /> Validar e concluir</>}
         </button>

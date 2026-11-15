@@ -26,23 +26,23 @@ export function LinhaDeTempoSemFotos({ status, aceitoEm, marcadoConcluidoEm }: P
   const avaliado = status === 'finalizado'
 
   const instrucao = !aceito
-    ? 'Aguardando você aceitar o início do serviço.'
+    ? 'Aguardando você aceitar o início do trabalho.'
     : !concluido
-    ? 'Serviço em andamento.'
+    ? 'Trabalho em andamento.'
     : !avaliado
-    ? 'Serviço concluído. Avalie abaixo para finalizar.'
-    : 'Serviço concluído e avaliado.'
+    ? 'Trabalho concluído. Avalie abaixo para finalizar.'
+    : 'Trabalho concluído e avaliado.'
 
   const marcos = [
     {
       key: 'aceite',
-      label: 'Aceite do serviço',
+      label: 'Aceite do trabalho',
       data: dataAceite,
       estado: (aceito ? 'concluido' : 'ativo') as TimelineEstado,
     },
     {
       key: 'execucao',
-      label: 'Execução do serviço',
+      label: 'Execução do trabalho',
       data: null,
       estado: (!aceito ? 'pendente' : concluido ? 'concluido' : 'ativo') as TimelineEstado,
     },
@@ -59,13 +59,13 @@ export function LinhaDeTempoSemFotos({ status, aceitoEm, marcadoConcluidoEm }: P
     estado: marco.estado,
     conteudo: (
       <div className="flex items-center justify-between gap-3 py-1.5">
-        <p className={`text-[11px] font-black uppercase tracking-wide leading-none ${
-          marco.estado === 'pendente' ? 'text-slate-300' : marco.estado === 'ativo' ? 'text-blue-600' : 'text-green-600'
+        <p className={`text-xs font-bold leading-none ${
+          marco.estado === 'pendente' ? 'text-slate-500' : marco.estado === 'ativo' ? 'text-blue-600' : 'text-green-600'
         }`}>
           {marco.label}
         </p>
         {marco.data && (
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{marco.data}</span>
+          <span className="text-xs font-bold text-slate-500">{marco.data}</span>
         )}
       </div>
     ),
@@ -74,14 +74,14 @@ export function LinhaDeTempoSemFotos({ status, aceitoEm, marcadoConcluidoEm }: P
   return (
     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+        <h3 className="text-xs font-bold text-slate-500">
           Status do Serviço
         </h3>
       </div>
 
       <TimelineVertical nos={nos} />
 
-      <p className="text-center text-[10px] font-medium text-slate-400 pt-1 border-t border-slate-50">
+      <p className="text-center text-xs font-medium text-slate-500 pt-1 border-t border-slate-50">
         {instrucao}
       </p>
     </div>

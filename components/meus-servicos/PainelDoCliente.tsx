@@ -135,11 +135,11 @@ export default function PainelDoCliente() {
                   />
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
                     {prestador.categoria?.nome && (
-                      <p className="text-[9px] font-black uppercase text-blue-600 tracking-[0.2em] truncate">
+                      <p className="text-xs font-bold text-blue-600 truncate">
                         {prestador.categoria.nome}
                       </p>
                     )}
-                    <h2 className="text-[13px] sm:text-sm font-black text-slate-900 uppercase tracking-tight truncate mt-0.5">
+                    <h2 className="text-[13px] sm:text-sm font-bold text-slate-900 tracking-tight truncate mt-0.5">
                       {prestador.nome}
                     </h2>
                   </div>
@@ -148,7 +148,7 @@ export default function PainelDoCliente() {
 
               {totalPendentes > 0 && (
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ao aceitar o trabalho</p>
+                  <p className="text-xs font-bold text-slate-500">Ao aceitar o trabalho</p>
                   <div className="space-y-3">
                     {[
                       { n: '01', texto: 'Você confirma que o prestador pode começar' },
@@ -156,7 +156,7 @@ export default function PainelDoCliente() {
                       { n: '03', texto: 'No final, você avalia o trabalho'              },
                     ].map(item => (
                       <div key={item.n} className="flex items-start gap-3">
-                        <span className="text-[10px] font-black text-blue-600 bg-blue-50 rounded-lg px-2 py-1 shrink-0 mt-0.5">{item.n}</span>
+                        <span className="text-xs font-bold text-blue-600 bg-blue-50 rounded-lg px-2 py-1 shrink-0 mt-0.5">{item.n}</span>
                         <p className="text-[12px] text-slate-500 font-medium leading-relaxed">{item.texto}</p>
                       </div>
                     ))}
@@ -182,10 +182,10 @@ export default function PainelDoCliente() {
               {projetoSelecionado && (
                 <section className="flex flex-col gap-3" aria-labelledby="projeto-selecionado-title">
                   <div className="flex items-center justify-between px-1">
-                    <h2 id="projeto-selecionado-title" className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-600">
+                    <h2 id="projeto-selecionado-title" className="text-xs font-bold text-blue-600">
                       Trabalho selecionado
                     </h2>
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-blue-600">
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600">
                       Em destaque
                     </span>
                   </div>
@@ -201,14 +201,14 @@ export default function PainelDoCliente() {
                     />
                     {projetoSelecionado.status?.toLowerCase() === 'pendente' && (
                       <div className="flex flex-col gap-3 px-3 pb-3 pt-1">
-                        <p className="text-center text-[11px] font-medium leading-relaxed text-slate-500">
+                        <p className="text-center text-xs font-medium leading-relaxed text-slate-500">
                           Confira os detalhes antes de decidir. Você pode aceitar pelo WhatsApp ou direto aqui.
                         </p>
                         <button
                           type="button"
                           disabled={acaoEmAndamento}
                           onClick={() => setConfirmandoRecusa(true)}
-                          className="w-full rounded-2xl border border-red-100 bg-red-50 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-red-600 transition-colors hover:bg-red-100 disabled:cursor-wait disabled:opacity-60"
+                          className="w-full rounded-2xl border border-red-100 bg-red-50 py-3 text-xs font-bold text-red-600 transition-colors hover:bg-red-100 disabled:cursor-wait disabled:opacity-60"
                         >
                           Recusar trabalho
                         </button>
@@ -222,10 +222,10 @@ export default function PainelDoCliente() {
               {projetoSelecionado && outrosServicos.length > 0 && (
                 <section className="flex flex-col gap-2" aria-labelledby="outros-servicos-title">
                   <div className="flex items-center justify-between px-1">
-                    <h2 id="outros-servicos-title" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    <h2 id="outros-servicos-title" className="text-xs font-bold text-slate-500">
                       Outros trabalhos deste prestador
                     </h2>
-                    <span className="text-[10px] font-bold text-slate-400">{outrosServicos.length}</span>
+                    <span className="text-xs font-bold text-slate-500">{outrosServicos.length}</span>
                   </div>
 
                   {(() => {
@@ -241,8 +241,8 @@ export default function PainelDoCliente() {
                       : `${pendenciasNosOutros} pendências em aberto com este prestador`
                     return (
                       <div className="flex items-center gap-2 rounded-xl border border-orange-100 bg-orange-50 px-3.5 py-2.5">
-                        <ShieldAlert size={13} className="shrink-0 text-orange-500" />
-                        <p className="text-[11px] font-bold text-orange-700">{texto}</p>
+                        <ShieldAlert size={13} className="shrink-0 text-orange-700" />
+                        <p className="text-xs font-bold text-orange-700">{texto}</p>
                       </div>
                     )
                   })()}
@@ -282,9 +282,9 @@ export default function PainelDoCliente() {
                       ))}
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-200 bg-white py-24 text-slate-300">
+                    <div className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-200 bg-white py-24 text-slate-500">
                       <Clock size={32} className="mb-3 opacity-40" />
-                      <p className="text-[11px] font-black uppercase tracking-widest">Nenhum trabalho por aqui ainda</p>
+                      <p className="text-xs font-bold">Nenhum trabalho por aqui ainda</p>
                     </div>
                   )}
                 </section>

@@ -84,3 +84,11 @@ Foto do Google do **prestador** não é usada de propósito: 940 dos 950 prestad
 ## Ajuda dentro da Área do cliente
 
 Cada tela termina com um bloco `ContextualHelp` (ver "Central de ajuda" em `02-arquitetura.md`): `/painel/perfil` usa o contexto `dashboard-cliente` ("Precisa de ajuda com seus trabalhos?"), `/meus-servicos` usa `meus-servicos` e `/acompanhamento/[token]` usa `acompanhamento`. Os artigos (`lib/help/help-content.ts`) seguem o mesmo vocabulário desta tela — quando um nome de status, filtro ou botão mudar aqui, o artigo correspondente (`status-do-trabalho`, `aceitar-trabalho`, `acompanhar-servico`, `avaliar-servico`) muda junto.
+
+## Tom calmo em todas as telas do cliente
+
+Todas as telas da Área do cliente (`/painel/perfil`, `/meus-servicos`, `/acompanhamento/[token]`, `/avaliar/[token]`, `/meus-dados`) seguem a mesma regra: texto com no mínimo 12px, sem itálico nem caixa-alta pesada, contraste mínimo 4,5:1 (em fundo escuro, texto claro: `slate-200`/`slate-300`) e botões de 44px. `/meus-dados` usa o mesmo fundo e o mesmo espaçamento de topo das demais.
+
+- **Compartilhar** (`useAcompanhamento.handleShare`): quando o aparelho não abre a janela de compartilhar, o link é copiado e a tela mostra um aviso (`avisoLink`, some em 4 s) — sem `alert` do navegador. Fechar a janela de compartilhar não mostra erro.
+- **Botão da home** (`HeaderBotoes`): quem só é cliente vê um único botão, "Área do cliente". Prestador continua vendo "Cliente" e "Meu Painel".
+- Textos do acompanhamento usam "trabalho" (não "serviço", "obra" ou "projeto").

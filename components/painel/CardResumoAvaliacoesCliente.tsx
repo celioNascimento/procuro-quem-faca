@@ -56,12 +56,12 @@ export function CardResumoAvaliacoesCliente({
         <Star size={22} className="text-white" fill="white" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-white font-black text-sm uppercase italic tracking-tight leading-none">
+        <p className="text-white font-bold text-sm tracking-tight leading-none">
           {stats.media.toFixed(1)} de nota média
         </p>
         <div className="mt-1.5 flex items-center gap-2">
           <StarsMini value={stats.media} />
-          <span className="text-emerald-200 text-[11px] font-medium">
+          <span className="text-emerald-200 text-xs font-medium">
             {stats.total} {stats.total === 1 ? 'avaliação' : 'avaliações'} · {percentualRecomenda}% recomenda
           </span>
         </div>

@@ -38,13 +38,13 @@ export function GarantiaAbertaCliente({ caso, clienteUserId }: Props) {
   return (
     <div className="space-y-4">
       <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 flex items-start gap-3">
-        <Clock size={18} className="text-orange-500 shrink-0 mt-0.5" />
+        <Clock size={18} className="text-orange-700 shrink-0 mt-0.5" />
         <div>
-          <p className="text-[11px] font-black uppercase tracking-wide text-orange-700 leading-none mb-1.5">
+          <p className="text-xs font-bold text-orange-700 leading-none mb-1.5">
             Aguardando resposta do prestador
           </p>
           {diasRestantes !== null && (
-            <p className="text-[10px] font-medium text-orange-700/80">
+            <p className="text-xs font-medium text-orange-700/80">
               {diasRestantes > 0
                 ? `O prestador tem ${diasRestantes} dia${diasRestantes > 1 ? 's' : ''} úteis para responder.`
                 : 'Prazo de resposta vencendo hoje.'}

@@ -31,8 +31,8 @@ export function DangerZone({ audience }: DangerZoneProps) {
           <ShieldAlert className="size-5" aria-hidden="true" />
         </div>
         <div className="flex min-w-0 flex-col gap-1">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600">{item.label}</p>
-          <h2 id={`danger-zone-${audience}-title`} className="text-base font-black text-red-950">{item.title}</h2>
+          <p className="text-xs font-bold text-red-600">{item.label}</p>
+          <h2 id={`danger-zone-${audience}-title`} className="text-base font-bold text-red-950">{item.title}</h2>
           <p className="text-[13px] leading-6 text-red-900/80">{item.description}</p>
         </div>
       </div>
@@ -42,7 +42,7 @@ export function DangerZone({ audience }: DangerZoneProps) {
       </p>
       <Link
         href="/confirmar-exclusao"
-        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-300 bg-white px-4 py-3 text-[10px] font-black uppercase tracking-widest text-red-700 transition-colors hover:bg-red-600 hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200"
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-300 bg-white px-4 py-3 text-xs font-bold text-red-700 transition-colors hover:bg-red-600 hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200"
       >
         Continuar para exclusão
         <ArrowRight className="size-4" aria-hidden="true" />

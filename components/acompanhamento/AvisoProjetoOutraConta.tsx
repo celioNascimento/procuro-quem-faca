@@ -16,10 +16,10 @@ export function AvisoProjetoOutraConta() {
         <ShieldAlert size={18} className="text-amber-600" />
       </div>
       <div>
-        <p className="text-[11px] font-black uppercase tracking-wide text-amber-900 leading-none mb-1">
+        <p className="text-xs font-bold text-amber-900 leading-none mb-1">
           Projeto vinculado a outra conta
         </p>
-        <p className="text-[11px] font-medium text-amber-800 leading-relaxed">
+        <p className="text-xs font-medium text-amber-800 leading-relaxed">
           Este serviço já está associado a outra conta. Para avaliar ou acionar a garantia,
           entre com a conta que abriu este link pela primeira vez.
         </p>

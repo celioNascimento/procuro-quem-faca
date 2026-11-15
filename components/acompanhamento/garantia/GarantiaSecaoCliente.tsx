@@ -64,7 +64,7 @@ export function GarantiaSecaoCliente({
   if (loadingCaso || loadingElegibilidade) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 size={20} className="animate-spin text-slate-300" />
+        <Loader2 size={20} className="animate-spin text-slate-500" />
       </div>
     )
   }
@@ -75,10 +75,10 @@ export function GarantiaSecaoCliente({
       if (elegibilidade?.motivo === 'fora_do_prazo') {
         return (
           <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 text-center">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
+            <p className="text-xs font-bold text-slate-500">
               {elegibilidade.tipo === 'reclamacao'
-                ? 'Prazo para reclamar deste serviço encerrado'
-                : 'Prazo de garantia deste serviço encerrado'}
+                ? 'Prazo para reclamar deste trabalho encerrado'
+                : 'Prazo de garantia deste trabalho encerrado'}
             </p>
           </div>
         )
@@ -92,10 +92,10 @@ export function GarantiaSecaoCliente({
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
         <div className="flex items-center gap-2">
           {ehReclamacao
-            ? <MessageCircleWarning size={16} className="text-orange-500" />
-            : <ShieldCheck size={16} className="text-blue-500" />}
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-            {ehReclamacao ? 'Teve algum problema?' : 'Garantia deste serviço'}
+            ? <MessageCircleWarning size={16} className="text-orange-700" />
+            : <ShieldCheck size={16} className="text-blue-600" />}
+          <h3 className="text-xs font-bold text-slate-500">
+            {ehReclamacao ? 'Teve algum problema?' : 'Garantia deste trabalho'}
           </h3>
         </div>
         <GarantiaFormAbertura
@@ -118,10 +118,10 @@ export function GarantiaSecaoCliente({
     >
       <div className="mb-5 flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">
+          <p className="text-xs font-bold text-orange-700">
             {ehReclamacao ? 'Reclamação' : 'Garantia'}
           </p>
-          <h2 id="garantia-titulo" className="mt-1 text-base font-black uppercase italic tracking-tight text-slate-800">
+          <h2 id="garantia-titulo" className="mt-1 text-base font-bold tracking-tight text-slate-800">
             Acompanhamento do caso
           </h2>
         </div>
