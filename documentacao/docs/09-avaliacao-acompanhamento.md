@@ -116,7 +116,7 @@ Além disso, como a avaliação agora grava `cliente_id`, o trigger `check_auto_
 
 `inserirAvaliacao`, `finalizarProjeto` e `marcarProjetoEmDisputa` foram removidas em 14/11/2026: após a migration 4 o banco recusa essas escritas diretas e só o fluxo antigo (também removido) as chamava.
 
-**Token secreto:** "dono" só é confiável se o token não vazar. As migrations `20261105190000` (funções, aditiva) e `20261105190100` (revoga leitura pública do token, remove vínculo por WhatsApp, trava `cliente_user_id`) fecham isso; aplicar na ordem: aditiva → deploy → restritiva. Limite residual: o modelo é de portador — quem recebe o link primeiro e loga vira dono (inclusive uma segunda conta do próprio prestador).
+**Token secreto:** "dono" só é confiável se o token não vazar. As migrations `20261105190000` (funções, aditiva) e `20261105190100` (revoga leitura pública do token, remove vínculo por WhatsApp, trava `cliente_user_id`) fecham isso; aplicadas em produção em 06/11/2026 na ordem aditiva → deploy → restritiva. Limite residual: o modelo é de portador — quem recebe o link primeiro e loga vira dono (inclusive uma segunda conta do próprio prestador).
 
 ## Garantia e reclamação
 
