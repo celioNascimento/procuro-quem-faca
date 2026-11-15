@@ -56,9 +56,9 @@ export function WizardCompleted({ hookData, prestadorId }: Props) {
 
       const mensagem =
         error.code === '23505'
-          ? 'Este cliente já foi avaliado neste serviço.'
+          ? 'Você já avaliou este cliente neste trabalho.'
           : error.code === '42501'
-            ? 'Você não tem permissão para avaliar este projeto. Verifique se o cliente está vinculado e se o serviço foi concluído.'
+            ? 'Não foi possível avaliar: o trabalho precisa estar concluído e ter um cliente com conta vinculado.'
             : error.code === '42P01'
               ? 'A função de avaliações ainda não está disponível neste ambiente.'
               : 'Não foi possível enviar agora. Tente novamente.'
@@ -157,14 +157,19 @@ export function WizardCompleted({ hookData, prestadorId }: Props) {
                 notaInicial={avaliacaoCliente!.nota}
                 motivosIniciais={avaliacaoCliente!.motivos}
               />
-              <p className="mt-3 text-center text-xs font-bold text-green-700">Avaliação do cliente registrada.</p>
+              <p className="mt-3 text-center text-sm font-semibold text-green-700">Avaliação do cliente registrada.</p>
             </>
           ) : (
-            <>
-              <AvaliacaoClienteRapida onSubmit={enviarAvaliacaoCliente} />
-              {!hookData.state.clienteUserId && <p className="mt-3 text-center text-[11px] font-bold text-amber-700">Este projeto antigo ainda não está vinculado a uma conta de cliente.</p>}
-              {erroEnvio && <p role="alert" className="mt-3 text-center text-xs font-bold text-red-600">{erroEnvio}</p>}
-            </>
+            hookData.state.clienteUserId ? (
+              <>
+                <AvaliacaoClienteRapida onSubmit={enviarAvaliacaoCliente} />
+                {erroEnvio && <p role="alert" className="mt-3 text-center text-sm font-semibold text-red-700">{erroEnvio}</p>}
+              </>
+            ) : (
+              <p className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-800">
+                Ainda não dá para avaliar este cliente: ele precisa abrir o link do trabalho e entrar com a conta dele. Depois que ele entrar, a avaliação aparece aqui.
+              </p>
+            )
           )}
         </div>
         {!semFotos && (

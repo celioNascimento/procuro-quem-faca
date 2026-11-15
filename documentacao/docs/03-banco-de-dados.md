@@ -167,7 +167,11 @@ id uuid, projeto_id uuid unique, prestador_id bigint,
 cliente_user_id uuid, nota integer (1–5, CHECK),
 motivos text[], created_at timestamptz
 ```
-RLS implementa acesso por vínculo: o prestador pode consultar as avaliações de clientes associadas aos seus prestadores, e o cliente pode consultar a própria avaliação recebida. A migration atual não implementa janela de 14 dias nem liberação condicionada ao status `finalizado` da avaliação do prestador; esse comportamento não deve ser tratado como garantia de privacidade double-blind no banco.
+Regras (migration `20261115213000_avaliacoes_clientes_seguras.sql`, já em produção):
+- **Quem pode avaliar:** só o prestador dono do trabalho, com o trabalho `finalizado`, e só o `cliente_user_id` vinculado a ele (antes bastava ser dono de qualquer perfil — falha corrigida em 15/11/2026). Uma avaliação por trabalho; sem edição nem exclusão pela API.
+- **Quem vê:** o prestador sempre vê as que fez. O cliente só vê a nota que recebeu **depois de avaliar o mesmo trabalho** (função `cliente_ja_avaliou_trabalho`, `SECURITY DEFINER`). Não há liberação por prazo: quem não avalia, não vê. A avaliação do cliente sobre o prestador continua pública como antes.
+- **Ordem livre:** prestador e cliente podem avaliar em qualquer ordem.
+- **Permissões:** `anon` sem acesso; `authenticated` só `select` e `insert`. No máximo 3 `motivos`.
 
 **Sistema de garantia (`solicitacoes_garantia`) — em produção:**
 ```sql

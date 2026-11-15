@@ -49,9 +49,9 @@ export function useAvaliacoesRecebidasCliente(clienteUserId: string | null) {
 
     queueMicrotask(() => setLoading(true))
 
-    // A RLS ("Cliente ve avaliacao recebida (double-blind)") já filtra
-    // sozinha: só retornam linhas onde o cliente avaliou de volta o
-    // prestador, ou onde já passaram 14 dias. Nenhum filtro adicional
+    // A RLS ("Cliente ve a avaliacao recebida depois de avaliar") já filtra
+    // sozinha: só retornam linhas de trabalhos em que o cliente também
+    // avaliou o prestador (sem prazo de liberação). Nenhum filtro adicional
     // é necessário aqui — o que a query devolve já é "revelado".
     supabase
       .from('avaliacoes_clientes')
