@@ -17,6 +17,7 @@ import { ContextualHelp } from '@/components/help/HelpCenter'
 import DangerZone from '@/components/account/DangerZone'
 import { DialogoAviso, DialogoConfirmacao } from '@/components/ui/Dialogo'
 import { ConvitePrestador } from '@/components/painel/ConvitePrestador'
+import { TituloArea } from '@/components/shared/TituloArea'
 
 export default function PerfilDoCliente() {
   const {
@@ -73,7 +74,7 @@ export default function PerfilDoCliente() {
 
   return (
     <main className="min-h-screen bg-[#F8FAFC] pb-12 font-sans antialiased">
-      <HeaderCliente nomeCliente={perfil.full_name} />
+      <HeaderCliente />
 
       <input type="file" ref={fileInputRef} onChange={handleUploadFoto} accept="image/*" className="hidden" />
 
@@ -105,9 +106,8 @@ export default function PerfilDoCliente() {
       )}
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-24 animate-in fade-in duration-500 sm:px-6 md:pt-26 lg:px-8">
-        <header className="mb-6 flex max-w-2xl flex-col gap-2 sm:mb-8">
-          <p className="text-xs font-semibold text-blue-700">Área do cliente</p>
-          <h1 className="text-balance text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Acompanhe seus trabalhos</h1>
+        <header className="mb-6 sm:mb-8">
+          <TituloArea area="Área do cliente" titulo="Meus trabalhos" />
         </header>
 
         <div className="mb-6 sm:mb-8">

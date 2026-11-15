@@ -15,24 +15,24 @@ const sessao = { user: { id: 'u1', user_metadata: {} } }
 describe('HeaderAuthButton', () => {
   afterEach(() => cleanup())
 
-  it('cliente vê só o acesso à conta, sem atalho para o painel profissional', () => {
+  it('cliente vê só a Área do cliente, sem atalho para a área do profissional', () => {
     estado.valor = { session: sessao, role: 'cliente', prestadorStatus: null, loading: false, erroLogin: false, loginGoogle: vi.fn() }
     render(<HeaderAuthButton />)
-    expect(screen.getByRole('link', { name: 'Minha Conta' }).getAttribute('href')).toBe('/painel/perfil')
-    expect(screen.queryByRole('link', { name: 'Meu Painel' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Área do cliente' }).getAttribute('href')).toBe('/painel/perfil')
+    expect(screen.queryByRole('link', { name: 'Área do profissional' })).toBeNull()
   })
 
-  it('prestador com cadastro completo acessa o painel e a área do cliente', () => {
+  it('profissional com cadastro completo acessa a área do profissional e a área do cliente', () => {
     estado.valor = { session: sessao, role: 'prestador', prestadorStatus: 'ativo', loading: false, erroLogin: false, loginGoogle: vi.fn() }
     render(<HeaderAuthButton />)
-    expect(screen.getAllByRole('link', { name: 'Meu Painel' })[0].getAttribute('href')).toBe('/dashboard')
-    expect(screen.getByRole('link', { name: 'Minha Conta' }).getAttribute('href')).toBe('/painel/perfil')
+    expect(screen.getAllByRole('link', { name: 'Área do profissional' })[0].getAttribute('href')).toBe('/dashboard')
+    expect(screen.getByRole('link', { name: 'Área do cliente' }).getAttribute('href')).toBe('/painel/perfil')
   })
 
-  it('prestador com cadastro pendente vê Concluir Cadastro e a área do cliente', () => {
+  it('profissional com cadastro pendente vê Concluir cadastro e a área do cliente', () => {
     estado.valor = { session: sessao, role: 'prestador', prestadorStatus: 'pendente', loading: false, erroLogin: false, loginGoogle: vi.fn() }
     render(<HeaderAuthButton />)
-    expect(screen.getAllByRole('link', { name: 'Concluir Cadastro' })[0].getAttribute('href')).toBe('/cadastro')
-    expect(screen.getByRole('link', { name: 'Minha Conta' }).getAttribute('href')).toBe('/painel/perfil')
+    expect(screen.getAllByRole('link', { name: 'Concluir cadastro' })[0].getAttribute('href')).toBe('/cadastro')
+    expect(screen.getByRole('link', { name: 'Área do cliente' }).getAttribute('href')).toBe('/painel/perfil')
   })
 })

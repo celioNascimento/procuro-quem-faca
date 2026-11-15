@@ -45,7 +45,7 @@ export default function PaginaAvaliar({
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased">
-      <HeaderCliente nomeCliente={projeto.cliente_nome} />
+      <HeaderCliente />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 md:pt-26 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex flex-col lg:flex-row lg:items-start gap-6">
