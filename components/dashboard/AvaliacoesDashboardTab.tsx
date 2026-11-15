@@ -59,7 +59,7 @@ export function AvaliacaoClienteRapida({
   }
   return (
     <div className="flex flex-col gap-5 rounded-3xl border border-slate-200 bg-white p-6">
-      <h3 className="text-lg font-black text-slate-900">
+      <h3 className="text-lg font-bold text-slate-900">
         {somenteLeitura ? 'Sua avaliação sobre este cliente' : 'Como foi atender este cliente?'}
       </h3>
       <div className="flex gap-2">
@@ -76,7 +76,7 @@ export function AvaliacaoClienteRapida({
           </button>
         ))}
       </div>
-      <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+      <p className="text-sm font-semibold text-slate-600">
         {somenteLeitura ? 'Pontos positivos selecionados' : 'Escolha até 3 pontos positivos'}
       </p>
       <div className="flex flex-wrap gap-2">
@@ -87,7 +87,7 @@ export function AvaliacaoClienteRapida({
             aria-pressed={motivos.includes(motivo)}
             disabled={somenteLeitura}
             onClick={() => alternar(motivo)}
-            className={`rounded-full border px-3 py-2 text-xs font-bold transition-colors ${motivos.includes(motivo) ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 text-slate-600 hover:border-blue-300'} ${somenteLeitura ? 'cursor-default opacity-80' : ''}`}
+            className={`min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${motivos.includes(motivo) ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 text-slate-700 hover:border-blue-300'} ${somenteLeitura ? 'cursor-default' : ''}`}
           >
             {motivo}
           </button>
@@ -98,11 +98,14 @@ export function AvaliacaoClienteRapida({
           type="button"
           disabled={!nota}
           onClick={() => onSubmit(nota, motivos)}
-          className="min-h-11 rounded-xl bg-blue-600 px-4 py-3 text-xs font-black uppercase tracking-wide text-white disabled:cursor-not-allowed disabled:opacity-40"
+          className="min-h-11 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
         >
           Enviar avaliação
         </button>
       )}
+      <p className="text-sm leading-relaxed text-slate-600">
+        O cliente só vê esta avaliação depois de avaliar o seu trabalho. Quem não avalia, não vê.
+      </p>
     </div>
   )
 }

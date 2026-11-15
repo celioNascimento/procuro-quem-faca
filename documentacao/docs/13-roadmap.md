@@ -6,6 +6,8 @@ Funcionalidades planejadas ou em avaliação, e pendências técnicas conhecidas
 
 ### Avaliação bidirecional (prestador avalia cliente)
 
+**Andamento (15/11/2026):** implementado (nota 1–5 + até 3 pontos positivos, sem texto livre). Regra definida: as duas avaliações podem ser feitas em qualquer ordem e o cliente só vê a que recebeu depois de avaliar também (detalhes em `03-banco-de-dados.md`). Abaixo, o texto original da proposta.
+
 **Problema:** hoje a confiança é assimétrica — só o prestador é avaliado.
 
 **Proposta de MVP:** nota (1–5) + tags rápidas ("Pagamento em dia", "Comunicação clara", "Ambiente organizado"), sem texto livre. Não público — só resumo agregado para o próximo prestador que for atender aquele cliente.
