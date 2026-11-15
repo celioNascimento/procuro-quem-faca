@@ -259,3 +259,21 @@ Cadeia de verificação: `auth.uid() → prestadores.user_id → prestadores.id 
 ## Migrations
 
 Localizadas em `supabase/`.
+
+## Auditoria de acesso (15/11/2026)
+
+Migration `20261115230000_rls_denuncias_comentarios_geografia.sql` (já em produção). Brechas fechadas, todas confirmadas com testes em transação revertida:
+
+| Tabela | Antes | Agora |
+|---|---|---|
+| `denuncias` | qualquer usuário logado lia e alterava todas | só administrador lê e altera; qualquer pessoa ainda pode denunciar (status inicial `aberta`) |
+| `portfolio_comentarios` | qualquer pessoa, até sem login, lia, criava, alterava e apagava | só quem participa do trabalho lê e comenta (cliente vinculado como `cliente`, prestador dono como `prestador`); a foto tem de ser do mesmo trabalho; sem editar nem apagar |
+| `projeto_mensagens` | leitura e inserção abertas a qualquer logado (tabela sem uso no app) | só quem participa do trabalho |
+| `cidades`, `estados`, `regioes` | "Admin pode…" sem checar admin | checa `is_admin()` de verdade |
+| todas as tabelas | `anon` e `authenticated` com TRUNCATE, REFERENCES e TRIGGER | retirados (padrão do Supabase que nenhuma tela usa) |
+
+Função de apoio: `usuario_tem_papel_no_projeto(projeto, papel)` (`SECURITY DEFINER`, só `authenticated`): diz se a pessoa logada é o cliente vinculado, o prestador dono, ou qualquer dos dois.
+
+**Conferido e deixado como está (intencional):** funções `SECURITY DEFINER` chamáveis por quem não está logado são só as de token (`consultar_perfil_por_token`, `excluir_perfil_por_token`, onde o token é a credencial) e a do formulário do titular de dados; as de administração (`admin_*`, `anonimizar_dados_titular`, `excluir_prestador_titular`) conferem `is_admin()` dentro da função; `prestadores` tem um gatilho que protege campos sensíveis. `logs_atividades` e `visitas_perfil` aceitam inserção pública por desenho (rastreio).
+
+**Ainda em aberto:** proteção contra senhas vazadas do Supabase Auth está desligada (só vale se houver login por senha; hoje o login é Google); `usuario_tem_acesso_ao_caso_garantia` pode ser chamada por `anon` (não retorna nada útil, mas uma política da garantia pode depender disso — revisar antes de retirar); tabelas `prestador_tokens`, `rastreio_*` e `retencao_regras` têm RLS ligada e nenhuma política (acesso só pelo servidor, o que é o desejado).
