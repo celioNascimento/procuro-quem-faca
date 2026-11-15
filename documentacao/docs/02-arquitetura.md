@@ -223,6 +223,8 @@ Os ids `acompanhar-servico` e `avaliar-servico` mantêm o nome antigo de propós
 
 **Como adicionar um artigo:** criar o objeto em `helpArticles` (id novo, `audiences`, `contexts`, passos curtos de uma ação cada) → se for atalho de uma tela, usar o contexto dela da tabela acima → rodar `npx vitest run lib/help`.
 
+**Chat guiado (sem IA):** `/ajuda` abre com `components/help/ChatAjuda.tsx` ("Converse com a Ajuda"), acima da busca por assunto. A pessoa escolhe uma opção ou escreve a dúvida com as próprias palavras; o chat responde com o resumo e os passos do artigo certo, pergunta "Isso resolveu a sua dúvida?" e, se não, oferece outros artigos parecidos ou a equipe pelo WhatsApp do PQF (`lib/config/contato.ts`, com a dúvida já escrita e só "Sou cliente/prestador", sem dados pessoais). A lógica fica em `lib/help/chat-ajuda.ts` (`buscarRespostas` compara palavras sem acento e pelo começo da palavra, ignora palavras sem valor como "como", "para", "quero"; `sugestoesIniciais` põe primeiro os artigos da tela de origem). Não usa IA nem servidor: as respostas são só os artigos de `help-content.ts`, então **todo artigo novo já aparece no chat**. Só as opções da última resposta ficam clicáveis; o resto vira histórico. Quando o chat não acha nada, ele diz isso e oferece o WhatsApp. Público (cliente ou prestador) vem da mesma regra da página (`?publico=prestador`).
+
 **Acesso à Ajuda:** além dos blocos `ContextualHelp` e do sitemap, o rodapé do site (`components/Footer.tsx`) tem o link "Ajuda" para `/ajuda`. O site não tem menu de navegação (o cabeçalho só tem os botões de entrada/área), então o rodapé é o único lugar fixo. O cabeçalho de `/ajuda` e os rótulos dos cartões seguem o tom calmo (sem caixa-alta pequena).
 
 ## Testes
