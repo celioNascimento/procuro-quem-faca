@@ -8,6 +8,8 @@ import { ROTULO_TIPO_PEDIDO } from '@/lib/titular/pedido'
 export interface EmailNotificacao {
   assunto: string
   texto: string
+  /** Destinatário. Sem ele, o aviso vai para o administrador (destino padrão). */
+  para?: string
 }
 
 export interface Pendencias {

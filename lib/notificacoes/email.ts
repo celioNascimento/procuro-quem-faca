@@ -21,7 +21,7 @@ export async function enviarEmail(
   const chave = env.RESEND_API_KEY
   if (!chave) return { enviado: false, motivo: 'sem_chave' }
 
-  const destino = env.NOTIFICACAO_EMAIL_DESTINO || NOTIFICACOES.destinoPadrao
+  const destino = email.para || env.NOTIFICACAO_EMAIL_DESTINO || NOTIFICACOES.destinoPadrao
   const remetente = env.NOTIFICACAO_EMAIL_REMETENTE || NOTIFICACOES.remetentePadrao
 
   const controle = new AbortController()

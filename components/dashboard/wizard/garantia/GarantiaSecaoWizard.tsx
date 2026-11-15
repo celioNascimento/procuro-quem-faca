@@ -49,7 +49,7 @@ export function GarantiaSecaoWizard({ prestadorId, caso, loadingCaso, recarregar
       )}
 
       {caso.status === 'aberta' && (
-        <GarantiaAberta caso={caso} prestadorId={prestadorId} onAtualizado={recarregar} />
+        <GarantiaAberta caso={caso} onAtualizado={recarregar} />
       )}
 
       {caso.status === 'respondida' && (

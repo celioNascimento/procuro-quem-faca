@@ -6,7 +6,7 @@
 // de leitura/escrita cruzada entre buckets com policies diferentes.
 //
 // Chamado quando um caso de garantia fecha como 'resolvida'
-// (ver garantia.service.ts -> confirmarResolucaoGarantia).
+// (ver garantia.service.ts -> confirmarResolucaoGarantia). Exige sessão e que o caso seja do próprio cliente.
 //
 // IMPORTANTE — pré-requisitos de infraestrutura que este código assume:
 //  1. Bucket 'garantia' existe e é PRIVADO
@@ -19,30 +19,49 @@
 // funcionar.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 const BUCKET_PRIVADO = 'garantia'
 const BUCKET_PUBLICO = 'garantia-publico'
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function POST(req: NextRequest) {
   try {
-    const { casoId } = await req.json()
+    const corpo = await req.json().catch(() => null)
+    const casoId = corpo?.casoId
 
-    if (!casoId) {
+    if (typeof casoId !== 'string' || !UUID.test(casoId)) {
       return NextResponse.json({ error: 'casoId é obrigatório' }, { status: 400 })
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY
+    // Quem chama precisa estar logado e ser o CLIENTE do caso (é ele quem confirma a resolução).
+    // A leitura usa a sessão da pessoa: o RLS só devolve o caso se ela for parte dele.
+    const sessao = await createClient()
+    const { data: auth } = await sessao.auth.getUser()
+    if (!auth?.user) return NextResponse.json({ error: 'Faça login para continuar.' }, { status: 401 })
 
-    if (!supabaseUrl || !serviceRoleKey) {
+    const { data: caso } = await sessao
+      .from('solicitacoes_garantia')
+      .select('id, status, cliente_user_id')
+      .eq('id', casoId)
+      .maybeSingle()
+
+    if (!caso || caso.cliente_user_id !== auth.user.id) {
+      return NextResponse.json({ error: 'Caso não encontrado.' }, { status: 404 })
+    }
+    if (caso.status !== 'resolvida') {
+      return NextResponse.json({ error: 'As fotos só são publicadas depois que o caso é resolvido.' }, { status: 409 })
+    }
+
+    // Client administrativo só para copiar entre buckets e marcar a foto como pública
+    let supabaseAdmin
+    try {
+      supabaseAdmin = getAdminClient()
+    } catch {
       console.error('[promover-fotos] Configuração Supabase administrativa ausente')
       return NextResponse.json({ error: 'Serviço temporariamente indisponível' }, { status: 503 })
     }
-
-    // Client com service role — criado apenas quando a rota é chamada,
-    // nunca durante a geração de páginas no build.
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
 
     // Busca só as fotos de resolução ainda não promovidas
     const { data: fotos, error: fotosError } = await supabaseAdmin
@@ -113,11 +132,4 @@ export async function POST(req: NextRequest) {
     console.error('Erro ao promover fotos de garantia:', err)
     return NextResponse.json({ error: 'Erro interno ao promover fotos.' }, { status: 500 })
   }
-}
-
-function extrairPathDoBucket(url: string, bucket: string): string | null {
-  const marcador = `/storage/v1/object/public/${bucket}/`
-  const idx = url.indexOf(marcador)
-  if (idx === -1) return null
-  return url.slice(idx + marcador.length)
 }

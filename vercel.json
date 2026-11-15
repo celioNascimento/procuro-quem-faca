@@ -1,5 +1,6 @@
 {
   "crons": [
-    { "path": "/api/cron/resumo-pendencias", "schedule": "0 11 * * *" }
+    { "path": "/api/cron/resumo-pendencias", "schedule": "0 11 * * *" },
+    { "path": "/api/cron/garantia-vencidos", "schedule": "0 12 * * *" }
   ]
 }

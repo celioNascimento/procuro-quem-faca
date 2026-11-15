@@ -11,7 +11,7 @@ import { useState } from 'react'
 import { CheckCircle2, RotateCcw, Star, Loader2, AlertCircle } from 'lucide-react'
 import type { CasoGarantia } from '@/hooks/useCasoGarantiaDoProjeto'
 import { useGarantiaWizard } from '@/hooks/useGarantiaWizard'
-import { confirmarResolucaoGarantia, reabrirCasoGarantia } from '@/lib/services/garantia.service'
+import { confirmarResolucaoGarantia, reabrirCasoGarantia, ErroGarantia } from '@/lib/services/garantia.service'
 import { GarantiaCarrossel } from '@/components/dashboard/wizard/garantia/GarantiaCarrossel'
 import { GarantiaComentarios } from '@/components/dashboard/wizard/garantia/GarantiaComentarios'
 
@@ -46,7 +46,6 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
 
       await confirmarResolucaoGarantia(
         caso.id,
-        clienteUserId,
         descricaoResolucao.trim(),
         fotosResolucao,
         caso.origem === 'prestador' ? undefined : notaNova,
@@ -70,7 +69,7 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
       onAtualizado()
     } catch (err) {
       console.error('Erro ao confirmar resolução:', err)
-      setErro('Não foi possível confirmar. Tente novamente.')
+      setErro(err instanceof ErroGarantia ? err.message : 'Não foi possível confirmar. Tente novamente.')
     } finally {
       setProcessando(false)
     }
@@ -81,11 +80,11 @@ export function GarantiaRespondidaCliente({ caso, clienteUserId, onAtualizado }:
     setProcessando(true)
     setErro(null)
     try {
-      await reabrirCasoGarantia(caso.id, clienteUserId)
+      await reabrirCasoGarantia(caso.id)
       onAtualizado()
     } catch (err) {
       console.error('Erro ao reabrir caso:', err)
-      setErro('Não foi possível reabrir o caso. Tente novamente.')
+      setErro(err instanceof ErroGarantia ? err.message : 'Não foi possível reabrir o caso. Tente novamente.')
     } finally {
       setProcessando(false)
     }

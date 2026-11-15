@@ -15,7 +15,7 @@
 
 import { useState } from 'react'
 import { AlertCircle, Camera, Loader2, Send } from 'lucide-react'
-import { abrirCasoGarantiaCliente } from '@/lib/services/garantia.service'
+import { abrirCasoGarantiaCliente, ErroGarantia } from '@/lib/services/garantia.service'
 import { useGarantiaWizard } from '@/hooks/useGarantiaWizard'
 import { FotoGarantia } from '@/components/dashboard/wizard/garantia/FotoGarantia'
 
@@ -53,13 +53,12 @@ export function GarantiaFormAbertura({ projetoId, clienteUserId, tipo, onAberto 
     try {
       const caso = await abrirCasoGarantiaCliente({
         projetoId,
-        clienteUserId,
         descricaoProblema: descricao.trim(),
       })
       setCasoIdRecemCriado(caso.id)
     } catch (err) {
       console.error('Erro ao abrir caso:', err)
-      setErro('Não foi possível abrir o caso. Tente novamente.')
+      setErro(err instanceof ErroGarantia ? err.message : 'Não foi possível abrir o caso. Tente novamente.')
     } finally {
       setEnviando(false)
     }

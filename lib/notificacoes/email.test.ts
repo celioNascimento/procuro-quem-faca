@@ -45,6 +45,12 @@ describe('enviarEmail', () => {
     expect(corpo.from).toBe('PQF <avisos@meudominio.com>')
   })
 
+  it('envia para o destinatário do próprio e-mail quando informado', async () => {
+    fetchMock.mockResolvedValue({ ok: true, status: 200 })
+    await enviarEmail({ ...email, para: 'cliente@exemplo.com' }, { RESEND_API_KEY: 're_teste', NOTIFICACAO_EMAIL_DESTINO: 'admin@exemplo.com' })
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).to).toEqual(['cliente@exemplo.com'])
+  })
+
   it('serviço recusando vira resultado, não exceção', async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 403 })
     await expect(enviarEmail(email, { RESEND_API_KEY: 're_teste' })).resolves.toEqual({

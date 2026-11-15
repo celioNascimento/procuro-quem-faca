@@ -6,7 +6,7 @@
 // Duas camadas distintas de interação, propositalmente separadas:
 //  1. Comentários (conversa livre, via useGarantiaWizard) — não muda status
 //  2. "Registrar proposta de solução" (texto mínimo obrigatório + botão) —
-//     é o que efetivamente chama /api/garantia/responder e move o caso para
+//     é o que efetivamente chama o serviço (rota autenticada) e move o caso para
 //     'respondida'. Comentar não é o mesmo que se comprometer a resolver.
 
 'use client'
@@ -14,6 +14,7 @@
 import { useState, useEffect } from 'react'
 import { AlertTriangle, Send, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { ErroGarantia, responderCasoGarantia } from '@/lib/services/garantia.service'
 import type { CasoGarantia } from '@/hooks/useCasoGarantiaDoProjeto'
 import { useGarantiaWizard } from '@/hooks/useGarantiaWizard'
 import { GarantiaCarrossel } from './GarantiaCarrossel'
@@ -21,13 +22,12 @@ import { GarantiaComentarios } from './GarantiaComentarios'
 
 interface Props {
   caso: CasoGarantia
-  prestadorId: number
   onAtualizado: () => void
 }
 
 const MIN_CARACTERES_PROPOSTA = 20
 
-export function GarantiaAberta({ caso, prestadorId, onAtualizado }: Props) {
+export function GarantiaAberta({ caso, onAtualizado }: Props) {
   const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -57,25 +57,11 @@ export function GarantiaAberta({ caso, prestadorId, onAtualizado }: Props) {
     setEnviandoProposta(true)
     setErroProposta(null)
     try {
-      const res = await fetch('/api/garantia/responder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          casoId: caso.id,
-          prestadorId,
-          resposta: proposta.trim(),
-        }),
-      })
-
-      if (!res.ok) {
-        const { error } = await res.json()
-        throw new Error(error)
-      }
-
+      await responderCasoGarantia(caso.id, proposta.trim())
       onAtualizado() // recarrega o caso no orquestrador, troca para GarantiaRespondida
     } catch (err) {
       console.error('Erro ao registrar proposta de solução:', err)
-      setErroProposta('Não foi possível registrar sua proposta. Tente novamente.')
+      setErroProposta(err instanceof ErroGarantia ? err.message : 'Não foi possível registrar sua proposta. Tente novamente.')
     } finally {
       setEnviandoProposta(false)
     }

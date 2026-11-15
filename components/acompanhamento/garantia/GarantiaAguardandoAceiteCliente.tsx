@@ -10,7 +10,7 @@
 import { useState } from 'react'
 import { Check, X, Loader2, HandHeart } from 'lucide-react'
 import type { CasoGarantia } from '@/hooks/useCasoGarantiaDoProjeto'
-import { aceitarOfertaReparo, recusarOfertaReparo } from '@/lib/services/garantia.service'
+import { aceitarOfertaReparo, recusarOfertaReparo, ErroGarantia } from '@/lib/services/garantia.service'
 
 interface Props {
   caso: CasoGarantia
@@ -19,14 +19,17 @@ interface Props {
 
 export function GarantiaAguardandoAceiteCliente({ caso, onAtualizado }: Props) {
   const [processando, setProcessando] = useState<'aceitar' | 'recusar' | null>(null)
+  const [erro, setErro] = useState<string | null>(null)
 
   const handleAceitar = async () => {
     setProcessando('aceitar')
+    setErro(null)
     try {
-      await aceitarOfertaReparo(caso.id, caso.cliente_user_id)
+      await aceitarOfertaReparo(caso.id)
       onAtualizado()
     } catch (err) {
       console.error('Erro ao aceitar oferta de reparo:', err)
+      setErro(err instanceof ErroGarantia ? err.message : 'Não foi possível aceitar agora. Tente novamente.')
     } finally {
       setProcessando(null)
     }
@@ -34,11 +37,13 @@ export function GarantiaAguardandoAceiteCliente({ caso, onAtualizado }: Props) {
 
   const handleRecusar = async () => {
     setProcessando('recusar')
+    setErro(null)
     try {
-      await recusarOfertaReparo(caso.id, caso.cliente_user_id)
+      await recusarOfertaReparo(caso.id)
       onAtualizado()
     } catch (err) {
       console.error('Erro ao recusar oferta de reparo:', err)
+      setErro(err instanceof ErroGarantia ? err.message : 'Não foi possível recusar agora. Tente novamente.')
     } finally {
       setProcessando(null)
     }
@@ -57,6 +62,8 @@ export function GarantiaAguardandoAceiteCliente({ caso, onAtualizado }: Props) {
           </p>
         </div>
       </div>
+
+      {erro && <p role="alert" className="text-[11px] font-bold text-red-600">{erro}</p>}
 
       <div className="flex gap-2">
         <button
