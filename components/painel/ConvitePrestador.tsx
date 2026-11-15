@@ -15,7 +15,7 @@ export function ConvitePrestador() {
   if (role === 'prestador') return null
 
   return (
-    <p className="mt-1 text-[13px] text-slate-600">
+    <p className="text-[13px] text-slate-600">
       Oferece algum serviço?{' '}
       {/* Área de toque de 44px sem aumentar o espaço do texto (o padding é compensado pela margem negativa). */}
       <Link

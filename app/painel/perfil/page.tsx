@@ -106,9 +106,8 @@ export default function PerfilDoCliente() {
       )}
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-24 animate-in fade-in duration-500 sm:px-6 md:pt-26 lg:px-8">
-        <header className="mb-6 sm:mb-8">
+        <header className="mb-5 sm:mb-6">
           <TituloArea area="Área do cliente" titulo="Meus trabalhos" />
-          <ConvitePrestador />
         </header>
 
         <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[20rem_minmax(0,1fr)]">
@@ -377,7 +376,8 @@ export default function PerfilDoCliente() {
               </div>
             )}
 
-            <div className="pt-2 sm:pt-4">
+            <div className="space-y-2 pt-2 sm:pt-4">
+              <ConvitePrestador />
               <ContextualHelp context="dashboard-cliente" audience="cliente" title="Precisa de ajuda com seus trabalhos?" />
             </div>
           </div>
