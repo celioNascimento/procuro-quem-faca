@@ -17,9 +17,10 @@ export function ConvitePrestador() {
   return (
     <p className="text-[13px] text-slate-600">
       Oferece algum serviço?{' '}
+      {/* Área de toque de 44px sem aumentar o espaço do texto (o padding é compensado pela margem negativa). */}
       <Link
         href="/cadastro"
-        className="inline-flex min-h-11 items-center font-semibold text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 rounded"
+        className="inline-block py-3 -my-3 font-semibold text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 rounded"
       >
         Cadastre-se como prestador
       </Link>

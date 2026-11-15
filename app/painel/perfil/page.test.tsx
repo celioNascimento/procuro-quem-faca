@@ -78,7 +78,7 @@ describe('/painel/perfil', () => {
     expect(screen.getByText('Aguardando o prestador. Toque para acompanhar')).toBeTruthy()
   })
 
-  it('na aba Minha conta os campos têm rótulo ligado', () => {
+  it('na aba Meus dados os campos têm rótulo ligado', () => {
     estado.valor = base({ aba: 'dados' })
     render(<PerfilDoCliente />)
     for (const nome of ['Nome completo', 'WhatsApp', 'Logradouro', 'Nº', 'Bairro', 'Complemento', 'UF', 'Cidade']) {

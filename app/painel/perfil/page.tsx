@@ -106,13 +106,9 @@ export default function PerfilDoCliente() {
       )}
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-24 animate-in fade-in duration-500 sm:px-6 md:pt-26 lg:px-8">
-        <header className="mb-6 sm:mb-8">
+        <header className="mb-5 sm:mb-6">
           <TituloArea area="Área do cliente" titulo="Meus trabalhos" />
         </header>
-
-        <div className="mb-6 sm:mb-8">
-          <ConvitePrestador />
-        </div>
 
         <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[20rem_minmax(0,1fr)]">
           <aside className="min-w-0 lg:sticky lg:top-22">
@@ -214,7 +210,7 @@ export default function PerfilDoCliente() {
               className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-18"
               aria-label="Seções do painel"
             >
-              {[{ id: 'servicos', label: 'Meus trabalhos' }, { id: 'dados', label: 'Minha conta' }].map(a => (
+              {[{ id: 'servicos', label: 'Meus trabalhos' }, { id: 'dados', label: 'Meus dados' }].map(a => (
                 <button
                   key={a.id}
                   type="button"
@@ -380,7 +376,8 @@ export default function PerfilDoCliente() {
               </div>
             )}
 
-            <div className="pt-2 sm:pt-4">
+            <div className="space-y-2 pt-2 sm:pt-4">
+              <ConvitePrestador />
               <ContextualHelp context="dashboard-cliente" audience="cliente" title="Precisa de ajuda com seus trabalhos?" />
             </div>
           </div>

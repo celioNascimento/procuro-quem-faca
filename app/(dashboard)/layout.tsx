@@ -13,7 +13,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-[#F8FAFC] font-sans antialiased">
       <Header href={fallback} />
 
-      <main className="mx-auto w-full max-w-7xl px-4 pb-4 pt-16 sm:px-6 sm:pt-28 md:pb-8 md:pt-26 lg:px-8">
+      {/* Mesmo recuo do topo da área do cliente (app/painel/perfil): o título fica à mesma distância do cabeçalho. */}
+      <main className="mx-auto w-full max-w-7xl px-4 pb-4 pt-24 sm:px-6 md:pb-8 md:pt-26 lg:px-8">
         <div className="w-full">
           {children}
         </div>
