@@ -33,18 +33,20 @@ export function HeaderAuthButton() {
   if (session) {
     // Alinhado com o resolverDestinoPosLogin: se não tem role, tratamos visualmente como cliente
     const safeRole = role || 'cliente'
+    const ehPrestador = safeRole === 'prestador'
 
-    const destinoPainel = safeRole === 'prestador' 
-      ? (prestadorStatus === 'pendente' ? '/cadastro' : '/dashboard')
-      : '/painel/perfil'
-      
-    const labelPainel = safeRole === 'prestador'
-      ? (prestadorStatus === 'pendente' ? 'Concluir Cadastro' : 'Meu Painel')
-      : 'Minha Conta'
-      
-    const IconePainel = safeRole === 'prestador'
-      ? (prestadorStatus === 'pendente' ? CheckCircle : LayoutDashboard)
-      : User
+    // Área do cliente: sempre disponível.
+    const areaCliente = { href: '/painel/perfil', label: 'Minha Conta', Icone: User }
+
+    // Área do prestador: só existe para quem tem perfil profissional (ou começou o cadastro).
+    const areaProfissional = prestadorStatus === 'pendente'
+      ? { href: '/cadastro', label: 'Concluir Cadastro', Icone: CheckCircle }
+      : { href: '/dashboard', label: 'Meu Painel', Icone: LayoutDashboard }
+
+    // Botão principal segue a área em que a pessoa mais atua; prestador ganha atalho para a outra.
+    const principal = ehPrestador ? areaProfissional : areaCliente
+    const outra = ehPrestador ? areaCliente : null
+    const IconePrincipal = principal.Icone
 
     return (
       <div className="relative" ref={ref}>
@@ -52,7 +54,7 @@ export function HeaderAuthButton() {
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-2">
           <Link
-            href={destinoPainel}
+            href={principal.href}
             className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-1 pr-4 shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50"
           >
             <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
@@ -69,9 +71,20 @@ export function HeaderAuthButton() {
               )}
             </div>
             <span className="whitespace-nowrap text-sm font-semibold text-slate-700">
-              {labelPainel}
+              {principal.label}
             </span>
           </Link>
+
+          {outra && (
+            <Link
+              href={outra.href}
+              title={outra.label}
+              aria-label={outra.label}
+              className="flex size-11 items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-600 transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 active:scale-95"
+            >
+              <outra.Icone size={16} />
+            </Link>
+          )}
 
           <button
             onClick={() => logout({ origem: 'header_principal', redirectTo: '/' })}
@@ -108,13 +121,23 @@ export function HeaderAuthButton() {
           {aberto && (
             <div className="absolute right-0 top-12 w-52 bg-white rounded-2xl border border-slate-100 shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
               <Link
-                href={destinoPainel}
+                href={principal.href}
                 onClick={() => setAberto(false)}
                 className="flex items-center gap-3 min-h-11 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
               >
-                <IconePainel size={16} />
-                {labelPainel}
+                <IconePrincipal size={16} />
+                {principal.label}
               </Link>
+              {outra && (
+                <Link
+                  href={outra.href}
+                  onClick={() => setAberto(false)}
+                  className="flex items-center gap-3 min-h-11 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  <outra.Icone size={16} />
+                  {outra.label}
+                </Link>
+              )}
               <div className="h-px bg-slate-100 mx-3" />
                  <button
                 onClick={() => { logout({ origem: 'header_principal', redirectTo: '/' }); setAberto(false) }}
@@ -123,7 +146,7 @@ export function HeaderAuthButton() {
                 <LogOut size={16} />
                 Sair
               </button>
-              
+
             </div>
           )}
         </div>
