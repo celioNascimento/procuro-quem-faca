@@ -12,7 +12,7 @@ export default function GoogleButton({ text = "Continuar com Google", onLog, rol
     <button
       onClick={handleLogin}
       disabled={isRedirecting}
-      className="w-full flex items-center justify-center gap-4 bg-white border-2 border-slate-100 p-4 rounded-3xl font-black text-slate-700 text-sm uppercase tracking-tighter hover:border-blue-500 hover:bg-blue-50/30 transition-all active:scale-95 disabled:opacity-70"
+      className="w-full min-h-[44px] flex items-center justify-center gap-4 bg-white border-2 border-slate-200 p-4 rounded-3xl font-semibold text-slate-800 text-[15px] lg:text-[16px] hover:border-blue-500 hover:bg-blue-50/30 transition-all active:scale-95 disabled:opacity-70"
     >
       {isRedirecting ? (
         <div className="w-5 h-5 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
