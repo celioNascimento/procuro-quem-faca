@@ -1,7 +1,8 @@
 -- 20261115195534_garantia_funcoes_seguras.sql
 --
 -- JÁ APLICADA em produção em 15/11/2026 (via MCP). Este arquivo registra o estado resultante, para
--- o repositório e o banco não divergirem. É idempotente (CREATE OR REPLACE / REVOKE / GRANT):
+-- o repositório e o banco não divergirem. (Conferido contra o banco em 15/11/2026: índice de um caso
+-- ativo por projeto e limites das fotos estavam aplicados e faltavam neste arquivo — itens 10b e 10c.) É idempotente (CREATE OR REPLACE / REVOKE / GRANT):
 -- rodar de novo não muda nada.
 --
 -- Por quê: a tabela solicitacoes_garantia aceitava INSERT/UPDATE direto do navegador (cliente e
@@ -351,6 +352,22 @@ begin
   returning sg.id, sg.prestador_id, sg.cliente_user_id, 'recusada'::text;
 end;
 $function$;
+
+-- 10b) Um caso ativo por projeto, garantido pelo próprio banco (a função confere antes de inserir, mas
+--      duas abas abrindo ao mesmo tempo passariam pela conferência; o índice impede de verdade).
+create unique index if not exists uq_solicitacoes_garantia_um_ativo_por_projeto
+  on public.solicitacoes_garantia (projeto_id)
+  where status in ('aguardando_aceite_cliente', 'aberta', 'respondida');
+
+-- 10c) Fotos do caso: ninguém marca foto como pública pelo navegador (só a rota promover-fotos, com a
+--      chave do servidor, depois que o caso está resolvido), e o único campo editável é a legenda.
+drop policy if exists insercao_garantia_fotos_dono_do_caso on public.garantia_fotos;
+create policy insercao_garantia_fotos_dono_do_caso on public.garantia_fotos
+  for insert to authenticated
+  with check (public.usuario_tem_acesso_ao_caso_garantia(caso_id) and coalesce(publica, false) = false);
+
+revoke update on public.garantia_fotos from anon, authenticated;
+grant update (legenda) on public.garantia_fotos to authenticated;
 
 -- 11) Quem pode EXECUTAR: ninguém anônimo; logado só as funções de ação; a rotina de prazos, só o servidor.
 revoke execute on function
