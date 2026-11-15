@@ -49,8 +49,8 @@ export const helpArticles: HelpArticle[] = [
     steps: ['Abra o trabalho na Área do cliente e vá até a seção Garantia (ou Reclamação, quando o prestador não oferece garantia).', 'Descreva o ocorrido e, quando for pedido, envie fotos para contextualizar o caso. Respeite o prazo mostrado na tela.', 'Acompanhe a resposta do prestador. Quando ele responder, o aviso laranja da Área do cliente muda para "Falta a sua resposta". Se ele oferecer um reparo, você pode aceitar ou recusar.', 'Quando o problema for resolvido, confirme a resolução. Se não foi, reabra o caso.', 'Se o prestador não responder no prazo, o caso é encerrado automaticamente como "sem resposta".', 'Depois que o caso for encerrado, o que foi escrito e a resposta do prestador podem aparecer no perfil público dele. Evite colocar telefone ou endereço no texto.'], related: ['status-do-trabalho', 'acompanhar-atualizacoes']
   },
   {
-    id: 'minha-conta-cliente', title: 'Como atualizar meus dados e minha foto', summary: 'Na aba Minha conta você mantém nome, WhatsApp, endereço e foto atualizados.', category: 'Minha conta', audiences: ['cliente'], contexts: ['dashboard-cliente', 'perfil-cliente'],
-    steps: ['Abra a Área do cliente e toque na aba Minha conta.', 'Para trocar a foto, toque no seu avatar no cartão de perfil (até 10 MB).', 'Atualize nome, WhatsApp (com DDD) e endereço e toque em Salvar alterações.', 'Se tentar sair com alterações não salvas, o app pergunta antes de descartar.'], related: ['conta-e-seguranca']
+    id: 'minha-conta-cliente', title: 'Como atualizar meus dados e minha foto', summary: 'Na aba Meus dados você mantém nome, WhatsApp, endereço e foto atualizados.', category: 'Meus dados', audiences: ['cliente'], contexts: ['dashboard-cliente', 'perfil-cliente'],
+    steps: ['Abra a Área do cliente e toque na aba Meus dados.', 'Para trocar a foto, toque no seu avatar no cartão de perfil (até 10 MB).', 'Atualize nome, WhatsApp (com DDD) e endereço e toque em Salvar alterações.', 'Se tentar sair com alterações não salvas, o app pergunta antes de descartar.'], related: ['conta-e-seguranca']
   },
   {
     id: 'responder-garantia', title: 'Como responder a uma garantia ou reclamação', summary: 'Quando um cliente abre um caso, você tem 5 dias úteis para responder. Também dá para oferecer reparo a uma avaliação negativa.', category: 'Garantia', audiences: ['prestador'], contexts: ['dashboard-prestador'],
@@ -90,7 +90,7 @@ export const helpArticles: HelpArticle[] = [
   },
   {
     id: 'conta-e-seguranca', title: 'Conta, privacidade e segurança', summary: 'Mantenha seus dados atualizados e use somente os canais oficiais do projeto.', category: 'Conta', audiences: ['cliente', 'publico'], contexts: ['login', 'cadastro', 'perfil-cliente'],
-    steps: ['Entre com seu e-mail para acessar a conta.', 'Use a recuperação de senha caso não consiga entrar.', 'Para ver e baixar uma cópia dos seus dados, use o link "ver e baixar seus dados" na aba Minha conta (ou a página Meus dados).', 'Para excluir a conta, siga o fluxo de confirmação e leia a política de privacidade.', 'Se aparecer em uma foto que não autorizou, use o botão de denúncia do perfil para pedir a remoção.']
+    steps: ['Entre com seu e-mail para acessar a conta.', 'Use a recuperação de senha caso não consiga entrar.', 'Para ver e baixar uma cópia dos seus dados, use o link "ver e baixar seus dados" na aba Meus dados (ou a página Meus dados).', 'Para excluir a conta, siga o fluxo de confirmação e leia a política de privacidade.', 'Se aparecer em uma foto que não autorizou, use o botão de denúncia do perfil para pedir a remoção.']
   },
 ]
 

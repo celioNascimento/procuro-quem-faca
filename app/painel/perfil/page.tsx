@@ -214,7 +214,7 @@ export default function PerfilDoCliente() {
               className="sticky top-16 z-40 flex gap-1 rounded-2xl border border-slate-200 bg-[#F8FAFC]/95 p-1.5 shadow-sm backdrop-blur-md md:top-18"
               aria-label="Seções do painel"
             >
-              {[{ id: 'servicos', label: 'Meus trabalhos' }, { id: 'dados', label: 'Minha conta' }].map(a => (
+              {[{ id: 'servicos', label: 'Meus trabalhos' }, { id: 'dados', label: 'Meus dados' }].map(a => (
                 <button
                   key={a.id}
                   type="button"
