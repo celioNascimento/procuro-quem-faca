@@ -4,7 +4,7 @@
 // O nome do ícone vem do banco (categorias_grupos.icone); aqui ele vira componente e cor.
 // Ícone desconhecido devolve null e o card cai nas iniciais coloridas.
 
-import { Book, Cpu, Hammer, Heart, Home, Sparkles, Star, type LucideIcon } from 'lucide-react'
+import { Book, Car, Cpu, Hammer, Heart, Home, Sparkles, Star, type LucideIcon } from 'lucide-react'
 
 export type VisualDaArea = { Icone: LucideIcon; cores: string }
 
@@ -16,6 +16,7 @@ const VISUAL_POR_ICONE: Record<string, VisualDaArea> = {
   heart:    { Icone: Heart,    cores: 'bg-rose-50 text-rose-600 border-rose-100' },
   book:     { Icone: Book,     cores: 'bg-sky-50 text-sky-600 border-sky-100' },
   star:     { Icone: Star,     cores: 'bg-orange-50 text-orange-600 border-orange-100' },
+  car:      { Icone: Car,      cores: 'bg-slate-50 text-slate-600 border-slate-100' },
 }
 
 export function visualDaArea(icone?: string | null): VisualDaArea | null {
