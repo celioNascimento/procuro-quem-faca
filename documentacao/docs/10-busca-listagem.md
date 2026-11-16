@@ -10,7 +10,7 @@ A busca combina o serviço com a cidade. Prioridade (quem vale primeiro):
 2. Cidade escolhida nos filtros ou já na URL (`?cidade=`). O parâmetro leva o **id da cidade** (duas cidades de estados diferentes podem ter o mesmo nome); links antigos com o nome continuam funcionando.
 3. Cidade salva do usuário (cookie `pqf_cidade`, 30 dias, com id e nome). É só o ponto de partida e filtra pelo id.
 
-Escolher **Estado** ou **Região** solta a cidade salva (são recortes mais amplos). Cada prestador pertence a uma cidade pela **sede** (`cidade_id`) e pelas **áreas de atuação** (`cidades_atendidas`, nomes). Com uma cidade em vigor, a lista traz quem tem essa cidade como sede **ou** como área de atuação. Quem tem a cidade como sede vem primeiro; dentro de cada grupo, a ordem de sempre se mantém. O menu "Cidade" conta cada prestador uma vez em cada cidade em que aparece, então o número bate com a lista.
+Escolher **Estado** ou **Região** solta a cidade salva (são recortes mais amplos). Cada prestador pertence a uma cidade pela **sede** (`cidade_id`) e pelas **áreas de atuação** (`cidades_atendidas`, nomes). Com uma cidade em vigor, a lista traz quem tem essa cidade como sede **ou** como área de atuação. Sede e área de atuação têm o mesmo peso: a cidade só filtra e não muda a ordem. A ordem continua a de sempre (ver "Ordem dos resultados"). O menu "Cidade" conta cada prestador uma vez em cada cidade em que aparece, então o número bate com a lista.
 
 **A cidade em vigor aparece para a pessoa.** O título diz `Profissionais em Londrina` ou `Resultados para "pedreiro" em Londrina`; sem cidade conhecida o título é genérico (`Profissionais cadastrados`, nunca "sua região"). Logo abaixo, numa linha só, `Ver outras cidades` à esquerda e o contador (`24 encontrados`) à direita (`components/busca/CidadeDaBusca.tsx`); a cidade em si fica só no título, sem repetir. Se a cidade foi escrita na própria busca, o título também a mostra.
 
@@ -21,7 +21,7 @@ Escolher **Estado** ou **Região** solta a cidade salva (são recortes mais ampl
 | `Massoterapia` com cidade salva Londrina | Londrina (título "em Londrina") |
 | `Massoterapia em Maringá` | Maringá (título só com a busca) |
 | `Massoterapia Maringá` (sem "em") | Maringá, igual à linha acima |
-| Prestador com sede em Rolândia que atende Londrina, busca `pedreiro` com cidade salva Londrina | Aparece depois dos de sede em Londrina |
+| Prestador com sede em Rolândia que atende Londrina, busca `pedreiro` com cidade salva Londrina | Entra na lista e fica na posição que a faixa e a nota dão, igual a quem tem Londrina como sede |
 | `Massoterapia` + `ampliar=1` | Todas as cidades |
 | Filtro manual Maringá | Maringá |
 | Sem cidade salva | Todas as cidades, título genérico, convite de localização |

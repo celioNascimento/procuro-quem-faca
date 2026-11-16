@@ -22,6 +22,10 @@ describe('pesoOrdenacao', () => {
     expect(pesoOrdenacao(p('registro_direto', false, 5))).toBeLessThan(pesoOrdenacao(p('registro_direto', false, 3)))
   })
 
+  it('a média por estrelas desempata com precisão: 4,6 vem antes de 4,5', () => {
+    expect(pesoOrdenacao(p('registro_direto', false, 4.6))).toBeLessThan(pesoOrdenacao(p('registro_direto', false, 4.5)))
+  })
+
   it('perfil real, mesmo sem verificação e sem nota, vem antes da curadoria pública', () => {
     expect(pesoOrdenacao(p('registro_direto'))).toBeLessThan(pesoOrdenacao(p('curadoria_publica', true, 5)))
   })

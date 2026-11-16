@@ -134,30 +134,6 @@ export function filtrarExibidos<T extends ItemBusca>(base: T[], f: FiltrosAtivos
   return base.filter(p => c.estado(p) && c.regiao(p) && c.cidade(p) && c.grupo(p) && c.categoria(p))
 }
 
-/**
- * Ordena os resultados. A faixa vem primeiro (`faixa` = pesoOrdenacao: vitrine, perfis reais,
- * curadoria pública; ver lib/ordenacao.ts). Dentro da mesma faixa, com cidade em vigor, quem tem
- * essa cidade como SEDE vem antes de quem só atende nela. Depois, a faixa fina (nota) e, por fim,
- * a ordem que já vinha.
- */
-export function ordenarPorCidade<T extends ItemBusca>(lista: T[], f: FiltrosAtivos, faixa: (p: T) => number): T[] {
-  const cidadeEmVigor = Boolean(f.cidade || f.cidadeId)
-  return lista
-    .map((p, i) => ({
-      p,
-      i,
-      faixa: faixa(p),
-      sede: cidadeEmVigor && !ehSede(p, f) ? 1 : 0,
-    }))
-    .sort((a, b) =>
-      Math.floor(a.faixa) - Math.floor(b.faixa) ||
-      a.sede - b.sede ||
-      a.faixa - b.faixa ||
-      a.i - b.i,
-    )
-    .map(x => x.p)
-}
-
 function contar<T extends ItemBusca, K extends string>(
   lista: T[],
   chave: (p: T) => K | null | undefined,
