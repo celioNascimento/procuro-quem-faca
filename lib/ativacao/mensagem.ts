@@ -5,7 +5,9 @@
 //  - dizer quem somos e de onde vieram os dados;
 //  - entregar o link pessoal, pelo qual o próprio profissional assume ou exclui o perfil;
 //  - apontar a Política de Privacidade;
-//  - não prometer ação manual da nossa parte (a exclusão é feita pelo titular, pelo link).
+//  - não prometer ação manual da nossa parte (a exclusão é feita pelo titular, pelo link);
+//  - não limitar a plataforma a uma cidade: o PQF atende profissionais de qualquer cidade
+//    (Londrina é só a origem do projeto).
 
 import { SITE_URL } from '@/lib/divulgacao/links'
 
@@ -79,7 +81,7 @@ export function montarMensagemAtivacao({ tipo, nome, slug, token }: ParamsMensag
 
   return (
     `Olá, ${nome}! Tudo bem?\n\n` +
-    `Aqui é o Célio, responsável pelo Procuro Quem Faça, uma plataforma de Londrina onde moradores encontram profissionais para serviços.\n\n` +
+    `Aqui é o Célio, responsável pelo Procuro Quem Faça, uma plataforma onde as pessoas encontram profissionais para serviços e entram em contato direto com eles, sem taxas.\n\n` +
     `Criei um perfil para você com as informações de contato profissional que você divulga publicamente em anúncios online: nome, WhatsApp, serviço e cidade. Nenhum outro dado foi coletado.\n\n` +
     `Seu perfil: ${perfil}?src=ativacao\n\n` +
     `Este link é pessoal e permite que você assuma o perfil, para completar e corrigir as informações, ou exclua o perfil e todos os dados, quando quiser:\n` +
