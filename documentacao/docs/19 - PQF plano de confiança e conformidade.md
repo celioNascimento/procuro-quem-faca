@@ -1,6 +1,6 @@
 # PQF: plano de confiança e conformidade
 
-Nov 9, 2026 · atualizado em Nov 10, 2026 · @Celio
+Nov 9, 2026 · atualizado em Nov 16, 2026 · @Celio
 
 ## Objetivo e princípios
 
@@ -98,7 +98,7 @@ A primeira atualização deixa a plataforma em conformidade com a LGPD (lei bras
 
 - [x] Revisar RLS de todas as tabelas e rodar os advisors de segurança do Supabase (advisors rodados em 10/11 e 11/11; achados tratados no item 6 do mapa; falta ligar a proteção contra senhas vazadas no painel)
 - [x] Conferir os valores de `origem_tipo` entre os 955 prestadores e documentar a base legal de quem não veio de cadastro direto, com opção de sair (conferido em 10/11: a grande maioria é `curadoria_publica`, sem conta; a opção de sair é o link pessoal de exclusão; a base legal, legítimo interesse, está documentada na seção 4 da Política, que aguarda a revisão do advogado)
-- [x] Revisar o texto das mensagens de ativação enviadas por WhatsApp (três mensagens prontas e testadas em `lib/ativacao/mensagem.ts`; as ativações seguem pausadas até o ensaio ponta a ponta)
+- [x] Revisar o texto das mensagens de ativação enviadas por WhatsApp (três mensagens prontas e testadas em `lib/ativacao/mensagem.ts`; o ensaio ponta a ponta foi concluído em 16/11 e as ativações podem ser retomadas)
 - [ ] Verificar a região do projeto Supabase e listar os serviços que recebem dados pessoais (Vercel, WhatsApp/Meta, demais). Não bloqueia o lançamento no Brasil; a análise de transferência internacional vira prioridade na expansão
 
 **Estrutura de base para expansão (sem custo)**
@@ -108,7 +108,7 @@ A primeira atualização deixa a plataforma em conformidade com a LGPD (lei bras
 
 ## Mapa de execução da Etapa 1
 
-Atualizado em 11/11/2026. Os itens 1 a 6 e 8 estão concluídos e em produção. As ativações seguem pausadas até o ensaio ponta a ponta (item 7).
+Atualizado em 16/11/2026. Os itens 1 a 6, 8 e 9 estão concluídos e em produção, e o ensaio ponta a ponta foi concluído (ver a seção Ensaio ponta a ponta). Resta o item 7, retomar as ativações.
 
 **Decisões tomadas**
 
@@ -129,11 +129,11 @@ A policy `Reivindicação de Perfil` em `prestadores` deixava qualquer usuário 
 | --- | --- | --- | --- | --- |
 | 1 | Reivindicação e exclusão por link pessoal (token) | Concluído em 10/11/2026: `prestador_tokens`, funções e fechamento da policy aberta, com a policy do admin trocada de e-mail fixo para `is_admin()` | Concluído: `/reivindicar`, cadastro e serviço, em produção | Concluído e testado (assumir perfil sem token não afeta nenhuma linha; dono, admin e anônimo conferidos) |
 | 2 | Aceite explícito e registrado dos Termos e da Política (sem pré-marcar), para clientes e prestadores | Feito: origem `login` aceita em `consentimentos`, com as regras de acesso testadas | Concluído: tela de aceite depois do login, registro no cadastro de prestador e fim do pré-aceite na reivindicação | Concluído e em produção; o aceite funcionou no teste. As contas que já existiam (16 em 11/11) veem a tela no próximo acesso |
-| 3 | Canal do titular: formulário `/titular` (também dentro de `/reivindicar`, ligado ao perfil), link no rodapé e na Política, e fila no admin em `/admin/titular` | Feito e testado: tipo `outro` aceito e funções de contagem | Concluído: formulário com protocolo e prazo de 15 dias, proteção contra robôs e fila com alerta de prazo | Em produção. `RESEND_API_KEY` e `CRON_SECRET` cadastrados e o cron diário rodou. Falta provar o e-mail de aviso no ensaio |
+| 3 | Canal do titular: formulário `/titular` (também dentro de `/reivindicar`, ligado ao perfil), link no rodapé e na Política, e fila no admin em `/admin/titular` | Feito e testado: tipo `outro` aceito e funções de contagem | Concluído: formulário com protocolo e prazo de 15 dias, proteção contra robôs e fila com alerta de prazo | Em produção. `RESEND_API_KEY` e `CRON_SECRET` cadastrados e o cron diário rodou. O e-mail de aviso foi provado no ensaio (12/11 e 16/11) |
 | 4 | Texto da `/privacidade`: origem pública, base legal (interesse legítimo), prazos, contato | Não se aplica | Concluído (`app/privacidade`, `config/controlador.ts`) | Texto em produção como rascunho. Falta a revisão do advogado e confirmar a origem dos dados |
-| 5 | Mensagens de ativação revisadas e geração do link pessoal na tela `/admin/ativacao`; a fila de solicitações do titular veio com o item 3 | Funções prontas | Concluído: três mensagens (primeiro contato, corretiva para quem já recebeu a primeira e link de exclusão para quem recusou), com o link pessoal gerado na hora do envio | Em produção. Falta o ensaio do envio pela tela, que foi corrigida depois de falhar com perfis sem nome |
+| 5 | Mensagens de ativação revisadas e geração do link pessoal na tela `/admin/ativacao`; a fila de solicitações do titular veio com o item 3 | Funções prontas | Concluído: três mensagens (primeiro contato, corretiva para quem já recebeu a primeira e link de exclusão para quem recusou), com o link pessoal gerado na hora do envio | Em produção. Envio pela tela testado no ensaio, que foi corrigida depois de falhar com perfis sem nome |
 | 6 | Limpeza e "Meus dados": fechar `verificar_usuario_existe` e `registrar_metrica_anuncio`, revisar as funções `SECURITY DEFINER` abertas, retenção automática, exportação dos dados e página `/meus-dados` | Concluído em 11/11/2026: `registrar_metrica_anuncio` e `verificar_usuario_existe` fechadas (com a tabela de e-mails do limite de tentativas), retenção diária ligada e `exportar_meus_dados` | Concluído e em produção: login sem a consulta de e-mail e página `/meus-dados` com download em JSON | Falta só ligar a proteção contra senhas vazadas no painel do Supabase |
-| 7 | Retomar as ativações com nova mensagem (origem do dado, base legal, link de exclusão) e mensagem corretiva para quem já foi contatado | Não se aplica | Não se aplica | Só depois do ensaio ponta a ponta e dos ajustes que ele pedir. As mensagens já estão prontas |
+| 7 | Retomar as ativações com nova mensagem (origem do dado, base legal, link de exclusão) e mensagem corretiva para quem já foi contatado | Não se aplica | Não se aplica | Liberado: o ensaio ponta a ponta terminou em 16/11 e as mensagens já estão prontas. Falta decidir a data de retomada |
 | 8 | Campos internos fora da tabela pública de prestadores: funil de ativação, observações e motivo de bloqueio passam para `prestador_ativacao` e `prestador_bloqueio` (acesso só do admin e, no bloqueio, do dono) | Concluído em 11/11/2026: tabelas, cópia dos dados, funções, remoção das colunas antigas e da view `prestadores_ranqueados`, e ajuste do gatilho `prestadores_proteger_campos` | Concluído e em produção: ativação, moderação, painel do prestador e estatísticas do admin usam as tabelas novas, com listas paginadas | Concluído. Conferido como visitante anônimo: as colunas não existem mais e as tabelas novas estão bloqueadas |
 | 9 | Correções encontradas no ensaio: tela de ativação quebrava com perfis sem nome; link de reivindicação era desviado para o painel em silêncio; aviso de bloqueio do cadastro nunca aparecia; reivindicar com conta que já tinha perfil apagava o perfil atual; tela de erro dizia "Erro 400" para qualquer falha | Não se aplica | Concluído (PRs 153 e 154): aviso "Esta conta já tem um perfil", modal visível, rotina que só apaga rascunhos, tela de erro com texto correto e log com a causa real | Concluído e em produção |
 
@@ -151,16 +151,33 @@ Concluído e em produção:
 
 Em aberto:
 
-- Ensaio ponta a ponta com os perfis de teste 1592 e 1593 (formulário e e-mail, link pessoal para assumir e para excluir, mensagem de ativação, `/meus-dados`, "esqueci a senha" e denúncia). Ao terminar, apagar os perfis, as contas e os pedidos de teste.
-- Retomar as ativações (item 7), só depois do ensaio.
+- Retomar as ativações (item 7). O ensaio ponta a ponta terminou em 16/11/2026.
+- Limpeza final do ensaio: fechar a denúncia de teste na moderação e apagar as contas de teste.
 - Ligar a proteção contra senhas vazadas no painel do Supabase.
 - Revisão do advogado na Política e nos Termos; depois, aumentar a versão em `config/documentos.ts`.
 - Preencher razão social e CNPJ em `config/controlador.ts` quando a empresa abrir, e confirmar com o advogado a guarda de registros de acesso.
 - Consolidar as 28 regras de acesso da tabela `prestadores` e criar a regra de leitura para o admin.
-- Decidir o que fazer com os 4 cadastros iniciados e nunca concluídos (sem nome, desde agosto), por exemplo com uma regra de retenção.
 - Próximas etapas do plano (2 a 6): verificações de CNPJ, formação, seguro, camada corporativa e feed.
 
 Pontos de atenção do item 1: os links antigos `/cadastro?reivindicar=ID` deixam de funcionar sem o token, e os botões "Reivindicar" dos cards e do perfil público levam à página `/reivindicar`, que agora explica como pedir o link pessoal.
+
+**Ensaio ponta a ponta (concluído em 16/11/2026)**
+
+O fluxo completo foi testado em produção com perfis de teste, conferindo o banco a cada etapa.
+
+| Fluxo | Resultado |
+| --- | --- |
+| Assumir um perfil pelo link pessoal (deslogado, com outra conta) | Passou (13/11) |
+| Excluir um perfil pelo link pessoal | Passou (13/11 e 16/11); o perfil sumiu e ficaram só dados anônimos |
+| Painel do prestador (Primeiros passos, Trabalhos, Vitrine de fotos) | Passou (13/11) |
+| Formulário do titular e e-mail de aviso | Passou (12/11) |
+| Envio da mensagem pela tela de ativação | Passou, depois da correção do item 9 |
+| `/meus-dados` e download em JSON | Passou (16/11) |
+| "Esqueci a senha" (redefinição) | Passou (16/11) |
+| Denúncia, fila de moderação e e-mail de aviso | Passou (16/11) |
+| Bloqueio e desbloqueio de perfil pelo admin | Passou (16/11) |
+
+Limpeza em 16/11: os cadastros iniciados e nunca concluídos (sem nome) foram apagados e o perfil de teste "TESTE ENSAIO A" foi excluído. O perfil "Celio Teste" ficou bloqueado, com o motivo "Perfil de teste (ensaio)". Falta fechar a denúncia de teste e apagar as contas de teste.
 
 **Notificações do admin**
 
@@ -385,10 +402,10 @@ O feed não cria um canal novo de contato nem altera o ciclo de orçamento.
 As decisões abaixo precisam de resposta antes ou durante as etapas indicadas.
 
 - [ ] Etapa 1: qual advogado revisa a Política e os Termos (o contato de privacidade já está definido: procuroquemfaca@gmail.com)
-- [ ] Etapa 1: ensaio ponta a ponta com os perfis de teste 1592 e 1593, e limpeza dos dados de teste
+- [x] Etapa 1: ensaio ponta a ponta com perfis de teste (concluído em 16/11/2026; falta só fechar a denúncia de teste e apagar as contas de teste)
 - [ ] Etapa 1: ligar a proteção contra senhas vazadas no painel do Supabase (se aparecer indisponível, é limite do plano)
 - [ ] Etapa 1: consolidar as regras de acesso da tabela `prestadores` e criar a regra de leitura para o admin
-- [ ] Etapa 1: destino dos cadastros iniciados e nunca concluídos (4 perfis sem nome, o mais antigo de agosto)
+- [x] Etapa 1: destino dos cadastros iniciados e nunca concluídos (apagados em 16/11/2026; se voltarem a aparecer, avaliar uma regra de retenção)
 - [ ] Etapa 1: preencher razão social e CNPJ em `config/controlador.ts` quando a empresa for aberta
 - [ ] Etapa 1: confirmar com o advogado a guarda de registros de acesso (Marco Civil, art. 15) quando houver CNPJ; a coluna `ip_address` foi mantida para isso
 - [x] Etapa 1: confirmar os prazos de retenção dos registros de atividade (12 meses) e dos pedidos do titular já respondidos (12 meses) para ligar essas duas regras (confirmado e ligado em 11/11/2026)
