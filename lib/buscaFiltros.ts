@@ -135,14 +135,26 @@ export function filtrarExibidos<T extends ItemBusca>(base: T[], f: FiltrosAtivos
 }
 
 /**
- * Com cidade em vigor, quem tem essa cidade como SEDE vem antes de quem só atende nela.
- * Dentro de cada grupo a ordem que já vinha (vitrine, perfis reais, nota) se mantém.
+ * Ordena os resultados. A faixa vem primeiro (`faixa` = pesoOrdenacao: vitrine, perfis reais,
+ * curadoria pública; ver lib/ordenacao.ts). Dentro da mesma faixa, com cidade em vigor, quem tem
+ * essa cidade como SEDE vem antes de quem só atende nela. Depois, a faixa fina (nota) e, por fim,
+ * a ordem que já vinha.
  */
-export function ordenarPorCidade<T extends ItemBusca>(lista: T[], f: FiltrosAtivos): T[] {
-  if (!f.cidade && !f.cidadeId) return lista
+export function ordenarPorCidade<T extends ItemBusca>(lista: T[], f: FiltrosAtivos, faixa: (p: T) => number): T[] {
+  const cidadeEmVigor = Boolean(f.cidade || f.cidadeId)
   return lista
-    .map((p, i) => ({ p, i, peso: ehSede(p, f) ? 0 : 1 }))
-    .sort((a, b) => a.peso - b.peso || a.i - b.i)
+    .map((p, i) => ({
+      p,
+      i,
+      faixa: faixa(p),
+      sede: cidadeEmVigor && !ehSede(p, f) ? 1 : 0,
+    }))
+    .sort((a, b) =>
+      Math.floor(a.faixa) - Math.floor(b.faixa) ||
+      a.sede - b.sede ||
+      a.faixa - b.faixa ||
+      a.i - b.i,
+    )
     .map(x => x.p)
 }
 

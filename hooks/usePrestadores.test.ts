@@ -245,3 +245,19 @@ describe('usePrestadores — área de atuação e cidade sem "em"', () => {
     expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([1, 2, 3, 4])
   })
 })
+
+describe('usePrestadores — faixa antes da cidade', () => {
+  it('perfil real que atende a cidade vem antes de curadoria pública que é sede nela', async () => {
+    getPrestadoresAtivos.mockImplementation(async () => ({
+      data: [
+        linha(5, 'Londrina', { origem_tipo: 'curadoria_publica' }),
+        linha(4, 'Rolândia', { cidades_atendidas: ['Londrina'] }),
+      ],
+      error: null,
+    }))
+    definirUrl({ q: 'pedreiro Londrina' })
+    const { result } = renderHook(() => usePrestadores())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([4, 5])
+  })
+})
