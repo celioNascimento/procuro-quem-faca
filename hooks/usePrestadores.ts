@@ -10,7 +10,6 @@ import {
   decidirCidade,
   filtrarExibidos,
   normalizarCidade,
-  ordenarPorCidade,
   parsearBusca,
 } from '@/lib/buscaFiltros'
 import { carregarCatalogoCidades, type CidadeCatalogo } from '@/lib/cidadesCatalogo'
@@ -246,7 +245,7 @@ export function usePrestadores() {
 
   // Com cidade em vigor, quem tem essa cidade como sede vem antes de quem só atende nela.
   const prestadoresExibidos = useMemo(
-    () => ordenarPorCidade<Prestador>(filtrarExibidos(prestadoresBase, filtrosAtivos), filtrosAtivos, pesoOrdenacao),
+    () => filtrarExibidos(prestadoresBase, filtrosAtivos),
     [prestadoresBase, filtrosAtivos],
   )
 
