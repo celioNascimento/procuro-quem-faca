@@ -9,6 +9,13 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => parametros,
 }))
 
+vi.mock('@/lib/cidadesCatalogo', () => ({
+  carregarCatalogoCidades: async () => [
+    { id: 'c-Londrina', nome: 'Londrina', estado_sigla: 'PR' },
+    { id: 'c-Maringa', nome: 'Maringá', estado_sigla: 'PR' },
+  ],
+}))
+
 import { useFiltrosPrestadores } from '@/hooks/useFiltrosPrestadores'
 
 function abrir(query: string) {
@@ -25,29 +32,29 @@ function ultimaUrl() {
 beforeEach(() => replace.mockClear())
 
 describe('useFiltrosPrestadores — Ver outras cidades', () => {
-  it('com a cidade escrita na busca, tira "em Maringá" do texto e amplia', () => {
+  it('com a cidade escrita na busca, tira "em Maringá" do texto e amplia', async () => {
     abrir('q=pedreiro%20em%20Maringa')
     const { result } = renderHook(() => useFiltrosPrestadores())
-    act(() => result.current.verOutrasCidades())
+    await act(async () => { await result.current.verOutrasCidades() })
     const u = ultimaUrl()
     expect(u.searchParams.get('q')).toBe('pedreiro')
     expect(u.searchParams.get('ampliar')).toBe('1')
   })
 
-  it('com a cidade vinda do filtro, tira ?cidade e amplia, sem mexer no texto', () => {
+  it('com a cidade vinda do filtro, tira ?cidade e amplia, sem mexer no texto', async () => {
     abrir('q=pedreiro&cidade=abc')
     const { result } = renderHook(() => useFiltrosPrestadores())
-    act(() => result.current.verOutrasCidades())
+    await act(async () => { await result.current.verOutrasCidades() })
     const u = ultimaUrl()
     expect(u.searchParams.get('q')).toBe('pedreiro')
     expect(u.searchParams.has('cidade')).toBe(false)
     expect(u.searchParams.get('ampliar')).toBe('1')
   })
 
-  it('link antigo com ?profissao= também perde a cidade do texto', () => {
+  it('link antigo com ?profissao= também perde a cidade do texto', async () => {
     abrir('profissao=pedreiro%20em%20Maringa')
     const { result } = renderHook(() => useFiltrosPrestadores())
-    act(() => result.current.verOutrasCidades())
+    await act(async () => { await result.current.verOutrasCidades() })
     const u = ultimaUrl()
     expect(u.searchParams.get('q')).toBe('pedreiro')
     expect(u.searchParams.has('profissao')).toBe(false)

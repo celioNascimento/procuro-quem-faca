@@ -5,6 +5,7 @@
 
 import { useRouter } from 'next/navigation'
 import { parsearBusca } from '@/lib/buscaFiltros'
+import { carregarCatalogoCidades } from '@/lib/cidadesCatalogo'
 import { useFiltrosParams } from './useFiltrosParams'
 
 export function useFiltrosPrestadores() {
@@ -66,15 +67,18 @@ export function useFiltrosPrestadores() {
   }
 
   // Tira o recorte de cidade (a cidade salva do usuário deixa de valer) e mostra todas.
-  // Se a cidade foi escrita na busca ("pedreiro em Maringá"), ela sai do texto: fica só "pedreiro".
-  function verOutrasCidades() {
+  // Se a cidade foi escrita na busca ("pedreiro em Maringá" ou "pedreiro Maringá"), ela sai do
+  // texto: fica só "pedreiro".
+  async function verOutrasCidades() {
+    const catalogo = await carregarCatalogoCidades()
     const params = new URLSearchParams(window.location.search)
     params.delete('cidade')
     const texto = params.get('q') || params.get('profissao') || ''
-    const { termo, cidadeExtraida } = parsearBusca(texto)
+    const { termo, cidadeExtraida } = parsearBusca(texto, catalogo)
     if (cidadeExtraida) {
       params.delete('profissao')
-      params.set('q', termo)
+      if (termo) params.set('q', termo)
+      else params.delete('q')
     }
     params.set('ampliar', '1')
     router.replace(`/prestadores?${params.toString()}`, { scroll: false })

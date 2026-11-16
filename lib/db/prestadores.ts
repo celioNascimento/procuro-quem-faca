@@ -12,6 +12,7 @@ const COLUNAS_LISTA = [
   'id', 'nome', 'slug', 'foto_perfil', 'bairro', 'habilidades',
   'origem_tipo', 'verificado',
   'estado_sigla', 'cidade_id', 'regiao_id', 'grupo_id', 'categoria_id',
+  'cidades_atendidas',
   'cidades(id, nome, estado_sigla, regiao_id, regioes(id, nome))',
   'categorias(id, nome, grupo_id, categorias_grupos(id, nome, icone))',
   'regioes(id, nome)',
@@ -49,7 +50,12 @@ export async function lerTodasAsPaginas<T = unknown>(
   return { data: todos, error: null }
 }
 
-export async function getPrestadoresAtivos(cidadeId?: string | number | null) {
+/**
+ * Prestadores ativos. Com `cidadeId`, traz quem tem a cidade como sede OU como área de
+ * atuação. `cidades_atendidas` guarda nomes (texto), por isso a área de atuação usa o `cidadeNome`.
+ * Os dois filtros em `.or()` separados viram AND no PostgREST (bloqueado + cidade).
+ */
+export async function getPrestadoresAtivos(cidadeId?: string | number | null, cidadeNome?: string | null) {
   return lerTodasAsPaginas((de, ate) => {
     let query = publicSupabase
       .from('prestadores')
@@ -59,9 +65,22 @@ export async function getPrestadoresAtivos(cidadeId?: string | number | null) {
       .order('id')
       .range(de, ate)
 
-    if (cidadeId) query = query.eq('cidade_id', cidadeId)
+    if (cidadeId) {
+      const nome = (cidadeNome ?? '').replace(/"/g, '')
+      const atuacao = nome ? `,cidades_atendidas.cs.{"${nome}"}` : ''
+      query = query.or(`cidade_id.eq.${cidadeId}${atuacao}`)
+    }
     return query
   })
+}
+
+/** Cidades ativas, para a busca reconhecer o nome escrito (com ou sem "em"). */
+export async function getCidadesAtivas() {
+  return publicSupabase
+    .from('cidades')
+    .select('id, nome, estado_sigla')
+    .eq('ativa', true)
+    .order('nome')
 }
 
 // Mesmas regras da página do perfil: avaliação visível e fora de disputa.

@@ -21,6 +21,13 @@ vi.mock('@/lib/db/prestadores', () => ({
   getMediasAvaliacoes: (...a: unknown[]) => getMediasAvaliacoes(...a),
 }))
 vi.mock('@/lib/db/logs', () => ({ insertLog: vi.fn().mockResolvedValue(undefined) }))
+vi.mock('@/lib/cidadesCatalogo', () => ({
+  carregarCatalogoCidades: async () => [
+    { id: 'c-Londrina', nome: 'Londrina', estado_sigla: 'PR' },
+    { id: 'c-Maringá', nome: 'Maringá', estado_sigla: 'PR' },
+    { id: 'c-Rolandia', nome: 'Rolândia', estado_sigla: 'PR' },
+  ],
+}))
 
 import { limparCacheLista, usePrestadores } from '@/hooks/usePrestadores'
 
@@ -59,7 +66,7 @@ describe('usePrestadores — cidade', () => {
     definirUrl({ q: 'pedreiro' })
     const { result } = renderHook(() => usePrestadores())
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(getPrestadoresAtivos).toHaveBeenCalledWith(undefined)
+    expect(getPrestadoresAtivos).toHaveBeenCalledWith(undefined, undefined)
     expect(result.current.prestadoresExibidos).toHaveLength(3)
     expect(result.current.prestadoresExibidos[0].grupo_icone).toBe('hammer')
     expect(result.current.cidadeNome).toBeNull()
@@ -70,7 +77,7 @@ describe('usePrestadores — cidade', () => {
     definirUrl({ q: 'pedreiro' })
     const { result } = renderHook(() => usePrestadores())
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(getPrestadoresAtivos).toHaveBeenCalledWith('c-Londrina')
+    expect(getPrestadoresAtivos).toHaveBeenCalledWith('c-Londrina', 'Londrina')
     expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([1, 2])
     expect(result.current.cidadeNome).toBe('Londrina')
     expect(result.current.origemCidade).toBe('salva')
@@ -81,7 +88,7 @@ describe('usePrestadores — cidade', () => {
     definirUrl({ q: 'pedreiro', cidade: 'Londrina' })
     const { result } = renderHook(() => usePrestadores())
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(getPrestadoresAtivos).toHaveBeenCalledWith('c-Londrina')
+    expect(getPrestadoresAtivos).toHaveBeenCalledWith('c-Londrina', 'Londrina')
     expect(result.current.origemCidade).toBe('filtro')
   })
 
@@ -90,7 +97,7 @@ describe('usePrestadores — cidade', () => {
     definirUrl({ q: 'pedreiro', ampliar: '1' })
     const { result } = renderHook(() => usePrestadores())
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(getPrestadoresAtivos).toHaveBeenCalledWith(undefined)
+    expect(getPrestadoresAtivos).toHaveBeenCalledWith(undefined, undefined)
     expect(result.current.prestadoresExibidos).toHaveLength(3)
     expect(result.current.cidadeNome).toBeNull()
   })
@@ -144,7 +151,7 @@ describe('usePrestadores — cidade por id', () => {
     definirUrl({ q: 'pedreiro', cidade: 'c-Londrina' })
     const { result } = renderHook(() => usePrestadores())
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(getPrestadoresAtivos).toHaveBeenCalledWith('c-Londrina')
+    expect(getPrestadoresAtivos).toHaveBeenCalledWith('c-Londrina', 'Londrina')
     expect(result.current.cidadeNome).toBe('Londrina')
   })
 
@@ -200,5 +207,41 @@ describe('usePrestadores — vitrine', () => {
     const { result } = renderHook(() => usePrestadores())
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([11, 10, 1])
+  })
+})
+
+describe('usePrestadores — área de atuação e cidade sem "em"', () => {
+  // Sede em Rolândia, mas atende Londrina (como o Wesley).
+  const atendeLondrina = linha(4, 'Rolândia', { cidades_atendidas: ['Londrina'] })
+
+  beforeEach(() => {
+    getPrestadoresAtivos.mockImplementation(async () => ({ data: [...catalogo, atendeLondrina], error: null }))
+  })
+
+  it('"pedreiro Londrina" (sem "em") reconhece a cidade e lista quem a tem como sede primeiro', async () => {
+    definirUrl({ q: 'pedreiro Londrina' })
+    const { result } = renderHook(() => usePrestadores())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.cidadeNome).toBe('Londrina')
+    expect(result.current.origemCidade).toBe('texto')
+    expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([1, 2, 4])
+  })
+
+  it('com cidade salva, quem atende a cidade entra na lista e vem depois da sede', async () => {
+    cidadeSalva = { id: 'c-Londrina', nome: 'Londrina' }
+    definirUrl({ q: 'pedreiro' })
+    const { result } = renderHook(() => usePrestadores())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(getPrestadoresAtivos).toHaveBeenCalledWith('c-Londrina', 'Londrina')
+    expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([1, 2, 4])
+  })
+
+  it('"Ver outras cidades" não restringe a consulta e a lista traz todos', async () => {
+    cidadeSalva = { id: 'c-Londrina', nome: 'Londrina' }
+    definirUrl({ q: 'pedreiro', ampliar: '1' })
+    const { result } = renderHook(() => usePrestadores())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(getPrestadoresAtivos).toHaveBeenCalledWith(undefined, undefined)
+    expect(result.current.prestadoresExibidos.map(p => p.id)).toEqual([1, 2, 3, 4])
   })
 })

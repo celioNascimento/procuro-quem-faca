@@ -105,7 +105,7 @@ sessao_fotos_urls text[]                       -- CHECK: no máximo 5 URLs
 | `regioes` | Região dentro de um estado — PK `uuid` |
 | `cidades` | Cidade, vinculada a região e estado, flag `ativa` — PK `uuid` |
 
-Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas` (array de texto) para atendimento em múltiplas cidades sem relação normalizada.
+Prestadores referenciam `cidade_id`/`regiao_id`; também têm `cidades_atendidas` (array de texto, com os nomes das cidades) para atendimento em múltiplas cidades sem relação normalizada. A busca usa esse campo para listar o prestador nas cidades em que atende (ver `10-busca-listagem.md`).
 
 ### Categorização
 
