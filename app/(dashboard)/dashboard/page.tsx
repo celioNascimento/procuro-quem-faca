@@ -102,6 +102,8 @@ function PerfilPageContent() {
       label: 'Divulgação',
       icon: <Megaphone size={14} />,
       bloqueado: !cadastroCompleto || bloqueado,
+      // Perfil bloqueado já tem cadastro completo: mostrar "Complete o perfil" aqui induz ao erro.
+      rotuloBloqueio: !cadastroCompleto ? 'Complete o perfil' : 'Perfil bloqueado',
       externo: false,
     },
     {
@@ -196,7 +198,7 @@ function PerfilPageContent() {
                 )}
                 {aba.bloqueado && !validando && (
                   <span id={`${aba.id}-locked`} className="rounded-md bg-white/70 px-1.5 py-0.5 text-xs font-semibold text-slate-500">
-                    Complete o perfil
+                    {aba.rotuloBloqueio ?? 'Complete o perfil'}
                   </span>
                 )}
               </button>
