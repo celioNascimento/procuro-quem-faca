@@ -1,8 +1,8 @@
 // lib/buscaFiltros.test.ts
 import { describe, it, expect } from 'vitest'
 import {
-  calcularFacetas, decidirCidade, filtrarExibidos, normalizarCidade, parsearBusca,
-  type FiltrosAtivos, type ItemBusca,
+  calcularFacetas, decidirCidade, filtrarExibidos, normalizarCidade, ordenarPorCidade, parsearBusca,
+  type CidadeRef, type FiltrosAtivos, type ItemBusca,
 } from '@/lib/buscaFiltros'
 import { corDasIniciais, getIniciais, getTituloBusca } from '@/lib/prestadorUtils'
 
@@ -23,6 +23,14 @@ const base: ItemBusca[] = [
   item({ estado_sigla: 'SP', regiao_id: 'r2', regiao_nome: 'Capital', cidade_id: 'cid-sp', cidade_nome: 'São Paulo' }),
 ]
 
+const catalogo: CidadeRef[] = [
+  { id: 'cid-lon', nome: 'Londrina', estado_sigla: 'PR' },
+  { id: 'cid-mar', nome: 'Maringá', estado_sigla: 'PR' },
+  { id: 'cid-rol', nome: 'Rolândia', estado_sigla: 'PR' },
+  { id: 'cid-sp', nome: 'São Paulo', estado_sigla: 'SP' },
+  { id: 'cid-pau', nome: 'Paulo', estado_sigla: 'PR' },
+]
+
 describe('parsearBusca / normalizarCidade', () => {
   it('separa a cidade escrita na busca', () => {
     expect(parsearBusca('massagista em Maringá')).toEqual({ termo: 'massagista', cidadeExtraida: 'Maringá' })
@@ -31,6 +39,24 @@ describe('parsearBusca / normalizarCidade', () => {
   it('compara cidades sem acento, caixa ou UF', () => {
     expect(normalizarCidade('Londrina - PR')).toBe('londrina')
     expect(normalizarCidade('MARINGÁ')).toBe('maringa')
+  })
+  it('reconhece a cidade sem "em", quando é o nome do catálogo', () => {
+    expect(parsearBusca('Wesley Rolândia', catalogo)).toEqual({ termo: 'Wesley', cidadeExtraida: 'Rolândia' })
+    expect(parsearBusca('pedreiro londrina', catalogo)).toEqual({ termo: 'pedreiro', cidadeExtraida: 'Londrina' })
+    expect(parsearBusca('pedreiro Rolandia', catalogo)).toEqual({ termo: 'pedreiro', cidadeExtraida: 'Rolândia' })
+  })
+  it('a cidade só, sem serviço, vira só cidade', () => {
+    expect(parsearBusca('Londrina', catalogo)).toEqual({ termo: '', cidadeExtraida: 'Londrina' })
+  })
+  it('sem catálogo, ou nome que não é cidade, não extrai nada', () => {
+    expect(parsearBusca('pedreiro Londrina')).toEqual({ termo: 'pedreiro Londrina', cidadeExtraida: null })
+    expect(parsearBusca('pedreiro Cilso', catalogo)).toEqual({ termo: 'pedreiro Cilso', cidadeExtraida: null })
+  })
+  it('nome de cidade com mais de uma palavra ganha do trecho menor', () => {
+    expect(parsearBusca('eletricista São Paulo', catalogo)).toEqual({ termo: 'eletricista', cidadeExtraida: 'São Paulo' })
+  })
+  it('com "em", o nome vem do catálogo mesmo digitado sem acento', () => {
+    expect(parsearBusca('pedreiro em rolandia', catalogo)).toEqual({ termo: 'pedreiro', cidadeExtraida: 'Rolândia' })
   })
 })
 
@@ -64,6 +90,51 @@ describe('filtrarExibidos', () => {
     expect(filtrarExibidos(base, { ...sem, cidade: 'londrina' })).toHaveLength(4)
     expect(filtrarExibidos(base, { ...sem, cidade: 'londrina', grupo: 'g1' })).toHaveLength(3)
     expect(filtrarExibidos(base, { ...sem, estado: 'SP' })).toHaveLength(1)
+  })
+})
+
+describe('área de atuação (cidades_atendidas)', () => {
+  // Wesley: sede em Rolândia, atende Cambé, Ibiporã e Londrina.
+  const wesley = item({
+    cidade_id: 'cid-rol', cidade_nome: 'Rolândia', categoria: 'Eletricista', categoria_id: 'c2',
+    cidades_atendidas: ['Cambé', 'Ibiporã', 'Londrina'],
+  })
+  const lista: ItemBusca[] = [...base, wesley]
+
+  it('aparece na cidade que atende, pelo nome', () => {
+    expect(filtrarExibidos(lista, { ...sem, cidade: 'londrina' })).toContain(wesley)
+  })
+  it('aparece na cidade que atende, pelo id da cidade em vigor', () => {
+    expect(filtrarExibidos(lista, { ...sem, cidadeId: 'cid-lon', cidade: 'londrina' })).toContain(wesley)
+  })
+  it('não aparece numa cidade que não é sede nem área de atuação', () => {
+    expect(filtrarExibidos(lista, { ...sem, cidade: 'maringa' })).not.toContain(wesley)
+  })
+  it('sem cidade escolhida, a sede continua valendo', () => {
+    expect(filtrarExibidos(lista, { ...sem, cidadeId: 'cid-rol', cidade: 'rolandia' })).toEqual([wesley])
+  })
+  it('compara o nome de atuação sem acento e sem UF', () => {
+    const cambe = item({ cidade_id: 'cid-lon', cidades_atendidas: ['Cambe - PR'] })
+    expect(filtrarExibidos([cambe], { ...sem, cidade: 'cambe' })).toEqual([cambe])
+  })
+  it('ordena a sede antes de quem só atende a cidade, mantendo a ordem interna', () => {
+    const outraAtende = item({ cidade_id: 'cid-mar', cidade_nome: 'Maringá', cidades_atendidas: ['Londrina'] })
+    const londrinaSede = item({})
+    const r = ordenarPorCidade([outraAtende, wesley, londrinaSede], { ...sem, cidade: 'londrina' })
+    expect(r).toEqual([londrinaSede, outraAtende, wesley])
+  })
+  it('sem cidade em vigor, a ordem não muda', () => {
+    const r = ordenarPorCidade([wesley, base[0]], sem)
+    expect(r).toEqual([wesley, base[0]])
+  })
+  it('a contagem da Cidade inclui quem atende, e bate com a lista', () => {
+    const { cidades } = calcularFacetas(lista, sem, catalogo)
+    const londrina = cidades.find(c => c.id === 'cid-lon')
+    expect(londrina?.count).toBe(4 + 1)
+    const f = { ...sem, grupo: 'g2' }
+    for (const c of calcularFacetas(lista, f, catalogo).cidades) {
+      expect(filtrarExibidos(lista, { ...f, cidadeId: c.id, cidade: normalizarCidade(c.nome.replace(/ - [A-Z]{2}$/, '')) })).toHaveLength(c.count)
+    }
   })
 })
 

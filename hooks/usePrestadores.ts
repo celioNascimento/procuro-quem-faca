@@ -10,8 +10,10 @@ import {
   decidirCidade,
   filtrarExibidos,
   normalizarCidade,
+  ordenarPorCidade,
   parsearBusca,
 } from '@/lib/buscaFiltros'
+import { carregarCatalogoCidades, type CidadeCatalogo } from '@/lib/cidadesCatalogo'
 import { insertLog } from '@/lib/db/logs'
 import { useFiltrosParams } from './useFiltrosParams'
 import { useLocation } from '@/lib/contexts/LocationContext'
@@ -58,6 +60,7 @@ export function usePrestadores() {
   const cidadeSalvaNome = cidadeAtual?.nome
 
   const [prestadoresBase, setPrestadoresBase] = useState<Prestador[]>([])
+  const [catalogoCidades, setCatalogoCidades] = useState<CidadeCatalogo[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState(false)
   const [tentativa, setTentativa] = useState(0)
@@ -70,12 +73,17 @@ export function usePrestadores() {
 
     async function fetchDados() {
       try {
-        // A cidade salva é só o ponto de partida. Consultamos APENAS a cidade dela (menos dados)
-        // quando é ela mesma que vale para a busca. Se a busca informa outra cidade, se há estado/
-        // região, ou se a pessoa pediu "Ver outras cidades", consultamos o catálogo todo e o filtro
-        // local faz o recorte. Sem cidade salva também é o catálogo todo: a lista nunca espera
-        // permissão de localização.
-        const { cidadeExtraida } = parsearBusca(queryBusca)
+        // Catálogo de cidades (uma vez por aba): permite reconhecer "pedreiro Londrina", sem "em".
+        const catalogo = await carregarCatalogoCidades()
+        if (!ativo) return
+        setCatalogoCidades(catalogo)
+
+        // A cidade salva é só o ponto de partida. Consultamos APENAS a cidade dela (sede ou área
+        // de atuação) quando é ela mesma que vale para a busca. Se a busca informa outra cidade,
+        // se há estado/região, ou se a pessoa pediu "Ver outras cidades", consultamos o catálogo
+        // todo e o filtro local faz o recorte. Sem cidade salva também é o catálogo todo: a lista
+        // nunca espera permissão de localização.
+        const { cidadeExtraida } = parsearBusca(queryBusca, catalogo)
         const usaCidadeSalva = Boolean(
           cidadeSalvaId &&
           !ampliar && !cidadeExtraida && !filtroEstado && !filtroRegiao &&
@@ -100,7 +108,10 @@ export function usePrestadores() {
         // O catálogo é público e stateless; não cancelamos o fetch manualmente.
         // Alguns navegadores, incluindo o Brave com Shields ativos, reportam o
         // cancelamento como erro de rede e deixavam a tela presa em "erro".
-        const { data: pData, error: pError } = await getPrestadoresAtivos(cidadeIdDaConsulta)
+        const { data: pData, error: pError } = await getPrestadoresAtivos(
+          cidadeIdDaConsulta,
+          cidadeIdDaConsulta ? cidadeSalvaNome : undefined,
+        )
 
         if (!ativo) return
 
@@ -135,12 +146,13 @@ export function usePrestadores() {
             grupo_id:      normalizarId(p.grupo_id                     || categoriaRelacionada?.grupo_id || grupoRelacionado?.id),
             grupo_nome:    grupoRelacionado?.nome                    || '',
             grupo_icone:   grupoRelacionado?.icone                   || null,
+            cidades_atendidas: Array.isArray(p.cidades_atendidas) ? p.cidades_atendidas : [],
             media_nota:    mediaMap[p.id] ? mediaMap[p.id].soma / mediaMap[p.id].total : 0,
             total_avals:   mediaMap[p.id]?.total                    || 0,
           }
         })
 
-        const { termo } = parsearBusca(queryBusca)
+        const { termo } = parsearBusca(queryBusca, catalogo)
         const termoNorm = normalizarTermo(termo, filtroHab)
 
         // A vitrine fica no topo, mas só quando combina com o que foi buscado (como qualquer perfil);
@@ -181,18 +193,21 @@ export function usePrestadores() {
   ])
 
   // ─── Cidade, filtros e opções ─────────────────────────────────────────────
-  // Prioridade: cidade escrita na busca ("em X") > cidade da URL/filtro > cidade salva do usuário.
+  // Prioridade: cidade escrita na busca ("em X" ou só "X") > cidade da URL/filtro > cidade salva.
   // Estado/região escolhidos soltam a cidade salva; "Ver outras cidades" (ampliar) também.
-  const cidadeDaBusca = parsearBusca(queryBusca).cidadeExtraida
+  const cidadeDaBusca = parsearBusca(queryBusca, catalogoCidades).cidadeExtraida
 
   // `?cidade=` traz o id da cidade (os filtros e a home gravam o id). Links antigos traziam o nome,
-  // e continuam valendo. É id quando bate com a cidade salva ou com alguma cidade da lista.
+  // e continuam valendo. É id quando bate com a cidade salva ou com alguma cidade conhecida.
+  const nomeDoIdNoCatalogo = catalogoCidades.find(c => c.id === filtroCidade)?.nome
   const cidadeDoFiltro = prestadoresBase.find(p => p.cidade_id && p.cidade_id === filtroCidade)
-  const filtroCidadeEhId = Boolean(filtroCidade) && (filtroCidade === cidadeSalvaId || Boolean(cidadeDoFiltro))
+  const filtroCidadeEhId = Boolean(filtroCidade) && (
+    filtroCidade === cidadeSalvaId || Boolean(nomeDoIdNoCatalogo) || Boolean(cidadeDoFiltro)
+  )
   const nomeDoFiltro = !filtroCidade
     ? ''
     : filtroCidadeEhId
-      ? (cidadeDoFiltro?.cidade_nome || cidadeSalvaNome || '')
+      ? (nomeDoIdNoCatalogo || cidadeDoFiltro?.cidade_nome || cidadeSalvaNome || '')
       : filtroCidade
 
   const { nome: cidadeNome, origem: origemCidade } = decidirCidade({
@@ -205,8 +220,8 @@ export function usePrestadores() {
   })
   const cidadeEfetivaNormalizada = normalizarCidade(cidadeNome)
 
-  // Quando sabemos o id da cidade (filtro por id ou cidade salva), filtramos por ele; só pelo nome
-  // quando a cidade veio escrita na busca ou num link antigo.
+  // Quando sabemos o id da cidade (filtro por id ou cidade salva), a SEDE é conferida pelo id;
+  // a área de atuação sempre pelo nome. Só pelo nome quando a cidade veio escrita na busca ou num link antigo.
   let cidadeEfetivaId = ''
   if (origemCidade === 'filtro' && filtroCidadeEhId) cidadeEfetivaId = filtroCidade
   else if (origemCidade === 'salva' && cidadeSalvaId) cidadeEfetivaId = cidadeSalvaId
@@ -216,7 +231,9 @@ export function usePrestadores() {
     ? ''
     : filtroCidadeEhId
       ? filtroCidade
-      : prestadoresBase.find(p => normalizarCidade(p.cidade_nome) === cidadeEfetivaNormalizada)?.cidade_id || ''
+      : catalogoCidades.find(c => normalizarCidade(c.nome) === cidadeEfetivaNormalizada)?.id
+        || prestadoresBase.find(p => normalizarCidade(p.cidade_nome) === cidadeEfetivaNormalizada)?.cidade_id
+        || ''
 
   const filtrosAtivos = useMemo(() => ({
     estado: filtroEstado,
@@ -227,15 +244,16 @@ export function usePrestadores() {
     cidadeId: cidadeEfetivaId,
   }), [filtroEstado, filtroRegiao, filtroGrupo, filtroCategoria, cidadeEfetivaNormalizada, cidadeEfetivaId])
 
+  // Com cidade em vigor, quem tem essa cidade como sede vem antes de quem só atende nela.
   const prestadoresExibidos = useMemo(
-    () => filtrarExibidos(prestadoresBase, filtrosAtivos),
+    () => ordenarPorCidade(filtrarExibidos(prestadoresBase, filtrosAtivos), filtrosAtivos),
     [prestadoresBase, filtrosAtivos],
   )
 
   // Contagem de cada opção = o que sobraria ao escolhê-la (ver lib/buscaFiltros.ts)
   const facetas = useMemo(
-    () => calcularFacetas(prestadoresBase, filtrosAtivos),
-    [prestadoresBase, filtrosAtivos],
+    () => calcularFacetas(prestadoresBase, filtrosAtivos, catalogoCidades),
+    [prestadoresBase, filtrosAtivos, catalogoCidades],
   )
 
   useEffect(() => {

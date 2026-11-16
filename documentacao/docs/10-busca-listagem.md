@@ -6,11 +6,11 @@ Página de resultados: `app/prestadores/page.tsx`. As regras puras ficam em `lib
 
 A busca combina o serviço com a cidade. Prioridade (quem vale primeiro):
 
-1. Cidade escrita no texto: `Massoterapia em Maringá`.
+1. Cidade escrita no texto: `Massoterapia em Maringá` ou, sem o "em", `Massoterapia Maringá` (a cidade só é reconhecida se for o nome de uma cidade ativa do catálogo; o nome mais longo ganha, como "São Paulo").
 2. Cidade escolhida nos filtros ou já na URL (`?cidade=`). O parâmetro leva o **id da cidade** (duas cidades de estados diferentes podem ter o mesmo nome); links antigos com o nome continuam funcionando.
 3. Cidade salva do usuário (cookie `pqf_cidade`, 30 dias, com id e nome). É só o ponto de partida e filtra pelo id.
 
-Escolher **Estado** ou **Região** solta a cidade salva (são recortes mais amplos). A busca **não** usa `cidades_atendidas` para ampliar resultados.
+Escolher **Estado** ou **Região** solta a cidade salva (são recortes mais amplos). Cada prestador pertence a uma cidade pela **sede** (`cidade_id`) e pelas **áreas de atuação** (`cidades_atendidas`, nomes). Com uma cidade em vigor, a lista traz quem tem essa cidade como sede **ou** como área de atuação. Quem tem a cidade como sede vem primeiro; dentro de cada grupo, a ordem de sempre se mantém. O menu "Cidade" conta cada prestador uma vez em cada cidade em que aparece, então o número bate com a lista.
 
 **A cidade em vigor aparece para a pessoa.** O título diz `Profissionais em Londrina` ou `Resultados para "pedreiro" em Londrina`; sem cidade conhecida o título é genérico (`Profissionais cadastrados`, nunca "sua região"). Logo abaixo, numa linha só, `Ver outras cidades` à esquerda e o contador (`24 encontrados`) à direita (`components/busca/CidadeDaBusca.tsx`); a cidade em si fica só no título, sem repetir. Se a cidade foi escrita na própria busca, o título também a mostra.
 
@@ -20,6 +20,8 @@ Escolher **Estado** ou **Região** solta a cidade salva (são recortes mais ampl
 | --- | --- |
 | `Massoterapia` com cidade salva Londrina | Londrina (título "em Londrina") |
 | `Massoterapia em Maringá` | Maringá (título só com a busca) |
+| `Massoterapia Maringá` (sem "em") | Maringá, igual à linha acima |
+| Prestador com sede em Rolândia que atende Londrina, busca `pedreiro` com cidade salva Londrina | Aparece depois dos de sede em Londrina |
 | `Massoterapia` + `ampliar=1` | Todas as cidades |
 | Filtro manual Maringá | Maringá |
 | Sem cidade salva | Todas as cidades, título genérico, convite de localização |
@@ -59,7 +61,8 @@ Limite: a página ainda baixa os perfis da cidade (ou do catálogo todo) de uma 
 
 - O Supabase corta consultas em ~1000 linhas **sem avisar**. `lerTodasAsPaginas` lê página por página usando a contagem total (com 949 ativos em 14/11/2026, o corte aconteceria em breve e sumiria quem estivesse no fim).
 - Só as colunas que a lista usa (antes era `select('*')`, que trazia WhatsApp e bio de todos).
-- Cidade salva igual à cidade em vigor → consulta só a cidade (menos dados). Caso contrário, catálogo todo.
+- Cidade salva igual à cidade em vigor → consulta só a cidade (menos dados): quem tem `cidade_id` igual OU `cidades_atendidas` contendo o nome da cidade. Caso contrário, catálogo todo.
+- O catálogo de cidades (`lib/cidadesCatalogo.ts`) é lido uma vez por aba. Se falhar, a busca continua, só sem reconhecer cidade escrita sem "em".
 - Em falha, a tela mostra o aviso com **Tentar de novo**.
 
 ## Página (detalhes)
