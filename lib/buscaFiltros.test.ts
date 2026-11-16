@@ -117,14 +117,20 @@ describe('área de atuação (cidades_atendidas)', () => {
     const cambe = item({ cidade_id: 'cid-lon', cidades_atendidas: ['Cambe - PR'] })
     expect(filtrarExibidos([cambe], { ...sem, cidade: 'cambe' })).toEqual([cambe])
   })
-  it('ordena a sede antes de quem só atende a cidade, mantendo a ordem interna', () => {
+  it('dentro da mesma faixa, a sede vem antes de quem só atende, mantendo a ordem interna', () => {
     const outraAtende = item({ cidade_id: 'cid-mar', cidade_nome: 'Maringá', cidades_atendidas: ['Londrina'] })
     const londrinaSede = item({})
-    const r = ordenarPorCidade([outraAtende, wesley, londrinaSede], { ...sem, cidade: 'londrina' })
+    const r = ordenarPorCidade([outraAtende, wesley, londrinaSede], { ...sem, cidade: 'londrina' }, () => 1)
     expect(r).toEqual([londrinaSede, outraAtende, wesley])
   })
+  it('a faixa vem antes da sede: perfil real que atende vence curadoria da sede', () => {
+    const curadoriaSede = { ...item({}), faixa: 10 }
+    const realAtende = { ...item({ cidade_id: 'cid-rol', cidade_nome: 'Rolândia', cidades_atendidas: ['Londrina'] }), faixa: 1.5 }
+    const r = ordenarPorCidade([curadoriaSede, realAtende], { ...sem, cidade: 'londrina' }, p => p.faixa)
+    expect(r).toEqual([realAtende, curadoriaSede])
+  })
   it('sem cidade em vigor, a ordem não muda', () => {
-    const r = ordenarPorCidade([wesley, base[0]], sem)
+    const r = ordenarPorCidade([wesley, base[0]], sem, () => 1)
     expect(r).toEqual([wesley, base[0]])
   })
   it('a contagem da Cidade inclui quem atende, e bate com a lista', () => {
