@@ -8,6 +8,7 @@ export type SegmentoAd =
   | 'limpeza'
   | 'jardinagem'
   | 'informatica'
+  | 'automotivo'
   | 'geral'
 
 const MAPA: Record<string, SegmentoAd> = {
@@ -25,6 +26,17 @@ const MAPA: Record<string, SegmentoAd> = {
   jardineiro: 'jardinagem',
   jardinagem: 'jardinagem',
   informatica: 'informatica',
+  'mecânica geral': 'automotivo',
+  'funilaria e pintura automotiva': 'automotivo',
+  'auto elétrica': 'automotivo',
+  borracharia: 'automotivo',
+  'lavagem e polimento': 'automotivo',
+  'insulfilm e envelopamento': 'automotivo',
+  'som e alarme automotivo': 'automotivo',
+  'ar condicionado automotivo': 'automotivo',
+  'vidraceiro automotivo': 'automotivo',
+  'alinhamento e balanceamento': 'automotivo',
+  'guincho e reboque': 'automotivo',
 }
 
 export function resolverSegmento(categoria?: string): SegmentoAd {

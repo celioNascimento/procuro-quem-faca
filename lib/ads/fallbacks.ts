@@ -66,6 +66,14 @@ const FALLBACKS_POR_SEGMENTO: Record<SegmentoAd, AdFallback[]> = {
     href: ROTA_CAPTACOES,
     cor: 'from-slate-600 to-slate-700',
   }],
+  automotivo: [{
+    emoji: '📢',
+    titulo: 'Sua autopeças ou oficina em destaque',
+    subtitulo: 'Anuncie para motoristas que estão procurando mecânico, funilaria ou borracharia na sua região.',
+    cta: 'Anunciar agora',
+    href: ROTA_CAPTACOES,
+    cor: 'from-slate-700 to-slate-800',
+  }],
   geral: [
     {
       emoji: '🚀',
