@@ -26,11 +26,11 @@ export default function QuemSomos() {
             </p>
 
             <p>
-              Por isso criamos uma plataforma simples, sem cadastro complicado e sem intermediário — você encontra o profissional certo, fala direto pelo WhatsApp, e ajuda outros moradores com sua avaliação depois do serviço.
+              Por isso criamos uma plataforma simples, sem cadastro complicado e sem intermediário — você encontra o profissional certo, fala direto pelo WhatsApp, e ajuda outras pessoas com sua avaliação depois do serviço.
             </p>
 
             <p>
-              Estamos começando em Londrina, crescendo aos poucos, com atenção a cada detalhe. Se você é cliente ou prestador, obrigado por fazer parte dessa construção com a gente.
+              Estamos crescendo aos poucos, cidade por cidade, com atenção a cada detalhe. Se você é cliente ou prestador, obrigado por fazer parte dessa construção com a gente.
             </p>
           </div>
 
