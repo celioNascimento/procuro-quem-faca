@@ -93,3 +93,9 @@ Caminho "aprovada": criada na semente do banco de teste a conta e2e-jorge@pqf-te
 Achado (consulta real): a razão social do MEI vem como "47.403.170 JORGE PAULO DE LIMA", com os 8 dígitos-base do CNPJ no INÍCIO (não o CPF no fim, como o doc 19 supunha), e o QSA vem vazio. Por isso a conferência de nome dava "pendente". Corrigido em lib/cnpj/nomes.ts (remove o prefixo e o CPF no fim), com testes unitários.
 Atenção ao recapturar o baseline: com a semente já certa, rodar só e2e_capturar_baseline(). Rodar e2e_resetar_fixtures() antes apaga o que ainda não está no baseline.
 Risco aceito pelo dono: o teste consulta a Receita de verdade (se as fontes caírem, é pulado). O E2E com APIs simuladas continua pendente.
+
+Atualização (17/11, noite, fila do admin)
+
+Fila de revisão feita: migração 20261117210000_fila_revisao_cnpj.sql (só no banco de teste) com admin_fila_verificacoes(filtro) e admin_decidir_verificacao(id, decisao, motivo). Rejeitar/revogar apaga a linha de prestador_cnpj (libera o CNPJ); aprovar exige situação ATIVA e grava validade de 35 dias. Tela em /admin/verificacoes (abas Aguardando, Aprovadas, Rejeitadas; item "Selos (CNPJ)" no menu). Camadas: types/verificacoesAdmin.ts, lib/services/adminVerificacoes.service.ts, hooks/useAdminVerificacoes.ts, components/admin/verificacoes/VerificacaoCard.tsx.
+Semente do banco de teste ganhou duas verificações pendentes (Pedro e Maria, CNPJs fictícios TESTE000000100 e TESTE000000200); baseline recapturado sem reset prévio. E2E: tests/e2e/homologacao/admin-verificacoes.spec.ts (login do admin via entrarComoAdmin).
+Decisões tomadas por padrão (confirmar): (1) rejeitada não reabre; o prestador reenvia o CNPJ e a verificação volta a pendente; (2) o prestador ainda NÃO é avisado da decisão (aparece na aba CNPJ de "Dados Profissionais", item 5); (3) sem contador no menu e sem entrar no resumo diário de pendências por e-mail (a seguir).

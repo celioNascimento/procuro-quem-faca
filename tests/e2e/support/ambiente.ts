@@ -71,6 +71,12 @@ export const CONTAS: Record<Papel, { email: string; senha: string; nome: string 
   },
 }
 
+/** Conta fictícia do administrador (login em /admin/login). */
+export const CONTA_ADMIN = {
+  email: process.env.E2E_ADMIN_EMAIL ?? 'admin@pqf-teste.invalid',
+  senha: process.env.E2E_ADMIN_SENHA ?? SENHA_PADRAO_TESTE,
+}
+
 /** Perfil público fictício semeado no banco de teste. */
 export const PERFIL_SEED = {
   slug: 'pedro-pedreiro-teste-pedreiro-londrina',
