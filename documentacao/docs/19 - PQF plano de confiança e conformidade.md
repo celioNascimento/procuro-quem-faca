@@ -60,7 +60,7 @@ Uma única tabela, `prestador_verificacoes`, serve a CNPJ, formação, conselho,
 | `verificado_por`, `verificado_em` | Quem aprovou e quando (ligado a `perfis_admin`) |
 | `conflito_parceiro` | Indica se o prestador tem relação com parceiro comercial (regra 6) |
 
-Os selos são independentes (CNPJ, Formação, Seguro, CND) e o nível do prestador é calculado a partir das verificações aprovadas, nunca editado à mão. Isso cobre casos que uma escada linear não cobre, como o eletricista com CNPJ e seguro, mas sem diploma. Decisão pendente: o boolean `verificado` de `prestadores` vira o nível Bronze ou é substituído.
+Os selos são independentes (CNPJ, Formação, Seguro, CND) e o nível do prestador é calculado a partir das verificações aprovadas, nunca editado à mão. Isso cobre casos que uma escada linear não cobre, como o eletricista com CNPJ e seguro, mas sem diploma. Decidido em 17/11/2026: o boolean `verificado` de `prestadores` (que ninguém usa) é substituído pelo nível calculado e removido numa migração posterior.
 
 ## Etapa 1: LGPD completa
 
@@ -241,6 +241,17 @@ A segunda atualização cria o selo "CNPJ ativo" e a estrutura comum de verifica
 - **Fonte dos dados:** as consultas gratuitas (BrasilAPI e espelhos como minhareceita) usam os dados abertos da Receita, atualizados mensalmente e com limite de taxa. Consulta em tempo real existe em APIs comerciais, como a CNPJá.
 - **Limite do selo:** CNPJ ativo prova que a empresa existe, não que quem se cadastrou é o dono. O texto do selo deve ser "CNPJ ativo, consultado em dd/mm".
 
+**Decisões de 17/11/2026**
+
+- **Fontes:** BrasilAPI primeiro, minhareceita como reserva e ReceitaWS por último (limite baixo), todas atrás de uma única função, com cache. Trocar para API comercial no futuro não mexe no resto.
+- **Aprovação automática:** situação cadastral ativa **e** nome do prestador igual (sem acento nem maiúsculas) à razão social do MEI, ao nome fantasia ou a algum sócio do QSA. Qualquer outro caso vai para a fila de revisão do admin.
+- **Limite honesto:** os dados são públicos, então a conferência de nome eleva a barra mas não prova que a pessoa é a dona. O texto do selo segue "CNPJ ativo, consultado em dd/mm", e a denúncia existente permite reportar selo indevido para revogação. Confirmação por telefone ou e-mail do cadastro da Receita fica para depois.
+- **CPF do MEI:** a razão social de MEI costuma vir com dígitos do CPF; eles são removidos antes de guardar ou exibir (a confirmar com consulta real na implementação).
+- **Experiência do prestador:** o nível não exige diploma. Entram selos independentes: "Experiência no PQF" (10 serviços concluídos e avaliados por 10 clientes diferentes, calculado pelo sistema), "tempo de CNPJ" (data de abertura) e "atividade compatível" (CNAE do CNPJ com a categoria do perfil).
+- **Níveis:** Bronze = CNPJ ativo aprovado. Prata = Bronze mais formação comprovada, conselho **ou** experiência no PQF. Ouro = mais seguro. Diamante = mais a camada corporativa (Etapa 5). Cada nível chega com a etapa que o habilita.
+- **Interface:** abas dentro de "Dados Profissionais", uma por conquista, com barra de evolução. A barra fala em conquistas ("1 de 4 selos"), nunca em perfil incompleto; etapas futuras aparecem como "Em breve" e não contam; ela é só visual e não altera a ordem na busca.
+- **Liberação:** tudo é construído e validado primeiro no ambiente de teste (banco de teste, preview e E2E). Só depois de validado o conjunto vai para produção, de uma vez.
+
 **Tarefas**
 
 - [ ] Criar `prestador_verificacoes` (estrutura comum) e a fila de revisão no painel admin
@@ -411,8 +422,8 @@ As decisões abaixo precisam de resposta antes ou durante as etapas indicadas.
 - [x] Etapa 1: confirmar os prazos de retenção dos registros de atividade (12 meses) e dos pedidos do titular já respondidos (12 meses) para ligar essas duas regras (confirmado e ligado em 11/11/2026)
 - [x] Etapa 1: base legal e opção de saída para prestadores que não vieram de cadastro direto (decidido em 10/11: interesse legítimo; saída por link pessoal que apaga o perfil, mantendo só dados anônimos das avaliações)
 - [ ] Etapa 1: verificar a região do Supabase e listar serviços com dados pessoais (prioridade baixa no Brasil; alta na expansão)
-- [ ] Etapa 2: o boolean `verificado` vira o nível Bronze ou é substituído
-- [ ] Etapa 2: fonte de consulta de CNPJ, gratuita com reserva ou API comercial em tempo real
+- [x] Etapa 2: o boolean `verificado` é substituído pelo nível calculado (decidido em 17/11/2026)
+- [x] Etapa 2: fonte de consulta de CNPJ gratuita, com reservas (decidido em 17/11/2026)
 - [ ] Etapa 3: quais categorias são regulamentadas e exigem conselho
 - [ ] Etapa 4: o nível mais alto influencia a ordem de exibição na vitrine
 - [ ] Etapa 4 e 5: consultar advogado sobre intermediação de seguros antes de qualquer receita relacionada a seguro
