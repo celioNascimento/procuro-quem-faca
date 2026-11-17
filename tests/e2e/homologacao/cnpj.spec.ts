@@ -38,15 +38,16 @@ test.describe('verificação de CNPJ (rota /api/cnpj)', () => {
     expect((await resposta.json()).erro).toMatch(/inválido/i);
   });
 
-  test('CNPJ válido sem cadastro na Receita volta 422, sem gravar nada', async ({ page }) => {
+  test('CNPJ válido sem cadastro na Receita não vira aprovação', async ({ page }) => {
     await entrar(page, 'prestador');
     await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
     const resposta = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_SIMULADOR_VALIDO } });
-    // Se a fonte estiver fora do ar, a rota responde 503; nesse caso não há o que concluir.
-    const textoSemCadastro = await resposta.text();
-    console.log(`[cnpj] sem cadastro: HTTP ${resposta.status()} ${textoSemCadastro}`);
-    test.skip(resposta.status() === 503, 'Fontes públicas do CNPJ indisponíveis agora.');
-    expect(resposta.status()).toBe(422);
+    const texto = await resposta.text();
+    console.log(`[cnpj] sem cadastro: HTTP ${resposta.status()} ${texto}`);
+    // 422 se alguma fonte confirmou que não existe; 503 se as fontes não responderam de forma conclusiva
+    // (a BrasilAPI responde 403 à Vercel). Em nenhum dos dois casos pode haver aprovação.
+    expect([422, 503]).toContain(resposta.status());
+    expect(texto).not.toContain('"aprovada"');
   });
 
   test('CNPJ real é consultado nas fontes públicas e recebe aprovação ou fila', async ({ page }) => {
