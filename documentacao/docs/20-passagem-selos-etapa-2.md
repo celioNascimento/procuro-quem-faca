@@ -30,7 +30,7 @@ Parte A:
 5. Abas em "Dados Profissionais" (aba CNPJ primeiro) e barra de evolução.
 6. Selo no card e no perfil público, lendo `selos_publicos()`; mostrar o nível por `nivel_do_prestador()`.
 7. Testes E2E: semente com prestador e fila; **simular as APIs externas** no teste (não depender de BrasilAPI no CI); cobrir aprovação automática, envio à fila, rejeição e a barra.
-8. Job mensal (pg_cron, já instalado no banco de teste) para reconsultar e expirar o selo de CNPJ suspenso.
+8. Job de reconsulta do CNPJ: FEITO em 17/11 (cron da Vercel, não pg_cron; ver seção abaixo).
 
 Parte B: selos de experiência (10 serviços, 10 clientes), tempo de CNPJ e atividade compatível, mais o cálculo do nível Prata.
 
@@ -82,7 +82,7 @@ Liberação: abrir PR `homologacao` para `main` só com tudo validado; aplicar a
 2. Fila de revisão no painel admin (item 4).
 3. Abas e barra em "Dados Profissionais" (item 5).
 4. Selo no card e no perfil público (item 6).
-5. Job mensal: reconsulta, expiração do selo e limpeza de `cnpj_consultas_cache` vencido (item 8).
+5. Job de reconsulta: feito (item 8). Falta só validar em ambiente com CRON_SECRET (ver seção abaixo).
 6. Parte B: selos de experiência, tempo de CNPJ e atividade compatível.
 
 **Merge na `main`:** não feito. Só depois de tudo validado em teste.
@@ -114,3 +114,11 @@ Selo no card e no perfil público feito, só no ambiente de teste. Decisões do 
 Camadas: lib/selos/publico.ts (textos e agrupamento), lib/services/selosPublicos.service.ts (RPCs selos_publicos e nivel_do_prestador, cliente público), hooks/useSelosPublicos.ts (lote dos cards visíveis; useSeloDoPerfil), PrestadorCard (prop seloCnpj), ResultadosPaginados, PerfilHero (ícone no avatar), PerfilConfianca (item com nível e data). Falha na consulta de selos nunca quebra a lista nem o perfil.
 E2E: tests/e2e/homologacao/selos-publicos.spec.ts (sem selo, aprovado, revogado) e ajudante tests/e2e/support/admin.ts (decide CNPJ como admin pelo banco de teste).
 Pendente de limpeza: coluna prestadores.verificado (e o campo no tipo/queries) sai na migração posterior, junto com o fim da fase de teste.
+
+Atualização (17/11, noite, reconsulta do CNPJ)
+
+Decisões do dono: roda como cron da Vercel (não pg_cron: a cascata da Receita está em TypeScript e o projeto já usa cron da Vercel); CNPJ que deixou de estar ATIVO derruba o selo na hora e vai para a fila do admin (motivo situacao_nao_ativa); fontes fora do ar mantêm o selo e tentam de novo no dia seguinte; CNPJ ainda ATIVO só renova +35 dias, sem reconferir o nome.
+Como funciona: rota /api/cron/cnpj-reverificacao (vercel.json, todo dia 10:00 UTC, protegida por CRON_SECRET). Seleciona selos que vencem em até 5 dias (20 por execução, os mais próximos primeiro), reconsulta com a mesma cascata e cache de 24h, e grava via função do banco. Depois marca como 'expirada' o que venceu sem renovar e apaga o cache vencido. Por rodar todo dia, "mensal" na prática: cada selo é reconsultado por volta do dia 30 e, se falhar, volta a tentar até vencer.
+Banco (migração 20261117230000_reverificacao_cnpj.sql, só no banco de teste): cnpj_reverificacao_pendentes, cnpj_registrar_reverificacao (renovada | enviada_para_fila | ignorada; não mexe em selo que o admin já revogou), cnpj_expirar_vencidos, cnpj_limpar_cache. Todas só para service_role. Verificado no banco de teste numa transação descartada: renova (+35 dias), derruba para pendente, ignora o que não está aprovado e expira vencidos.
+Código: lib/cnpj/reverificar.ts (lógica pura, com testes), app/api/cron/cnpj-reverificacao/route.ts (com testes). Aviso ao prestador: não existe sistema de notificações para ele; o aviso aparece na aba CNPJ ("A Receita não mostra o seu CNPJ como ativo. Por isso o selo foi pausado..."), com teste em AbaCnpj.test.tsx.
+Pendente: não há E2E da rota (precisa de CRON_SECRET no ambiente de homologação e da Receita real). Antes do release: criar CRON_SECRET na Vercel de produção (já existe para os outros crons) e aplicar a migração 20261117230000 após as anteriores.

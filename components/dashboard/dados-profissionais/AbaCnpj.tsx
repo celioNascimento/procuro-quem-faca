@@ -33,6 +33,7 @@ export function AbaCnpj({ selo, temPerfil }: { selo: SeloCnpj; temPerfil: boolea
 
   const podeInformar = fase === 'sem' || fase === 'rejeitado' || fase === 'expirado'
   const cnpjMostrado = dados.cnpj ? mascararCnpj(dados.cnpj.cnpj) : null
+  const cnpjForaDeAtividade = !!dados.cnpj?.situacao && dados.cnpj.situacao !== 'ATIVA'
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,7 +49,14 @@ export function AbaCnpj({ selo, temPerfil }: { selo: SeloCnpj; temPerfil: boolea
       {fase === 'em_conferencia' && (
         <CartaoSecao titulo="Estamos conferindo" descricao="Nossa equipe confere o seu CNPJ." icone={<Hourglass size={20} />}>
           <div className="rounded-2xl bg-amber-50 p-4 text-amber-900" data-testid="cnpj-fase-conferencia">
-            <p className="text-sm font-bold">Seu CNPJ está em conferência.</p>
+            <p className="text-sm font-bold">
+              {cnpjForaDeAtividade ? 'A Receita não mostra o seu CNPJ como ativo.' : 'Seu CNPJ está em conferência.'}
+            </p>
+            {cnpjForaDeAtividade && (
+              <p className="mt-1 text-sm" data-testid="cnpj-aviso-inativo">
+                Por isso o selo foi pausado e nossa equipe vai conferir. Se o CNPJ já foi regularizado, é só aguardar.
+              </p>
+            )}
             <p className="mt-1 text-sm">
               {cnpjMostrado ? `${cnpjMostrado}${dados.cnpj?.razao_social ? ` · ${dados.cnpj.razao_social}` : ''}. ` : ''}
               Volte a esta aba mais tarde para ver o resultado. Enquanto isso, seu perfil continua normal na busca.
