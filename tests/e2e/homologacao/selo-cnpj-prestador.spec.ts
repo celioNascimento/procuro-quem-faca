@@ -4,14 +4,9 @@
 // A semente deixa o Pedro Pedreiro Teste com um CNPJ fictício em conferência. Nenhuma consulta
 // externa: remover e validar o campo não chamam a Receita; a aprovação vem do admin pelo banco.
 
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import {
-  CONTA_ADMIN,
-  CONTAS,
-  motivoParaPular,
-  SUPABASE_TESTE_ANON_KEY,
-  SUPABASE_TESTE_URL,
-} from '../support/ambiente';
+import { expect, test, type Page } from '@playwright/test';
+import { CONTAS, motivoParaPular } from '../support/ambiente';
+import { decidirCnpjComoAdmin } from '../support/admin';
 import { aceitarDocumentosSeAparecer, dispensarAvisoDeCookies, entrar } from '../support/entrar';
 import { resetarFixtures } from '../support/reset';
 
@@ -25,25 +20,6 @@ async function abrirAbaCnpj(page: Page) {
   await page.goto('/dashboard?aba=perfil&sub=cnpj');
   await aceitarDocumentosSeAparecer(page);
   await expect(page.getByRole('tab', { name: 'CNPJ' })).toHaveAttribute('aria-selected', 'true', { timeout: 20_000 });
-}
-
-async function aprovarComoAdmin(request: APIRequestContext) {
-  const login = await request.post(`${SUPABASE_TESTE_URL}/auth/v1/token?grant_type=password`, {
-    headers: { apikey: SUPABASE_TESTE_ANON_KEY, 'Content-Type': 'application/json' },
-    data: { email: CONTA_ADMIN.email, password: CONTA_ADMIN.senha },
-  });
-  expect(login.ok(), await login.text()).toBe(true);
-  const { access_token } = await login.json();
-  const cabecalho = { apikey: SUPABASE_TESTE_ANON_KEY, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' };
-  const fila = await request.post(`${SUPABASE_TESTE_URL}/rest/v1/rpc/admin_fila_verificacoes`, { headers: cabecalho, data: { p_filtro: 'pendentes' } });
-  expect(fila.ok()).toBe(true);
-  const pedro = (await fila.json()).find((v: { prestador_nome: string }) => v.prestador_nome === CONTAS.prestador.nome);
-  expect(pedro, 'pendência do Pedro na semente').toBeTruthy();
-  const decide = await request.post(`${SUPABASE_TESTE_URL}/rest/v1/rpc/admin_decidir_verificacao`, {
-    headers: cabecalho,
-    data: { p_verificacao_id: pedro.verificacao_id, p_decisao: 'aprovada' },
-  });
-  expect(decide.ok(), await decide.text()).toBe(true);
 }
 
 test.describe('aba CNPJ do prestador', () => {
@@ -89,7 +65,7 @@ test.describe('aba CNPJ do prestador', () => {
   });
 
   test('depois da aprovação do admin a aba mostra o selo conquistado e a barra em 1 de 1', async ({ page, request }) => {
-    await aprovarComoAdmin(request);
+    await decidirCnpjComoAdmin(request, CONTAS.prestador.nome, 'aprovada');
     await abrirAbaCnpj(page);
     await expect(page.getByTestId('cnpj-fase-aprovado')).toContainText(/CNPJ ativo, consultado em \d{2}\/\d{2}\/\d{4}/);
     await expect(page.getByTestId('evolucao-texto')).toHaveText('1 de 1 selo conquistado');

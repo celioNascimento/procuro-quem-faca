@@ -125,3 +125,15 @@ describe('PrestadorCard', () => {
     expect(container.querySelector('svg.lucide-hammer')).toBeNull()
   })
 })
+
+describe('PrestadorCard — selo de CNPJ', () => {
+  it('sem selo não mostra nada', () => {
+    render(<PrestadorCard prestador={prestador()} session={null} />)
+    expect(screen.queryByTestId('selo-cnpj-card')).toBeNull()
+  })
+
+  it('com selo mostra "CNPJ ativo" ao lado da categoria', () => {
+    render(<PrestadorCard prestador={prestador()} session={null} seloCnpj />)
+    expect(screen.getByTestId('selo-cnpj-card').textContent).toBe('CNPJ ativo')
+  })
+})

@@ -26,7 +26,7 @@ import CentralDivulgacaoTab from '@/components/dashboard/CentralDivulgacaoTab'
 import { baixarCanvas } from '@/lib/divulgacao/download'
 
 const completo: DadosDivulgacao = {
-  id: 7, nome: 'Elétrica Silva', slug: 'eletrica-silva', categoria: 'Eletricista', cidade: 'Londrina', verificado: true,
+  id: 7, nome: 'Elétrica Silva', slug: 'eletrica-silva', categoria: 'Eletricista', cidade: 'Londrina',
   whatsapp: '43999998888', fotoPerfilUrl: null, totalIndicacoes: 5, totalConcluidos: 3, garantiaDias: 30, fotosPortfolio: ['https://x/1.png'],
 }
 const vazio: DadosDivulgacao = { ...completo, totalIndicacoes: 0, totalConcluidos: 0, garantiaDias: 0, fotosPortfolio: [] }

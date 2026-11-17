@@ -17,6 +17,7 @@ import {
   verificarInventarioSegmento,
   type AnuncioComAnunciante,
 } from '@/lib/services/anunciosPublicos.service'
+import { useSelosPublicos } from '@/hooks/useSelosPublicos'
 import type { Prestador } from '@/types/prestador'
 import type { Anuncio } from '@/types/ads'
 
@@ -139,6 +140,8 @@ export function ResultadosPaginados({ prestadores, quantidadeInicial, session, c
 
   const visiveis = useMemo(() => prestadores.slice(0, quantidade), [prestadores, quantidade])
   const restantes = prestadores.length - visiveis.length
+  // Selos só dos cards que aparecem (10 por vez), uma consulta por lote novo.
+  const selosCnpj = useSelosPublicos(useMemo(() => visiveis.map((p) => Number(p.id)).filter(Number.isFinite), [visiveis]))
 
   // Só consulta o inventário das praças que aparecem nos cards visíveis (e uma vez cada).
   const pracasVisiveis = useMemo(() => {
@@ -187,7 +190,7 @@ export function ResultadosPaginados({ prestadores, quantidadeInicial, session, c
 
           return (
             <Fragment key={p.id}>
-              <PrestadorCard prestador={p} session={session} />
+              <PrestadorCard prestador={p} session={session} seloCnpj={selosCnpj.has(Number(p.id))} />
 
               {comAnuncio && (
                 <div className="lg:col-span-2">

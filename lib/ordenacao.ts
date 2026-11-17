@@ -2,11 +2,11 @@
 //
 // Ordem dos resultados da busca (menor peso aparece primeiro):
 //   vitrine → perfis reais (cadastro direto ou assumido) → curadoria pública.
-// Dentro de cada faixa, quem tem nota melhor vem antes. Perfis verificados sobem uma faixa.
+// Dentro de cada faixa, quem tem nota melhor vem antes. Selos de confiança (CNPJ etc.) NÃO mudam a ordem:
+// são opcionais e não podem punir quem não os tem (decisão de 17/11/2026, doc 19).
 
 type Prestador = {
   origem_tipo: string | null
-  verificado: boolean | null
   media_nota?: number | null
 }
 
@@ -20,7 +20,6 @@ export function pesoOrdenacao(p: Prestador): number {
   if (p.origem_tipo === 'vitrine') return -1
   if (p.origem_tipo === 'curadoria_publica') return 10
   const real = ORIGENS_REAIS.includes(p.origem_tipo ?? '')
-  if (real && p.verificado) return 0 + ajusteNota
   if (real) return 1 + ajusteNota
   return 2 + ajusteNota
 }

@@ -3,15 +3,18 @@
 'use client'
 import { useState, useRef, useLayoutEffect } from 'react'
 import Link from 'next/link'
-import { MapPin, ChevronRight } from 'lucide-react'
+import { MapPin, ChevronRight, BadgeCheck } from 'lucide-react'
 import type { Prestador } from '@/types/prestador'
 import { corDasIniciais, getIniciais, getLocalizacao, getPerfilHref } from '@/lib/prestadorUtils'
 import { visualDaArea } from '@/lib/areaVisual'
+import { ROTULO_SELO_CARD } from '@/lib/selos/publico'
 
 type Props = {
   prestador: Prestador
   session: unknown
   registrarLog?: (acao: string, detalhes?: Record<string, unknown>) => void
+  /** true quando o prestador tem o selo de CNPJ ativo (aprovado e vigente). */
+  seloCnpj?: boolean
 }
 
 // Largura estimada do badge "+N" (px), reservada de antemão para não
@@ -20,7 +23,7 @@ const LARGURA_BADGE_EXTRA = 44
 // Espaço entre badges (gap-1.5 = 6px)
 const GAP_BADGES = 6
 
-export default function PrestadorCard({ prestador, session, registrarLog }: Props) {
+export default function PrestadorCard({ prestador, session, registrarLog, seloCnpj = false }: Props) {
   const [imgError, setImgError] = useState(false)
 
   const habilidadesTotais = prestador?.habilidades || []
@@ -115,9 +118,20 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                 {prestador.nome}
               </Link>
             </h2>
-            <span className="text-xs font-bold uppercase leading-tight tracking-wide text-blue-600">
-              {prestador.categoria}
-            </span>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="text-xs font-bold uppercase leading-tight tracking-wide text-blue-600">
+                {prestador.categoria}
+              </span>
+              {seloCnpj && (
+                <span
+                  data-testid="selo-cnpj-card"
+                  className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-bold text-green-700"
+                >
+                  <BadgeCheck size={12} aria-hidden="true" />
+                  {ROTULO_SELO_CARD}
+                </span>
+              )}
+            </div>
             {(localizacao || isPublico) && (
               <div className="flex flex-wrap items-center gap-x-3">
                 {localizacao && (

@@ -107,3 +107,10 @@ Camadas: lib/selos/cnpjEstado.ts (fase do selo) e lib/selos/evolucao.ts (barra),
 Fases da aba CNPJ: sem CNPJ (formulário), em conferência, conquistado ("CNPJ ativo, consultado em dd/mm/aaaa"), rejeitado e vencido (voltam ao formulário). O campo aceita letras e números com máscara e confere os dígitos antes de enviar.
 Rota nova: DELETE /api/cnpj (botão "Remover meu CNPJ"): apaga prestador_cnpj e a verificação do próprio prestador; tira o selo e libera o número.
 E2E: tests/e2e/homologacao/selo-cnpj-prestador.spec.ts. Decisão do dono: cada conteúdo em sua aba (Meu perfil, CNPJ, e as próximas).
+
+Atualização (17/11, noite, selo para o cliente)
+
+Selo no card e no perfil público feito, só no ambiente de teste. Decisões do dono: (1) o selo NÃO muda a ordem da busca (a regra antiga de `verificado` saiu de lib/ordenacao.ts); (2) card mostra "CNPJ ativo"; perfil mostra "Nível Bronze · CNPJ ativo, consultado em dd/mm" (nível vem de nivel_do_prestador(), data de selos_publicos()); (3) adesivos e cartão de visita não levam mais a palavra "Verificado".
+Camadas: lib/selos/publico.ts (textos e agrupamento), lib/services/selosPublicos.service.ts (RPCs selos_publicos e nivel_do_prestador, cliente público), hooks/useSelosPublicos.ts (lote dos cards visíveis; useSeloDoPerfil), PrestadorCard (prop seloCnpj), ResultadosPaginados, PerfilHero (ícone no avatar), PerfilConfianca (item com nível e data). Falha na consulta de selos nunca quebra a lista nem o perfil.
+E2E: tests/e2e/homologacao/selos-publicos.spec.ts (sem selo, aprovado, revogado) e ajudante tests/e2e/support/admin.ts (decide CNPJ como admin pelo banco de teste).
+Pendente de limpeza: coluna prestadores.verificado (e o campo no tipo/queries) sai na migração posterior, junto com o fim da fase de teste.

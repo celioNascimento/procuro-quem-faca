@@ -3,20 +3,24 @@
 // Bloco de confiança no topo do perfil. A prova social é a quantidade de INDICAÇÕES de
 // clientes (não nota média). Só mostra o que existe: sem indicação, sem serviço concluído
 // ou sem garantia, o item simplesmente não aparece (nunca "0").
-import { ThumbsUp, CheckCircle2, ShieldCheck, MapPin } from 'lucide-react'
+import { ThumbsUp, CheckCircle2, ShieldCheck, MapPin, BadgeCheck } from 'lucide-react'
 import type { PrestadorPerfil } from '@/types/perfil'
+import { rotuloNivel, textoSeloCnpj, type SeloCnpjPublico } from '@/lib/selos/publico'
 
 interface Props {
   prestador: PrestadorPerfil
   totalIndicacoes: number
   totalConcluidos: number
+  /** Selo de CNPJ vigente e nível calculado pelo banco; ausentes = não aparece nada. */
+  selo?: SeloCnpjPublico | null
+  nivel?: string | null
 }
 
 function plural(n: number, singular: string, pluralForm: string) {
   return n === 1 ? singular : pluralForm
 }
 
-export default function PerfilConfianca({ prestador, totalIndicacoes, totalConcluidos }: Props) {
+export default function PerfilConfianca({ prestador, totalIndicacoes, totalConcluidos, selo = null, nivel = null }: Props) {
   const garantiaDias = prestador.garantia_dias ?? 0
   const cidades = (prestador.cidades_atendidas ?? []).filter(c => c?.trim())
   const atende = cidades.length > 0
@@ -24,7 +28,13 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalConcl
     : prestador.cidades?.nome ?? ''
 
   const temDestaque = totalIndicacoes > 0
+  const nomeNivel = rotuloNivel(nivel)
   const itens = [
+    selo && {
+      key: 'selo-cnpj',
+      icon: <BadgeCheck size={14} className="text-green-600" aria-hidden="true" />,
+      texto: nomeNivel ? `Nível ${nomeNivel} · ${textoSeloCnpj(selo)}` : textoSeloCnpj(selo),
+    },
     totalConcluidos > 0 && {
       key: 'concluidos',
       icon: <CheckCircle2 size={14} className="text-green-500" aria-hidden="true" />,

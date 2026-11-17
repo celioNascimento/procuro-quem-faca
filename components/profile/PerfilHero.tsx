@@ -2,7 +2,7 @@
 
 'use client'
 import Link from 'next/link'
-import { MapPin, ShieldCheck, Flag, Share2, CheckCircle, Wrench } from 'lucide-react'
+import { MapPin, BadgeCheck, Flag, Share2, CheckCircle, Wrench } from 'lucide-react'
 import type { PrestadorPerfil } from '@/types/perfil'
 import { visualDaArea } from '@/lib/areaVisual'
 import { corDasIniciais, getIniciais } from '@/lib/prestadorUtils'
@@ -11,9 +11,11 @@ interface Props {
   prestador: PrestadorPerfil
   compartilhando: boolean
   onCompartilhar: () => void
+  /** true quando há selo de CNPJ ativo e vigente. */
+  seloCnpj?: boolean
 }
 
-export default function PerfilHero({ prestador, compartilhando, onCompartilhar }: Props) {
+export default function PerfilHero({ prestador, compartilhando, onCompartilhar, seloCnpj = false }: Props) {
   const localizacao = [prestador.bairro, prestador.cidades?.nome]
     .filter(v => v?.trim())
     .join(', ')
@@ -52,9 +54,12 @@ export default function PerfilHero({ prestador, compartilhando, onCompartilhar }
                 </div>
               )}
             </div>
-            {prestador.verificado && (
-              <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1 rounded-full shadow border-2 border-white">
-                <ShieldCheck size={10} strokeWidth={3} />
+            {seloCnpj && (
+              <div
+                title="CNPJ ativo"
+                className="absolute -bottom-1 -right-1 bg-green-600 text-white p-1 rounded-full shadow border-2 border-white"
+              >
+                <BadgeCheck size={12} strokeWidth={3} aria-hidden="true" />
               </div>
             )}
           </div>
