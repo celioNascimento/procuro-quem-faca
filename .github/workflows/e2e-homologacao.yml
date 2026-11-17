@@ -1,8 +1,11 @@
 # E2E contra o ambiente de HOMOLOGAÇÃO (banco Supabase de teste, contas fictícias).
 # Nunca aponta para produção: o endereço é fixo e os testes abortam se a base for o domínio real.
 #
-# Segredo necessário (GitHub → Settings → Secrets and variables → Actions):
-#   E2E_BYPASS_SECRET = "Protection Bypass for Automation" do projeto na Vercel.
+# Roda dentro da imagem oficial do Playwright (navegadores já instalados). O passo
+# "playwright install" travava ~10 min no download do navegador nos runners do GitHub.
+#
+# Segredo OPCIONAL: E2E_BYPASS_SECRET ("Protection Bypass for Automation" da Vercel).
+# Só é necessário se a proteção de deploy da Vercel for ligada. Sem ela, deixe em branco.
 name: E2E Homologação
 on:
   push:
@@ -15,6 +18,9 @@ jobs:
   e2e:
     timeout-minutes: 30
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --ipc=host --init
     env:
       E2E_BASE_URL: https://procuro-quem-faca-git-homologacao-celionascimentos-projects.vercel.app
       E2E_HOMOLOGACAO: '1'
@@ -26,19 +32,28 @@ jobs:
         node-version: lts/*
     - name: Install dependencies
       run: npm ci
-    - name: Install Playwright Browsers
-      timeout-minutes: 10
-      run: npx playwright install --with-deps chromium
     - name: Aguardar o deploy desta branch ficar pronto
-      # O push dispara o deploy da Vercel em paralelo; espera a página responder sem erro de servidor.
+      # O push dispara o deploy da Vercel em paralelo; espera a página responder 200.
       run: |
-        for i in $(seq 1 40); do
-          code=$(curl -s -o /dev/null -w '%{http_code}' \
-            "$E2E_BASE_URL/?x-vercel-protection-bypass=$E2E_BYPASS_SECRET" || true)
-          if [ "$code" = "200" ]; then echo "Deploy pronto."; exit 0; fi
-          echo "Tentativa $i: HTTP $code. Aguardando 15s..."; sleep 15
-        done
-        echo "Deploy não ficou pronto a tempo."; exit 1
+        node -e "
+        const base = process.env.E2E_BASE_URL;
+        const segredo = process.env.E2E_BYPASS_SECRET;
+        const url = segredo ? base + '/?x-vercel-protection-bypass=' + segredo : base + '/';
+        (async () => {
+          for (let i = 1; i <= 40; i++) {
+            try {
+              const r = await fetch(url, { redirect: 'follow' });
+              if (r.status === 200) { console.log('Deploy pronto.'); return; }
+              console.log('Tentativa ' + i + ': HTTP ' + r.status + '. Aguardando 15s...');
+            } catch (e) {
+              console.log('Tentativa ' + i + ': ' + e.message + '. Aguardando 15s...');
+            }
+            await new Promise((ok) => setTimeout(ok, 15000));
+          }
+          console.log('Deploy não ficou pronto a tempo.');
+          process.exit(1);
+        })();
+        "
     - name: Run Playwright tests (homologação)
       run: npx playwright test
     - uses: actions/upload-artifact@v4
