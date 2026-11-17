@@ -43,7 +43,7 @@ test.describe('verificação de CNPJ (rota /api/cnpj)', () => {
     await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
     const resposta = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_SIMULADOR_VALIDO } });
     // Se a fonte estiver fora do ar, a rota responde 503; nesse caso não há o que concluir.
-    console.log(`[cnpj] sem cadastro: HTTP ${resposta.status()}`);
+    console.log(`[cnpj] sem cadastro: HTTP ${resposta.status()} ${await resposta.clone().text()}`);
     test.skip(resposta.status() === 503, 'Fontes públicas do CNPJ indisponíveis agora.');
     expect(resposta.status()).toBe(422);
   });
@@ -52,7 +52,7 @@ test.describe('verificação de CNPJ (rota /api/cnpj)', () => {
     await entrar(page, 'prestador');
     await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
     const resposta = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_REAL } });
-    console.log(`[cnpj] consulta real: HTTP ${resposta.status()}`);
+    console.log(`[cnpj] consulta real: HTTP ${resposta.status()} ${await resposta.clone().text()}`);
     test.skip(resposta.status() === 503, 'Fontes públicas do CNPJ indisponíveis agora.');
     expect(resposta.status(), await resposta.text()).toBe(200);
     const corpo = await resposta.json();
