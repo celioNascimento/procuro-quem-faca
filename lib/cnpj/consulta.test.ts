@@ -1,5 +1,5 @@
 // lib/cnpj/consulta.test.ts
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { consultarCnpj, type Buscador } from './consulta'
 
 const CNPJ = '11222333000181'
@@ -84,6 +84,19 @@ describe('consultarCnpj', () => {
   it('reporta indisponivel quando alguma fonte falha sem 404', async () => {
     const r = await consultarCnpj(CNPJ, { buscar: buscadorFalso({ brasilapi: 'erro' }), cache: new Map() })
     expect(r).toEqual({ ok: false, motivo: 'indisponivel' })
+  })
+
+  it('envia um User-Agent próprio nas chamadas às fontes (não o padrão "node")', async () => {
+    const fetchEspiao = vi.fn(async () => new Response(JSON.stringify(respostaBrasilApi), { status: 200 }))
+    vi.stubGlobal('fetch', fetchEspiao)
+    try {
+      await consultarCnpj(CNPJ, { cache: new Map() })
+      const [, init] = fetchEspiao.mock.calls[0] as unknown as [string, { headers: Record<string, string> }]
+      expect(init.headers['user-agent']).toMatch(/ProcuroQuemFaca/)
+      expect(init.headers['user-agent']).not.toBe('node')
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('guarda em cache e não chama as fontes de novo dentro do prazo', async () => {

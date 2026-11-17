@@ -22,6 +22,12 @@ export type DadosCnpj = {
   fonte: FonteCnpj
 }
 
+// Identifica o app para as fontes. O padrão do Node ("node") é tratado como bot pela Vercel e pelas APIs.
+export const CABECALHOS_CONSULTA = {
+  accept: 'application/json',
+  'user-agent': 'ProcuroQuemFaca/1.0 (+https://procuroquemfaca.com.br)',
+}
+
 export type RespostaHttp = { status: number; json: () => Promise<unknown> }
 export type Buscador = (url: string, opts: { signal: AbortSignal }) => Promise<RespostaHttp>
 
@@ -110,7 +116,7 @@ export type OpcoesConsulta = {
 export const cachePadrao = new Map<string, { dados: DadosCnpj; expiraEm: number }>()
 
 export async function consultarCnpj(cnpj: string, opts: OpcoesConsulta = {}): Promise<ResultadoConsulta> {
-  const buscar: Buscador = opts.buscar ?? ((url, o) => fetch(url, { signal: o.signal, headers: { accept: 'application/json' } }))
+  const buscar: Buscador = opts.buscar ?? ((url, o) => fetch(url, { signal: o.signal, headers: CABECALHOS_CONSULTA }))
   const fontes = opts.fontes ?? FONTES
   const cache = opts.cache ?? cachePadrao
   const agora = opts.agora ?? Date.now
