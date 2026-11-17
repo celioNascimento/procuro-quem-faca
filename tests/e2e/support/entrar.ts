@@ -64,8 +64,9 @@ export async function aceitarDocumentosSeAparecer(page: Page) {
   } catch {
     return; // não apareceu: já aceito
   }
-  for (const caixa of await dialogo.getByRole('checkbox').all()) {
-    await caixa.check({ force: true });
+  // As caixas reais são escondidas (class "hidden"): clica no quadradinho visível de cada linha.
+  for (const quadrado of await dialogo.locator('label > div').all()) {
+    await quadrado.click();
   }
   await dialogo.getByRole('button', { name: 'Aceitar e continuar' }).click();
   await dialogo.waitFor({ state: 'hidden', timeout: 20_000 });

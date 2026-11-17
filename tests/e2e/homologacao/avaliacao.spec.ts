@@ -10,7 +10,8 @@ import { PROJETO_PRONTO_TOKEN, TOKEN_INEXISTENTE } from '../support/fixtures';
 import { resetarFixtures } from '../support/reset';
 
 test.skip(motivoParaPular() !== null, motivoParaPular() ?? '');
-test.describe.configure({ mode: 'serial' });
+// Login + aceite de documentos + avaliação levam mais que os 30 s padrão.
+test.describe.configure({ mode: 'serial', timeout: 90_000 });
 
 test.describe('avaliação por link (grava no banco de teste)', () => {
   test.beforeEach(async () => {
