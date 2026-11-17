@@ -17,7 +17,8 @@ export function isAdminPath(pathname: string) {
 }
 
 export function isSafeNavigation(href: string | null) {
-  if (!href) return false;
+  // Controle sem href (botão, por exemplo) não navega: não há destino para vigiar.
+  if (!href) return true;
   try {
     return !isAdminPath(new URL(href, 'http://localhost').pathname);
   } catch {
