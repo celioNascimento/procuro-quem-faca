@@ -55,7 +55,9 @@ jobs:
         })();
         "
     - name: Run Playwright tests (homologação)
-      run: npx playwright test
+      # Só a pasta homologacao: o controls.spec.ts (inspeção de todos os controles) estoura 30s por rota
+      # contra URL remota e consumiria o tempo do job. Ele segue no workflow "Playwright Tests".
+      run: npx playwright test tests/e2e/homologacao
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
