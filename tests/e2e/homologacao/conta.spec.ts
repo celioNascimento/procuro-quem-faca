@@ -29,7 +29,7 @@ test.describe('conta do usuário (grava no banco de teste)', () => {
 
   test('/meus-dados sem login pede para entrar', async ({ page }) => {
     await page.goto('/meus-dados');
-    await expect(page.getByText('Entre na sua conta')).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('heading', { name: 'Entre na sua conta' })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole('button', { name: /baixar meus dados/i })).toHaveCount(0);
   });
 
