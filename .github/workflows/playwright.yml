@@ -1,4 +1,6 @@
-# runs-on fixo em ubuntu-24.04: o "ubuntu-latest" passou a apontar para o Ubuntu 26.04, que o Playwright 1.58 ainda não suporta (falha em "Install Playwright Browsers").
+# Roda dentro da imagem oficial do Playwright (navegadores já instalados).
+# O passo "npx playwright install --with-deps chromium" travava ~10 min no download do navegador
+# nos runners do GitHub e derrubava todas as execuções. A versão da imagem acompanha o @playwright/test do package-lock.
 name: Playwright Tests
 on:
   push:
@@ -9,6 +11,9 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --ipc=host --init
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -16,10 +21,6 @@ jobs:
         node-version: lts/*
     - name: Install dependencies
       run: npm ci
-    - name: Install Playwright Browsers
-      timeout-minutes: 10
-      # Só o Chromium: os dois projetos do playwright.config usam Chromium (desktop e Pixel 5).
-      run: npx playwright install --with-deps chromium
     - name: Run Playwright tests
       run: npx playwright test
     - uses: actions/upload-artifact@v4
