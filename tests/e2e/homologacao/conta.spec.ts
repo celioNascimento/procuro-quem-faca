@@ -48,7 +48,7 @@ test.describe('conta do usuário (grava no banco de teste)', () => {
     const hosts = vigiarSupabase(page);
     await entrarComCredenciais(page, emailNovo(), SENHA_NOVA);
 
-    await expect(page.getByText(/conta criada/i)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/^(Erro|Sucesso):/)).toContainText('Conta criada', { timeout: 30_000 });
     await expect(page).toHaveURL(/\/login/);
     exigirSomenteBancoDeTeste(hosts);
   });
