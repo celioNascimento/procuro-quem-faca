@@ -44,15 +44,6 @@ test.describe('conta do usuário (grava no banco de teste)', () => {
     expect((await download).suggestedFilename()).toMatch(/\.json$/i);
   });
 
-  test('cadastro novo: e-mail desconhecido cria a conta e pede a confirmação por e-mail', async ({ page }) => {
-    const hosts = vigiarSupabase(page);
-    await entrarComCredenciais(page, emailNovo(), SENHA_NOVA);
-
-    await expect(page.getByText(/^(Erro|Sucesso):/)).toContainText('Conta criada', { timeout: 30_000 });
-    await expect(page).toHaveURL(/\/login/);
-    exigirSomenteBancoDeTeste(hosts);
-  });
-
   test('exclusão de conta: exige digitar EXCLUIR e apaga a conta nova', async ({ page }) => {
     const hosts = vigiarSupabase(page);
     // Conta já confirmada, criada só para este teste (o e-mail .invalid não recebe confirmação).
@@ -75,6 +66,27 @@ test.describe('conta do usuário (grava no banco de teste)', () => {
     await confirmar.click();
 
     await expect(page).toHaveURL(/\/login\?status=conta-excluida/, { timeout: 45_000 });
+    exigirSomenteBancoDeTeste(hosts);
+  });
+});
+
+// Cada cadastro novo faz o Supabase enviar um e-mail de confirmação, e o envio embutido tem limite
+// baixíssimo por hora ("email rate limit exceeded"). Fica desligado até o projeto de teste ter SMTP
+// próprio ou a confirmação de e-mail desativada. Para ligar: E2E_CADASTRO_NOVO=1.
+test.describe('cadastro novo (desligado por padrão)', () => {
+  test.skip(process.env.E2E_CADASTRO_NOVO !== '1', 'Cadastro novo desligado: limite de e-mails do Supabase de teste.');
+
+  test.beforeEach(async ({ page }) => {
+    await resetarFixtures();
+    await dispensarAvisoDeCookies(page);
+  });
+
+  test('cadastro novo: e-mail desconhecido cria a conta e pede a confirmação por e-mail', async ({ page }) => {
+    const hosts = vigiarSupabase(page);
+    await entrarComCredenciais(page, emailNovo(), SENHA_NOVA);
+
+    await expect(page.getByText(/^(Erro|Sucesso):/)).toContainText('Conta criada', { timeout: 30_000 });
+    await expect(page).toHaveURL(/\/login/);
     exigirSomenteBancoDeTeste(hosts);
   });
 });
