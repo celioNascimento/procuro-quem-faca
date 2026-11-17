@@ -125,14 +125,18 @@ export async function consultarCnpj(cnpj: string, opts: OpcoesConsulta = {}): Pr
       // 404 e 400 significam "esta fonte não tem este CNPJ" (a BrasilAPI responde 400 a números que rejeita).
       if (resp.status === 404 || resp.status === 400) continue
       todas404 = false
-      if (resp.status !== 200) continue
+      if (resp.status !== 200) {
+        console.warn(`[cnpj] fonte ${fonte.nome} respondeu HTTP ${resp.status}`)
+        continue
+      }
       const mapeado = fonte.mapear(await resp.json() as Json, cnpj)
       if (!mapeado) continue
       const dados: DadosCnpj = { ...mapeado, razaoSocial: mapeado.mei ? removerCpfDoNomeMei(mapeado.razaoSocial) : mapeado.razaoSocial }
       cache.set(cnpj, { dados, expiraEm: agora() + TTL_CACHE_MS })
       return { ok: true, dados }
-    } catch {
+    } catch (erro) {
       todas404 = false   // rede, timeout ou JSON inválido: tenta a próxima fonte
+      console.warn(`[cnpj] fonte ${fonte.nome} falhou: ${erro instanceof Error ? erro.message : String(erro)}`)
     }
   }
   return { ok: false, motivo: todas404 ? 'nao_encontrado' : 'indisponivel' }
