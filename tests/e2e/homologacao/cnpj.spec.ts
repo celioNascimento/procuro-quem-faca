@@ -16,6 +16,9 @@ test.describe.configure({ mode: 'serial', timeout: 90_000 });
 /** CNPJ real informado pelo dono para teste (empresa ativa, fonte pública). */
 const CNPJ_REAL = '41.236.325/0001-55';
 
+/** CNPJ ativo de um MEI real, cujo nome confere com o prestador "Jorge Paulo de Lima" da semente. */
+const CNPJ_MEI_APROVACAO = '47.403.170/0001-80';
+
 /** Exemplo do simulador da Receita (formato alfanumérico): válido, mas sem cadastro real. */
 const CNPJ_SIMULADOR_VALIDO = 'XX.MVW.CSZ/0001-43';
 
@@ -72,5 +75,32 @@ test.describe('verificação de CNPJ (rota /api/cnpj)', () => {
     expect(primeira.status()).toBe(200);
     const segunda = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_REAL } });
     expect(segunda.status()).toBe(200);
+  });
+
+  test('nome que confere com o MEI do CNPJ aprova na hora (caminho "aprovada")', async ({ page }) => {
+    await entrar(page, 'prestadorMei');
+    await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
+    const resposta = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_MEI_APROVACAO } });
+    const texto = await resposta.text();
+    console.log(`[cnpj] aprovação MEI: HTTP ${resposta.status()} ${texto}`);
+    test.skip(resposta.status() === 503, 'Fontes públicas do CNPJ indisponíveis agora.');
+    expect(resposta.status(), texto).toBe(200);
+    const corpo = JSON.parse(texto);
+    expect(corpo.status, texto).toBe('aprovada');
+    // O selo público não pode expor o CPF que a Receita embute na razão social de MEI.
+    expect(texto).not.toMatch(/\d{11}/);
+  });
+
+  test('o mesmo CNPJ não vale para outro prestador (Pedro não herda o de Jorge)', async ({ page }) => {
+    await entrar(page, 'prestadorMei');
+    await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
+    const primeira = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_MEI_APROVACAO } });
+    test.skip(primeira.status() === 503, 'Fontes públicas do CNPJ indisponíveis agora.');
+    expect(primeira.status()).toBe(200);
+    await page.context().clearCookies();
+    await entrar(page, 'prestador');
+    await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
+    const outra = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_MEI_APROVACAO } });
+    expect(outra.status()).toBe(409);
   });
 });

@@ -44,7 +44,7 @@ export function motivoParaPular(): string | null {
   return null
 }
 
-export type Papel = 'prestador' | 'cliente'
+export type Papel = 'prestador' | 'cliente' | 'prestadorMei'
 
 /**
  * Contas fictícias do banco de teste (domínio .invalid, não recebem e-mail).
@@ -57,6 +57,12 @@ export const CONTAS: Record<Papel, { email: string; senha: string; nome: string 
     email: process.env.E2E_PRESTADOR_EMAIL ?? 'prestador@pqf-teste.invalid',
     senha: process.env.E2E_PRESTADOR_SENHA ?? SENHA_PADRAO_TESTE,
     nome: 'Pedro Pedreiro Teste',
+  },
+  // Prestador da semente com o nome de um MEI real (dado público da Receita), para o caminho "aprovada".
+  prestadorMei: {
+    email: 'e2e-jorge@pqf-teste.invalid',
+    senha: SENHA_PADRAO_TESTE,
+    nome: 'Jorge Paulo de Lima',
   },
   cliente: {
     email: process.env.E2E_CLIENTE_EMAIL ?? 'cliente@pqf-teste.invalid',
