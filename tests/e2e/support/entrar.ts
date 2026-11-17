@@ -8,14 +8,23 @@ import { CONTAS, SUPABASE_PRODUCAO_REF, SUPABASE_TESTE_REF, type Papel } from '.
 /** Entra pela tela /login com e-mail e senha (a mesma que o usuário vê). */
 export async function entrar(page: Page, papel: Papel, senhaOverride?: string) {
   const conta = CONTAS[papel];
+  await entrarComCredenciais(page, conta.email, senhaOverride ?? conta.senha);
+}
+
+/**
+ * Mesma tela de login, com e-mail e senha à escolha. Atenção: para um e-mail que não existe
+ * a tela CRIA a conta (é assim que o cadastro novo funciona). Em teste, use e-mails
+ * `e2e-*@pqf-teste.invalid`, que o reset apaga.
+ */
+export async function entrarComCredenciais(page: Page, emailConta: string, senhaConta: string) {
   await page.goto('/login');
   // Espera a página assentar: preencher antes da hidratação (comum no celular) apaga os campos.
   await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
   const email = page.getByPlaceholder('seu@email.com');
   const senha = page.getByPlaceholder('Mínimo 6 caracteres');
-  await email.fill(conta.email);
-  await senha.fill(senhaOverride ?? conta.senha);
-  await expect(email).toHaveValue(conta.email);
+  await email.fill(emailConta);
+  await senha.fill(senhaConta);
+  await expect(email).toHaveValue(emailConta);
   const enviou = page
     .waitForResponse((r) => r.url().includes('/auth/v1/'), { timeout: 8_000 })
     .catch(() => null);

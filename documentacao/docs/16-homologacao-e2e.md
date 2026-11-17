@@ -181,7 +181,8 @@ Limite conhecido: o Supabase proíbe `DELETE` direto em `storage.objects`; arqui
 | `reivindicar.spec.ts` | Sem link, link inválido, assumir (vai ao cadastro), voltar sem apagar, excluir e link deixa de valer | Sim |
 
 Os identificadores fictícios da semente (tokens, ids) ficam em `tests/e2e/support/fixtures.ts`.
+| `conta.spec.ts` | `/meus-dados` sem login e logada (baixa o JSON); cadastro novo com e-mail `e2e-*@pqf-teste.invalid`; exclusão de conta (EXCLUIR obrigatório) | Sim (contas novas apagadas pelo reset) |
 
-Ainda pendentes: cadastro novo, `/meus-dados` e exclusão de conta logada.
+Atenção: o reset NÃO recria contas de login apagadas. Por isso a exclusão de conta é testada sempre com uma conta criada no próprio teste, nunca com as contas fixas da semente.
 
 A semente do banco de teste ganhou o projeto `3333…` (em execução, sem fotos, já marcado como concluído, da cliente de teste), pois o banco só aceita avaliar projeto concluído e logado como dono.
