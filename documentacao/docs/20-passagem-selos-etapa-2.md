@@ -86,3 +86,10 @@ Liberação: abrir PR `homologacao` para `main` só com tudo validado; aplicar a
 6. Parte B: selos de experiência, tempo de CNPJ e atividade compatível.
 
 **Merge na `main`:** não feito. Só depois de tudo validado em teste.
+
+Atualização (17/11, noite)
+
+Caminho "aprovada": criada na semente do banco de teste a conta e2e-jorge@pqf-teste.invalid (senha Teste@1234) com o prestador "Jorge Paulo de Lima" (id 104; só o nome, sem telefone nem e-mail reais) para o CNPJ 47.403.170/0001-80 (MEI real, dado público). Baseline recapturado. Papel 'prestadorMei' em tests/e2e/support/ambiente.ts. Dois testes novos em cnpj.spec.ts: aprovação na hora e conflito de CNPJ já vinculado a outro prestador.
+Achado (consulta real): a razão social do MEI vem como "47.403.170 JORGE PAULO DE LIMA", com os 8 dígitos-base do CNPJ no INÍCIO (não o CPF no fim, como o doc 19 supunha), e o QSA vem vazio. Por isso a conferência de nome dava "pendente". Corrigido em lib/cnpj/nomes.ts (remove o prefixo e o CPF no fim), com testes unitários.
+Atenção ao recapturar o baseline: com a semente já certa, rodar só e2e_capturar_baseline(). Rodar e2e_resetar_fixtures() antes apaga o que ainda não está no baseline.
+Risco aceito pelo dono: o teste consulta a Receita de verdade (se as fontes caírem, é pulado). O E2E com APIs simuladas continua pendente.
