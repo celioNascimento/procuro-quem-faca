@@ -84,7 +84,7 @@ test.describe('aba CNPJ do prestador', () => {
     });
     await campo.fill('11222333000180');
     await page.getByRole('button', { name: 'Conferir meu CNPJ' }).click();
-    await expect(page.getByRole('alert')).toContainText(/confira o número/i);
+    await expect(page.locator('#erro-cnpj')).toContainText(/confira o número/i);
     expect(chamadas).toHaveLength(0);
   });
 
