@@ -181,7 +181,7 @@ Limite conhecido: o Supabase proíbe `DELETE` direto em `storage.objects`; arqui
 | `reivindicar.spec.ts` | Sem link, link inválido, assumir (vai ao cadastro), voltar sem apagar, excluir e link deixa de valer | Sim |
 
 Os identificadores fictícios da semente (tokens, ids) ficam em `tests/e2e/support/fixtures.ts`.
-| `conta.spec.ts` | `/meus-dados` sem login e logada (baixa o JSON); cadastro novo (cria a conta e pede confirmação por e-mail); exclusão de conta (EXCLUIR obrigatório) | Sim (contas novas apagadas pelo reset) |
+| `conta.spec.ts` | `/meus-dados` sem login e logada (baixa o JSON); cadastro novo (cria a conta e segue para `/cadastro`); exclusão de conta (EXCLUIR obrigatório) | Sim (contas novas apagadas pelo reset) |
 
 Atenção: o reset NÃO recria contas de login apagadas. Por isso a exclusão de conta é testada sempre com uma conta criada no próprio teste, nunca com as contas fixas da semente.
 
@@ -190,3 +190,5 @@ A semente do banco de teste ganhou o projeto `3333…` (em execução, sem fotos
 O projeto de teste exige confirmação de e-mail, como a produção, e um e-mail `.invalid` nunca a recebe. Por isso o teste de exclusão cria a conta com `e2e_criar_conta()` (já confirmada, só aceita `e2e-*@pqf-teste.invalid`), definida em `supabase/homologacao/reset_fixtures.sql`.
 
 Achado do E2E: sem login, `/meus-dados` mostrava erro genérico em vez do convite para entrar (o banco nega a função a visitantes com erro 42501, e o app só tratava 28000). Corrigido em `lib/services/meusDados.service.ts`.
+
+**Atualização:** a confirmação de e-mail foi desligada no projeto de teste (a produção não muda), porque o envio embutido do Supabase estoura o limite ("email rate limit exceeded"). Com isso o cadastro novo roda no CI (`E2E_CADASTRO_NOVO=1`).

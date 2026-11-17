@@ -71,8 +71,8 @@ test.describe('conta do usuário (grava no banco de teste)', () => {
 });
 
 // Cada cadastro novo faz o Supabase enviar um e-mail de confirmação, e o envio embutido tem limite
-// baixíssimo por hora ("email rate limit exceeded"). Fica desligado até o projeto de teste ter SMTP
-// próprio ou a confirmação de e-mail desativada. Para ligar: E2E_CADASTRO_NOVO=1.
+// baixíssimo por hora ("email rate limit exceeded"). Só roda com a confirmação de e-mail DESLIGADA no
+// projeto de teste (já está) e E2E_CADASTRO_NOVO=1 (o workflow define).
 test.describe('cadastro novo (desligado por padrão)', () => {
   test.skip(process.env.E2E_CADASTRO_NOVO !== '1', 'Cadastro novo desligado: limite de e-mails do Supabase de teste.');
 
@@ -81,12 +81,12 @@ test.describe('cadastro novo (desligado por padrão)', () => {
     await dispensarAvisoDeCookies(page);
   });
 
-  test('cadastro novo: e-mail desconhecido cria a conta e pede a confirmação por e-mail', async ({ page }) => {
+  test('cadastro novo: e-mail desconhecido cria a conta e segue para o cadastro', async ({ page }) => {
     const hosts = vigiarSupabase(page);
     await entrarComCredenciais(page, emailNovo(), SENHA_NOVA);
 
-    await expect(page.getByText(/^(Erro|Sucesso):/)).toContainText('Conta criada', { timeout: 30_000 });
-    await expect(page).toHaveURL(/\/login/);
+    await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
+    await expect(page).toHaveURL(/\/cadastro/);
     exigirSomenteBancoDeTeste(hosts);
   });
 });
