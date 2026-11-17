@@ -24,6 +24,7 @@ jobs:
     env:
       E2E_BASE_URL: https://procuro-quem-faca-git-homologacao-celionascimentos-projects.vercel.app
       E2E_HOMOLOGACAO: '1'
+      E2E_CADASTRO_NOVO: '1'
       E2E_BYPASS_SECRET: ${{ secrets.E2E_BYPASS_SECRET }}
     steps:
     - uses: actions/checkout@v4
