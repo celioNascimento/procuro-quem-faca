@@ -16,7 +16,12 @@ export async function entrar(page: Page, papel: Papel, senhaOverride?: string) {
   await email.fill(conta.email);
   await senha.fill(senhaOverride ?? conta.senha);
   await expect(email).toHaveValue(conta.email);
+  const enviou = page
+    .waitForResponse((r) => r.url().includes('/auth/v1/'), { timeout: 8_000 })
+    .catch(() => null);
   await page.getByRole('button', { name: 'Entrar / Criar Conta' }).click();
+  // No celular o clique às vezes não dispara o envio: se nada saiu, envia com Enter.
+  if (!(await enviou)) await senha.press('Enter');
 }
 
 /**
