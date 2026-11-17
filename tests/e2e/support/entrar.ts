@@ -41,3 +41,41 @@ export function exigirSomenteBancoDeTeste(hosts: Set<string>) {
     expect(host, 'host do Supabase inesperado').toBe(`${SUPABASE_TESTE_REF}.supabase.co`);
   }
 }
+
+/** Marca o aviso de cookies como já aceito (no celular ele cobre botões e atrapalha os cliques). */
+export async function dispensarAvisoDeCookies(page: Page) {
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem('cookie_consent_aceito', 'true');
+    } catch {
+      /* sem storage: segue */
+    }
+  });
+}
+
+/**
+ * Se a tela "Antes de continuar" (aceite de Termos e Privacidade) aparecer, aceita.
+ * Chame depois de abrir a página que o usuário logado quer ver.
+ */
+export async function aceitarDocumentosSeAparecer(page: Page) {
+  const dialogo = page.getByRole('dialog', { name: /antes de continuar/i });
+  try {
+    await dialogo.waitFor({ state: 'visible', timeout: 8_000 });
+  } catch {
+    return; // não apareceu: já aceito
+  }
+  for (const caixa of await dialogo.getByRole('checkbox').all()) {
+    await caixa.check({ force: true });
+  }
+  await dialogo.getByRole('button', { name: 'Aceitar e continuar' }).click();
+  await dialogo.waitFor({ state: 'hidden', timeout: 20_000 });
+}
+
+/** Login como cliente de teste já com cookies e aceite resolvidos, parando em `destino`. */
+export async function entrarComoClienteEIrPara(page: Page, destino: string) {
+  await dispensarAvisoDeCookies(page);
+  await entrar(page, 'cliente');
+  await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
+  await page.goto(destino);
+  await aceitarDocumentosSeAparecer(page);
+}

@@ -5,14 +5,16 @@
 import { expect, test } from '@playwright/test';
 import { motivoParaPular } from '../support/ambiente';
 import { LINKS_PERFIL, TOKEN_INEXISTENTE } from '../support/fixtures';
+import { dispensarAvisoDeCookies } from '../support/entrar';
 import { resetarFixtures } from '../support/reset';
 
 test.skip(motivoParaPular() !== null, motivoParaPular() ?? '');
 test.describe.configure({ mode: 'serial' });
 
 test.describe('reivindicar / excluir por link pessoal (grava no banco de teste)', () => {
-  test.beforeEach(async () => {
+  test.beforeEach(async ({ page }) => {
     await resetarFixtures();
+    await dispensarAvisoDeCookies(page);
   });
 
   test('sem link, explica como pedir o link pessoal', async ({ page }) => {
