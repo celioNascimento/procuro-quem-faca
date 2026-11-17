@@ -122,7 +122,8 @@ export async function consultarCnpj(cnpj: string, opts: OpcoesConsulta = {}): Pr
   for (const fonte of fontes) {
     try {
       const resp = await buscar(fonte.url(cnpj), { signal: AbortSignal.timeout(TIMEOUT_MS) })
-      if (resp.status === 404) continue
+      // 404 e 400 significam "esta fonte não tem este CNPJ" (a BrasilAPI responde 400 a números que rejeita).
+      if (resp.status === 404 || resp.status === 400) continue
       todas404 = false
       if (resp.status !== 200) continue
       const mapeado = fonte.mapear(await resp.json() as Json, cnpj)

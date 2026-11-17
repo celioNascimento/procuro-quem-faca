@@ -73,6 +73,14 @@ describe('consultarCnpj', () => {
     expect(r).toEqual({ ok: false, motivo: 'nao_encontrado' })
   })
 
+  it('trata 400 de uma fonte como "não encontrado" nela, e segue para a próxima', async () => {
+    const r = await consultarCnpj(CNPJ, {
+      buscar: buscadorFalso({ brasilapi: { status: 400 }, minhareceita: { status: 404 }, receitaws: { status: 404 } }),
+      cache: new Map(),
+    })
+    expect(r).toEqual({ ok: false, motivo: 'nao_encontrado' })
+  })
+
   it('reporta indisponivel quando alguma fonte falha sem 404', async () => {
     const r = await consultarCnpj(CNPJ, { buscar: buscadorFalso({ brasilapi: 'erro' }), cache: new Map() })
     expect(r).toEqual({ ok: false, motivo: 'indisponivel' })
