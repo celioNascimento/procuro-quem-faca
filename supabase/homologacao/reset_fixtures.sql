@@ -75,7 +75,7 @@ begin
     select string_agg(quote_ident(column_name), ', ' order by ordinal_position) into colunas
       from information_schema.columns
      where table_schema = 'public' and table_name = r.tablename and is_generated = 'NEVER';
-    execute format('delete from public.%I', r.tablename);
+    execute format('delete from public.%I where true', r.tablename);  -- o Supabase exige WHERE em DELETE
     execute format('insert into public.%I (%s) overriding system value select %s from e2e_baseline.%I',
                    r.tablename, colunas, colunas, r.tablename);
   end loop;
