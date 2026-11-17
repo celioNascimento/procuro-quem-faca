@@ -77,7 +77,7 @@ test.describe('verificação de CNPJ (rota /api/cnpj)', () => {
     expect(segunda.status()).toBe(200);
   });
 
-  test.only('nome que confere com o MEI do CNPJ aprova na hora (caminho "aprovada")', async ({ page }) => {
+  test('nome que confere com o MEI do CNPJ aprova na hora (caminho "aprovada")', async ({ page }) => {
     await entrar(page, 'prestadorMei');
     await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
     const resposta = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_MEI_APROVACAO } });
