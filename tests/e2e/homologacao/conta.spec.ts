@@ -13,7 +13,7 @@ import {
   exigirSomenteBancoDeTeste,
   vigiarSupabase,
 } from '../support/entrar';
-import { resetarFixtures } from '../support/reset';
+import { criarContaConfirmada, resetarFixtures } from '../support/reset';
 
 test.skip(motivoParaPular() !== null, motivoParaPular() ?? '');
 test.describe.configure({ mode: 'serial', timeout: 120_000 });
@@ -44,18 +44,21 @@ test.describe('conta do usuário (grava no banco de teste)', () => {
     expect((await download).suggestedFilename()).toMatch(/\.json$/i);
   });
 
-  test('cadastro novo: e-mail desconhecido cria a conta e segue para o cadastro', async ({ page }) => {
+  test('cadastro novo: e-mail desconhecido cria a conta e pede a confirmação por e-mail', async ({ page }) => {
     const hosts = vigiarSupabase(page);
     await entrarComCredenciais(page, emailNovo(), SENHA_NOVA);
 
-    await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
-    await expect(page).toHaveURL(/\/cadastro/);
+    await expect(page.getByText(/conta criada/i)).toBeVisible({ timeout: 30_000 });
+    await expect(page).toHaveURL(/\/login/);
     exigirSomenteBancoDeTeste(hosts);
   });
 
   test('exclusão de conta: exige digitar EXCLUIR e apaga a conta nova', async ({ page }) => {
     const hosts = vigiarSupabase(page);
-    await entrarComCredenciais(page, emailNovo(), SENHA_NOVA);
+    // Conta já confirmada, criada só para este teste (o e-mail .invalid não recebe confirmação).
+    const email = emailNovo();
+    await criarContaConfirmada(email, SENHA_NOVA);
+    await entrarComCredenciais(page, email, SENHA_NOVA);
     await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
 
     await page.goto('/confirmar-exclusao');
