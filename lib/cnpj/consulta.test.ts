@@ -117,4 +117,25 @@ describe('consultarCnpj', () => {
     await consultarCnpj(CNPJ, { buscar: buscadorFalso({ brasilapi: 'erro' }), cache })
     expect(cache.size).toBe(0)
   })
+
+  it('um cache assíncrono (banco) é lido e gravado; falha de leitura não derruba a consulta', async () => {
+    const guardado: Record<string, { dados: unknown; expiraEm: number }> = {}
+    const cacheBanco = {
+      async get(c: string) { return guardado[c] as never },
+      async set(c: string, e: { dados: unknown; expiraEm: number }) { guardado[c] = e },
+    }
+    const chamadas: string[] = []
+    const buscar = buscadorFalso({ brasilapi: { status: 200, body: respostaBrasilApi } }, chamadas)
+    await consultarCnpj(CNPJ, { buscar, cache: cacheBanco })
+    const segunda = await consultarCnpj(CNPJ, { buscar, cache: cacheBanco })
+    expect(chamadas).toHaveLength(1)
+    expect(segunda.ok).toBe(true)
+
+    const cacheQuebrado = {
+      async get() { throw new Error('banco fora') },
+      async set() { throw new Error('banco fora') },
+    }
+    const r = await consultarCnpj(CNPJ, { buscar: buscadorFalso({ brasilapi: { status: 200, body: respostaBrasilApi } }), cache: cacheQuebrado })
+    expect(r.ok).toBe(true)
+  })
 })

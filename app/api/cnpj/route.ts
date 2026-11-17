@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { verificarCnpj, type RepositorioCnpj } from '@/lib/cnpj/verificar'
+import { consultarCnpj, type CacheConsulta, type DadosCnpj } from '@/lib/cnpj/consulta'
 
 export async function POST(req: Request) {
   try {
@@ -87,9 +88,35 @@ export async function POST(req: Request) {
       },
     }
 
+    // Cache compartilhado entre instâncias serverless (tabela cnpj_consultas_cache, 24h).
+    const cacheBanco: CacheConsulta = {
+      async get(cnpj) {
+        const { data, error } = await admin
+          .from('cnpj_consultas_cache')
+          .select('dados, expira_em')
+          .eq('cnpj', cnpj)
+          .maybeSingle()
+        if (error) throw error
+        if (!data) return undefined
+        return { dados: data.dados as DadosCnpj, expiraEm: new Date(data.expira_em).getTime() }
+      },
+      async set(cnpj, { dados, expiraEm }) {
+        const { error } = await admin.from('cnpj_consultas_cache').upsert(
+          {
+            cnpj,
+            dados,
+            consultado_em: new Date().toISOString(),
+            expira_em: new Date(expiraEm).toISOString(),
+          },
+          { onConflict: 'cnpj' },
+        )
+        if (error) throw error
+      },
+    }
+
     const resultado = await verificarCnpj(
       { prestadorId: prestador.id, nomePrestador: prestador.nome ?? '', cnpjBruto: corpoEntrada.cnpj },
-      { repositorio },
+      { repositorio, consultar: (cnpj) => consultarCnpj(cnpj, { cache: cacheBanco }) },
     )
 
     return NextResponse.json(resultado.corpo, { status: resultado.http })

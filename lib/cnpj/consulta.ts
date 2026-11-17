@@ -18,7 +18,7 @@ export type DadosCnpj = {
   cnaeCodigo: string | null   // só dígitos
   cnaeDescricao: string | null
   dataAbertura: string | null // AAAA-MM-DD
-  socios: string[]            // usados só para conferir o nome; não são guardados
+  socios: string[]            // nomes do QSA: usados para conferir o nome e guardados só no cache (24h)
   fonte: FonteCnpj
 }
 
@@ -105,23 +105,39 @@ export const FONTES: Fonte[] = [
 const TTL_CACHE_MS = 24 * 60 * 60 * 1000
 const TIMEOUT_MS = 8000
 
+export type EntradaCache = { dados: DadosCnpj; expiraEm: number }
+
+/**
+ * Cache de consultas. Pode ser memória (Map) ou banco (tabela cnpj_consultas_cache).
+ * Só guarda respostas com sucesso. Falha de cache nunca derruba a consulta.
+ */
+export type CacheConsulta = {
+  get(cnpj: string): EntradaCache | undefined | Promise<EntradaCache | undefined>
+  set(cnpj: string, entrada: EntradaCache): unknown
+}
+
 export type OpcoesConsulta = {
   buscar?: Buscador
   fontes?: Fonte[]
-  cache?: Map<string, { dados: DadosCnpj; expiraEm: number }>
+  cache?: CacheConsulta
   agora?: () => number
 }
 
-/** Cache em memória do processo. Só guarda respostas com sucesso. */
-export const cachePadrao = new Map<string, { dados: DadosCnpj; expiraEm: number }>()
+/** Cache em memória do processo (padrão para testes e uso sem banco). */
+export const cachePadrao = new Map<string, EntradaCache>()
 
 export async function consultarCnpj(cnpj: string, opts: OpcoesConsulta = {}): Promise<ResultadoConsulta> {
   const buscar: Buscador = opts.buscar ?? ((url, o) => fetch(url, { signal: o.signal, headers: CABECALHOS_CONSULTA }))
   const fontes = opts.fontes ?? FONTES
-  const cache = opts.cache ?? cachePadrao
+  const cache: CacheConsulta = opts.cache ?? cachePadrao
   const agora = opts.agora ?? Date.now
 
-  const emCache = cache.get(cnpj)
+  let emCache: EntradaCache | undefined
+  try {
+    emCache = await cache.get(cnpj)
+  } catch (erro) {
+    console.warn(`[cnpj] cache indisponível na leitura: ${erro instanceof Error ? erro.message : String(erro)}`)
+  }
   if (emCache && emCache.expiraEm > agora()) return { ok: true, dados: emCache.dados }
 
   let todas404 = true
@@ -138,7 +154,11 @@ export async function consultarCnpj(cnpj: string, opts: OpcoesConsulta = {}): Pr
       const mapeado = fonte.mapear(await resp.json() as Json, cnpj)
       if (!mapeado) continue
       const dados: DadosCnpj = { ...mapeado, razaoSocial: mapeado.mei ? removerCpfDoNomeMei(mapeado.razaoSocial) : mapeado.razaoSocial }
-      cache.set(cnpj, { dados, expiraEm: agora() + TTL_CACHE_MS })
+      try {
+        await cache.set(cnpj, { dados, expiraEm: agora() + TTL_CACHE_MS })
+      } catch (erro) {
+        console.warn(`[cnpj] cache indisponível na gravação: ${erro instanceof Error ? erro.message : String(erro)}`)
+      }
       return { ok: true, dados }
     } catch (erro) {
       todas404 = false   // rede, timeout ou JSON inválido: tenta a próxima fonte
