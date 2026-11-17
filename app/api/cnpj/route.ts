@@ -125,3 +125,44 @@ export async function POST(req: Request) {
     return NextResponse.json({ erro: 'Erro interno' }, { status: 500 })
   }
 }
+
+// DELETE: o prestador remove o próprio CNPJ. Apaga o vínculo e a verificação, o que tira o selo
+// e libera o número para outro perfil. Só mexe no perfil do usuário logado.
+export async function DELETE() {
+  try {
+    const supabase = await createServerClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ erro: 'Não autorizado' }, { status: 401 })
+    }
+
+    const admin = getAdminClient()
+    const { data: prestador, error: erroPrestador } = await admin
+      .from('prestadores')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (erroPrestador) {
+      console.error('Erro ao buscar prestador:', erroPrestador)
+      return NextResponse.json({ erro: 'Erro interno' }, { status: 500 })
+    }
+    if (!prestador) {
+      return NextResponse.json({ erro: 'Perfil de prestador não encontrado.' }, { status: 404 })
+    }
+
+    const { error: erroVerif } = await admin
+      .from('prestador_verificacoes')
+      .delete()
+      .eq('prestador_id', prestador.id)
+      .eq('tipo', 'cnpj')
+    if (erroVerif) throw erroVerif
+
+    const { error: erroCnpj } = await admin.from('prestador_cnpj').delete().eq('prestador_id', prestador.id)
+    if (erroCnpj) throw erroCnpj
+
+    return NextResponse.json({ ok: true }, { status: 200 })
+  } catch (err) {
+    console.error('Erro inesperado ao remover o CNPJ:', err)
+    return NextResponse.json({ erro: 'Erro interno' }, { status: 500 })
+  }
+}

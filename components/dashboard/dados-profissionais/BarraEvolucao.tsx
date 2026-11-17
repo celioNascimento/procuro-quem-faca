@@ -1,0 +1,61 @@
+// components/dashboard/dados-profissionais/BarraEvolucao.tsx
+// Só mostra a evolução das conquistas (selos). Não busca dados e não muda a ordem na busca.
+import { BadgeCheck, Clock, Sparkles } from 'lucide-react'
+import { resumoEvolucao, type Conquista, type EstadoConquista } from '@/lib/selos/evolucao'
+
+const ROTULO: Record<EstadoConquista, string> = {
+  conquistado: 'Conquistado',
+  em_andamento: 'Em conferência',
+  disponivel: 'Disponível',
+  em_breve: 'Em breve',
+}
+
+const ESTILO: Record<EstadoConquista, string> = {
+  conquistado: 'bg-green-50 text-green-700',
+  em_andamento: 'bg-amber-50 text-amber-700',
+  disponivel: 'bg-blue-50 text-blue-700',
+  em_breve: 'bg-slate-100 text-slate-500',
+}
+
+export function BarraEvolucao({ conquistas }: { conquistas: Conquista[] }) {
+  const { conquistados, total, percentual, texto } = resumoEvolucao(conquistas)
+
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="evolucao-titulo">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p id="evolucao-titulo" className="text-xs font-bold uppercase tracking-widest text-blue-600">Seus selos de confiança</p>
+          <p className="mt-1 text-lg font-black text-slate-900" data-testid="evolucao-texto">{texto}</p>
+        </div>
+        <BadgeCheck className={conquistados > 0 ? 'text-green-600' : 'text-slate-300'} size={28} aria-hidden="true" />
+      </div>
+
+      <div
+        className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-slate-100"
+        role="progressbar"
+        aria-label="Evolução dos selos"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={conquistados}
+        aria-valuetext={texto}
+      >
+        <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${percentual}%` }} />
+      </div>
+
+      <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {conquistas.map((c) => (
+          <li key={c.id} className="flex min-w-0 items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2">
+            <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-700">
+              {c.estado === 'em_breve' ? <Clock size={14} aria-hidden="true" /> : <Sparkles size={14} aria-hidden="true" />}
+              <span className="truncate">{c.titulo}</span>
+            </span>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${ESTILO[c.estado]}`}>{ROTULO[c.estado]}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-xs leading-relaxed text-slate-500">
+        Os selos são opcionais e mostram aos clientes o que foi conferido. Quem ainda não tem não perde posição na busca.
+      </p>
+    </section>
+  )
+}

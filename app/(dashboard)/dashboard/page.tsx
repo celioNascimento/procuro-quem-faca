@@ -4,7 +4,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
+import DadosProfissionaisTabs, { type SubAbaDados } from '@/components/dashboard/dados-profissionais/DadosProfissionaisTabs'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
 import DesempenhoDashboardTab, { type SubAbaDesempenho } from '@/components/dashboard/DesempenhoDashboardTab'
 import CentralDivulgacaoTab from '@/components/dashboard/CentralDivulgacaoTab'
@@ -27,6 +27,7 @@ function PerfilPageContent() {
     abaParam === 'perfil' ? 'perfil' : abaParam === 'desempenho' || abaParam === 'avaliacoes' ? 'desempenho' : 'portfolio'
   const subAbaInicial: SubAbaDesempenho =
     abaParam === 'avaliacoes' || searchParams.get('sub') === 'avaliacoes' ? 'avaliacoes' : 'analises'
+  const subAbaDados: SubAbaDados = searchParams.get('sub') === 'cnpj' ? 'cnpj' : 'perfil'
   const [abaAtiva, setAbaAtiva] = useState(abaInicial)
   // Começa como "visto" para o selo não piscar antes de ler o armazenamento do navegador.
   const [desempenhoVisto, setDesempenhoVisto] = useState(true)
@@ -214,7 +215,7 @@ function PerfilPageContent() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Verificando seu perfil</p>
           </div>
         ) : (
-          abaAtiva === 'perfil' ? <EditarPerfilTab /> : abaAtiva === 'desempenho' ? <DesempenhoDashboardTab prestadorId={prestadorId} subAbaInicial={subAbaInicial} /> : abaAtiva === 'divulgacao' ? <CentralDivulgacaoTab prestadorId={prestadorId} onIrParaTrabalhos={() => abrirAba('portfolio')} /> : <PortfolioDashboardTab />
+          abaAtiva === 'perfil' ? <DadosProfissionaisTabs prestadorId={prestadorId} subAbaInicial={subAbaDados} /> : abaAtiva === 'desempenho' ? <DesempenhoDashboardTab prestadorId={prestadorId} subAbaInicial={subAbaInicial} /> : abaAtiva === 'divulgacao' ? <CentralDivulgacaoTab prestadorId={prestadorId} onIrParaTrabalhos={() => abrirAba('portfolio')} /> : <PortfolioDashboardTab />
         )}
       </div>
 

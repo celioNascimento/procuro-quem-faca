@@ -6,7 +6,7 @@ vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams(b
 type StatusPerfil = { cadastroCompleto: boolean; validando: boolean; slug: string; prestadorId: number; bloqueado: boolean; motivoBloqueio: string | null }
 let status: StatusPerfil = { cadastroCompleto: true, validando: false, slug: 'ana', prestadorId: 7, bloqueado: false, motivoBloqueio: null }
 vi.mock('@/hooks/usePerfilStatus', () => ({ usePerfilStatus: () => status }))
-vi.mock('@/components/dashboard/EditarPerfilTab', () => ({ default: () => <div>ABA-PERFIL</div> }))
+vi.mock('@/components/dashboard/dados-profissionais/DadosProfissionaisTabs', () => ({ default: () => <div>ABA-PERFIL</div> }))
 vi.mock('@/components/dashboard/PortfolioDashboardTab', () => ({ default: () => <div>ABA-TRABALHOS</div> }))
 vi.mock('@/components/dashboard/DesempenhoDashboardTab', () => ({ default: () => <div>ABA-DESEMPENHO</div> }))
 vi.mock('@/components/dashboard/CentralDivulgacaoTab', () => ({ default: () => <div>ABA-DIVULGACAO</div> }))
