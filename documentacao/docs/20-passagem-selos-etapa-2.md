@@ -61,3 +61,28 @@ Liberação: abrir PR `homologacao` para `main` só com tudo validado; aplicar a
 - Registro de migrações e migração-base do banco (Etapa 6 do plano antigo de organização).
 - Achado aberto: `controls.spec.ts` (suíte antiga, fora da homologação) é lento e pode ter falhas reais de acessibilidade.
 - Atualizar o doc 19 com o ambiente de teste e a proteção contra senhas vazadas (indisponível no plano Free).
+
+## Atualização (17/11, tarde)
+
+**Feito no branch `homologacao` (último commit `b59e29a`, E2E verde com 62 testes):**
+- Validação do CNPJ alfanumérico (módulo 11, valor = ASCII - 48). Sete exemplos do simulador (`XX.MVW.CSZ`) passam como casos de teste.
+- Consulta em cascata (BrasilAPI, minhareceita, ReceitaWS), comparação de nomes, aprovação automática ou fila, e rota `POST /api/cnpj`.
+- Cache das consultas em tabela `cnpj_consultas_cache` (24h), migration `20261117190000_cache_consulta_cnpj.sql`. Aplicada **só no banco de teste**; depois rodei `e2e_resetar_fixtures()` e `e2e_capturar_baseline()`.
+- Testes E2E de CNPJ em `tests/e2e/homologacao/cnpj.spec.ts`: sem login (401), inválido (400), sem cadastro (422 ou 503, nunca aprovação), CNPJ real (200 com aprovada ou pendente) e repetição sem conflito.
+
+**Achados:**
+- A BrasilAPI respondia **403 à Vercel** com o User-Agent padrão do Node. Corrigido com User-Agent próprio (`ProcuroQuemFaca/1.0`), com teste automatizado. Depois da correção, não apareceram mais 403 nos logs de runtime, mas a amostra é pequena: continuar acompanhando.
+- O cache em memória não é compartilhado entre instâncias serverless. Por isso a tabela no banco.
+- O CNPJ `41.236.325/0001-55` responde 200 "pendente" porque o nome do prestador de teste ("Pedro Pedreiro Teste") não confere com a empresa. O caminho "aprovada" ainda não foi testado.
+
+**Decisão a confirmar:** o cache guarda os nomes do QSA (sócios) por 24 horas, porque a conferência de nome precisa deles. São dados públicos, mas é dado pessoal. Se não for aceitável, a alternativa é guardar só o resultado da conferência.
+
+**Pendências, em ordem:**
+1. Caminho "aprovada": preciso de um nome que confira com a razão social, o fantasia ou um sócio do CNPJ real, para o prestador de teste.
+2. Fila de revisão no painel admin (item 4).
+3. Abas e barra em "Dados Profissionais" (item 5).
+4. Selo no card e no perfil público (item 6).
+5. Job mensal: reconsulta, expiração do selo e limpeza de `cnpj_consultas_cache` vencido (item 8).
+6. Parte B: selos de experiência, tempo de CNPJ e atividade compatível.
+
+**Merge na `main`:** não feito. Só depois de tudo validado em teste.
