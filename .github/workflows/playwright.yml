@@ -1,4 +1,6 @@
-# runs-on fixo em ubuntu-24.04: o "ubuntu-latest" passou a apontar para o Ubuntu 26.04, que o Playwright 1.58 ainda não suporta (falha em "Install Playwright Browsers").
+# Roda dentro da imagem oficial do Playwright (navegadores já instalados).
+# O passo "npx playwright install --with-deps chromium" travava ~10 min no download do navegador
+# nos runners do GitHub e derrubava todas as execuções. A versão da imagem acompanha o @playwright/test do package-lock.
 name: Playwright Tests
 on:
   push:
@@ -9,6 +11,14 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --ipc=host --init
+    env:
+      # O app não inicia sem o Supabase. O servidor local do CI usa o banco de TESTE (nunca produção).
+      # Valores públicos: URL do projeto e chave anon (a mesma que o navegador recebe).
+      NEXT_PUBLIC_SUPABASE_URL: https://qvrkmaavbrtjnwcaocax.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2cmttYWF2YnJ0am53Y2FvY2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ4NzE4ODQsImV4cCI6MjExMDQ0Nzg4NH0.0WJGiZM5lYROcg8-hGdKEbZL_zzE3mG1WHlFDL4fMmw
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -16,10 +26,6 @@ jobs:
         node-version: lts/*
     - name: Install dependencies
       run: npm ci
-    - name: Install Playwright Browsers
-      timeout-minutes: 10
-      # Só o Chromium: os dois projetos do playwright.config usam Chromium (desktop e Pixel 5).
-      run: npx playwright install --with-deps chromium
     - name: Run Playwright tests
       run: npx playwright test
     - uses: actions/upload-artifact@v4
