@@ -76,7 +76,13 @@ export async function aceitarDocumentosSeAparecer(page: Page) {
 export async function entrarComoClienteEIrPara(page: Page, destino: string) {
   await dispensarAvisoDeCookies(page);
   await entrar(page, 'cliente');
-  await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
+  try {
+    await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
+  } catch {
+    // Diagnóstico: mostra o que a tela exibia quando o login não avançou.
+    const texto = (await page.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 400);
+    throw new Error(`Login da cliente não saiu de ${page.url()}. Tela: "${texto}"`);
+  }
   await page.goto(destino);
   await aceitarDocumentosSeAparecer(page);
 }
