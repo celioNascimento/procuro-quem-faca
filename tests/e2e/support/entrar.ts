@@ -9,8 +9,13 @@ import { CONTAS, SUPABASE_PRODUCAO_REF, SUPABASE_TESTE_REF, type Papel } from '.
 export async function entrar(page: Page, papel: Papel, senhaOverride?: string) {
   const conta = CONTAS[papel];
   await page.goto('/login');
-  await page.getByPlaceholder('seu@email.com').fill(conta.email);
-  await page.getByPlaceholder('Mínimo 6 caracteres').fill(senhaOverride ?? conta.senha);
+  // Espera a página assentar: preencher antes da hidratação (comum no celular) apaga os campos.
+  await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+  const email = page.getByPlaceholder('seu@email.com');
+  const senha = page.getByPlaceholder('Mínimo 6 caracteres');
+  await email.fill(conta.email);
+  await senha.fill(senhaOverride ?? conta.senha);
+  await expect(email).toHaveValue(conta.email);
   await page.getByRole('button', { name: 'Entrar / Criar Conta' }).click();
 }
 
