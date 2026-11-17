@@ -25,13 +25,16 @@ test.describe('reivindicar / excluir por link pessoal (grava no banco de teste)'
     await expect(page.getByRole('heading', { name: /link inválido/i })).toBeVisible();
   });
 
-  test('link válido mostra o perfil e leva ao cadastro ao assumir', async ({ page }) => {
+  test('link válido mostra o perfil e, ao assumir, pede login levando ao cadastro', async ({ page }) => {
     const { token, id, nome } = LINKS_PERFIL.assumir;
     await page.goto(`/reivindicar?token=${token}`);
     await expect(page.getByText(nome)).toBeVisible();
 
     await page.getByRole('button', { name: 'Assumir este perfil' }).click();
-    await expect(page).toHaveURL(new RegExp(`/cadastro\\?reivindicar=${id}&token=${token}`));
+    // Sem sessão, o cadastro exige login e devolve o titular ao cadastro depois (parâmetro next).
+    await expect(page).toHaveURL(/\/login\?next=/);
+    const next = new URL(page.url()).searchParams.get('next') ?? '';
+    expect(next).toBe(`/cadastro?reivindicar=${id}&token=${token}`);
   });
 
   test('"Voltar" na confirmação de exclusão não apaga nada', async ({ page }) => {

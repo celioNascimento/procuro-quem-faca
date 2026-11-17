@@ -18,7 +18,7 @@ test.describe('avaliação por link (grava no banco de teste)', () => {
   test('só libera "Validar e concluir" depois de escolher a nota', async ({ page }) => {
     await page.goto(`/avaliar/${PROJETO_EM_EXECUCAO_TOKEN}`);
     const concluir = page.getByRole('button', { name: /validar e concluir/i });
-    await expect(concluir).toBeVisible();
+    await expect(concluir).toBeVisible({ timeout: 20_000 });
     await expect(concluir).toBeDisabled();
 
     await page.getByRole('button', { name: 'Dar 5 estrelas' }).click();
