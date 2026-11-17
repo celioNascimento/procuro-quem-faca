@@ -80,13 +80,17 @@ export async function aceitarDocumentosSeAparecer(page: Page) {
 /** Login como cliente de teste já com cookies e aceite resolvidos, parando em `destino`. */
 export async function entrarComoClienteEIrPara(page: Page, destino: string) {
   await dispensarAvisoDeCookies(page);
+  const respostasAuth: string[] = [];
+  page.on('response', (r) => {
+    if (r.url().includes('/auth/v1/')) respostasAuth.push(`${r.request().method()} ${new URL(r.url()).pathname} ${r.status()}`);
+  });
   await entrar(page, 'cliente');
   try {
     await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
   } catch {
     // Diagnóstico: mostra o que a tela exibia quando o login não avançou.
     const texto = (await page.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 400);
-    throw new Error(`Login da cliente não saiu de ${page.url()}. Tela: "${texto}"`);
+    throw new Error(`Login da cliente não saiu de ${page.url()}. Auth: [${respostasAuth.join('; ')}]. Tela: "${texto}"`);
   }
   await page.goto(destino);
   await aceitarDocumentosSeAparecer(page);
