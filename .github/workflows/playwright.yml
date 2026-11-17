@@ -14,6 +14,11 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.58.2-noble
       options: --ipc=host --init
+    env:
+      # O app não inicia sem o Supabase. O servidor local do CI usa o banco de TESTE (nunca produção).
+      # Valores públicos: URL do projeto e chave anon (a mesma que o navegador recebe).
+      NEXT_PUBLIC_SUPABASE_URL: https://qvrkmaavbrtjnwcaocax.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2cmttYWF2YnJ0am53Y2FvY2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ4NzE4ODQsImV4cCI6MjExMDQ0Nzg4NH0.0WJGiZM5lYROcg8-hGdKEbZL_zzE3mG1WHlFDL4fMmw
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
