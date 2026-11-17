@@ -42,7 +42,8 @@ test.describe('reivindicar / excluir por link pessoal (grava no banco de teste)'
     await page.getByRole('button', { name: 'Prefiro excluir meu perfil' }).click();
     await expect(page.getByRole('heading', { name: /excluir perfil/i })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Voltar' }).click();
+    // O cabeçalho também tem um "Voltar": o da confirmação é o último da página.
+    await page.getByRole('button', { name: 'Voltar' }).last().click();
     await expect(page.getByRole('button', { name: 'Assumir este perfil' })).toBeVisible();
   });
 

@@ -1,10 +1,12 @@
 // tests/e2e/homologacao/avaliacao.spec.ts
 //
-// Fluxo que GRAVA: avaliação do cliente por link (token). Banco restaurado antes de cada teste.
+// Fluxo que GRAVA: avaliação do cliente por link (token). A cliente de teste precisa estar
+// logada (o banco só deixa o dono do projeto avaliar). Banco restaurado antes de cada teste.
 
 import { expect, test } from '@playwright/test';
 import { motivoParaPular } from '../support/ambiente';
-import { PROJETO_EM_EXECUCAO_TOKEN } from '../support/fixtures';
+import { entrar } from '../support/entrar';
+import { PROJETO_PRONTO_TOKEN, TOKEN_INEXISTENTE } from '../support/fixtures';
 import { resetarFixtures } from '../support/reset';
 
 test.skip(motivoParaPular() !== null, motivoParaPular() ?? '');
@@ -15,30 +17,43 @@ test.describe('avaliação por link (grava no banco de teste)', () => {
     await resetarFixtures();
   });
 
-  test('só libera "Validar e concluir" depois de escolher a nota', async ({ page }) => {
-    await page.goto(`/avaliar/${PROJETO_EM_EXECUCAO_TOKEN}`);
+  test('sem login, o link não mostra o formulário', async ({ page }) => {
+    await page.goto(`/avaliar/${PROJETO_PRONTO_TOKEN}`);
+    await expect(page.getByText(/carregando avaliação/i)).toHaveCount(0, { timeout: 20_000 });
+    await expect(page.getByRole('button', { name: /validar e concluir/i })).toHaveCount(0);
+  });
+
+  test('logada, só libera "Validar e concluir" depois de escolher a nota', async ({ page }) => {
+    await entrar(page, 'cliente');
+    await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
+    await page.goto(`/avaliar/${PROJETO_PRONTO_TOKEN}`);
+
     const concluir = page.getByRole('button', { name: /validar e concluir/i });
-    await expect(concluir).toBeVisible({ timeout: 20_000 });
+    await expect(concluir).toBeVisible({ timeout: 30_000 });
     await expect(concluir).toBeDisabled();
 
     await page.getByRole('button', { name: 'Dar 5 estrelas' }).click();
     await expect(concluir).toBeEnabled();
   });
 
-  test('cliente avalia o serviço e vê o acompanhamento', async ({ page }) => {
-    await page.goto(`/avaliar/${PROJETO_EM_EXECUCAO_TOKEN}`);
+  test('cliente avalia o serviço e vai para a tela de sucesso', async ({ page }) => {
+    await entrar(page, 'cliente');
+    await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
+    await page.goto(`/avaliar/${PROJETO_PRONTO_TOKEN}`);
 
-    await page.getByRole('button', { name: 'Dar 5 estrelas' }).click();
+    await page.getByRole('button', { name: 'Dar 5 estrelas' }).click({ timeout: 30_000 });
     await page.getByLabel(/seu depoimento/i).fill('Avaliação automática de teste (E2E).');
     await page.getByRole('button', { name: /^indico/i }).click();
     await page.getByRole('button', { name: /validar e concluir/i }).click();
 
-    await expect(page.getByText('Acompanhamento e Garantia')).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByRole('button', { name: /validar e concluir/i })).toHaveCount(0);
+    await expect(page).toHaveURL(/\/sucesso/, { timeout: 30_000 });
   });
 
-  test('link de avaliação inexistente não mostra o formulário', async ({ page }) => {
-    await page.goto('/avaliar/00000000-0000-4000-8000-00000000dead');
+  test('token inexistente não abre o formulário', async ({ page }) => {
+    await entrar(page, 'cliente');
+    await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
+    await page.goto(`/avaliar/${TOKEN_INEXISTENTE}`);
+    await expect(page.getByText(/carregando avaliação/i)).toHaveCount(0, { timeout: 20_000 });
     await expect(page.getByRole('button', { name: /validar e concluir/i })).toHaveCount(0);
   });
 });

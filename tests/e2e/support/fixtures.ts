@@ -3,8 +3,8 @@
 // Identificadores FICTÍCIOS da semente do banco de teste (nunca existem em produção).
 // Se a semente mudar, atualize aqui e rode e2e_capturar_baseline() no banco de teste.
 
-/** Projeto "em execução": aceita avaliação por token. */
-export const PROJETO_EM_EXECUCAO_TOKEN = 'c45791f1-8ae6-4517-8d38-b98438e20994';
+/** Projeto da cliente de teste, em execução e já marcado como concluído: pronto para ser avaliado. */
+export const PROJETO_PRONTO_TOKEN = 'b7d1c2e4-5f60-4a71-8b92-0c3d4e5f6a7b';
 
 /** Links pessoais de perfis sem dono (reivindicar / excluir). */
 export const LINKS_PERFIL = {
