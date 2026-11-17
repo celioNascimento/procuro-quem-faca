@@ -55,4 +55,13 @@ describe('cnpjValido', () => {
     expect(cnpjValido(`${base}${d1}${d2}`)).toBe(true)
     expect(cnpjValido(`${base}${d1}${(d2 + 1) % 10}`)).toBe(false)
   })
+
+  it('aceita CNPJs alfanuméricos de exemplo do simulador (XX.MVW.CSZ)', () => {
+    // Exemplos fornecidos pelo dono em 17/11/2026: todos conferem pela regra módulo 11 com valor = ASCII - 48.
+    const exemplos = [
+      'XX.MVW.CSZ/0001-43', 'XX.MVW.CSZ/8WLM-95', 'XX.MVW.CSZ/V8LX-50', 'XX.MVW.CSZ/JE9C-28',
+      'XX.MVW.CSZ/73EE-83', 'XX.MVW.CSZ/2RY4-40', 'XX.MVW.CSZ/SDEZ-00',
+    ]
+    for (const e of exemplos) expect(cnpjValido(e)).toBe(true)
+  })
 })
