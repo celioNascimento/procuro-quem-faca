@@ -14,6 +14,12 @@ export const SUPABASE_TESTE_REF = 'qvrkmaavbrtjnwcaocax'
 /** Projeto Supabase de PRODUÇÃO. Se aparecer em qualquer requisição, o teste falha. */
 export const SUPABASE_PRODUCAO_REF = 'skhqvcluiacwujeeqefg'
 
+/** URL e chave pública (anon) do banco de TESTE, usadas só para chamar o reset das fixtures. */
+export const SUPABASE_TESTE_URL = process.env.E2E_SUPABASE_URL ?? `https://${SUPABASE_TESTE_REF}.supabase.co`;
+export const SUPABASE_TESTE_ANON_KEY =
+  process.env.E2E_SUPABASE_ANON_KEY ??
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2cmttYWF2YnJ0am53Y2FvY2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ4NzE4ODQsImV4cCI6MjExMDQ0Nzg4NH0.0WJGiZM5lYROcg8-hGdKEbZL_zzE3mG1WHlFDL4fMmw';
+
 export const BASE_URL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3000'
 
 /** Só liga os testes de homologação quando o workflow (ou o dev) pede explicitamente. */

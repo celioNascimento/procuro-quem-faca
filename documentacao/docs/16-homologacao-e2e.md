@@ -166,3 +166,14 @@ A fase 1 está concluída quando cada rota não-admin possui seus controles prin
 **Execução.** O workflow `E2E Homologação` roda a cada push na branch `homologacao` e sob demanda. Localmente: `npm run test:e2e:homologacao` (no PowerShell, defina as variáveis com `$env:` antes).
 
 **Próximos fluxos (ainda PENDENTES):** cadastro de prestador novo, reivindicar e excluir por link pessoal, denúncia, avaliação por token, `/meus-dados` e exclusão de conta. Eles gravam dados e exigem reset das fixtures de teste antes de cada execução.
+
+
+### Reset das fixtures e fluxos que gravam (17/11/2026)
+
+O banco de teste tem a função `e2e_resetar_fixtures()`, que o teste chama antes de cada cenário que grava dados. Ela apaga contas e linhas criadas pelos testes e restaura o que eles alteraram, voltando à semente. O SQL está em `supabase/homologacao/reset_fixtures.sql`, **fora** de `supabase/migrations` de propósito: é exclusivo da homologação e se recusa a rodar em qualquer banco sem a tabela-marcador `ambiente_teste_marcador`. Sempre que a semente mudar, rode `select public.e2e_capturar_baseline();` no banco de teste para fotografar o novo estado limpo.
+
+Limite conhecido: o Supabase proíbe `DELETE` direto em `storage.objects`; arquivos enviados por testes de upload precisam ser removidos pela API do Storage.
+
+| Arquivo | O que prova | Grava dados? |
+|---|---|---|
+| `denuncia.spec.ts` | Botão bloqueado sem motivo; denúncia gravada (HTTP 201) e tela "Denúncia Recebida" | Sim (restaurado antes de cada teste) |
