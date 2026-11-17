@@ -30,8 +30,9 @@ test.describe('perfil público e busca (dados fictícios)', () => {
     await expect(page.getByText(PERFIL_SEED.nome).first()).toBeVisible();
   });
 
-  test('slug inexistente mostra a página de não encontrado', async ({ page }) => {
-    const resposta = await page.goto('/perfil-que-nao-existe-e2e');
-    expect(resposta?.status()).toBe(404);
+  test('slug inexistente mostra a mensagem de perfil não encontrado', async ({ page }) => {
+    // O perfil é carregado no navegador: a resposta HTTP é 200 e a tela avisa que não existe.
+    await page.goto('/perfil-que-nao-existe-e2e');
+    await expect(page.getByText(/perfil não encontrado/i).first()).toBeVisible();
   });
 });

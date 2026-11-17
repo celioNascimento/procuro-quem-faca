@@ -13,7 +13,7 @@ test.describe('LGPD — páginas públicas', () => {
   test('/titular mostra o formulário de pedido do titular', async ({ page }) => {
     await page.goto('/titular');
     await expect(page.getByRole('heading', { name: 'Seus dados, sua decisão' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Política de Privacidade' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Política de Privacidade' }).first()).toBeVisible();
   });
 
   test('/privacidade e /termos abrem sem erro', async ({ page }) => {

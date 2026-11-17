@@ -14,7 +14,7 @@ test.describe('autenticação (contas fictícias)', () => {
     await entrar(page, 'prestador');
 
     await expect(page).toHaveURL(/\/dashboard/);
-    await expect(page.getByText('Meu painel')).toBeVisible();
+    await expect(page.getByText('Meu painel').first()).toBeVisible();
     for (const aba of ['Meus Trabalhos', 'Desempenho', 'Divulgação', 'Dados Profissionais']) {
       await expect(page.getByRole('button', { name: aba }).first()).toBeVisible();
     }
