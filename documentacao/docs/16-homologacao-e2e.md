@@ -144,3 +144,44 @@ A auditoria falha quando encontra controle visível sem nome acessível ou link 
 ## Critério de aceite documental
 
 A fase 1 está concluída quando cada rota não-admin possui seus controles principais inventariados, cada mutação tem pré-condição e isolamento definidos, cada divergência está registrada e nenhuma referência a `/admin` é necessária para executar um fluxo público.
+
+
+## Ambiente de homologação e E2E autenticado (fase 2, 17/11/2026)
+
+**Ambiente.** Existe um banco Supabase de teste (`procuro-quem-faca-teste`, separado da produção) e uma URL fixa de homologação, a branch `homologacao` na Vercel: `https://procuro-quem-faca-git-homologacao-celionascimentos-projects.vercel.app`. As variáveis de preview da Vercel apontam para o banco de teste; as de produção ficam só em Production. Preview não tem chave de e-mail nem segredo de tarefas agendadas.
+
+**Dados fictícios.** Contas com senha fixa fictícia (domínio `.invalid`, sem e-mail real): `admin@`, `prestador@` e `cliente@pqf-teste.invalid`. Há também o perfil público "Pedro Pedreiro Teste", dois projetos (um em execução, um finalizado com avaliação) e seis perfis de curadoria sem dono, com link pessoal, para os testes de reivindicar e excluir.
+
+**Testes desta fase** (`tests/e2e/homologacao`, ligados por `E2E_HOMOLOGACAO=1` e abortados se a base for o domínio de produção):
+
+| Arquivo | O que prova | Grava dados? |
+|---|---|---|
+| `isolamento.spec.ts` | Toda chamada ao Supabase vai para o banco de teste, nunca para produção | Não |
+| `perfil-publico.spec.ts` | Perfil fictício, abas, link de denúncia, busca e 404 | Não |
+| `autenticacao.spec.ts` | Login do prestador, senha errada, cliente sem cadastro completo, mostrar/ocultar senha | Não |
+| `lgpd.spec.ts` | `/titular`, `/privacidade` e `/termos` abrem | Não |
+
+**Proteção de deploy.** O robô entra pelo segredo "Protection Bypass for Automation" da Vercel, guardado no GitHub como `E2E_BYPASS_SECRET`. O `global-setup` troca o segredo por um cookie; o segredo nunca é impresso.
+
+**Execução.** O workflow `E2E Homologação` roda a cada push na branch `homologacao` e sob demanda. Localmente: `npm run test:e2e:homologacao` (no PowerShell, defina as variáveis com `$env:` antes).
+
+**Próximos fluxos (ainda PENDENTES):** cadastro de prestador novo, reivindicar e excluir por link pessoal, denúncia, avaliação por token, `/meus-dados` e exclusão de conta. Eles gravam dados e exigem reset das fixtures de teste antes de cada execução.
+
+
+### Reset das fixtures e fluxos que gravam (17/11/2026)
+
+O banco de teste tem a função `e2e_resetar_fixtures()`, que o teste chama antes de cada cenário que grava dados. Ela apaga contas e linhas criadas pelos testes e restaura o que eles alteraram, voltando à semente. O SQL está em `supabase/homologacao/reset_fixtures.sql`, **fora** de `supabase/migrations` de propósito: é exclusivo da homologação e se recusa a rodar em qualquer banco sem a tabela-marcador `ambiente_teste_marcador`. Sempre que a semente mudar, rode `select public.e2e_capturar_baseline();` no banco de teste para fotografar o novo estado limpo.
+
+Limite conhecido: o Supabase proíbe `DELETE` direto em `storage.objects`; arquivos enviados por testes de upload precisam ser removidos pela API do Storage.
+
+| Arquivo | O que prova | Grava dados? |
+|---|---|---|
+| `denuncia.spec.ts` | Botão bloqueado sem motivo; denúncia gravada (HTTP 201) e tela "Denúncia Recebida" | Sim (restaurado antes de cada teste) |
+| `avaliacao.spec.ts` | Sem login não abre; cliente logada: nota obrigatória, avalia o projeto pronto (3333…) e vai a `/sucesso`; token inexistente não abre | Sim |
+| `reivindicar.spec.ts` | Sem link, link inválido, assumir (vai ao cadastro), voltar sem apagar, excluir e link deixa de valer | Sim |
+
+Os identificadores fictícios da semente (tokens, ids) ficam em `tests/e2e/support/fixtures.ts`.
+
+Ainda pendentes: cadastro novo, `/meus-dados` e exclusão de conta logada.
+
+A semente do banco de teste ganhou o projeto `3333…` (em execução, sem fotos, já marcado como concluído, da cliente de teste), pois o banco só aceita avaliar projeto concluído e logado como dono.

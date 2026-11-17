@@ -1,0 +1,66 @@
+# E2E contra o ambiente de HOMOLOGAÇÃO (banco Supabase de teste, contas fictícias).
+# Nunca aponta para produção: o endereço é fixo e os testes abortam se a base for o domínio real.
+#
+# Roda dentro da imagem oficial do Playwright (navegadores já instalados). O passo
+# "playwright install" travava ~10 min no download do navegador nos runners do GitHub.
+#
+# Segredo OPCIONAL: E2E_BYPASS_SECRET ("Protection Bypass for Automation" da Vercel).
+# Só é necessário se a proteção de deploy da Vercel for ligada. Sem ela, deixe em branco.
+name: E2E Homologação
+on:
+  push:
+    branches: [ homologacao ]
+  workflow_dispatch:
+concurrency:
+  group: e2e-homologacao
+  cancel-in-progress: true
+jobs:
+  e2e:
+    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --ipc=host --init
+    env:
+      E2E_BASE_URL: https://procuro-quem-faca-git-homologacao-celionascimentos-projects.vercel.app
+      E2E_HOMOLOGACAO: '1'
+      E2E_BYPASS_SECRET: ${{ secrets.E2E_BYPASS_SECRET }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm ci
+    - name: Aguardar o deploy desta branch ficar pronto
+      # O push dispara o deploy da Vercel em paralelo; espera a página responder 200.
+      run: |
+        node -e "
+        const base = process.env.E2E_BASE_URL;
+        const segredo = process.env.E2E_BYPASS_SECRET;
+        const url = segredo ? base + '/?x-vercel-protection-bypass=' + segredo : base + '/';
+        (async () => {
+          for (let i = 1; i <= 40; i++) {
+            try {
+              const r = await fetch(url, { redirect: 'follow' });
+              if (r.status === 200) { console.log('Deploy pronto.'); return; }
+              console.log('Tentativa ' + i + ': HTTP ' + r.status + '. Aguardando 15s...');
+            } catch (e) {
+              console.log('Tentativa ' + i + ': ' + e.message + '. Aguardando 15s...');
+            }
+            await new Promise((ok) => setTimeout(ok, 15000));
+          }
+          console.log('Deploy não ficou pronto a tempo.');
+          process.exit(1);
+        })();
+        "
+    - name: Run Playwright tests (homologação)
+      # Só a pasta homologacao: o controls.spec.ts (inspeção de todos os controles) estoura 30s por rota
+      # contra URL remota e consumiria o tempo do job. Ele segue no workflow "Playwright Tests".
+      run: npx playwright test tests/e2e/homologacao
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: playwright-report-homologacao
+        path: playwright-report/
+        retention-days: 14
