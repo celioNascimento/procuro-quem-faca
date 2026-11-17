@@ -191,7 +191,10 @@ export function useLoginForm() {
       if (!isActive.current) return
 
       if (signUpError) {
-        setMensagem('Erro: ' + signUpError.message)
+        // Sem confirmação de e-mail, o Supabase avisa que a conta existe com um erro (em vez de
+        // `identities: []`): para quem digitou a senha errada, a mensagem é a mesma de sempre.
+        const contaExiste = signUpError.code === 'user_already_exists' || /already registered/i.test(signUpError.message)
+        setMensagem(contaExiste ? 'Erro: E-mail ou senha incorretos.' : 'Erro: ' + signUpError.message)
         return
       }
 
