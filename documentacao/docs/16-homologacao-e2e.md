@@ -177,3 +177,9 @@ Limite conhecido: o Supabase proíbe `DELETE` direto em `storage.objects`; arqui
 | Arquivo | O que prova | Grava dados? |
 |---|---|---|
 | `denuncia.spec.ts` | Botão bloqueado sem motivo; denúncia gravada (HTTP 201) e tela "Denúncia Recebida" | Sim (restaurado antes de cada teste) |
+| `avaliacao.spec.ts` | Nota obrigatória; cliente avalia por token e vê "Acompanhamento e Garantia"; token inexistente não abre o formulário | Sim |
+| `reivindicar.spec.ts` | Sem link, link inválido, assumir (vai ao cadastro), voltar sem apagar, excluir e link deixa de valer | Sim |
+
+Os identificadores fictícios da semente (tokens, ids) ficam em `tests/e2e/support/fixtures.ts`.
+
+Ainda pendentes: cadastro novo, `/meus-dados` e exclusão de conta logada.
