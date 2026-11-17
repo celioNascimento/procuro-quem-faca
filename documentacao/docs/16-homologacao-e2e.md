@@ -144,3 +144,25 @@ A auditoria falha quando encontra controle visível sem nome acessível ou link 
 ## Critério de aceite documental
 
 A fase 1 está concluída quando cada rota não-admin possui seus controles principais inventariados, cada mutação tem pré-condição e isolamento definidos, cada divergência está registrada e nenhuma referência a `/admin` é necessária para executar um fluxo público.
+
+
+## Ambiente de homologação e E2E autenticado (fase 2, 17/11/2026)
+
+**Ambiente.** Existe um banco Supabase de teste (`procuro-quem-faca-teste`, separado da produção) e uma URL fixa de homologação, a branch `homologacao` na Vercel: `https://procuro-quem-faca-git-homologacao-celionascimentos-projects.vercel.app`. As variáveis de preview da Vercel apontam para o banco de teste; as de produção ficam só em Production. Preview não tem chave de e-mail nem segredo de tarefas agendadas.
+
+**Dados fictícios.** Contas com senha fixa fictícia (domínio `.invalid`, sem e-mail real): `admin@`, `prestador@` e `cliente@pqf-teste.invalid`. Há também o perfil público "Pedro Pedreiro Teste", dois projetos (um em execução, um finalizado com avaliação) e seis perfis de curadoria sem dono, com link pessoal, para os testes de reivindicar e excluir.
+
+**Testes desta fase** (`tests/e2e/homologacao`, ligados por `E2E_HOMOLOGACAO=1` e abortados se a base for o domínio de produção):
+
+| Arquivo | O que prova | Grava dados? |
+|---|---|---|
+| `isolamento.spec.ts` | Toda chamada ao Supabase vai para o banco de teste, nunca para produção | Não |
+| `perfil-publico.spec.ts` | Perfil fictício, abas, link de denúncia, busca e 404 | Não |
+| `autenticacao.spec.ts` | Login do prestador, senha errada, cliente sem cadastro completo, mostrar/ocultar senha | Não |
+| `lgpd.spec.ts` | `/titular`, `/privacidade` e `/termos` abrem | Não |
+
+**Proteção de deploy.** O robô entra pelo segredo "Protection Bypass for Automation" da Vercel, guardado no GitHub como `E2E_BYPASS_SECRET`. O `global-setup` troca o segredo por um cookie; o segredo nunca é impresso.
+
+**Execução.** O workflow `E2E Homologação` roda a cada push na branch `homologacao` e sob demanda. Localmente: `npm run test:e2e:homologacao` (no PowerShell, defina as variáveis com `$env:` antes).
+
+**Próximos fluxos (ainda PENDENTES):** cadastro de prestador novo, reivindicar e excluir por link pessoal, denúncia, avaliação por token, `/meus-dados` e exclusão de conta. Eles gravam dados e exigem reset das fixtures de teste antes de cada execução.

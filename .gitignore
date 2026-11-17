@@ -47,3 +47,6 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Estado de sessão do bypass da Vercel (E2E)
+/tests/e2e/.auth/

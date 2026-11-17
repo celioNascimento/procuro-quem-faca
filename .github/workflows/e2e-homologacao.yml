@@ -1,0 +1,49 @@
+# E2E contra o ambiente de HOMOLOGAÇÃO (banco Supabase de teste, contas fictícias).
+# Nunca aponta para produção: o endereço é fixo e os testes abortam se a base for o domínio real.
+#
+# Segredo necessário (GitHub → Settings → Secrets and variables → Actions):
+#   E2E_BYPASS_SECRET = "Protection Bypass for Automation" do projeto na Vercel.
+name: E2E Homologação
+on:
+  push:
+    branches: [ homologacao ]
+  workflow_dispatch:
+concurrency:
+  group: e2e-homologacao
+  cancel-in-progress: true
+jobs:
+  e2e:
+    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    env:
+      E2E_BASE_URL: https://procuro-quem-faca-git-homologacao-celionascimentos-projects.vercel.app
+      E2E_HOMOLOGACAO: '1'
+      E2E_BYPASS_SECRET: ${{ secrets.E2E_BYPASS_SECRET }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browsers
+      timeout-minutes: 10
+      run: npx playwright install --with-deps chromium
+    - name: Aguardar o deploy desta branch ficar pronto
+      # O push dispara o deploy da Vercel em paralelo; espera a página responder sem erro de servidor.
+      run: |
+        for i in $(seq 1 40); do
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            "$E2E_BASE_URL/?x-vercel-protection-bypass=$E2E_BYPASS_SECRET" || true)
+          if [ "$code" = "200" ]; then echo "Deploy pronto."; exit 0; fi
+          echo "Tentativa $i: HTTP $code. Aguardando 15s..."; sleep 15
+        done
+        echo "Deploy não ficou pronto a tempo."; exit 1
+    - name: Run Playwright tests (homologação)
+      run: npx playwright test
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: playwright-report-homologacao
+        path: playwright-report/
+        retention-days: 14
