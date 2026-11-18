@@ -92,3 +92,8 @@ No site (sem criar dados falsos em produção):
 - **Aviso ao prestador:** não existe sistema de notificações para o prestador; o aviso de selo pausado aparece só na aba CNPJ.
 - **Coluna `prestadores.verificado`:** sem uso na tela; remover numa migração posterior, depois de confirmar que nada lê o campo.
 - **Teste instável** `admin-verificacoes.spec.ts:62` (revogar selo): passou na repetição; vale investigar se voltar a oscilar.
+
+## Adendo (18/11) — migration de segurança do admin
+
+- `20261118120000_admin_nao_edita_prestador.sql`: remove a policy "Admin pode atualizar qualquer prestador" (admin podia alterar qualquer campo de qualquer prestador pelo navegador). Aplicar em produção DEPOIS das 5 migrations dos selos. Antes, conferir no painel de produção que ativação, bloqueio e decisão de CNPJ continuam funcionando (não dependem dessa policy). Teste automatizado: `tests/e2e/homologacao/admin-nao-edita-prestador.spec.ts`.
+- Reaplicar nome do Pedro (id 2) para teste manual do CNPJ real: o reset do E2E devolve "Pedro Pedreiro Teste" a cada push.

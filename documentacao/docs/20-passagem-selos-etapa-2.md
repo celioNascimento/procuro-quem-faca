@@ -152,3 +152,7 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Os selos continuam aparecendo junto do placar (selo confirma só o que foi conferido). Nada muda na ordem da busca.
 - Código: `lib/avaliacoes/transparencia.ts` (regra pura + testes), `usePerfilPrestador` (conta `indica = false`), `PerfilConfianca` (placar e aviso), `PerfilAvaliacoes`/`PerfilTabs` (cabeçalho com totais reais).
 - Fora desta entrega (não escolhido): placar no card da busca e lembrete antes do WhatsApp.
+
+## Atualização (18/11) — Admin não edita perfil de outras pessoas
+
+- Auditoria de RLS: a policy de UPDATE amplo do admin em `prestadores` foi removida (migration `20261118120000`, aplicada só no teste). Admin continua moderando por tabelas e funções próprias. Detalhes no doc 21.
