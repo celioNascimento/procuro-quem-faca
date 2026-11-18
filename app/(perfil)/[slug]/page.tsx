@@ -12,6 +12,7 @@ type PerfilSeo = {
   cidade: string | null
   estado: string | null
   fotoPerfil: string | null
+  exemplo: boolean
 }
 
 const baseUrl = 'https://procuroquemfaca.com.br'
@@ -35,7 +36,7 @@ const buscarPerfil = cache(async (slug: string): Promise<PerfilSeo | null> => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('prestadores')
-    .select('nome, slug, bio, foto_perfil, status, estado_sigla, categorias(nome), cidades(nome)')
+    .select('nome, slug, bio, foto_perfil, status, exemplo, estado_sigla, categorias(nome), cidades(nome)')
     .eq('slug', slug)
     .eq('status', 'ativo')
     .maybeSingle()
@@ -53,6 +54,7 @@ const buscarPerfil = cache(async (slug: string): Promise<PerfilSeo | null> => {
     cidade: cidadeRelacionada?.nome ?? null,
     estado: data.estado_sigla ?? null,
     fotoPerfil: data.foto_perfil,
+    exemplo: data.exemplo === true,
   }
 })
 
@@ -89,6 +91,8 @@ export async function generateMetadata({
   return {
     title,
     description,
+    // Perfil de exemplo (divulgação): só por link direto, nunca no Google.
+    ...(perfil.exemplo ? { robots: { index: false, follow: false } } : {}),
     alternates: { canonical: `${baseUrl}/${perfil.slug || slug}` },
     openGraph: {
       title,

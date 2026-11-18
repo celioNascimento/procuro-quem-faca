@@ -2,6 +2,7 @@
 
 'use client'
 
+import { AvisoPerfilExemplo } from '@/components/profile/AvisoPerfilExemplo'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
@@ -99,6 +100,12 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 md:pt-26 lg:px-8 lg:pb-8 2xl:max-w-[96rem] 2xl:px-12">
         {/* Perfil montado com dados públicos: avisa de onde vêm as informações e oferece assumir o perfil */}
+        {prestador.exemplo === true && (
+          <div className="mb-5 lg:mb-6">
+            <AvisoPerfilExemplo />
+          </div>
+        )}
+
         {isPublico && (
           <div className="mb-5 lg:mb-6">
             <AvisoPerfilPublico prestadorId={prestador.id} nome={prestador.nome || ''} />

@@ -22,6 +22,8 @@ export interface Prestador {
   cidades_atendidas: string[] | null
   origem_tipo: string | null
   verificado: boolean | null
+  /** Perfil de demonstração: fora da busca e do Google, com faixa "Perfil de exemplo". */
+  exemplo?: boolean | null
   grupo_id: string | null
   categoria_id: string | null
   categoria?: string | null
