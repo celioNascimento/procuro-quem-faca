@@ -37,7 +37,7 @@ interface PerfilCarregadoProps {
 }
 
 export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicacoes, urlRetorno }: PerfilCarregadoProps) {
-  const { selo, nivel } = useSeloDoPerfil(prestador.id)
+  const { selo, nivel, complementares } = useSeloDoPerfil(prestador.id)
   const { status: statusCompartilhamento, compartilhar } = useCompartilharPerfil({
     prestador,
     projetos,
@@ -127,6 +127,7 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
                   totalConcluidos={projetos.filter(p => p.status === 'finalizado').length}
                   selo={selo}
                   nivel={nivel}
+                  complementares={complementares}
                 />
               </div>
 

@@ -4,7 +4,12 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { buscarNivelDoPrestador, buscarSelosPublicos } from '@/lib/services/selosPublicos.service'
-import { selosCnpjPorPrestador, type SeloCnpjPublico } from '@/lib/selos/publico'
+import {
+  selosCnpjPorPrestador,
+  selosComplementaresPorPrestador,
+  type SeloCnpjPublico,
+  type SelosComplementares,
+} from '@/lib/selos/publico'
 
 export function useSelosPublicos(ids: number[]): Map<number, SeloCnpjPublico> {
   const [selos, setSelos] = useState<Map<number, SeloCnpjPublico>>(() => new Map())
@@ -39,17 +44,26 @@ export function useSelosPublicos(ids: number[]): Map<number, SeloCnpjPublico> {
 export interface SeloDoPerfil {
   selo: SeloCnpjPublico | null
   nivel: string | null
+  /** Experiência no PQF, tempo de CNPJ e atividade compatível (só no perfil, não no card). */
+  complementares: SelosComplementares | null
 }
 
 export function useSeloDoPerfil(prestadorId: number | null | undefined): SeloDoPerfil {
-  const [estado, setEstado] = useState<SeloDoPerfil>({ selo: null, nivel: null })
+  const [estado, setEstado] = useState<SeloDoPerfil>({ selo: null, nivel: null, complementares: null })
 
   useEffect(() => {
     if (!prestadorId) return
     let ativo = true
     Promise.all([buscarSelosPublicos([prestadorId]), buscarNivelDoPrestador(prestadorId)])
       .then(([linhas, nivel]) => {
-        if (ativo) setEstado({ selo: selosCnpjPorPrestador(linhas).get(Number(prestadorId)) ?? null, nivel })
+        if (ativo) {
+          const id = Number(prestadorId)
+          setEstado({
+            selo: selosCnpjPorPrestador(linhas).get(id) ?? null,
+            nivel,
+            complementares: selosComplementaresPorPrestador(linhas).get(id) ?? null,
+          })
+        }
       })
       .catch(() => { /* sem selo: o perfil aparece normalmente */ })
     return () => { ativo = false }

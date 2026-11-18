@@ -9,6 +9,7 @@ import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
 import { BarraEvolucao } from './BarraEvolucao'
 import { AbaCnpj } from './AbaCnpj'
 import { useSeloCnpj } from '@/hooks/useSeloCnpj'
+import { useExtrasEvolucao } from '@/hooks/useExtrasEvolucao'
 import { montarConquistas } from '@/lib/selos/evolucao'
 
 export type SubAbaDados = 'perfil' | 'cnpj'
@@ -27,7 +28,8 @@ export default function DadosProfissionaisTabs({ prestadorId, subAbaInicial = 'p
   const [subAba, setSubAba] = useState<SubAbaDados>(subAbaInicial)
   const botoes = useRef<Record<string, HTMLButtonElement | null>>({})
   const selo = useSeloCnpj(prestadorId)
-  const conquistas = montarConquistas(selo.fase)
+  const extras = useExtrasEvolucao(prestadorId, selo.fase)
+  const conquistas = montarConquistas(selo.fase, extras)
 
   const aoTeclar = (evento: KeyboardEvent<HTMLButtonElement>) => {
     if (evento.key !== 'ArrowLeft' && evento.key !== 'ArrowRight') return

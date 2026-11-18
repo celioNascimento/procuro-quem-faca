@@ -27,11 +27,11 @@ test.describe('aba CNPJ do prestador', () => {
     await resetarFixtures();
   });
 
-  test('CNPJ em conferência: mostra o número, a barra em 0 de 1 e o resto "em breve"', async ({ page }) => {
+  test('CNPJ em conferência: mostra o número e a barra em 0 de 4 (tempo e atividade dependem do CNPJ)', async ({ page }) => {
     await abrirAbaCnpj(page);
     await expect(page.getByTestId('cnpj-fase-conferencia')).toContainText('EMPRESA FICTICIA ALFA LTDA');
-    await expect(page.getByTestId('evolucao-texto')).toHaveText('0 de 1 selo conquistado');
-    await expect(page.getByText('Em breve')).toHaveCount(3);
+    await expect(page.getByTestId('evolucao-texto')).toHaveText('0 de 4 selos conquistados', { timeout: 20_000 });
+    await expect(page.getByText('Depende do CNPJ')).toHaveCount(2);
     await expect(page.getByRole('progressbar', { name: /evolução dos selos/i })).toBeVisible();
     // Nunca fala em "perfil incompleto".
     await expect(page.getByText(/incompleto/i)).toHaveCount(0);
@@ -48,7 +48,7 @@ test.describe('aba CNPJ do prestador', () => {
     await page.getByRole('button', { name: 'Remover meu CNPJ' }).click();
     await expect(page.getByRole('button', { name: 'Conferir meu CNPJ' })).toBeVisible({ timeout: 15_000 });
     await expect(page.getByRole('button', { name: 'Remover meu CNPJ' })).toHaveCount(0);
-    await expect(page.getByTestId('evolucao-texto')).toHaveText('0 de 1 selo conquistado');
+    await expect(page.getByTestId('evolucao-texto')).toHaveText('0 de 4 selos conquistados', { timeout: 20_000 });
 
     const campo = page.getByLabel('Número do CNPJ');
     await campo.fill('xxmvwcsz000143');
@@ -68,7 +68,8 @@ test.describe('aba CNPJ do prestador', () => {
     await decidirCnpjComoAdmin(request, CONTAS.prestador.nome, 'aprovada');
     await abrirAbaCnpj(page);
     await expect(page.getByTestId('cnpj-fase-aprovado')).toContainText(/CNPJ ativo, consultado em \d{2}\/\d{2}\/\d{4}/);
-    await expect(page.getByTestId('evolucao-texto')).toHaveText('1 de 1 selo conquistado');
+    // CNPJ fictício aprovado, sem data de abertura nem CNAE: tempo fica "em breve" e atividade "não se aplica" (fora da conta).
+    await expect(page.getByTestId('evolucao-texto')).toHaveText('1 de 2 selos conquistados', { timeout: 20_000 });
     await expect(page.getByRole('button', { name: 'Conferir meu CNPJ' })).toHaveCount(0);
   });
 });

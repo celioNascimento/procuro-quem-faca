@@ -65,6 +65,9 @@ begin
     raise exception 'Sem baseline: rode e2e_capturar_baseline() antes.';
   end if;
 
+  -- 0) Avaliações de contas criadas pelos testes (a FK com o Auth não tem cascata): sai antes das contas.
+  delete from public.avaliacoes where cliente_id not in (select id from e2e_baseline.auth_users);
+
   -- 1) Contas criadas pelos testes (a cascata do Auth leva perfis ligados).
   delete from auth.users where id not in (select id from e2e_baseline.auth_users);
 
@@ -114,3 +117,40 @@ begin
 end $$;
 revoke all on function public.e2e_criar_conta(text, text) from public;
 grant execute on function public.e2e_criar_conta(text, text) to anon, authenticated;
+
+-- ----------------------------------------------------------------------------
+-- Apoio aos E2E dos selos calculados (Etapa 2, Parte B). Só no banco de TESTE (checam o marcador).
+-- e2e_semear_experiencia: cria N serviços finalizados e avaliados (nota informada), cada um por um cliente
+--   novo (conta fictícia e2e-exp-*). O e2e_resetar_fixtures() apaga tudo isso.
+-- e2e_ajustar_cnpj: define data de abertura e CNAE do CNPJ fictício do prestador.
+-- ----------------------------------------------------------------------------
+create or replace function public.e2e_semear_experiencia(p_prestador_id bigint, p_servicos int, p_nota int default 5) returns void
+language plpgsql security definer set search_path = public, extensions, pg_temp as $$
+declare v_u uuid; v_proj uuid; v_inst uuid; i int;
+begin
+  if not exists (select 1 from public.ambiente_teste_marcador where nome = 'homologacao') then
+    raise exception 'Este banco não é o de homologação: semente recusada.';
+  end if;
+  select instance_id into v_inst from auth.users where email = 'cliente@pqf-teste.invalid';
+  for i in 1..p_servicos loop
+    v_u := gen_random_uuid();
+    insert into auth.users (instance_id, id, aud, role, email, email_confirmed_at, created_at, updated_at)
+      values (v_inst, v_u, 'authenticated', 'authenticated', 'e2e-exp-' || replace(v_u::text, '-', '') || '@pqf-teste.invalid', now(), now(), now());
+    insert into public.portfolio_projetos (prestador_id, status, titulo) values (p_prestador_id, 'finalizado', 'Serviço de teste ' || i) returning id into v_proj;
+    insert into public.avaliacoes (projeto_id, prestador_id, cliente_id, nota, status, visivel)
+      values (v_proj, p_prestador_id, v_u, p_nota, 'finalizado', true);
+  end loop;
+end $$;
+revoke all on function public.e2e_semear_experiencia(bigint, int, int) from public;
+grant execute on function public.e2e_semear_experiencia(bigint, int, int) to anon, authenticated;
+
+create or replace function public.e2e_ajustar_cnpj(p_prestador_id bigint, p_data_abertura date, p_cnae text) returns void
+language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  if not exists (select 1 from public.ambiente_teste_marcador where nome = 'homologacao') then
+    raise exception 'Este banco não é o de homologação: ajuste recusado.';
+  end if;
+  update public.prestador_cnpj set data_abertura = p_data_abertura, cnae_codigo = p_cnae where prestador_id = p_prestador_id;
+end $$;
+revoke all on function public.e2e_ajustar_cnpj(bigint, date, text) from public;
+grant execute on function public.e2e_ajustar_cnpj(bigint, date, text) to anon, authenticated;

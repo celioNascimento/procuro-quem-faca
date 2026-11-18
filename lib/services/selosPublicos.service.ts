@@ -26,3 +26,17 @@ export async function buscarNivelDoPrestador(id: number): Promise<string | null>
   if (error) throw error
   return typeof data === 'string' ? data : null
 }
+
+export interface ProgressoExperiencia {
+  servicos: number
+  clientes: number
+  atingido: boolean
+}
+
+/** Andamento do selo "Experiência no PQF" (serviços e clientes diferentes que já contam). */
+export async function buscarProgressoExperiencia(id: number): Promise<ProgressoExperiencia> {
+  const { data, error } = await publico().rpc('experiencia_no_pqf', { p_prestador_ids: [id] })
+  if (error) throw error
+  const linha = (data as { servicos: number; clientes: number; atingido: boolean }[] | null)?.[0]
+  return { servicos: linha?.servicos ?? 0, clientes: linha?.clientes ?? 0, atingido: linha?.atingido ?? false }
+}

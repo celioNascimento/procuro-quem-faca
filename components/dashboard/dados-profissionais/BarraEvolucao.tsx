@@ -6,14 +6,20 @@ import { resumoEvolucao, type Conquista, type EstadoConquista } from '@/lib/selo
 const ROTULO: Record<EstadoConquista, string> = {
   conquistado: 'Conquistado',
   em_andamento: 'Em conferência',
+  em_progresso: 'Em andamento',
   disponivel: 'Disponível',
+  depende_cnpj: 'Depende do CNPJ',
+  nao_aplica: 'Não se aplica',
   em_breve: 'Em breve',
 }
 
 const ESTILO: Record<EstadoConquista, string> = {
   conquistado: 'bg-green-50 text-green-700',
   em_andamento: 'bg-amber-50 text-amber-700',
+  em_progresso: 'bg-amber-50 text-amber-700',
   disponivel: 'bg-blue-50 text-blue-700',
+  depende_cnpj: 'bg-slate-100 text-slate-600',
+  nao_aplica: 'bg-slate-100 text-slate-500',
   em_breve: 'bg-slate-100 text-slate-500',
 }
 
@@ -44,12 +50,15 @@ export function BarraEvolucao({ conquistas }: { conquistas: Conquista[] }) {
 
       <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {conquistas.map((c) => (
-          <li key={c.id} className="flex min-w-0 items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2">
-            <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-700">
-              {c.estado === 'em_breve' ? <Clock size={14} aria-hidden="true" /> : <Sparkles size={14} aria-hidden="true" />}
-              <span className="truncate">{c.titulo}</span>
-            </span>
-            <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${ESTILO[c.estado]}`}>{ROTULO[c.estado]}</span>
+          <li key={c.id} className="flex min-w-0 flex-col gap-1 rounded-xl bg-slate-50 px-3 py-2" data-testid={`conquista-${c.id}`}>
+            <div className="flex min-w-0 items-center justify-between gap-2">
+              <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-700">
+                {c.estado === 'em_breve' ? <Clock size={14} aria-hidden="true" /> : <Sparkles size={14} aria-hidden="true" />}
+                <span className="truncate">{c.titulo}</span>
+              </span>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${ESTILO[c.estado]}`}>{ROTULO[c.estado]}</span>
+            </div>
+            {c.detalhe && <p className="text-xs leading-snug text-slate-500">{c.detalhe}</p>}
           </li>
         ))}
       </ul>

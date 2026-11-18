@@ -261,7 +261,7 @@ A segunda atualização cria o selo "CNPJ ativo" e a estrutura comum de verifica
 - [ ] Regra de vínculo: MEI compara nome do titular com o do perfil; divergências vão para revisão manual
 - [ ] Job mensal (pg_cron) para reconsultar e rebaixar o selo de CNPJ suspenso
 - [ ] Selo "CNPJ ativo" no card e no perfil público, com a data da consulta
-- [ ] Cálculo do nível a partir das verificações aprovadas
+- [x] Cálculo do nível a partir das verificações aprovadas (Bronze e Prata, 17/11/2026, ambiente de teste; Ouro e Diamante chegam com as etapas 4 e 5)
 - [ ] Definir o destino do boolean `verificado`
 - [ ] Comunicar aos prestadores que o selo é opcional e não afeta quem não o tem
 

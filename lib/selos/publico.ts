@@ -2,6 +2,9 @@
 // Selos que o cliente vê (card da busca e perfil público). Só lógica pura: o que mostrar e como escrever.
 // O texto diz apenas o que foi conferido, nunca mais que isso.
 
+import { META_EXPERIENCIA } from '@/config/selos'
+import { faixaTempoCnpj, type FaixaTempoCnpj } from './tempoCnpj'
+
 /** Uma linha de selos_publicos(): selo aprovado e dentro da validade. */
 export interface LinhaSeloPublico {
   prestador_id: number
@@ -52,4 +55,34 @@ const NOMES_NIVEL: Record<string, string> = {
 export function rotuloNivel(nivel: string | null | undefined): string | null {
   if (!nivel) return null
   return NOMES_NIVEL[nivel] ?? null
+}
+
+/** Selos calculados pelo sistema (Parte B). Só aparecem no perfil público; o card mostra apenas o CNPJ ativo. */
+export interface SelosComplementares {
+  experiencia: boolean
+  tempoCnpj: FaixaTempoCnpj | null
+  atividadeCompativel: boolean
+}
+
+export const TEXTO_EXPERIENCIA = `Experiência no PQF: ${META_EXPERIENCIA.servicos} serviços avaliados por ${META_EXPERIENCIA.clientes} clientes diferentes`
+export const TEXTO_ATIVIDADE = 'Atividade do CNPJ compatível com a categoria do perfil'
+
+/** Agrupa por prestador os selos de experiência, tempo de CNPJ e atividade compatível. */
+export function selosComplementaresPorPrestador(linhas: LinhaSeloPublico[], agora: Date = new Date()): Map<number, SelosComplementares> {
+  const mapa = new Map<number, SelosComplementares>()
+  const de = (id: number) => {
+    const atual = mapa.get(id) ?? { experiencia: false, tempoCnpj: null, atividadeCompativel: false }
+    mapa.set(id, atual)
+    return atual
+  }
+  for (const l of linhas) {
+    const id = Number(l.prestador_id)
+    if (l.tipo === 'experiencia') de(id).experiencia = true
+    else if (l.tipo === 'atividade_compativel') de(id).atividadeCompativel = true
+    else if (l.tipo === 'tempo_cnpj') {
+      const faixa = faixaTempoCnpj(l.data_abertura, agora)
+      if (faixa) de(id).tempoCnpj = faixa
+    }
+  }
+  return mapa
 }

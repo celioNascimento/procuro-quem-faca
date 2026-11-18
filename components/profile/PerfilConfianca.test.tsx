@@ -24,3 +24,31 @@ describe('PerfilConfianca — selo de CNPJ', () => {
     expect(screen.queryByText(/CNPJ/)).toBeNull()
   })
 })
+
+describe('PerfilConfianca — selos calculados pelo sistema', () => {
+  it('mostra experiência, tempo de CNPJ e atividade compatível, e o nível Prata', () => {
+    render(
+      <PerfilConfianca
+        prestador={prestador} totalIndicacoes={0} totalConcluidos={0}
+        selo={{ consultadoEm: '2026-11-17T15:00:00Z' }} nivel="prata"
+        complementares={{ experiencia: true, tempoCnpj: 3, atividadeCompativel: true }}
+      />,
+    )
+    expect(screen.getByText('Nível Prata · CNPJ ativo, consultado em 17/11')).toBeTruthy()
+    expect(screen.getByText('Experiência no PQF: 10 serviços avaliados por 10 clientes diferentes')).toBeTruthy()
+    expect(screen.getByText('CNPJ aberto há mais de 3 anos')).toBeTruthy()
+    expect(screen.getByText('Atividade do CNPJ compatível com a categoria do perfil')).toBeTruthy()
+  })
+
+  it('só mostra o que foi conquistado; o que falta não aparece (nunca "0")', () => {
+    render(
+      <PerfilConfianca
+        prestador={prestador} totalIndicacoes={0} totalConcluidos={0}
+        complementares={{ experiencia: false, tempoCnpj: null, atividadeCompativel: false }}
+      />,
+    )
+    expect(screen.queryByText(/Experiência no PQF/)).toBeNull()
+    expect(screen.queryByText(/CNPJ aberto/)).toBeNull()
+    expect(screen.queryByText(/Atividade do CNPJ/)).toBeNull()
+  })
+})

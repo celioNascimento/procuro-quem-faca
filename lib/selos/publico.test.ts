@@ -1,6 +1,6 @@
 // lib/selos/publico.test.ts
 import { describe, expect, it } from 'vitest'
-import { diaMes, rotuloNivel, selosCnpjPorPrestador, textoSeloCnpj, type LinhaSeloPublico } from './publico'
+import { diaMes, rotuloNivel, selosCnpjPorPrestador, selosComplementaresPorPrestador, textoSeloCnpj, TEXTO_EXPERIENCIA, type LinhaSeloPublico } from './publico'
 
 const linha = (o: Partial<LinhaSeloPublico>): LinhaSeloPublico => ({
   prestador_id: 1, tipo: 'cnpj', verificado_em: null, valido_ate: null, consultado_em: '2026-11-17T15:00:00Z', data_abertura: null, ...o,
@@ -38,5 +38,26 @@ describe('rotuloNivel', () => {
     expect(rotuloNivel('diamante')).toBe('Diamante')
     expect(rotuloNivel(null)).toBeNull()
     expect(rotuloNivel('lixo')).toBeNull()
+  })
+})
+
+describe('selosComplementaresPorPrestador', () => {
+  const hoje = new Date(2026, 10, 18)
+  it('agrupa experiência, tempo de CNPJ (pela faixa) e atividade por prestador', () => {
+    const mapa = selosComplementaresPorPrestador([
+      linha({ prestador_id: 1, tipo: 'experiencia' }),
+      linha({ prestador_id: 1, tipo: 'tempo_cnpj', data_abertura: '2022-03-01' }),
+      linha({ prestador_id: 1, tipo: 'atividade_compativel' }),
+      linha({ prestador_id: 2, tipo: 'tempo_cnpj', data_abertura: '2021-01-01' }),
+    ], hoje)
+    expect(mapa.get(1)).toEqual({ experiencia: true, tempoCnpj: 3, atividadeCompativel: true })
+    expect(mapa.get(2)).toEqual({ experiencia: false, tempoCnpj: 5, atividadeCompativel: false })
+  })
+  it('ignora o selo de CNPJ comum e tempo sem data válida', () => {
+    const mapa = selosComplementaresPorPrestador([linha({ tipo: 'cnpj' }), linha({ prestador_id: 5, tipo: 'tempo_cnpj', data_abertura: null })], hoje)
+    expect(mapa.size).toBe(0)
+  })
+  it('o texto da experiência cita as metas', () => {
+    expect(TEXTO_EXPERIENCIA).toBe('Experiência no PQF: 10 serviços avaliados por 10 clientes diferentes')
   })
 })
