@@ -60,6 +60,12 @@ test.describe('verificação de CNPJ (rota /api/cnpj)', () => {
     const textoReal = await resposta.text();
     console.log(`[cnpj] consulta real: HTTP ${resposta.status()} ${textoReal}`);
     test.skip(resposta.status() === 503, 'Fontes públicas do CNPJ indisponíveis agora.');
+    // Este CNPJ real pode estar ativo (200: aprovada ou fila) ou não (422: pede para regularizar, sem fila).
+    // Os dois resultados são corretos; o que importa é nunca dar erro nem aprovar um CNPJ não ativo.
+    if (resposta.status() === 422) {
+      expect(JSON.parse(textoReal).erro, textoReal).toMatch(/Regularize a situação do CNPJ/);
+      return;
+    }
     expect(resposta.status(), textoReal).toBe(200);
     const corpo = JSON.parse(textoReal);
     console.log(`[cnpj] resultado real: ${corpo.status} - ${corpo.mensagem}`);
@@ -68,12 +74,13 @@ test.describe('verificação de CNPJ (rota /api/cnpj)', () => {
   });
 
   test('repetir a consulta do mesmo CNPJ pelo mesmo prestador não dá conflito', async ({ page }) => {
-    await entrar(page, 'prestador');
+    // Usa o CNPJ ativo do MEI de teste: o "real" pode estar inapto e, nesse caso, nada é gravado.
+    await entrar(page, 'prestadorMei');
     await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
-    const primeira = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_REAL } });
+    const primeira = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_MEI_APROVACAO } });
     test.skip(primeira.status() === 503, 'Fontes públicas do CNPJ indisponíveis agora.');
     expect(primeira.status()).toBe(200);
-    const segunda = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_REAL } });
+    const segunda = await page.request.post('/api/cnpj', { data: { cnpj: CNPJ_MEI_APROVACAO } });
     expect(segunda.status()).toBe(200);
   });
 
