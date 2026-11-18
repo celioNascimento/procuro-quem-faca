@@ -11,10 +11,11 @@ export async function proxy(request: NextRequest) {
   const isCadastro = pathname.startsWith('/cadastro')
   const isAcompanhamento = pathname.startsWith('/acompanhamento')
   const isAvaliar = pathname.startsWith('/avaliar')
+  const isPainelCliente = pathname === '/painel' || pathname.startsWith('/painel/')
   const isLogin = pathname === '/login'
   const isAdmin = pathname.startsWith('/admin')
   const isAdminLogin = pathname === '/admin/login'
-  const precisaAuth = isDashboard || isCadastro || isAcompanhamento || isAvaliar || isLogin || isAdmin
+  const precisaAuth = isDashboard || isCadastro || isAcompanhamento || isAvaliar || isPainelCliente || isLogin || isAdmin
 
   // Páginas públicas (home, perfis, páginas de serviço etc.): só grava o
   // cookie de origem/campanha (Tarefa 4), sem gastar uma consulta ao
@@ -37,10 +38,10 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user && (isDashboard || isCadastro || isAcompanhamento || isAvaliar)) {
+  if (!user && (isDashboard || isCadastro || isAcompanhamento || isAvaliar || isPainelCliente)) {
     // O link pessoal de um perfil (/cadastro?reivindicar=...) também volta depois do login,
     // senão quem não está logado perde o link e cria um perfil novo em vez de assumir o seu
-    const voltaDepoisDoLogin = isAcompanhamento || isAvaliar || (isCadastro && request.nextUrl.searchParams.has('reivindicar'))
+    const voltaDepoisDoLogin = isAcompanhamento || isAvaliar || isPainelCliente || (isCadastro && request.nextUrl.searchParams.has('reivindicar'))
     if (voltaDepoisDoLogin) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('next', pathname + request.nextUrl.search)
