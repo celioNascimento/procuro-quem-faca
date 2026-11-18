@@ -216,3 +216,10 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 
 - Decidido com o Célio: o texto grande "Neste perfil, X de Y clientes não indicam. Leia as avaliações antes de contratar." foi REMOVIDO do perfil (repetia o placar e a tag). A transparência fica no placar completo (7 indicações / 3 não indicam) e na tag âmbar, que agora mostra a porcentagem: "30% não indicam" (perfil e card da busca).
 - Regra inalterada: 3 ou mais avaliações e 30% ou mais "não indico", calculada sobre os números reais (não sobre a porcentagem arredondada). `avisoNaoIndicacoes` deixou de existir; só `textoTagNaoIndicam` em `lib/avaliacoes/transparencia.ts`.
+
+## Ajustes de interface do painel (lote após homologação)
+- Faixa "Últimos 7 dias" aparece em **todas** as abas do painel; dentro de Desempenho ela só informa (prop `semAtalho`, sem seta/clique), para a barra de abas não "pular" ao trocar de aba.
+- Botão "Ver meu perfil" agora é compacto (branco, borda cinza, ícone) ao lado do título "Meu painel", visível em todas as abas (`data-testid="ver-perfil-publico"`). Removidos o botão grande de Meus Trabalhos e o duplicado do cabeçalho de Editar Perfil.
+- Vitrine de fotos: botão de remover é círculo branco com lixeira vermelha.
+- Divulgação: sub-aba selecionada em azul (`bg-blue-600`), igual às abas principais.
+- Perfil público, "Fotos do profissional": faixa de miniaturas centralizada (wrapper `justify-center` + faixa interna rolável, `data-testid="miniaturas-fotos"`).

@@ -62,7 +62,7 @@ export default function CentralDivulgacaoTab({ prestadorId, onIrParaTrabalhos }:
       <div role="tablist" aria-label="Materiais de divulgação" className="flex gap-2 overflow-x-auto">
         {SUBABAS.map(s => (
           <button key={s.id} role="tab" type="button" aria-selected={aba === s.id} onClick={() => setAba(s.id)}
-            className={`flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${aba === s.id ? 'bg-slate-900 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
+            className={`flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${aba === s.id ? 'bg-blue-600 text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
             {s.icon}{s.label}
           </button>
         ))}

@@ -10,7 +10,8 @@ import DesempenhoDashboardTab, { type SubAbaDesempenho } from '@/components/dash
 import CentralDivulgacaoTab from '@/components/dashboard/CentralDivulgacaoTab'
 import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
 import { ResumoDesempenhoStrip } from '@/components/dashboard/ResumoDesempenhoStrip'
-import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Activity, Megaphone } from 'lucide-react'
+import Link from 'next/link'
+import { ExternalLink, Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Activity, Megaphone } from 'lucide-react'
 import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 import { ContextualHelp } from '@/components/help/HelpCenter'
@@ -122,6 +123,18 @@ function PerfilPageContent() {
       {/* ── Cabeçalho ── */}
       <header className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-6">
         <TituloArea area="Área do profissional" titulo="Meu painel" />
+        {slug && cadastroCompleto && (
+          <Link
+            href={`/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="ver-perfil-publico"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 sm:self-end"
+          >
+            <ExternalLink size={16} aria-hidden="true" />
+            Ver meu perfil
+          </Link>
+        )}
       </header>
 
       {/* ── Alerta de bloqueio ── */}
@@ -166,10 +179,11 @@ function PerfilPageContent() {
         <AdCardDashboard />
       </div>
 
-      {/* Faixa resumo (7 dias) com atalho para a aba Desempenho; escondida dentro dela para não repetir. */}
-      {!validando && cadastroCompleto && !bloqueado && abaAtiva !== 'desempenho' && (
+      {/* Faixa resumo (7 dias) em todas as abas, para a tela não mudar de lugar ao trocar de aba.
+          Dentro de Desempenho ela só informa (sem atalho para a tela em que a pessoa já está). */}
+      {!validando && cadastroCompleto && !bloqueado && (
         <div className="mt-4">
-          <ResumoDesempenhoStrip onAbrir={() => abrirAba('desempenho')} />
+          <ResumoDesempenhoStrip onAbrir={() => abrirAba('desempenho')} semAtalho={abaAtiva === 'desempenho'} />
         </div>
       )}
 

@@ -27,6 +27,16 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('ResumoDesempenhoStrip', () => {
+  it('semAtalho (dentro de Desempenho): mostra os números sem botão nem seta', () => {
+    render(<ResumoDesempenhoStrip onAbrir={() => {}} semAtalho />)
+
+    const faixa = screen.getByTestId('resumo-7-dias')
+    expect(screen.queryByRole('button')).toBeNull()
+    expect(faixa.textContent).toContain('12')
+    expect(faixa.textContent).toContain('3')
+    expect(faixa.textContent).not.toMatch(/ver desempenho/i)
+  })
+
   it('mostra visitas e contatos dos últimos 7 dias', () => {
     render(<ResumoDesempenhoStrip onAbrir={() => {}} />)
 

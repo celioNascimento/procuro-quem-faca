@@ -8,7 +8,7 @@ import type { User } from '@supabase/supabase-js'
 import type { PrestadorFormData } from '@/types/prestador'
 
 // UI Components
-import { ExternalLink, Loader2, Camera } from 'lucide-react'
+import { Loader2, Camera } from 'lucide-react'
 import DangerZone from '@/components/account/DangerZone'
 import { ErrorModal } from '@/components/ui/ErrorModal'
 
@@ -230,17 +230,6 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
             <h2 id="profile-settings-title" className="text-balance text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Seu perfil na vitrine</h2>
             <p className="max-w-xl text-sm leading-relaxed text-slate-500">Mantenha seus dados em dia: é com eles que os clientes encontram e chamam você.</p>
           </div>
-          {form.formData.id && form.formData.slug && (
-            <Link
-              href={`/${form.formData.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
-            >
-              <ExternalLink size={16} aria-hidden="true" />
-              Ver meu perfil público
-            </Link>
-          )}
         </header>
 
         <form onSubmit={handleSalvar} className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12 lg:gap-8">
