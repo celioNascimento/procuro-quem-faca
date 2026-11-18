@@ -10,6 +10,7 @@ const ROTULO: Record<EstadoConquista, string> = {
   disponivel: 'Disponível',
   depende_cnpj: 'Depende do CNPJ',
   nao_aplica: 'Não se aplica',
+  nao_sabemos: 'Ainda não sabemos',
   em_breve: 'Em breve',
 }
 
@@ -20,6 +21,7 @@ const ESTILO: Record<EstadoConquista, string> = {
   disponivel: 'bg-blue-50 text-blue-700',
   depende_cnpj: 'bg-slate-100 text-slate-600',
   nao_aplica: 'bg-slate-100 text-slate-500',
+  nao_sabemos: 'bg-slate-100 text-slate-600',
   em_breve: 'bg-slate-100 text-slate-500',
 }
 
@@ -59,6 +61,17 @@ export function BarraEvolucao({ conquistas }: { conquistas: Conquista[] }) {
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${ESTILO[c.estado]}`}>{ROTULO[c.estado]}</span>
             </div>
             {c.detalhe && <p className="text-xs leading-snug text-slate-500">{c.detalhe}</p>}
+            {c.acao && (
+              <a
+                href={c.acao.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid={`acao-${c.id}`}
+                className="w-fit text-xs font-bold text-blue-700 underline-offset-2 hover:underline"
+              >
+                {c.acao.texto} →
+              </a>
+            )}
           </li>
         ))}
       </ul>

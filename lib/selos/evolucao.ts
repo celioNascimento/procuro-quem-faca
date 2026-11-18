@@ -5,6 +5,7 @@
 import { META_EXPERIENCIA } from '@/config/selos'
 import type { FaseSeloCnpj } from './cnpjEstado'
 import { textoTempoCnpj, type FaixaTempoCnpj } from './tempoCnpj'
+import { linkWhatsappSuporte } from '@/lib/help/chat-ajuda'
 
 export type EstadoConquista =
   | 'conquistado'
@@ -13,6 +14,7 @@ export type EstadoConquista =
   | 'disponivel'
   | 'depende_cnpj'   // só existe depois do CNPJ ativo
   | 'nao_aplica'     // não vale para este perfil (ex.: CNAE de outra atividade); não conta
+  | 'nao_sabemos'    // ainda não sabemos qual CNAE combina com a categoria; pedimos ajuda; não conta
   | 'em_breve'       // ainda não disponível; não conta
 
 export interface Conquista {
@@ -20,6 +22,8 @@ export interface Conquista {
   titulo: string
   estado: EstadoConquista
   detalhe?: string
+  /** Convite para a pessoa nos ajudar (ex.: informar o CNAE da categoria). */
+  acao?: { texto: string; href: string }
 }
 
 export interface ResumoEvolucao {
@@ -34,9 +38,15 @@ export interface ExtrasEvolucao {
   experiencia: { servicos: number; clientes: number; atingido: boolean }
   tempoCnpj: FaixaTempoCnpj | null
   atividadeCompativel: boolean
+  /** true quando a categoria do perfil não tem nenhum CNAE cadastrado (não sabemos conferir). */
+  categoriaSemMapeamento?: boolean
 }
 
-const NAO_CONTAM: EstadoConquista[] = ['em_breve', 'nao_aplica']
+const NAO_CONTAM: EstadoConquista[] = ['em_breve', 'nao_aplica', 'nao_sabemos']
+
+/** Mensagem do WhatsApp do PQF para quem quer ajudar a mapear o CNAE da própria categoria. */
+export const PEDIDO_AJUDA_CNAE =
+  'Quero ajudar com o selo "Atividade compatível": minha categoria ainda não tem CNAE cadastrado e posso informar qual código uso.'
 
 export function resumoEvolucao(conquistas: Conquista[]): ResumoEvolucao {
   const contam = conquistas.filter((c) => !NAO_CONTAM.includes(c.estado))
@@ -82,7 +92,15 @@ export function montarConquistas(faseCnpj: FaseSeloCnpj, extras: ExtrasEvolucao 
     ? { id: 'atividade', titulo: 'Atividade compatível', estado: 'depende_cnpj', detalhe: 'Aparece depois do CNPJ ativo.' }
     : extras.atividadeCompativel
       ? { id: 'atividade', titulo: 'Atividade compatível', estado: 'conquistado' }
-      : {
+      : extras.categoriaSemMapeamento
+        ? {
+            id: 'atividade',
+            titulo: 'Atividade compatível',
+            estado: 'nao_sabemos',
+            detalhe: 'Ainda não sabemos qual atividade de CNPJ combina com a sua categoria, então não conseguimos conferir este selo. Se você sabe, ajude-nos.',
+            acao: { texto: 'Contar qual CNAE eu uso', href: linkWhatsappSuporte('prestador', PEDIDO_AJUDA_CNAE) },
+          }
+        : {
           id: 'atividade',
           titulo: 'Atividade compatível',
           estado: 'nao_aplica',

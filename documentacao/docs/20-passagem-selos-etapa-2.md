@@ -171,3 +171,11 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Agendador: `supabase/ops/agendar_reverificacao_cnpj.sql` (pg_cron + pg_net + Vault), a rodar uma vez em cada ambiente. O banco só chama o app quando há selo a reconsultar, então sem trabalho não há chamada externa nem invocação. Expiração de selos vencidos e limpeza do cache rodam direto no banco, uma vez por dia.
 - O cron diário da Vercel continua em `vercel.json` como rede de segurança (3 por dia, idempotente).
 - Ainda falta no ambiente de teste/produção: rodar o script (precisa da URL do app e do CRON_SECRET) e conferir em `cron.job_run_details`.
+
+## Atualização (18/11) — Revisão do mapeamento CNAE e "ainda não sabemos"
+
+- Revisão com o Célio: Manicure corrigida de 9602502 para 9602501 (manicure e pedicure ficam junto com cabeleireiros; 9602502 é estética). Corrigido na seed da migration `20261118000000` (ainda não foi para produção) e no banco de teste. Insulfilm e Som/Alarme Automotivo seguem compartilhando 4520007 (decidido: tudo bem).
+- Categorias sem CNAE cadastrado (Massoterapia, Calheiro, Vidraceiro Automotivo, Ar Condicionado Automotivo): em vez de dizer que a atividade "não combina", o painel diz "Ainda não sabemos qual atividade de CNPJ combina com a sua categoria" e oferece o botão "Contar qual CNAE eu uso" (WhatsApp do PQF com mensagem pronta). Novo estado `nao_sabemos` (não entra na conta dos selos). Só aparece no painel do prestador, nunca para o cliente.
+- Banco: migration `20261118140000_categoria_sem_mapeamento_cnae.sql` (função `categoria_sem_mapeamento_cnae`, devolve só verdadeiro/falso; falso para quem não tem categoria). Aplicada só no teste.
+- Aguardando: CNAE principal do CNPJ 29.867.943/0001-06 (cunhado do Célio; Insulfilm e ar condicionado) para conferir qual selo de atividade ele recebe.
+- O selo compara só o CNAE principal; quem tem a atividade como secundária não ganha o selo (item futuro: CNAEs secundários).

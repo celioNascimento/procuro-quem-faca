@@ -72,3 +72,28 @@ describe('resumoEvolucao', () => {
     expect(resumoEvolucao([]).percentual).toBe(0)
   })
 })
+
+describe('atividade compatível: honestidade quando não sabemos conferir', () => {
+  const base = { experiencia: { servicos: 0, clientes: 0, atingido: false }, tempoCnpj: null, atividadeCompativel: false }
+
+  it('categoria sem CNAE cadastrado: diz que não sabemos, convida a ajudar e não entra na conta', () => {
+    const lista = montarConquistas('aprovado', { ...base, categoriaSemMapeamento: true })
+    const atividade = lista.find((c) => c.id === 'atividade')!
+    expect(atividade.estado).toBe('nao_sabemos')
+    expect(atividade.detalhe).toMatch(/Ainda não sabemos/)
+    expect(atividade.acao?.href).toMatch(/^https:\/\/wa\.me\//)
+    expect(decodeURIComponent(atividade.acao!.href)).toContain('minha categoria ainda não tem CNAE cadastrado')
+    expect(resumoEvolucao(lista).total).toBe(2) // CNPJ e experiência; tempo e atividade não contam
+  })
+
+  it('categoria mapeada cujo CNAE não combina continua "não se aplica", sem pedir ajuda', () => {
+    const atividade = montarConquistas('aprovado', { ...base, categoriaSemMapeamento: false }).find((c) => c.id === 'atividade')!
+    expect(atividade.estado).toBe('nao_aplica')
+    expect(atividade.acao).toBeUndefined()
+  })
+
+  it('antes do CNPJ ativo continua dependendo do CNPJ (não falamos de mapeamento ainda)', () => {
+    const atividade = montarConquistas('sem', { ...base, categoriaSemMapeamento: true }).find((c) => c.id === 'atividade')!
+    expect(atividade.estado).toBe('depende_cnpj')
+  })
+})

@@ -45,7 +45,7 @@ select v.prefixo, c.id
     ('Insulfilm e Envelopamento', '4520007'),
     ('Guincho e Reboque', '5229002'),
     ('Cabeleireiro', '9602501'),
-    ('Manicure', '9602502'),
+    ('Manicure', '9602501'),
     ('Esteticista', '9602502'),
     ('Fisioterapeuta', '8650004'),
     ('Nutricionista', '8650002'),

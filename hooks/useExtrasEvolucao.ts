@@ -5,7 +5,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { buscarProgressoExperiencia, buscarSelosPublicos } from '@/lib/services/selosPublicos.service'
+import { buscarCategoriaSemMapeamento, buscarProgressoExperiencia, buscarSelosPublicos } from '@/lib/services/selosPublicos.service'
 import { selosComplementaresPorPrestador } from '@/lib/selos/publico'
 import type { ExtrasEvolucao } from '@/lib/selos/evolucao'
 import type { FaseSeloCnpj } from '@/lib/selos/cnpjEstado'
@@ -16,14 +16,19 @@ export function useExtrasEvolucao(prestadorId: number | null, faseCnpj: FaseSelo
   useEffect(() => {
     if (prestadorId === null) return
     let ativo = true
-    Promise.all([buscarSelosPublicos([prestadorId]), buscarProgressoExperiencia(prestadorId)])
-      .then(([linhas, experiencia]) => {
+    Promise.all([
+      buscarSelosPublicos([prestadorId]),
+      buscarProgressoExperiencia(prestadorId),
+      buscarCategoriaSemMapeamento(prestadorId).catch(() => false), // sem a resposta, não afirmamos nada
+    ])
+      .then(([linhas, experiencia, categoriaSemMapeamento]) => {
         if (!ativo) return
         const c = selosComplementaresPorPrestador(linhas).get(Number(prestadorId))
         setExtras({
           experiencia,
           tempoCnpj: c?.tempoCnpj ?? null,
           atividadeCompativel: c?.atividadeCompativel ?? false,
+          categoriaSemMapeamento,
         })
       })
       .catch(() => { /* sem os extras: a barra mostra "em breve" */ })

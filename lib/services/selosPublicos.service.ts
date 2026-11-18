@@ -34,6 +34,13 @@ export interface ProgressoExperiencia {
 }
 
 /** Andamento do selo "Experiência no PQF" (serviços e clientes diferentes que já contam). */
+/** true quando ainda não sabemos qual CNAE combina com a categoria do perfil (só para o painel do prestador). */
+export async function buscarCategoriaSemMapeamento(id: number): Promise<boolean> {
+  const { data, error } = await publico().rpc('categoria_sem_mapeamento_cnae', { p_prestador_id: id })
+  if (error) throw error
+  return data === true
+}
+
 export async function buscarProgressoExperiencia(id: number): Promise<ProgressoExperiencia> {
   const { data, error } = await publico().rpc('experiencia_no_pqf', { p_prestador_ids: [id] })
   if (error) throw error

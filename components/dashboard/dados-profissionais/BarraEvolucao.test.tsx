@@ -24,3 +24,25 @@ describe('BarraEvolucao com os selos calculados', () => {
     expect(screen.getByTestId('evolucao-texto').textContent).toBe('3 de 3 selos conquistados')
   })
 })
+
+describe('BarraEvolucao: categoria que ainda não sabemos conferir', () => {
+  it('mostra "Ainda não sabemos" e o convite para nos ajudar pelo WhatsApp', () => {
+    render(<BarraEvolucao conquistas={montarConquistas('aprovado', {
+      experiencia: { servicos: 0, clientes: 0, atingido: false }, tempoCnpj: null, atividadeCompativel: false, categoriaSemMapeamento: true,
+    })} />)
+    const item = screen.getByTestId('conquista-atividade')
+    expect(item.textContent).toContain('Ainda não sabemos')
+    const link = screen.getByTestId('acao-atividade') as HTMLAnchorElement
+    expect(link.textContent).toContain('Contar qual CNAE eu uso')
+    expect(link.href).toMatch(/^https:\/\/wa\.me\//)
+    expect(link.target).toBe('_blank')
+    expect(link.rel).toContain('noopener')
+  })
+
+  it('sem esse caso, não aparece convite nenhum', () => {
+    render(<BarraEvolucao conquistas={montarConquistas('aprovado', {
+      experiencia: { servicos: 0, clientes: 0, atingido: false }, tempoCnpj: null, atividadeCompativel: true,
+    })} />)
+    expect(screen.queryByTestId('acao-atividade')).toBeNull()
+  })
+})
