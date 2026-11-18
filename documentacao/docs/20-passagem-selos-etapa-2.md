@@ -247,3 +247,14 @@ Feita sobre o código e o banco de TESTE (produção não é acessível daqui; r
   4. `logs_atividades` tem 3 políticas de INSERT públicas e duplicadas (`with check true`): qualquer pessoa pode gravar logs (poluição/abuso). Consolidar numa só, com limite.
   5. Funções `e2e_*` aparecem como executáveis por `anon` **no banco de teste** (só existem lá e recusam rodar sem o marcador); confirmar que **não existem em produção**.
   6. Proteção contra senhas vazadas desligada (plano Free).
+
+### Conferências em PRODUÇÃO (18/11, noite; somente leitura)
+- `perfis`: **0 linhas** (item 2 sem exposição real hoje; ainda vale fechar a leitura/gravação pública da tabela legada).
+- Funções `e2e_*` e tabela `ambiente_teste_marcador`: **não existem** em produção (item 5 OK).
+- Migrações das pendências anteriores: `categorias.exemplo_descricao` existe, região Grande Cascavel existe, funções do cliente existem (aplicadas, só sem registro na lista).
+- Prestadores: 947 ativos, 2 bloqueados, 1 pendente. A leitura pública expõe também os 2 bloqueados e o pendente (nome, WhatsApp, slug) pela API direta.
+- `prestadores`: trigger `prestadores_proteger_campos` impede o dono de mexer em `verificado`, `bloqueado`, `cliques_whatsapp` e de forçar status (OK). `avaliacoes` sem política de escrita (só por função, OK). `perfis_admin` sem política de escrita (OK, apesar de `anon` ter concessão de tabela).
+- **Concessões de tabela**: `anon` tem INSERT/UPDATE/DELETE em quase todas as tabelas (inclusive `perfis_admin`, `anuncios`, `transacoes_carteira`). Hoje só as regras de linha (RLS) seguram; funciona, mas é uma única camada. Sugestão: revogar escrita de `anon` onde não é necessária (só `denuncias`, `visitas_perfil`, `logs_atividades` precisam).
+- **ACHADO IMPORTANTE (armazenamento de fotos)**: em `fotos-perfil`, qualquer pessoa logada pode atualizar e apagar qualquer arquivo, e qualquer visitante pode enviar arquivos; em `portfolios`, qualquer pessoa logada pode sobrescrever qualquer arquivo. Proposta de correção em `supabase/ops/PROPOSTA_storage_fotos_so_do_dono.sql` (não aplicada).
+- `logs_atividades`: 3 políticas públicas de gravação duplicadas; a política de leitura do admin usa o e-mail provisório `SEU_EMAIL_DE_ADMIN@gmail.com` (o admin não consegue ler os logs por ela). Corrigir para `is_admin()`.
+- Proteção contra senhas vazadas desligada; função `is_admin()` e demais definers conferidas.
