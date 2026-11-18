@@ -19,6 +19,8 @@ export type DadosCnpj = {
   cnaeDescricao: string | null
   /** Atividades secundárias registradas (só dígitos, 7 por código). Ausente em consultas antigas do cache. */
   cnaesSecundarios?: string[]
+  /** Mesmas secundárias, com a descrição (só para mostrar ao prestador). */
+  cnaesSecundariosDetalhe?: { codigo: string; descricao: string | null }[]
   dataAbertura: string | null // AAAA-MM-DD
   socios: string[]            // nomes do QSA: usados para conferir o nome e guardados só no cache (24h)
   fonte: FonteCnpj
@@ -54,6 +56,20 @@ function codigosCnae(lista: unknown, campo: string): string[] {
   return [...new Set(codigos)]
 }
 
+/** Secundárias com a descrição, na mesma ordem e filtro de codigosCnae. */
+function detalheCnae(lista: unknown, campoCodigo: string, campoDescricao: string): { codigo: string; descricao: string | null }[] {
+  const permitidos = new Set(codigosCnae(lista, campoCodigo))
+  const vistos = new Set<string>()
+  const itens: { codigo: string; descricao: string | null }[] = []
+  for (const item of (Array.isArray(lista) ? lista : []) as Json[]) {
+    const codigo = soDigitos(item?.[campoCodigo])
+    if (!codigo || !permitidos.has(codigo) || vistos.has(codigo)) continue
+    vistos.add(codigo)
+    itens.push({ codigo, descricao: textoOuNulo(item?.[campoDescricao]) })
+  }
+  return itens
+}
+
 /** "dd/mm/aaaa" -> "aaaa-mm-dd"; "aaaa-mm-dd" passa direto. */
 function dataIso(v: unknown): string | null {
   if (typeof v !== 'string') return null
@@ -76,6 +92,7 @@ function mapearEsquemaBrasilApi(j: Json, cnpj: string, fonte: FonteCnpj): DadosC
     cnaeCodigo: soDigitos(j.cnae_fiscal),
     cnaeDescricao: textoOuNulo(j.cnae_fiscal_descricao),
     cnaesSecundarios: codigosCnae(j.cnaes_secundarios, 'codigo'),
+    cnaesSecundariosDetalhe: detalheCnae(j.cnaes_secundarios, 'codigo', 'descricao'),
     dataAbertura: dataIso(j.data_inicio_atividade),
     socios: Array.isArray(j.qsa) ? j.qsa.map((s: Json) => textoOuNulo(s?.nome_socio)).filter(Boolean) as string[] : [],
     fonte,
@@ -97,6 +114,7 @@ function mapearReceitaWs(j: Json, cnpj: string): DadosCnpj | null {
     cnaeCodigo: soDigitos(atividade?.code),
     cnaeDescricao: textoOuNulo(atividade?.text),
     cnaesSecundarios: codigosCnae(j.atividades_secundarias, 'code'),
+    cnaesSecundariosDetalhe: detalheCnae(j.atividades_secundarias, 'code', 'text'),
     dataAbertura: dataIso(j.abertura),
     socios: Array.isArray(j.qsa) ? j.qsa.map((s: Json) => textoOuNulo(s?.nome)).filter(Boolean) as string[] : [],
     fonte: 'receitaws',

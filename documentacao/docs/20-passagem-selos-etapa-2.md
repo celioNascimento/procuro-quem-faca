@@ -188,3 +188,10 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Banco: migration `20261118150000_cnaes_secundarios.sql` (coluna `prestador_cnpj.cnaes_secundarios text[]` + `selos_publicos` recriada). Só os códigos são guardados. Os CNAEs secundários só são gravados no envio do CNPJ; a reverificação ainda atualiza apenas a situação (item futuro).
 - Ambiente de teste: o reset do E2E restaura `prestador_cnpj` a partir de `e2e_baseline`; a coluna nova precisa existir também lá (`alter table e2e_baseline.prestador_cnpj add column cnaes_secundarios ...`) e `e2e_ajustar_cnpj` ganhou o parâmetro `p_secundarios` (ver `supabase/homologacao/reset_fixtures.sql`).
 - Nível visível: o painel (Dados Profissionais → "Seus selos de confiança") mostra "Seu nível: Bronze/Prata/Sem nível ainda" com cor própria e o que falta para o próximo. O perfil público mostra o mesmo selo colorido ("Nível Bronze/Prata"). Helper único em `lib/selos/nivel.ts` (Bronze cobre/âmbar, Prata cinza-azulado). O card da busca segue só com "CNPJ ativo".
+
+## Atualização (18/11, tarde) — Ar condicionado automotivo e lista de CNAEs no painel
+
+- Conferido pelo Célio no Google/IBGE: Ar Condicionado Automotivo = CNAE 4520-0/07 (acessórios para veículos automotores; mesmo código de Insulfilm e Som/Alarme). Mapeado na migration `20261118160000_cnaes_detalhe_e_ar_automotivo.sql`. Restam sem CNAE: Massoterapia, Calheiro, Vidraceiro Automotivo (seguem com "ainda não sabemos").
+- Painel do prestador (aba CNPJ, abaixo dos dados do CNPJ aprovado): seta "Atividades registradas no CNPJ (N)" que abre e fecha. Mostra código formatado (4520-0/07), descrição, "Principal" e "Combina com o seu perfil". Componente `CnaesDoCnpj`, lista montada por `lib/cnpj/cnaes.ts`.
+- Banco: coluna `prestador_cnpj.cnaes_detalhe jsonb` (códigos + descrição das secundárias, só para exibir) e função `cnaes_compativeis_do_prestador(prestador_id)` (só o dono do perfil recebe resposta). CNPJs aprovados antes desta versão só mostram as secundárias depois de informar o CNPJ de novo.
+- Teste: o baseline do E2E (`e2e_baseline.prestador_cnpj`) recebeu as colunas `cnaes_secundarios` e `cnaes_detalhe`.

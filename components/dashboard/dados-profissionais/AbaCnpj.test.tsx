@@ -4,7 +4,7 @@ import { AbaCnpj } from './AbaCnpj'
 import type { SeloCnpj } from '@/hooks/useSeloCnpj'
 
 const base: SeloCnpj = {
-  dados: { verificacao: null, cnpj: null }, fase: 'sem', carregando: false, enviando: false, removendo: false,
+  dados: { verificacao: null, cnpj: null }, cnaesCompativeis: [], fase: 'sem', carregando: false, enviando: false, removendo: false,
   digitado: '', erro: null, aviso: null, digitar: vi.fn(), enviar: vi.fn(), remover: vi.fn(),
 }
 const cnpj = (situacao: string) => ({

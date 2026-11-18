@@ -15,13 +15,20 @@ export async function buscarMeuSeloCnpj(prestadorId: number): Promise<DadosSeloC
       .maybeSingle(),
     supabase
       .from('prestador_cnpj')
-      .select('cnpj, razao_social, consultado_em, situacao')
+      .select('cnpj, razao_social, consultado_em, situacao, cnae_codigo, cnae_descricao, cnaes_secundarios, cnaes_detalhe')
       .eq('prestador_id', prestadorId)
       .maybeSingle(),
   ])
   if (verif.error) throw verif.error
   if (cnpj.error) throw cnpj.error
   return { verificacao: verif.data, cnpj: cnpj.data }
+}
+
+/** Códigos de atividade do CNPJ que combinam com a categoria do perfil (só o dono consulta). Falhou: lista vazia. */
+export async function buscarCnaesCompativeis(prestadorId: number): Promise<string[]> {
+  const { data, error } = await supabase.rpc('cnaes_compativeis_do_prestador', { p_prestador_id: prestadorId })
+  if (error) return []
+  return Array.isArray(data) ? (data as string[]) : []
 }
 
 export type ResultadoEnvioCnpj =

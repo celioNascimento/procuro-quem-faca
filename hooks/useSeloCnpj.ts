@@ -2,12 +2,14 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { buscarMeuSeloCnpj, enviarCnpj, removerCnpj } from '@/lib/services/seloCnpj.service'
+import { buscarCnaesCompativeis, buscarMeuSeloCnpj, enviarCnpj, removerCnpj } from '@/lib/services/seloCnpj.service'
 import { cnpjValido, mascararCnpj, normalizarCnpj } from '@/lib/cnpj/validacao'
 import { faseDoSeloCnpj, type DadosSeloCnpj, type FaseSeloCnpj } from '@/lib/selos/cnpjEstado'
 
 export interface SeloCnpj {
   dados: DadosSeloCnpj
+  /** Códigos de CNAE do CNPJ que combinam com a categoria do perfil. */
+  cnaesCompativeis: string[]
   fase: FaseSeloCnpj
   carregando: boolean
   enviando: boolean
@@ -24,6 +26,7 @@ const VAZIO: DadosSeloCnpj = { verificacao: null, cnpj: null }
 
 export function useSeloCnpj(prestadorId: number | null): SeloCnpj {
   const [dados, setDados] = useState<DadosSeloCnpj>(VAZIO)
+  const [cnaesCompativeis, setCnaesCompativeis] = useState<string[]>([])
   const [carregando, setCarregando] = useState(prestadorId !== null)
   const [enviando, setEnviando] = useState(false)
   const [removendo, setRemovendo] = useState(false)
@@ -34,7 +37,9 @@ export function useSeloCnpj(prestadorId: number | null): SeloCnpj {
   const carregar = useCallback(async () => {
     if (prestadorId === null) return
     try {
-      setDados(await buscarMeuSeloCnpj(prestadorId))
+      const novos = await buscarMeuSeloCnpj(prestadorId)
+      setDados(novos)
+      setCnaesCompativeis(novos.cnpj ? await buscarCnaesCompativeis(prestadorId) : [])
     } catch (err) {
       console.error('Erro ao carregar o selo de CNPJ:', err)
       setErro('Não foi possível carregar o seu CNPJ agora. Atualize a página.')
@@ -87,5 +92,5 @@ export function useSeloCnpj(prestadorId: number | null): SeloCnpj {
 
   const fase = useMemo(() => faseDoSeloCnpj(dados), [dados])
 
-  return { dados, fase, carregando, enviando, removendo, digitado, erro, aviso, digitar, enviar, remover }
+  return { dados, cnaesCompativeis, fase, carregando, enviando, removendo, digitado, erro, aviso, digitar, enviar, remover }
 }

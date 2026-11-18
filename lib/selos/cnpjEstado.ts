@@ -5,7 +5,11 @@ export type FaseSeloCnpj = 'sem' | 'aprovado' | 'em_conferencia' | 'rejeitado' |
 
 export interface DadosSeloCnpj {
   verificacao: { status: string; valido_ate: string | null; verificado_em: string | null } | null
-  cnpj: { cnpj: string; razao_social: string | null; consultado_em: string; situacao: string | null } | null
+  cnpj: {
+    cnpj: string; razao_social: string | null; consultado_em: string; situacao: string | null
+    cnae_codigo?: string | null; cnae_descricao?: string | null
+    cnaes_secundarios?: string[] | null; cnaes_detalhe?: { codigo: string; descricao: string | null }[] | null
+  } | null
 }
 
 /** Data local no formato AAAA-MM-DD, para comparar com colunas do tipo date. */

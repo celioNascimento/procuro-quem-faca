@@ -167,6 +167,7 @@ describe('consultarCnpj: atividades secundárias', () => {
     const r = await consultarCnpj('29867943000106', { buscar, cache: new Map() })
     expect(r.ok && r.dados.cnaeCodigo).toBe('4520007')
     expect(r.ok && r.dados.cnaesSecundarios).toEqual(['4520001', '4761003'])
+    expect(r.ok && r.dados.cnaesSecundariosDetalhe?.map((d) => d.codigo)).toEqual(['4520001', '4761003'])
   })
 
   it('ReceitaWS: lê atividades_secundarias no formato "00.00-0-00"', async () => {
@@ -179,6 +180,7 @@ describe('consultarCnpj: atividades secundárias', () => {
       ? { status: 200, json: async () => corpo } : { status: 404, json: async () => ({}) })
     const r = await consultarCnpj('29867943000106', { buscar, cache: new Map() })
     expect(r.ok && r.dados.cnaesSecundarios).toEqual(['4322302'])
+    expect(r.ok && r.dados.cnaesSecundariosDetalhe).toEqual([{ codigo: '4322302', descricao: 'ar condicionado' }])
   })
 
   it('sem lista nenhuma: devolve lista vazia, nunca quebra', async () => {

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { mascararCnpj } from '@/lib/cnpj/validacao'
 import { rotuloSituacao } from '@/lib/cnpj/situacao'
 import { MOTIVOS_CNPJ } from '@/lib/selos/motivosCnpj'
+import { CnaesDoCnpj } from './CnaesDoCnpj'
 import type { SeloCnpj } from '@/hooks/useSeloCnpj'
 
 const BOTAO_PRIMARIO =
@@ -18,7 +19,7 @@ function dataBr(iso: string): string {
 }
 
 export function AbaCnpj({ selo, temPerfil }: { selo: SeloCnpj; temPerfil: boolean }) {
-  const { fase, dados, carregando, enviando, removendo, digitado, erro, aviso, digitar, enviar, remover } = selo
+  const { fase, dados, cnaesCompativeis, carregando, enviando, removendo, digitado, erro, aviso, digitar, enviar, remover } = selo
 
   if (!temPerfil) {
     return (
@@ -45,6 +46,7 @@ export function AbaCnpj({ selo, temPerfil }: { selo: SeloCnpj; temPerfil: boolea
           <div className="rounded-2xl bg-green-50 p-4 text-green-900" data-testid="cnpj-fase-aprovado">
             <p className="text-sm font-bold">CNPJ ativo, consultado em {dataBr(dados.cnpj.consultado_em)}</p>
             <p className="mt-1 text-sm">{cnpjMostrado}{dados.cnpj.razao_social ? ` · ${dados.cnpj.razao_social}` : ''}</p>
+            <CnaesDoCnpj cnpj={dados.cnpj} compativeis={cnaesCompativeis ?? []} />
           </div>
         </CartaoSecao>
       )}
