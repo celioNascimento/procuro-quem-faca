@@ -150,13 +150,18 @@ end $$;
 revoke all on function public.e2e_semear_experiencia(bigint, int, int) from public;
 grant execute on function public.e2e_semear_experiencia(bigint, int, int) to anon, authenticated;
 
-create or replace function public.e2e_ajustar_cnpj(p_prestador_id bigint, p_data_abertura date, p_cnae text) returns void
+drop function if exists public.e2e_ajustar_cnpj(bigint, date, text);
+create or replace function public.e2e_ajustar_cnpj(p_prestador_id bigint, p_data_abertura date, p_cnae text, p_secundarios text[] default '{}') returns void
 language plpgsql security definer set search_path = public, pg_temp as $$
 begin
   if not exists (select 1 from public.ambiente_teste_marcador where nome = 'homologacao') then
     raise exception 'Este banco não é o de homologação: ajuste recusado.';
   end if;
-  update public.prestador_cnpj set data_abertura = p_data_abertura, cnae_codigo = p_cnae where prestador_id = p_prestador_id;
+  update public.prestador_cnpj set data_abertura = p_data_abertura, cnae_codigo = p_cnae, cnaes_secundarios = coalesce(p_secundarios, '{}') where prestador_id = p_prestador_id;
 end $$;
-revoke all on function public.e2e_ajustar_cnpj(bigint, date, text) from public;
-grant execute on function public.e2e_ajustar_cnpj(bigint, date, text) to anon, authenticated;
+revoke all on function public.e2e_ajustar_cnpj(bigint, date, text, text[]) from public;
+grant execute on function public.e2e_ajustar_cnpj(bigint, date, text, text[]) to anon, authenticated;
+
+-- ATENÇÃO: ao adicionar coluna numa tabela restaurada pelo reset (ex.: prestador_cnpj.cnaes_secundarios),
+-- adicione a mesma coluna na cópia do baseline (alter table e2e_baseline.<tabela> add column ... default ...),
+-- senão o reset falha por coluna inexistente. Não recapture o baseline com dados de teste manual.

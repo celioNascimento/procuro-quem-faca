@@ -46,3 +46,21 @@ describe('BarraEvolucao: categoria que ainda não sabemos conferir', () => {
     expect(screen.queryByTestId('acao-atividade')).toBeNull()
   })
 })
+
+describe('BarraEvolucao: nível atual', () => {
+  it('mostra Bronze com orientação para o Prata', () => {
+    render(<BarraEvolucao conquistas={montarConquistas('aprovado')} nivel="bronze" />)
+    expect(screen.getByTestId('nivel-nome').textContent).toBe('Bronze')
+    expect(screen.getByTestId('nivel-proximo').textContent).toContain('Prata')
+  })
+  it('mostra Prata sem próximo nível', () => {
+    render(<BarraEvolucao conquistas={montarConquistas('aprovado')} nivel="prata" />)
+    expect(screen.getByTestId('nivel-nome').textContent).toBe('Prata')
+    expect(screen.queryByTestId('nivel-proximo')).toBeNull()
+  })
+  it('sem nível: orienta a informar o CNPJ', () => {
+    render(<BarraEvolucao conquistas={montarConquistas('sem')} nivel={null} />)
+    expect(screen.getByTestId('nivel-nome').textContent).toBe('Sem nível ainda')
+    expect(screen.getByTestId('nivel-proximo').textContent).toContain('CNPJ')
+  })
+})

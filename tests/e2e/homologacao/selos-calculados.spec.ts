@@ -31,9 +31,17 @@ test.describe('selos calculados no perfil público', () => {
 
     await page.goto(`/${PERFIL_SEED.slug}`);
     await expect(page.getByText('CNPJ aberto há mais de 3 anos')).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText('Atividade do CNPJ compatível com a categoria do perfil')).toBeVisible();
+    await expect(page.getByText('Atividade registrada no CNPJ compatível com a categoria do perfil')).toBeVisible();
     await expect(page.getByText(/Nível Bronze/)).toBeVisible();
     await expect(page.getByText(/Experiência no PQF/)).toHaveCount(0);
+  });
+
+  test('CNAE principal de outra atividade, mas atividade secundária de pedreiro: mostra atividade registrada', async ({ page, request }) => {
+    await ajustarCnpj(PERFIL_SEED.id, haAnos(2), '4321500', ['4399103']); // principal eletricista, secundária pedreiro
+    await decidirCnpjComoAdmin(request, CONTAS.prestador.nome, 'aprovada');
+
+    await page.goto(`/${PERFIL_SEED.slug}`);
+    await expect(page.getByText('Atividade registrada no CNPJ compatível com a categoria do perfil')).toBeVisible({ timeout: 20_000 });
   });
 
   test('CNAE de outra atividade: não mostra "atividade compatível" (e não pune)', async ({ page, request }) => {
@@ -42,7 +50,7 @@ test.describe('selos calculados no perfil público', () => {
 
     await page.goto(`/${PERFIL_SEED.slug}`);
     await expect(page.getByText('CNPJ aberto há mais de 1 ano')).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/Atividade do CNPJ compatível/)).toHaveCount(0);
+    await expect(page.getByText(/Atividade registrada no CNPJ compatível/)).toHaveCount(0);
   });
 
   test('9 clientes no total não bastam: sem experiência e continua Bronze', async ({ page, request }) => {

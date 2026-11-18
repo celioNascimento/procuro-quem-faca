@@ -17,6 +17,8 @@ export type DadosCnpj = {
   mei: boolean
   cnaeCodigo: string | null   // só dígitos
   cnaeDescricao: string | null
+  /** Atividades secundárias registradas (só dígitos, 7 por código). Ausente em consultas antigas do cache. */
+  cnaesSecundarios?: string[]
   dataAbertura: string | null // AAAA-MM-DD
   socios: string[]            // nomes do QSA: usados para conferir o nome e guardados só no cache (24h)
   fonte: FonteCnpj
@@ -43,6 +45,15 @@ type Json = Record<string, any> | null | undefined
 const soDigitos = (v: unknown) => (v == null ? null : String(v).replace(/\D/g, '') || null)
 const textoOuNulo = (v: unknown) => (typeof v === 'string' && v.trim() !== '' ? v.trim() : null)
 
+/** Lista de códigos de atividade (7 dígitos), sem repetição e sem o "0000000" que as fontes usam para "não informada". */
+function codigosCnae(lista: unknown, campo: string): string[] {
+  if (!Array.isArray(lista)) return []
+  const codigos = lista
+    .map((item: Json) => soDigitos(item?.[campo]))
+    .filter((c): c is string => !!c && c.length === 7 && !/^0+$/.test(c))
+  return [...new Set(codigos)]
+}
+
 /** "dd/mm/aaaa" -> "aaaa-mm-dd"; "aaaa-mm-dd" passa direto. */
 function dataIso(v: unknown): string | null {
   if (typeof v !== 'string') return null
@@ -64,6 +75,7 @@ function mapearEsquemaBrasilApi(j: Json, cnpj: string, fonte: FonteCnpj): DadosC
     mei: j.opcao_pelo_mei === true,
     cnaeCodigo: soDigitos(j.cnae_fiscal),
     cnaeDescricao: textoOuNulo(j.cnae_fiscal_descricao),
+    cnaesSecundarios: codigosCnae(j.cnaes_secundarios, 'codigo'),
     dataAbertura: dataIso(j.data_inicio_atividade),
     socios: Array.isArray(j.qsa) ? j.qsa.map((s: Json) => textoOuNulo(s?.nome_socio)).filter(Boolean) as string[] : [],
     fonte,
@@ -84,6 +96,7 @@ function mapearReceitaWs(j: Json, cnpj: string): DadosCnpj | null {
     mei: j.simei?.optante === true,
     cnaeCodigo: soDigitos(atividade?.code),
     cnaeDescricao: textoOuNulo(atividade?.text),
+    cnaesSecundarios: codigosCnae(j.atividades_secundarias, 'code'),
     dataAbertura: dataIso(j.abertura),
     socios: Array.isArray(j.qsa) ? j.qsa.map((s: Json) => textoOuNulo(s?.nome)).filter(Boolean) as string[] : [],
     fonte: 'receitaws',

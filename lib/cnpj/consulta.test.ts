@@ -156,3 +156,34 @@ describe('consultarCnpj: limite de consultas das fontes', () => {
     expect(r).toEqual({ ok: false, motivo: 'limite' })
   })
 })
+
+describe('consultarCnpj: atividades secundárias', () => {
+  it('BrasilAPI: guarda os códigos secundários, sem repetição e sem "não informada"', async () => {
+    const corpo = {
+      razao_social: 'X', descricao_situacao_cadastral: 'ATIVA', cnae_fiscal: 4520007,
+      cnaes_secundarios: [{ codigo: 4520001 }, { codigo: 4761003 }, { codigo: 4520001 }, { codigo: 0 }],
+    }
+    const buscar: Buscador = async () => ({ status: 200, json: async () => corpo })
+    const r = await consultarCnpj('29867943000106', { buscar, cache: new Map() })
+    expect(r.ok && r.dados.cnaeCodigo).toBe('4520007')
+    expect(r.ok && r.dados.cnaesSecundarios).toEqual(['4520001', '4761003'])
+  })
+
+  it('ReceitaWS: lê atividades_secundarias no formato "00.00-0-00"', async () => {
+    const corpo = {
+      nome: 'X', situacao: 'ATIVA',
+      atividade_principal: [{ code: '45.20-0-07', text: 'acessórios' }],
+      atividades_secundarias: [{ code: '43.22-3-02', text: 'ar condicionado' }, { code: '00.00-0-00', text: 'Não informada' }],
+    }
+    const buscar: Buscador = async (url) => (url.includes('receitaws')
+      ? { status: 200, json: async () => corpo } : { status: 404, json: async () => ({}) })
+    const r = await consultarCnpj('29867943000106', { buscar, cache: new Map() })
+    expect(r.ok && r.dados.cnaesSecundarios).toEqual(['4322302'])
+  })
+
+  it('sem lista nenhuma: devolve lista vazia, nunca quebra', async () => {
+    const buscar: Buscador = async () => ({ status: 200, json: async () => ({ razao_social: 'X', descricao_situacao_cadastral: 'ATIVA' }) })
+    const r = await consultarCnpj('29867943000106', { buscar, cache: new Map() })
+    expect(r.ok && r.dados.cnaesSecundarios).toEqual([])
+  })
+})

@@ -68,6 +68,7 @@ export async function POST(req: Request) {
             mei: dados.mei,
             cnae_codigo: dados.cnaeCodigo,
             cnae_descricao: dados.cnaeDescricao,
+            cnaes_secundarios: dados.cnaesSecundarios ?? [],
             data_abertura: dados.dataAbertura,
             consultado_em: agoraIso,
             fonte: dados.fonte,

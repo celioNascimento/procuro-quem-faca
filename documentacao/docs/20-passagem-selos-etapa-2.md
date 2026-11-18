@@ -180,3 +180,11 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Aguardando: CNAE principal do CNPJ 29.867.943/0001-06 (cunhado do Célio; Insulfilm e ar condicionado) para conferir qual selo de atividade ele recebe.
 - O selo compara só o CNAE principal; quem tem a atividade como secundária não ganha o selo (item futuro: CNAEs secundários).
 - Erro achado na revisão (print do cnpj.biz de um CNPJ real): 4520003 é manutenção ELÉTRICA e 4520002 é lanternagem/funilaria e pintura. A seed tinha os dois trocados; corrigido na migration `20261118000000` e no banco de teste (Auto Elétrica = 4520003; Funilaria e Pintura = 4520002).
+
+## Atualização (18/11) — Todas as atividades do CNPJ e nível visível
+
+- Decidido com o Célio: o selo "Atividade registrada no CNPJ compatível com a categoria do perfil" considera o CNAE principal E os secundários (como a Receita Federal considera). Texto antigo ("Atividade do CNPJ compatível...") substituído.
+- Consulta: `DadosCnpj.cnaesSecundarios` (códigos de 7 dígitos, sem repetição, ignora "0000000"), lido de BrasilAPI/minhareceita (`cnaes_secundarios[].codigo`) e ReceitaWS (`atividades_secundarias[].code`). Consultas antigas do cache vêm sem o campo e valem como lista vazia.
+- Banco: migration `20261118150000_cnaes_secundarios.sql` (coluna `prestador_cnpj.cnaes_secundarios text[]` + `selos_publicos` recriada). Só os códigos são guardados. Os CNAEs secundários só são gravados no envio do CNPJ; a reverificação ainda atualiza apenas a situação (item futuro).
+- Ambiente de teste: o reset do E2E restaura `prestador_cnpj` a partir de `e2e_baseline`; a coluna nova precisa existir também lá (`alter table e2e_baseline.prestador_cnpj add column cnaes_secundarios ...`) e `e2e_ajustar_cnpj` ganhou o parâmetro `p_secundarios` (ver `supabase/homologacao/reset_fixtures.sql`).
+- Nível visível: o painel (Dados Profissionais → "Seus selos de confiança") mostra "Seu nível: Bronze/Prata/Sem nível ainda" com cor própria e o que falta para o próximo. O perfil público mostra o mesmo selo colorido ("Nível Bronze/Prata"). Helper único em `lib/selos/nivel.ts` (Bronze cobre/âmbar, Prata cinza-azulado). O card da busca segue só com "CNPJ ativo".

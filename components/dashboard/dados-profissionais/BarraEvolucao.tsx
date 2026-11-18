@@ -1,6 +1,7 @@
 // components/dashboard/dados-profissionais/BarraEvolucao.tsx
 // Só mostra a evolução das conquistas (selos). Não busca dados e não muda a ordem na busca.
 import { BadgeCheck, Clock, Sparkles } from 'lucide-react'
+import { apresentarNivel } from '@/lib/selos/nivel'
 import { resumoEvolucao, type Conquista, type EstadoConquista } from '@/lib/selos/evolucao'
 
 const ROTULO: Record<EstadoConquista, string> = {
@@ -25,8 +26,9 @@ const ESTILO: Record<EstadoConquista, string> = {
   em_breve: 'bg-slate-100 text-slate-500',
 }
 
-export function BarraEvolucao({ conquistas }: { conquistas: Conquista[] }) {
+export function BarraEvolucao({ conquistas, nivel }: { conquistas: Conquista[]; nivel?: string | null }) {
   const { conquistados, total, percentual, texto } = resumoEvolucao(conquistas)
+  const n = apresentarNivel(nivel)
 
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="evolucao-titulo">
@@ -37,6 +39,12 @@ export function BarraEvolucao({ conquistas }: { conquistas: Conquista[] }) {
         </div>
         <BadgeCheck className={conquistados > 0 ? 'text-green-600' : 'text-slate-300'} size={28} aria-hidden="true" />
       </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2" data-testid="nivel-atual">
+        <span className="text-sm font-semibold text-slate-600">Seu nível:</span>
+        <span className={`rounded-full border px-3 py-0.5 text-sm font-black ${n.classes}`} data-testid="nivel-nome">{n.nome}</span>
+      </div>
+      {n.proximo && <p className="mt-1 text-xs leading-snug text-slate-500" data-testid="nivel-proximo">{n.proximo}</p>}
 
       <div
         className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-slate-100"

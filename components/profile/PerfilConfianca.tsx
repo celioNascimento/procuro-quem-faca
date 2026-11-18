@@ -14,6 +14,7 @@ import {
   type SelosComplementares,
 } from '@/lib/selos/publico'
 import { textoTempoCnpj } from '@/lib/selos/tempoCnpj'
+import { apresentarNivel } from '@/lib/selos/nivel'
 import { avisoNaoIndicacoes } from '@/lib/avaliacoes/transparencia'
 
 interface Props {
@@ -48,7 +49,14 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
     selo && {
       key: 'selo-cnpj',
       icon: <BadgeCheck size={14} className="text-green-600" aria-hidden="true" />,
-      texto: nomeNivel ? `Nível ${nomeNivel} · ${textoSeloCnpj(selo)}` : textoSeloCnpj(selo),
+      texto: nomeNivel ? (
+        <>
+          <span className={`mr-1.5 inline-block rounded-full border px-2 py-px text-xs font-black ${apresentarNivel(nivel).classes}`} data-testid="nivel-perfil">
+            Nível {nomeNivel}
+          </span>
+          {textoSeloCnpj(selo)}
+        </>
+      ) : textoSeloCnpj(selo),
     },
     complementares?.experiencia && {
       key: 'selo-experiencia',
@@ -80,7 +88,7 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
       icon: <MapPin size={14} className="text-slate-400" aria-hidden="true" />,
       texto: `Atende em ${atende}`,
     },
-  ].filter(Boolean) as { key: string; icon: React.ReactNode; texto: string }[]
+  ].filter(Boolean) as { key: string; icon: React.ReactNode; texto: React.ReactNode }[]
 
   if (!temDestaque && !temNaoIndicacoes && itens.length === 0) return null
 

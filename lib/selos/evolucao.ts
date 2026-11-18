@@ -40,6 +40,8 @@ export interface ExtrasEvolucao {
   atividadeCompativel: boolean
   /** true quando a categoria do perfil não tem nenhum CNAE cadastrado (não sabemos conferir). */
   categoriaSemMapeamento?: boolean
+  /** Nível calculado pelo banco ('bronze', 'prata') ou null. */
+  nivel?: string | null
 }
 
 const NAO_CONTAM: EstadoConquista[] = ['em_breve', 'nao_aplica', 'nao_sabemos']
@@ -104,7 +106,7 @@ export function montarConquistas(faseCnpj: FaseSeloCnpj, extras: ExtrasEvolucao 
           id: 'atividade',
           titulo: 'Atividade compatível',
           estado: 'nao_aplica',
-          detalhe: 'A atividade principal do CNPJ não combina com a categoria do perfil.',
+          detalhe: 'Nenhuma atividade registrada no CNPJ combina com a categoria do perfil.',
         }
 
   return [cnpj, experiencia, tempo, atividade]

@@ -43,7 +43,7 @@ export default function DadosProfissionaisTabs({ prestadorId, subAbaInicial = 'p
 
   return (
     <div className="flex flex-col gap-6">
-      <BarraEvolucao conquistas={conquistas} />
+      <BarraEvolucao conquistas={conquistas} nivel={extras?.nivel ?? null} />
 
       <div role="tablist" aria-label="Seções de dados profissionais" className="flex w-full gap-1 rounded-2xl bg-slate-100 p-1 sm:w-fit">
         {SUB_ABAS.map(({ id, label, icon: Icone }) => {

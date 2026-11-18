@@ -65,7 +65,7 @@ export interface SelosComplementares {
 }
 
 export const TEXTO_EXPERIENCIA = `Experiência no PQF: ${META_EXPERIENCIA.servicos} serviços avaliados por ${META_EXPERIENCIA.clientes} clientes diferentes`
-export const TEXTO_ATIVIDADE = 'Atividade do CNPJ compatível com a categoria do perfil'
+export const TEXTO_ATIVIDADE = 'Atividade registrada no CNPJ compatível com a categoria do perfil'
 
 /** Agrupa por prestador os selos de experiência, tempo de CNPJ e atividade compatível. */
 export function selosComplementaresPorPrestador(linhas: LinhaSeloPublico[], agora: Date = new Date()): Map<number, SelosComplementares> {

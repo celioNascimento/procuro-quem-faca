@@ -5,7 +5,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { buscarCategoriaSemMapeamento, buscarProgressoExperiencia, buscarSelosPublicos } from '@/lib/services/selosPublicos.service'
+import { buscarCategoriaSemMapeamento, buscarNivelDoPrestador, buscarProgressoExperiencia, buscarSelosPublicos } from '@/lib/services/selosPublicos.service'
 import { selosComplementaresPorPrestador } from '@/lib/selos/publico'
 import type { ExtrasEvolucao } from '@/lib/selos/evolucao'
 import type { FaseSeloCnpj } from '@/lib/selos/cnpjEstado'
@@ -20,8 +20,9 @@ export function useExtrasEvolucao(prestadorId: number | null, faseCnpj: FaseSelo
       buscarSelosPublicos([prestadorId]),
       buscarProgressoExperiencia(prestadorId),
       buscarCategoriaSemMapeamento(prestadorId).catch(() => false), // sem a resposta, não afirmamos nada
+      buscarNivelDoPrestador(prestadorId).catch(() => null),
     ])
-      .then(([linhas, experiencia, categoriaSemMapeamento]) => {
+      .then(([linhas, experiencia, categoriaSemMapeamento, nivel]) => {
         if (!ativo) return
         const c = selosComplementaresPorPrestador(linhas).get(Number(prestadorId))
         setExtras({
@@ -29,6 +30,7 @@ export function useExtrasEvolucao(prestadorId: number | null, faseCnpj: FaseSelo
           tempoCnpj: c?.tempoCnpj ?? null,
           atividadeCompativel: c?.atividadeCompativel ?? false,
           categoriaSemMapeamento,
+          nivel,
         })
       })
       .catch(() => { /* sem os extras: a barra mostra "em breve" */ })

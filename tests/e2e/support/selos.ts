@@ -27,8 +27,8 @@ export function semearExperiencia(prestadorId: number, servicos: number, nota = 
 }
 
 /** Define a data de abertura (AAAA-MM-DD) e o CNAE do CNPJ fictício do prestador. */
-export function ajustarCnpj(prestadorId: number, dataAbertura: string, cnae: string) {
-  return rpcTeste('e2e_ajustar_cnpj', { p_prestador_id: prestadorId, p_data_abertura: dataAbertura, p_cnae: cnae });
+export function ajustarCnpj(prestadorId: number, dataAbertura: string, cnae: string, secundarios: string[] = []) {
+  return rpcTeste('e2e_ajustar_cnpj', { p_prestador_id: prestadorId, p_data_abertura: dataAbertura, p_cnae: cnae, p_secundarios: secundarios });
 }
 
 /** Data de hoje menos N anos (e um dia, para ficar além do aniversário), em AAAA-MM-DD. */

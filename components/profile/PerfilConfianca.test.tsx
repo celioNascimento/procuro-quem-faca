@@ -11,7 +11,8 @@ const prestador = { id: 1, nome: 'Pedro', garantia_dias: 0, cidades_atendidas: [
 describe('PerfilConfianca — selo de CNPJ', () => {
   it('mostra o nível e o que foi conferido, com a data', () => {
     render(<PerfilConfianca prestador={prestador} totalIndicacoes={0} totalConcluidos={0} selo={{ consultadoEm: '2026-11-17T15:00:00Z' }} nivel="bronze" />)
-    expect(screen.getByText('Nível Bronze · CNPJ ativo, consultado em 17/11')).toBeTruthy()
+    expect(screen.getByTestId('nivel-perfil').textContent).toBe('Nível Bronze')
+    expect(screen.getByText('CNPJ ativo, consultado em 17/11')).toBeTruthy()
   })
 
   it('sem nível conhecido, mostra só o que foi conferido', () => {
@@ -34,10 +35,11 @@ describe('PerfilConfianca — selos calculados pelo sistema', () => {
         complementares={{ experiencia: true, tempoCnpj: 3, atividadeCompativel: true }}
       />,
     )
-    expect(screen.getByText('Nível Prata · CNPJ ativo, consultado em 17/11')).toBeTruthy()
+    expect(screen.getByTestId('nivel-perfil').textContent).toBe('Nível Prata')
+    expect(screen.getByText('CNPJ ativo, consultado em 17/11')).toBeTruthy()
     expect(screen.getByText('Experiência no PQF: 10 serviços avaliados por 10 clientes diferentes')).toBeTruthy()
     expect(screen.getByText('CNPJ aberto há mais de 3 anos')).toBeTruthy()
-    expect(screen.getByText('Atividade do CNPJ compatível com a categoria do perfil')).toBeTruthy()
+    expect(screen.getByText('Atividade registrada no CNPJ compatível com a categoria do perfil')).toBeTruthy()
   })
 
   it('só mostra o que foi conquistado; o que falta não aparece (nunca "0")', () => {
@@ -75,7 +77,8 @@ describe('PerfilConfianca — transparência das não indicações', () => {
 
   it('os selos continuam aparecendo junto do aviso', () => {
     render(<PerfilConfianca prestador={prestador} totalIndicacoes={1} totalNaoIndicacoes={3} totalConcluidos={0} selo={{ consultadoEm: '2026-11-17T15:00:00Z' }} nivel="bronze" />)
-    expect(screen.getByText('Nível Bronze · CNPJ ativo, consultado em 17/11')).toBeTruthy()
+    expect(screen.getByTestId('nivel-perfil').textContent).toBe('Nível Bronze')
+    expect(screen.getByText('CNPJ ativo, consultado em 17/11')).toBeTruthy()
     expect(screen.getByTestId('aviso-nao-indicacoes')).toBeTruthy()
   })
 })
