@@ -43,3 +43,23 @@ describe('AbaCnpj: motivos para informar o CNPJ', () => {
     expect(screen.queryByTestId('cnpj-motivos')).toBeNull()
   })
 })
+
+describe('AbaCnpj: CNPJ que deixou de ser ativo na reverificação', () => {
+  it('pede para regularizar e permite informar de novo, sem falar em conferência da equipe', () => {
+    render(<AbaCnpj temPerfil selo={{ ...base, fase: 'expirado',
+      dados: { verificacao: { status: 'expirada', valido_ate: null, verificado_em: null }, cnpj: cnpj('SUSPENSA') } }} />)
+    const aviso = screen.getByTestId('cnpj-fase-inativo')
+    expect(aviso.textContent).toContain('Seu selo está pausado')
+    expect(aviso.textContent).toContain('suspensa')
+    expect(aviso.textContent).toContain('Regularize')
+    expect(screen.getByRole('button', { name: 'Conferir meu CNPJ' })).toBeTruthy()
+    expect(screen.queryByTestId('cnpj-fase-expirado')).toBeNull()
+  })
+
+  it('selo vencido com CNPJ ainda ativo mantém o texto de renovação', () => {
+    render(<AbaCnpj temPerfil selo={{ ...base, fase: 'expirado',
+      dados: { verificacao: { status: 'expirada', valido_ate: null, verificado_em: null }, cnpj: cnpj('ATIVA') } }} />)
+    expect(screen.getByTestId('cnpj-fase-expirado')).toBeTruthy()
+    expect(screen.queryByTestId('cnpj-fase-inativo')).toBeNull()
+  })
+})

@@ -39,6 +39,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ erro: 'Perfil de prestador não encontrado.' }, { status: 404 })
     }
 
+    // O nome do perfil (o que o cliente vê) e o nome completo da conta (profiles.full_name) valem na conferência.
+    const { data: conta } = await admin.from('profiles').select('full_name').eq('id', user.id).maybeSingle()
+    const nomesPrestador = [prestador.nome, conta?.full_name].filter((n): n is string => typeof n === 'string' && n.trim() !== '')
+
     const repositorio: RepositorioCnpj = {
       async cnpjEmUsoPorOutro(cnpj, prestadorId) {
         const { data, error } = await admin
@@ -115,7 +119,7 @@ export async function POST(req: Request) {
     }
 
     const resultado = await verificarCnpj(
-      { prestadorId: prestador.id, nomePrestador: prestador.nome ?? '', cnpjBruto: corpoEntrada.cnpj },
+      { prestadorId: prestador.id, nomesPrestador, cnpjBruto: corpoEntrada.cnpj },
       { repositorio, consultar: (cnpj) => consultarCnpj(cnpj, { cache: cacheBanco }) },
     )
 

@@ -5,6 +5,7 @@
 import { cnpjValido, normalizarCnpj } from './validacao'
 import { consultarCnpj, type DadosCnpj, type ResultadoConsulta } from './consulta'
 import { decidirVerificacao } from './decisao'
+import { mensagemCnpjNaoAtivo } from './situacao'
 
 // Dias de validade do selo. A reconsulta mensal (job pg_cron, ainda não criado) renova antes do fim.
 export const DIAS_VALIDADE_SELO = 35
@@ -30,7 +31,7 @@ export type ResultadoVerificacao =
   | { http: 200; corpo: { status: 'aprovada' | 'pendente'; mensagem: string } }
 
 export async function verificarCnpj(
-  entrada: { prestadorId: number; nomePrestador: string; cnpjBruto: unknown },
+  entrada: { prestadorId: number; nomesPrestador: readonly string[]; cnpjBruto: unknown },
   deps: {
     repositorio: RepositorioCnpj
     consultar?: (cnpj: string) => Promise<ResultadoConsulta>
@@ -54,7 +55,13 @@ export async function verificarCnpj(
     return { http: 503, corpo: { erro: 'A consulta está indisponível agora. Tente de novo em alguns minutos.' } }
   }
 
-  const decisao = decidirVerificacao(entrada.nomePrestador, r.dados)
+  // CNPJ que não está ativo não tem o que a equipe decidir: só a regularização na Receita muda isso.
+  // Avisamos o prestador na hora e não gravamos nada.
+  if (r.dados.situacao !== 'ATIVA') {
+    return { http: 422, corpo: { erro: mensagemCnpjNaoAtivo(r.dados.situacao) } }
+  }
+
+  const decisao = decidirVerificacao(entrada.nomesPrestador, r.dados)
   const agora = (deps.agora ?? (() => new Date()))()
   const validoAte = new Date(agora.getTime() + DIAS_VALIDADE_SELO * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 

@@ -1,7 +1,7 @@
 // lib/cnpj/reverificar.ts
 // Reconsulta diária dos selos de CNPJ perto de vencer (decisões de 17/11/2026):
 //  - CNPJ ainda ATIVO: renova a validade (o banco decide e grava; o nome não é reconferido);
-//  - CNPJ não ATIVO: o selo cai e o caso vai para a fila do admin (também decidido pelo banco);
+//  - CNPJ não ATIVO: o selo é pausado e o prestador é avisado no painel para regularizar (sem fila do admin);
 //  - fontes fora do ar ou CNPJ não encontrado: nada muda; tenta de novo no próximo dia e, se a validade
 //    vencer antes disso, o selo expira sozinho (função cnpj_expirar_vencidos).
 // Lógica pura: o acesso ao banco e à Receita entra por parâmetro, para testar sem rede.
@@ -9,7 +9,7 @@
 import type { ResultadoConsulta } from './consulta'
 
 export type PendenteReverificacao = { prestadorId: number; cnpj: string }
-export type ResultadoRegistro = 'renovada' | 'enviada_para_fila' | 'ignorada'
+export type ResultadoRegistro = 'renovada' | 'selo_pausado' | 'ignorada'
 
 export type RepositorioReverificacao = {
   listarPendentes(limite: number): Promise<PendenteReverificacao[]>
@@ -19,7 +19,7 @@ export type RepositorioReverificacao = {
 export type ResumoReverificacao = {
   analisados: number
   renovados: number
-  enviadosParaFila: number
+  selosPausados: number
   ignorados: number
   semResposta: number // fontes fora do ar ou CNPJ não encontrado agora: tenta de novo amanhã
   erros: number
@@ -33,7 +33,7 @@ export async function reverificarCnpjs(deps: {
   limite?: number
 }): Promise<ResumoReverificacao> {
   const resumo: ResumoReverificacao = {
-    analisados: 0, renovados: 0, enviadosParaFila: 0, ignorados: 0, semResposta: 0, erros: 0,
+    analisados: 0, renovados: 0, selosPausados: 0, ignorados: 0, semResposta: 0, erros: 0,
   }
   const pendentes = await deps.repositorio.listarPendentes(deps.limite ?? LIMITE_POR_EXECUCAO)
 
@@ -48,7 +48,7 @@ export async function reverificarCnpjs(deps: {
       }
       const r = await deps.repositorio.registrar(p.prestadorId, consulta.dados.situacao, consulta.dados.fonte)
       if (r === 'renovada') resumo.renovados += 1
-      else if (r === 'enviada_para_fila') resumo.enviadosParaFila += 1
+      else if (r === 'selo_pausado') resumo.selosPausados += 1
       else resumo.ignorados += 1
     } catch {
       resumo.erros += 1

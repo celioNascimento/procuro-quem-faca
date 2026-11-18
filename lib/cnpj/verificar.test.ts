@@ -23,7 +23,7 @@ describe('verificarCnpj', () => {
   it('aprova na hora quando o nome confere e grava com validade de 35 dias', async () => {
     const { r, gravar } = repo()
     const res = await verificarCnpj(
-      { prestadorId: 7, nomePrestador: 'João da Silva', cnpjBruto: CNPJ },
+      { prestadorId: 7, nomesPrestador: ['João da Silva'], cnpjBruto: CNPJ },
       { repositorio: r, consultar: async () => ({ ok: true, dados }), agora },
     )
     expect(res.http).toBe(200)
@@ -34,7 +34,7 @@ describe('verificarCnpj', () => {
   it('envia para a fila quando o nome não confere', async () => {
     const { r, gravar } = repo()
     const res = await verificarCnpj(
-      { prestadorId: 7, nomePrestador: 'Pedro', cnpjBruto: CNPJ },
+      { prestadorId: 7, nomesPrestador: ['Pedro'], cnpjBruto: CNPJ },
       { repositorio: r, consultar: async () => ({ ok: true, dados }), agora },
     )
     expect(res.http === 200 && res.corpo.status).toBe('pendente')
@@ -44,7 +44,7 @@ describe('verificarCnpj', () => {
   it('recusa CNPJ inválido sem consultar nada', async () => {
     const { r, gravar } = repo()
     const consultar = vi.fn()
-    const res = await verificarCnpj({ prestadorId: 7, nomePrestador: 'X', cnpjBruto: '11.222.333/0001-80' }, { repositorio: r, consultar })
+    const res = await verificarCnpj({ prestadorId: 7, nomesPrestador: ['X'], cnpjBruto: '11.222.333/0001-80' }, { repositorio: r, consultar })
     expect(res.http).toBe(400)
     expect(consultar).not.toHaveBeenCalled()
     expect(gravar).not.toHaveBeenCalled()
@@ -52,28 +52,49 @@ describe('verificarCnpj', () => {
 
   it('recusa entrada que não é texto', async () => {
     const { r } = repo()
-    const res = await verificarCnpj({ prestadorId: 7, nomePrestador: 'X', cnpjBruto: 123 }, { repositorio: r })
+    const res = await verificarCnpj({ prestadorId: 7, nomesPrestador: ['X'], cnpjBruto: 123 }, { repositorio: r })
     expect(res.http).toBe(400)
   })
 
   it('recusa CNPJ já ligado a outro perfil, sem revelar qual', async () => {
     const { r, gravar } = repo(true)
-    const res = await verificarCnpj({ prestadorId: 7, nomePrestador: 'João da Silva', cnpjBruto: CNPJ }, { repositorio: r, consultar: async () => ({ ok: true, dados }) })
+    const res = await verificarCnpj({ prestadorId: 7, nomesPrestador: ['João da Silva'], cnpjBruto: CNPJ }, { repositorio: r, consultar: async () => ({ ok: true, dados }) })
     expect(res.http).toBe(409)
     expect(gravar).not.toHaveBeenCalled()
   })
 
   it('responde 422 quando a Receita não tem o CNPJ', async () => {
     const { r, gravar } = repo()
-    const res = await verificarCnpj({ prestadorId: 7, nomePrestador: 'X', cnpjBruto: CNPJ }, { repositorio: r, consultar: async () => ({ ok: false, motivo: 'nao_encontrado' }) })
+    const res = await verificarCnpj({ prestadorId: 7, nomesPrestador: ['X'], cnpjBruto: CNPJ }, { repositorio: r, consultar: async () => ({ ok: false, motivo: 'nao_encontrado' }) })
     expect(res.http).toBe(422)
     expect(gravar).not.toHaveBeenCalled()
   })
 
   it('responde 503 quando as fontes estão indisponíveis, sem gravar nada', async () => {
     const { r, gravar } = repo()
-    const res = await verificarCnpj({ prestadorId: 7, nomePrestador: 'X', cnpjBruto: CNPJ }, { repositorio: r, consultar: async () => ({ ok: false, motivo: 'indisponivel' }) })
+    const res = await verificarCnpj({ prestadorId: 7, nomesPrestador: ['X'], cnpjBruto: CNPJ }, { repositorio: r, consultar: async () => ({ ok: false, motivo: 'indisponivel' }) })
     expect(res.http).toBe(503)
     expect(gravar).not.toHaveBeenCalled()
+  })
+
+  it('CNPJ não ativo: avisa para regularizar, não grava nada e não vai para a fila', async () => {
+    const { r, gravar } = repo()
+    const res = await verificarCnpj(
+      { prestadorId: 7, nomesPrestador: ['João da Silva'], cnpjBruto: CNPJ },
+      { repositorio: r, consultar: async () => ({ ok: true, dados: { ...dados, situacao: 'BAIXADA' } }), agora },
+    )
+    expect(res.http).toBe(422)
+    expect(res.http === 422 && res.corpo.erro).toBe('A Receita Federal mostra este CNPJ como baixada. Regularize a situação do CNPJ e tente novamente.')
+    expect(gravar).not.toHaveBeenCalled()
+  })
+
+  it('aprova quando o nome completo da conta bate, mesmo que o nome do perfil seja outro', async () => {
+    const { r, gravar } = repo()
+    const res = await verificarCnpj(
+      { prestadorId: 7, nomesPrestador: ['Zé Eletricista', 'João da Silva'], cnpjBruto: CNPJ },
+      { repositorio: r, consultar: async () => ({ ok: true, dados }), agora },
+    )
+    expect(res.http === 200 && res.corpo.status).toBe('aprovada')
+    expect(gravar).toHaveBeenCalledWith(expect.objectContaining({ status: 'aprovada' }))
   })
 })

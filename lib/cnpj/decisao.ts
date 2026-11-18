@@ -10,12 +10,13 @@ export type DecisaoCnpj =
   | { status: 'aprovada'; motivo: 'automatica' }
   | { status: 'pendente'; motivo: 'situacao_nao_ativa' | 'nome_nao_confere' }
 
-export function decidirVerificacao(nomePrestador: string, dados: DadosCnpj): DecisaoCnpj {
+/** `nomes`: o nome do perfil e, se houver, o nome completo da conta; qualquer um que bata aprova. */
+export function decidirVerificacao(nomes: string | readonly string[], dados: DadosCnpj): DecisaoCnpj {
   if (dados.situacao !== 'ATIVA') return { status: 'pendente', motivo: 'situacao_nao_ativa' }
 
-  const nome = normalizarNome(nomePrestador)
-  const candidatos = [dados.razaoSocial, dados.nomeFantasia ?? '', ...dados.socios]
-  const confere = nome !== '' && candidatos.some((c) => normalizarNome(c) === nome)
+  const procurados = (Array.isArray(nomes) ? nomes : [nomes]).map(normalizarNome).filter((n) => n !== '')
+  const candidatos = [dados.razaoSocial, dados.nomeFantasia ?? '', ...dados.socios].map(normalizarNome)
+  const confere = procurados.some((n) => candidatos.includes(n))
 
   return confere ? { status: 'aprovada', motivo: 'automatica' } : { status: 'pendente', motivo: 'nome_nao_confere' }
 }

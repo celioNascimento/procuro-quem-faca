@@ -156,3 +156,10 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 ## Atualização (18/11) — Admin não edita perfil de outras pessoas
 
 - Auditoria de RLS: a policy de UPDATE amplo do admin em `prestadores` foi removida (migration `20261118120000`, aplicada só no teste). Admin continua moderando por tabelas e funções próprias. Detalhes no doc 21.
+
+## Atualização (18/11) — CNPJ não ativo e nome completo da conta
+
+- Decidido com o Célio: CNPJ que não está ATIVO não vai mais para a fila do admin. No envio, o prestador recebe na hora "A Receita Federal mostra este CNPJ como [situação]. Regularize a situação do CNPJ e tente novamente." e nada é gravado (`lib/cnpj/verificar.ts`, `lib/cnpj/situacao.ts`).
+- Na reverificação diária, CNPJ aprovado que deixa de ser ATIVO tem o selo pausado (status 'expirada', motivo `situacao_nao_ativa`, sem fila) e a aba CNPJ mostra "Seu selo está pausado" pedindo para regularizar e informar de novo. Migration `20261118130000_cnpj_inativo_sem_fila.sql` (retorno da função passa de `enviada_para_fila` para `selo_pausado`; resumo do cron: `selosPausados`).
+- Aprovação automática agora compara razão social, fantasia e sócios com o nome do perfil OU o nome completo da conta (`profiles.full_name`), para quem usa nome de trabalho. Decidimos NÃO criar campo livre "nome no CNPJ", porque razão social e sócios são dados públicos e qualquer pessoa poderia copiá-los.
+- Casos antigos já na fila com motivo `situacao_nao_ativa` continuam sendo mostrados; podem ser rejeitados pelo admin.

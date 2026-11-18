@@ -4,6 +4,7 @@ import { BadgeCheck, Hourglass, Loader2, ShieldQuestion } from 'lucide-react'
 import { CartaoSecao, estiloCampo } from '@/components/perfil/CartaoSecao'
 import Link from 'next/link'
 import { mascararCnpj } from '@/lib/cnpj/validacao'
+import { rotuloSituacao } from '@/lib/cnpj/situacao'
 import { MOTIVOS_CNPJ } from '@/lib/selos/motivosCnpj'
 import type { SeloCnpj } from '@/hooks/useSeloCnpj'
 
@@ -78,7 +79,13 @@ export function AbaCnpj({ selo, temPerfil }: { selo: SeloCnpj; temPerfil: boolea
               Não conseguimos confirmar o CNPJ enviado. Confira o número e tente de novo.
             </p>
           )}
-          {fase === 'expirado' && (
+          {fase === 'expirado' && cnpjForaDeAtividade && (
+            <p className="mb-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900" data-testid="cnpj-fase-inativo">
+              <strong>Seu selo está pausado.</strong> A Receita Federal mostra o seu CNPJ como {rotuloSituacao(dados.cnpj?.situacao)}.
+              Regularize a situação do CNPJ e informe o número de novo para recuperar o selo.
+            </p>
+          )}
+          {fase === 'expirado' && !cnpjForaDeAtividade && (
             <p className="mb-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-700" data-testid="cnpj-fase-expirado">
               A conferência do seu selo venceu. Informe o CNPJ de novo para renová-lo.
             </p>

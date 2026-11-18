@@ -24,13 +24,13 @@ describe('reverificarCnpjs', () => {
   })
 
   it('repassa situação e fonte ao banco e conta renovados e enviados para a fila', async () => {
-    const registrar = vi.fn().mockResolvedValueOnce('renovada').mockResolvedValueOnce('enviada_para_fila')
+    const registrar = vi.fn().mockResolvedValueOnce('renovada').mockResolvedValueOnce('selo_pausado')
     const { repositorio } = montar([{ prestadorId: 1, cnpj: 'A' }, { prestadorId: 2, cnpj: 'B' }], registrar)
     const consultar = vi.fn().mockResolvedValueOnce(ok('ATIVA')).mockResolvedValueOnce(ok('SUSPENSA'))
     const r = await reverificarCnpjs({ repositorio, consultar })
     expect(registrar).toHaveBeenNthCalledWith(1, 1, 'ATIVA', 'brasilapi')
     expect(registrar).toHaveBeenNthCalledWith(2, 2, 'SUSPENSA', 'brasilapi')
-    expect(r).toMatchObject({ analisados: 2, renovados: 1, enviadosParaFila: 1, semResposta: 0, erros: 0 })
+    expect(r).toMatchObject({ analisados: 2, renovados: 1, selosPausados: 1, semResposta: 0, erros: 0 })
   })
 
   it('fontes fora do ar: não grava nada (o selo é mantido) e segue para o próximo', async () => {

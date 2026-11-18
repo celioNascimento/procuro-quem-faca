@@ -45,4 +45,9 @@ describe('decidirVerificacao', () => {
   it('nome vazio nunca aprova', () => {
     expect(decidirVerificacao('   ', { ...base, razaoSocial: '' }).status).toBe('pendente')
   })
+
+  it('aprova se qualquer um dos nomes bater (nome do perfil ou nome completo da conta)', () => {
+    expect(decidirVerificacao(['Zé Eletricista', 'João da Silva'], base).status).toBe('aprovada')
+    expect(decidirVerificacao(['Zé Eletricista', ''], base).status).toBe('pendente')
+  })
 })
