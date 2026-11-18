@@ -4,7 +4,9 @@
 // "Authorization: Bearer <CRON_SECRET>". Sem CRON_SECRET configurado, a rota recusa tudo.
 //
 // O que a rotina faz:
-//  1) reconsulta na Receita os selos que vencem em até 5 dias (até 20 por execução) e renova ou derruba;
+//  1) reconsulta na Receita os selos que vencem em até 5 dias (3 por chamada) e renova ou pausa o selo;
+//     ao bater o limite das fontes, para e deixa o resto para a próxima chamada (a cada minuto, ver
+//     supabase/ops/agendar_reverificacao_cnpj.sql);
 //  2) marca como 'expirada' o selo cuja validade passou sem renovar;
 //  3) apaga do cache de consultas o que já venceu.
 // Rodar mais de uma vez no mesmo dia é seguro: quem já foi renovado deixa de aparecer na lista.

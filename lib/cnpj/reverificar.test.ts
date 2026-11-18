@@ -62,4 +62,34 @@ describe('reverificarCnpjs', () => {
     await reverificarCnpjs({ repositorio, consultar: vi.fn(), limite: 5 })
     expect(repositorio.listarPendentes).toHaveBeenCalledWith(5)
   })
+
+  it('bateu o limite das fontes: para na hora, não insiste e não marca o que sobrou como falha', async () => {
+    const { repositorio, registrar } = montar([{ prestadorId: 1, cnpj: 'A' }, { prestadorId: 2, cnpj: 'B' }, { prestadorId: 3, cnpj: 'C' }])
+    const consultar = vi.fn().mockResolvedValueOnce(ok('ATIVA')).mockResolvedValueOnce({ ok: false, motivo: 'limite' })
+    const r = await reverificarCnpjs({ repositorio, consultar })
+    expect(consultar).toHaveBeenCalledTimes(2) // o terceiro nem é consultado
+    expect(registrar).toHaveBeenCalledTimes(1)
+    expect(r).toMatchObject({ analisados: 1, renovados: 1, semResposta: 0, erros: 0, parouPor: 'limite' })
+  })
+
+  it('termina o lote normalmente sem parar por nada', async () => {
+    const { repositorio } = montar([{ prestadorId: 1, cnpj: 'A' }])
+    const r = await reverificarCnpjs({ repositorio, consultar: vi.fn().mockResolvedValue(ok('ATIVA')) })
+    expect(r.parouPor).toBeNull()
+  })
+
+  it('passou do prazo da função: não começa outra consulta', async () => {
+    const { repositorio } = montar([{ prestadorId: 1, cnpj: 'A' }, { prestadorId: 2, cnpj: 'B' }])
+    let t = 0
+    const consultar = vi.fn(async () => { t += 45_000; return ok('ATIVA') })
+    const r = await reverificarCnpjs({ repositorio, consultar, agora: () => t, prazoMs: 40_000 })
+    expect(consultar).toHaveBeenCalledTimes(1)
+    expect(r.parouPor).toBe('tempo')
+  })
+
+  it('o lote padrão é de 3 por chamada', async () => {
+    const { repositorio } = montar([])
+    await reverificarCnpjs({ repositorio, consultar: vi.fn() })
+    expect(repositorio.listarPendentes).toHaveBeenCalledWith(3)
+  })
 })

@@ -163,3 +163,11 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Na reverificação diária, CNPJ aprovado que deixa de ser ATIVO tem o selo pausado (status 'expirada', motivo `situacao_nao_ativa`, sem fila) e a aba CNPJ mostra "Seu selo está pausado" pedindo para regularizar e informar de novo. Migration `20261118130000_cnpj_inativo_sem_fila.sql` (retorno da função passa de `enviada_para_fila` para `selo_pausado`; resumo do cron: `selosPausados`).
 - Aprovação automática agora compara razão social, fantasia e sócios com o nome do perfil OU o nome completo da conta (`profiles.full_name`), para quem usa nome de trabalho. Decidimos NÃO criar campo livre "nome no CNPJ", porque razão social e sócios são dados públicos e qualquer pessoa poderia copiá-los.
 - Casos antigos já na fila com motivo `situacao_nao_ativa` continuam sendo mostrados; podem ser rejeitados pelo admin.
+
+## Atualização (18/11) — Reverificação em ritmo das fontes (3 por minuto)
+
+- Como era: 1 chamada por dia (cron da Vercel), até 20 CNPJs em sequência, sem pausa. Um limite (HTTP 429) era tratado como falha comum: tentava a próxima fonte e seguia para o próximo CNPJ, gastando até 60 chamadas nas mesmas fontes limitadas.
+- Como ficou (decidido com o Célio): cada chamada faz no máximo 3 consultas. Ao receber 429, o lote PARA na hora, sem insistir e sem marcar o que sobrou como falha; a próxima chamada (1 minuto depois) continua pelos que vencem primeiro. Também para de começar consultas depois de 40 s (a função vive 60 s).
+- Agendador: `supabase/ops/agendar_reverificacao_cnpj.sql` (pg_cron + pg_net + Vault), a rodar uma vez em cada ambiente. O banco só chama o app quando há selo a reconsultar, então sem trabalho não há chamada externa nem invocação. Expiração de selos vencidos e limpeza do cache rodam direto no banco, uma vez por dia.
+- O cron diário da Vercel continua em `vercel.json` como rede de segurança (3 por dia, idempotente).
+- Ainda falta no ambiente de teste/produção: rodar o script (precisa da URL do app e do CRON_SECRET) e conferir em `cron.job_run_details`.

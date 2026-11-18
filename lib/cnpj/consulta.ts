@@ -33,7 +33,8 @@ export type Buscador = (url: string, opts: { signal: AbortSignal }) => Promise<R
 
 export type ResultadoConsulta =
   | { ok: true; dados: DadosCnpj }
-  | { ok: false; motivo: 'nao_encontrado' | 'indisponivel' }
+  /** 'limite': alguma fonte respondeu 429 (limite de consultas) e nenhuma deu resposta. Quem consulta em lote deve parar. */
+  | { ok: false; motivo: 'nao_encontrado' | 'indisponivel' | 'limite' }
 
 // Respostas externas têm formato variável; o mapeamento abaixo confere cada campo.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -141,12 +142,14 @@ export async function consultarCnpj(cnpj: string, opts: OpcoesConsulta = {}): Pr
   if (emCache && emCache.expiraEm > agora()) return { ok: true, dados: emCache.dados }
 
   let todas404 = true
+  let limitada = false
   for (const fonte of fontes) {
     try {
       const resp = await buscar(fonte.url(cnpj), { signal: AbortSignal.timeout(TIMEOUT_MS) })
       // 404 e 400 significam "esta fonte não tem este CNPJ" (a BrasilAPI responde 400 a números que rejeita).
       if (resp.status === 404 || resp.status === 400) continue
       todas404 = false
+      if (resp.status === 429) limitada = true
       if (resp.status !== 200) {
         console.warn(`[cnpj] fonte ${fonte.nome} respondeu HTTP ${resp.status}`)
         continue
@@ -165,5 +168,6 @@ export async function consultarCnpj(cnpj: string, opts: OpcoesConsulta = {}): Pr
       console.warn(`[cnpj] fonte ${fonte.nome} falhou: ${erro instanceof Error ? erro.message : String(erro)}`)
     }
   }
+  if (limitada) return { ok: false, motivo: 'limite' }
   return { ok: false, motivo: todas404 ? 'nao_encontrado' : 'indisponivel' }
 }

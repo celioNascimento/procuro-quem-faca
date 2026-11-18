@@ -50,7 +50,7 @@ describe('GET /api/cron/cnpj-reverificacao', () => {
     const r = await chamar('Bearer segredo')
     expect(rpc).toHaveBeenCalledWith('cnpj_registrar_reverificacao', { p_prestador_id: 7, p_situacao: 'ATIVA', p_fonte: 'brasilapi' })
     expect(await r.json()).toEqual({
-      ok: true, analisados: 1, renovados: 1, selosPausados: 0, ignorados: 0, semResposta: 0, erros: 0,
+      ok: true, analisados: 1, renovados: 1, selosPausados: 0, ignorados: 0, semResposta: 0, erros: 0, parouPor: null,
       expirados: 2, cacheLimpo: 5,
     })
   })

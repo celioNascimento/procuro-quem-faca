@@ -139,3 +139,20 @@ describe('consultarCnpj', () => {
     expect(r.ok).toBe(true)
   })
 })
+
+describe('consultarCnpj: limite de consultas das fontes', () => {
+  const resp = (status: number, corpo: unknown = {}) => ({ status, json: async () => corpo }) as never
+
+  it('429 em todas as fontes devolve "limite" e não repete a consulta', async () => {
+    const buscar = vi.fn(async () => resp(429))
+    const r = await consultarCnpj('47403170000180', { buscar, cache: new Map() as never })
+    expect(r).toEqual({ ok: false, motivo: 'limite' })
+    expect(buscar).toHaveBeenCalledTimes(3) // uma por fonte, nenhuma insistência
+  })
+
+  it('429 numa fonte e 404 nas outras: também conta como limite (nenhuma deu resposta)', async () => {
+    const buscar = vi.fn(async (url: string) => (url.includes('brasilapi') ? resp(429) : resp(404)))
+    const r = await consultarCnpj('47403170000180', { buscar, cache: new Map() as never })
+    expect(r).toEqual({ ok: false, motivo: 'limite' })
+  })
+})
