@@ -235,3 +235,15 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Vitrine de fotos: botão de remover é círculo branco com lixeira vermelha.
 - Divulgação: sub-aba selecionada em azul (`bg-blue-600`), igual às abas principais.
 - Perfil público, "Fotos do profissional": faixa de miniaturas centralizada (wrapper `justify-center` + faixa interna rolável, `data-testid="miniaturas-fotos"`).
+
+## Auditoria de rotas e acesso (18/11, noite)
+Feita sobre o código e o banco de TESTE (produção não é acessível daqui; repetir as consultas lá antes do release).
+- **Corrigido:** `GET /api/anuncios/metricas` lia métricas de anúncios com a chave de serviço **sem exigir login** (qualquer pessoa na internet). Agora exige login e `perfis_admin` (401/403), com teste (`route.test.ts`). O `POST` (registrar impressão/clique) continua público de propósito; risco residual: inflar métricas.
+- **OK:** todas as rotas `/api/admin/*`, `/api/cnpj`, `/api/delete-account`, `/api/prestadores/meus-cliques`, `/api/garantia/promover-fotos` checam usuário (e admin quando cabe); as rotas `/api/cron/*` exigem `Bearer CRON_SECRET`; as funções `admin_*`, `anonimizar_dados_titular` e `excluir_prestador_titular` checam admin por dentro e não são executáveis por `anon`. `/dashboard`, `/admin`, `/acompanhamento`, `/avaliar` e `/cadastro` são protegidos no `proxy.ts`.
+- **Atenção (decidir/verificar):**
+  1. `/painel/perfil`, `/meus-servicos`, `/meus-dados`, `/titular` e `/denunciar` **não passam pelo `proxy.ts`**: a proteção é só no cliente (tela de login / hook) e nas regras do banco. Os dados estão protegidos pelas regras do banco, mas quem está deslogado vê a "casca" da página em vez de ser redirecionado. Sugestão: incluir `/painel` e `/meus-servicos` no `proxy.ts`.
+  2. Tabela `perfis` (legada, **sem uso no código**): legível por qualquer pessoa (nome, WhatsApp, cidade, bairro) e com INSERT/UPDATE/DELETE concedidos a `anon` (as regras de linha limitam, mas a superfície é desnecessária). No teste está vazia; **conferir em produção** (contagem e conteúdo) e, se sem uso, fechar a leitura pública.
+  3. `prestadores` é legível por todos, inclusive linhas pendentes/bloqueadas e a coluna `user_id`; `portfolio_projetos` expõe `cliente_user_id`. Hoje a interface só lista aprovados, mas a API direta mostra tudo. Avaliar restringir por status e esconder `user_id`.
+  4. `logs_atividades` tem 3 políticas de INSERT públicas e duplicadas (`with check true`): qualquer pessoa pode gravar logs (poluição/abuso). Consolidar numa só, com limite.
+  5. Funções `e2e_*` aparecem como executáveis por `anon` **no banco de teste** (só existem lá e recusam rodar sem o marcador); confirmar que **não existem em produção**.
+  6. Proteção contra senhas vazadas desligada (plano Free).
