@@ -2,7 +2,9 @@
 // Aba "CNPJ": conduz o prestador pelo selo, uma tela por fase. Só exibe e dispara ações do hook.
 import { BadgeCheck, Hourglass, Loader2, ShieldQuestion } from 'lucide-react'
 import { CartaoSecao, estiloCampo } from '@/components/perfil/CartaoSecao'
+import Link from 'next/link'
 import { mascararCnpj } from '@/lib/cnpj/validacao'
+import { MOTIVOS_CNPJ } from '@/lib/selos/motivosCnpj'
 import type { SeloCnpj } from '@/hooks/useSeloCnpj'
 
 const BOTAO_PRIMARIO =
@@ -81,6 +83,19 @@ export function AbaCnpj({ selo, temPerfil }: { selo: SeloCnpj; temPerfil: boolea
               A conferência do seu selo venceu. Informe o CNPJ de novo para renová-lo.
             </p>
           )}
+          <div className="mb-5 rounded-2xl bg-blue-50/60 p-4" data-testid="cnpj-motivos">
+            <p className="text-sm font-bold text-slate-900">Por que informar o CNPJ?</p>
+            <ul className="mt-3 flex flex-col gap-3">
+              {MOTIVOS_CNPJ.map((m) => (
+                <li key={m.titulo} className="text-sm leading-6 text-slate-600">
+                  <span className="font-semibold text-slate-800">{m.titulo}.</span> {m.texto}
+                </li>
+              ))}
+            </ul>
+            <Link href="/ajuda?artigo=selo-cnpj-prestador&publico=prestador" className="mt-3 inline-block text-xs font-bold text-blue-700">
+              Ver o passo a passo na Central de ajuda →
+            </Link>
+          </div>
           <form
             onSubmit={(e) => {
               e.preventDefault()

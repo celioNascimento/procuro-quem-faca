@@ -179,6 +179,7 @@ Um arquivo de tipos por área de produto: `ads.ts`, `avaliacao.ts`, `categorias.
 
 **Arquivos**
 - `lib/help/help-content.ts` — **fonte única do conteúdo**: `helpArticles` (lista), `getHelpArticles(público, contexto?)`, `searchHelpArticles(texto, público)`, `findHelpArticle(id)`, `helpCategories`.
+- Artigos de selos (categoria "Selos de confiança"): `selo-cnpj-prestador` (por que informar o CNPJ + passo a passo), `selos-e-niveis-prestador` (como ganhar selos e subir de nível) e `selos-no-perfil` (para o cliente, contexto `perfil-publico`). O campo opcional `reasons` do artigo mostra cartões de motivos antes dos passos. Os motivos vêm de `lib/selos/motivosCnpj.ts`, fonte única também usada no bloco "Por que informar o CNPJ?" da aba CNPJ do painel. Regra de texto: nunca prometer mais clientes nem posição melhor na busca, e dizer que o número do CNPJ e a razão social não aparecem para o cliente.
 - `components/help/HelpCenter.tsx` — `HelpCenter` (busca + categorias + cartões), `HelpArticle` (um artigo com passos numerados) e `ContextualHelp` (bloco "Central de ajuda" que as telas embutem no rodapé).
 - `app/ajuda/page.tsx` — rota `/ajuda`: sem parâmetros lista os artigos; `?artigo=<id>` abre um artigo; `?contexto=<contexto>` lista só os artigos daquela tela; `&publico=prestador` troca o público (qualquer outro valor cai em `cliente`).
 - `lib/help/help-content.test.ts` — protege o conteúdo (ver "Regras" abaixo).

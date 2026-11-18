@@ -26,3 +26,20 @@ describe('AbaCnpj em conferência', () => {
     expect(screen.queryByTestId('cnpj-aviso-inativo')).toBeNull()
   })
 })
+
+describe('AbaCnpj: motivos para informar o CNPJ', () => {
+  it('quem ainda não informou vê os motivos e o link da ajuda, antes do campo', () => {
+    render(<AbaCnpj temPerfil selo={{ ...base, fase: 'sem' }} />)
+    const bloco = screen.getByTestId('cnpj-motivos')
+    expect(bloco.textContent).toContain('Por que informar o CNPJ?')
+    expect(bloco.textContent).toContain('nível Bronze')
+    expect(bloco.textContent).toContain('Ele não muda a posição na busca')
+    const link = bloco.querySelector('a')
+    expect(link?.getAttribute('href')).toBe('/ajuda?artigo=selo-cnpj-prestador&publico=prestador')
+  })
+
+  it('quem já tem o selo ou está em conferência não vê o bloco de convencimento', () => {
+    render(<AbaCnpj temPerfil selo={{ ...base, fase: 'em_conferencia', dados: { verificacao: { status: 'pendente', valido_ate: null, verificado_em: null }, cnpj: cnpj('ATIVA') } }} />)
+    expect(screen.queryByTestId('cnpj-motivos')).toBeNull()
+  })
+})

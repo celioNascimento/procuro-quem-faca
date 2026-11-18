@@ -43,7 +43,7 @@ export function buscarRespostas(pergunta: string, audience: HelpAudience, limite
       const titulo = normalizarTexto(artigo.title)
       const resumo = normalizarTexto(artigo.summary)
       const categoria = normalizarTexto(artigo.category)
-      const passos = normalizarTexto((artigo.steps ?? []).join(' '))
+      const passos = normalizarTexto([...(artigo.steps ?? []), ...(artigo.reasons?.items.flatMap((i) => [i.title, i.text]) ?? [])].join(' '))
       let pontos = 0
       for (const palavra of palavras) {
         if (combina(titulo, palavra)) pontos += 3

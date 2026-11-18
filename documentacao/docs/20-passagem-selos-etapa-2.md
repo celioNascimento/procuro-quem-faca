@@ -138,3 +138,9 @@ Checklist de release (ordem das migrações, verificações e plano de volta): v
 Atualização (18/11, aceite dos termos na homologação)
 
 Quem testava à mão na homologação via a tela "Antes de continuar" de novo a cada atualização: o reset do E2E (e2e_resetar_fixtures) devolvia a tabela consentimentos à semente (vazia) a cada teste, apagando o aceite. Correção só no banco de teste (supabase/homologacao/reset_fixtures.sql): consentimentos saiu do reset, então o aceite das contas fixas (admin, prestador, cliente, Jorge) é mantido; o das contas criadas pelos testes (e2e-*) é apagado no reset (a FK zera o user_id e o reset remove os órfãos), e essas contas novas continuam passando pela tela de aceite. Produção não tem reset e não foi afetada por isso.
+
+## Atualização (18/11) — Ajuda e motivos do CNPJ
+
+- Central de ajuda ganhou 3 artigos de selos (2 para prestador, 1 para cliente no perfil público). Ver `02-arquitetura.md`, seção Central de ajuda.
+- A aba CNPJ do painel mostra, antes do campo, o bloco "Por que informar o CNPJ?" (só para quem ainda não informou) com link para o artigo. Motivos centralizados em `lib/selos/motivosCnpj.ts`.
+- Testes: `lib/help/help-content.test.ts` (artigos, contextos, busca, e que o texto não promete ranking nem expõe o CNPJ) e `AbaCnpj.test.tsx`.
