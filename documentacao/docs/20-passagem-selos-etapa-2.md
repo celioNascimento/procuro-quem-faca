@@ -132,3 +132,5 @@ Código: config/selos.ts (metas e faixas, espelhando o banco), lib/selos/tempoCn
 PENDENTE DE REVISÃO DO DONO antes de produção: o mapeamento CNAE -> categoria (semente na migração) foi escrito de memória a partir da tabela CNAE e precisa ser conferido linha a linha. Categorias sem mapeamento: Massoterapia, Calheiro, Vidraceiro Automotivo, Ar Condicionado Automotivo (não ganham o selo de atividade, sem punição). Hoje só o CNAE principal é guardado; CNAEs secundários ficam para depois, se fizer falta (MEI costuma ter vários).
 E2E: tests/e2e/homologacao/selos-calculados.spec.ts (8 testes) e support/selos.ts. Funções só do banco de teste, em supabase/homologacao/reset_fixtures.sql: e2e_semear_experiencia e e2e_ajustar_cnpj; o reset agora apaga primeiro as avaliações de contas criadas pelos testes (a FK com o Auth não tem cascata). Testes antigos da barra passaram de "0 de 1" para "0 de 4".
 Liberação: aplicar em produção, na ordem, ...20261117230000 e depois 20261118000000 (e NUNCA as funções de supabase/homologacao/).
+
+Checklist de release (ordem das migrações, verificações e plano de volta): ver `21-checklist-release-selos.md`.
