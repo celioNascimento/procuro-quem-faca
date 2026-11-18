@@ -6,7 +6,7 @@ Regra: nada daqui vai para produção antes de o dono conferir os itens marcados
 
 ## 0. Estado atual
 
-- (Atualizado em 18/11: a lista de migrações abaixo está incompleta; a ordem completa de produção está no doc 20, "Resumo do estado em 18/11", e inclui 20261118120000 a 190000 (a 190000 é a de segurança, a última), exceto 160000, que é só de teste.)
+- (Atualizado em 18/11: a lista de migrações abaixo está incompleta; a ordem completa de produção está no doc 20, "Resumo do estado em 18/11", e inclui 20261118120000 a 20261118180000 e, por último, 20261118190000 (segurança), exceto 160000, que é só de teste.)
 - Branch `homologacao` no commit `e4a62de` (historico de 17/11). CI verde; E2E de homologação: 105 passaram, 1 instável (fila do admin, revogar selo; passa na repetição), 0 falhas.
 - Banco de teste (`qvrkmaavbrtjnwcaocax`) já tem todas as migrações abaixo, aplicadas nesta ordem.
 - Produção (`skhqvcluiacwujeeqefg`): a última migração registrada é `20261115210740_rls_denuncias_comentarios_geografia`. Nenhuma migração da Etapa 2 foi aplicada.
