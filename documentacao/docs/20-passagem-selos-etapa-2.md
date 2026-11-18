@@ -134,3 +134,7 @@ E2E: tests/e2e/homologacao/selos-calculados.spec.ts (8 testes) e support/selos.t
 Liberação: aplicar em produção, na ordem, ...20261117230000 e depois 20261118000000 (e NUNCA as funções de supabase/homologacao/).
 
 Checklist de release (ordem das migrações, verificações e plano de volta): ver `21-checklist-release-selos.md`.
+
+Atualização (18/11, aceite dos termos na homologação)
+
+Quem testava à mão na homologação via a tela "Antes de continuar" de novo a cada atualização: o reset do E2E (e2e_resetar_fixtures) devolvia a tabela consentimentos à semente (vazia) a cada teste, apagando o aceite. Correção só no banco de teste (supabase/homologacao/reset_fixtures.sql): consentimentos saiu do reset, então o aceite das contas fixas (admin, prestador, cliente, Jorge) é mantido; o das contas criadas pelos testes (e2e-*) é apagado no reset (a FK zera o user_id e o reset remove os órfãos), e essas contas novas continuam passando pela tela de aceite. Produção não tem reset e não foi afetada por isso.

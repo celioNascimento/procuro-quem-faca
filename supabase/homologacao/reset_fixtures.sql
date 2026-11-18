@@ -29,7 +29,8 @@ revoke all on public.ambiente_teste_marcador from public, anon, authenticated;
 create or replace function public.e2e_tabelas_referencia() returns text[]
 language sql immutable as $$
   select array['ambiente_teste_marcador','categorias','categorias_grupos','cidades','estados','habilidades',
-               'regioes','retencao_regras','rastreio_config','perfis_admin','logs_atividades','catalogo_itens']
+               'regioes','retencao_regras','rastreio_config','perfis_admin','logs_atividades','catalogo_itens',
+               'consentimentos']  -- aceite dos termos das contas fixas sobrevive ao reset (ver e2e_resetar_fixtures)
 $$;
 revoke all on function public.e2e_tabelas_referencia() from public, anon, authenticated;
 
@@ -71,10 +72,15 @@ begin
   -- 1) Contas criadas pelos testes (a cascata do Auth leva perfis ligados).
   delete from auth.users where id not in (select id from e2e_baseline.auth_users);
 
+  -- 1b) Aceite dos termos: o das contas fixas (as da semente) é mantido, para quem testa à mão na homologação
+  --     não ter que aceitar de novo a cada rodada do E2E. O das contas criadas pelos testes fica órfão
+  --     (a FK zera o user_id ao apagar a conta) e sai aqui; essas contas novas ainda passam pela tela de aceite.
+  delete from public.consentimentos where user_id is null;
+
   -- 2) Tabelas de fixture: apaga tudo e reinsere a semente, sem disparar gatilhos nem checagem de FK.
   set local session_replication_role = replica;
   for r in select tablename from pg_tables where schemaname = 'e2e_baseline'
-            and tablename not in ('auth_users','storage_objects') loop
+            and tablename not in ('auth_users','storage_objects','consentimentos') loop
     select string_agg(quote_ident(column_name), ', ' order by ordinal_position) into colunas
       from information_schema.columns
      where table_schema = 'public' and table_name = r.tablename and is_generated = 'NEVER';
