@@ -69,6 +69,17 @@ describe('PerfilConfianca — transparência das não indicações', () => {
     expect(screen.getByTestId('tag-nao-indicam').textContent).toBe('3 de 7 não indicam')
   })
 
+  it('a tag do nível fica na linha de cima, junto da tag de não indicações', () => {
+    render(
+      <PerfilConfianca
+        prestador={prestador} totalIndicacoes={7} totalNaoIndicacoes={3} totalConcluidos={10}
+        selo={{ consultadoEm: '2026-11-17T15:00:00Z' }} nivel="prata"
+      />,
+    )
+    expect(screen.getByTestId('nivel-perfil').parentElement).toBe(screen.getByTestId('tag-nao-indicam').parentElement)
+    expect(screen.getByTestId('selo-cnpj-texto').textContent).toBe('CNPJ ativo, consultado em 17/11')
+  })
+
   it('sem aviso, sem tag', () => {
     render(<PerfilConfianca prestador={prestador} totalIndicacoes={9} totalNaoIndicacoes={1} totalConcluidos={0} />)
     expect(screen.queryByTestId('tag-nao-indicam')).toBeNull()

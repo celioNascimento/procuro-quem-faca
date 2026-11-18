@@ -50,14 +50,7 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
     selo && {
       key: 'selo-cnpj',
       icon: <BadgeCheck size={14} className="text-green-600" aria-hidden="true" />,
-      texto: nomeNivel ? (
-        <>
-          <span className={`mr-1.5 inline-block rounded-full border px-2 py-px text-xs font-black ${apresentarNivel(nivel).classes}`} data-testid="nivel-perfil">
-            Nível {nomeNivel}
-          </span>
-          <span data-testid="selo-cnpj-texto">{textoSeloCnpj(selo)}</span>
-        </>
-      ) : textoSeloCnpj(selo),
+      texto: <span data-testid="selo-cnpj-texto">{textoSeloCnpj(selo)}</span>,
     },
     complementares?.experiencia && {
       key: 'selo-experiencia',
@@ -99,15 +92,25 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
       data-testid="caixa-confianca"
       aria-label="Confiança neste profissional"
     >
-      {tagNaoIndicam && (
-        <p className="mb-3">
-          <span
-            data-testid="tag-nao-indicam"
-            className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-px text-xs font-black text-amber-900"
-          >
-            {tagNaoIndicam}
-          </span>
-        </p>
+      {((selo && nomeNivel) || tagNaoIndicam) && (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {selo && nomeNivel && (
+            <span
+              data-testid="nivel-perfil"
+              className={`inline-flex items-center rounded-full border px-2 py-px text-xs font-black ${apresentarNivel(nivel).classes}`}
+            >
+              Nível {nomeNivel}
+            </span>
+          )}
+          {tagNaoIndicam && (
+            <span
+              data-testid="tag-nao-indicam"
+              className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-px text-xs font-black text-amber-900"
+            >
+              {tagNaoIndicam}
+            </span>
+          )}
+        </div>
       )}
 
       {temDestaque && (
