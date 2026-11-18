@@ -179,3 +179,4 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Banco: migration `20261118140000_categoria_sem_mapeamento_cnae.sql` (função `categoria_sem_mapeamento_cnae`, devolve só verdadeiro/falso; falso para quem não tem categoria). Aplicada só no teste.
 - Aguardando: CNAE principal do CNPJ 29.867.943/0001-06 (cunhado do Célio; Insulfilm e ar condicionado) para conferir qual selo de atividade ele recebe.
 - O selo compara só o CNAE principal; quem tem a atividade como secundária não ganha o selo (item futuro: CNAEs secundários).
+- Erro achado na revisão (print do cnpj.biz de um CNPJ real): 4520003 é manutenção ELÉTRICA e 4520002 é lanternagem/funilaria e pintura. A seed tinha os dois trocados; corrigido na migration `20261118000000` e no banco de teste (Auto Elétrica = 4520003; Funilaria e Pintura = 4520002).
