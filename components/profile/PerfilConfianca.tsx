@@ -3,7 +3,7 @@
 // Bloco de confiança no topo do perfil. A prova social é a quantidade de INDICAÇÕES de
 // clientes (não nota média). Só mostra o que existe: sem indicação, sem serviço concluído
 // ou sem garantia, o item simplesmente não aparece (nunca "0").
-import { ThumbsUp, ThumbsDown, AlertTriangle, CheckCircle2, ShieldCheck, MapPin, BadgeCheck, Award, CalendarClock, Briefcase } from 'lucide-react'
+import { ThumbsUp, ThumbsDown, CheckCircle2, ShieldCheck, MapPin, BadgeCheck, Award, CalendarClock, Briefcase } from 'lucide-react'
 import type { PrestadorPerfil } from '@/types/perfil'
 import {
   rotuloNivel,
@@ -15,7 +15,7 @@ import {
 } from '@/lib/selos/publico'
 import { textoTempoCnpj } from '@/lib/selos/tempoCnpj'
 import { apresentarNivel } from '@/lib/selos/nivel'
-import { avisoNaoIndicacoes, textoTagNaoIndicam } from '@/lib/avaliacoes/transparencia'
+import { textoTagNaoIndicam } from '@/lib/avaliacoes/transparencia'
 
 interface Props {
   prestador: PrestadorPerfil
@@ -43,7 +43,6 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
 
   const temDestaque = totalIndicacoes > 0
   const temNaoIndicacoes = totalNaoIndicacoes > 0
-  const aviso = avisoNaoIndicacoes(totalIndicacoes, totalNaoIndicacoes)
   const tagNaoIndicam = textoTagNaoIndicam(totalIndicacoes, totalNaoIndicacoes)
   const nomeNivel = rotuloNivel(nivel)
   const itens = [
@@ -139,17 +138,6 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
         >
           <ThumbsDown size={14} className="shrink-0 text-slate-400" aria-hidden="true" />
           {totalNaoIndicacoes} {plural(totalNaoIndicacoes, 'cliente não indica', 'clientes não indicam')} este profissional
-        </p>
-      )}
-
-      {aviso && (
-        <p
-          role="note"
-          data-testid="aviso-nao-indicacoes"
-          className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-[13px] font-semibold leading-snug text-amber-900 lg:text-sm"
-        >
-          <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
-          {aviso}
         </p>
       )}
 

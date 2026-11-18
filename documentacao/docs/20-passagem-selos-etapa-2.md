@@ -211,3 +211,8 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Antes: um bloco único de ajuda (contexto `dashboard-prestador`) aparecia em quase todas as abas, com 11 atalhos misturados (divulgação aparecia até em CNPJ).
 - Agora (`lib/help/ajuda-do-painel.ts`, com teste): Meus Trabalhos = portfólio + garantia; Desempenho = avaliações + garantia; Divulgação = os 4 artigos de divulgação; Dados Profissionais → Meu perfil = editar perfil + ativação/bloqueio; Dados Profissionais → CNPJ = só selos e CNPJ. A ajuda de Dados Profissionais é mostrada pela própria aba (`DadosProfissionaisTabs`), porque muda entre Meu perfil e CNPJ. Teste garante: divulgação só em Divulgação, selos só em CNPJ, no máximo 4 atalhos por bloco.
 - Os contextos antigos (`dashboard-prestador`, `dados-profissionais`) continuam nos artigos, para links e o chat de ajuda existentes. Sem mudança de banco.
+
+## Atualização (18/11, noite) — Tag em porcentagem e fim do aviso grande
+
+- Decidido com o Célio: o texto grande "Neste perfil, X de Y clientes não indicam. Leia as avaliações antes de contratar." foi REMOVIDO do perfil (repetia o placar e a tag). A transparência fica no placar completo (7 indicações / 3 não indicam) e na tag âmbar, que agora mostra a porcentagem: "30% não indicam" (perfil e card da busca).
+- Regra inalterada: 3 ou mais avaliações e 30% ou mais "não indico", calculada sobre os números reais (não sobre a porcentagem arredondada). `avisoNaoIndicacoes` deixou de existir; só `textoTagNaoIndicam` em `lib/avaliacoes/transparencia.ts`.

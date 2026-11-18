@@ -1,6 +1,6 @@
 // lib/avaliacoes/transparencia.ts
-// Transparência com o cliente: o perfil mostra o placar completo (indicam x não indicam)
-// e, quando as não indicações pesam, um aviso neutro. Não muda selos nem a ordem da busca.
+// Transparência com o cliente: o perfil mostra o placar completo (indicam x não indicam) e, quando as
+// não indicações pesam, uma tag com a porcentagem (perfil e card da busca). Não muda selos nem a ordem da busca.
 
 export const MIN_AVALIACOES_AVISO = 3
 export const PERCENTUAL_AVISO = 0.3
@@ -17,17 +17,9 @@ export function placarIndicacoes(indicam: number, naoIndicam: number): PlacarInd
   return { indicam: i, naoIndicam: n, total: i + n }
 }
 
-/** Aviso neutro quando há ao menos 3 avaliações e 30% ou mais delas são "não indico". */
-export function avisoNaoIndicacoes(indicam: number, naoIndicam: number): string | null {
-  const p = placarIndicacoes(indicam, naoIndicam)
-  if (p.total < MIN_AVALIACOES_AVISO || p.naoIndicam / p.total < PERCENTUAL_AVISO) return null
-  return `Neste perfil, ${p.naoIndicam} de ${p.total} clientes não indicam. Leia as avaliações antes de contratar.`
-}
-
-/** Texto curto da tag ("3 de 10 não indicam"), com a mesma regra do aviso. Fora dela, null. */
+/** Tag curta ("30% não indicam") quando há ao menos 3 avaliações e 30% ou mais delas são "não indico". Fora disso, null. */
 export function textoTagNaoIndicam(indicam: number, naoIndicam: number): string | null {
   const p = placarIndicacoes(indicam, naoIndicam)
   if (p.total < MIN_AVALIACOES_AVISO || p.naoIndicam / p.total < PERCENTUAL_AVISO) return null
-  return `${p.naoIndicam} de ${p.total} ${p.naoIndicam === 1 ? 'não indica' : 'não indicam'}`
+  return `${Math.round((p.naoIndicam / p.total) * 100)}% não indicam`
 }
-
