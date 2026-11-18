@@ -162,6 +162,19 @@ end $$;
 revoke all on function public.e2e_ajustar_cnpj(bigint, date, text, text[]) from public;
 grant execute on function public.e2e_ajustar_cnpj(bigint, date, text, text[]) to anon, authenticated;
 
+-- e2e_marcar_exemplo: liga/desliga a marca de perfil de exemplo (em produção o admin faz isso pelo SQL Editor;
+-- o admin do app não edita perfis de outras pessoas).
+create or replace function public.e2e_marcar_exemplo(p_prestador_id bigint, p_valor boolean) returns void
+language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  if not exists (select 1 from public.ambiente_teste_marcador where nome = 'homologacao') then
+    raise exception 'Este banco não é o de homologação: ajuste recusado.';
+  end if;
+  update public.prestadores set exemplo = p_valor where id = p_prestador_id;
+end $$;
+revoke all on function public.e2e_marcar_exemplo(bigint, boolean) from public;
+grant execute on function public.e2e_marcar_exemplo(bigint, boolean) to anon, authenticated;
+
 -- ATENÇÃO: ao adicionar coluna numa tabela restaurada pelo reset (ex.: prestador_cnpj.cnaes_secundarios),
 -- adicione a mesma coluna na cópia do baseline (alter table e2e_baseline.<tabela> add column ... default ...),
 -- senão o reset falha por coluna inexistente. Não recapture o baseline com dados de teste manual.

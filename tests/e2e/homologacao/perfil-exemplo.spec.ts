@@ -5,8 +5,9 @@
 // sozinho (só o admin). Usa o Pedro da semente; o reset devolve tudo ao normal.
 
 import { expect, test } from '@playwright/test';
-import { CONTA_ADMIN, CONTAS, PERFIL_SEED, motivoParaPular, SUPABASE_TESTE_ANON_KEY, SUPABASE_TESTE_URL } from '../support/ambiente';
+import { CONTAS, PERFIL_SEED, motivoParaPular, SUPABASE_TESTE_ANON_KEY, SUPABASE_TESTE_URL } from '../support/ambiente';
 import { resetarFixtures } from '../support/reset';
+import { marcarExemplo } from '../support/selos';
 
 test.skip(motivoParaPular() !== null, motivoParaPular() ?? '');
 test.describe.configure({ mode: 'serial', timeout: 90_000 });
@@ -44,14 +45,8 @@ test('o dono não consegue marcar o próprio perfil como exemplo', async ({ requ
   expect((await leitura.json())[0].exemplo).toBe(false);
 });
 
-test('perfil de exemplo: fora da busca, com faixa e noindex, mas abre por link direto', async ({ request, page }) => {
-  const admin = await token(request, CONTA_ADMIN.email, CONTA_ADMIN.senha);
-  const marcou = await request.patch(`${SUPABASE_TESTE_URL}/rest/v1/prestadores?id=eq.${PERFIL_SEED.id}`, {
-    headers: cab(admin),
-    data: { exemplo: true },
-  });
-  expect(marcou.ok(), await marcou.text()).toBe(true);
-  expect((await marcou.json())[0].exemplo).toBe(true);
+test('perfil de exemplo: fora da busca, com faixa e noindex, mas abre por link direto', async ({ page }) => {
+  await marcarExemplo(PERFIL_SEED.id, true);
 
   // Link direto: abre, com a faixa e sem indexação
   await page.goto(`/${PERFIL_SEED.slug}`);

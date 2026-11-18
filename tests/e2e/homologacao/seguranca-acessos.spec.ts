@@ -63,7 +63,9 @@ test('outra pessoa logada não apaga nem sobrescreve a foto de alguém; o dono a
   // O dono consegue apagar
   const apagou = await request.delete(urlObjeto('fotos-perfil', caminho), { headers: comToken(dono) });
   expect(apagou.ok(), await apagou.text()).toBe(true);
-  expect((await request.get(urlPublica('fotos-perfil', caminho))).status()).toBeGreaterThanOrEqual(400);
+  // A URL pública pode continuar em cache; a leitura autenticada mostra se o arquivo saiu do bucket.
+  const lido = await request.get(`${SUPABASE_TESTE_URL}/storage/v1/object/authenticated/fotos-perfil/${caminho}`, { headers: comToken(dono) });
+  expect(lido.status()).toBeGreaterThanOrEqual(400);
 });
 
 test('outra pessoa logada não sobrescreve arquivo do bucket portfolios', async ({ request }) => {

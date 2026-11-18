@@ -31,6 +31,11 @@ export function ajustarCnpj(prestadorId: number, dataAbertura: string, cnae: str
   return rpcTeste('e2e_ajustar_cnpj', { p_prestador_id: prestadorId, p_data_abertura: dataAbertura, p_cnae: cnae, p_secundarios: secundarios });
 }
 
+/** Liga/desliga a marca de perfil de exemplo (só no banco de teste). */
+export function marcarExemplo(prestadorId: number, valor: boolean) {
+  return rpcTeste('e2e_marcar_exemplo', { p_prestador_id: prestadorId, p_valor: valor });
+}
+
 /** Data de hoje menos N anos (e um dia, para ficar além do aniversário), em AAAA-MM-DD. */
 export function haAnos(anos: number): string {
   const d = new Date();
