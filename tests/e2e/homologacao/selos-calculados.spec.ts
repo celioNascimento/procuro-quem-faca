@@ -5,6 +5,7 @@
 // pelo banco de teste e as avaliações/datas são semeadas por funções do banco de teste (sem consulta externa).
 // Regras: 10 serviços avaliados por 10 clientes diferentes (nota efetiva >= 3); tempo em faixas de 1, 3 e 5
 // anos; CNAE 4399103 (alvenaria) casa com a categoria Pedreiro.
+// ATENÇÃO: a semente já traz 1 avaliação válida do Pedro; por isso "N clientes no total" semeia N-1.
 
 import { expect, test, type Page } from '@playwright/test';
 import { CONTAS, PERFIL_SEED, motivoParaPular } from '../support/ambiente';
@@ -44,8 +45,8 @@ test.describe('selos calculados no perfil público', () => {
     await expect(page.getByText(/Atividade do CNPJ compatível/)).toHaveCount(0);
   });
 
-  test('9 clientes não bastam: sem experiência e continua Bronze', async ({ page, request }) => {
-    await semearExperiencia(PERFIL_SEED.id, 9);
+  test('9 clientes no total não bastam: sem experiência e continua Bronze', async ({ page, request }) => {
+    await semearExperiencia(PERFIL_SEED.id, 8); // + 1 da semente = 9
     await decidirCnpjComoAdmin(request, CONTAS.prestador.nome, 'aprovada');
 
     await page.goto(`/${PERFIL_SEED.slug}`);
@@ -54,7 +55,7 @@ test.describe('selos calculados no perfil público', () => {
   });
 
   test('10 clientes diferentes com CNPJ ativo: Experiência no PQF e nível Prata', async ({ page, request }) => {
-    await semearExperiencia(PERFIL_SEED.id, 10);
+    await semearExperiencia(PERFIL_SEED.id, 9); // + 1 da semente = 10
     await decidirCnpjComoAdmin(request, CONTAS.prestador.nome, 'aprovada');
 
     await page.goto(`/${PERFIL_SEED.slug}`);
@@ -62,7 +63,7 @@ test.describe('selos calculados no perfil público', () => {
     await expect(page.getByText(TEXTO_EXPERIENCIA)).toBeVisible();
   });
 
-  test('10 serviços com nota 2 não contam (nota efetiva abaixo de 3)', async ({ page, request }) => {
+  test('serviços com nota 2 não contam (nota efetiva abaixo de 3)', async ({ page, request }) => {
     await semearExperiencia(PERFIL_SEED.id, 10, 2);
     await decidirCnpjComoAdmin(request, CONTAS.prestador.nome, 'aprovada');
 
@@ -72,7 +73,7 @@ test.describe('selos calculados no perfil público', () => {
   });
 
   test('experiência não depende do CNPJ: aparece mesmo sem selo de CNPJ, e o nível continua vazio', async ({ page }) => {
-    await semearExperiencia(PERFIL_SEED.id, 10);
+    await semearExperiencia(PERFIL_SEED.id, 9);
 
     await page.goto(`/${PERFIL_SEED.slug}`);
     await expect(page.getByText(TEXTO_EXPERIENCIA)).toBeVisible({ timeout: 20_000 });
@@ -95,7 +96,7 @@ test.describe('barra de evolução do prestador', () => {
   }
 
   test('mostra o andamento da experiência (7 de 10) e o que depende do CNPJ', async ({ page }) => {
-    await semearExperiencia(PERFIL_SEED.id, 7);
+    await semearExperiencia(PERFIL_SEED.id, 6); // + 1 da semente = 7
     await abrirDados(page);
     await expect(page.getByTestId('conquista-experiencia')).toContainText('7 de 10 clientes diferentes avaliaram seus serviços', { timeout: 20_000 });
     await expect(page.getByTestId('conquista-experiencia')).toContainText('Em andamento');
@@ -103,7 +104,7 @@ test.describe('barra de evolução do prestador', () => {
   });
 
   test('com 10 clientes, a experiência aparece como conquistada', async ({ page }) => {
-    await semearExperiencia(PERFIL_SEED.id, 10);
+    await semearExperiencia(PERFIL_SEED.id, 9);
     await abrirDados(page);
     await expect(page.getByTestId('conquista-experiencia')).toContainText('Conquistado', { timeout: 20_000 });
     await expect(page.getByTestId('evolucao-texto')).toHaveText('1 de 4 selos conquistados');
