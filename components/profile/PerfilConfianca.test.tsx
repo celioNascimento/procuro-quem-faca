@@ -52,3 +52,30 @@ describe('PerfilConfianca — selos calculados pelo sistema', () => {
     expect(screen.queryByText(/Atividade do CNPJ/)).toBeNull()
   })
 })
+
+describe('PerfilConfianca — transparência das não indicações', () => {
+  it('mostra o placar completo ao lado das indicações', () => {
+    render(<PerfilConfianca prestador={prestador} totalIndicacoes={9} totalNaoIndicacoes={1} totalConcluidos={0} />)
+    expect(screen.getByTestId('placar-nao-indicam').textContent).toContain('1 cliente não indica este profissional')
+    expect(screen.queryByTestId('aviso-nao-indicacoes')).toBeNull()
+  })
+
+  it('avisa, de forma neutra, quando 30% ou mais não indicam (mínimo 3 avaliações)', () => {
+    render(<PerfilConfianca prestador={prestador} totalIndicacoes={4} totalNaoIndicacoes={3} totalConcluidos={0} />)
+    expect(screen.getByTestId('aviso-nao-indicacoes').textContent).toBe('Neste perfil, 3 de 7 clientes não indicam. Leia as avaliações antes de contratar.')
+  })
+
+  it('aparece mesmo sem nenhuma indicação, e some quando não há não indicações', () => {
+    const { unmount } = render(<PerfilConfianca prestador={prestador} totalIndicacoes={0} totalNaoIndicacoes={3} totalConcluidos={0} />)
+    expect(screen.getByTestId('placar-nao-indicam').textContent).toContain('3 clientes não indicam')
+    unmount()
+    render(<PerfilConfianca prestador={prestador} totalIndicacoes={5} totalConcluidos={0} />)
+    expect(screen.queryByTestId('placar-nao-indicam')).toBeNull()
+  })
+
+  it('os selos continuam aparecendo junto do aviso', () => {
+    render(<PerfilConfianca prestador={prestador} totalIndicacoes={1} totalNaoIndicacoes={3} totalConcluidos={0} selo={{ consultadoEm: '2026-11-17T15:00:00Z' }} nivel="bronze" />)
+    expect(screen.getByText('Nível Bronze · CNPJ ativo, consultado em 17/11')).toBeTruthy()
+    expect(screen.getByTestId('aviso-nao-indicacoes')).toBeTruthy()
+  })
+})

@@ -33,10 +33,11 @@ interface PerfilCarregadoProps {
     ? D extends { avaliacoes: infer A } ? A : never
     : never
   totalIndicacoes: number
+  totalNaoIndicacoes?: number
   urlRetorno: string
 }
 
-export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicacoes, urlRetorno }: PerfilCarregadoProps) {
+export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicacoes, totalNaoIndicacoes = 0, urlRetorno }: PerfilCarregadoProps) {
   const { selo, nivel, complementares } = useSeloDoPerfil(prestador.id)
   const { status: statusCompartilhamento, compartilhar } = useCompartilharPerfil({
     prestador,
@@ -124,6 +125,7 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
                 <PerfilConfianca
                   prestador={prestador}
                   totalIndicacoes={totalIndicacoes}
+                  totalNaoIndicacoes={totalNaoIndicacoes}
                   totalConcluidos={projetos.filter(p => p.status === 'finalizado').length}
                   selo={selo}
                   nivel={nivel}
@@ -167,6 +169,7 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
             <PerfilTabs
               projetos={projetos}
               avaliacoes={avaliacoes}
+              totais={{ indicam: totalIndicacoes, naoIndicam: totalNaoIndicacoes }}
               portfolioObrigatorio={prestador.portfolio_obrigatorio}
               contato={{ nome: prestador.nome || '', whatsapp: prestador.whatsapp || '', onClique: registrarCliqueWhatsapp }}
             />

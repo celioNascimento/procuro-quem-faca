@@ -144,3 +144,11 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Central de ajuda ganhou 3 artigos de selos (2 para prestador, 1 para cliente no perfil público). Ver `02-arquitetura.md`, seção Central de ajuda.
 - A aba CNPJ do painel mostra, antes do campo, o bloco "Por que informar o CNPJ?" (só para quem ainda não informou) com link para o artigo. Motivos centralizados em `lib/selos/motivosCnpj.ts`.
 - Testes: `lib/help/help-content.test.ts` (artigos, contextos, busca, e que o texto não promete ranking nem expõe o CNPJ) e `AbaCnpj.test.tsx`.
+
+## Atualização (18/11) — Transparência das não indicações
+
+- Pedido do Célio: o cliente precisa ser avisado quando o profissional tem muitas "não indico" em relação às indicações.
+- Regras (decididas com o Célio): o perfil mostra sempre o placar completo (indicam x não indicam, totais reais e não só as 10 últimas avaliações); aviso neutro quando há 3 ou mais avaliações e 30% ou mais são "não indico": "Neste perfil, X de Y clientes não indicam. Leia as avaliações antes de contratar."
+- Os selos continuam aparecendo junto do placar (selo confirma só o que foi conferido). Nada muda na ordem da busca.
+- Código: `lib/avaliacoes/transparencia.ts` (regra pura + testes), `usePerfilPrestador` (conta `indica = false`), `PerfilConfianca` (placar e aviso), `PerfilAvaliacoes`/`PerfilTabs` (cabeçalho com totais reais).
+- Fora desta entrega (não escolhido): placar no card da busca e lembrete antes do WhatsApp.

@@ -72,5 +72,7 @@ export interface PerfilData {
   avaliacoes: AvaliacaoPerfil[] // <- Adicionado aqui
   /** Total de indicações de clientes (avaliações visíveis com indica = true), sem o limite da lista. */
   totalIndicacoes: number
+  /** Total de não indicações (avaliações visíveis com indica = false), sem o limite da lista. */
+  totalNaoIndicacoes: number
   urlRetorno: string
 }

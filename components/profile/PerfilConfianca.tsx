@@ -3,7 +3,7 @@
 // Bloco de confiança no topo do perfil. A prova social é a quantidade de INDICAÇÕES de
 // clientes (não nota média). Só mostra o que existe: sem indicação, sem serviço concluído
 // ou sem garantia, o item simplesmente não aparece (nunca "0").
-import { ThumbsUp, CheckCircle2, ShieldCheck, MapPin, BadgeCheck, Award, CalendarClock, Briefcase } from 'lucide-react'
+import { ThumbsUp, ThumbsDown, AlertTriangle, CheckCircle2, ShieldCheck, MapPin, BadgeCheck, Award, CalendarClock, Briefcase } from 'lucide-react'
 import type { PrestadorPerfil } from '@/types/perfil'
 import {
   rotuloNivel,
@@ -14,10 +14,13 @@ import {
   type SelosComplementares,
 } from '@/lib/selos/publico'
 import { textoTempoCnpj } from '@/lib/selos/tempoCnpj'
+import { avisoNaoIndicacoes } from '@/lib/avaliacoes/transparencia'
 
 interface Props {
   prestador: PrestadorPerfil
   totalIndicacoes: number
+  /** Não indicações; mostradas sempre ao lado das indicações. */
+  totalNaoIndicacoes?: number
   totalConcluidos: number
   /** Selo de CNPJ vigente e nível calculado pelo banco; ausentes = não aparece nada. */
   selo?: SeloCnpjPublico | null
@@ -30,7 +33,7 @@ function plural(n: number, singular: string, pluralForm: string) {
   return n === 1 ? singular : pluralForm
 }
 
-export default function PerfilConfianca({ prestador, totalIndicacoes, totalConcluidos, selo = null, nivel = null, complementares = null }: Props) {
+export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIndicacoes = 0, totalConcluidos, selo = null, nivel = null, complementares = null }: Props) {
   const garantiaDias = prestador.garantia_dias ?? 0
   const cidades = (prestador.cidades_atendidas ?? []).filter(c => c?.trim())
   const atende = cidades.length > 0
@@ -38,6 +41,8 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalConcl
     : prestador.cidades?.nome ?? ''
 
   const temDestaque = totalIndicacoes > 0
+  const temNaoIndicacoes = totalNaoIndicacoes > 0
+  const aviso = avisoNaoIndicacoes(totalIndicacoes, totalNaoIndicacoes)
   const nomeNivel = rotuloNivel(nivel)
   const itens = [
     selo && {
@@ -77,7 +82,7 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalConcl
     },
   ].filter(Boolean) as { key: string; icon: React.ReactNode; texto: string }[]
 
-  if (!temDestaque && itens.length === 0) return null
+  if (!temDestaque && !temNaoIndicacoes && itens.length === 0) return null
 
   return (
     <section
@@ -103,8 +108,29 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalConcl
         </div>
       )}
 
+      {temNaoIndicacoes && (
+        <p
+          data-testid="placar-nao-indicam"
+          className={`flex items-center gap-2 text-[13px] font-semibold text-slate-600 lg:text-sm ${temDestaque ? 'mt-3' : ''}`}
+        >
+          <ThumbsDown size={14} className="shrink-0 text-slate-400" aria-hidden="true" />
+          {totalNaoIndicacoes} {plural(totalNaoIndicacoes, 'cliente não indica', 'clientes não indicam')} este profissional
+        </p>
+      )}
+
+      {aviso && (
+        <p
+          role="note"
+          data-testid="aviso-nao-indicacoes"
+          className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-[13px] font-semibold leading-snug text-amber-900 lg:text-sm"
+        >
+          <AlertTriangle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+          {aviso}
+        </p>
+      )}
+
       {itens.length > 0 && (
-        <ul className={`flex flex-col gap-2.5 ${temDestaque ? 'mt-4 border-t border-slate-50 pt-4' : ''}`}>
+        <ul className={`flex flex-col gap-2.5 ${temDestaque || temNaoIndicacoes ? 'mt-4 border-t border-slate-50 pt-4' : ''}`}>
           {itens.map(item => (
             <li key={item.key} className="flex items-start gap-2.5 text-[13px] font-semibold leading-snug text-slate-600 lg:text-sm">
               <span className="mt-0.5 shrink-0">{item.icon}</span>
