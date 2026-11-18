@@ -20,9 +20,8 @@ afterEach(() => { cleanup(); busca = ''; status = { cadastroCompleto: true, vali
 
 describe('Painel do prestador — central de ajuda', () => {
   it.each([
-    ['Meus Trabalhos', 'dashboard-prestador'],
-    ['Desempenho', 'dashboard-prestador'],
-    ['Dados Profissionais', 'dashboard-prestador'],
+    ['Meus Trabalhos', 'painel-trabalhos'],
+    ['Desempenho', 'painel-desempenho'],
     ['Divulgação', 'divulgacao'],
   ])('na aba %s aparece um único bloco de ajuda (%s)', (aba, contexto) => {
     render(<PerfilPage />)
@@ -30,6 +29,12 @@ describe('Painel do prestador — central de ajuda', () => {
     const blocos = screen.getAllByTestId('ajuda')
     expect(blocos).toHaveLength(1)
     expect(blocos[0].textContent).toBe(contexto)
+  })
+
+  it('em Dados Profissionais a página não mostra bloco: a própria aba mostra, conforme Meu perfil ou CNPJ', () => {
+    render(<PerfilPage />)
+    fireEvent.click(screen.getByRole('button', { name: /Dados Profissionais/ }))
+    expect(screen.queryAllByTestId('ajuda')).toHaveLength(0)
   })
 })
 

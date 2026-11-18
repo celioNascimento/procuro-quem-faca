@@ -205,3 +205,9 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Os selos continuam sem mudar a ordem da busca.
 
 - Tag de não indicações (decidido com o Célio): tag âmbar suave "3 de 10 não indicam" no card da busca e no perfil público, pela MESMA regra do aviso (3 ou mais avaliações e 30% ou mais não indicam); fora dela o card não mostra nada de indicação. Regra em `lib/avaliacoes/transparencia.ts` (`textoTagNaoIndicam`, com teste de que tag e aviso sempre concordam). Banco: migration `20261118180000_placar_indicacoes_dos_prestadores.sql` (contagens em lote; só avaliações visíveis, como o perfil). Hook `usePlacarIndicacoes`.
+
+## Atualização (18/11, noite) — Ajuda só onde é relevante (painel do prestador)
+
+- Antes: um bloco único de ajuda (contexto `dashboard-prestador`) aparecia em quase todas as abas, com 11 atalhos misturados (divulgação aparecia até em CNPJ).
+- Agora (`lib/help/ajuda-do-painel.ts`, com teste): Meus Trabalhos = portfólio + garantia; Desempenho = avaliações + garantia; Divulgação = os 4 artigos de divulgação; Dados Profissionais → Meu perfil = editar perfil + ativação/bloqueio; Dados Profissionais → CNPJ = só selos e CNPJ. A ajuda de Dados Profissionais é mostrada pela própria aba (`DadosProfissionaisTabs`), porque muda entre Meu perfil e CNPJ. Teste garante: divulgação só em Divulgação, selos só em CNPJ, no máximo 4 atalhos por bloco.
+- Os contextos antigos (`dashboard-prestador`, `dados-profissionais`) continuam nos artigos, para links e o chat de ajuda existentes. Sem mudança de banco.

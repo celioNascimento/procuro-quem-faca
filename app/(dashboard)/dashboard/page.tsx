@@ -14,6 +14,7 @@ import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, A
 import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 import { ContextualHelp } from '@/components/help/HelpCenter'
+import { ajudaDaAba } from '@/lib/help/ajuda-do-painel'
 import { TituloArea } from '@/components/shared/TituloArea'
 
 // Selo "Novo" da aba Desempenho: some assim que o prestador abre a aba pela primeira vez.
@@ -219,12 +220,13 @@ function PerfilPageContent() {
         )}
       </div>
 
-      <div className="pt-6 sm:pt-8">
-        {/* Um único bloco de ajuda por tela: na aba Divulgação ele traz os artigos de divulgação. */}
-        {abaAtiva === 'divulgacao'
-          ? <ContextualHelp context="divulgacao" audience="prestador" title="Dúvidas sobre divulgação?" />
-          : <ContextualHelp context="dashboard-prestador" audience="prestador" title="Encontre respostas para cuidar do seu perfil" />}
-      </div>
+      {/* Um único bloco de ajuda por tela, só com o que é relevante na aba aberta.
+          Em Dados Profissionais quem mostra é a própria aba, porque a ajuda muda entre Meu perfil e CNPJ. */}
+      {abaAtiva !== 'perfil' && (
+        <div className="pt-6 sm:pt-8">
+          <ContextualHelp audience="prestador" {...ajudaDaAba(abaAtiva as 'portfolio' | 'desempenho' | 'divulgacao')} />
+        </div>
+      )}
     </div>
   )
 }

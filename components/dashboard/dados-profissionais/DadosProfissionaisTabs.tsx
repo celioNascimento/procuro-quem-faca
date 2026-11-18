@@ -11,6 +11,8 @@ import { AbaCnpj } from './AbaCnpj'
 import { useSeloCnpj } from '@/hooks/useSeloCnpj'
 import { useExtrasEvolucao } from '@/hooks/useExtrasEvolucao'
 import { montarConquistas } from '@/lib/selos/evolucao'
+import { ContextualHelp } from '@/components/help/HelpCenter'
+import { ajudaDaAba } from '@/lib/help/ajuda-do-painel'
 
 export type SubAbaDados = 'perfil' | 'cnpj'
 
@@ -76,6 +78,9 @@ export default function DadosProfissionaisTabs({ prestadorId, subAbaInicial = 'p
       <div role="tabpanel" id={`dados-painel-${subAba}`} aria-labelledby={`dados-tab-${subAba}`}>
         {subAba === 'perfil' ? <EditarPerfilTab /> : <AbaCnpj selo={selo} temPerfil={prestadorId !== null} />}
       </div>
+
+      {/* A ajuda acompanha a sub-aba: em CNPJ só fala de CNPJ e selos. */}
+      <ContextualHelp audience="prestador" {...ajudaDaAba('perfil', subAba)} />
     </div>
   )
 }
