@@ -67,7 +67,8 @@ test.describe('selos calculados no perfil público', () => {
     await decidirCnpjComoAdmin(request, CONTAS.prestador.nome, 'aprovada');
 
     await page.goto(`/${PERFIL_SEED.slug}`);
-    await expect(page.getByText(/Nível Prata · CNPJ ativo/)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId('nivel-perfil')).toHaveText('Nível Prata', { timeout: 20_000 });
+    await expect(page.getByTestId('selo-cnpj-texto')).toContainText('CNPJ ativo, consultado em');
     await expect(page.getByText(TEXTO_EXPERIENCIA)).toBeVisible();
   });
 

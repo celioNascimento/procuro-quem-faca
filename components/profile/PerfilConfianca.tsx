@@ -54,7 +54,7 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
           <span className={`mr-1.5 inline-block rounded-full border px-2 py-px text-xs font-black ${apresentarNivel(nivel).classes}`} data-testid="nivel-perfil">
             Nível {nomeNivel}
           </span>
-          {textoSeloCnpj(selo)}
+          <span data-testid="selo-cnpj-texto">{textoSeloCnpj(selo)}</span>
         </>
       ) : textoSeloCnpj(selo),
     },

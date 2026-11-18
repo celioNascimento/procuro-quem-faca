@@ -40,7 +40,8 @@ test.describe('selo de CNPJ para o cliente', () => {
     await decidirCnpjComoAdmin(request, CONTAS.prestador.nome, 'aprovada');
 
     await page.goto(`/${PERFIL_SEED.slug}`);
-    await expect(page.getByText(/Nível Bronze · CNPJ ativo, consultado em \d{2}\/\d{2}/)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId('nivel-perfil')).toHaveText('Nível Bronze', { timeout: 20_000 });
+    await expect(page.getByTestId('selo-cnpj-texto')).toHaveText(/CNPJ ativo, consultado em \d{2}\/\d{2}/);
     // O número do CNPJ e a razão social nunca aparecem para o cliente.
     await expect(page.getByText(/EMPRESA FICTICIA/)).toHaveCount(0);
     await expect(page.getByText(/TESTE0000001/)).toHaveCount(0);
