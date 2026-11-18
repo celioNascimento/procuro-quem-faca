@@ -3,7 +3,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { buscarNivelDoPrestador, buscarSelosPublicos } from '@/lib/services/selosPublicos.service'
+import { buscarNivelDoPrestador, buscarNiveisDosPrestadores, buscarSelosPublicos } from '@/lib/services/selosPublicos.service'
 import {
   selosCnpjPorPrestador,
   selosComplementaresPorPrestador,
@@ -27,9 +27,10 @@ export function useSelosPublicos(ids: number[]): Map<number, SeloCnpjPublico> {
     const novos = lista.filter((id) => Number.isFinite(id) && !consultados.current.has(id))
     if (novos.length === 0) return
     novos.forEach((id) => consultados.current.add(id))
-    buscarSelosPublicos(novos)
-      .then((linhas) => {
+    Promise.all([buscarSelosPublicos(novos), buscarNiveisDosPrestadores(novos).catch(() => new Map<number, string>())])
+      .then(([linhas, niveis]) => {
         const achados = selosCnpjPorPrestador(linhas)
+        achados.forEach((selo, id) => achados.set(id, { ...selo, nivel: niveis.get(id) ?? null }))
         if (montado.current && achados.size > 0) setSelos((antes) => new Map([...antes, ...achados]))
       })
       .catch(() => {

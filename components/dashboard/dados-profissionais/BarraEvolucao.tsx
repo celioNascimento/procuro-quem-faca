@@ -31,7 +31,9 @@ export function BarraEvolucao({ conquistas, nivel }: { conquistas: Conquista[]; 
   const n = apresentarNivel(nivel)
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="evolucao-titulo">
+    <section className={`rounded-3xl bg-white p-5 shadow-sm ${n.chave ? `border-2 ${n.borda}` : 'border border-slate-200'}`}
+      aria-labelledby="evolucao-titulo"
+      data-testid="caixa-selos">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p id="evolucao-titulo" className="text-xs font-bold uppercase tracking-widest text-blue-600">Seus selos de confiança</p>

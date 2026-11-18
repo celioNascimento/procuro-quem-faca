@@ -190,7 +190,7 @@ export function ResultadosPaginados({ prestadores, quantidadeInicial, session, c
 
           return (
             <Fragment key={p.id}>
-              <PrestadorCard prestador={p} session={session} seloCnpj={selosCnpj.has(Number(p.id))} />
+              <PrestadorCard prestador={p} session={session} seloCnpj={selosCnpj.has(Number(p.id))} nivel={selosCnpj.get(Number(p.id))?.nivel ?? null} />
 
               {comAnuncio && (
                 <div className="lg:col-span-2">

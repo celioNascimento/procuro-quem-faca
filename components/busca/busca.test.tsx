@@ -24,14 +24,16 @@ vi.mock('@/components/ads/AdCard', () => ({
   AdCard: ({ page }: { page: string }) => <div data-testid="anuncio">{page}</div>,
 }))
 vi.mock('@/components/cards/PrestadorCard', () => ({
-  default: ({ prestador, seloCnpj }: { prestador: Prestador; seloCnpj?: boolean }) => (
-    <article data-testid="card">{prestador.nome}{seloCnpj ? ' [selo]' : ''}</article>
+  default: ({ prestador, seloCnpj, nivel }: { prestador: Prestador; seloCnpj?: boolean; nivel?: string | null }) => (
+    <article data-testid="card">{prestador.nome}{seloCnpj ? ' [selo]' : ''}{nivel ? ` [${nivel}]` : ''}</article>
   ),
 }))
 const buscarSelosPublicos = vi.fn().mockResolvedValue([])
+const buscarNiveisDosPrestadores = vi.fn().mockResolvedValue(new Map())
 vi.mock('@/lib/services/selosPublicos.service', () => ({
   buscarSelosPublicos: (ids: number[]) => buscarSelosPublicos(ids),
   buscarNivelDoPrestador: vi.fn().mockResolvedValue(null),
+  buscarNiveisDosPrestadores: (ids: number[]) => buscarNiveisDosPrestadores(ids),
 }))
 vi.mock('@/lib/services/anunciosPublicos.service', () => ({
   listarAnunciosAtivosPorPraca: vi.fn().mockResolvedValue([]),
@@ -203,8 +205,10 @@ describe('ResultadosPaginados — selos de CNPJ', () => {
     buscarSelosPublicos.mockResolvedValue([
       { prestador_id: 2, tipo: 'cnpj', verificado_em: null, valido_ate: null, consultado_em: '2026-11-17T15:00:00Z', data_abertura: null },
     ])
+    buscarNiveisDosPrestadores.mockReset()
+    buscarNiveisDosPrestadores.mockResolvedValue(new Map([[2, 'prata']]))
     render(<ResultadosPaginados prestadores={lista(25)} quantidadeInicial={10} session={null} contextoAnuncio="" />)
-    await vi.waitFor(() => expect(screen.getByText('Prof 2 [selo]')).toBeTruthy())
+    await vi.waitFor(() => expect(screen.getByText('Prof 2 [selo] [prata]')).toBeTruthy())
     expect(buscarSelosPublicos).toHaveBeenCalledTimes(1)
     expect(buscarSelosPublicos.mock.calls[0][0]).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     expect(screen.getByText('Prof 1')).toBeTruthy() // sem selo: sem marca
@@ -213,6 +217,7 @@ describe('ResultadosPaginados — selos de CNPJ', () => {
   it('se a consulta de selos falhar, a lista aparece normalmente', async () => {
     buscarSelosPublicos.mockReset()
     buscarSelosPublicos.mockRejectedValue(new Error('rede'))
+    buscarNiveisDosPrestadores.mockResolvedValue(new Map())
     render(<ResultadosPaginados prestadores={lista(3)} quantidadeInicial={10} session={null} contextoAnuncio="" />)
     await vi.waitFor(() => expect(buscarSelosPublicos).toHaveBeenCalled())
     expect(screen.getAllByTestId('card')).toHaveLength(3)

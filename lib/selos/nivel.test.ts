@@ -19,4 +19,10 @@ describe('apresentarNivel', () => {
     expect(apresentarNivel('xyz').chave).toBeNull()
     expect(apresentarNivel(undefined).proximo).toContain('CNPJ')
   })
+  it('Bronze e Prata têm borda de cores diferentes; sem nível não há borda colorida', () => {
+    expect(apresentarNivel('bronze').borda).toContain('amber')
+    expect(apresentarNivel('prata').borda).toContain('slate')
+    expect(apresentarNivel('prata').borda).not.toBe(apresentarNivel('bronze').borda)
+    expect(apresentarNivel(null).borda).toBe('')
+  })
 })

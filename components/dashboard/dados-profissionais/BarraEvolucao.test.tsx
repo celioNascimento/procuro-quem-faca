@@ -63,4 +63,12 @@ describe('BarraEvolucao: nível atual', () => {
     expect(screen.getByTestId('nivel-nome').textContent).toBe('Sem nível ainda')
     expect(screen.getByTestId('nivel-proximo').textContent).toContain('CNPJ')
   })
+  it('a caixa toma a cor do nível; sem nível fica neutra', () => {
+    const { rerender } = render(<BarraEvolucao conquistas={montarConquistas('aprovado')} nivel="prata" />)
+    expect(screen.getByTestId('caixa-selos').className).toContain('border-slate-400')
+    rerender(<BarraEvolucao conquistas={montarConquistas('aprovado')} nivel="bronze" />)
+    expect(screen.getByTestId('caixa-selos').className).toContain('border-amber-500')
+    rerender(<BarraEvolucao conquistas={montarConquistas('sem')} nivel={null} />)
+    expect(screen.getByTestId('caixa-selos').className).toContain('border-slate-200')
+  })
 })

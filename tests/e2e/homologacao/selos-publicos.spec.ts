@@ -48,6 +48,7 @@ test.describe('selo de CNPJ para o cliente', () => {
 
     await buscarPedreiro(page);
     await expect(page.getByTestId('selo-cnpj-card')).toHaveText('CNPJ ativo', { timeout: 20_000 });
+    await expect(page.getByTestId('nivel-card')).toHaveText('Bronze');
   });
 
   test('selo revogado some do perfil e do card', async ({ page, request }) => {

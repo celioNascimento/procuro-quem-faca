@@ -27,6 +27,16 @@ export async function buscarNivelDoPrestador(id: number): Promise<string | null>
   return typeof data === 'string' ? data : null
 }
 
+/** Nível de vários prestadores de uma vez (cards da busca). Só vêm os que têm nível. */
+export async function buscarNiveisDosPrestadores(ids: number[]): Promise<Map<number, string>> {
+  const mapa = new Map<number, string>()
+  if (ids.length === 0) return mapa
+  const { data, error } = await publico().rpc('niveis_dos_prestadores', { p_prestador_ids: ids })
+  if (error) throw error
+  for (const l of (data as { prestador_id: number; nivel: string }[] | null) ?? []) mapa.set(Number(l.prestador_id), l.nivel)
+  return mapa
+}
+
 export interface ProgressoExperiencia {
   servicos: number
   clientes: number

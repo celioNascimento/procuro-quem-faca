@@ -35,6 +35,7 @@ describe('PerfilConfianca — selos calculados pelo sistema', () => {
         complementares={{ experiencia: true, tempoCnpj: 3, atividadeCompativel: true }}
       />,
     )
+    expect(screen.getByTestId('caixa-confianca').className).toContain('border-slate-400')
     expect(screen.getByTestId('nivel-perfil').textContent).toBe('Nível Prata')
     expect(screen.getByText('CNPJ ativo, consultado em 17/11')).toBeTruthy()
     expect(screen.getByText('Experiência no PQF: 10 serviços avaliados por 10 clientes diferentes')).toBeTruthy()

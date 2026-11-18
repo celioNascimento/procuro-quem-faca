@@ -137,3 +137,23 @@ describe('PrestadorCard — selo de CNPJ', () => {
     expect(screen.getByTestId('selo-cnpj-card').textContent).toBe('CNPJ ativo')
   })
 })
+
+describe('PrestadorCard: nível', () => {
+  it('com nível Prata mostra o selinho e a foto ganha borda da cor do nível', () => {
+    const { container } = render(<PrestadorCard prestador={prestador()} session={null} seloCnpj nivel="prata" />)
+    expect(screen.getByTestId('nivel-card').textContent).toBe('Prata')
+    expect(container.innerHTML).toContain('border-slate-400!')
+  })
+  it('com nível Bronze usa a cor de cobre', () => {
+    const { container } = render(<PrestadorCard prestador={prestador()} session={null} seloCnpj nivel="bronze" />)
+    expect(screen.getByTestId('nivel-card').textContent).toBe('Bronze')
+    expect(container.innerHTML).toContain('border-amber-500!')
+  })
+  it('sem nível: sem selinho e sem borda colorida (fica como sempre foi)', () => {
+    const { container } = render(<PrestadorCard prestador={prestador()} session={null} />)
+    expect(screen.queryByTestId('nivel-card')).toBeNull()
+    expect(container.innerHTML).not.toContain('border-amber-500')
+    expect(container.innerHTML).not.toContain('border-slate-400')
+  })
+})
+

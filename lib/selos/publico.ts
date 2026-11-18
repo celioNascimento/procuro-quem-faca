@@ -17,6 +17,8 @@ export interface LinhaSeloPublico {
 
 export interface SeloCnpjPublico {
   consultadoEm: string | null
+  /** 'bronze', 'prata'... Só preenchido nos cards da busca. */
+  nivel?: string | null
 }
 
 export const ROTULO_SELO_CARD = 'CNPJ ativo'

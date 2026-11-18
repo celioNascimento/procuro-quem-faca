@@ -8,6 +8,7 @@ import type { Prestador } from '@/types/prestador'
 import { corDasIniciais, getIniciais, getLocalizacao, getPerfilHref } from '@/lib/prestadorUtils'
 import { visualDaArea } from '@/lib/areaVisual'
 import { ROTULO_SELO_CARD } from '@/lib/selos/publico'
+import { apresentarNivel } from '@/lib/selos/nivel'
 
 type Props = {
   prestador: Prestador
@@ -15,6 +16,8 @@ type Props = {
   registrarLog?: (acao: string, detalhes?: Record<string, unknown>) => void
   /** true quando o prestador tem o selo de CNPJ ativo (aprovado e vigente). */
   seloCnpj?: boolean
+  /** 'bronze', 'prata'... A foto ganha borda da cor do nível. */
+  nivel?: string | null
 }
 
 // Largura estimada do badge "+N" (px), reservada de antemão para não
@@ -23,7 +26,9 @@ const LARGURA_BADGE_EXTRA = 44
 // Espaço entre badges (gap-1.5 = 6px)
 const GAP_BADGES = 6
 
-export default function PrestadorCard({ prestador, session, registrarLog, seloCnpj = false }: Props) {
+export default function PrestadorCard({ prestador, session, registrarLog, seloCnpj = false, nivel = null }: Props) {
+  const apresentacaoNivel = apresentarNivel(nivel)
+  const temNivel = apresentacaoNivel.chave !== null
   const [imgError, setImgError] = useState(false)
 
   const habilidadesTotais = prestador?.habilidades || []
@@ -90,7 +95,7 @@ export default function PrestadorCard({ prestador, session, registrarLog, seloCn
       <div className="flex flex-col gap-3 px-4 py-4 md:px-5">
         {/* Identidade: foto, nome, categoria e onde atende — tudo junto, sem blocos vazios */}
         <div className="flex min-w-0 items-center gap-4">
-          <div className={`flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border md:size-20 ${temFoto ? 'border-slate-100 bg-slate-50' : visualArea ? visualArea.cores : corDasIniciais(prestador.nome || '')}`}>
+          <div className={`flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl md:size-20 ${temNivel ? `border-2 ${apresentacaoNivel.bordaForte}` : 'border'} ${temFoto ? `${temNivel ? '' : 'border-slate-100 '}bg-slate-50` : visualArea ? visualArea.cores : corDasIniciais(prestador.nome || '')}`}>
             {temFoto ? (
               <img
                 src={prestador.foto_perfil ?? undefined}
@@ -122,6 +127,14 @@ export default function PrestadorCard({ prestador, session, registrarLog, seloCn
               <span className="text-xs font-bold uppercase leading-tight tracking-wide text-blue-600">
                 {prestador.categoria}
               </span>
+              {temNivel && (
+                <span
+                  data-testid="nivel-card"
+                  className={`inline-flex items-center rounded-full border px-2 py-px text-xs font-black ${apresentacaoNivel.classes}`}
+                >
+                  {apresentacaoNivel.nome}
+                </span>
+              )}
               {seloCnpj && (
                 <span
                   data-testid="selo-cnpj-card"

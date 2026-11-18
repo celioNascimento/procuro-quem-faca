@@ -94,7 +94,8 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
 
   return (
     <section
-      className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm"
+      className={`rounded-[2rem] bg-white p-5 shadow-sm ${apresentarNivel(nivel).chave ? `border-2 ${apresentarNivel(nivel).borda}` : 'border border-slate-100'}`}
+      data-testid="caixa-confianca"
       aria-label="Confiança neste profissional"
     >
       {temDestaque && (

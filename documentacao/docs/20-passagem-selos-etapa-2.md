@@ -195,3 +195,11 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Painel do prestador (aba CNPJ, abaixo dos dados do CNPJ aprovado): seta "Atividades registradas no CNPJ (N)" que abre e fecha. Mostra código formatado (4520-0/07), descrição, "Principal" e "Combina com o seu perfil". Componente `CnaesDoCnpj`, lista montada por `lib/cnpj/cnaes.ts`.
 - Banco: coluna `prestador_cnpj.cnaes_detalhe jsonb` (códigos + descrição das secundárias, só para exibir) e função `cnaes_compativeis_do_prestador(prestador_id)` (só o dono do perfil recebe resposta). CNPJs aprovados antes desta versão só mostram as secundárias depois de informar o CNPJ de novo.
 - Teste: o baseline do E2E (`e2e_baseline.prestador_cnpj`) recebeu as colunas `cnaes_secundarios` e `cnaes_detalhe`.
+
+## Atualização (18/11, fim da tarde) — Borda da cor do nível (busca, perfil e painel)
+
+- Decidido com o Célio: a caixa de selos do painel, a caixa de confiança do perfil público e a FOTO do card da busca ganham borda da cor do nível (Bronze cobre/âmbar, Prata cinza-prata). Sem nível: borda neutra de sempre (não parece penalização). Perfil com aviso de não indicações (30%+) mantém a cor do nível, com o aviso e o placar logo abaixo.
+- Acessibilidade: o card da busca ganhou um selinho com o nome do nível ("Bronze"/"Prata") além da borda. No perfil e no painel o nome do nível já aparece em texto.
+- Cores e nomes ficam em `lib/selos/nivel.ts` (`borda`, `bordaForte`, `classes`). A foto usa `bordaForte` (Tailwind `!`) porque o ícone da área já traz uma borda própria.
+- Banco: migration `20261118170000_niveis_dos_prestadores.sql` cria `niveis_dos_prestadores(ids)` (nível de vários de uma vez) e `nivel_do_prestador(id)` passa a usá-la: a regra do nível agora existe num só lugar. O card da busca busca o nível junto com os selos, por lote de cards visíveis.
+- Os selos continuam sem mudar a ordem da busca.
