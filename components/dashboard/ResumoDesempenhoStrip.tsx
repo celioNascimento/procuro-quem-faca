@@ -12,11 +12,9 @@ import { useMinhasVisitas } from '@/hooks/useMinhasVisitas'
 
 interface ResumoDesempenhoStripProps {
   onAbrir: () => void
-  /** Dentro da própria aba Desempenho: só mostra os números, sem seta nem clique. */
-  semAtalho?: boolean
 }
 
-export function ResumoDesempenhoStrip({ onAbrir, semAtalho = false }: ResumoDesempenhoStripProps) {
+export function ResumoDesempenhoStrip({ onAbrir }: ResumoDesempenhoStripProps) {
   const visitas = useMinhasVisitas()
   const cliques = useMeusCliques()
 
@@ -55,25 +53,12 @@ export function ResumoDesempenhoStrip({ onAbrir, semAtalho = false }: ResumoDese
           </span>
         </span>
       </span>
-      {!semAtalho && (
-        <span className="flex shrink-0 items-center gap-1 text-sm font-bold text-blue-600">
+      <span className="flex shrink-0 items-center gap-1 text-sm font-bold text-blue-600">
           <span className="hidden sm:inline">Ver desempenho</span>
           <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
-      )}
     </>
   )
-
-  if (semAtalho) {
-    return (
-      <div
-        data-testid="resumo-7-dias"
-        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left"
-      >
-        {conteudo}
-      </div>
-    )
-  }
 
   return (
     <button

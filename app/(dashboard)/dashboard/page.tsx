@@ -121,7 +121,7 @@ function PerfilPageContent() {
   return (
     <div className="mx-auto w-full max-w-6xl">
       {/* ── Cabeçalho ── */}
-      <header className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-6">
+      <header className="flex items-end justify-between gap-3 border-b border-slate-200 pb-4 sm:gap-6 sm:pb-6">
         <TituloArea area="Área do profissional" titulo="Meu painel" />
         {slug && cadastroCompleto && (
           <Link
@@ -129,7 +129,7 @@ function PerfilPageContent() {
             target="_blank"
             rel="noopener noreferrer"
             data-testid="ver-perfil-publico"
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 sm:self-end"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 sm:gap-2 sm:px-4"
           >
             <ExternalLink size={16} aria-hidden="true" />
             Ver meu perfil
@@ -180,10 +180,18 @@ function PerfilPageContent() {
       </div>
 
       {/* Faixa resumo (7 dias) em todas as abas, para a tela não mudar de lugar ao trocar de aba.
-          Dentro de Desempenho ela só informa (sem atalho para a tela em que a pessoa já está). */}
+          A seta é igual em todas; dentro de Desempenho ela leva às análises (rola até o conteúdo). */}
       {!validando && cadastroCompleto && !bloqueado && (
         <div className="mt-4">
-          <ResumoDesempenhoStrip onAbrir={() => abrirAba('desempenho')} semAtalho={abaAtiva === 'desempenho'} />
+          <ResumoDesempenhoStrip
+            onAbrir={() => {
+              if (abaAtiva === 'desempenho') {
+                document.getElementById('conteudo-painel')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+              } else {
+                abrirAba('desempenho')
+              }
+            }}
+          />
         </div>
       )}
 
@@ -223,7 +231,7 @@ function PerfilPageContent() {
         </div>
       </nav>
 
-      <div className="min-h-[28rem] pt-6 sm:pt-8">
+      <div id="conteudo-painel" className="min-h-[28rem] scroll-mt-4 pt-6 sm:pt-8">
         {validando ? (
           <div className="flex min-h-64 flex-col items-center justify-center gap-4" role="status">
             <Loader2 className="size-8 animate-spin text-blue-600" aria-hidden="true" />

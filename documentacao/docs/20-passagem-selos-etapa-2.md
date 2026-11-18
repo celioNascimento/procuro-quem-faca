@@ -1,6 +1,18 @@
 # 20. Passagem de conversa: Etapa 2 (selos, CNPJ) e ambiente de teste
 
-Atualizado em 17/11/2026. Este documento deixa a próxima conversa seguir do mesmo ponto. Leia junto com `19 - PQF plano de confiança e conformidade.md` (plano e decisões) e `16-homologacao-e2e.md` (ambiente de teste).
+Atualizado em 18/11/2026 (noite). **Leia primeiro o "Resumo do estado em 18/11" logo abaixo**; as seções seguintes são o histórico (do mais antigo ao mais novo) e a de 17/11 ("Onde estamos", "O que falta") está superada por ele.
+
+## Resumo do estado em 18/11 (noite)
+
+- Branch `homologacao` (repo `celioNascimento/procuro-quem-faca`): tudo desta etapa validado no banco de teste (`qvrkmaavbrtjnwcaocax`). Último push com E2E verde: `efd7e95`. Depois dele há **ajustes locais ainda sem push**: cabeçalho do painel em uma linha no celular e seta da faixa "Últimos 7 dias" igual em todas as abas.
+- Funcionalidades prontas: selo CNPJ (35 dias) com todos os CNAEs, tempo de CNPJ, atividade compatível, experiência (Prata), nível Bronze/Prata com borda colorida (busca, perfil e painel), tag "N% não indicam", ajuda por aba, reverificação agendada (3 por minuto), admin sem editar perfis de outras pessoas. Detalhes nas seções abaixo.
+- Falta antes da produção (só com o "pode seguir" do dono): (1) testar o CNPJ 47.403.170/0001-80 com o Jorge (seed abaixo) e ver o Prata; (2) conferir as migrações ausentes na lista de produção (`cadastro_no_ar_sem_aprovacao_manual`, `dados_do_cliente` partes 1 e 2, `exemplo_de_descricao_por_categoria`, `regiao_grande_cascavel`); (3) decidir o cache de 24h dos nomes do QSA; (4) trocar o `CRON_SECRET` de produção e redeploy; (5) confirmar que a URL de produção não redireciona para `www`; (6) rodar `supabase/ops/agendar_reverificacao_cnpj.sql` em produção (nunca commitar com segredo); (7) PR `homologacao` -> `main`.
+- Ordem das migrações em produção: 20261117150000, 190000, 210000, 230000, 20261118000000, 120000, 130000, 140000, 150000, 160000 (só teste: não vai), 170000, 180000; depois o script do agendador. Ver doc 21.
+- Seed do Jorge no banco de teste (o reset do E2E apaga a cada push): `select public.e2e_semear_experiencia(2, 9, 5);` depois marcar 7 avaliações com `indica=true`, apagar `prestador_verificacoes`/`prestador_cnpj` do prestador 2 e `update prestadores set nome='Jorge Paulo de Lima' where id=2`.
+- Cuidados: as ferramentas do Supabase podem estourar o tempo esperando confirmação do dono; não repetir na mesma resposta. Push só quando o dono pedir.
+- Ideias futuras: atualizar CNAEs na reverificação; nível em mais lugares; formulário no painel para sugerir CNAE (hoje WhatsApp); e-mail ao admin da fila; remover `prestadores.verificado`; categorias sem mapeamento (Massoterapia, Calheiro, Vidraceiro Automotivo); E2E da seta de CNAEs; testes E2E instáveis.
+
+Este documento deixa a próxima conversa seguir do mesmo ponto. Leia junto com `19 - PQF plano de confiança e conformidade.md` (plano e decisões) e `16-homologacao-e2e.md` (ambiente de teste).
 
 ## Onde estamos
 
@@ -218,8 +230,8 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Regra inalterada: 3 ou mais avaliações e 30% ou mais "não indico", calculada sobre os números reais (não sobre a porcentagem arredondada). `avisoNaoIndicacoes` deixou de existir; só `textoTagNaoIndicam` em `lib/avaliacoes/transparencia.ts`.
 
 ## Ajustes de interface do painel (lote após homologação)
-- Faixa "Últimos 7 dias" aparece em **todas** as abas do painel; dentro de Desempenho ela só informa (prop `semAtalho`, sem seta/clique), para a barra de abas não "pular" ao trocar de aba.
-- Botão "Ver meu perfil" agora é compacto (branco, borda cinza, ícone) ao lado do título "Meu painel", visível em todas as abas (`data-testid="ver-perfil-publico"`). Removidos o botão grande de Meus Trabalhos e o duplicado do cabeçalho de Editar Perfil.
+- Faixa "Últimos 7 dias" aparece em **todas** as abas do painel; a faixa é idêntica em todas (mesma seta). Em Desempenho a seta rola até o conteúdo (`#conteudo-painel`); nas outras leva a Desempenho. Assim a barra de abas não "pula" ao trocar de aba.
+- Botão "Ver meu perfil" agora é compacto (branco, borda cinza, ícone) na mesma linha do título "Meu painel" (também no celular), visível em todas as abas (`data-testid="ver-perfil-publico"`). Removidos o botão grande de Meus Trabalhos e o duplicado do cabeçalho de Editar Perfil.
 - Vitrine de fotos: botão de remover é círculo branco com lixeira vermelha.
 - Divulgação: sub-aba selecionada em azul (`bg-blue-600`), igual às abas principais.
 - Perfil público, "Fotos do profissional": faixa de miniaturas centralizada (wrapper `justify-center` + faixa interna rolável, `data-testid="miniaturas-fotos"`).

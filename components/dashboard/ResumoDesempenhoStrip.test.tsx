@@ -27,14 +27,14 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('ResumoDesempenhoStrip', () => {
-  it('semAtalho (dentro de Desempenho): mostra os números sem botão nem seta', () => {
-    render(<ResumoDesempenhoStrip onAbrir={() => {}} semAtalho />)
+  it('é sempre um botão com a seta, igual em qualquer aba', () => {
+    const onAbrir = vi.fn()
+    render(<ResumoDesempenhoStrip onAbrir={onAbrir} />)
 
-    const faixa = screen.getByTestId('resumo-7-dias')
-    expect(screen.queryByRole('button')).toBeNull()
-    expect(faixa.textContent).toContain('12')
-    expect(faixa.textContent).toContain('3')
-    expect(faixa.textContent).not.toMatch(/ver desempenho/i)
+    const botao = screen.getByRole('button', { name: /ver desempenho completo/i })
+    expect(botao.querySelector('svg.lucide-chevron-right')).not.toBeNull()
+    fireEvent.click(botao)
+    expect(onAbrir).toHaveBeenCalledTimes(1)
   })
 
   it('mostra visitas e contatos dos últimos 7 dias', () => {
