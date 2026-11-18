@@ -203,3 +203,5 @@ Quem testava à mão na homologação via a tela "Antes de continuar" de novo a 
 - Cores e nomes ficam em `lib/selos/nivel.ts` (`borda`, `bordaForte`, `classes`). A foto usa `bordaForte` (Tailwind `!`) porque o ícone da área já traz uma borda própria.
 - Banco: migration `20261118170000_niveis_dos_prestadores.sql` cria `niveis_dos_prestadores(ids)` (nível de vários de uma vez) e `nivel_do_prestador(id)` passa a usá-la: a regra do nível agora existe num só lugar. O card da busca busca o nível junto com os selos, por lote de cards visíveis.
 - Os selos continuam sem mudar a ordem da busca.
+
+- Tag de não indicações (decidido com o Célio): tag âmbar suave "3 de 10 não indicam" no card da busca e no perfil público, pela MESMA regra do aviso (3 ou mais avaliações e 30% ou mais não indicam); fora dela o card não mostra nada de indicação. Regra em `lib/avaliacoes/transparencia.ts` (`textoTagNaoIndicam`, com teste de que tag e aviso sempre concordam). Banco: migration `20261118180000_placar_indicacoes_dos_prestadores.sql` (contagens em lote; só avaliações visíveis, como o perfil). Hook `usePlacarIndicacoes`.

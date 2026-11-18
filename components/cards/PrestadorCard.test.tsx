@@ -157,3 +157,16 @@ describe('PrestadorCard: nível', () => {
   })
 })
 
+describe('PrestadorCard: tag de não indicações', () => {
+  it('3 de 10 não indicam: mostra a tag âmbar com o texto', () => {
+    render(<PrestadorCard prestador={prestador()} session={null} placar={{ indicam: 7, naoIndicam: 3 }} />)
+    expect(screen.getByTestId('tag-nao-indicam').textContent).toBe('3 de 10 não indicam')
+  })
+  it('abaixo da regra ou sem avaliações: nada de tag', () => {
+    const { rerender } = render(<PrestadorCard prestador={prestador()} session={null} placar={{ indicam: 9, naoIndicam: 1 }} />)
+    expect(screen.queryByTestId('tag-nao-indicam')).toBeNull()
+    rerender(<PrestadorCard prestador={prestador()} session={null} placar={null} />)
+    expect(screen.queryByTestId('tag-nao-indicam')).toBeNull()
+  })
+})
+

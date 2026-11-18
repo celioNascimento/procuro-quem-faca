@@ -23,3 +23,11 @@ export function avisoNaoIndicacoes(indicam: number, naoIndicam: number): string 
   if (p.total < MIN_AVALIACOES_AVISO || p.naoIndicam / p.total < PERCENTUAL_AVISO) return null
   return `Neste perfil, ${p.naoIndicam} de ${p.total} clientes não indicam. Leia as avaliações antes de contratar.`
 }
+
+/** Texto curto da tag ("3 de 10 não indicam"), com a mesma regra do aviso. Fora dela, null. */
+export function textoTagNaoIndicam(indicam: number, naoIndicam: number): string | null {
+  const p = placarIndicacoes(indicam, naoIndicam)
+  if (p.total < MIN_AVALIACOES_AVISO || p.naoIndicam / p.total < PERCENTUAL_AVISO) return null
+  return `${p.naoIndicam} de ${p.total} ${p.naoIndicam === 1 ? 'não indica' : 'não indicam'}`
+}
+

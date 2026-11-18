@@ -24,8 +24,8 @@ vi.mock('@/components/ads/AdCard', () => ({
   AdCard: ({ page }: { page: string }) => <div data-testid="anuncio">{page}</div>,
 }))
 vi.mock('@/components/cards/PrestadorCard', () => ({
-  default: ({ prestador, seloCnpj, nivel }: { prestador: Prestador; seloCnpj?: boolean; nivel?: string | null }) => (
-    <article data-testid="card">{prestador.nome}{seloCnpj ? ' [selo]' : ''}{nivel ? ` [${nivel}]` : ''}</article>
+  default: ({ prestador, seloCnpj, nivel, placar }: { prestador: Prestador; seloCnpj?: boolean; nivel?: string | null; placar?: { naoIndicam: number } | null }) => (
+    <article data-testid="card">{prestador.nome}{seloCnpj ? ' [selo]' : ''}{nivel ? ` [${nivel}]` : ''}{placar ? ` [nao:${placar.naoIndicam}]` : ''}</article>
   ),
 }))
 const buscarSelosPublicos = vi.fn().mockResolvedValue([])
@@ -34,6 +34,10 @@ vi.mock('@/lib/services/selosPublicos.service', () => ({
   buscarSelosPublicos: (ids: number[]) => buscarSelosPublicos(ids),
   buscarNivelDoPrestador: vi.fn().mockResolvedValue(null),
   buscarNiveisDosPrestadores: (ids: number[]) => buscarNiveisDosPrestadores(ids),
+}))
+const buscarPlacarDosPrestadores = vi.fn().mockResolvedValue(new Map())
+vi.mock('@/lib/services/placarIndicacoes.service', () => ({
+  buscarPlacarDosPrestadores: (ids: number[]) => buscarPlacarDosPrestadores(ids),
 }))
 vi.mock('@/lib/services/anunciosPublicos.service', () => ({
   listarAnunciosAtivosPorPraca: vi.fn().mockResolvedValue([]),
@@ -207,8 +211,11 @@ describe('ResultadosPaginados — selos de CNPJ', () => {
     ])
     buscarNiveisDosPrestadores.mockReset()
     buscarNiveisDosPrestadores.mockResolvedValue(new Map([[2, 'prata']]))
+    buscarPlacarDosPrestadores.mockReset()
+    buscarPlacarDosPrestadores.mockResolvedValue(new Map([[2, { indicam: 7, naoIndicam: 3 }]]))
     render(<ResultadosPaginados prestadores={lista(25)} quantidadeInicial={10} session={null} contextoAnuncio="" />)
-    await vi.waitFor(() => expect(screen.getByText('Prof 2 [selo] [prata]')).toBeTruthy())
+    await vi.waitFor(() => expect(screen.getByText('Prof 2 [selo] [prata] [nao:3]')).toBeTruthy())
+    expect(buscarPlacarDosPrestadores.mock.calls[0][0]).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     expect(buscarSelosPublicos).toHaveBeenCalledTimes(1)
     expect(buscarSelosPublicos.mock.calls[0][0]).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     expect(screen.getByText('Prof 1')).toBeTruthy() // sem selo: sem marca

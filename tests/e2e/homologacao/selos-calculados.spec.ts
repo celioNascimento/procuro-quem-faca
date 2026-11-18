@@ -70,6 +70,8 @@ test.describe('selos calculados no perfil público', () => {
     await expect(page.getByTestId('nivel-perfil')).toHaveText('Nível Prata', { timeout: 20_000 });
     await expect(page.getByTestId('selo-cnpj-texto')).toContainText('CNPJ ativo, consultado em');
     await expect(page.getByText(TEXTO_EXPERIENCIA)).toBeVisible();
+    // As avaliações semeadas não têm "indica": contam como "não indico" e passam de 30%, então a tag aparece.
+    await expect(page.getByTestId('tag-nao-indicam')).toHaveText(/\d+ de 10 não indicam/);
   });
 
   test('serviços com nota 2 não contam (nota efetiva abaixo de 3)', async ({ page, request }) => {

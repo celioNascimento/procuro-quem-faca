@@ -15,7 +15,7 @@ import {
 } from '@/lib/selos/publico'
 import { textoTempoCnpj } from '@/lib/selos/tempoCnpj'
 import { apresentarNivel } from '@/lib/selos/nivel'
-import { avisoNaoIndicacoes } from '@/lib/avaliacoes/transparencia'
+import { avisoNaoIndicacoes, textoTagNaoIndicam } from '@/lib/avaliacoes/transparencia'
 
 interface Props {
   prestador: PrestadorPerfil
@@ -44,6 +44,7 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
   const temDestaque = totalIndicacoes > 0
   const temNaoIndicacoes = totalNaoIndicacoes > 0
   const aviso = avisoNaoIndicacoes(totalIndicacoes, totalNaoIndicacoes)
+  const tagNaoIndicam = textoTagNaoIndicam(totalIndicacoes, totalNaoIndicacoes)
   const nomeNivel = rotuloNivel(nivel)
   const itens = [
     selo && {
@@ -98,6 +99,17 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
       data-testid="caixa-confianca"
       aria-label="Confiança neste profissional"
     >
+      {tagNaoIndicam && (
+        <p className="mb-3">
+          <span
+            data-testid="tag-nao-indicam"
+            className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-px text-xs font-black text-amber-900"
+          >
+            {tagNaoIndicam}
+          </span>
+        </p>
+      )}
+
       {temDestaque && (
         <div className="flex items-center gap-3">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">

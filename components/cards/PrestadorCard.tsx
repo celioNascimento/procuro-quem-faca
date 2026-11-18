@@ -9,6 +9,7 @@ import { corDasIniciais, getIniciais, getLocalizacao, getPerfilHref } from '@/li
 import { visualDaArea } from '@/lib/areaVisual'
 import { ROTULO_SELO_CARD } from '@/lib/selos/publico'
 import { apresentarNivel } from '@/lib/selos/nivel'
+import { textoTagNaoIndicam } from '@/lib/avaliacoes/transparencia'
 
 type Props = {
   prestador: Prestador
@@ -18,6 +19,8 @@ type Props = {
   seloCnpj?: boolean
   /** 'bronze', 'prata'... A foto ganha borda da cor do nível. */
   nivel?: string | null
+  /** Placar de indicações; a tag "X de Y não indicam" só aparece pela mesma regra do aviso do perfil. */
+  placar?: { indicam: number; naoIndicam: number } | null
 }
 
 // Largura estimada do badge "+N" (px), reservada de antemão para não
@@ -26,7 +29,8 @@ const LARGURA_BADGE_EXTRA = 44
 // Espaço entre badges (gap-1.5 = 6px)
 const GAP_BADGES = 6
 
-export default function PrestadorCard({ prestador, session, registrarLog, seloCnpj = false, nivel = null }: Props) {
+export default function PrestadorCard({ prestador, session, registrarLog, seloCnpj = false, nivel = null, placar = null }: Props) {
+  const tagNaoIndicam = placar ? textoTagNaoIndicam(placar.indicam, placar.naoIndicam) : null
   const apresentacaoNivel = apresentarNivel(nivel)
   const temNivel = apresentacaoNivel.chave !== null
   const [imgError, setImgError] = useState(false)
@@ -133,6 +137,14 @@ export default function PrestadorCard({ prestador, session, registrarLog, seloCn
                   className={`inline-flex items-center rounded-full border px-2 py-px text-xs font-black ${apresentacaoNivel.classes}`}
                 >
                   {apresentacaoNivel.nome}
+                </span>
+              )}
+              {tagNaoIndicam && (
+                <span
+                  data-testid="tag-nao-indicam"
+                  className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-px text-xs font-bold text-amber-900"
+                >
+                  {tagNaoIndicam}
                 </span>
               )}
               {seloCnpj && (

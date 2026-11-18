@@ -66,6 +66,12 @@ describe('PerfilConfianca — transparência das não indicações', () => {
   it('avisa, de forma neutra, quando 30% ou mais não indicam (mínimo 3 avaliações)', () => {
     render(<PerfilConfianca prestador={prestador} totalIndicacoes={4} totalNaoIndicacoes={3} totalConcluidos={0} />)
     expect(screen.getByTestId('aviso-nao-indicacoes').textContent).toBe('Neste perfil, 3 de 7 clientes não indicam. Leia as avaliações antes de contratar.')
+    expect(screen.getByTestId('tag-nao-indicam').textContent).toBe('3 de 7 não indicam')
+  })
+
+  it('sem aviso, sem tag', () => {
+    render(<PerfilConfianca prestador={prestador} totalIndicacoes={9} totalNaoIndicacoes={1} totalConcluidos={0} />)
+    expect(screen.queryByTestId('tag-nao-indicam')).toBeNull()
   })
 
   it('aparece mesmo sem nenhuma indicação, e some quando não há não indicações', () => {
