@@ -20,10 +20,11 @@ interface Props {
   contato?: ContatoDoModal
   /** Curtir no modal do trabalho. Sem isto (ou no próprio perfil), o modal não mostra curtir. */
   curtidas?: {
-    porTrabalho: Record<string, { total: number; curtidoPorMim: boolean }>
+    porTrabalho: Record<string, { total: number; curtidoPorMim: boolean; salvoPorMim: boolean }>
     logado: boolean
     aviso: string | null
     onCurtir: (projetoId: string) => void
+    onSalvar: (projetoId: string) => void
   } | null
 }
 
@@ -120,9 +121,11 @@ export default function PerfilTabs({ projetos, avaliacoes, totais, portfolioObri
           curtir={curtidas ? {
             total: curtidas.porTrabalho[String(projetoAberto.id)]?.total ?? 0,
             curtido: curtidas.porTrabalho[String(projetoAberto.id)]?.curtidoPorMim ?? false,
+            salvo: curtidas.porTrabalho[String(projetoAberto.id)]?.salvoPorMim ?? false,
             logado: curtidas.logado,
             aviso: curtidas.aviso,
             onCurtir: () => curtidas.onCurtir(String(projetoAberto.id)),
+            onSalvar: () => curtidas.onSalvar(String(projetoAberto.id)),
           } : null}
         />
       )}

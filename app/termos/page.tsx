@@ -131,6 +131,9 @@ export default function Termos() {
                 <strong className="text-slate-700">Curtir e seguir.</strong> Para curtir um trabalho ou seguir um prestador é preciso ter conta. O prestador vê o total de curtidas e de seguidores, não quem curtiu nem quem segue. A lista de quem a pessoa segue é visível só para ela. Não é permitido usar curtidas ou seguidores de forma artificial, como contas falsas ou combinadas para inflar números; o PQF pode desfazê-los.
               </p>
               <p>
+                <strong className="text-slate-700">Salvar.</strong> Para salvar um trabalho é preciso ter conta. O que você salva fica visível só para você; o prestador não sabe quem salvou nem quantos. Cada conta pode ter até 500 trabalhos salvos. Um trabalho salvo some da sua lista se o cliente o retirar do feed ou o prestador o ocultar.
+              </p>
+              <p>
                 <strong className="text-slate-700">Moderação.</strong> O PQF pode retirar do feed trabalhos ou imagens que violem estes termos, conforme a seção 6.
               </p>
             </div>

@@ -3,9 +3,9 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useSession } from '@/hooks/useSession'
-import { alternarCurtida, deixarDeSeguirPrestador, fetchPerfilSocial, seguirPrestador } from '@/lib/services/feed.service'
+import { alternarCurtida, alternarSalvo, deixarDeSeguirPrestador, fetchPerfilSocial, seguirPrestador } from '@/lib/services/feed.service'
 import { MENSAGEM_LOGIN_PARA_AGIR, mensagemDeResultado } from '@/lib/feed/feed'
-import { aplicarCurtidaNoPerfil, aplicarSeguirNoPerfil, type PerfilSocial } from '@/lib/feed/perfilSocial'
+import { aplicarCurtidaNoPerfil, aplicarSalvoNoPerfil, aplicarSeguirNoPerfil, type PerfilSocial } from '@/lib/feed/perfilSocial'
 
 export function usePerfilSocial(prestadorId: number) {
   const session = useSession()
@@ -42,7 +42,7 @@ export function usePerfilSocial(prestadorId: number) {
     if (!social) return
     if (!logado) { setAviso(MENSAGEM_LOGIN_PARA_AGIR); return }
     setAviso(null)
-    const antes = social.curtidas[projetoId] ?? { total: 0, curtidoPorMim: false }
+    const antes = social.curtidas[projetoId] ?? { total: 0, curtidoPorMim: false, salvoPorMim: false }
     setSocial(s => (s ? aplicarCurtidaNoPerfil(s, projetoId, !antes.curtidoPorMim, antes.total + (antes.curtidoPorMim ? -1 : 1)) : s))
     try {
       const r = await alternarCurtida(projetoId)
@@ -55,5 +55,22 @@ export function usePerfilSocial(prestadorId: number) {
     }
   }, [social, logado])
 
-  return { social, logado, aviso, seguir, curtir, limparAviso: () => setAviso(null) }
+  const salvar = useCallback(async (projetoId: string) => {
+    if (!social) return
+    if (!logado) { setAviso(MENSAGEM_LOGIN_PARA_AGIR); return }
+    setAviso(null)
+    const antes = social.curtidas[projetoId]?.salvoPorMim ?? false
+    setSocial(s => (s ? aplicarSalvoNoPerfil(s, projetoId, !antes) : s))
+    try {
+      const r = await alternarSalvo(projetoId)
+      const msg = mensagemDeResultado(r.erro)
+      if (msg || r.salvo === undefined) throw new Error(msg ?? 'resposta inesperada')
+      setSocial(s => (s ? aplicarSalvoNoPerfil(s, projetoId, r.salvo as boolean) : s))
+    } catch (e) {
+      setSocial(s => (s ? aplicarSalvoNoPerfil(s, projetoId, antes) : s))
+      setAviso(e instanceof Error && e.message !== 'resposta inesperada' ? e.message : 'Não conseguimos salvar agora. Tente de novo.')
+    }
+  }, [social, logado])
+
+  return { social, logado, aviso, seguir, curtir, salvar, limparAviso: () => setAviso(null) }
 }

@@ -38,6 +38,14 @@ O feed não mostra Seguir nem Curtir no trabalho do usuário logado. No lugar do
 - **Cabeçalho sem "pulo":** no celular o ícone do feed saiu do cabeçalho; "Trabalhos concluídos" entrou no menu da conta (avatar), junto de Área do cliente e Área do profissional. No computador o link "Trabalhos" fica em todas as telas, inclusive no `/feed` (marcado como página atual). A prop `semLinkFeed` do Header virou `feedAtivo`. Visitante no celular vê só o Entrar; o caminho dele é o link da home.
 - **Imagem quebrada no feed de teste:** as fotos do trabalho de teste apontam para `example.invalid` (dado de teste, não é erro do app).
 
+## Salvar trabalho (19/11/2026)
+- **O que é:** marcador como no Instagram. Guarda o **trabalho** como referência. É **privado**: só quem salvou vê; o prestador não sabe quem salvou nem quantos. Limite de **500** por conta ("Você chegou ao limite de 500 trabalhos salvos. Remova algum para continuar."). Não salva o próprio trabalho.
+- **Onde:** ícone de marcador no card do feed; ícone no rodapé do modal do trabalho no perfil público (ao lado de Curtir, WhatsApp e Compartilhar); terceira aba **"Salvos"** em `/feed` ("Todos | Quem eu sigo | Salvos"), mais recente primeiro, com os mesmos filtros. Trabalho salvo que sair do feed (retirado pelo cliente ou ocultado pelo prestador) some da aba, mas a marca fica no banco e volta se o trabalho reaparecer. Remover dos salvos dentro da aba tira o trabalho da lista na hora.
+- **Banco** (`20261119170000_feed_salvar`, depois de `20261119160000`): tabela `portfolio_salvos (projeto_id, user_id, created_at)` com RLS (cada um lê só os seus; escrita só pela função); `alternar_salvo(projeto)` devolve `{salvo}` ou `{erro}` (`nao_autenticado`, `nao_encontrado`, `proprio_projeto`, `limite_salvos`); `feed_projetos` ganha o parâmetro `p_somente_salvos` e o campo `salvo_por_mim` (a versão de 6 parâmetros é apagada); `perfil_social` devolve `salvo_por_mim` por trabalho; `exportar_meus_dados` inclui `trabalhos_salvos`. Apagar a conta apaga os salvos (on delete cascade).
+- **Reset do E2E (teste):** a base do reset precisa conhecer a tabela nova: rode `supabase/homologacao/baseline_feed.sql` (já rodado em 19/11). Não recapture a base inteira.
+- **Termos §10 e Privacidade §12:** rascunho atualizado para o advogado (Salvar, dado guardado, privacidade, exportação e exclusão). `VERSAO_DOCUMENTOS` **não** foi alterada: sobe uma vez só depois da revisão jurídica.
+- **Fora desta etapa:** salvar prestador; coleções; comentários (não recomendados).
+
 ## Validação feita no banco de teste (com rollback)
 Sem aceite não entra; com aceite entra e sem dado pessoal; curtir/descurtir e total; anônimo recusado ao curtir e ao ler `seguidores`; prestador não curte nem segue o próprio; seguir repetido é inofensivo e o feed "só seguidos" mostra o trabalho; cliente não oculta trabalho alheio, prestador oculta e mostra; cliente retira e some; trabalho em execução não entra.
 

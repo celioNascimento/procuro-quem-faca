@@ -4,7 +4,7 @@
 // Nunca mostra nome de cliente, WhatsApp nem endereço (o banco nem devolve esses dados).
 // "Falar com o profissional" abre o perfil já com o trabalho aberto, onde está o botão de WhatsApp.
 import Link from 'next/link'
-import { Heart, MapPin, MessageCircle, Share2, UserCheck, UserPlus } from 'lucide-react'
+import { Bookmark, Heart, MapPin, MessageCircle, Share2, UserCheck, UserPlus } from 'lucide-react'
 import { enderecoDoTrabalho, textoCurtidas, type FeedItem } from '@/lib/feed/feed'
 import { enderecoDaDenuncia } from '@/lib/feed/denuncia'
 import { FotosDoTrabalho } from './FotosDoTrabalho'
@@ -14,11 +14,12 @@ interface Props {
   item: FeedItem
   onCurtir: (projetoId: string) => void
   onSeguir: (prestadorId: number) => void
+  onSalvar: (projetoId: string) => void
   onCompartilhar: (item: FeedItem) => void
   onCopiarLink: (item: FeedItem) => void
 }
 
-export function FeedCard({ item, onCurtir, onSeguir, onCompartilhar, onCopiarLink }: Props) {
+export function FeedCard({ item, onCurtir, onSeguir, onSalvar, onCompartilhar, onCopiarLink }: Props) {
   const { prestador } = item
   const local = [prestador.categoria, prestador.cidade].filter(Boolean).join(' · ')
   return (
@@ -76,6 +77,15 @@ export function FeedCard({ item, onCurtir, onSeguir, onCompartilhar, onCopiarLin
             >
               <Share2 size={18} aria-hidden="true" />
             </button>
+            {!item.meu && (
+              <button
+                type="button" onClick={() => onSalvar(item.projetoId)} aria-pressed={item.salvoPorMim} data-testid="feed-salvar"
+                aria-label={item.salvoPorMim ? 'Remover dos salvos' : `Salvar o trabalho ${item.titulo}`} title={item.salvoPorMim ? 'Remover dos salvos' : 'Salvar'}
+                className={`flex size-11 items-center justify-center rounded-xl active:scale-95 ${item.salvoPorMim ? 'text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-700'}`}
+              >
+                <Bookmark size={18} aria-hidden="true" fill={item.salvoPorMim ? 'currentColor' : 'none'} />
+              </button>
+            )}
             {!item.meu && (
               <MenuDoCard hrefDenuncia={enderecoDaDenuncia(prestador.id, item.projetoId, item.titulo)} onCopiarLink={() => onCopiarLink(item)} />
             )}

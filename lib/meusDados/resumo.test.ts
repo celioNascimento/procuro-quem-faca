@@ -41,6 +41,10 @@ describe('feed', () => {
     const resumo = resumirExportacao({ ...base, curtidas: [{}], prestadores_que_sigo: [{}, {}], consentimentos: [{ tipo: 'termos_uso', versao_documento: '2026-11', concedido: true, origem: 'login', aceito_em: '2026-11-11' }] })
     expect(resumo.map(i => [i.chave, i.quantidade])).toEqual([['curtidas', 1], ['prestadores_que_sigo', 2], ['consentimentos', 1]])
   })
+  it('mostra os trabalhos salvos depois de quem a pessoa segue', () => {
+    const resumo = resumirExportacao({ ...base, prestadores_que_sigo: [{}], trabalhos_salvos: [{}, {}, {}], consentimentos: [{ tipo: 'termos_uso', versao_documento: '2026-11', concedido: true, origem: 'login', aceito_em: '2026-11-11' }] })
+    expect(resumo.map(i => [i.chave, i.quantidade])).toEqual([['prestadores_que_sigo', 1], ['trabalhos_salvos', 3], ['consentimentos', 1]])
+  })
 })
 
 describe('apoio', () => {

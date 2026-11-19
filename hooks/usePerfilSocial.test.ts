@@ -4,12 +4,12 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 const sessao = vi.hoisted(() => ({ valor: null as unknown }))
 vi.mock('@/hooks/useSession', () => ({ useSession: () => sessao.valor }))
 vi.mock('@/lib/services/feed.service', () => ({
-  fetchPerfilSocial: vi.fn(), alternarCurtida: vi.fn(), seguirPrestador: vi.fn(), deixarDeSeguirPrestador: vi.fn(),
+  fetchPerfilSocial: vi.fn(), alternarCurtida: vi.fn(), alternarSalvo: vi.fn(), seguirPrestador: vi.fn(), deixarDeSeguirPrestador: vi.fn(),
 }))
-import { alternarCurtida, deixarDeSeguirPrestador, fetchPerfilSocial, seguirPrestador } from '@/lib/services/feed.service'
+import { alternarCurtida, alternarSalvo, deixarDeSeguirPrestador, fetchPerfilSocial, seguirPrestador } from '@/lib/services/feed.service'
 import { usePerfilSocial } from './usePerfilSocial'
 
-const social = { totalSeguidores: 3, seguindo: false, meuPerfil: false, curtidas: { a: { total: 2, curtidoPorMim: false } } }
+const social = { totalSeguidores: 3, seguindo: false, meuPerfil: false, curtidas: { a: { total: 2, curtidoPorMim: false, salvoPorMim: false } } }
 
 beforeEach(() => {
   sessao.valor = { user: { id: 'u' } }
@@ -17,6 +17,7 @@ beforeEach(() => {
   vi.mocked(seguirPrestador).mockReset()
   vi.mocked(deixarDeSeguirPrestador).mockReset()
   vi.mocked(alternarCurtida).mockReset()
+  vi.mocked(alternarSalvo).mockReset()
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 
@@ -70,17 +71,47 @@ describe('usePerfilSocial', () => {
     vi.mocked(alternarCurtida).mockResolvedValue({ curtido: true, total: 9 })
     const { result } = await abrir()
     await act(async () => { await result.current.curtir('a') })
-    expect(result.current.social?.curtidas.a).toEqual({ total: 9, curtidoPorMim: true })
+    expect(result.current.social?.curtidas.a).toEqual({ total: 9, curtidoPorMim: true, salvoPorMim: false })
   })
   it('erro ao curtir volta e avisa; falha de rede também', async () => {
     vi.mocked(alternarCurtida).mockResolvedValueOnce({ erro: 'proprio_projeto' })
     const { result } = await abrir()
     await act(async () => { await result.current.curtir('a') })
-    expect(result.current.social?.curtidas.a).toEqual({ total: 2, curtidoPorMim: false })
+    expect(result.current.social?.curtidas.a).toEqual({ total: 2, curtidoPorMim: false, salvoPorMim: false })
     expect(result.current.aviso).toMatch(/próprio trabalho/)
     vi.mocked(alternarCurtida).mockRejectedValueOnce(new Error('rede'))
     await act(async () => { await result.current.curtir('a') })
-    expect(result.current.social?.curtidas.a).toEqual({ total: 2, curtidoPorMim: false })
+    expect(result.current.social?.curtidas.a).toEqual({ total: 2, curtidoPorMim: false, salvoPorMim: false })
     expect(result.current.aviso).toBeTruthy()
+  })
+  it('visitante: salvar só avisa, sem chamar o banco', async () => {
+    sessao.valor = null
+    const { result } = await abrir()
+    await act(async () => { await result.current.salvar('a') })
+    expect(result.current.aviso).toMatch(/Entre na sua conta/)
+    expect(alternarSalvo).not.toHaveBeenCalled()
+  })
+  it('salvar logado marca na hora e confirma com o banco; salvar de novo desmarca', async () => {
+    vi.mocked(alternarSalvo).mockResolvedValueOnce({ salvo: true }).mockResolvedValueOnce({ salvo: false })
+    const { result } = await abrir()
+    await act(async () => { await result.current.salvar('a') })
+    expect(alternarSalvo).toHaveBeenCalledWith('a')
+    expect(result.current.social?.curtidas.a.salvoPorMim).toBe(true)
+    await act(async () => { await result.current.salvar('a') })
+    expect(result.current.social?.curtidas.a.salvoPorMim).toBe(false)
+  })
+  it('salvar com erro volta ao estado anterior e avisa em frase simples', async () => {
+    vi.mocked(alternarSalvo).mockResolvedValue({ erro: 'limite_salvos' })
+    const { result } = await abrir()
+    await act(async () => { await result.current.salvar('a') })
+    expect(result.current.social?.curtidas.a.salvoPorMim).toBe(false)
+    expect(result.current.aviso).toBe('Você chegou ao limite de 500 trabalhos salvos. Remova algum para continuar.')
+  })
+  it('salvar com falha de rede volta ao estado anterior', async () => {
+    vi.mocked(alternarSalvo).mockRejectedValue(new Error('rede'))
+    const { result } = await abrir()
+    await act(async () => { await result.current.salvar('a') })
+    expect(result.current.social?.curtidas.a.salvoPorMim).toBe(false)
+    expect(result.current.aviso).toBe('rede')
   })
 })

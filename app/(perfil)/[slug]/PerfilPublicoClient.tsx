@@ -47,7 +47,7 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
     origem: 'perfil_publico',
   })
 
-  const { social, logado, aviso: avisoSocial, seguir, curtir } = usePerfilSocial(Number(prestador.id))
+  const { social, logado, aviso: avisoSocial, seguir, curtir, salvar } = usePerfilSocial(Number(prestador.id))
   // No próprio perfil não há o que seguir nem curtir; sem dado do banco (perfil de exemplo, bloqueado), some.
   const mostrarSocial = social !== null && !social.meuPerfil
 
@@ -187,7 +187,7 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
               totais={{ indicam: totalIndicacoes, naoIndicam: totalNaoIndicacoes }}
               portfolioObrigatorio={prestador.portfolio_obrigatorio}
               contato={{ nome: prestador.nome || '', whatsapp: prestador.whatsapp || '', onClique: registrarCliqueWhatsapp }}
-              curtidas={mostrarSocial ? { porTrabalho: social.curtidas, logado, aviso: avisoSocial, onCurtir: curtir } : null}
+              curtidas={mostrarSocial ? { porTrabalho: social.curtidas, logado, aviso: avisoSocial, onCurtir: curtir, onSalvar: salvar } : null}
             />
 
             <ContextualHelp context="perfil-publico" title="Dúvidas sobre este perfil?" />

@@ -13,7 +13,7 @@ import type { FeedItem } from '@/lib/feed/feed'
 const item: FeedItem = {
   projetoId: 'a', titulo: 'Reforma de varanda', descricao: '', concluidoEm: null,
   prestador: { id: 2, nome: 'Pedro Pedreiro', slug: 'pedro', categoria: null, cidade: null },
-  fotos: ['https://x/1.jpg'], totalCurtidas: 0, curtidoPorMim: false, seguindo: false, meu: false,
+  fotos: ['https://x/1.jpg'], totalCurtidas: 0, curtidoPorMim: false, seguindo: false, salvoPorMim: false, meu: false,
 }
 
 beforeEach(() => { vi.useFakeTimers(); vi.mocked(compartilharViaNative).mockReset(); vi.mocked(registrarCompartilhamento).mockClear() })

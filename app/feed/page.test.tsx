@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach } from 'vitest'
 
-const h = vi.hoisted(() => ({ replace: vi.fn(), query: '', filtrosRecebidos: [] as unknown[], itens: [] as unknown[] }))
+const h = vi.hoisted(() => ({ replace: vi.fn(), query: '', filtrosRecebidos: [] as unknown[], itens: [] as unknown[], aba: 'todos', logado: false, setAba: vi.fn() }))
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: h.replace }),
@@ -10,11 +10,11 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(h.query),
 }))
 vi.mock('@/components/Header', () => ({ default: () => null }))
-vi.mock('@/hooks/useSession', () => ({ useSession: () => null }))
+vi.mock('@/hooks/useSession', () => ({ useSession: () => (h.logado ? { user: { id: 'u' } } : null) }))
 vi.mock('@/hooks/useFeed', () => ({
   useFeed: (_logado: boolean, filtros: unknown) => {
     h.filtrosRecebidos.push(filtros)
-    return { aba: 'todos', setAba: vi.fn(), itens: h.itens, temMais: false, carregando: false, erro: null, aviso: null, carregarMais: vi.fn(), curtir: vi.fn(), alternarSeguir: vi.fn() }
+    return { aba: h.aba, setAba: h.setAba, itens: h.itens, temMais: false, carregando: false, erro: null, aviso: null, carregarMais: vi.fn(), curtir: vi.fn(), salvar: vi.fn(), alternarSeguir: vi.fn() }
   },
 }))
 vi.mock('@/hooks/useCompartilharTrabalho', () => ({
@@ -31,7 +31,7 @@ const CIDADE = '15123e3f-9f76-4d66-b2ee-f03c45de38fa'
 const CAMPINAS = '22222222-2222-4222-8222-222222222222'
 const CATEGORIA = '11111111-1111-4111-8111-111111111111'
 
-beforeEach(() => { h.replace.mockReset(); h.query = ''; h.filtrosRecebidos = []; h.itens = [] })
+beforeEach(() => { h.replace.mockReset(); h.query = ''; h.filtrosRecebidos = []; h.itens = []; h.aba = 'todos'; h.logado = false; h.setAba.mockReset() })
 afterEach(cleanup)
 
 describe('página do feed — filtros na URL', () => {
@@ -105,5 +105,26 @@ describe('página do feed — filtros na URL', () => {
     render(<FeedPage />)
     fireEvent.click(screen.getByTestId('feed-limpar-filtros'))
     expect(h.replace).toHaveBeenCalledWith('/feed', { scroll: false })
+  })
+})
+
+describe('página do feed — aba Salvos', () => {
+  it('as três abas existem: Todos, Quem eu sigo e Salvos; tocar em Salvos troca a aba', () => {
+    render(<FeedPage />)
+    expect(screen.getByTestId('feed-aba-todos')).toBeTruthy()
+    expect(screen.getByTestId('feed-aba-seguindo')).toBeTruthy()
+    fireEvent.click(screen.getByTestId('feed-aba-salvos'))
+    expect(h.setAba).toHaveBeenCalledWith('salvos')
+  })
+  it('Salvos vazia, logado: explica como salvar e que só a pessoa vê', () => {
+    h.aba = 'salvos'; h.logado = true
+    render(<FeedPage />)
+    expect(screen.getByTestId('feed-salvos-vazio').textContent).toMatch(/ainda não salvou nenhum trabalho.*Só você vê/)
+  })
+  it('Salvos vazia, visitante: pede para entrar', () => {
+    h.aba = 'salvos'
+    render(<FeedPage />)
+    expect(screen.getByTestId('feed-vazio').textContent).toMatch(/Entre na sua conta para ver os trabalhos que você salvou/)
+    expect(screen.getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe('/login')
   })
 })

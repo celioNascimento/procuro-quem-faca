@@ -140,7 +140,7 @@ describe('ProjetoModal', () => {
 })
 
 describe('ProjetoModal — curtir', () => {
-  const curtir = { total: 4, curtido: false, logado: true, aviso: null as string | null, onCurtir: vi.fn() }
+  const curtir = { total: 4, curtido: false, salvo: false, logado: true, aviso: null as string | null, onCurtir: vi.fn(), onSalvar: vi.fn() }
 
   it('com curtir: mostra o botão e avisa o pai ao tocar', () => {
     const onCurtir = vi.fn()
@@ -152,6 +152,22 @@ describe('ProjetoModal — curtir', () => {
   it('sem curtir (próprio perfil ou perfil sem social): o botão não aparece', () => {
     render(<ProjetoModal projeto={projeto()} onClose={() => {}} />)
     expect(screen.queryByTestId('modal-curtir')).toBeNull()
+  })
+  it('Salvar: mostra o estado, avisa o pai ao tocar e muda o nome para "Remover dos salvos"', () => {
+    const onSalvar = vi.fn()
+    const { rerender } = render(<ProjetoModal projeto={projeto()} onClose={() => {}} curtir={{ ...curtir, onSalvar }} />)
+    const botao = screen.getByTestId('modal-salvar')
+    expect(botao.getAttribute('aria-pressed')).toBe('false')
+    expect(botao.getAttribute('aria-label')).toBe('Salvar este trabalho')
+    fireEvent.click(botao)
+    expect(onSalvar).toHaveBeenCalledTimes(1)
+    rerender(<ProjetoModal projeto={projeto()} onClose={() => {}} curtir={{ ...curtir, salvo: true, onSalvar }} />)
+    expect(screen.getByTestId('modal-salvar').getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByTestId('modal-salvar').getAttribute('aria-label')).toBe('Remover dos salvos')
+  })
+  it('sem curtir (próprio perfil), o Salvar também não aparece', () => {
+    render(<ProjetoModal projeto={projeto()} onClose={() => {}} />)
+    expect(screen.queryByTestId('modal-salvar')).toBeNull()
   })
   it('visitante vê o aviso com o link Entrar', () => {
     render(<ProjetoModal projeto={projeto()} onClose={() => {}} curtir={{ ...curtir, logado: false, aviso: 'Entre na sua conta para curtir trabalhos e seguir prestadores.' }} />)

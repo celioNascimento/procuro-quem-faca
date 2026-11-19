@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { aplicarCurtida, aplicarFeedOculto, aplicarRetiradaDoFeed, podeRetirarDoFeed, aplicarSeguir, estadoNoFeed, enderecoDoTrabalho, mensagemDeResultado, normalizarFeed, textoCompartilharTrabalho, textoCurtidas } from './feed'
+import { aplicarSalvo, aplicarCurtida, aplicarFeedOculto, aplicarRetiradaDoFeed, podeRetirarDoFeed, aplicarSeguir, estadoNoFeed, enderecoDoTrabalho, mensagemDeResultado, normalizarFeed, textoCompartilharTrabalho, textoCurtidas } from './feed'
 
 const bruto = [{
   projeto_id: 'a', titulo: ' Reforma ', descricao: 'Varanda', concluido_em: '2026-11-10T10:00:00Z',
   prestador: { id: 2, nome: 'Pedro', slug: 'pedro', categoria: 'Pedreiro', cidade: 'Londrina' },
-  fotos: ['https://x/1.jpg', '', 5], total_curtidas: 3, curtido_por_mim: true, seguindo: false, meu: false,
+  fotos: ['https://x/1.jpg', '', 5], total_curtidas: 3, curtido_por_mim: true, seguindo: false, salvo_por_mim: false, meu: false,
 }]
 
 describe('normalizarFeed: campo meu', () => {
@@ -18,7 +18,7 @@ describe('normalizarFeed: campo meu', () => {
 describe('normalizarFeed', () => {
   it('converte o que vem do banco', () => {
     const [i] = normalizarFeed(bruto)
-    expect(i).toMatchObject({ projetoId: 'a', titulo: 'Reforma', totalCurtidas: 3, curtidoPorMim: true, seguindo: false, meu: false })
+    expect(i).toMatchObject({ projetoId: 'a', titulo: 'Reforma', totalCurtidas: 3, curtidoPorMim: true, seguindo: false, salvoPorMim: false, meu: false })
     expect(i.fotos).toEqual(['https://x/1.jpg'])
     expect(i.prestador.slug).toBe('pedro')
   })
@@ -100,5 +100,22 @@ describe('textoCompartilharTrabalho', () => {
 describe('enderecoDoTrabalho', () => {
   it('abre o perfil com o trabalho aberto', () => {
     expect(enderecoDoTrabalho('pedro', 'abc-123')).toBe('/pedro?projeto=abc-123')
+  })
+})
+
+describe('salvar', () => {
+  it('salvo_por_mim só vale com true; ausente vira false', () => {
+    expect(normalizarFeed([{ ...bruto[0], salvo_por_mim: true }])[0].salvoPorMim).toBe(true)
+    expect(normalizarFeed([{ ...bruto[0], salvo_por_mim: 'sim' }])[0].salvoPorMim).toBe(false)
+    expect(normalizarFeed([{ ...bruto[0], salvo_por_mim: undefined }])[0].salvoPorMim).toBe(false)
+  })
+  it('aplicarSalvo marca só o trabalho certo', () => {
+    const itens = normalizarFeed([bruto[0], { ...bruto[0], projeto_id: 'b', prestador: { ...bruto[0].prestador, id: 9, slug: 'maria' } }])
+    const r = aplicarSalvo(itens, 'b', true)
+    expect(r.map(i => i.salvoPorMim)).toEqual([false, true])
+    expect(aplicarSalvo(r, 'b', false).map(i => i.salvoPorMim)).toEqual([false, false])
+  })
+  it('limite de salvos vira frase simples', () => {
+    expect(mensagemDeResultado('limite_salvos')).toBe('Você chegou ao limite de 500 trabalhos salvos. Remova algum para continuar.')
   })
 })

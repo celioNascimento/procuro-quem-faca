@@ -53,7 +53,7 @@ function FeedConteudo() {
         <p className="mt-1 text-sm text-slate-600">Veja serviços reais, gostou? Abra o perfil de quem fez.</p>
 
         <div role="tablist" aria-label="Quais trabalhos mostrar" className="mt-4 flex w-fit gap-1 rounded-2xl bg-slate-100 p-1">
-          {([['todos', 'Todos'], ['seguindo', 'Quem eu sigo']] as const).map(([id, rotulo]) => (
+          {([['todos', 'Todos'], ['seguindo', 'Quem eu sigo'], ['salvos', 'Salvos']] as const).map(([id, rotulo]) => (
             <button key={id} role="tab" aria-selected={f.aba === id} onClick={() => f.setAba(id)} data-testid={`feed-aba-${id}`}
               className={`min-h-11 rounded-xl px-4 text-sm font-black ${f.aba === id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500'}`}>
               {rotulo}
@@ -98,14 +98,18 @@ function FeedConteudo() {
         {f.erro && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{f.erro}</p>}
 
         <div className="mt-6 space-y-5">
-          {f.itens.map(item => <FeedCard key={item.projetoId} item={item} onCurtir={f.curtir} onSeguir={f.alternarSeguir} onCompartilhar={c.compartilhar} onCopiarLink={c.copiarLink} />)}
+          {f.itens.map(item => <FeedCard key={item.projetoId} item={item} onCurtir={f.curtir} onSeguir={f.alternarSeguir} onSalvar={f.salvar} onCompartilhar={c.compartilhar} onCopiarLink={c.copiarLink} />)}
         </div>
 
         {f.carregando && <div className="mt-6 h-48 animate-pulse rounded-3xl bg-slate-100" aria-label="Carregando" />}
 
         {!f.carregando && !f.erro && f.itens.length === 0 && (
           <div className="mt-10 rounded-3xl bg-slate-50 p-6 text-center" data-testid="feed-vazio">
-            {f.aba === 'seguindo' ? (
+            {f.aba === 'salvos' ? (
+              logado
+                ? <p className="text-sm font-semibold text-slate-600" data-testid="feed-salvos-vazio">Você ainda não salvou nenhum trabalho. Toque no marcador de um trabalho para guardá-lo aqui. Só você vê o que salvou.</p>
+                : <p className="text-sm font-semibold text-slate-600">Entre na sua conta para ver os trabalhos que você salvou. <Link href="/login" className="font-black text-blue-700 underline">Entrar</Link></p>
+            ) : f.aba === 'seguindo' ? (
               logado
                 ? <p className="text-sm font-semibold text-slate-600">Você ainda não segue ninguém, ou quem você segue não tem trabalhos aqui. Volte para “Todos” e toque em Seguir.</p>
                 : <p className="text-sm font-semibold text-slate-600">Entre na sua conta para ver os trabalhos de quem você segue. <Link href="/login" className="font-black text-blue-700 underline">Entrar</Link></p>

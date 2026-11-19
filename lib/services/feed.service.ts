@@ -9,15 +9,17 @@ export interface FiltroFeed {
   cidadeId?: string | null
   estado?: string | null
   somenteSeguidos?: boolean
+  somenteSalvos?: boolean
   pagina?: number
 }
 
-export async function fetchFeed({ categoriaId = null, cidadeId = null, estado = null, somenteSeguidos = false, pagina = 0 }: FiltroFeed = {}): Promise<FeedItem[]> {
+export async function fetchFeed({ categoriaId = null, cidadeId = null, estado = null, somenteSeguidos = false, somenteSalvos = false, pagina = 0 }: FiltroFeed = {}): Promise<FeedItem[]> {
   const { data, error } = await supabase.rpc('feed_projetos', {
     p_categoria_id: categoriaId,
     p_cidade_id: cidadeId,
     p_estado: estado,
     p_somente_seguidos: somenteSeguidos,
+    p_somente_salvos: somenteSalvos,
     p_limite: ITENS_POR_PAGINA,
     p_pagina: pagina,
   })
@@ -29,6 +31,13 @@ export async function alternarCurtida(projetoId: string): Promise<{ curtido?: bo
   const { data, error } = await supabase.rpc('alternar_curtida', { p_projeto_id: projetoId })
   if (error) throw error
   return (data ?? {}) as { curtido?: boolean; total?: number; erro?: string }
+}
+
+/** Salvar/remover dos salvos (só o próprio usuário vê). Devolve {salvo} ou {erro}. */
+export async function alternarSalvo(projetoId: string): Promise<{ salvo?: boolean; erro?: string }> {
+  const { data, error } = await supabase.rpc('alternar_salvo', { p_projeto_id: projetoId })
+  if (error) throw error
+  return (data ?? {}) as { salvo?: boolean; erro?: string }
 }
 
 export async function seguirPrestador(prestadorId: number): Promise<string> {

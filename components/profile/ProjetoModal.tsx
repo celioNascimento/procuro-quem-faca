@@ -16,6 +16,7 @@ import { descricaoOuPadrao, NOME_DA_ETAPA, type EtapaFoto } from '@/lib/trabalho
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 import { primeiroNomeDoCliente, CLIENTE_SEM_NOME } from '@/lib/nomeDoCliente'
 import { CurtirTrabalho } from './CurtirTrabalho'
+import { SalvarTrabalho } from './SalvarTrabalho'
 
 /** Contato do profissional, para o botão do rodapé. Sem WhatsApp válido, o botão não aparece. */
 export interface ContatoDoModal {
@@ -28,9 +29,11 @@ export interface ContatoDoModal {
 export interface CurtirDoModal {
   total: number
   curtido: boolean
+  salvo: boolean
   logado: boolean
   aviso: string | null
   onCurtir: () => void
+  onSalvar: () => void
 }
 
 interface Props {
@@ -303,6 +306,7 @@ export default function ProjetoModal({ projeto, onClose, contato, curtir = null 
             <span className="truncate">Chamar no WhatsApp</span>
           </a>
         )}
+        {curtir && <SalvarTrabalho salvo={curtir.salvo} onSalvar={curtir.onSalvar} />}
         {/* Só o ícone: o "Chamar no WhatsApp" precisa do espaço. O nome fica para leitores de tela e no tooltip. */}
         <button
           type="button"

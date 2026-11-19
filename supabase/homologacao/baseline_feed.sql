@@ -8,3 +8,6 @@ alter table e2e_baseline.portfolio_projetos
   add column if not exists feed_oculto boolean not null default false,
   add column if not exists feed_revogado_em timestamptz;
 create table if not exists e2e_baseline.seguidores as select * from public.seguidores where false;
+
+-- Depois da migração 20261119170000_feed_salvar.sql (tabela portfolio_salvos), a base do reset precisa conhecê-la.
+create table if not exists e2e_baseline.portfolio_salvos as select * from public.portfolio_salvos where false;

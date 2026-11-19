@@ -2,13 +2,13 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { alternarCurtida, deixarDeSeguirPrestador, fetchFeed, seguirPrestador } from '@/lib/services/feed.service'
+import { alternarCurtida, alternarSalvo, deixarDeSeguirPrestador, fetchFeed, seguirPrestador } from '@/lib/services/feed.service'
 import type { FiltrosFeed } from '@/lib/feed/filtros'
 import {
-  aplicarCurtida, aplicarSeguir, ITENS_POR_PAGINA, MENSAGEM_LOGIN_PARA_AGIR, mensagemDeResultado, type FeedItem,
+  aplicarCurtida, aplicarSalvo, aplicarSeguir, ITENS_POR_PAGINA, MENSAGEM_LOGIN_PARA_AGIR, mensagemDeResultado, type FeedItem,
 } from '@/lib/feed/feed'
 
-export type AbaFeed = 'todos' | 'seguindo'
+export type AbaFeed = 'todos' | 'seguindo' | 'salvos'
 
 // Tipo de serviço, estado e cidade vêm de fora (do endereço da página); a aba e o resto ficam aqui.
 export function useFeed(logado: boolean, { categoriaId, cidadeId, estado }: FiltrosFeed = { categoriaId: null, cidadeId: null, estado: null }) {
@@ -25,7 +25,7 @@ export function useFeed(logado: boolean, { categoriaId, cidadeId, estado }: Filt
     const minha = ++requisicao.current
     setCarregando(true)
     try {
-      const novos = await fetchFeed({ categoriaId, cidadeId, estado, somenteSeguidos: aba === 'seguindo', pagina: paginaAlvo })
+      const novos = await fetchFeed({ categoriaId, cidadeId, estado, somenteSeguidos: aba === 'seguindo', somenteSalvos: aba === 'salvos', pagina: paginaAlvo })
       if (minha !== requisicao.current) return
       setItens(atual => (acumular ? [...atual, ...novos.filter(n => !atual.some(a => a.projetoId === n.projetoId))] : novos))
       setPagina(paginaAlvo)
@@ -61,6 +61,24 @@ export function useFeed(logado: boolean, { categoriaId, cidadeId, estado }: Filt
     }
   }, [itens, logado])
 
+  const salvar = useCallback(async (projetoId: string) => {
+    if (!logado) { setAviso(MENSAGEM_LOGIN_PARA_AGIR); return }
+    setAviso(null)
+    const antes = itens.find(i => i.projetoId === projetoId)?.salvoPorMim ?? false
+    setItens(a => aplicarSalvo(a, projetoId, !antes))
+    try {
+      const r = await alternarSalvo(projetoId)
+      const msg = mensagemDeResultado(r.erro)
+      if (msg || r.salvo === undefined) throw new Error(msg ?? 'resposta inesperada')
+      setItens(a => aplicarSalvo(a, projetoId, r.salvo as boolean))
+      // Na aba "Salvos", remover dos salvos tira o trabalho da lista.
+      if (!r.salvo && aba === 'salvos') setItens(a => a.filter(i => i.projetoId !== projetoId))
+    } catch (e) {
+      setItens(a => aplicarSalvo(a, projetoId, antes))
+      setAviso(e instanceof Error && e.message !== 'resposta inesperada' ? e.message : 'Não conseguimos salvar agora. Tente de novo.')
+    }
+  }, [itens, logado, aba])
+
   const alternarSeguir = useCallback(async (prestadorId: number) => {
     if (!logado) { setAviso(MENSAGEM_LOGIN_PARA_AGIR); return }
     setAviso(null)
@@ -78,5 +96,5 @@ export function useFeed(logado: boolean, { categoriaId, cidadeId, estado }: Filt
     }
   }, [itens, logado, aba])
 
-  return { aba, setAba, itens, temMais, carregando, erro, aviso, carregarMais, curtir, alternarSeguir, recarregar: () => carregar(0, false) }
+  return { aba, setAba, itens, temMais, carregando, erro, aviso, carregarMais, curtir, salvar, alternarSeguir, recarregar: () => carregar(0, false) }
 }

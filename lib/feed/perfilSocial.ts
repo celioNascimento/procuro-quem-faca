@@ -1,7 +1,7 @@
 // lib/feed/perfilSocial.ts
 // Regras puras de curtir e seguir no perfil público. Sem acesso a banco.
 
-export interface CurtidaDoTrabalho { total: number; curtidoPorMim: boolean }
+export interface CurtidaDoTrabalho { total: number; curtidoPorMim: boolean; salvoPorMim: boolean }
 
 export interface PerfilSocial {
   totalSeguidores: number
@@ -21,7 +21,7 @@ export function normalizarPerfilSocial(bruto: unknown): PerfilSocial | null {
   if (c && typeof c === 'object' && !Array.isArray(c)) {
     for (const [id, v] of Object.entries(c as Record<string, unknown>)) {
       const x = (v ?? {}) as Record<string, unknown>
-      curtidas[id] = { total: Math.max(0, Number(x.total) || 0), curtidoPorMim: x.curtido_por_mim === true }
+      curtidas[id] = { total: Math.max(0, Number(x.total) || 0), curtidoPorMim: x.curtido_por_mim === true, salvoPorMim: x.salvo_por_mim === true }
     }
   }
   return {
@@ -44,5 +44,11 @@ export function aplicarSeguirNoPerfil(s: PerfilSocial, seguindo: boolean): Perfi
 }
 
 export function aplicarCurtidaNoPerfil(s: PerfilSocial, projetoId: string, curtido: boolean, total: number): PerfilSocial {
-  return { ...s, curtidas: { ...s.curtidas, [projetoId]: { total: Math.max(0, total), curtidoPorMim: curtido } } }
+  const atual = s.curtidas[projetoId]
+  return { ...s, curtidas: { ...s.curtidas, [projetoId]: { total: Math.max(0, total), curtidoPorMim: curtido, salvoPorMim: atual?.salvoPorMim ?? false } } }
+}
+
+export function aplicarSalvoNoPerfil(s: PerfilSocial, projetoId: string, salvo: boolean): PerfilSocial {
+  const atual = s.curtidas[projetoId] ?? { total: 0, curtidoPorMim: false, salvoPorMim: false }
+  return { ...s, curtidas: { ...s.curtidas, [projetoId]: { ...atual, salvoPorMim: salvo } } }
 }

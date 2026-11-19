@@ -297,3 +297,58 @@ test.describe('feed: botões do card (estilo Instagram)', () => {
     await expect(cartao.getByTestId('feed-compartilhar')).toBeVisible();
   });
 });
+
+test.describe('feed: salvar', () => {
+  test('visitante: Salvar pede login, e a aba Salvos pede para entrar', async ({ page }) => {
+    await abrirFeed(page);
+    await page.getByTestId('feed-salvar').click();
+    await expect(page.getByTestId('feed-aviso')).toContainText(/Entre na sua conta/);
+    await page.getByTestId('feed-aba-salvos').click();
+    await expect(page.getByTestId('feed-vazio')).toContainText(/Entre na sua conta para ver os trabalhos que você salvou/);
+  });
+
+  test('cliente logada: salva, aparece em Salvos (e continua depois de recarregar), remove e some da lista', async ({ page }) => {
+    await entrarComoClienteEIrPara(page, '/feed');
+    await expect(page.getByTestId('feed-salvar')).toHaveAttribute('aria-pressed', 'false');
+    await page.getByTestId('feed-salvar').click();
+    await expect(page.getByTestId('feed-salvar')).toHaveAttribute('aria-pressed', 'true');
+
+    await page.reload();
+    await expect(page.getByTestId('feed-salvar')).toHaveAttribute('aria-pressed', 'true');
+
+    await page.getByTestId('feed-aba-salvos').click();
+    await expect(page.getByTestId('feed-card')).toHaveCount(1);
+    await expect(page.getByTestId('feed-card').first().getByRole('heading', { name: TITULO_NO_FEED })).toBeVisible();
+
+    // Remover dos salvos, dentro da aba, tira o trabalho da lista.
+    await page.getByTestId('feed-salvar').click();
+    await expect(page.getByTestId('feed-card')).toHaveCount(0);
+    await expect(page.getByTestId('feed-salvos-vazio')).toBeVisible();
+
+    // No "Todos" o trabalho continua, agora sem marca.
+    await page.getByTestId('feed-aba-todos').click();
+    await expect(page.getByTestId('feed-card')).toHaveCount(1);
+    await expect(page.getByTestId('feed-salvar')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('cliente logada: salvar no modal do perfil aparece como salvo no feed', async ({ page }) => {
+    await entrarComoClienteEIrPara(page, `/${PERFIL_SEED.slug}?projeto=${ID_NO_FEED}`);
+    const salvar = page.getByTestId('modal-salvar');
+    await expect(salvar).toBeVisible();
+    await expect(salvar).toHaveAttribute('aria-pressed', 'false');
+    await salvar.click();
+    await expect(salvar).toHaveAttribute('aria-pressed', 'true');
+
+    await page.goto('/feed');
+    await expect(page.getByTestId('feed-salvar')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('prestador dono do trabalho: não vê o botão Salvar no feed nem no próprio perfil', async ({ page }) => {
+    await entrar(page, 'prestador');
+    await expect(page).toHaveURL(/\/dashboard/);
+    await page.goto('/feed');
+    await aceitarDocumentosSeAparecer(page);
+    await expect(page.getByTestId('feed-card')).toHaveCount(1);
+    await expect(page.getByTestId('feed-salvar')).toHaveCount(0);
+  });
+});
