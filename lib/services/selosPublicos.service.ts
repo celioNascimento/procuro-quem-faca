@@ -1,0 +1,59 @@
+// lib/services/selosPublicos.service.ts
+// Leitura pública dos selos (anônimos também podem ver): só o que as funções do banco expõem.
+// Nunca traz o CNPJ nem a razão social. Falha aqui não pode quebrar a busca nem o perfil.
+
+import { createPublicClient } from '@/lib/supabase/client'
+import type { LinhaSeloPublico } from '@/lib/selos/publico'
+
+// Criado na hora do uso (e não ao importar), para não exigir variáveis de ambiente em quem só importa o módulo.
+let cliente: ReturnType<typeof createPublicClient> | null = null
+function publico() {
+  if (!cliente) cliente = createPublicClient()
+  return cliente
+}
+
+/** Selos aprovados e vigentes de vários prestadores de uma vez (cards da busca). */
+export async function buscarSelosPublicos(ids: number[]): Promise<LinhaSeloPublico[]> {
+  if (ids.length === 0) return []
+  const { data, error } = await publico().rpc('selos_publicos', { p_prestador_ids: ids })
+  if (error) throw error
+  return (data as LinhaSeloPublico[] | null) ?? []
+}
+
+/** Nível calculado pelo banco ('bronze', ...) ou null. */
+export async function buscarNivelDoPrestador(id: number): Promise<string | null> {
+  const { data, error } = await publico().rpc('nivel_do_prestador', { p_prestador_id: id })
+  if (error) throw error
+  return typeof data === 'string' ? data : null
+}
+
+/** Nível de vários prestadores de uma vez (cards da busca). Só vêm os que têm nível. */
+export async function buscarNiveisDosPrestadores(ids: number[]): Promise<Map<number, string>> {
+  const mapa = new Map<number, string>()
+  if (ids.length === 0) return mapa
+  const { data, error } = await publico().rpc('niveis_dos_prestadores', { p_prestador_ids: ids })
+  if (error) throw error
+  for (const l of (data as { prestador_id: number; nivel: string }[] | null) ?? []) mapa.set(Number(l.prestador_id), l.nivel)
+  return mapa
+}
+
+export interface ProgressoExperiencia {
+  servicos: number
+  clientes: number
+  atingido: boolean
+}
+
+/** Andamento do selo "Experiência no PQF" (serviços e clientes diferentes que já contam). */
+/** true quando ainda não sabemos qual CNAE combina com a categoria do perfil (só para o painel do prestador). */
+export async function buscarCategoriaSemMapeamento(id: number): Promise<boolean> {
+  const { data, error } = await publico().rpc('categoria_sem_mapeamento_cnae', { p_prestador_id: id })
+  if (error) throw error
+  return data === true
+}
+
+export async function buscarProgressoExperiencia(id: number): Promise<ProgressoExperiencia> {
+  const { data, error } = await publico().rpc('experiencia_no_pqf', { p_prestador_ids: [id] })
+  if (error) throw error
+  const linha = (data as { servicos: number; clientes: number; atingido: boolean }[] | null)?.[0]
+  return { servicos: linha?.servicos ?? 0, clientes: linha?.clientes ?? 0, atingido: linha?.atingido ?? false }
+}

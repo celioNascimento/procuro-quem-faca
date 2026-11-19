@@ -29,7 +29,8 @@ revoke all on public.ambiente_teste_marcador from public, anon, authenticated;
 create or replace function public.e2e_tabelas_referencia() returns text[]
 language sql immutable as $$
   select array['ambiente_teste_marcador','categorias','categorias_grupos','cidades','estados','habilidades',
-               'regioes','retencao_regras','rastreio_config','perfis_admin','logs_atividades','catalogo_itens']
+               'regioes','retencao_regras','rastreio_config','perfis_admin','logs_atividades','catalogo_itens',
+               'consentimentos']  -- aceite dos termos das contas fixas sobrevive ao reset (ver e2e_resetar_fixtures)
 $$;
 revoke all on function public.e2e_tabelas_referencia() from public, anon, authenticated;
 
@@ -65,13 +66,21 @@ begin
     raise exception 'Sem baseline: rode e2e_capturar_baseline() antes.';
   end if;
 
+  -- 0) Avaliações de contas criadas pelos testes (a FK com o Auth não tem cascata): sai antes das contas.
+  delete from public.avaliacoes where cliente_id not in (select id from e2e_baseline.auth_users);
+
   -- 1) Contas criadas pelos testes (a cascata do Auth leva perfis ligados).
   delete from auth.users where id not in (select id from e2e_baseline.auth_users);
+
+  -- 1b) Aceite dos termos: o das contas fixas (as da semente) é mantido, para quem testa à mão na homologação
+  --     não ter que aceitar de novo a cada rodada do E2E. O das contas criadas pelos testes fica órfão
+  --     (a FK zera o user_id ao apagar a conta) e sai aqui; essas contas novas ainda passam pela tela de aceite.
+  delete from public.consentimentos where user_id is null;
 
   -- 2) Tabelas de fixture: apaga tudo e reinsere a semente, sem disparar gatilhos nem checagem de FK.
   set local session_replication_role = replica;
   for r in select tablename from pg_tables where schemaname = 'e2e_baseline'
-            and tablename not in ('auth_users','storage_objects') loop
+            and tablename not in ('auth_users','storage_objects','consentimentos') loop
     select string_agg(quote_ident(column_name), ', ' order by ordinal_position) into colunas
       from information_schema.columns
      where table_schema = 'public' and table_name = r.tablename and is_generated = 'NEVER';
@@ -114,3 +123,58 @@ begin
 end $$;
 revoke all on function public.e2e_criar_conta(text, text) from public;
 grant execute on function public.e2e_criar_conta(text, text) to anon, authenticated;
+
+-- ----------------------------------------------------------------------------
+-- Apoio aos E2E dos selos calculados (Etapa 2, Parte B). Só no banco de TESTE (checam o marcador).
+-- e2e_semear_experiencia: cria N serviços finalizados e avaliados (nota informada), cada um por um cliente
+--   novo (conta fictícia e2e-exp-*). O e2e_resetar_fixtures() apaga tudo isso.
+-- e2e_ajustar_cnpj: define data de abertura e CNAE do CNPJ fictício do prestador.
+-- ----------------------------------------------------------------------------
+create or replace function public.e2e_semear_experiencia(p_prestador_id bigint, p_servicos int, p_nota int default 5) returns void
+language plpgsql security definer set search_path = public, extensions, pg_temp as $$
+declare v_u uuid; v_proj uuid; v_inst uuid; i int;
+begin
+  if not exists (select 1 from public.ambiente_teste_marcador where nome = 'homologacao') then
+    raise exception 'Este banco não é o de homologação: semente recusada.';
+  end if;
+  select instance_id into v_inst from auth.users where email = 'cliente@pqf-teste.invalid';
+  for i in 1..p_servicos loop
+    v_u := gen_random_uuid();
+    insert into auth.users (instance_id, id, aud, role, email, email_confirmed_at, created_at, updated_at)
+      values (v_inst, v_u, 'authenticated', 'authenticated', 'e2e-exp-' || replace(v_u::text, '-', '') || '@pqf-teste.invalid', now(), now(), now());
+    insert into public.portfolio_projetos (prestador_id, status, titulo) values (p_prestador_id, 'finalizado', 'Serviço de teste ' || i) returning id into v_proj;
+    insert into public.avaliacoes (projeto_id, prestador_id, cliente_id, nota, status, visivel)
+      values (v_proj, p_prestador_id, v_u, p_nota, 'finalizado', true);
+  end loop;
+end $$;
+revoke all on function public.e2e_semear_experiencia(bigint, int, int) from public;
+grant execute on function public.e2e_semear_experiencia(bigint, int, int) to anon, authenticated;
+
+drop function if exists public.e2e_ajustar_cnpj(bigint, date, text);
+create or replace function public.e2e_ajustar_cnpj(p_prestador_id bigint, p_data_abertura date, p_cnae text, p_secundarios text[] default '{}') returns void
+language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  if not exists (select 1 from public.ambiente_teste_marcador where nome = 'homologacao') then
+    raise exception 'Este banco não é o de homologação: ajuste recusado.';
+  end if;
+  update public.prestador_cnpj set data_abertura = p_data_abertura, cnae_codigo = p_cnae, cnaes_secundarios = coalesce(p_secundarios, '{}') where prestador_id = p_prestador_id;
+end $$;
+revoke all on function public.e2e_ajustar_cnpj(bigint, date, text, text[]) from public;
+grant execute on function public.e2e_ajustar_cnpj(bigint, date, text, text[]) to anon, authenticated;
+
+-- e2e_marcar_exemplo: liga/desliga a marca de perfil de exemplo (em produção o admin faz isso pelo SQL Editor;
+-- o admin do app não edita perfis de outras pessoas).
+create or replace function public.e2e_marcar_exemplo(p_prestador_id bigint, p_valor boolean) returns void
+language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  if not exists (select 1 from public.ambiente_teste_marcador where nome = 'homologacao') then
+    raise exception 'Este banco não é o de homologação: ajuste recusado.';
+  end if;
+  update public.prestadores set exemplo = p_valor where id = p_prestador_id;
+end $$;
+revoke all on function public.e2e_marcar_exemplo(bigint, boolean) from public;
+grant execute on function public.e2e_marcar_exemplo(bigint, boolean) to anon, authenticated;
+
+-- ATENÇÃO: ao adicionar coluna numa tabela restaurada pelo reset (ex.: prestador_cnpj.cnaes_secundarios),
+-- adicione a mesma coluna na cópia do baseline (alter table e2e_baseline.<tabela> add column ... default ...),
+-- senão o reset falha por coluna inexistente. Não recapture o baseline com dados de teste manual.

@@ -48,7 +48,7 @@ export function VitrineDeFotos({ prestadorId, inicial, onFotosChange }: Props) {
               onClick={() => remover(indice)}
               disabled={enviando}
               aria-label={`Remover a foto ${indice + 1}`}
-              className="absolute right-2 top-2 flex size-9 items-center justify-center rounded-full bg-slate-950/70 text-white transition-colors hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-50"
+              className="absolute right-2 top-2 flex size-9 items-center justify-center rounded-full bg-white text-red-600 shadow-md ring-1 ring-slate-200 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-50"
             >
               <Trash2 size={16} aria-hidden="true" />
             </button>

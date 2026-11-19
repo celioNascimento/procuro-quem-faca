@@ -28,7 +28,7 @@ const COLUNAS_PRESTADOR_PUBLICO = [
   'id', 'created_at', 'nome', 'bio', 'whatsapp', 'foto_perfil', 'bairro', 'status', 'aprovado_em',
   'bloqueado', 'habilidades', 'tags', 'estado_sigla', 'cidade_id', 'regiao_id', 'slug',
   'cidades_atendidas', 'origem_tipo', 'verificado', 'grupo_id', 'categoria_id', 'garantia_dias',
-  'portfolio_obrigatorio', 'sessao_fotos_titulo', 'sessao_fotos_urls',
+  'portfolio_obrigatorio', 'sessao_fotos_titulo', 'sessao_fotos_urls', 'exemplo',
 ].join(', ')
 
 type ProjetoRaw = {
@@ -156,6 +156,16 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
           .abortSignal(controller.signal)
         if (indicError) throw indicError
 
+        // Total de NÃO indicações: o cliente vê o placar completo, não só o lado positivo.
+        const { count: totalNaoIndicacoesRaw, error: naoIndicError } = await supabase
+          .from('avaliacoes')
+          .select('id', { count: 'exact', head: true })
+          .eq('prestador_id', prestadorRaw.id)
+          .eq('visivel', true)
+          .eq('indica', false)
+          .abortSignal(controller.signal)
+        if (naoIndicError) throw naoIndicError
+
         // A vitrine aparece mesmo sem nome: sem título escrito, usa o padrão ("Fotos do profissional").
         prestadorRaw.sessao_fotos = Array.isArray(prestadorRaw.sessao_fotos_urls) && prestadorRaw.sessao_fotos_urls.length > 0
           ? { titulo: tituloDaVitrine(prestadorRaw.sessao_fotos_titulo), fotos: prestadorRaw.sessao_fotos_urls.slice(0, 5) }
@@ -230,6 +240,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
           projetos,
           avaliacoes,
           totalIndicacoes: totalIndicacoesRaw ?? 0,
+          totalNaoIndicacoes: totalNaoIndicacoesRaw ?? 0,
           urlRetorno,
         })
       } catch (err) {

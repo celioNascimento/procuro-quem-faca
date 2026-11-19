@@ -13,12 +13,14 @@ type Tab = 'portfolio' | 'avaliacoes'
 interface Props {
   projetos: ProjetoPerfil[]
   avaliacoes: AvaliacaoPerfil[]
+  /** Totais reais (a lista traz só as 10 últimas). */
+  totais?: { indicam: number; naoIndicam: number }
   portfolioObrigatorio?: boolean // NEW: controlar visibilidade da aba
   /** Contato do profissional para o botão de WhatsApp dentro do modal do trabalho. */
   contato?: ContatoDoModal
 }
 
-export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio = true, contato }: Props) {
+export default function PerfilTabs({ projetos, avaliacoes, totais, portfolioObrigatorio = true, contato }: Props) {
   // Contagem da aba Portfólio exclui projetos sem_fotos — eles nunca
   // aparecem na grade (ver PortfolioGrid), então não devem inflar o badge.
   const projetosComFoto = projetos.filter(p => !p.sem_fotos)
@@ -94,6 +96,7 @@ export default function PerfilTabs({ projetos, avaliacoes, portfolioObrigatorio 
           <div className="animate-in fade-in duration-200">
             <PerfilAvaliacoes
               avaliacoes={avaliacoes}
+              totais={totais}
               projetos={projetos}
               onVerProjeto={abrirModal}
             />

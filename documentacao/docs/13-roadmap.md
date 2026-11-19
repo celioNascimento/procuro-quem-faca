@@ -123,7 +123,7 @@ Explicar o diferencial do PQF (registro fotográfico + avaliação vinculada a p
 - [ ] Padronizar nome do parâmetro de URL de retorno — `?from=` (perfil público) vs. `?origem=` (dashboard), mesma função, nomes diferentes
 - [ ] Páginas de SEO de serviço (`seo-service-page.tsx`): as faixas de preço por serviço (`dadosServico`) e os bairros por cidade (`dadosCidade`) são texto fixo, não vêm do banco, e o `priceRange` do JSON-LD usa as mesmas faixas. Trocar por dados reais (ou retirar) antes de investir em SEO local; os bairros só aparecem para as 5 cidades com lista própria
 - [ ] Busca no servidor: hoje a página baixa os perfis da cidade (ou do catálogo todo, ~950 em 14/11/2026) e filtra/pagina na tela. Quando passar de poucos milhares, mover termo, filtros, contagens e paginação (10 por vez) para o banco (RPC/view `prestadores_ranqueados`, que também resolveria as médias de avaliação calculadas no frontend)
-- [ ] Selo "Verificado" no card da lista — junto com a fase de qualificações do prestador (hoje `verificado` só pesa na ordenação e aparece no perfil)
+- [x] Selo no card da lista e no perfil público (17/11/2026, ambiente de teste): "CNPJ ativo" no card; no perfil, "Nível Bronze · CNPJ ativo, consultado em dd/mm". O campo antigo `verificado` não é mais lido pela tela (sai em migração posterior)
 - [ ] Confirmar se tabela `perfis` (legado) tem dado real antes de remover do schema
 - [ ] Unificar `useAuth().role` com `profiles.role` — divergência hoje é de escopo pequeno (só durante o cadastro), mas ainda são duas fontes em paralelo
 - [ ] Avaliar se `useAdContext` deveria recalcular o fallback quando `categoria` muda (hoje usa `useState` com inicializador, não reage a mudanças)

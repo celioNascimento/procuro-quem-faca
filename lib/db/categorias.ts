@@ -30,6 +30,7 @@ export async function getSugestoesPorBusca(termo: string, cidadeId?: string | nu
     .select('categoria_id')
     .eq('cidade_id', cidadeId)
     .eq('status', 'ativo')
+    .eq('exemplo', false)
     .eq('bloqueado', false)
     .in('categoria_id', ids)
 

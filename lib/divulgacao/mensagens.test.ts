@@ -5,7 +5,7 @@ import type { DadosDivulgacao } from '@/lib/divulgacao/tipos'
 
 const base: DadosDivulgacao = {
   id: 7, nome: 'Elétrica Silva', slug: 'eletrica-silva', categoria: 'Eletricista', cidade: 'Londrina',
-  verificado: true, whatsapp: '43999998888', fotoPerfilUrl: null,
+  whatsapp: '43999998888', fotoPerfilUrl: null,
   totalIndicacoes: 87, totalConcluidos: 12, garantiaDias: 90, fotosPortfolio: [],
 }
 

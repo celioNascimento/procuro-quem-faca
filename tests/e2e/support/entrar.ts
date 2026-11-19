@@ -3,7 +3,7 @@
 // Ajudantes de teste: login pela tela /login e vigia de requisições ao Supabase.
 
 import { expect, type Page } from '@playwright/test';
-import { CONTAS, SUPABASE_PRODUCAO_REF, SUPABASE_TESTE_REF, type Papel } from './ambiente';
+import { CONTA_ADMIN, CONTAS, SUPABASE_PRODUCAO_REF, SUPABASE_TESTE_REF, type Papel } from './ambiente';
 
 /** Entra pela tela /login com e-mail e senha (a mesma que o usuário vê). */
 export async function entrar(page: Page, papel: Papel, senhaOverride?: string) {
@@ -108,4 +108,18 @@ export async function entrarComoClienteEIrPara(page: Page, destino: string) {
   }
   await page.goto(destino);
   await aceitarDocumentosSeAparecer(page);
+}
+
+/** Login do administrador pela tela /admin/login. */
+export async function entrarComoAdmin(page: Page) {
+  await dispensarAvisoDeCookies(page);
+  await page.goto('/admin/login');
+  await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+  const email = page.getByPlaceholder('admin@empresa.com');
+  const senha = page.getByPlaceholder('••••••••');
+  await email.fill(CONTA_ADMIN.email);
+  await senha.fill(CONTA_ADMIN.senha);
+  await expect(email).toHaveValue(CONTA_ADMIN.email);
+  await page.getByRole('button', { name: 'Entrar no Sistema' }).click();
+  await page.waitForURL((u) => !u.pathname.startsWith('/admin/login'), { timeout: 30_000 });
 }

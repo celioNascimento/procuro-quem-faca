@@ -1,3 +1,5 @@
+import { MOTIVOS_CNPJ } from '@/lib/selos/motivosCnpj'
+
 export type HelpAudience = 'cliente' | 'publico' | 'prestador' | 'admin'
 
 export interface HelpArticle {
@@ -8,6 +10,8 @@ export interface HelpArticle {
   audiences: HelpAudience[]
   contexts: string[]
   steps?: string[]
+  /** Motivos em destaque (cartões), mostrados antes dos passos. */
+  reasons?: { heading: string; items: { title: string; text: string }[] }
   related?: string[]
 }
 
@@ -53,19 +57,19 @@ export const helpArticles: HelpArticle[] = [
     steps: ['Abra a Área do cliente e toque na aba Meus dados.', 'Para trocar a foto, toque no seu avatar no cartão de perfil (até 10 MB).', 'Atualize nome, WhatsApp (com DDD) e endereço e toque em Salvar alterações.', 'Se tentar sair com alterações não salvas, o app pergunta antes de descartar.'], related: ['conta-e-seguranca']
   },
   {
-    id: 'responder-garantia', title: 'Como responder a uma garantia ou reclamação', summary: 'Quando um cliente abre um caso, você tem 5 dias úteis para responder. Também dá para oferecer reparo a uma avaliação negativa.', category: 'Garantia', audiences: ['prestador'], contexts: ['dashboard-prestador'],
+    id: 'responder-garantia', title: 'Como responder a uma garantia ou reclamação', summary: 'Quando um cliente abre um caso, você tem 5 dias úteis para responder. Também dá para oferecer reparo a uma avaliação negativa.', category: 'Garantia', audiences: ['prestador'], contexts: ['dashboard-prestador', 'painel-trabalhos', 'painel-desempenho'],
     steps: ['Em Meus Trabalhos, o aviso laranja no topo mostra quantos casos esperam sua resposta e até quando. Toque nele para abrir o mais urgente.', 'Leia o problema descrito pelo cliente e veja as fotos, se houver.', 'Escreva o que você vai fazer em "Registrar proposta de solução". Só depois disso o cliente pode confirmar que resolveu ou reabrir o caso.', 'Se você não responder em 5 dias úteis, o caso é encerrado como "sem resposta" e isso aparece no seu perfil público.', 'Para oferecer reparo a uma avaliação negativa, abra o trabalho concluído e toque em "Oferecer reparo". Isso exige ter uma garantia configurada no seu perfil. O cliente decide se aceita; se confirmar que ficou resolvido, a avaliação passa a contar como 3 estrelas no seu ranking.'], related: ['avaliacoes-prestador', 'editar-perfil-prestador']
   },
   {
-    id: 'editar-perfil-prestador', title: 'Como editar meu perfil profissional', summary: 'Mantenha seus dados, especialidades e formas de contato atualizados para aparecer melhor nas buscas.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador'],
+    id: 'editar-perfil-prestador', title: 'Como editar meu perfil profissional', summary: 'Mantenha seus dados, especialidades e formas de contato atualizados para aparecer melhor nas buscas.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador', 'painel-dados-perfil'],
     steps: ['Abra a aba Dados Profissionais no painel.', 'Atualize sua descrição, localização, especialidades e WhatsApp.', 'Salve as alterações e confira como seu perfil aparece publicamente.'], related: ['portfolio-prestador', 'ativacao-perfil-prestador']
   },
   {
-    id: 'portfolio-prestador', title: 'Como publicar projetos no portfólio', summary: 'Adicione fotos e informações de trabalhos realizados para apresentar sua experiência aos clientes.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador'],
+    id: 'portfolio-prestador', title: 'Como publicar projetos no portfólio', summary: 'Adicione fotos e informações de trabalhos realizados para apresentar sua experiência aos clientes.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador', 'painel-trabalhos'],
     steps: ['Acesse a aba Meus Trabalhos.', 'Envie fotos nítidas e escolha trabalhos que representem seu serviço.', 'Avise o cliente de que as fotos do serviço podem aparecer no seu portfólio público e evite mostrar rostos, documentos, placas e endereços completos.', 'Revise o conteúdo antes de publicar para manter seu portfólio atualizado.']
   },
   {
-    id: 'avaliacoes-prestador', title: 'Como consultar minhas avaliações', summary: 'Acompanhe as avaliações recebidas dos clientes diretamente no seu painel profissional.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador'],
+    id: 'avaliacoes-prestador', title: 'Como consultar minhas avaliações', summary: 'Acompanhe as avaliações recebidas dos clientes diretamente no seu painel profissional.', category: 'Meu perfil', audiences: ['prestador'], contexts: ['dashboard-prestador', 'painel-desempenho'],
     steps: ['Abra a aba Desempenho no painel e escolha a visão Avaliações.', 'Leia os comentários e confira sua nota geral.', 'Use os retornos para melhorar a comunicação e a qualidade dos serviços.']
   },
   {
@@ -85,7 +89,20 @@ export const helpArticles: HelpArticle[] = [
     steps: ['Na aba Divulgação, abra Links & mensagens.', 'Toque em Copiar link geral para pegar o endereço do seu perfil público.', 'Escolha uma mensagem: apresentação do perfil, responder quem te chamou, texto para Status/Stories ou grupos de bairro e condomínio.', 'Toque em Enviar no WhatsApp para escolher o contato e mandar na hora, ou em Copiar para colar onde quiser. Ajuste o texto ao seu jeito antes de enviar.', 'Respeite as regras de cada grupo antes de divulgar.'], related: ['divulgacao-visao-geral', 'avaliacoes-prestador']
   },
   {
-    id: 'ativacao-perfil-prestador', title: 'Ativação ou bloqueio do perfil', summary: 'Entenda o que acontece quando seu perfil está incompleto, em análise ou bloqueado pela moderação.', category: 'Conta', audiences: ['prestador'], contexts: ['dashboard-prestador'],
+    id: 'selo-cnpj-prestador', title: 'Por que mostrar meu CNPJ e como fazer', summary: 'É opcional e gratuito. O selo de CNPJ ativo dá ao cliente um motivo a mais para confiar em você antes de chamar.', category: 'Selos de confiança', audiences: ['prestador'], contexts: ['dashboard-prestador', 'dados-profissionais', 'painel-dados-cnpj'],
+    reasons: { heading: 'Por que vale a pena informar o CNPJ', items: MOTIVOS_CNPJ.map((m) => ({ title: m.titulo, text: m.texto })) },
+    steps: ['Abra o painel, vá em Dados Profissionais e toque na aba CNPJ. Antes, salve a aba Meu perfil.', 'Digite o número do CNPJ (pode ter letras e números; a máscara aparece enquanto você digita) e toque em "Conferir meu CNPJ".', 'Consultamos os dados abertos da Receita Federal. Se o CNPJ estiver ativo e o seu nome (o do perfil ou o nome completo da sua conta) for igual à razão social, ao nome fantasia ou a um sócio, o selo é liberado na hora. No MEI, o nome costuma ser o seu próprio nome.', 'Se o CNPJ estiver ativo mas o nome não bater, o caso vai para a nossa equipe e aparece como "Em conferência". Volte à aba mais tarde para ver o resultado. Seu perfil continua normal na busca enquanto isso. Se a Receita mostrar o CNPJ como baixado, suspenso ou inapto, avisamos na hora: regularize a situação e informe o número de novo.', 'O selo vale por 35 dias e é renovado sozinho enquanto o CNPJ continuar ativo. Se a Receita deixar de mostrar o CNPJ como ativo, o selo é pausado e a aba CNPJ avisa para você regularizar a situação e informar o número de novo.', 'Para tirar o selo, use "Remover meu CNPJ" na mesma aba. Você pode informar este ou outro CNPJ quando quiser.'], related: ['selos-e-niveis-prestador']
+  },
+  {
+    id: 'selos-e-niveis-prestador', title: 'Como ganhar selos e subir de nível', summary: 'Os selos mostram ao cliente o que foi conferido de verdade. Veja o que cada um pede e como chegar ao nível Prata.', category: 'Selos de confiança', audiences: ['prestador'], contexts: ['dados-profissionais', 'painel-dados-cnpj'],
+    steps: ['CNPJ ativo: conferido na Receita Federal (veja "Por que mostrar meu CNPJ e como fazer"). É a base do nível Bronze.', 'Experiência no PQF: 10 serviços concluídos aqui e avaliados por 10 clientes diferentes, cada avaliação com nota 3 ou mais. É calculado sozinho; avaliação anulada por uma garantia deixa de contar.', 'Tempo de CNPJ: aparece quando a abertura registrada na Receita tem 1 ano ou mais, e mostra a faixa de 1, 3 ou 5 anos. Precisa do CNPJ ativo.', 'Atividade compatível: aparece quando alguma atividade registrada no CNPJ (a principal ou uma secundária) combina com a categoria do seu perfil. Se não combinar, nada muda para você: é só um selo a menos. Para algumas categorias ainda não sabemos qual atividade de CNPJ combina; nesse caso o painel avisa e você pode nos contar, pelo WhatsApp, qual código usa, para ajudar a melhorar a conferência.', 'Níveis: Bronze é o CNPJ ativo. Prata é o Bronze mais a Experiência no PQF. Novos selos e níveis poderão chegar no futuro.', 'Acompanhe o andamento na barra "Seus selos de confiança", no topo de Dados Profissionais. Nenhum selo muda a sua posição na busca: eles servem para o cliente confiar em você.'], related: ['selo-cnpj-prestador', 'avaliacoes-prestador']
+  },
+  {
+    id: 'selos-no-perfil', title: 'O que significam os selos no perfil do profissional', summary: 'Os selos mostram o que o PQF conferiu. Eles ajudam na escolha, mas não substituem combinar tudo com o profissional.', category: 'Encontrar ajuda', audiences: ['cliente', 'publico'], contexts: ['perfil-publico'],
+    steps: ['"CNPJ ativo": na data indicada, a Receita Federal mostrava o CNPJ do profissional como ativo. Não exibimos o número do CNPJ nem a razão social.', '"Experiência no PQF": o profissional tem 10 serviços concluídos aqui, avaliados por 10 clientes diferentes com nota 3 ou mais.', '"CNPJ aberto há mais de 1, 3 ou 5 anos": há quanto tempo a empresa existe, segundo a Receita.', '"Atividade compatível": uma das atividades registradas no CNPJ combina com o serviço que o profissional oferece.', 'Nível Bronze ou Prata: resume os selos. Bronze é o CNPJ ativo. Prata é o CNPJ ativo mais a experiência no PQF.', 'Quem não tem selo não é pior: o selo é opcional e há bons profissionais sem CNPJ. Olhe também as avaliações e o portfólio.', 'O selo não garante o resultado do serviço. Combine valores e prazos pelo WhatsApp e, se houver problema, use a garantia.'], related: ['ler-perfil-publico', 'garantia']
+  },
+  {
+    id: 'ativacao-perfil-prestador', title: 'Ativação ou bloqueio do perfil', summary: 'Entenda o que acontece quando seu perfil está incompleto, em análise ou bloqueado pela moderação.', category: 'Conta', audiences: ['prestador'], contexts: ['dashboard-prestador', 'painel-dados-perfil'],
     steps: ['Complete os dados obrigatórios indicados na aba Dados Profissionais.', 'Aguarde a análise quando o perfil estiver em revisão.', 'Se houver bloqueio, leia o motivo informado e use o canal de suporte do painel para pedir esclarecimentos.']
   },
   {
@@ -102,7 +119,7 @@ export function findHelpArticle(id: string) { return helpArticles.find((article)
 
 export function searchHelpArticles(query: string, audience: HelpAudience = 'cliente') {
   const normalized = query.trim().toLocaleLowerCase('pt-BR')
-  return helpArticles.filter((article) => article.audiences.includes(audience) && (!normalized || [article.title, article.summary, article.category, ...(article.steps || [])].join(' ').toLocaleLowerCase('pt-BR').includes(normalized)))
+  return helpArticles.filter((article) => article.audiences.includes(audience) && (!normalized || [article.title, article.summary, article.category, ...(article.steps || []), ...(article.reasons?.items.flatMap((i) => [i.title, i.text]) || [])].join(' ').toLocaleLowerCase('pt-BR').includes(normalized)))
 }
 
 export const helpCategories = [...new Set(helpArticles.map((article) => article.category))]

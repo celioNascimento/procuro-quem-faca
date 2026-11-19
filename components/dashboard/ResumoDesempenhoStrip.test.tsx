@@ -27,6 +27,16 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('ResumoDesempenhoStrip', () => {
+  it('é sempre um botão com a seta, igual em qualquer aba', () => {
+    const onAbrir = vi.fn()
+    render(<ResumoDesempenhoStrip onAbrir={onAbrir} />)
+
+    const botao = screen.getByRole('button', { name: /ver desempenho completo/i })
+    expect(botao.querySelector('svg.lucide-chevron-right')).not.toBeNull()
+    fireEvent.click(botao)
+    expect(onAbrir).toHaveBeenCalledTimes(1)
+  })
+
   it('mostra visitas e contatos dos últimos 7 dias', () => {
     render(<ResumoDesempenhoStrip onAbrir={() => {}} />)
 

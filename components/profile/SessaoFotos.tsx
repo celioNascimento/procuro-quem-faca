@@ -56,12 +56,15 @@ export function SessaoFotos({ sessao }: SessaoFotosProps) {
         </button>
       </div>
 
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1" aria-label="Selecionar foto">
+      {/* Centralizadas: o wrapper centraliza e a faixa interna só rola quando não cabe (justify-center cortaria o começo). */}
+      <div className="mt-4 flex justify-center">
+      <div className="flex max-w-full gap-2 overflow-x-auto pb-1" aria-label="Selecionar foto" data-testid="miniaturas-fotos">
         {fotos.map((foto, index) => (
           <button key={`${foto}-${index}`} type="button" onClick={() => setFotoAtual(index)} className={`relative h-14 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 ${fotoAtual === index ? 'border-blue-600 shadow-sm' : 'border-transparent opacity-60 hover:opacity-100'}`} aria-label={`Selecionar foto ${index + 1}`} aria-current={fotoAtual === index ? 'true' : undefined}>
             <Image src={foto} alt="" fill className="object-cover" sizes="64px" />
           </button>
         ))}
+      </div>
       </div>
 
       {fotoSelecionada !== null && (

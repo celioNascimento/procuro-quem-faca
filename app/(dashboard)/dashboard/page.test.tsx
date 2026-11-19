@@ -6,7 +6,7 @@ vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams(b
 type StatusPerfil = { cadastroCompleto: boolean; validando: boolean; slug: string; prestadorId: number; bloqueado: boolean; motivoBloqueio: string | null }
 let status: StatusPerfil = { cadastroCompleto: true, validando: false, slug: 'ana', prestadorId: 7, bloqueado: false, motivoBloqueio: null }
 vi.mock('@/hooks/usePerfilStatus', () => ({ usePerfilStatus: () => status }))
-vi.mock('@/components/dashboard/EditarPerfilTab', () => ({ default: () => <div>ABA-PERFIL</div> }))
+vi.mock('@/components/dashboard/dados-profissionais/DadosProfissionaisTabs', () => ({ default: () => <div>ABA-PERFIL</div> }))
 vi.mock('@/components/dashboard/PortfolioDashboardTab', () => ({ default: () => <div>ABA-TRABALHOS</div> }))
 vi.mock('@/components/dashboard/DesempenhoDashboardTab', () => ({ default: () => <div>ABA-DESEMPENHO</div> }))
 vi.mock('@/components/dashboard/CentralDivulgacaoTab', () => ({ default: () => <div>ABA-DIVULGACAO</div> }))
@@ -20,9 +20,8 @@ afterEach(() => { cleanup(); busca = ''; status = { cadastroCompleto: true, vali
 
 describe('Painel do prestador — central de ajuda', () => {
   it.each([
-    ['Meus Trabalhos', 'dashboard-prestador'],
-    ['Desempenho', 'dashboard-prestador'],
-    ['Dados Profissionais', 'dashboard-prestador'],
+    ['Meus Trabalhos', 'painel-trabalhos'],
+    ['Desempenho', 'painel-desempenho'],
     ['Divulgação', 'divulgacao'],
   ])('na aba %s aparece um único bloco de ajuda (%s)', (aba, contexto) => {
     render(<PerfilPage />)
@@ -30,6 +29,12 @@ describe('Painel do prestador — central de ajuda', () => {
     const blocos = screen.getAllByTestId('ajuda')
     expect(blocos).toHaveLength(1)
     expect(blocos[0].textContent).toBe(contexto)
+  })
+
+  it('em Dados Profissionais a página não mostra bloco: a própria aba mostra, conforme Meu perfil ou CNPJ', () => {
+    render(<PerfilPage />)
+    fireEvent.click(screen.getByRole('button', { name: /Dados Profissionais/ }))
+    expect(screen.queryAllByTestId('ajuda')).toHaveLength(0)
   })
 })
 

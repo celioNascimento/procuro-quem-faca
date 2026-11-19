@@ -12,7 +12,6 @@ interface PrestadorRow {
   slug: string | null
   whatsapp: string | null
   foto_perfil: string | null
-  verificado: boolean | null
   garantia_dias: number | null
   categorias: Rel<{ nome: string }>
   cidades: Rel<{ nome: string }>
@@ -37,7 +36,7 @@ export function escolherFotosPortfolio(projetos: ProjetoRow[], max = 4): string[
 export async function fetchDadosDivulgacao(prestadorId: number): Promise<DadosDivulgacao> {
   const { data, error } = await supabase
     .from('prestadores')
-    .select('id, nome, slug, whatsapp, foto_perfil, verificado, garantia_dias, categorias(nome), cidades(nome)')
+    .select('id, nome, slug, whatsapp, foto_perfil, garantia_dias, categorias(nome), cidades(nome)')
     .eq('id', prestadorId)
     .single()
   if (error) throw error
@@ -68,7 +67,6 @@ export async function fetchDadosDivulgacao(prestadorId: number): Promise<DadosDi
     slug: p.slug,
     categoria: um(p.categorias)?.nome ?? null,
     cidade: um(p.cidades)?.nome ?? null,
-    verificado: p.verificado === true,
     whatsapp: p.whatsapp,
     fotoPerfilUrl: p.foto_perfil,
     totalIndicacoes: indicacoesRes.count ?? 0,

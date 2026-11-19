@@ -3,15 +3,24 @@
 'use client'
 import { useState, useRef, useLayoutEffect } from 'react'
 import Link from 'next/link'
-import { MapPin, ChevronRight } from 'lucide-react'
+import { MapPin, ChevronRight, BadgeCheck } from 'lucide-react'
 import type { Prestador } from '@/types/prestador'
 import { corDasIniciais, getIniciais, getLocalizacao, getPerfilHref } from '@/lib/prestadorUtils'
 import { visualDaArea } from '@/lib/areaVisual'
+import { ROTULO_SELO_CARD } from '@/lib/selos/publico'
+import { apresentarNivel } from '@/lib/selos/nivel'
+import { textoTagNaoIndicam } from '@/lib/avaliacoes/transparencia'
 
 type Props = {
   prestador: Prestador
   session: unknown
   registrarLog?: (acao: string, detalhes?: Record<string, unknown>) => void
+  /** true quando o prestador tem o selo de CNPJ ativo (aprovado e vigente). */
+  seloCnpj?: boolean
+  /** 'bronze', 'prata'... A foto ganha borda da cor do nível. */
+  nivel?: string | null
+  /** Placar de indicações; a tag "X de Y não indicam" só aparece pela mesma regra do aviso do perfil. */
+  placar?: { indicam: number; naoIndicam: number } | null
 }
 
 // Largura estimada do badge "+N" (px), reservada de antemão para não
@@ -20,7 +29,10 @@ const LARGURA_BADGE_EXTRA = 44
 // Espaço entre badges (gap-1.5 = 6px)
 const GAP_BADGES = 6
 
-export default function PrestadorCard({ prestador, session, registrarLog }: Props) {
+export default function PrestadorCard({ prestador, session, registrarLog, seloCnpj = false, nivel = null, placar = null }: Props) {
+  const tagNaoIndicam = placar ? textoTagNaoIndicam(placar.indicam, placar.naoIndicam) : null
+  const apresentacaoNivel = apresentarNivel(nivel)
+  const temNivel = apresentacaoNivel.chave !== null
   const [imgError, setImgError] = useState(false)
 
   const habilidadesTotais = prestador?.habilidades || []
@@ -87,7 +99,7 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
       <div className="flex flex-col gap-3 px-4 py-4 md:px-5">
         {/* Identidade: foto, nome, categoria e onde atende — tudo junto, sem blocos vazios */}
         <div className="flex min-w-0 items-center gap-4">
-          <div className={`flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border md:size-20 ${temFoto ? 'border-slate-100 bg-slate-50' : visualArea ? visualArea.cores : corDasIniciais(prestador.nome || '')}`}>
+          <div className={`flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl md:size-20 ${temNivel ? `border-2 ${apresentacaoNivel.bordaForte}` : 'border'} ${temFoto ? `${temNivel ? '' : 'border-slate-100 '}bg-slate-50` : visualArea ? visualArea.cores : corDasIniciais(prestador.nome || '')}`}>
             {temFoto ? (
               <img
                 src={prestador.foto_perfil ?? undefined}
@@ -115,9 +127,36 @@ export default function PrestadorCard({ prestador, session, registrarLog }: Prop
                 {prestador.nome}
               </Link>
             </h2>
-            <span className="text-xs font-bold uppercase leading-tight tracking-wide text-blue-600">
-              {prestador.categoria}
-            </span>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="text-xs font-bold uppercase leading-tight tracking-wide text-blue-600">
+                {prestador.categoria}
+              </span>
+              {temNivel && (
+                <span
+                  data-testid="nivel-card"
+                  className={`inline-flex items-center rounded-full border px-2 py-px text-xs font-black ${apresentacaoNivel.classes}`}
+                >
+                  {apresentacaoNivel.nome}
+                </span>
+              )}
+              {tagNaoIndicam && (
+                <span
+                  data-testid="tag-nao-indicam"
+                  className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-px text-xs font-bold text-amber-900"
+                >
+                  {tagNaoIndicam}
+                </span>
+              )}
+              {seloCnpj && (
+                <span
+                  data-testid="selo-cnpj-card"
+                  className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-bold text-green-700"
+                >
+                  <BadgeCheck size={12} aria-hidden="true" />
+                  {ROTULO_SELO_CARD}
+                </span>
+              )}
+            </div>
             {(localizacao || isPublico) && (
               <div className="flex flex-wrap items-center gap-x-3">
                 {localizacao && (

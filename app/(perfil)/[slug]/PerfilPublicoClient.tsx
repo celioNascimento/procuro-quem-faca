@@ -2,6 +2,7 @@
 
 'use client'
 
+import { AvisoPerfilExemplo } from '@/components/profile/AvisoPerfilExemplo'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
@@ -18,6 +19,7 @@ import { AdCard } from '@/components/ads/AdCard'
 import { usePerfilPrestador } from '@/hooks/usePerfilPrestador'
 import { RastreamentoAtivacaoProvider } from '@/components/RastreamentoAtivacaoProvider'
 import { useCompartilharPerfil } from '@/hooks/useCompartilharPerfil'
+import { useSeloDoPerfil } from '@/hooks/useSelosPublicos'
 import { supabase } from '@/lib/supabase/client'
 import type { PrestadorPerfil, ProjetoPerfil } from '@/types/perfil'
 import type { Anuncio } from '@/types/ads'
@@ -32,10 +34,12 @@ interface PerfilCarregadoProps {
     ? D extends { avaliacoes: infer A } ? A : never
     : never
   totalIndicacoes: number
+  totalNaoIndicacoes?: number
   urlRetorno: string
 }
 
-export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicacoes, urlRetorno }: PerfilCarregadoProps) {
+export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicacoes, totalNaoIndicacoes = 0, urlRetorno }: PerfilCarregadoProps) {
+  const { selo, nivel, complementares } = useSeloDoPerfil(prestador.id)
   const { status: statusCompartilhamento, compartilhar } = useCompartilharPerfil({
     prestador,
     projetos,
@@ -96,6 +100,12 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 md:pt-26 lg:px-8 lg:pb-8 2xl:max-w-[96rem] 2xl:px-12">
         {/* Perfil montado com dados públicos: avisa de onde vêm as informações e oferece assumir o perfil */}
+        {prestador.exemplo === true && (
+          <div className="mb-5 lg:mb-6">
+            <AvisoPerfilExemplo />
+          </div>
+        )}
+
         {isPublico && (
           <div className="mb-5 lg:mb-6">
             <AvisoPerfilPublico prestadorId={prestador.id} nome={prestador.nome || ''} />
@@ -114,6 +124,7 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
                   prestador={prestador}
                   compartilhando={statusCompartilhamento === 'copiado'}
                   onCompartilhar={compartilhar}
+                  seloCnpj={selo !== null}
                 />
               </div>
 
@@ -121,7 +132,11 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
                 <PerfilConfianca
                   prestador={prestador}
                   totalIndicacoes={totalIndicacoes}
+                  totalNaoIndicacoes={totalNaoIndicacoes}
                   totalConcluidos={projetos.filter(p => p.status === 'finalizado').length}
+                  selo={selo}
+                  nivel={nivel}
+                  complementares={complementares}
                 />
               </div>
 
@@ -161,6 +176,7 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
             <PerfilTabs
               projetos={projetos}
               avaliacoes={avaliacoes}
+              totais={{ indicam: totalIndicacoes, naoIndicam: totalNaoIndicacoes }}
               portfolioObrigatorio={prestador.portfolio_obrigatorio}
               contato={{ nome: prestador.nome || '', whatsapp: prestador.whatsapp || '', onClique: registrarCliqueWhatsapp }}
             />

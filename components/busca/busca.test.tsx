@@ -24,7 +24,20 @@ vi.mock('@/components/ads/AdCard', () => ({
   AdCard: ({ page }: { page: string }) => <div data-testid="anuncio">{page}</div>,
 }))
 vi.mock('@/components/cards/PrestadorCard', () => ({
-  default: ({ prestador }: { prestador: Prestador }) => <article data-testid="card">{prestador.nome}</article>,
+  default: ({ prestador, seloCnpj, nivel, placar }: { prestador: Prestador; seloCnpj?: boolean; nivel?: string | null; placar?: { naoIndicam: number } | null }) => (
+    <article data-testid="card">{prestador.nome}{seloCnpj ? ' [selo]' : ''}{nivel ? ` [${nivel}]` : ''}{placar ? ` [nao:${placar.naoIndicam}]` : ''}</article>
+  ),
+}))
+const buscarSelosPublicos = vi.fn().mockResolvedValue([])
+const buscarNiveisDosPrestadores = vi.fn().mockResolvedValue(new Map())
+vi.mock('@/lib/services/selosPublicos.service', () => ({
+  buscarSelosPublicos: (ids: number[]) => buscarSelosPublicos(ids),
+  buscarNivelDoPrestador: vi.fn().mockResolvedValue(null),
+  buscarNiveisDosPrestadores: (ids: number[]) => buscarNiveisDosPrestadores(ids),
+}))
+const buscarPlacarDosPrestadores = vi.fn().mockResolvedValue(new Map())
+vi.mock('@/lib/services/placarIndicacoes.service', () => ({
+  buscarPlacarDosPrestadores: (ids: number[]) => buscarPlacarDosPrestadores(ids),
 }))
 vi.mock('@/lib/services/anunciosPublicos.service', () => ({
   listarAnunciosAtivosPorPraca: vi.fn().mockResolvedValue([]),
@@ -184,5 +197,36 @@ describe('DicaDaLista', () => {
     unmount()
     render(<DicaDaLista />)
     expect(screen.queryByRole('complementary')).toBeNull()
+  })
+})
+
+describe('ResultadosPaginados — selos de CNPJ', () => {
+  const lista = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ id: i + 1, nome: `Prof ${i + 1}`, slug: `p-${i + 1}`, origem_tipo: 'registro_direto' }) as unknown as Prestador)
+
+  it('consulta só os cards visíveis e marca quem tem selo', async () => {
+    buscarSelosPublicos.mockReset()
+    buscarSelosPublicos.mockResolvedValue([
+      { prestador_id: 2, tipo: 'cnpj', verificado_em: null, valido_ate: null, consultado_em: '2026-11-17T15:00:00Z', data_abertura: null },
+    ])
+    buscarNiveisDosPrestadores.mockReset()
+    buscarNiveisDosPrestadores.mockResolvedValue(new Map([[2, 'prata']]))
+    buscarPlacarDosPrestadores.mockReset()
+    buscarPlacarDosPrestadores.mockResolvedValue(new Map([[2, { indicam: 7, naoIndicam: 3 }]]))
+    render(<ResultadosPaginados prestadores={lista(25)} quantidadeInicial={10} session={null} contextoAnuncio="" />)
+    await vi.waitFor(() => expect(screen.getByText('Prof 2 [selo] [prata] [nao:3]')).toBeTruthy())
+    expect(buscarPlacarDosPrestadores.mock.calls[0][0]).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    expect(buscarSelosPublicos).toHaveBeenCalledTimes(1)
+    expect(buscarSelosPublicos.mock.calls[0][0]).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    expect(screen.getByText('Prof 1')).toBeTruthy() // sem selo: sem marca
+  })
+
+  it('se a consulta de selos falhar, a lista aparece normalmente', async () => {
+    buscarSelosPublicos.mockReset()
+    buscarSelosPublicos.mockRejectedValue(new Error('rede'))
+    buscarNiveisDosPrestadores.mockResolvedValue(new Map())
+    render(<ResultadosPaginados prestadores={lista(3)} quantidadeInicial={10} session={null} contextoAnuncio="" />)
+    await vi.waitFor(() => expect(buscarSelosPublicos).toHaveBeenCalled())
+    expect(screen.getAllByTestId('card')).toHaveLength(3)
   })
 })

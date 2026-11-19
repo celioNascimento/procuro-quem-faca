@@ -4,16 +4,18 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-import EditarPerfilTab from '@/components/dashboard/EditarPerfilTab'
+import DadosProfissionaisTabs, { type SubAbaDados } from '@/components/dashboard/dados-profissionais/DadosProfissionaisTabs'
 import PortfolioDashboardTab from '@/components/dashboard/PortfolioDashboardTab'
 import DesempenhoDashboardTab, { type SubAbaDesempenho } from '@/components/dashboard/DesempenhoDashboardTab'
 import CentralDivulgacaoTab from '@/components/dashboard/CentralDivulgacaoTab'
 import { AdCardDashboard } from '@/components/dashboard/AdCardDashboard'
 import { ResumoDesempenhoStrip } from '@/components/dashboard/ResumoDesempenhoStrip'
-import { Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Activity, Megaphone } from 'lucide-react'
+import Link from 'next/link'
+import { ExternalLink, Lock, UserCircle2, Images, Loader2, ShieldAlert, MessageCircle, Send, Activity, Megaphone } from 'lucide-react'
 import { NUMERO_WHATSAPP_PQF } from '@/lib/config/contato'
 import { usePerfilStatus } from '@/hooks/usePerfilStatus'
 import { ContextualHelp } from '@/components/help/HelpCenter'
+import { ajudaDaAba } from '@/lib/help/ajuda-do-painel'
 import { TituloArea } from '@/components/shared/TituloArea'
 
 // Selo "Novo" da aba Desempenho: some assim que o prestador abre a aba pela primeira vez.
@@ -27,6 +29,7 @@ function PerfilPageContent() {
     abaParam === 'perfil' ? 'perfil' : abaParam === 'desempenho' || abaParam === 'avaliacoes' ? 'desempenho' : 'portfolio'
   const subAbaInicial: SubAbaDesempenho =
     abaParam === 'avaliacoes' || searchParams.get('sub') === 'avaliacoes' ? 'avaliacoes' : 'analises'
+  const subAbaDados: SubAbaDados = searchParams.get('sub') === 'cnpj' ? 'cnpj' : 'perfil'
   const [abaAtiva, setAbaAtiva] = useState(abaInicial)
   // Começa como "visto" para o selo não piscar antes de ler o armazenamento do navegador.
   const [desempenhoVisto, setDesempenhoVisto] = useState(true)
@@ -118,8 +121,20 @@ function PerfilPageContent() {
   return (
     <div className="mx-auto w-full max-w-6xl">
       {/* ── Cabeçalho ── */}
-      <header className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:pb-6">
+      <header className="flex items-end justify-between gap-3 border-b border-slate-200 pb-4 sm:gap-6 sm:pb-6">
         <TituloArea area="Área do profissional" titulo="Meu painel" />
+        {slug && cadastroCompleto && (
+          <Link
+            href={`/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="ver-perfil-publico"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 sm:gap-2 sm:px-4"
+          >
+            <ExternalLink size={16} aria-hidden="true" />
+            Ver meu perfil
+          </Link>
+        )}
       </header>
 
       {/* ── Alerta de bloqueio ── */}
@@ -164,10 +179,19 @@ function PerfilPageContent() {
         <AdCardDashboard />
       </div>
 
-      {/* Faixa resumo (7 dias) com atalho para a aba Desempenho; escondida dentro dela para não repetir. */}
-      {!validando && cadastroCompleto && !bloqueado && abaAtiva !== 'desempenho' && (
+      {/* Faixa resumo (7 dias) em todas as abas, para a tela não mudar de lugar ao trocar de aba.
+          A seta é igual em todas; dentro de Desempenho ela leva às análises (rola até o conteúdo). */}
+      {!validando && cadastroCompleto && !bloqueado && (
         <div className="mt-4">
-          <ResumoDesempenhoStrip onAbrir={() => abrirAba('desempenho')} />
+          <ResumoDesempenhoStrip
+            onAbrir={() => {
+              if (abaAtiva === 'desempenho') {
+                document.getElementById('conteudo-painel')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+              } else {
+                abrirAba('desempenho')
+              }
+            }}
+          />
         </div>
       )}
 
@@ -207,23 +231,24 @@ function PerfilPageContent() {
         </div>
       </nav>
 
-      <div className="min-h-[28rem] pt-6 sm:pt-8">
+      <div id="conteudo-painel" className="min-h-[28rem] scroll-mt-4 pt-6 sm:pt-8">
         {validando ? (
           <div className="flex min-h-64 flex-col items-center justify-center gap-4" role="status">
             <Loader2 className="size-8 animate-spin text-blue-600" aria-hidden="true" />
             <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Verificando seu perfil</p>
           </div>
         ) : (
-          abaAtiva === 'perfil' ? <EditarPerfilTab /> : abaAtiva === 'desempenho' ? <DesempenhoDashboardTab prestadorId={prestadorId} subAbaInicial={subAbaInicial} /> : abaAtiva === 'divulgacao' ? <CentralDivulgacaoTab prestadorId={prestadorId} onIrParaTrabalhos={() => abrirAba('portfolio')} /> : <PortfolioDashboardTab />
+          abaAtiva === 'perfil' ? <DadosProfissionaisTabs prestadorId={prestadorId} subAbaInicial={subAbaDados} /> : abaAtiva === 'desempenho' ? <DesempenhoDashboardTab prestadorId={prestadorId} subAbaInicial={subAbaInicial} /> : abaAtiva === 'divulgacao' ? <CentralDivulgacaoTab prestadorId={prestadorId} onIrParaTrabalhos={() => abrirAba('portfolio')} /> : <PortfolioDashboardTab />
         )}
       </div>
 
-      <div className="pt-6 sm:pt-8">
-        {/* Um único bloco de ajuda por tela: na aba Divulgação ele traz os artigos de divulgação. */}
-        {abaAtiva === 'divulgacao'
-          ? <ContextualHelp context="divulgacao" audience="prestador" title="Dúvidas sobre divulgação?" />
-          : <ContextualHelp context="dashboard-prestador" audience="prestador" title="Encontre respostas para cuidar do seu perfil" />}
-      </div>
+      {/* Um único bloco de ajuda por tela, só com o que é relevante na aba aberta.
+          Em Dados Profissionais quem mostra é a própria aba, porque a ajuda muda entre Meu perfil e CNPJ. */}
+      {abaAtiva !== 'perfil' && (
+        <div className="pt-6 sm:pt-8">
+          <ContextualHelp audience="prestador" {...ajudaDaAba(abaAtiva as 'portfolio' | 'desempenho' | 'divulgacao')} />
+        </div>
+      )}
     </div>
   )
 }

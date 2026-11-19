@@ -7,7 +7,6 @@ export interface DadosDivulgacao {
   slug: string | null
   categoria: string | null
   cidade: string | null
-  verificado: boolean
   whatsapp: string | null
   fotoPerfilUrl: string | null
   /** Indicações de clientes (avaliações visíveis com indica = true). A prova social é esta, não nota média. */

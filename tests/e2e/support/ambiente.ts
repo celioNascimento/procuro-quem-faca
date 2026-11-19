@@ -44,7 +44,7 @@ export function motivoParaPular(): string | null {
   return null
 }
 
-export type Papel = 'prestador' | 'cliente'
+export type Papel = 'prestador' | 'cliente' | 'prestadorMei'
 
 /**
  * Contas fictícias do banco de teste (domínio .invalid, não recebem e-mail).
@@ -58,11 +58,23 @@ export const CONTAS: Record<Papel, { email: string; senha: string; nome: string 
     senha: process.env.E2E_PRESTADOR_SENHA ?? SENHA_PADRAO_TESTE,
     nome: 'Pedro Pedreiro Teste',
   },
+  // Prestador da semente com o nome de um MEI real (dado público da Receita), para o caminho "aprovada".
+  prestadorMei: {
+    email: 'e2e-jorge@pqf-teste.invalid',
+    senha: SENHA_PADRAO_TESTE,
+    nome: 'Jorge Paulo de Lima',
+  },
   cliente: {
     email: process.env.E2E_CLIENTE_EMAIL ?? 'cliente@pqf-teste.invalid',
     senha: process.env.E2E_CLIENTE_SENHA ?? SENHA_PADRAO_TESTE,
     nome: 'Clara Cliente Teste',
   },
+}
+
+/** Conta fictícia do administrador (login em /admin/login). */
+export const CONTA_ADMIN = {
+  email: process.env.E2E_ADMIN_EMAIL ?? 'admin@pqf-teste.invalid',
+  senha: process.env.E2E_ADMIN_SENHA ?? SENHA_PADRAO_TESTE,
 }
 
 /** Perfil público fictício semeado no banco de teste. */

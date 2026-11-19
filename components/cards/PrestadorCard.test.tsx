@@ -125,3 +125,48 @@ describe('PrestadorCard', () => {
     expect(container.querySelector('svg.lucide-hammer')).toBeNull()
   })
 })
+
+describe('PrestadorCard — selo de CNPJ', () => {
+  it('sem selo não mostra nada', () => {
+    render(<PrestadorCard prestador={prestador()} session={null} />)
+    expect(screen.queryByTestId('selo-cnpj-card')).toBeNull()
+  })
+
+  it('com selo mostra "CNPJ ativo" ao lado da categoria', () => {
+    render(<PrestadorCard prestador={prestador()} session={null} seloCnpj />)
+    expect(screen.getByTestId('selo-cnpj-card').textContent).toBe('CNPJ ativo')
+  })
+})
+
+describe('PrestadorCard: nível', () => {
+  it('com nível Prata mostra o selinho e a foto ganha borda da cor do nível', () => {
+    const { container } = render(<PrestadorCard prestador={prestador()} session={null} seloCnpj nivel="prata" />)
+    expect(screen.getByTestId('nivel-card').textContent).toBe('Prata')
+    expect(container.innerHTML).toContain('border-slate-400!')
+  })
+  it('com nível Bronze usa a cor de cobre', () => {
+    const { container } = render(<PrestadorCard prestador={prestador()} session={null} seloCnpj nivel="bronze" />)
+    expect(screen.getByTestId('nivel-card').textContent).toBe('Bronze')
+    expect(container.innerHTML).toContain('border-amber-500!')
+  })
+  it('sem nível: sem selinho e sem borda colorida (fica como sempre foi)', () => {
+    const { container } = render(<PrestadorCard prestador={prestador()} session={null} />)
+    expect(screen.queryByTestId('nivel-card')).toBeNull()
+    expect(container.innerHTML).not.toContain('border-amber-500')
+    expect(container.innerHTML).not.toContain('border-slate-400')
+  })
+})
+
+describe('PrestadorCard: tag de não indicações', () => {
+  it('3 de 10 não indicam: mostra a tag âmbar com a porcentagem', () => {
+    render(<PrestadorCard prestador={prestador()} session={null} placar={{ indicam: 7, naoIndicam: 3 }} />)
+    expect(screen.getByTestId('tag-nao-indicam').textContent).toBe('30% não indicam')
+  })
+  it('abaixo da regra ou sem avaliações: nada de tag', () => {
+    const { rerender } = render(<PrestadorCard prestador={prestador()} session={null} placar={{ indicam: 9, naoIndicam: 1 }} />)
+    expect(screen.queryByTestId('tag-nao-indicam')).toBeNull()
+    rerender(<PrestadorCard prestador={prestador()} session={null} placar={null} />)
+    expect(screen.queryByTestId('tag-nao-indicam')).toBeNull()
+  })
+})
+

@@ -7,11 +7,13 @@ import { nomePublicoDoCliente } from '@/lib/nomeDoCliente'
 
 interface Props {
   avaliacoes: AvaliacaoPerfil[]
+  /** Totais reais; sem isso, conta só o que está na lista. */
+  totais?: { indicam: number; naoIndicam: number }
   projetos?: ProjetoPerfil[]
   onVerProjeto?: (projetoId: string | number) => void
 }
 
-export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }: Props) {
+export default function PerfilAvaliacoes({ avaliacoes, totais, projetos, onVerProjeto }: Props) {
   // Estado vazio com a mesma altura/estilo do PortfolioGrid vazio:
   // retornar null encolhia a página ao trocar de aba e causava "pulo" de tela.
   if (avaliacoes.length === 0) {
@@ -24,8 +26,8 @@ export default function PerfilAvaliacoes({ avaliacoes, projetos, onVerProjeto }:
     )
   }
 
-  const totalIndica = avaliacoes.filter(a => a.indica === true).length
-  const totalNaoIndica = avaliacoes.filter(a => a.indica === false).length
+  const totalIndica = totais?.indicam ?? avaliacoes.filter(a => a.indica === true).length
+  const totalNaoIndica = totais?.naoIndicam ?? avaliacoes.filter(a => a.indica === false).length
 
   const formatarData = (dataIso?: string) => {
     if (!dataIso) return ''

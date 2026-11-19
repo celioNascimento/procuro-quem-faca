@@ -61,6 +61,7 @@ export async function getPrestadoresAtivos(cidadeId?: string | number | null, ci
       .from('prestadores')
       .select(COLUNAS_LISTA, { count: 'exact' })
       .eq('status', 'ativo')
+      .eq('exemplo', false)
       .or('bloqueado.is.null,bloqueado.eq.false')
       .order('id')
       .range(de, ate)

@@ -445,7 +445,7 @@ export function desenharAdesivo(canvas: HTMLCanvasElement, dados: DadosDivulgaca
   fonte(ctx, nomePx, 900)
   const linhasNome = quebrarLinhas(ctx, dados.nome, larguraTexto, 2)
   const nicho = (dados.categoria ?? 'Profissional').toUpperCase()
-  const titulo = dados.verificado ? `${nicho} VERIFICADO` : nicho
+  const titulo = nicho
   const nPx = ajustarFonte(ctx, titulo, larguraTexto * 0.9, h * 0.075, h * 0.05, 800)
   const cPx = h * 0.065
   const gap = h * 0.05
@@ -537,7 +537,7 @@ export function desenharCartaoVisita(canvas: HTMLCanvasElement, lado: 'frente' |
     ctx.fillText(l, tx, y)
     y += nomePx * 1.08
   }
-  const nicho = [dados.categoria, dados.verificado ? 'Verificado' : null].filter(Boolean).join(' • ')
+  const nicho = dados.categoria ?? ''
   if (nicho) {
     const nPx = ajustarFonte(ctx, nicho.toUpperCase(), tw, h * 0.075, h * 0.045, 800)
     fonte(ctx, nPx, 800)

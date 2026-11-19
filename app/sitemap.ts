@@ -30,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [{ data: categorias }, { data: cidades }, { data: prestadores }] = await Promise.all([
     supabase.from('categorias').select('slug'),
     supabase.from('cidades').select('nome').eq('ativa', true),
-    supabase.from('prestadores').select('slug, created_at').eq('status', 'ativo'),
+    supabase.from('prestadores').select('slug, created_at').eq('status', 'ativo').eq('exemplo', false),
   ])
 
   // 2. Gera URLs combinadas: "servico-em-cidade"

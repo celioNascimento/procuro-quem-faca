@@ -45,9 +45,9 @@ A contagem ao lado de cada opção é **o que sobra ao escolhê-la** (`calcularF
 
 ## Ordem dos resultados (`lib/ordenacao.ts`)
 
-Vitrine → perfis reais (cadastro direto `registro_direto`, assumido `reivindicado`; `proprio` é nome antigo) → curadoria pública. Dentro da faixa, nota melhor primeiro; **verificado sobe uma faixa**. A nota é a mesma do perfil público (`nota_efetiva` quando existe; só avaliações visíveis e fora de disputa). Em empate, vale a ordem de cadastro.
+Vitrine → perfis reais (cadastro direto `registro_direto`, assumido `reivindicado`; `proprio` é nome antigo) → curadoria pública. Dentro da faixa, nota melhor primeiro; **selos de confiança não mudam a posição** (decisão de 17/11/2026: o selo é opcional e não pune quem não o tem; a regra antiga de `verificado` saiu da ordenação). A nota é a mesma do perfil público (`nota_efetiva` quando existe; só avaliações visíveis e fora de disputa). Em empate, vale a ordem de cadastro.
 
-O selo "Verificado" **ainda não aparece no card**: só será mostrado quando existir algo verificado de fato, na fase de qualificações do prestador.
+O card mostra o selo **"CNPJ ativo"** (`PrestadorCard`, prop `seloCnpj`) só para quem tem verificação de CNPJ aprovada e vigente. Os selos dos 10 cards visíveis vêm de `selos_publicos()` numa consulta por lote (`useSelosPublicos`, `ResultadosPaginados`); se a consulta falhar, o card aparece sem o selo. Nunca exibe o número do CNPJ nem a razão social.
 
 ## Mostrar 10 por vez
 

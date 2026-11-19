@@ -107,3 +107,41 @@ describe('ajuda: cliente', () => {
     expect(searchHelpArticles('foto', 'cliente').map((a) => a.id)).toContain('minha-conta-cliente')
   })
 })
+
+describe('ajuda: selos de confiança e CNPJ', () => {
+  it('o prestador tem o artigo do CNPJ na tela dele e ele explica os motivos antes dos passos', () => {
+    expect(getHelpArticles('prestador', 'dashboard-prestador').map((a) => a.id)).toContain('selo-cnpj-prestador')
+    const artigo = findHelpArticle('selo-cnpj-prestador')!
+    expect(artigo.reasons?.items.length).toBeGreaterThanOrEqual(4)
+    const motivos = artigo.reasons!.items.map((i) => `${i.title} ${i.text}`).join(' ')
+    expect(motivos).toMatch(/confiança/i)
+    expect(motivos).toMatch(/Bronze/)
+    expect(motivos).toMatch(/Prata/)
+    expect(motivos).toMatch(/remover/i)
+  })
+
+  it('não promete o que o sistema não faz: o selo não muda a posição na busca e o CNPJ não aparece para o cliente', () => {
+    const tudo = ['selo-cnpj-prestador', 'selos-e-niveis-prestador', 'selos-no-perfil']
+      .map((id) => findHelpArticle(id)!)
+      .flatMap((a) => [a.summary, ...(a.steps ?? []), ...(a.reasons?.items.flatMap((i) => [i.title, i.text]) ?? [])])
+      .join(' ')
+    expect(tudo).toMatch(/não muda a posição/i)
+    expect(tudo).toMatch(/não (aparecem|exibimos)/i)
+    expect(tudo).not.toMatch(/mais clientes|mais contatos|sobe na busca|aparece primeiro/i)
+  })
+
+  it('a busca do prestador e a do cliente encontram os artigos de selos', () => {
+    expect(searchHelpArticles('CNPJ', 'prestador').map((a) => a.id)).toEqual(expect.arrayContaining(['selo-cnpj-prestador', 'selos-e-niveis-prestador']))
+    expect(searchHelpArticles('nível Prata', 'prestador').map((a) => a.id)).toContain('selos-e-niveis-prestador')
+    expect(searchHelpArticles('selo', 'cliente').map((a) => a.id)).toContain('selos-no-perfil')
+  })
+
+  it('o artigo do cliente aparece no perfil público e não vaza para o prestador', () => {
+    expect(getHelpArticles('cliente', 'perfil-publico').map((a) => a.id)).toContain('selos-no-perfil')
+    expect(getHelpArticles('prestador').map((a) => a.id)).not.toContain('selos-no-perfil')
+  })
+
+  it('os artigos do prestador sobre selos não aparecem para o cliente', () => {
+    expect(searchHelpArticles('CNPJ', 'cliente').map((a) => a.id)).not.toContain('selo-cnpj-prestador')
+  })
+})

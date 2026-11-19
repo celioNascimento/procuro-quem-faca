@@ -94,6 +94,7 @@ async function contarPrestadoresDaPraca(cidadeId: string, categoriaId: string): 
     .from('prestadores')
     .select('id, nome, categoria:categorias(nome), habilidades, cidades(nome)')
     .eq('status', 'ativo')
+    .eq('exemplo', false)
     .eq('cidade_id', cidadeId)
 
   if (erroPrestadores) throw erroPrestadores
