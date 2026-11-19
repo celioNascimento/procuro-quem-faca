@@ -12,7 +12,7 @@ import type { FiltrosFeed } from '@/lib/feed/filtros'
 const item = (id: string, prestadorId = 2): FeedItem => ({
   projetoId: id, titulo: 'T', descricao: '', concluidoEm: null,
   prestador: { id: prestadorId, nome: 'P', slug: 'p' + prestadorId, categoria: null, cidade: null },
-  fotos: ['https://x/1.jpg'], totalCurtidas: 1, curtidoPorMim: false, seguindo: false,
+  fotos: ['https://x/1.jpg'], totalCurtidas: 1, curtidoPorMim: false, seguindo: false, meu: false,
 })
 
 beforeEach(() => { vi.mocked(fetchFeed).mockReset().mockResolvedValue([item('a'), item('b', 9)]) })

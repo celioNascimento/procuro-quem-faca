@@ -8,7 +8,7 @@ afterEach(cleanup)
 const item: FeedItem = {
   projetoId: 'a', titulo: 'Reforma de varanda', descricao: 'Piso novo e pintura.', concluidoEm: null,
   prestador: { id: 2, nome: 'Pedro Pedreiro', slug: 'pedro', categoria: 'Pedreiro', cidade: 'Londrina' },
-  fotos: ['https://x/1.jpg'], totalCurtidas: 2, curtidoPorMim: false, seguindo: false,
+  fotos: ['https://x/1.jpg'], totalCurtidas: 2, curtidoPorMim: false, seguindo: false, meu: false,
 }
 
 describe('FeedCard', () => {
@@ -35,5 +35,23 @@ describe('FeedCard', () => {
     rerender(<FeedCard item={{ ...item, seguindo: true, curtidoPorMim: true }} onCurtir={onCurtir} onSeguir={onSeguir} />)
     expect(screen.getByTestId('feed-seguir').textContent).toContain('Seguindo')
     expect(screen.getByTestId('feed-curtir').getAttribute('aria-pressed')).toBe('true')
+  })
+  it('trabalho meu: sem Seguir e sem Curtir, com etiqueta e total só para leitura', () => {
+    const onCurtir = vi.fn(); const onSeguir = vi.fn()
+    render(<FeedCard item={{ ...item, meu: true }} onCurtir={onCurtir} onSeguir={onSeguir} />)
+    expect(screen.queryByTestId('feed-seguir')).toBeNull()
+    expect(screen.queryByTestId('feed-curtir')).toBeNull()
+    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.getByTestId('feed-meu').textContent).toBe('Seu trabalho')
+    expect(screen.getByTestId('feed-curtidas').textContent).toBe('2 curtidas')
+    expect(screen.getByTestId('feed-prestador').getAttribute('href')).toBe('/pedro')
+  })
+  it('trabalho meu sem curtidas: texto próprio, sem "seja o primeiro a curtir"', () => {
+    render(<FeedCard item={{ ...item, meu: true, totalCurtidas: 0 }} onCurtir={vi.fn()} onSeguir={vi.fn()} />)
+    expect(screen.getByTestId('feed-curtidas').textContent).toBe('Nenhuma curtida ainda')
+  })
+  it('trabalho de outro: não mostra a etiqueta "Seu trabalho"', () => {
+    render(<FeedCard item={item} onCurtir={vi.fn()} onSeguir={vi.fn()} />)
+    expect(screen.queryByTestId('feed-meu')).toBeNull()
   })
 })

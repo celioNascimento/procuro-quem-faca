@@ -11,6 +11,8 @@ export interface FeedItem {
   totalCurtidas: number
   curtidoPorMim: boolean
   seguindo: boolean
+  /** O trabalho é de quem está olhando: o card não mostra Seguir nem Curtir. */
+  meu: boolean
 }
 
 export const ITENS_POR_PAGINA = 12
@@ -37,6 +39,7 @@ export function normalizarFeed(bruto: unknown): FeedItem[] {
       totalCurtidas: Number(x.total_curtidas) || 0,
       curtidoPorMim: x.curtido_por_mim === true,
       seguindo: x.seguindo === true,
+      meu: x.meu === true,
     })
   }
   return itens

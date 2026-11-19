@@ -4,13 +4,21 @@ import { aplicarCurtida, aplicarFeedOculto, aplicarRetiradaDoFeed, podeRetirarDo
 const bruto = [{
   projeto_id: 'a', titulo: ' Reforma ', descricao: 'Varanda', concluido_em: '2026-11-10T10:00:00Z',
   prestador: { id: 2, nome: 'Pedro', slug: 'pedro', categoria: 'Pedreiro', cidade: 'Londrina' },
-  fotos: ['https://x/1.jpg', '', 5], total_curtidas: 3, curtido_por_mim: true, seguindo: false,
+  fotos: ['https://x/1.jpg', '', 5], total_curtidas: 3, curtido_por_mim: true, seguindo: false, meu: false,
 }]
+
+describe('normalizarFeed: campo meu', () => {
+  it('vem true só quando o banco manda true; ausente ou outro valor vira false', () => {
+    expect(normalizarFeed([{ ...bruto[0], meu: true }])[0].meu).toBe(true)
+    expect(normalizarFeed([{ ...bruto[0], meu: 'true' }])[0].meu).toBe(false)
+    expect(normalizarFeed([{ ...bruto[0], meu: undefined }])[0].meu).toBe(false)
+  })
+})
 
 describe('normalizarFeed', () => {
   it('converte o que vem do banco', () => {
     const [i] = normalizarFeed(bruto)
-    expect(i).toMatchObject({ projetoId: 'a', titulo: 'Reforma', totalCurtidas: 3, curtidoPorMim: true, seguindo: false })
+    expect(i).toMatchObject({ projetoId: 'a', titulo: 'Reforma', totalCurtidas: 3, curtidoPorMim: true, seguindo: false, meu: false })
     expect(i.fotos).toEqual(['https://x/1.jpg'])
     expect(i.prestador.slug).toBe('pedro')
   })

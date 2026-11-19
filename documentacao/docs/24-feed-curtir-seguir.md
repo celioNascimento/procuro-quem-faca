@@ -23,6 +23,9 @@ Um trabalho aparece no feed quando: `status = finalizado`, `feed_aceito_em` pree
 - `alternar_curtida(projeto)`: só logado, só trabalho público, não curte o próprio.
 - `feed_projetos(categoria, cidade, somente_seguidos, limite, pagina)`: público. **Nunca devolve nome de cliente, WhatsApp nem endereço.** Devolve título, descrição (280 caracteres), até 5 fotos, prestador (nome, slug, categoria, cidade), total de curtidas, se eu curti e se eu sigo.
 
+## Trabalho do próprio prestador no feed (19/11/2026)
+O feed não mostra Seguir nem Curtir no trabalho do usuário logado. No lugar do Seguir aparece a etiqueta "Seu trabalho"; no lugar do coração, o total de curtidas só para leitura ("Nenhuma curtida ainda" quando zero). O trabalho continua aparecendo no feed para ele. O campo `meu` vem de `feed_projetos` (migração `20261119160000_feed_marca_meu`, depois de `20261119150000`), no mesmo espírito do `meu_perfil` de `perfil_social`. As travas do banco (`proprio_perfil`, `proprio_projeto`) continuam como rede de segurança. O perfil público já escondia os botões no perfil próprio.
+
 ## Validação feita no banco de teste (com rollback)
 Sem aceite não entra; com aceite entra e sem dado pessoal; curtir/descurtir e total; anônimo recusado ao curtir e ao ler `seguidores`; prestador não curte nem segue o próprio; seguir repetido é inofensivo e o feed "só seguidos" mostra o trabalho; cliente não oculta trabalho alheio, prestador oculta e mostra; cliente retira e some; trabalho em execução não entra.
 
