@@ -27,6 +27,7 @@ const SELECT_PROJETO_COM_GARANTIA = `
   id, titulo, status, created_at, prestador_id,
   cliente_user_id,
   sem_fotos, marcado_concluido_at,
+  feed_aceito_em, feed_oculto, feed_revogado_em,
   portfolio_fotos (id, url_foto, ordem),
   avaliacoes (id),
   solicitacoes_garantia (id, status, origem, tipo, prazo_resposta)

@@ -38,6 +38,13 @@ export async function deixarDeSeguirPrestador(prestadorId: number): Promise<stri
   return String(data)
 }
 
+/** Prestador dono mostra ou oculta o trabalho no feed (não apaga nada). Devolve o código do banco ('ok', 'nao_e_dono'...). */
+export async function ocultarProjetoNoFeed(projetoId: string, ocultar: boolean): Promise<string> {
+  const { data, error } = await supabase.rpc('feed_ocultar_projeto', { p_projeto_id: projetoId, p_ocultar: ocultar })
+  if (error) throw error
+  return String(data)
+}
+
 export interface CategoriaDoFiltro { id: string; nome: string }
 
 export async function fetchCategoriasDoFiltro(): Promise<CategoriaDoFiltro[]> {

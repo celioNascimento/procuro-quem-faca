@@ -3,10 +3,14 @@
 import { visibilidadeDasFotos } from '@/lib/trabalho/visibilidade'
 import { ImageOff, CheckCircle2, Clock, AlertCircle, Pencil, ShieldAlert, MessageCircle } from 'lucide-react'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
+import { estadoNoFeed } from '@/lib/feed/feed'
+import { FeedSwitch } from './FeedSwitch'
 
 interface Props {
   projeto: Projeto
   onClick: (projeto: Projeto) => void
+  // Mostrar/ocultar no feed. Sem isto, o card não exibe o interruptor.
+  onAlternarFeed?: (projetoId: string) => void
 }
 
 // ── Config visual por status ───────────────────────────────────────────────────
@@ -58,13 +62,15 @@ function getStatusConfig(proj: Projeto) {
   }
 }
 
-export function ProjetoCard({ projeto, onClick }: Props) {
+export function ProjetoCard({ projeto, onClick, onAlternarFeed }: Props) {
   const fotos = projeto.portfolio_fotos ?? []
   const capa  = [...fotos].sort((a, b) => b.ordem - a.ordem)[0]?.url_foto
   const { label, icon, cls } = getStatusConfig(projeto)
   const semFotos = projeto.sem_fotos
+  const noFeed = onAlternarFeed ? estadoNoFeed(projeto) : null
 
   return (
+    <div className="flex flex-col gap-2">
     <button
       type="button"
       onClick={() => onClick(projeto)}
@@ -120,5 +126,7 @@ export function ProjetoCard({ projeto, onClick }: Props) {
         </span>
       </span>
     </button>
+    {noFeed && <FeedSwitch projetoId={projeto.id} estado={noFeed} onAlternar={onAlternarFeed!} />}
+    </div>
   )
 }

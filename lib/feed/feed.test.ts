@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aplicarCurtida, aplicarSeguir, mensagemDeResultado, normalizarFeed, textoCurtidas } from './feed'
+import { aplicarCurtida, aplicarFeedOculto, aplicarSeguir, estadoNoFeed, mensagemDeResultado, normalizarFeed, textoCurtidas } from './feed'
 
 const bruto = [{
   projeto_id: 'a', titulo: ' Reforma ', descricao: 'Varanda', concluido_em: '2026-11-10T10:00:00Z',
@@ -43,5 +43,27 @@ describe('textos e atualizações', () => {
     const itens = normalizarFeed([bruto[0], { ...bruto[0], projeto_id: 'b', prestador: { ...bruto[0].prestador, id: 9, slug: 'maria' } }])
     expect(aplicarCurtida(itens, 'b', true, 8).map(i => [i.projetoId, i.totalCurtidas])).toEqual([['a', 3], ['b', 8]])
     expect(aplicarSeguir(itens, 2, true).map(i => i.seguindo)).toEqual([true, false])
+  })
+})
+
+describe('controle "Mostrar no feed" do prestador', () => {
+  const base = { status: 'finalizado', feed_aceito_em: '2026-11-19T10:00:00Z', feed_revogado_em: null, feed_oculto: false }
+  it('estadoNoFeed: elegível aparece como visível ou oculto', () => {
+    expect(estadoNoFeed(base)).toBe('visivel')
+    expect(estadoNoFeed({ ...base, feed_oculto: true })).toBe('oculto')
+  })
+  it('estadoNoFeed: sem controle quando não pode estar no feed', () => {
+    expect(estadoNoFeed({ ...base, status: 'em_execucao' })).toBeNull()
+    expect(estadoNoFeed({ ...base, status: 'pendente' })).toBeNull()
+    expect(estadoNoFeed({ ...base, feed_aceito_em: null })).toBeNull()
+    expect(estadoNoFeed({ status: 'finalizado' })).toBeNull()
+    expect(estadoNoFeed({ ...base, feed_revogado_em: '2026-11-20T10:00:00Z' })).toBeNull()
+  })
+  it('aplicarFeedOculto só muda o trabalho certo', () => {
+    const lista = [{ id: 'a', feed_oculto: false }, { id: 'b', feed_oculto: false }]
+    expect(aplicarFeedOculto(lista, 'b', true)).toEqual([{ id: 'a', feed_oculto: false }, { id: 'b', feed_oculto: true }])
+  })
+  it('mensagemDeResultado: nao_e_dono vira frase', () => {
+    expect(mensagemDeResultado('nao_e_dono')).toMatch(/Só quem registrou/)
   })
 })

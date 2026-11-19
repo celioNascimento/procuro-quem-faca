@@ -59,6 +59,7 @@ export function mensagemDeResultado(codigo: string | undefined | null): string |
     case 'proprio_projeto': return 'Você não pode curtir o seu próprio trabalho.'
     case 'limite_atingido': return 'Você chegou ao limite de 500 perfis seguidos. Deixe de seguir algum para continuar.'
     case 'nao_encontrado': return 'Este trabalho não está mais disponível.'
+    case 'nao_e_dono': return 'Só quem registrou este trabalho pode alterar isso.'
     default: return 'Não conseguimos concluir agora. Tente de novo.'
   }
 }
@@ -71,4 +72,30 @@ export function aplicarCurtida(itens: FeedItem[], projetoId: string, curtido: bo
 /** Atualiza todos os trabalhos de um prestador depois de seguir/deixar de seguir. */
 export function aplicarSeguir(itens: FeedItem[], prestadorId: number, seguindo: boolean): FeedItem[] {
   return itens.map(i => (i.prestador.id === prestadorId ? { ...i, seguindo } : i))
+}
+
+// ── Controle "Mostrar no feed" (painel do prestador) ─────────────────────────────
+
+/** Campos do trabalho que decidem se o prestador vê o controle do feed. */
+export interface TrabalhoParaFeed {
+  status: string
+  feed_aceito_em?: string | null
+  feed_revogado_em?: string | null
+  feed_oculto?: boolean | null
+}
+
+export type EstadoNoFeed = 'visivel' | 'oculto' | null
+
+/**
+ * null  = o trabalho não pode estar no feed (não finalizado, aceito antes do aviso ou retirado pelo cliente): não mostra controle.
+ * visivel/oculto = está elegível; o prestador escolhe.
+ */
+export function estadoNoFeed(t: TrabalhoParaFeed): EstadoNoFeed {
+  if (t.status !== 'finalizado' || !t.feed_aceito_em || t.feed_revogado_em) return null
+  return t.feed_oculto ? 'oculto' : 'visivel'
+}
+
+/** Troca o campo feed_oculto de um trabalho da lista, sem recarregar. */
+export function aplicarFeedOculto<T extends { id: string; feed_oculto?: boolean | null }>(lista: T[], projetoId: string, oculto: boolean): T[] {
+  return lista.map(t => (t.id === projetoId ? { ...t, feed_oculto: oculto } : t))
 }
