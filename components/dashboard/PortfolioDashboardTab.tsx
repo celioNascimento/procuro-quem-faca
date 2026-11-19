@@ -13,7 +13,7 @@ import { AvisoGarantiaPrestador } from './AvisoGarantiaPrestador'
 
 export default function PortfolioDashboardTab() {
   const {
-    projetos, loading, erro, erroFeed, alternarFeed, recarregar, meuPrestadorId, perfilPrestador,
+    projetos, loading, erro, recarregar, meuPrestadorId, perfilPrestador,
     showWizard, projetoParaEdicao, totalConcluidos, totalAtivos,
     abrirEdicao, abrirNovo, fecharWizard,
   } = usePortfolioDashboard()
@@ -103,9 +103,6 @@ export default function PortfolioDashboardTab() {
                 </button>
               </div>
             )}
-            {erroFeed && (
-              <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800" data-testid="feed-erro">{erroFeed}</p>
-            )}
             {/* Sem trabalhos: o cartão tracejado abaixo já convida a adicionar; o bloco azul só repetiria o mesmo botão. */}
             {projetos.length > 0 && <DashboardHeader
               totalProjetos={projetos.length}
@@ -117,7 +114,7 @@ export default function PortfolioDashboardTab() {
             {projetos.length > 0 && (
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {projetos.map(proj => (
-                  <ProjetoCard key={proj.id} projeto={proj} onClick={abrirEdicao} onAlternarFeed={alternarFeed} />
+                  <ProjetoCard key={proj.id} projeto={proj} onClick={abrirEdicao} />
                 ))}
                 {projetos.length % 2 !== 0 && (
                   <button

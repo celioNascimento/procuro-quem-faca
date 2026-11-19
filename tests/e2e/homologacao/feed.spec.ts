@@ -212,12 +212,18 @@ test.describe('feed: cliente logada', () => {
   });
 });
 
+// Mostrar no feed mora em Divulgação > Feed de trabalhos.
+async function abrirFeedNaDivulgacao(page: Page) {
+  await page.getByRole('button', { name: 'Divulgação' }).first().click();
+  await page.getByRole('tab', { name: 'Feed de trabalhos' }).click();
+}
+
 test.describe('feed: prestador', () => {
   test('Mostrar no feed oculta e reexibe o trabalho, sem apagá-lo', async ({ page }) => {
     await entrar(page, 'prestador');
     await expect(page).toHaveURL(/\/dashboard/);
     await aceitarDocumentosSeAparecer(page);
-    await page.getByRole('button', { name: 'Meus Trabalhos' }).first().click();
+    await abrirFeedNaDivulgacao(page);
 
     const interruptor = page.getByTestId(`feed-switch-${ID_NO_FEED}`);
     await expect(interruptor).toBeVisible({ timeout: 20_000 });
@@ -234,7 +240,7 @@ test.describe('feed: prestador', () => {
 
     // Reexibir: volta ao feed.
     await page.goto('/dashboard');
-    await page.getByRole('button', { name: 'Meus Trabalhos' }).first().click();
+    await abrirFeedNaDivulgacao(page);
     const de_novo = page.getByTestId(`feed-switch-${ID_NO_FEED}`);
     await expect(de_novo).toHaveAttribute('aria-checked', 'false', { timeout: 20_000 });
     await de_novo.click();

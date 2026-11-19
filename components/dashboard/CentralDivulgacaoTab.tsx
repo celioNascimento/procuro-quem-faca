@@ -1,18 +1,20 @@
 // components/dashboard/CentralDivulgacaoTab.tsx
 'use client'
 import { useState } from 'react'
-import { Loader2, Smartphone, Car, Link2, ImagePlus } from 'lucide-react'
+import { Loader2, Smartphone, Car, Link2, ImagePlus, Newspaper } from 'lucide-react'
 import { useKitDivulgacao } from '@/hooks/useKitDivulgacao'
 import { CartaoDigitalPanel } from './divulgacao/CartaoDigitalPanel'
 import { MaterialFisicoPanel } from './divulgacao/MaterialFisicoPanel'
 import { LinksPanel } from './divulgacao/LinksPanel'
+import { FeedDeTrabalhosPanel } from './divulgacao/FeedDeTrabalhosPanel'
 import { temPortfolio } from '@/lib/divulgacao/portfolio'
 
-type SubAba = 'cartao' | 'fisico' | 'links'
+type SubAba = 'cartao' | 'fisico' | 'links' | 'feed'
 const SUBABAS: { id: SubAba; label: string; icon: React.ReactNode }[] = [
   { id: 'cartao', label: 'Cartão digital & WhatsApp', icon: <Smartphone size={14} aria-hidden="true" /> },
   { id: 'fisico', label: 'Adesivos & QR Code', icon: <Car size={14} aria-hidden="true" /> },
   { id: 'links', label: 'Links & mensagens', icon: <Link2 size={14} aria-hidden="true" /> },
+  { id: 'feed', label: 'Feed de trabalhos', icon: <Newspaper size={14} aria-hidden="true" /> },
 ]
 
 interface Props {
@@ -71,6 +73,7 @@ export default function CentralDivulgacaoTab({ prestadorId, onIrParaTrabalhos }:
         {aba === 'cartao' && <CartaoDigitalPanel dados={dados} imagens={imagens} />}
         {aba === 'fisico' && <MaterialFisicoPanel dados={dados} imagens={imagens} />}
         {aba === 'links' && <LinksPanel dados={dados} />}
+        {aba === 'feed' && <FeedDeTrabalhosPanel />}
       </div>
     </div>
   )

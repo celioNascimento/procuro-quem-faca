@@ -70,6 +70,11 @@ export function FeedCard({ item, onCurtir, onSeguir, onSalvar, onCompartilhar, o
             </button>
           )}
           <div className="ml-auto flex items-center gap-1">
+            {item.meu && (
+              <Link href={`/${prestador.slug}`} data-testid="feed-ver-perfil" className="flex min-h-11 items-center rounded-xl px-3 text-sm font-black text-blue-700 hover:bg-blue-50">
+                Ver perfil
+              </Link>
+            )}
             <button
               type="button" onClick={() => onCompartilhar(item)} data-testid="feed-compartilhar"
               aria-label={`Compartilhar o trabalho ${item.titulo}`} title="Compartilhar"
@@ -92,8 +97,8 @@ export function FeedCard({ item, onCurtir, onSeguir, onSalvar, onCompartilhar, o
           </div>
         </div>
 
-        <div className="mt-1 flex items-center gap-2">
-          {!item.meu && (
+        {!item.meu && (
+          <div className="mt-1 flex items-center gap-2">
             <Link
               href={enderecoDoTrabalho(prestador.slug, item.projetoId)} data-testid="feed-falar"
               className="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 text-sm font-black text-white hover:bg-blue-700"
@@ -101,11 +106,11 @@ export function FeedCard({ item, onCurtir, onSeguir, onSalvar, onCompartilhar, o
               <MessageCircle size={18} aria-hidden="true" />
               <span className="truncate">Falar com o profissional</span>
             </Link>
-          )}
-          <Link href={`/${prestador.slug}`} data-testid="feed-ver-perfil" className="flex min-h-11 shrink-0 items-center rounded-2xl px-3 text-sm font-black text-blue-700 hover:bg-blue-50">
-            Ver perfil
-          </Link>
-        </div>
+            <Link href={`/${prestador.slug}`} data-testid="feed-ver-perfil" className="flex min-h-11 shrink-0 items-center rounded-2xl px-3 text-sm font-black text-blue-700 hover:bg-blue-50">
+              Ver perfil
+            </Link>
+          </div>
+        )}
       </div>
     </article>
   )

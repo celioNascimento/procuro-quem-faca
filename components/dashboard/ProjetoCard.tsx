@@ -3,14 +3,10 @@
 import { visibilidadeDasFotos } from '@/lib/trabalho/visibilidade'
 import { ImageOff, CheckCircle2, Clock, AlertCircle, Pencil, ShieldAlert, MessageCircle } from 'lucide-react'
 import { Projeto } from '@/hooks/usePortfolioDashboard'
-import { estadoNoFeed } from '@/lib/feed/feed'
-import { FeedSwitch } from './FeedSwitch'
 
 interface Props {
   projeto: Projeto
   onClick: (projeto: Projeto) => void
-  // Mostrar/ocultar no feed. Sem isto, o card não exibe o interruptor.
-  onAlternarFeed?: (projetoId: string) => void
 }
 
 // ── Config visual por status ───────────────────────────────────────────────────
@@ -62,19 +58,17 @@ function getStatusConfig(proj: Projeto) {
   }
 }
 
-export function ProjetoCard({ projeto, onClick, onAlternarFeed }: Props) {
+export function ProjetoCard({ projeto, onClick }: Props) {
   const fotos = projeto.portfolio_fotos ?? []
   const capa  = [...fotos].sort((a, b) => b.ordem - a.ordem)[0]?.url_foto
   const { label, icon, cls } = getStatusConfig(projeto)
   const semFotos = projeto.sem_fotos
-  const noFeed = onAlternarFeed ? estadoNoFeed(projeto) : null
 
   return (
-    <div className="flex min-w-0 flex-col gap-2">
     <button
       type="button"
       onClick={() => onClick(projeto)}
-      className="group flex w-full overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0"
+      className="group flex w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0"
       aria-label={`Editar projeto ${projeto.titulo}`}
     >
       {/* Coluna da imagem — largura fixa, altura limitada a 9rem para não crescer com conteúdo externo.
@@ -126,7 +120,5 @@ export function ProjetoCard({ projeto, onClick, onAlternarFeed }: Props) {
         </span>
       </span>
     </button>
-    {noFeed && <FeedSwitch projetoId={projeto.id} estado={noFeed} onAlternar={onAlternarFeed!} />}
-    </div>
   )
 }

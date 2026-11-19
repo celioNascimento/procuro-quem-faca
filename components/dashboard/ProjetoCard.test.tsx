@@ -24,24 +24,9 @@ describe('ProjetoCard — quem vê as fotos', () => {
   })
 })
 
-describe('ProjetoCard — Mostrar no feed', () => {
-  const elegivel = { ...projeto('finalizado'), feed_aceito_em: '2026-11-19T10:00:00Z', feed_oculto: false, feed_revogado_em: null } as Projeto
-
-  it('trabalho concluído e aceito mostra o interruptor, e ele não fica dentro do botão de editar', () => {
-    render(<ProjetoCard projeto={elegivel} onClick={() => {}} onAlternarFeed={() => {}} />)
-    const sw = screen.getByRole('switch', { name: /Mostrar no feed/i })
-    expect(sw.getAttribute('aria-checked')).toBe('true')
-    expect(screen.getByRole('button', { name: /Editar projeto/ }).contains(sw)).toBe(false)
-  })
-  it('não mostra se o cliente retirou, se não foi aceito no feed ou se não está concluído', () => {
-    const { rerender } = render(<ProjetoCard projeto={{ ...elegivel, feed_revogado_em: '2026-11-20T10:00:00Z' } as Projeto} onClick={() => {}} onAlternarFeed={() => {}} />)
-    expect(screen.queryByRole('switch')).toBeNull()
-    rerender(<ProjetoCard projeto={{ ...elegivel, feed_aceito_em: null } as Projeto} onClick={() => {}} onAlternarFeed={() => {}} />)
-    expect(screen.queryByRole('switch')).toBeNull()
-    rerender(<ProjetoCard projeto={{ ...elegivel, status: 'em_execucao' } as Projeto} onClick={() => {}} onAlternarFeed={() => {}} />)
-    expect(screen.queryByRole('switch')).toBeNull()
-  })
-  it('sem onAlternarFeed o card continua igual (sem interruptor)', () => {
+describe('ProjetoCard — sem interruptor do feed', () => {
+  it('o interruptor "Mostrar no feed" mora em Divulgação, não no card do trabalho', () => {
+    const elegivel = { ...projeto('finalizado'), feed_aceito_em: '2026-11-19T10:00:00Z', feed_oculto: false, feed_revogado_em: null } as Projeto
     render(<ProjetoCard projeto={elegivel} onClick={() => {}} />)
     expect(screen.queryByRole('switch')).toBeNull()
   })
@@ -52,9 +37,9 @@ describe('ProjetoCard — Mostrar no feed', () => {
 // (nowrap): como item de grid, a coluna crescia até caber o título inteiro. jsdom não calcula layout, então
 // o teste confere as duas classes que impedem isso.
 describe('ProjetoCard — não alarga a coluna da lista no celular', () => {
-  it('o invólucro do card tem min-w-0 (não cresce com o título longo)', () => {
+  it('o card (item da grade) tem min-w-0 e não cresce com o título longo', () => {
     const longo = { ...projeto('em_execucao'), titulo: 'Muro de 10 metros com acabamento especial (em execução)' } as Projeto
-    const { container } = render(<ProjetoCard projeto={longo} onClick={() => {}} onAlternarFeed={() => {}} />)
+    const { container } = render(<ProjetoCard projeto={longo} onClick={() => {}} />)
     expect((container.firstElementChild as HTMLElement).className).toContain('min-w-0')
   })
   it('a grade de trabalhos do painel tem uma coluna de largura fixa (grid-cols-1) abaixo de xl', () => {

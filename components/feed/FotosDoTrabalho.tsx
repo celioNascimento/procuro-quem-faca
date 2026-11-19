@@ -58,7 +58,7 @@ export function FotosDoTrabalho({ fotos, titulo, onDuploToque }: Props) {
           <img
             key={url + i} src={url} alt={varias ? `${titulo} (foto ${i + 1} de ${fotos.length})` : titulo} draggable={false}
             loading={i === 0 ? 'eager' : 'lazy'} data-testid="feed-foto"
-            className="aspect-[4/3] w-full shrink-0 snap-center object-cover"
+            className="aspect-[16/10] w-full shrink-0 snap-center object-cover"
           />
         ))}
       </div>
