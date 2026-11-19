@@ -50,8 +50,8 @@ describe('selosComplementaresPorPrestador', () => {
       linha({ prestador_id: 1, tipo: 'atividade_compativel' }),
       linha({ prestador_id: 2, tipo: 'tempo_cnpj', data_abertura: '2021-01-01' }),
     ], hoje)
-    expect(mapa.get(1)).toEqual({ experiencia: true, tempoCnpj: 3, atividadeCompativel: true })
-    expect(mapa.get(2)).toEqual({ experiencia: false, tempoCnpj: 5, atividadeCompativel: false })
+    expect(mapa.get(1)).toEqual({ experiencia: true, tempoCnpj: 3, atividadeCompativel: true, seguro: false, cnd: false })
+    expect(mapa.get(2)).toEqual({ experiencia: false, tempoCnpj: 5, atividadeCompativel: false, seguro: false, cnd: false })
   })
   it('ignora o selo de CNPJ comum e tempo sem data válida', () => {
     const mapa = selosComplementaresPorPrestador([linha({ tipo: 'cnpj' }), linha({ prestador_id: 5, tipo: 'tempo_cnpj', data_abertura: null })], hoje)
@@ -59,5 +59,13 @@ describe('selosComplementaresPorPrestador', () => {
   })
   it('o texto da experiência cita as metas', () => {
     expect(TEXTO_EXPERIENCIA).toBe('Experiência no PQF: 10 serviços avaliados por 10 clientes diferentes')
+  })
+})
+
+describe('selos de seguro e CND', () => {
+  it('aparecem só quando a linha existe em selos_publicos', () => {
+    const l = (tipo: string) => ({ prestador_id: 9, tipo, verificado_em: null, valido_ate: null, consultado_em: null, data_abertura: null })
+    expect(selosComplementaresPorPrestador([l('seguro')]).get(9)).toMatchObject({ seguro: true, cnd: false })
+    expect(selosComplementaresPorPrestador([l('seguro'), l('cnd')]).get(9)).toMatchObject({ seguro: true, cnd: true })
   })
 })

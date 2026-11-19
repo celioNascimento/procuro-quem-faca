@@ -28,6 +28,7 @@ import { useCategorias } from '@/hooks/useCategorias'
 import { useLocalizacao } from '@/hooks/useLocalizacao'
 import { useSlugCheck } from '@/hooks/useSlugCheck'
 import { fazerUploadFoto, removerFotoAntiga } from '@/lib/uploadFoto'
+import { normalizarInstagram } from '@/lib/instagram'
 
 const inputStyleBase = estiloCampo
 
@@ -129,6 +130,9 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
   }
 
 
+  // Opcional: vazio é válido. Guardamos só o usuário (sem @ nem link).
+  const instagram = normalizarInstagram(form.formData.instagram)
+
   const handleSalvar = async (e: React.FormEvent) => {
     e.preventDefault()
     setTentouEnviar(true)
@@ -139,6 +143,10 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
     }
     if (!slugCheck.disponivel) {
       setStatus('Erro: URL indisponível. Escolha outra.')
+      return
+    }
+    if (!instagram.ok) {
+      setStatus('Erro: confira o Instagram.')
       return
     }
 
@@ -167,6 +175,7 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
         cidades_atendidas: cidadesLimpo,
         user_id: userLogado?.id,
         status: 'ativo',
+        instagram: instagram.ok ? instagram.usuario : null,
         // portfolio_obrigatorio não existe em usePrestadorForm/form.formData
         // — precisa ser injetado explicitamente a partir do state local
         // (portfolioOb), senão o upsert envia esse campo ausente/undefined
@@ -280,6 +289,12 @@ export default function EditarPerfilTab({ onSalvar }: { onSalvar?: () => void } 
               onSlugChange={form.handleSlugChange}
               onWhatsappChange={form.handleWhatsappChange}
               onBioChange={(v) => form.set({ bio: v })}
+              instagram={form.formData.instagram ?? ''}
+              instagramErro={instagram.ok ? null : instagram.motivo}
+              instagramUsuario={instagram.ok ? instagram.usuario : null}
+              tentouEnviar={tentouEnviar}
+              onInstagramChange={form.handleInstagramChange}
+              onInstagramBlur={form.handleInstagramBlur}
             />
 
             <SecaoLocalizacao

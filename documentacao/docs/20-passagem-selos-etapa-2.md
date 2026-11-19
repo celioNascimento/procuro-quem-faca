@@ -277,3 +277,35 @@ Produção: aplicar `20261118190000` **junto** com as demais (é a última da or
 
 ### APLICADA EM PRODUÇÃO (18/11, 20:36): `20261118190000_seguranca_acessos`
 Aplicada no Supabase de produção a pedido do dono (correção de segurança independente dos selos; não esperar o release). Conferido por leitura logo depois: `anon` só com INSERT em `denuncias`, `visitas_perfil` e `logs_atividades`; `perfis` sem concessões; `logs_atividades` com 1 política de inserção + leitura do admin por `is_admin()`; storage com `fotos_perfil_dono_atualiza`/`_apaga` e `portfolios_dono_atualiza` e sem o "Upload Público". Ao subir o release dos selos, **pular** esta migração (já está lá). Fica pendente em produção: `20261118200000_perfil_exemplo` (vai no release) e a correção de código (rota de métricas só admin e proxy de `/painel`), que só chega à produção por PR na `main`.
+
+
+## Ouro e Diamante (19/11) — seguro e CND
+
+**Regra do nível (calculada no banco, nunca editada à mão):** Bronze = CNPJ ativo · Prata = Bronze + Experiência · **Ouro = Prata + seguro aprovado e vigente** · **Diamante = Ouro + CND federal aprovada e vigente**. Sem dossiê/filtro corporativo e sem exigir formação/conselho (Etapa 3 não existe). Selos nunca mudam a ordem da busca.
+
+**Como funciona**
+- Prestador: abas **Seguro** e **CND** em Dados Profissionais (`?sub=seguro` / `?sub=cnd`). Seguro pede seguradora, nº da apólice, validade e o arquivo; CND pede só o arquivo (PDF/foto, até 5 MB). Arquivo vai para o bucket **privado** `verificacoes-docs` (pasta `<user_id>/`).
+- Equipe: `/admin/verificacoes` → aba **Seguro e CND**. Abre o comprovante (link de 5 min), informa a validade da apólice (seguro) ou a data de emissão (CND = emissão + 180 dias, Portaria RFB/PGFN 1.751/2014) e aprova/rejeita (rejeitar exige motivo). **Depois da decisão o arquivo é apagado**; ficam só o resumo e a validade.
+- Renovação: dá para reenviar nos últimos 30 dias (o selo atual vale até a decisão); recusa de renovação não derruba o selo vigente.
+- Vencimento: o selo sai sozinho (consultas só contam vigente). Cron diário `/api/cron/verificacoes-vencimento` (10:30 UTC) marca `expirada` e envia e-mail ao prestador 30, 15 e 3 dias antes (só marca o aviso se o e-mail saiu; precisa de `RESEND_API_KEY`).
+- Perfil público: linhas “Seguro de responsabilidade civil: apólice conferida pela equipe do PQF” e “CND ... conferida pela equipe do PQF”. O PQF só verifica, não vende nem recomenda seguro.
+
+**Arquivos:** migração `20261118210000_ouro_diamante_seguro_cnd.sql` (bucket + policies, `enviar_documento_verificacao`, `admin_fila_documentos`, `admin_decidir_documento`, `niveis_dos_prestadores` com ouro/diamante, `verificacoes_expirar/a_avisar/marcar_aviso`); `lib/selos/documentos.ts`; `lib/services/documentosVerificacao.service.ts`; `hooks/useDocumentoVerificacao.ts`, `hooks/useAdminDocumentos.ts`; `AbaDocumento.tsx`; `DocumentoCard.tsx`; E2E `selos-ouro-diamante.spec.ts`.
+
+**Estado:** migração aplicada só no banco de TESTE e validada por SQL (bloqueios, aprovação, CND vencida recusada, selo público). Barra de evolução agora tem 6 conquistas (E2E de contagem atualizados: 0 de 6 / 1 de 4 / 1 de 6). **Produção: ainda não aplicada.** Pendente: E2E no GitHub Actions após o push.
+
+**Roteiro da equipe (19/11):** ver `23-roteiro-conferencia-seguro-cnd.md`. A fila do admin mostra o CNPJ do perfil e uma checklist de 5 itens por tipo; Aprovar só libera com tudo marcado. Política: titular = mesmo CNPJ do perfil; seguro RC sem valor mínimo; CND ou CPEND.
+
+**Prazo e privacidade (19/11):** pedido sem decisão em 60 dias é limpo pelo cron (`verificacoes_limpar_pedidos_parados`, arquivo apagado, fase `pedido_expirado`, sem recusa); exclusão de conta apaga comprovantes pendentes (`/api/delete-account`); aviso de privacidade no formulário; rascunho dos Termos (seção 9) e da Privacidade (seção 11) aguardando o advogado; `VERSAO_DOCUMENTOS` só sobe depois da revisão (aceite único por versão, não por envio).
+
+
+## Tráfego real no painel admin (18/11)
+
+**Por quê:** na análise de produção, boa parte das buscas era da equipe e havia sinais de robô. Número de demanda não pode misturar isso.
+
+**O que existe:**
+- Migração `20261118220000_admin_trafego_resumo.sql`: função `admin_trafego_resumo(p_dias)`, só admin, só leitura. Separa buscas (equipe / logados / anônimas), visitas via busca e dias suspeitos (muitas visitas anônimas, quase cada uma a um perfil diferente).
+- Card "Tráfego: o que é real" na home do admin (7 ou 30 dias), com alertas em português. Lógica pura em `lib/admin/trafego.ts`.
+- Filtro no navegador: `insertLogDeTrafego` (`lib/db/logs.ts`) não grava BUSCA_REALIZADA nem VISITA_PERFIL_VIA_BUSCA quando o navegador é robô ou automatizado (`lib/tracking/navegadorAutomatizado.ts`).
+- **Privacidade:** o navegador (user agent) NÃO é guardado. Ele só decide se grava ou não. Nenhuma mudança na Política de Privacidade.
+- Limite: ainda inclui testes de conhecidos e você em aba anônima; o número mais confiável é "visitas a perfis" (servidor, com filtro de robô).

@@ -14,6 +14,8 @@ import { DialogoConfirmacao } from '@/components/ui/Dialogo'
 import { useRolagemNoTopo } from '@/hooks/useRolagemNoTopo'
 import { estaProntoParaAvaliar, statusVisualDoServico } from '@/lib/painel/statusDoServico'
 import { usePainelCliente } from '@/hooks/usePainelCliente'
+import { TEXTO_RETIRAR_DO_FEED } from '@/lib/feed/feed'
+import type { Servico } from '@/types/painel'
 import PainelDoClienteSkeleton from '@/components/skeletons/PainelDoClienteSkeleton'
 import { AdCardPainelCliente } from '@/components/painel/AdCardPainelCliente'
 import { ContextualHelp } from '@/components/help/HelpCenter'
@@ -27,12 +29,13 @@ export default function PainelDoCliente() {
     session, servicos, servicosGarantia, servicosReclamacao, loading,
     zoomImage, setZoomImage,
     tokenUrl,
-    handleAceitar, handleRecusar, handleVerGarantia,
+    handleAceitar, handleRecusar, handleRetirarDoFeed, handleVerGarantia,
     acaoEmAndamento, erroAcao,
   } = usePainelCliente()
 
   useRolagemNoTopo()
   const [confirmandoRecusa, setConfirmandoRecusa] = useState(false)
+  const [retirandoDoFeed, setRetirandoDoFeed] = useState<Servico | null>(null)
 
   // ── Grupos por status ────────────────────────────────────────────────────────
   const emRegistro  = servicos.filter(s => s.status?.toLowerCase() === 'em_registro')
@@ -110,6 +113,17 @@ export default function PainelDoCliente() {
           onConfirmar={() => { setConfirmandoRecusa(false); void handleRecusar(projetoSelecionado) }}
         />
       )}
+
+      <DialogoConfirmacao
+        aberto={retirandoDoFeed !== null}
+        titulo="Retirar do feed?"
+        mensagem={TEXTO_RETIRAR_DO_FEED}
+        textoConfirmar="Sim, retirar"
+        textoCancelar="Voltar"
+        perigo
+        onCancelar={() => setRetirandoDoFeed(null)}
+        onConfirmar={() => { const alvo = retirandoDoFeed; setRetirandoDoFeed(null); if (alvo) void handleRetirarDoFeed(alvo) }}
+      />
 
       {zoomImage && (
         <ZoomImageModal url={zoomImage} onClose={() => setZoomImage(null)} />
@@ -196,6 +210,7 @@ export default function PainelDoCliente() {
                       onAceitar={getOnAceitar(projetoSelecionado)}
                       hidePrestador
                       ocupado={acaoEmAndamento}
+                      onRetirarDoFeed={setRetirandoDoFeed}
                       modo={getModo(projetoSelecionado)}
                       tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(projetoSelecionado)}
                     />
@@ -275,6 +290,7 @@ export default function PainelDoCliente() {
                             onAceitar={getOnAceitar(servico)}
                             hidePrestador
                             ocupado={acaoEmAndamento}
+                            onRetirarDoFeed={setRetirandoDoFeed}
                             modo={getModo(servico)}
                             tipoGarantiaAtiva={tipoGarantiaAtivaDoServico(servico)}
                           />

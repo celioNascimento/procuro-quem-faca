@@ -28,6 +28,20 @@ const POR_NIVEL: Record<string, Omit<ApresentacaoNivel, 'chave'>> = {
     classes: 'bg-slate-200 text-slate-800 border-slate-400',
     borda: 'border-slate-400',
     bordaForte: 'border-slate-400!',
+    proximo: 'Para chegar ao Ouro: envie a apólice do seu seguro de responsabilidade civil, na aba Seguro.',
+  },
+  ouro: {
+    nome: 'Ouro',
+    classes: 'bg-yellow-100 text-yellow-900 border-yellow-400',
+    borda: 'border-yellow-500',
+    bordaForte: 'border-yellow-500!',
+    proximo: 'Para chegar ao Diamante: envie a certidão negativa de débitos federais (CND), na aba CND.',
+  },
+  diamante: {
+    nome: 'Diamante',
+    classes: 'bg-sky-100 text-sky-900 border-sky-400',
+    borda: 'border-sky-500',
+    bordaForte: 'border-sky-500!',
     proximo: null,
   },
 }

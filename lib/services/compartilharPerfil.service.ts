@@ -16,7 +16,7 @@ export interface CompartilhamentoPayload {
 export interface RegistroCompartilhamento {
   prestador_id: number
   canal: 'native_share' | 'clipboard' | 'whatsapp' | 'link_direto'
-  origem: 'perfil_publico' | 'dashboard' | 'pagina_sucesso'
+  origem: 'perfil_publico' | 'dashboard' | 'pagina_sucesso' | 'feed'
 }
 
 // ── Funções de URL ─────────────────────────────────────────────────────────

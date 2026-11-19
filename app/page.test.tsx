@@ -76,15 +76,28 @@ describe('home — cartão de profissional', () => {
     expect(screen.getByRole('link', { name: /quer oferecer serviços/i }).getAttribute('href')).toBe('/cadastro')
   })
 
-  it('prestador ativo vê "Área do Profissional" e vai ao painel', () => {
+  it('prestador ativo não vê cartão de profissional (o atalho já está no cabeçalho), mas continua vendo o feed', () => {
     auth = { session: {}, role: 'prestador', prestadorStatus: 'ativo', roleLoading: false }
     render(<Home />)
-    expect(screen.getByRole('link', { name: /área do profissional/i }).getAttribute('href')).toBe('/dashboard')
+    expect(screen.queryByRole('link', { name: /área do profissional/i })).toBeNull()
+    expect(screen.queryByRole('link', { name: /prestador de serviços|oferecer serviços|cadastro em andamento/i })).toBeNull()
+    expect(screen.getByTestId('home-link-feed')).toBeTruthy()
   })
 
   it('prestador com cadastro pendente vê "Cadastro em andamento" e volta ao cadastro', () => {
     auth = { session: {}, role: 'prestador', prestadorStatus: 'pendente', roleLoading: false }
     render(<Home />)
     expect(screen.getByRole('link', { name: /cadastro em andamento/i }).getAttribute('href')).toBe('/cadastro')
+  })
+})
+
+describe('home — link para o feed', () => {
+  it('mostra o bloco "Trabalhos reais" que leva ao feed, para visitante e para quem está logado', () => {
+    const { unmount } = render(<Home />)
+    expect(screen.getByTestId('home-link-feed').getAttribute('href')).toBe('/feed')
+    unmount()
+    auth = { session: { user: { id: 'u' } }, role: 'cliente', roleLoading: false }
+    render(<Home />)
+    expect(screen.getByTestId('home-link-feed').getAttribute('href')).toBe('/feed')
   })
 })

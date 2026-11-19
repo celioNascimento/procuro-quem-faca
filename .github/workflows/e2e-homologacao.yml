@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   e2e:
-    timeout-minutes: 30
+    timeout-minutes: 50
     runs-on: ubuntu-24.04
     container:
       image: mcr.microsoft.com/playwright:v1.58.2-noble

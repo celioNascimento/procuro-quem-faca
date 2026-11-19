@@ -6,11 +6,11 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSugestoes } from '@/hooks/useSugestoes'
-import { insertLog } from '@/lib/db/logs'
+import { insertLog, insertLogDeTrafego } from '@/lib/db/logs'
 import SearchForm from '@/components/home/SearchForm'
 import { ConviteLocalizacao } from '@/components/busca/ConviteLocalizacao'
 import CTAPrestadorSkeleton from '@/components/home/CTAPrestadorSkeleton'
-import { ArrowRight, Briefcase } from 'lucide-react'
+import { ArrowRight, Briefcase, Images } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useLocation } from '@/lib/contexts/LocationContext'
 import Logo from '@/components/Logo'
@@ -32,6 +32,8 @@ export default function Home() {
   let tituloCTA = 'É prestador de serviços?'
   let subtituloCTA = 'Cadastre-se e apareça para quem precisa de você'
   let acaoLogCTA = 'CLIQUE_CTA_PRESTADOR'
+  // Prestador com perfil ativo já tem "Área do profissional" no cabeçalho: o cartão repetiria o mesmo atalho.
+  let mostrarCTA = true
 
   if (session) {
     if (role === 'prestador') {
@@ -41,10 +43,7 @@ export default function Home() {
         subtituloCTA = 'Finalize seu perfil e apareça nas buscas'
         acaoLogCTA = 'CLIQUE_CTA_CONTINUAR_CADASTRO'
       } else {
-        hrefCTA = '/dashboard'
-        tituloCTA = 'Área do Profissional'
-        subtituloCTA = 'Acesse seu painel e gerencie seus serviços'
-        acaoLogCTA = 'CLIQUE_CTA_ACESSAR_PAINEL'
+        mostrarCTA = false
       }
     } else {
       hrefCTA = '/cadastro'
@@ -73,7 +72,7 @@ export default function Home() {
     }
     setErro(false)
     if (termoManual) setBusca(termoManual)
-    insertLog({ acao: 'BUSCA_REALIZADA', detalhes: { termo: termoFinal }, entidadeTipo: 'busca' })
+    insertLogDeTrafego({ acao: 'BUSCA_REALIZADA', detalhes: { termo: termoFinal }, entidadeTipo: 'busca' })
 
     const params = new URLSearchParams({ q: termoFinal })
     // Uma cidade escrita na busca tem prioridade sobre a cidade salva do usuário.
@@ -143,13 +142,31 @@ export default function Home() {
         </div>
       </div>
 
-      {/* CTA para prestadores. Aparece para todos, inclusive quem já é prestador (leva ao painel): ele ancora o
-          fim da tela; sem ele sobrava um vazio grande embaixo das sugestões. */}
+      {/* CTA para prestadores. Aparece para visitante, cliente e prestador com cadastro pendente; o prestador ativo usa o atalho do cabeçalho. */}
       <div className="relative z-10 flex-1 flex items-end justify-center pt-6 pb-12 px-6">
-        <div className="w-full max-w-3xl">
+        <div className="flex w-full max-w-3xl flex-col gap-3">
+          {/* Feed de trabalhos concluídos: mostra o que os profissionais já fizeram, para quem ainda não sabe o que buscar. */}
+          <Link
+            href="/feed"
+            onClick={() => insertLog({ acao: 'CLIQUE_FEED_HOME', entidadeTipo: 'home' })}
+            data-testid="home-link-feed"
+            className="group flex min-h-16 items-center justify-between gap-3 w-full px-5 py-4 md:px-8 md:py-5 rounded-[2rem] border border-blue-100 bg-blue-50/60 hover:bg-blue-50 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-white border border-blue-100 flex items-center justify-center shrink-0">
+                <Images size={16} aria-hidden="true" className="text-blue-600" />
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-black uppercase tracking-widest text-blue-700 mb-0.5">Trabalhos reais</p>
+                <p className="text-xs md:text-sm font-bold text-slate-700">Veja serviços concluídos e se inspire</p>
+              </div>
+            </div>
+            <ArrowRight size={18} aria-hidden="true" className="text-blue-400 group-hover:translate-x-1 transition-all duration-300 shrink-0" />
+          </Link>
+
           {mostrarSkeletonCTA ? (
             <CTAPrestadorSkeleton />
-          ) : (
+          ) : mostrarCTA && (
             <Link
               href={hrefCTA}
               onClick={() => insertLog({ acao: acaoLogCTA, entidadeTipo: 'home' })}

@@ -18,9 +18,17 @@ interface Props {
   portfolioObrigatorio?: boolean // NEW: controlar visibilidade da aba
   /** Contato do profissional para o botão de WhatsApp dentro do modal do trabalho. */
   contato?: ContatoDoModal
+  /** Curtir no modal do trabalho. Sem isto (ou no próprio perfil), o modal não mostra curtir. */
+  curtidas?: {
+    porTrabalho: Record<string, { total: number; curtidoPorMim: boolean; salvoPorMim: boolean }>
+    logado: boolean
+    aviso: string | null
+    onCurtir: (projetoId: string) => void
+    onSalvar: (projetoId: string) => void
+  } | null
 }
 
-export default function PerfilTabs({ projetos, avaliacoes, totais, portfolioObrigatorio = true, contato }: Props) {
+export default function PerfilTabs({ projetos, avaliacoes, totais, portfolioObrigatorio = true, contato, curtidas = null }: Props) {
   // Contagem da aba Portfólio exclui projetos sem_fotos — eles nunca
   // aparecem na grade (ver PortfolioGrid), então não devem inflar o badge.
   const projetosComFoto = projetos.filter(p => !p.sem_fotos)
@@ -110,6 +118,15 @@ export default function PerfilTabs({ projetos, avaliacoes, totais, portfolioObri
           projeto={projetoAberto}
           onClose={fecharModal}
           contato={contato}
+          curtir={curtidas ? {
+            total: curtidas.porTrabalho[String(projetoAberto.id)]?.total ?? 0,
+            curtido: curtidas.porTrabalho[String(projetoAberto.id)]?.curtidoPorMim ?? false,
+            salvo: curtidas.porTrabalho[String(projetoAberto.id)]?.salvoPorMim ?? false,
+            logado: curtidas.logado,
+            aviso: curtidas.aviso,
+            onCurtir: () => curtidas.onCurtir(String(projetoAberto.id)),
+            onSalvar: () => curtidas.onSalvar(String(projetoAberto.id)),
+          } : null}
         />
       )}
     </section>

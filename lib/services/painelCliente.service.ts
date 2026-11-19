@@ -1,3 +1,4 @@
+import { VERSAO_AVISO_FEED } from '@/config/feed'
 import { supabase } from '@/lib/supabase'
 import type { Servico } from '@/types/painel'
 import { anexarTokens, obterProjetoIdPorToken } from './projetoToken.service'
@@ -15,6 +16,7 @@ import { anexarDadosCliente, nomeClientePorToken } from './dadosClienteProjeto.s
 const SELECT_SERVICOS = `
   id, prestador_id, titulo, descricao, data_conclusao, created_at, data_inicio,
       status, aceito_at, cliente_user_id, sem_fotos, marcado_concluido_at,
+      feed_aceito_em, feed_revogado_em,
   prestadores (id, user_id, nome, foto_perfil, whatsapp, categoria:categorias(nome, categorias_grupos(icone))),
   portfolio_fotos (*),
   solicitacoes_garantia (id, status, origem, tipo, prazo_resposta),
@@ -139,6 +141,8 @@ export function mensagemDeErroDaAcao(erro: unknown): string {
       return 'Este trabalho não está mais aguardando sua resposta. Atualize a página para ver a situação atual.'
     case 'nao_encontrado':
       return 'Não encontramos este trabalho. Peça um novo link ao prestador.'
+    case 'nunca_esteve_no_feed':
+      return 'Este trabalho não está no feed, então não há o que retirar.'
     default:
       return 'Não conseguimos concluir agora. Confira sua internet e tente de novo.'
   }
@@ -146,7 +150,14 @@ export function mensagemDeErroDaAcao(erro: unknown): string {
 
 /** Somente a conta dona do projeto (vinculada pelo token) aceita. Regra na função do banco. */
 export async function aceitarServico(servicoId: string, nomeCliente: string) {
-  const { data, error } = await supabase.rpc('aceitar_projeto', { p_projeto_id: servicoId, p_nome: nomeCliente })
+  const { data, error } = await supabase.rpc('aceitar_projeto', { p_projeto_id: servicoId, p_nome: nomeCliente, p_feed_versao: VERSAO_AVISO_FEED })
+  if (error) throw error
+  exigirOk(data as ResultadoAcao)
+}
+
+/** Só o cliente dono retira o trabalho do feed. Permanente para aquele trabalho. Regra na função do banco. */
+export async function retirarDoFeed(servicoId: string) {
+  const { data, error } = await supabase.rpc('revogar_feed_projeto', { p_projeto_id: servicoId })
   if (error) throw error
   exigirOk(data as ResultadoAcao)
 }

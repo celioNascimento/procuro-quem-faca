@@ -3,6 +3,9 @@
 import { BadgeCheck } from 'lucide-react'
 import { useAdminVerificacoes } from '@/hooks/useAdminVerificacoes'
 import { VerificacaoCard } from '@/components/admin/verificacoes/VerificacaoCard'
+import { DocumentoCard } from '@/components/admin/verificacoes/DocumentoCard'
+import { useAdminDocumentos } from '@/hooks/useAdminDocumentos'
+import { useState } from 'react'
 
 const FILTROS = [
   { valor: 'pendentes', label: 'Aguardando' },
@@ -10,7 +13,39 @@ const FILTROS = [
   { valor: 'rejeitadas', label: 'Rejeitadas' },
 ] as const
 
+function SecaoDocumentos() {
+  const { itens, loading, filtro, setFiltro, processando, erro, camposDe, atualizar, alternarItem, abrirComprovante, decidir } = useAdminDocumentos()
+  return (
+    <section data-testid="secao-documentos">
+      <p className="mb-4 text-sm text-slate-500">Seguro (nível Ouro) e CND federal (nível Diamante). Confira o comprovante, informe a validade e decida.</p>
+      <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
+        {FILTROS.map(f => (
+          <button key={f.valor} onClick={() => setFiltro(f.valor)} aria-pressed={filtro === f.valor}
+            className={`rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${filtro === f.valor ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+      {erro && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{erro}</p>}
+      {loading ? (
+        <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />
+      ) : itens.length === 0 ? (
+        <p className="py-20 text-center text-sm font-semibold text-slate-400">Nada por aqui nesta lista.</p>
+      ) : (
+        <div className="space-y-4">
+          {itens.map(item => (
+            <DocumentoCard key={item.verificacao_id} item={item} processando={processando} campos={camposDe(item.verificacao_id)}
+              onCampos={p => atualizar(item.verificacao_id, p)} onAlternarItem={i => alternarItem(item.verificacao_id, i)} onAbrir={() => abrirComprovante(item)}
+              onAprovar={() => decidir(item, 'aprovada')} onRejeitar={() => decidir(item, 'rejeitada')} />
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
 export default function VerificacoesPage() {
+  const [tipo, setTipo] = useState<'cnpj' | 'documentos'>('cnpj')
   const { itens, loading, filtro, setFiltro, processando, erro, motivos, atualizarMotivo, decidir } = useAdminVerificacoes()
 
   return (
@@ -25,6 +60,16 @@ export default function VerificacoesPage() {
         </p>
       </header>
 
+      <div role="tablist" aria-label="Tipo de verificação" className="mb-6 flex w-fit gap-1 rounded-2xl bg-slate-100 p-1">
+        {([['cnpj', 'CNPJ'], ['documentos', 'Seguro e CND']] as const).map(([id, rotulo]) => (
+          <button key={id} role="tab" aria-selected={tipo === id} onClick={() => setTipo(id)} data-testid={`aba-admin-${id}`}
+            className={`min-h-10 rounded-xl px-5 text-xs font-black uppercase tracking-widest ${tipo === id ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>
+            {rotulo}
+          </button>
+        ))}
+      </div>
+
+      {tipo === 'documentos' ? <SecaoDocumentos /> : (<>
       <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
         {FILTROS.map(f => (
           <button
@@ -64,6 +109,7 @@ export default function VerificacoesPage() {
           ))}
         </div>
       )}
+      </>)}
     </main>
   )
 }

@@ -6,6 +6,7 @@
 // O cliente aparece só pelo primeiro nome: a plataforma não verifica quem avalia.
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import { Share2, Check, CheckCircle2, Activity, User, ShieldCheck, ShieldOff, XCircle, Camera, X } from 'lucide-react'
 import type { ProjetoPerfil, GarantiaPublica } from '@/types/perfil'
 import { useSlides } from '@/hooks/useSlides'
@@ -14,6 +15,8 @@ import { ModalFotoBase } from '@/components/shared/ModalFotoBase'
 import { descricaoOuPadrao, NOME_DA_ETAPA, type EtapaFoto } from '@/lib/trabalho/descricaoFotos'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 import { primeiroNomeDoCliente, CLIENTE_SEM_NOME } from '@/lib/nomeDoCliente'
+import { CurtirTrabalho } from './CurtirTrabalho'
+import { SalvarTrabalho } from './SalvarTrabalho'
 
 /** Contato do profissional, para o botão do rodapé. Sem WhatsApp válido, o botão não aparece. */
 export interface ContatoDoModal {
@@ -22,10 +25,22 @@ export interface ContatoDoModal {
   onClique: () => Promise<void>
 }
 
+/** Curtir este trabalho. Sem isto (ou no próprio perfil), o botão não aparece. */
+export interface CurtirDoModal {
+  total: number
+  curtido: boolean
+  salvo: boolean
+  logado: boolean
+  aviso: string | null
+  onCurtir: () => void
+  onSalvar: () => void
+}
+
 interface Props {
   projeto: ProjetoPerfil
   onClose: () => void
   contato?: ContatoDoModal
+  curtir?: CurtirDoModal | null
 }
 
 const CONFIG_GARANTIA: Record<string, {
@@ -113,7 +128,7 @@ function GarantiaCard({ garantia }: { garantia: GarantiaPublica }) {
   )
 }
 
-export default function ProjetoModal({ projeto, onClose, contato }: Props) {
+export default function ProjetoModal({ projeto, onClose, contato, curtir = null }: Props) {
   const { sorted: fotos, fotoAtual, current, next, prev, ir } = useSlides(projeto.portfolio_fotos, true)
   const comentarios = useComentariosFoto(fotoAtual?.id)
   const [avisoCopiado, setAvisoCopiado] = useState(false)
@@ -268,7 +283,14 @@ export default function ProjetoModal({ projeto, onClose, contato }: Props) {
 
       </div>
 
+      {curtir?.aviso && (
+        <p role="status" className="shrink-0 bg-amber-50 px-5 py-3 text-sm font-semibold text-amber-900" data-testid="modal-aviso">
+          {curtir.aviso} {!curtir.logado && <Link href="/login" className="font-black underline">Entrar</Link>}
+        </p>
+      )}
+
       <div className="flex shrink-0 items-center gap-2 border-t border-slate-100 bg-white px-5 py-3">
+        {curtir && <CurtirTrabalho total={curtir.total} curtido={curtir.curtido} onCurtir={curtir.onCurtir} />}
         {linkWhatsapp && contato && (
           <a
             href={linkWhatsapp}
@@ -284,6 +306,7 @@ export default function ProjetoModal({ projeto, onClose, contato }: Props) {
             <span className="truncate">Chamar no WhatsApp</span>
           </a>
         )}
+        {curtir && <SalvarTrabalho salvo={curtir.salvo} onSalvar={curtir.onSalvar} />}
         {/* Só o ícone: o "Chamar no WhatsApp" precisa do espaço. O nome fica para leitores de tela e no tooltip. */}
         <button
           type="button"

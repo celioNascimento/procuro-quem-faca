@@ -401,6 +401,8 @@ O feed não cria um canal novo de contato nem altera o ciclo de orçamento.
 
 ## Decisões tomadas
 
+- **Feed (19/11/2026, ver doc 24):** o feed ganhou curtir e seguir; o aceite passou a ser um aviso no "Aceitar trabalho" (sem caixa separada); só trabalhos novos entram; **não há fila de revisão de fotos com pessoas**, o aceite do cliente e a confirmação de terceiros bastam. Isso substitui o que a Etapa 6 previa acima.
+
 - **Feed:** publicação só com aceite ativo do cliente, dado na avaliação. Após o aceite, o projeto entra ativado por padrão e o prestador pode desativar por projeto.
 - **CND:** conferência manual por upload, sem consulta automatizada no lançamento.
 - **Dados trabalhistas:** fora da plataforma.

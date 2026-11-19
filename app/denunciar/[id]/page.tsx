@@ -1,15 +1,18 @@
 //app/denunciar/[id]/page.tsx
 
 'use client'
-import { useState } from 'react'
-import { useParams } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useParams, useSearchParams } from 'next/navigation'
 import { useVoltar } from '@/hooks/useVoltar'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import { criarDenuncia } from '@/lib/services/denuncia.service'
+import { lerTrabalhoDenunciado, motivoDaDenuncia } from '@/lib/feed/denuncia'
 
-export default function PaginaDenuncia() {
+function ConteudoDenuncia() {
   const params = useParams()
+  // Vindo do feed, o endereço traz o trabalho denunciado (?trabalho=&titulo=); do perfil, não traz nada.
+  const trabalho = lerTrabalhoDenunciado(useSearchParams())
   const id = params?.id as string
   // Vem do perfil do prestador: volta para ele; sem histórico, vai para a lista.
   const voltar = useVoltar('/prestadores')
@@ -26,7 +29,7 @@ export default function PaginaDenuncia() {
       const prestadorId = Number(id)
       
       // Chamada limpa para a camada de serviço
-      await criarDenuncia(prestadorId, motivo)
+      await criarDenuncia(prestadorId, motivoDaDenuncia(motivo, trabalho))
 
       setSucesso(true)
       
@@ -99,6 +102,12 @@ export default function PaginaDenuncia() {
           </p>
         </header>
 
+        {trabalho && (
+          <p className="mb-4 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-700" data-testid="denuncia-trabalho">
+            Você está denunciando o trabalho: {trabalho.titulo}
+          </p>
+        )}
+
         <div className="bg-white p-1 rounded-[2.5rem] shadow-xl shadow-slate-100 border border-slate-50">
           <div className="p-6 md:p-8 space-y-6">
             
@@ -110,6 +119,7 @@ export default function PaginaDenuncia() {
                 className="w-full h-48 p-6 rounded-[2rem] bg-slate-50 border-2 border-slate-100 outline-none focus:border-red-400 focus:bg-white text-slate-700 font-bold text-sm placeholder:text-slate-300 transition-all resize-none"
                 placeholder="Por favor, descreva o problema encontrado com este prestador..."
                 value={motivo}
+                maxLength={1000}
                 onChange={(e) => setMotivo(e.target.value)}
               />
             </div>
@@ -153,5 +163,14 @@ export default function PaginaDenuncia() {
 
       </div>
     </main>
+  )
+}
+
+// useSearchParams exige Suspense para a página poder ser gerada no build.
+export default function PaginaDenuncia() {
+  return (
+    <Suspense fallback={null}>
+      <ConteudoDenuncia />
+    </Suspense>
   )
 }

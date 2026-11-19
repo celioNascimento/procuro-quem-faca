@@ -70,8 +70,9 @@ test.describe('selos calculados no perfil público', () => {
     await expect(page.getByTestId('nivel-perfil')).toHaveText('Nível Prata', { timeout: 20_000 });
     await expect(page.getByTestId('selo-cnpj-texto')).toContainText('CNPJ ativo, consultado em');
     await expect(page.getByText(TEXTO_EXPERIENCIA)).toBeVisible();
-    // As avaliações semeadas não têm "indica": contam como "não indico" e passam de 30%, então a tag aparece.
-    await expect(page.getByTestId('tag-nao-indicam')).toHaveText(/\d+% não indicam/);
+    // As avaliações semeadas não têm "indica": contam como "não indico". O perfil mostra o número exato, sem tag de porcentagem.
+    await expect(page.getByTestId('placar-nao-indicam')).toContainText(/não indicam? este profissional/);
+    await expect(page.getByTestId('tag-nao-indicam')).toHaveCount(0);
   });
 
   test('serviços com nota 2 não contam (nota efetiva abaixo de 3)', async ({ page, request }) => {
@@ -118,6 +119,6 @@ test.describe('barra de evolução do prestador', () => {
     await semearExperiencia(PERFIL_SEED.id, 9);
     await abrirDados(page);
     await expect(page.getByTestId('conquista-experiencia')).toContainText('Conquistado', { timeout: 20_000 });
-    await expect(page.getByTestId('evolucao-texto')).toHaveText('1 de 4 selos conquistados');
+    await expect(page.getByTestId('evolucao-texto')).toHaveText('1 de 6 selos conquistados');
   });
 });

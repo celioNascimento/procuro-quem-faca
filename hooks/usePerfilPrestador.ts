@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { insertLog } from '@/lib/db/logs'
+import { insertLogDeTrafego } from '@/lib/db/logs'
 import { registrarVisitaPerfil } from '@/lib/db/visitasPerfil'
 import { sanitizarRotaInterna } from '@/lib/navegacao'
 import type { PerfilData, PrestadorPerfil, ProjetoPerfil, FotoProjeto, GarantiaPublica, FotoGarantiaPublica } from '@/types/perfil'
@@ -28,7 +28,7 @@ const COLUNAS_PRESTADOR_PUBLICO = [
   'id', 'created_at', 'nome', 'bio', 'whatsapp', 'foto_perfil', 'bairro', 'status', 'aprovado_em',
   'bloqueado', 'habilidades', 'tags', 'estado_sigla', 'cidade_id', 'regiao_id', 'slug',
   'cidades_atendidas', 'origem_tipo', 'verificado', 'grupo_id', 'categoria_id', 'garantia_dias',
-  'portfolio_obrigatorio', 'sessao_fotos_titulo', 'sessao_fotos_urls', 'exemplo',
+  'portfolio_obrigatorio', 'sessao_fotos_titulo', 'sessao_fotos_urls', 'exemplo', 'instagram',
 ].join(', ')
 
 type ProjetoRaw = {
@@ -218,7 +218,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
         }
 
         if (fromParam) {
-          insertLog({
+          insertLogDeTrafego({
             acao: 'VISITA_PERFIL_VIA_BUSCA',
             detalhes: { origem: urlRetorno },
             entidadeId: String(prestadorRaw.id),

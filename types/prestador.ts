@@ -19,6 +19,8 @@ export interface Prestador {
   cidade_id: string | null
   regiao_id: string | null
   slug: string | null
+  /** Usuário do Instagram, sem @ (opcional, público no perfil). */
+  instagram?: string | null
   cidades_atendidas: string[] | null
   origem_tipo: string | null
   verificado: boolean | null

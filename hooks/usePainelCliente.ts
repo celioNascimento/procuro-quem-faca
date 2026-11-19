@@ -14,8 +14,10 @@ import {
   filtrarComReclamacaoAtiva,
   aceitarServico,
   recusarServico,
+  retirarDoFeed,
   mensagemDeErroDaAcao,
 } from '../lib/services/painelCliente.service'
+import { aplicarRetiradaDoFeed } from '@/lib/feed/feed'
 import { reivindicarProjetoPorToken } from '../lib/services/avaliacao.service'
 
 export function usePainelCliente() {
@@ -184,6 +186,22 @@ export function usePainelCliente() {
     }
   }
 
+  // Retirar do feed: permanente para aquele trabalho. A lista já passa a esconder o botão.
+  const handleRetirarDoFeed = async (servico: Servico) => {
+    if (acaoEmAndamento) return
+    setErroAcao(null)
+    setAcaoEmAndamento(true)
+    try {
+      await retirarDoFeed(servico.id)
+      setServicos(prev => aplicarRetiradaDoFeed(prev, servico.id, new Date().toISOString()))
+    } catch (erro) {
+      console.error('Erro ao retirar do feed:', erro)
+      setErroAcao(mensagemDeErroDaAcao(erro))
+    } finally {
+      setAcaoEmAndamento(false)
+    }
+  }
+
   const handleVerGarantia = (servico: Servico) => {
     router.push(`/acompanhamento/${servico.avaliacao_token}?garantia=1`)
   }
@@ -197,7 +215,7 @@ export function usePainelCliente() {
     session, profile, servicos, servicosGarantia, servicosReclamacao, loading,
     zoomImage, setZoomImage,
     tokenUrl, nomeCliente, avatarUrl,
-    handleAceitar, handleRecusar, handleVerGarantia,
+    handleAceitar, handleRecusar, handleRetirarDoFeed, handleVerGarantia,
     acaoEmAndamento, erroAcao,
   }
 }

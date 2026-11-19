@@ -145,3 +145,37 @@ describe('ajuda: selos de confiança e CNPJ', () => {
     expect(searchHelpArticles('CNPJ', 'cliente').map((a) => a.id)).not.toContain('selo-cnpj-prestador')
   })
 })
+
+describe('ajuda: seguro, CND e níveis Ouro/Diamante', () => {
+  it('prestador tem artigos de seguro e CND nas telas de Dados Profissionais', () => {
+    const ids = getHelpArticles('prestador', 'painel-dados-cnpj').map((a) => a.id)
+    expect(ids).toEqual(expect.arrayContaining(['selo-seguro-prestador', 'selo-cnd-prestador', 'selos-e-niveis-prestador']))
+  })
+
+  it('o artigo de seguro deixa claro: vale para qualquer categoria, o PQF não vende seguro e o arquivo é apagado', () => {
+    const texto = (findHelpArticle('selo-seguro-prestador')?.steps ?? []).join(' ')
+    expect(texto).toMatch(/qualquer profissional|qualquer categoria/i)
+    expect(texto).toMatch(/não vende nem indica seguro/i)
+    expect(texto).toMatch(/arquivo da apólice é apagado/i)
+    expect(texto).toMatch(/30, 15 e 3 dias/)
+  })
+
+  it('o artigo de CND explica validade de 180 dias e CPEND', () => {
+    const texto = (findHelpArticle('selo-cnd-prestador')?.steps ?? []).join(' ')
+    expect(texto).toMatch(/180 dias/)
+    expect(texto).toMatch(/CPEND/)
+  })
+
+  it('o cliente lê o que Ouro e Diamante significam e o que o selo não promete', () => {
+    const texto = (findHelpArticle('selos-no-perfil')?.steps ?? []).join(' ')
+    expect(texto).toMatch(/Ouro/)
+    expect(texto).toMatch(/Diamante/)
+    expect(texto).toMatch(/não diz que um problema específico será coberto/)
+    expect(getHelpArticles('cliente', 'perfil-publico').map((a) => a.id)).toContain('selos-no-perfil')
+  })
+
+  it('artigos de seguro e CND não aparecem para cliente nem visitante', () => {
+    expect(searchHelpArticles('apólice', 'cliente').map((a) => a.id)).not.toContain('selo-seguro-prestador')
+    expect(searchHelpArticles('certidão', 'publico').map((a) => a.id)).not.toContain('selo-cnd-prestador')
+  })
+})

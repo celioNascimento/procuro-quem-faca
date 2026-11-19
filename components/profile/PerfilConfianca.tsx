@@ -13,9 +13,9 @@ import {
   type SeloCnpjPublico,
   type SelosComplementares,
 } from '@/lib/selos/publico'
+import { textoSeloPublico } from '@/lib/selos/documentos'
 import { textoTempoCnpj } from '@/lib/selos/tempoCnpj'
 import { apresentarNivel } from '@/lib/selos/nivel'
-import { textoTagNaoIndicam } from '@/lib/avaliacoes/transparencia'
 
 interface Props {
   prestador: PrestadorPerfil
@@ -43,7 +43,6 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
 
   const temDestaque = totalIndicacoes > 0
   const temNaoIndicacoes = totalNaoIndicacoes > 0
-  const tagNaoIndicam = textoTagNaoIndicam(totalIndicacoes, totalNaoIndicacoes)
   const nomeNivel = rotuloNivel(nivel)
   const itens = [
     selo && {
@@ -65,6 +64,16 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
       key: 'selo-atividade',
       icon: <Briefcase size={14} className="text-green-600" aria-hidden="true" />,
       texto: TEXTO_ATIVIDADE,
+    },
+    complementares?.seguro && {
+      key: 'selo-seguro',
+      icon: <ShieldCheck size={14} className="text-green-600" aria-hidden="true" />,
+      texto: <span data-testid="selo-seguro-texto">{textoSeloPublico('seguro')}</span>,
+    },
+    complementares?.cnd && {
+      key: 'selo-cnd',
+      icon: <BadgeCheck size={14} className="text-green-600" aria-hidden="true" />,
+      texto: <span data-testid="selo-cnd-texto">{textoSeloPublico('cnd')}</span>,
     },
     totalConcluidos > 0 && {
       key: 'concluidos',
@@ -91,24 +100,14 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
       data-testid="caixa-confianca"
       aria-label="Confiança neste profissional"
     >
-      {((selo && nomeNivel) || tagNaoIndicam) && (
+      {selo && nomeNivel && (
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          {selo && nomeNivel && (
-            <span
-              data-testid="nivel-perfil"
-              className={`inline-flex items-center rounded-full border px-2 py-px text-xs font-black ${apresentarNivel(nivel).classes}`}
-            >
-              Nível {nomeNivel}
-            </span>
-          )}
-          {tagNaoIndicam && (
-            <span
-              data-testid="tag-nao-indicam"
-              className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-px text-xs font-black text-amber-900"
-            >
-              {tagNaoIndicam}
-            </span>
-          )}
+          <span
+            data-testid="nivel-perfil"
+            className={`inline-flex items-center rounded-full border px-2 py-px text-xs font-black ${apresentarNivel(nivel).classes}`}
+          >
+            Nível {nomeNivel}
+          </span>
         </div>
       )}
 
@@ -142,7 +141,7 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
       )}
 
       {itens.length > 0 && (
-        <ul className={`flex flex-col gap-2.5 ${temDestaque || temNaoIndicacoes ? 'mt-4 border-t border-slate-50 pt-4' : ''}`}>
+        <ul className={`flex flex-col gap-2.5 ${temDestaque || temNaoIndicacoes ? 'mt-3 border-t border-slate-50 pt-3' : ''}`}>
           {itens.map(item => (
             <li key={item.key} className="flex items-start gap-2.5 text-[13px] font-semibold leading-snug text-slate-600 lg:text-sm">
               <span className="mt-0.5 shrink-0">{item.icon}</span>

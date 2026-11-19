@@ -3,12 +3,14 @@
 import { useState, useCallback } from 'react'
 import type { PrestadorFormData } from '@/types/prestador'
 import { aplicarMascaraWhatsapp, formatarParaSlug } from '@/lib/mascaras'
+import { arrobaDoInstagram, normalizarInstagram } from '@/lib/instagram'
 
 const FORM_INICIAL: PrestadorFormData = {
   id: null,
   slug: null,
   nome: '',
   whatsapp: '',
+  instagram: '',
   foto_perfil: null,
   grupo_id: '',
   categoria_id: '',
@@ -48,6 +50,7 @@ export function usePrestadorForm(idAtual?: number | null) {
       slug: perfil.slug || formatarParaSlug(perfil.nome || ''),
       estado_sigla: perfil.estado_sigla || 'PR',
       whatsapp: aplicarMascaraWhatsapp(perfil.whatsapp || ''),
+      instagram: perfil.instagram ? arrobaDoInstagram(perfil.instagram) : '',
       // garantia_dias já vem do spread de ...perfil acima quando presente
       // no banco; explícito aqui só para cobrir perfis legados sem a
       // coluna preenchida ainda (undefined → 0, "sem garantia").
@@ -73,6 +76,19 @@ export function usePrestadorForm(idAtual?: number | null) {
 
   const handleWhatsappChange = useCallback((valor: string) => {
     setFormData(prev => ({ ...prev, whatsapp: aplicarMascaraWhatsapp(valor) }))
+  }, [])
+
+  const handleInstagramChange = useCallback((valor: string) => {
+    setFormData(prev => ({ ...prev, instagram: valor }))
+  }, [])
+
+  // Ao sair do campo, link colado ou usuário sem @ viram "@usuario" (o que será mostrado no perfil).
+  // Texto inválido fica como está: o erro aparece embaixo do campo.
+  const handleInstagramBlur = useCallback(() => {
+    setFormData(prev => {
+      const r = normalizarInstagram(prev.instagram)
+      return r.ok ? { ...prev, instagram: r.usuario ? arrobaDoInstagram(r.usuario) : '' } : prev
+    })
   }, [])
 
   const handleGrupoChange = useCallback((grupoId: string) => {
@@ -116,6 +132,8 @@ export function usePrestadorForm(idAtual?: number | null) {
     handleNomeChange,
     handleSlugChange,
     handleWhatsappChange,
+    handleInstagramChange,
+    handleInstagramBlur,
     handleGrupoChange,
     handleEstadoChange,
     handleRegiaoChange,

@@ -53,3 +53,9 @@ jobs:
       - name: Tipos (TypeScript)
         if: ${{ !cancelled() }}
         run: pnpm exec tsc --noEmit
+
+      # Falha se alguma dependência de produção tiver vulnerabilidade alta ou crítica (varredura de 19/11:
+      # o Next.js antigo tinha falha crítica de execução remota). Conserto: atualizar o pacote e o pnpm-lock.yaml.
+      - name: Vulnerabilidades nas dependências (pnpm audit)
+        if: ${{ !cancelled() }}
+        run: pnpm audit --prod --audit-level=high

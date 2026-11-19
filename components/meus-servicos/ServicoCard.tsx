@@ -1,9 +1,11 @@
 //components/meus-servicos/ServicoCard.tsx
 'use client'
+import { TEXTO_AVISO_FEED } from '@/config/feed'
 import { Clock, Phone, ChevronRight, ZoomIn, Briefcase, CheckCircle2, ShieldAlert } from 'lucide-react'
 import AvatarPrestador from '@/components/shared/AvatarPrestador'
 import { Servico } from '@/types/painel'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
+import { podeRetirarDoFeed } from '@/lib/feed/feed'
 
 interface Props {
   servico: Servico
@@ -12,6 +14,8 @@ interface Props {
   hidePrestador?: boolean
   /** Enquanto uma ação (autorizar) está sendo enviada: trava o botão e mostra "Aceitando…". */
   ocupado?: boolean
+  /** Pede para retirar o trabalho do feed. Sem isto, o botão não aparece. */
+  onRetirarDoFeed?: (servico: Servico) => void
   modo?: 'pendente' | 'andamento' | 'concluido' | 'garantia'
   // Tipo do caso ativo (garantia formal ou reclamação sem garantia),
   // ou null quando não há caso ativo. Substitui o antigo booleano
@@ -36,6 +40,7 @@ export default function ServicoCard({
   onAceitar,
   hidePrestador = false,
   ocupado = false,
+  onRetirarDoFeed,
   modo = 'pendente',
   tipoGarantiaAtiva = null,
 }: Props) {
@@ -249,6 +254,28 @@ export default function ServicoCard({
           )}
 
         </div>
+
+        {/* Retirar do feed: só em trabalho concluído que está no feed. */}
+        {onRetirarDoFeed && podeRetirarDoFeed(servico) && (
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3" data-testid="retirar-feed-bloco">
+            <p className="text-xs font-medium leading-snug text-slate-500">Este trabalho aparece no feed do prestador.</p>
+            <button
+              type="button"
+              onClick={() => onRetirarDoFeed(servico)}
+              disabled={ocupado}
+              className="min-h-11 shrink-0 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60"
+            >
+              Retirar do feed
+            </button>
+          </div>
+        )}
+
+        {/* Aviso do feed: o cliente precisa saber, antes de aceitar, que as fotos aparecem no feed do prestador. */}
+        {modo === 'pendente' && (
+          <p className="mt-3 text-xs leading-snug text-slate-500" data-testid="aviso-feed-aceite">
+            {TEXTO_AVISO_FEED}
+          </p>
+        )}
       </div>
 
     </div>

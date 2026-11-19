@@ -68,7 +68,7 @@ export function ProjetoCard({ projeto, onClick }: Props) {
     <button
       type="button"
       onClick={() => onClick(projeto)}
-      className="group flex w-full overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0"
+      className="group flex w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 active:translate-y-0"
       aria-label={`Editar projeto ${projeto.titulo}`}
     >
       {/* Coluna da imagem — largura fixa, altura limitada a 9rem para não crescer com conteúdo externo.

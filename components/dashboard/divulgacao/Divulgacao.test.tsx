@@ -18,6 +18,7 @@ vi.mock('@/components/dashboard/divulgacao/CanvasPreview', () => ({
 const kit = vi.fn()
 vi.mock('@/hooks/useKitDivulgacao', () => ({ useKitDivulgacao: () => kit() }))
 vi.mock('@/components/help/HelpCenter', () => ({ ContextualHelp: () => null }))
+vi.mock('@/components/dashboard/divulgacao/FeedDeTrabalhosPanel', () => ({ FeedDeTrabalhosPanel: () => <div>FEED</div> }))
 vi.mock('@/components/dashboard/divulgacao/MaterialFisicoPanel', () => ({ MaterialFisicoPanel: () => <div>FISICO</div> }))
 
 import { LinksPanel } from '@/components/dashboard/divulgacao/LinksPanel'
@@ -135,5 +136,13 @@ describe('CentralDivulgacaoTab — prestador sem trabalhos', () => {
     render(<CentralDivulgacaoTab prestadorId={7} />)
     expect(screen.getByRole('tab', { name: /links & mensagens/i })).toBeTruthy()
     expect(screen.queryByText(/orçamento/i)).toBeNull()
+  })
+
+  it('tem a sub-aba "Feed de trabalhos", onde fica o interruptor Mostrar no feed', () => {
+    estado(completo)
+    render(<CentralDivulgacaoTab prestadorId={7} />)
+    expect(screen.queryByText('FEED')).toBeNull()
+    fireEvent.click(screen.getByRole('tab', { name: /feed de trabalhos/i }))
+    expect(screen.getByText('FEED')).toBeTruthy()
   })
 })

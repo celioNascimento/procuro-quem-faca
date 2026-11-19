@@ -92,7 +92,55 @@ export default function Termos() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-xl font-bold text-slate-800">9. Encerramento e alterações</h2>
+            <h2 className="mb-3 text-xl font-bold text-slate-800">9. Selos de confiança e níveis</h2>
+            <div className="space-y-3">
+              <p>
+                O prestador pode, se quiser, pedir selos que mostram ao cliente o que o PQF conferiu: CNPJ ativo, tempo de CNPJ, atividade compatível, experiência no PQF, seguro de responsabilidade civil e certidão negativa de débitos federais (CND). Os selos formam níveis (Bronze, Prata, Ouro e Diamante), calculados automaticamente. Os selos e os níveis são opcionais e não mudam a posição do profissional na busca.
+              </p>
+              <p>
+                <strong className="text-slate-700">O que o selo significa.</strong> Cada selo indica apenas o que foi conferido, na data indicada ou dentro da validade do documento. Ele não garante a qualidade do serviço, a situação financeira do profissional, que um seguro cobrirá um problema específico, nem o resultado de qualquer contratação. O cliente continua responsável por combinar valores, prazos e condições com o profissional.
+              </p>
+              <p>
+                <strong className="text-slate-700">Seguro.</strong> O PQF não vende, não intermedeia e não recomenda seguros, e não é parte de nenhum contrato de seguro. Só conferimos uma apólice que o prestador já tem. O que a apólice cobre é uma relação entre o prestador e a seguradora.
+              </p>
+              <p>
+                <strong className="text-slate-700">Responsabilidade do prestador.</strong> O prestador declara que as informações e os documentos enviados são verdadeiros e que pertencem ao CNPJ do perfil. O PQF pode recusar um pedido e, em caso de inconsistência, documento falso ou vencido, retirar o selo, informando o motivo. Falsidade pode levar ao bloqueio do perfil, conforme a seção 6.
+              </p>
+              <p>
+                <strong className="text-slate-700">Validade.</strong> Selos com validade (CNPJ, seguro e CND) saem do perfil automaticamente quando vencem, e o nível é recalculado. O prestador é avisado por e-mail antes do vencimento do seguro e da CND, mas manter os documentos em dia é responsabilidade dele. O tratamento dos dados enviados está descrito na Política de Privacidade.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-bold text-slate-800">10. Feed de trabalhos, curtidas e seguidores</h2>
+            <div className="space-y-3">
+              <p>
+                O PQF tem um feed público (“Trabalhos”) com serviços concluídos pelos prestadores. Um trabalho só entra no feed depois de finalizado, com pelo menos uma foto liberada, e se o cliente tiver aceitado o trabalho vendo o aviso do feed. Sem esse aceite, o trabalho aparece apenas no perfil do prestador, como antes.
+              </p>
+              <p>
+                <strong className="text-slate-700">O que aparece.</strong> As fotos liberadas, o título e a descrição do trabalho, a categoria, a cidade e o nome do prestador. O nome, o telefone e o endereço do cliente nunca aparecem. Quem envia as fotos continua responsável por elas, conforme a seção 4.
+              </p>
+              <p>
+                <strong className="text-slate-700">Controle do prestador.</strong> O prestador pode ocultar e mostrar de novo cada trabalho no feed, pelo painel dele.
+              </p>
+              <p>
+                <strong className="text-slate-700">Controle do cliente.</strong> O cliente pode retirar o trabalho do feed quando quiser, em Meus serviços. A retirada é definitiva: o trabalho não volta ao feed e o PQF não o recoloca. Ela vale só para o feed; o trabalho continua no perfil do prestador, e pedidos de remoção de imagens seguem a seção 4.
+              </p>
+              <p>
+                <strong className="text-slate-700">Curtir e seguir.</strong> Para curtir um trabalho ou seguir um prestador é preciso ter conta. O prestador vê o total de curtidas e de seguidores, não quem curtiu nem quem segue. A lista de quem a pessoa segue é visível só para ela. Não é permitido usar curtidas ou seguidores de forma artificial, como contas falsas ou combinadas para inflar números; o PQF pode desfazê-los.
+              </p>
+              <p>
+                <strong className="text-slate-700">Salvar.</strong> Para salvar um trabalho é preciso ter conta. O que você salva fica visível só para você; o prestador não sabe quem salvou nem quantos. Cada conta pode ter até 500 trabalhos salvos. Um trabalho salvo some da sua lista se o cliente o retirar do feed ou o prestador o ocultar.
+              </p>
+              <p>
+                <strong className="text-slate-700">Moderação.</strong> O PQF pode retirar do feed trabalhos ou imagens que violem estes termos, conforme a seção 6.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-bold text-slate-800">11. Encerramento e alterações</h2>
             <p>
               O usuário pode solicitar a exclusão da conta pelos fluxos disponíveis. O PQF pode alterar funcionalidades e estes termos para refletir a evolução do produto, a legislação ou melhorias de segurança. A versão vigente será publicada nesta página.
             </p>

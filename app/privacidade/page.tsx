@@ -63,7 +63,7 @@ export default function Privacidade() {
           <Secao titulo="3. Dados coletados">
             <div className="space-y-3">
               <p>
-                <Destaque>Fornecidos por você:</Destaque> nome, e-mail, telefone ou WhatsApp, cidade, região, categoria, habilidades, biografia, dados de acesso e informações do perfil. No login com Google, recebemos os dados básicos da conta autorizados por você.
+                <Destaque>Fornecidos por você:</Destaque> nome, e-mail, telefone ou WhatsApp, cidade, região, categoria, habilidades, biografia, dados de acesso e informações do perfil, incluindo, se você quiser, o usuário do seu Instagram (campo opcional). No login com Google, recebemos os dados básicos da conta autorizados por você.
               </p>
               <p>
                 <Destaque>Imagens e conteúdo:</Destaque> foto de perfil, sessão de fotos, fotos e comentários de projetos, foto e nome do cliente em avaliações, evidências de garantia ou reclamação, solicitações e denúncias.
@@ -134,7 +134,7 @@ export default function Privacidade() {
 
           <Secao titulo="7. Dados públicos e compartilhamento">
             <p>
-              Quando o prestador publica ou mantém um perfil ativo, informações profissionais escolhidas no cadastro podem ficar visíveis na busca e no perfil público, incluindo nome, cidade, categoria, biografia, habilidades, fotos, portfólio, avaliações e formas de contato, como o WhatsApp. Fotos e dados de projetos só são exibidos conforme o fluxo e as permissões aplicáveis. O link exclusivo de acompanhamento dá acesso ao projeto a quem o receber e não deve ser compartilhado. Não vendemos dados pessoais e não compartilhamos informações para marketing de terceiros. Compartilhamos dados apenas com os provedores necessários para operar a plataforma (como hospedagem, autenticação, armazenamento, geocodificação e estatísticas, descritos nas seções 8 e 9), com autoridades quando houver obrigação legal e com a moderação para tratar denúncias.
+              Quando o prestador publica ou mantém um perfil ativo, informações profissionais escolhidas no cadastro podem ficar visíveis na busca e no perfil público, incluindo nome, cidade, categoria, biografia, habilidades, fotos, portfólio, avaliações e formas de contato, como o WhatsApp e, se você informar, o seu Instagram (o link leva ao seu perfil na rede social, que tem política própria). Fotos e dados de projetos só são exibidos conforme o fluxo e as permissões aplicáveis. O link exclusivo de acompanhamento dá acesso ao projeto a quem o receber e não deve ser compartilhado. Não vendemos dados pessoais e não compartilhamos informações para marketing de terceiros. Compartilhamos dados apenas com os provedores necessários para operar a plataforma (como hospedagem, autenticação, armazenamento, geocodificação e estatísticas, descritos nas seções 8 e 9), com autoridades quando houver obrigação legal e com a moderação para tratar denúncias.
             </p>
           </Secao>
 
@@ -177,6 +177,49 @@ export default function Privacidade() {
               </p>
               <p>
                 <Destaque>Prazo.</Destaque> Respondemos aos pedidos em até {prazoRespostaDias} dias. A exclusão pode estar sujeita à preservação de registros exigidos por lei ou necessários para segurança, nos termos da seção 9. Você também pode apresentar reclamação à Autoridade Nacional de Proteção de Dados (ANPD).
+              </p>
+            </div>
+          </Secao>
+
+          <Secao titulo="11. Selos de confiança: CNPJ, seguro e CND">
+            <div className="space-y-3">
+              <p>
+                Esta seção vale para o prestador que pede selos de confiança. É opcional: sem pedido, nada disso é tratado.
+              </p>
+              <p>
+                <Destaque>Quais dados.</Destaque> CNPJ informado; dados abertos da Receita Federal sobre esse CNPJ (situação cadastral, razão social, nome fantasia, data de abertura, atividades registradas e, para conferir se o nome do perfil confere, os nomes dos sócios, que não são exibidos); no seguro, o nome da seguradora, o número e a validade da apólice e o arquivo do comprovante; na CND, o arquivo da certidão e a data de emissão. Em CNPJ de MEI, o nome da empresa pode ser o nome da própria pessoa.
+              </p>
+              <p>
+                <Destaque>Para quê e base legal.</Destaque> Conferir os dados para exibir os selos no perfil, a pedido do próprio prestador (consentimento, LGPD art. 7º, I, e execução do serviço solicitado, art. 7º, V). Os dados da Receita são públicos; ainda assim, usamos só o necessário para o selo. A aprovação do selo de CNPJ pode ser automática quando o nome confere; em caso de dúvida, uma pessoa da equipe revisa. Você pode pedir a revisão por uma pessoa de qualquer decisão automatizada (art. 20).
+              </p>
+              <p>
+                <Destaque>Quem vê e onde ficam.</Destaque> Os comprovantes ficam em área privada, sem endereço público, e só a equipe autorizada os abre, por links temporários. O perfil público mostra apenas o selo e a data de conferência ou validade: nunca o número do CNPJ, a razão social, a seguradora, o número da apólice ou o arquivo. A consulta à Receita fica em cache por até 24 horas.
+              </p>
+              <p>
+                <Destaque>Por quanto tempo.</Destaque> O arquivo do comprovante é apagado assim que a equipe decide o pedido; se ninguém decidir em 60 dias, é apagado automaticamente e o prestador pode enviar de novo; também é apagado se a conta for excluída. Depois da conferência guardamos só o resumo (por exemplo, seguradora, número e validade da apólice, ou data de emissão da CND), a validade e o registro da decisão, enquanto o perfil existir, e o registro de atividades conforme a seção 9.
+              </p>
+              <p>
+                <Destaque>Seus direitos.</Destaque> Você pode remover o CNPJ e o selo pelo painel a qualquer momento ou pedir a exclusão desses dados pelos canais da seção 10. Sem os selos, o perfil continua funcionando normalmente.
+              </p>
+            </div>
+          </Secao>
+
+          <Secao titulo="12. Feed de trabalhos, curtidas e seguidores">
+            <div className="space-y-3">
+              <p>
+                <Destaque>O que é tratado.</Destaque> No feed público, mostramos fotos, título, descrição, categoria e cidade de trabalhos concluídos, com o nome do prestador. Também guardamos o aceite do cliente ao aviso do feed (data e versão do aviso), as curtidas que você dá (qual trabalho e quando), os trabalhos que você salva (qual e quando) e os prestadores que você segue (qual e desde quando).
+              </p>
+              <p>
+                <Destaque>Para quê e base legal.</Destaque> Divulgar o trabalho do prestador e permitir que você acompanhe prestadores de que gosta. O trabalho só entra no feed com o aceite do cliente, que pode retirá-lo quando quiser, em Meus serviços (consentimento, LGPD art. 7º, I; a retirada vale para os próximos usos). Curtir, salvar e seguir são ações que você escolhe fazer, para executar o recurso que usa (art. 7º, V).
+              </p>
+              <p>
+                <Destaque>O que nunca aparece.</Destaque> Nome, telefone e endereço do cliente não aparecem no feed. A lista de quem você segue e a de trabalhos que você salvou são visíveis só para você. O prestador vê apenas o total de curtidas e de seguidores, sem saber quem são, e não sabe quem salvou seus trabalhos.
+              </p>
+              <p>
+                <Destaque>Fotos e terceiros.</Destaque> As regras de fotos e de pessoas nas imagens da seção 6 valem também no feed. Fotos do feed ficam na área pública e podem ser copiadas por terceiros fora do controle do PQF.
+              </p>
+              <p>
+                <Destaque>Seus direitos.</Destaque> Você pode deixar de seguir, descurtir e remover dos salvos a qualquer momento. Em Meus dados, você baixa a lista do que curtiu, do que salvou e de quem segue. Ao excluir a conta, apagamos suas curtidas, seus salvos e seus seguidos. O cliente que retirar um trabalho do feed não faz o trabalho voltar. Para pedidos sobre outros dados, use os canais da seção 10.
               </p>
             </div>
           </Secao>

@@ -6,6 +6,7 @@ import { MapPin, BadgeCheck, Flag, Share2, CheckCircle, Wrench } from 'lucide-re
 import type { PrestadorPerfil } from '@/types/perfil'
 import { visualDaArea } from '@/lib/areaVisual'
 import { corDasIniciais, getIniciais } from '@/lib/prestadorUtils'
+import { SeguirPrestador } from './SeguirPrestador'
 
 interface Props {
   prestador: PrestadorPerfil
@@ -13,9 +14,17 @@ interface Props {
   onCompartilhar: () => void
   /** true quando há selo de CNPJ ativo e vigente. */
   seloCnpj?: boolean
+  /** Seguir + total de seguidores. Sem isto (ou no próprio perfil), o botão não aparece. */
+  social?: {
+    totalSeguidores: number
+    seguindo: boolean
+    logado: boolean
+    aviso: string | null
+    onSeguir: () => void
+  } | null
 }
 
-export default function PerfilHero({ prestador, compartilhando, onCompartilhar, seloCnpj = false }: Props) {
+export default function PerfilHero({ prestador, compartilhando, onCompartilhar, seloCnpj = false, social = null }: Props) {
   const localizacao = [prestador.bairro, prestador.cidades?.nome]
     .filter(v => v?.trim())
     .join(', ')
@@ -88,6 +97,8 @@ export default function PerfilHero({ prestador, compartilhando, onCompartilhar, 
           </div>
         )}
       </div>
+
+      {social && <SeguirPrestador {...social} />}
 
       {/* ── Ações secundárias ── */}
       <div className="flex items-center gap-2">
