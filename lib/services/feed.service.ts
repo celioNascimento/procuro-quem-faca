@@ -1,6 +1,7 @@
 // lib/services/feed.service.ts — acesso ao banco do feed (a regra fica nas funções do banco).
 import { supabase } from '@/lib/supabase'
 import { ITENS_POR_PAGINA, normalizarFeed, type FeedItem } from '@/lib/feed/feed'
+import { normalizarPerfilSocial, type PerfilSocial } from '@/lib/feed/perfilSocial'
 
 export interface FiltroFeed {
   categoriaId?: string | null
@@ -43,6 +44,13 @@ export async function ocultarProjetoNoFeed(projetoId: string, ocultar: boolean):
   const { data, error } = await supabase.rpc('feed_ocultar_projeto', { p_projeto_id: projetoId, p_ocultar: ocultar })
   if (error) throw error
   return String(data)
+}
+
+/** Curtir/seguir do perfil público: totais para todos; "seguindo" e "curtido" só para quem está logado. null = sem curtir/seguir. */
+export async function fetchPerfilSocial(prestadorId: number): Promise<PerfilSocial | null> {
+  const { data, error } = await supabase.rpc('perfil_social', { p_prestador_id: prestadorId })
+  if (error) throw error
+  return normalizarPerfilSocial(data)
 }
 
 export interface CategoriaDoFiltro { id: string; nome: string }

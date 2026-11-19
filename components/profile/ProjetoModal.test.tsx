@@ -138,3 +138,24 @@ describe('ProjetoModal', () => {
     expect(onClose).toHaveBeenCalled()
   })
 })
+
+describe('ProjetoModal — curtir', () => {
+  const curtir = { total: 4, curtido: false, logado: true, aviso: null as string | null, onCurtir: vi.fn() }
+
+  it('com curtir: mostra o botão e avisa o pai ao tocar', () => {
+    const onCurtir = vi.fn()
+    render(<ProjetoModal projeto={projeto()} onClose={() => {}} curtir={{ ...curtir, onCurtir }} />)
+    expect(screen.getByTestId('modal-curtidas-texto').textContent).toBe('4')
+    fireEvent.click(screen.getByTestId('modal-curtir'))
+    expect(onCurtir).toHaveBeenCalledTimes(1)
+  })
+  it('sem curtir (próprio perfil ou perfil sem social): o botão não aparece', () => {
+    render(<ProjetoModal projeto={projeto()} onClose={() => {}} />)
+    expect(screen.queryByTestId('modal-curtir')).toBeNull()
+  })
+  it('visitante vê o aviso com o link Entrar', () => {
+    render(<ProjetoModal projeto={projeto()} onClose={() => {}} curtir={{ ...curtir, logado: false, aviso: 'Entre na sua conta para curtir trabalhos e seguir prestadores.' }} />)
+    expect(screen.getByTestId('modal-aviso').textContent).toMatch(/Entre na sua conta/)
+    expect(screen.getByRole('link', { name: 'Entrar' }).getAttribute('href')).toBe('/login')
+  })
+})
