@@ -13,10 +13,10 @@ const anon = { apikey: SUPABASE_TESTE_ANON_KEY, Authorization: `Bearer ${SUPABAS
 const rest = (tabela: string, filtro = '') => `${SUPABASE_TESTE_URL}/rest/v1/${tabela}${filtro}`;
 const rpc = (nome: string) => `${SUPABASE_TESTE_URL}/rest/v1/rpc/${nome}`;
 
-async function tokenDoPrestador(request: APIRequestContext) {
+async function tokenDoPrestador(request: APIRequestContext, papel: 'prestador' | 'prestadorMei' = 'prestador') {
   const r = await request.post(`${SUPABASE_TESTE_URL}/auth/v1/token?grant_type=password`, {
     headers: { apikey: SUPABASE_TESTE_ANON_KEY, 'Content-Type': 'application/json' },
-    data: { email: CONTAS.prestador.email, password: CONTAS.prestador.senha },
+    data: { email: CONTAS[papel].email, password: CONTAS[papel].senha },
   });
   expect(r.ok(), await r.text()).toBe(true);
   const t = (await r.json()).access_token as string;
@@ -90,4 +90,29 @@ test('denúncia com texto gigante é recusada (limite de 3000 caracteres)', asyn
     data: { prestador_id: PERFIL_SEED.id, motivo: 'x'.repeat(3001), status: 'aberta' },
   });
   expect(r.ok(), 'denúncia gigante foi aceita').toBe(false);
+});
+
+test('limite de ritmo: a 31ª tentativa de seguir em 1 minuto é barrada', async ({ request }) => {
+  // Conta que nenhum outro teste usa para seguir, para não atrapalhar a cota de ninguém.
+  const logado = await tokenDoPrestador(request, 'prestadorMei');
+  let ultima = '';
+  for (let i = 0; i < 31; i++) {
+    const r = await request.post(rpc('seguir_prestador'), { headers: logado, data: { p_prestador_id: PERFIL_SEED.id } });
+    ultima = (await r.text()).replace(/"/g, '');
+  }
+  expect(ultima).toBe('muito_rapido');
+});
+
+test('foto de trabalho só aceita endereço do Storage do projeto', async ({ request }) => {
+  const logado = await tokenDoPrestador(request);
+  const lista = await request.get(rest('portfolio_fotos', '?select=id,url_foto&limit=1'), { headers: logado });
+  const [foto] = lista.ok() ? await lista.json() : [];
+  test.skip(!foto, 'sem foto de teste para tentar');
+  const r = await request.patch(rest('portfolio_fotos', `?id=eq.${foto.id}`), {
+    headers: { ...logado, Prefer: 'return=representation' },
+    data: { url_foto: 'https://rastreador.exemplo/p.gif' },
+  });
+  expect(r.ok() ? await r.json() : [], 'URL externa foi aceita').toEqual([]);
+  const depois = await request.get(rest('portfolio_fotos', `?id=eq.${foto.id}&select=url_foto`), { headers: logado });
+  expect((await depois.json())[0].url_foto).toBe(foto.url_foto);
 });

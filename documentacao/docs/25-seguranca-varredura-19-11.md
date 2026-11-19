@@ -10,15 +10,20 @@
 ## Conferido, sem problema
 RPCs do feed/social: `security definer` com `search_path` fixo, checam `auth.uid()` e dono; `feed_projetos` não devolve WhatsApp, telefone nem dados do cliente; foto com pessoas só com consentimento; `seguidores` e `portfolio_salvos` só lidos pelo próprio usuário; rotas `/api/cron/*` exigem `CRON_SECRET`; rotas admin conferem `perfis_admin`; sem segredo no repositório (`.env*` no .gitignore).
 
+## Segunda leva (19/11 tarde) — padrão de grandes empresas
+Migração `20261119210000_seguranca_ritmo_e_fotos` (depois de `20261119200000`), aplicada e validada no TESTE:
+- **Foto só do Storage:** `portfolio_fotos.url_foto` precisa ser URL pública do bucket `portfolios` (`portfolio_fotos_url_storage`). Impede rastreador de IP em quem vê o feed. As fotos de teste (seed) foram trocadas de `example.invalid` para o caminho do Storage (na tabela e na base `e2e_baseline`). Na produção a migração falha inteira se houver foto fora disso.
+- **Limite de ritmo por pessoa** (`checar_ritmo`, tabela `acoes_ritmo`, só o banco acessa): curtir e salvar 60/min, seguir e ocultar 30/min; estourou devolve `muito_rapido` ("Calma! Muitas ações em pouco tempo…"). Linhas com mais de 1 hora são apagadas na própria chamada; apagar a conta apaga as linhas (cascata).
+- **Denúncia pública com teto:** no máximo 10 denúncias abertas por perfil por hora e 60 no total por minuto (função `denuncia_dentro_do_limite`, chamada pela política de INSERT).
+- **CSP em duas camadas** (`next.config.ts`): enforçada só `object-src 'none'; base-uri 'self'; frame-ancestors 'none'`; a política completa de origens (Supabase, Google, Vercel) está em **modo relatório** (`Content-Security-Policy-Report-Only`), com relatórios em `/api/csp-report` (logs da Vercel, prefixo `[csp-report]`). Próximo passo: olhar os relatórios por alguns dias, ajustar origens e então enforçar; depois trocar `'unsafe-inline'` por nonce.
+- **Limite por IP no firewall da Vercel** (rotas `/api/*` públicas: titular, denúncia, CNPJ): ainda NÃO configurado; é mudança de produção, só com o "de acordo". O Supabase não passa pela Vercel, por isso a denúncia direta usa o teto do banco.
+
 ## Pendências (decisão do dono)
-1. **Leaked password protection** desligada no Supabase Auth (painel: Authentication → Passwords). Fazer no TEST e na produção.
-2. **Funções `e2e_*`** (criar conta, resetar fixtures) são executáveis por `anon` no banco de TESTE. Têm trava de ambiente (`ambiente_teste_marcador`), mas confirmar que **não existem na produção** antes de qualquer migração.
-3. **Foto por URL externa**: `portfolio_fotos.url_foto` aceita qualquer URL (rastreador de IP de quem vê o feed). Restringir ao Storage do projeto exige trocar as fotos do seed (`example.invalid`).
-4. **Sem limite de ritmo** em curtir/seguir/salvar e na denúncia anônima (spam). Avaliar limite por usuário/IP.
-5. **CSP** (Content-Security-Policy) ainda não existe; entrar primeiro em modo report-only.
-6. Comparação do `CRON_SECRET` com `!==` (não é tempo-constante). Risco baixo; trocar por `timingSafeEqual` se quiser.
-7. `alternar_curtida`/`alternar_salvo` aceitam qualquer trabalho em execução/finalizado, inclusive de perfil bloqueado. Baixo.
-8. Descrição do trabalho é texto livre do prestador e pode conter telefone (não é dado do cliente, mas vai ao feed).
+1. **Leaked password protection** do Supabase Auth: recurso de plano pago; plano free não tem. Bloqueada, sem ação.
+2. **Funções `e2e_*`** são executáveis por `anon` só no banco de TESTE (travadas pelo marcador do ambiente). Conferir que **não existem na produção** antes de qualquer migração.
+3. Comparação do `CRON_SECRET` com `!==` (não tempo-constante). Risco baixo.
+4. `alternar_curtida`/`alternar_salvo` aceitam qualquer trabalho em execução/finalizado, inclusive de perfil bloqueado. Baixo.
+5. Descrição do trabalho é texto livre do prestador e pode conter telefone (não é dado do cliente, mas vai ao feed).
 
 ## Testes automatizados
 - Unidade: `tests/seguranca/cabecalhos.test.ts`, `lib/feed/feed.test.ts` (slug), `lib/feed/denuncia.test.ts` (limites), `lib/instagram.test.ts`, `app/api/cron/*/route.test.ts`.

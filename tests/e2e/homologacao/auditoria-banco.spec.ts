@@ -16,6 +16,8 @@ const VISITANTE_PODE_EXECUTAR = new Set([
   'feed_cidades', 'feed_projetos', 'foto_do_projeto_pode_ser_vista', 'niveis_dos_prestadores', 'nivel_do_prestador',
   'perfil_social', 'placar_indicacoes_dos_prestadores', 'registrar_solicitacao_titular', 'selos_publicos',
   'total_seguidores', 'usuario_tem_acesso_ao_caso_garantia',
+  // Chamada pela política de INSERT da denúncia pública (teto de volume); precisa ser executável por visitante.
+  'denuncia_dentro_do_limite',
 ]);
 // Auxiliares do ambiente de teste: existem só na homologação (travados pelo marcador do ambiente).
 const AUXILIAR_DE_TESTE = /^e2e_/;
