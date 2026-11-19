@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aplicarCurtida, aplicarFeedOculto, aplicarSeguir, estadoNoFeed, mensagemDeResultado, normalizarFeed, textoCurtidas } from './feed'
+import { aplicarCurtida, aplicarFeedOculto, aplicarRetiradaDoFeed, podeRetirarDoFeed, aplicarSeguir, estadoNoFeed, mensagemDeResultado, normalizarFeed, textoCurtidas } from './feed'
 
 const bruto = [{
   projeto_id: 'a', titulo: ' Reforma ', descricao: 'Varanda', concluido_em: '2026-11-10T10:00:00Z',
@@ -65,5 +65,19 @@ describe('controle "Mostrar no feed" do prestador', () => {
   })
   it('mensagemDeResultado: nao_e_dono vira frase', () => {
     expect(mensagemDeResultado('nao_e_dono')).toMatch(/Só quem registrou/)
+  })
+})
+
+describe('"Retirar do feed" do cliente', () => {
+  const ok = { status: 'finalizado', feed_aceito_em: '2026-11-19T10:00:00Z', feed_revogado_em: null }
+  it('podeRetirarDoFeed: só concluído, aceito com o aviso e ainda não retirado', () => {
+    expect(podeRetirarDoFeed(ok)).toBe(true)
+    expect(podeRetirarDoFeed({ ...ok, status: 'em_execucao' })).toBe(false)
+    expect(podeRetirarDoFeed({ ...ok, feed_aceito_em: null })).toBe(false)
+    expect(podeRetirarDoFeed({ ...ok, feed_revogado_em: '2026-11-20T10:00:00Z' })).toBe(false)
+  })
+  it('aplicarRetiradaDoFeed marca só o trabalho certo', () => {
+    const lista = [{ id: 'a', feed_revogado_em: null }, { id: 'b', feed_revogado_em: null }]
+    expect(aplicarRetiradaDoFeed(lista, 'a', 'agora')).toEqual([{ id: 'a', feed_revogado_em: 'agora' }, { id: 'b', feed_revogado_em: null }])
   })
 })

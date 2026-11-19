@@ -59,4 +59,7 @@ export interface Servico {
   // migration portfolio_projetos.sem_fotos). Quando true, o ServicoCard
   // não mostra o bloco de foto de capa (nunca vai existir).
   sem_fotos?: boolean
+  // Feed de trabalhos: aceito com o aviso (feed_aceito_em) e, se o cliente retirar, feed_revogado_em.
+  feed_aceito_em?: string | null
+  feed_revogado_em?: string | null
 }

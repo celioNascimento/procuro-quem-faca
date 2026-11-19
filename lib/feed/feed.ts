@@ -99,3 +99,17 @@ export function estadoNoFeed(t: TrabalhoParaFeed): EstadoNoFeed {
 export function aplicarFeedOculto<T extends { id: string; feed_oculto?: boolean | null }>(lista: T[], projetoId: string, oculto: boolean): T[] {
   return lista.map(t => (t.id === projetoId ? { ...t, feed_oculto: oculto } : t))
 }
+
+// ── "Retirar do feed" (painel do cliente) ────────────────────────────────────────
+
+/** O cliente só vê "Retirar do feed" em trabalho concluído, aceito com o aviso do feed e ainda não retirado. */
+export function podeRetirarDoFeed(t: { status: string; feed_aceito_em?: string | null; feed_revogado_em?: string | null }): boolean {
+  return t.status?.toLowerCase() === 'finalizado' && !!t.feed_aceito_em && !t.feed_revogado_em
+}
+
+/** Marca o trabalho como retirado do feed na lista, sem recarregar. */
+export function aplicarRetiradaDoFeed<T extends { id: string; feed_revogado_em?: string | null }>(lista: T[], projetoId: string, quando: string): T[] {
+  return lista.map(t => (t.id === projetoId ? { ...t, feed_revogado_em: quando } : t))
+}
+
+export const TEXTO_RETIRAR_DO_FEED = 'Este trabalho deixa de aparecer no feed e não volta. Ele continua no perfil do prestador.'

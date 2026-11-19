@@ -30,11 +30,12 @@ vi.mock('@/lib/services/painelCliente.service', async () => {
     getServicosPorUserId: vi.fn(async () => []),
     aceitarServico: vi.fn(),
     recusarServico: vi.fn(),
+    retirarDoFeed: vi.fn(),
   }
 })
 
 import { usePainelCliente } from '@/hooks/usePainelCliente'
-import { aceitarServico } from '@/lib/services/painelCliente.service'
+import { aceitarServico, retirarDoFeed } from '@/lib/services/painelCliente.service'
 import { AcaoRecusadaError } from '@/lib/services/painelCliente.service'
 
 beforeEach(() => {
@@ -91,5 +92,36 @@ describe('painel do cliente — Autorizar Serviço', () => {
     expect(aceitarServico).toHaveBeenCalledTimes(1)
 
     await act(async () => { liberar(); await primeira })
+  })
+})
+
+describe('painel do cliente — Retirar do feed', () => {
+  const noFeed = { ...servico, status: 'finalizado', feed_aceito_em: '2026-11-19T10:00:00Z', feed_revogado_em: null }
+
+  async function abrir() {
+    const { getServicoPorToken } = await import('@/lib/services/painelCliente.service')
+    vi.mocked(getServicoPorToken).mockResolvedValue([noFeed] as never)
+    const hook = renderHook(() => usePainelCliente())
+    await waitFor(() => expect(hook.result.current.servicos).toHaveLength(1))
+    return hook
+  }
+
+  it('retirou: marca o trabalho como retirado na lista', async () => {
+    vi.mocked(retirarDoFeed).mockReset().mockResolvedValue(undefined)
+    const { result } = await abrir()
+    await act(async () => { await result.current.handleRetirarDoFeed(result.current.servicos[0]) })
+    expect(retirarDoFeed).toHaveBeenCalledWith('p1')
+    expect(result.current.servicos[0].feed_revogado_em).toBeTruthy()
+    expect(result.current.erroAcao).toBeNull()
+    expect(result.current.acaoEmAndamento).toBe(false)
+  })
+
+  it('o banco recusou: explica o motivo, não marca como retirado e libera o botão', async () => {
+    vi.mocked(retirarDoFeed).mockReset().mockRejectedValue(new AcaoRecusadaError('nao_e_dono'))
+    const { result } = await abrir()
+    await act(async () => { await result.current.handleRetirarDoFeed(result.current.servicos[0]) })
+    expect(result.current.servicos[0].feed_revogado_em).toBeNull()
+    expect(result.current.erroAcao).toMatch(/outra conta/i)
+    expect(result.current.acaoEmAndamento).toBe(false)
   })
 })

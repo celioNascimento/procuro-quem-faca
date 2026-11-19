@@ -26,7 +26,7 @@ function base(extra: Record<string, unknown> = {}) {
   return {
     session: { user: { id: 'u' } }, servicos: [servico], servicosGarantia: [], servicosReclamacao: [], loading: false,
     zoomImage: null, setZoomImage: vi.fn(), tokenUrl: 'tok-1', nomeCliente: 'Ana',
-    handleAceitar: vi.fn(), handleRecusar: vi.fn(), handleVerGarantia: vi.fn(), acaoEmAndamento: false, erroAcao: null,
+    handleAceitar: vi.fn(), handleRecusar: vi.fn(), handleRetirarDoFeed: vi.fn(), handleVerGarantia: vi.fn(), acaoEmAndamento: false, erroAcao: null,
     ...extra,
   }
 }
@@ -71,5 +71,43 @@ describe('PainelDoCliente — recusar trabalho', () => {
     h.valor = base({ session: null })
     render(<PainelDoCliente />)
     expect(screen.getByTestId('login')).toBeTruthy()
+  })
+})
+
+describe('PainelDoCliente — retirar do feed', () => {
+  const concluido = { ...servico, status: 'finalizado', feed_aceito_em: '2026-11-19T10:00:00Z', feed_revogado_em: null }
+  beforeEach(() => { window.scrollTo = vi.fn() as unknown as typeof window.scrollTo })
+
+  it('abre o diálogo explicando que não volta e que continua no perfil; só retira depois de confirmar', () => {
+    const handleRetirarDoFeed = vi.fn()
+    h.valor = base({ servicos: [concluido], handleRetirarDoFeed })
+    render(<PainelDoCliente />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retirar do feed' }))
+    const dialogo = screen.getByRole('dialog', { name: 'Retirar do feed?' })
+    expect(dialogo.textContent).toMatch(/não volta/)
+    expect(dialogo.textContent).toMatch(/continua no perfil do prestador/)
+    expect(handleRetirarDoFeed).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sim, retirar' }))
+    expect(handleRetirarDoFeed).toHaveBeenCalledTimes(1)
+    expect(handleRetirarDoFeed).toHaveBeenCalledWith(expect.objectContaining({ id: 's1' }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('"Voltar" fecha sem retirar', () => {
+    const handleRetirarDoFeed = vi.fn()
+    h.valor = base({ servicos: [concluido], handleRetirarDoFeed })
+    render(<PainelDoCliente />)
+    fireEvent.click(screen.getByRole('button', { name: 'Retirar do feed' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Voltar' }))
+    expect(handleRetirarDoFeed).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('trabalho já retirado não mostra o botão', () => {
+    h.valor = base({ servicos: [{ ...concluido, feed_revogado_em: '2026-11-20T10:00:00Z' }] })
+    render(<PainelDoCliente />)
+    expect(screen.queryByRole('button', { name: 'Retirar do feed' })).toBeNull()
   })
 })
