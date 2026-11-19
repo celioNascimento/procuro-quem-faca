@@ -51,13 +51,13 @@ function FeedConteudo() {
   return (
     <>
       <Header href="/" larga feedAtivo />
-      <main className="mx-auto w-full max-w-xl px-4 pb-24 pt-24 md:pt-28">
-        <h1 className="text-2xl font-black text-slate-900">Feed de trabalhos</h1>
-        <p className="mt-1 text-sm text-slate-600">Veja serviços reais, gostou? Abra o perfil de quem fez.</p>
+      <main className="mx-auto w-full max-w-xl px-4 pb-24 pt-16 md:pt-18">
+        {/* Sem título na tela (a barra de abas já diz onde a pessoa está); o h1 fica para leitores de tela. */}
+        <h1 className="sr-only">Feed de trabalhos</h1>
 
         {/* Barra fixa logo abaixo do cabeçalho (h-16 / md:h-18): abas + filtro. Some ao rolar para baixo e volta ao subir. */}
         <div data-testid="feed-barra" onFocusCapture={barra.mostrar}
-          className={`sticky top-16 z-40 -mx-4 mt-3 flex items-center gap-2 bg-white/95 px-4 py-2 backdrop-blur transition-transform duration-200 md:top-18 ${barra.visivel ? 'translate-y-0' : '-translate-y-full'}`}>
+          className={`sticky top-16 z-40 -mx-4 flex items-center gap-2 bg-white/95 px-4 py-2 backdrop-blur transition-transform duration-200 md:top-18 ${barra.visivel ? 'translate-y-0' : '-translate-y-full'}`}>
           <div role="tablist" aria-label="Quais trabalhos mostrar" className="flex min-w-0 flex-1 gap-1 rounded-2xl bg-slate-100 p-1">
             {([['todos', 'Todos'], ['seguindo', 'Quem eu sigo'], ['salvos', 'Salvos']] as const).map(([id, rotulo]) => (
               <button key={id} role="tab" aria-selected={f.aba === id} onClick={() => f.setAba(id)} data-testid={`feed-aba-${id}`}
@@ -82,7 +82,7 @@ function FeedConteudo() {
         {c.erro && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{c.erro}</p>}
         {f.erro && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{f.erro}</p>}
 
-        <div className="mt-6 space-y-5">
+        <div className="mt-1 space-y-3">
           {f.itens.map(item => <FeedCard key={item.projetoId} item={item} onCurtir={f.curtir} onSeguir={f.alternarSeguir} onSalvar={f.salvar} onCompartilhar={c.compartilhar} onCopiarLink={c.copiarLink} />)}
         </div>
 

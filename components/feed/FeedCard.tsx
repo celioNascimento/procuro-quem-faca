@@ -24,7 +24,7 @@ export function FeedCard({ item, onCurtir, onSeguir, onSalvar, onCompartilhar, o
   const local = [prestador.categoria, prestador.cidade].filter(Boolean).join(' · ')
   return (
     <article className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm" data-testid="feed-card">
-      <header className="flex items-center justify-between gap-3 p-4">
+      <header className="flex items-center justify-between gap-3 px-3 py-2.5">
         <Link href={`/${prestador.slug}`} className="min-w-0 flex-1" data-testid="feed-prestador">
           <p className="truncate text-sm font-black text-slate-900">{prestador.nome}</p>
           {local && (
@@ -50,11 +50,11 @@ export function FeedCard({ item, onCurtir, onSeguir, onSalvar, onCompartilhar, o
         onDuploToque={item.meu ? null : () => { if (!item.curtidoPorMim) onCurtir(item.projetoId) }}
       />
 
-      <div className="p-4">
-        <h2 className="text-base font-black leading-snug text-slate-900">{item.titulo}</h2>
+      <div className="px-3 pb-3 pt-2">
+        <h2 className="text-[15px] font-black leading-snug text-slate-900">{item.titulo}</h2>
         {item.descricao && <p className="mt-1 line-clamp-3 text-sm text-slate-600">{item.descricao}</p>}
 
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
           {item.meu ? (
             <p className="flex min-h-11 items-center gap-2 px-3 text-sm font-bold text-slate-600" data-testid="feed-curtidas-meu">
               <Heart size={18} aria-hidden="true" />
@@ -92,17 +92,17 @@ export function FeedCard({ item, onCurtir, onSeguir, onSalvar, onCompartilhar, o
           </div>
         </div>
 
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-1 flex items-center gap-2">
           {!item.meu && (
             <Link
               href={enderecoDoTrabalho(prestador.slug, item.projetoId)} data-testid="feed-falar"
-              className="flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 text-sm font-black text-white hover:bg-blue-700"
+              className="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 text-sm font-black text-white hover:bg-blue-700"
             >
               <MessageCircle size={18} aria-hidden="true" />
               <span className="truncate">Falar com o profissional</span>
             </Link>
           )}
-          <Link href={`/${prestador.slug}`} data-testid="feed-ver-perfil" className="flex min-h-12 shrink-0 items-center rounded-2xl px-3 text-sm font-black text-blue-700 hover:bg-blue-50">
+          <Link href={`/${prestador.slug}`} data-testid="feed-ver-perfil" className="flex min-h-11 shrink-0 items-center rounded-2xl px-3 text-sm font-black text-blue-700 hover:bg-blue-50">
             Ver perfil
           </Link>
         </div>

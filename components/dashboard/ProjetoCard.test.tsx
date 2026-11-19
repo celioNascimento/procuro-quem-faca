@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { ProjetoCard } from '@/components/dashboard/ProjetoCard'
@@ -43,5 +44,23 @@ describe('ProjetoCard — Mostrar no feed', () => {
   it('sem onAlternarFeed o card continua igual (sem interruptor)', () => {
     render(<ProjetoCard projeto={elegivel} onClick={() => {}} />)
     expect(screen.queryByRole('switch')).toBeNull()
+  })
+})
+
+// Regressão (19/11): no celular a lista de trabalhos ficou mais larga que a tela (a página rolava para o lado).
+// Causa: o card ganhou um <div> em volta (para o interruptor do feed) sem min-w-0, e o título tem `truncate`
+// (nowrap): como item de grid, a coluna crescia até caber o título inteiro. jsdom não calcula layout, então
+// o teste confere as duas classes que impedem isso.
+describe('ProjetoCard — não alarga a coluna da lista no celular', () => {
+  it('o invólucro do card tem min-w-0 (não cresce com o título longo)', () => {
+    const longo = { ...projeto('em_execucao'), titulo: 'Muro de 10 metros com acabamento especial (em execução)' } as Projeto
+    const { container } = render(<ProjetoCard projeto={longo} onClick={() => {}} onAlternarFeed={() => {}} />)
+    expect((container.firstElementChild as HTMLElement).className).toContain('min-w-0')
+  })
+  it('a grade de trabalhos do painel tem uma coluna de largura fixa (grid-cols-1) abaixo de xl', () => {
+    const codigo = readFileSync('components/dashboard/PortfolioDashboardTab.tsx', 'utf8')
+    const grades = codigo.match(/className="grid [^"]*xl:grid-cols-2"/g) ?? []
+    expect(grades.length).toBeGreaterThan(0)
+    for (const g of grades) expect(g).toContain('grid-cols-1')
   })
 })

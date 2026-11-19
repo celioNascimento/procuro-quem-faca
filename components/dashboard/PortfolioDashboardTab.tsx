@@ -47,7 +47,7 @@ export default function PortfolioDashboardTab() {
         <div className="h-48 rounded-[2rem] bg-slate-100 lg:h-[28rem]" />
         <div className="flex flex-col gap-4">
           <div className="h-44 rounded-[2rem] bg-slate-100" />
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {[1, 2, 3, 4].map(i => <div key={i} className="h-32 rounded-[1.75rem] bg-slate-100" />)}
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function PortfolioDashboardTab() {
             />}
             {projetos.length === 0 && !erro && <EstadoVazio onNovoProjeto={abrirNovo} />}
             {projetos.length > 0 && (
-              <div className="grid gap-4 xl:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {projetos.map(proj => (
                   <ProjetoCard key={proj.id} projeto={proj} onClick={abrirEdicao} onAlternarFeed={alternarFeed} />
                 ))}

@@ -70,7 +70,7 @@ export function ProjetoCard({ projeto, onClick, onAlternarFeed }: Props) {
   const noFeed = onAlternarFeed ? estadoNoFeed(projeto) : null
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
     <button
       type="button"
       onClick={() => onClick(projeto)}
