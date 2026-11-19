@@ -19,7 +19,7 @@ Um trabalho aparece no feed quando: `status = finalizado`, `feed_aceito_em` pree
 - `aceitar_projeto(p_projeto_id, p_nome, p_feed_versao)`: registra o aceite do feed quando a versão do aviso é enviada.
 - `feed_ocultar_projeto(projeto, ocultar)`: só o prestador dono. Não apaga nada.
 - `revogar_feed_projeto(projeto)`: só o cliente dono. É permanente para aquele trabalho.
-- `seguir_prestador`, `deixar_de_seguir`, `total_seguidores` (público, só o número). Tabela `seguidores` só é lida pelo próprio usuário (RLS); limite de 500 seguidos por conta; ninguém segue o próprio perfil.
+- `seguir_prestador`, `deixar_de_seguir`, `total_seguidores` (público, só o número). Tabela `seguidores` só é lida pelo próprio usuário (RLS); sem limite de perfis seguidos (removido em `20261119190000_feed_seguir_sem_limite`, depois de `20261119100000`); ninguém segue o próprio perfil.
 - `alternar_curtida(projeto)`: só logado, só trabalho público, não curte o próprio.
 - `feed_projetos(categoria, cidade, somente_seguidos, limite, pagina)`: público. **Nunca devolve nome de cliente, WhatsApp nem endereço.** Devolve título, descrição (280 caracteres), até 5 fotos, prestador (nome, slug, categoria, cidade), total de curtidas, se eu curti e se eu sigo.
 

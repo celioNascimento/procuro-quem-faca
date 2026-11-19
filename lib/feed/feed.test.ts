@@ -44,7 +44,6 @@ describe('textos e atualizações', () => {
     expect(mensagemDeResultado(undefined)).toBeNull()
     expect(mensagemDeResultado('nao_autenticado')).toMatch(/Entre na sua conta/)
     expect(mensagemDeResultado('proprio_perfil')).toMatch(/próprio perfil/)
-    expect(mensagemDeResultado('limite_atingido')).toMatch(/500/)
     expect(mensagemDeResultado('xyz')).toMatch(/Tente de novo/)
   })
   it('aplicarCurtida e aplicarSeguir só mexem no que devem', () => {

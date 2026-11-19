@@ -72,7 +72,6 @@ export function mensagemDeResultado(codigo: string | undefined | null): string |
     case 'nao_autenticado': return MENSAGEM_LOGIN_PARA_AGIR
     case 'proprio_perfil': return 'Você não pode seguir o seu próprio perfil.'
     case 'proprio_projeto': return 'Você não pode curtir o seu próprio trabalho.'
-    case 'limite_atingido': return 'Você chegou ao limite de 500 perfis seguidos. Deixe de seguir algum para continuar.'
     case 'limite_salvos': return 'Você chegou ao limite de 500 trabalhos salvos. Remova algum para continuar.'
     case 'nao_encontrado': return 'Este trabalho não está mais disponível.'
     case 'nao_e_dono': return 'Só quem registrou este trabalho pode alterar isso.'

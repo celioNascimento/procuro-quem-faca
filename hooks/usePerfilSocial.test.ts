@@ -61,11 +61,11 @@ describe('usePerfilSocial', () => {
     expect(result.current.social).toMatchObject({ seguindo: false, totalSeguidores: 3 })
   })
   it('erro ao seguir volta ao estado anterior e explica', async () => {
-    vi.mocked(seguirPrestador).mockResolvedValue('limite_atingido')
+    vi.mocked(seguirPrestador).mockResolvedValue('nao_encontrado')
     const { result } = await abrir()
     await act(async () => { await result.current.seguir() })
     expect(result.current.social).toMatchObject({ seguindo: false, totalSeguidores: 3 })
-    expect(result.current.aviso).toMatch(/limite de 500/)
+    expect(result.current.aviso).toMatch(/não está mais disponível/)
   })
   it('curtir logado usa o total do banco', async () => {
     vi.mocked(alternarCurtida).mockResolvedValue({ curtido: true, total: 9 })
