@@ -47,6 +47,11 @@ export function temFiltroAtivo(f: FiltrosFeed): boolean {
   return f.categoriaId !== null || f.cidadeId !== null || f.estado !== null
 }
 
+/** Quantos filtros estão ligados (vira o número no botão "Filtrar"). */
+export function contarFiltrosAtivos(f: FiltrosFeed): number {
+  return [f.categoriaId, f.estado, f.cidadeId].filter(v => v !== null).length
+}
+
 /** Converte a resposta do banco (feed_cidades). Item sem id ou nome é descartado. */
 export function normalizarCidadesDoFeed(bruto: unknown): CidadeDoFeed[] {
   if (!Array.isArray(bruto)) return []

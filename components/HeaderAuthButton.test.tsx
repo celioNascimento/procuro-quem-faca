@@ -44,7 +44,7 @@ describe('HeaderAuthButton', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Abrir menu da conta' }))
       const link = screen.getByTestId('menu-link-feed')
       expect(link.getAttribute('href')).toBe('/feed')
-      expect(link.textContent).toContain('Trabalhos concluídos')
+      expect(link.textContent).toContain('Feed de trabalhos')
       unmount()
     }
   })

@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
 export const metadata: Metadata = {
-  title: 'Trabalhos concluídos',
+  title: 'Feed de trabalhos',
   description: 'Veja trabalhos reais concluídos por profissionais e escolha quem chamar.',
 }
 

@@ -147,7 +147,7 @@ export function HeaderAuthButton({ feedAtivo = false }: { feedAtivo?: boolean } 
                 className="flex items-center gap-3 min-h-11 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
               >
                 <Images size={16} />
-                Trabalhos concluídos
+                Feed de trabalhos
               </Link>
               <div className="h-px bg-slate-100 mx-3" />
                  <button

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cidadesDoEstado, estadosDoFeed, estadoValido, filtrosAoTrocarEstado, idValido, lerFiltrosDaUrl, montarEnderecoDoFeed, normalizarCidadesDoFeed, rotuloDaCidade, temFiltroAtivo } from './filtros'
+import { cidadesDoEstado, estadosDoFeed, estadoValido, filtrosAoTrocarEstado, idValido, lerFiltrosDaUrl, montarEnderecoDoFeed, normalizarCidadesDoFeed, rotuloDaCidade, temFiltroAtivo, contarFiltrosAtivos } from './filtros'
 
 const A = '15123e3f-9f76-4d66-b2ee-f03c45de38fa'
 const B = '22222222-2222-4222-8222-222222222222'
@@ -23,6 +23,11 @@ describe('filtros do feed na URL', () => {
     expect(montarEnderecoDoFeed('/feed', { categoriaId: A, cidadeId: null, estado: null })).toBe(`/feed?categoria=${A}`)
     expect(montarEnderecoDoFeed('/feed', { categoriaId: A, cidadeId: B, estado: null })).toBe(`/feed?categoria=${A}&cidade=${B}`)
     expect(montarEnderecoDoFeed('/feed', { categoriaId: A, cidadeId: B, estado: 'PR' })).toBe(`/feed?categoria=${A}&estado=PR&cidade=${B}`)
+  })
+  it('contarFiltrosAtivos conta cada filtro ligado', () => {
+    expect(contarFiltrosAtivos({ categoriaId: null, cidadeId: null, estado: null })).toBe(0)
+    expect(contarFiltrosAtivos({ categoriaId: A, cidadeId: null, estado: null })).toBe(1)
+    expect(contarFiltrosAtivos({ categoriaId: A, cidadeId: B, estado: 'PR' })).toBe(3)
   })
   it('temFiltroAtivo', () => {
     expect(temFiltroAtivo({ categoriaId: null, cidadeId: null, estado: null })).toBe(false)

@@ -15,7 +15,7 @@ afterEach(cleanup)
 describe('LinkFeed e Header', () => {
   it('o link leva ao feed e tem nome para leitores de tela', () => {
     render(<LinkFeed />)
-    expect(screen.getByRole('link', { name: 'Ver trabalhos concluídos' }).getAttribute('href')).toBe('/feed')
+    expect(screen.getByRole('link', { name: 'Ver o feed de trabalhos' }).getAttribute('href')).toBe('/feed')
   })
   it('o Header das telas internas mostra o link do feed', () => {
     render(<Header href="/" />)

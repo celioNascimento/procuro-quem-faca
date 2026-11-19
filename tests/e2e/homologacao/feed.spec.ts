@@ -25,7 +25,7 @@ test.beforeEach(async ({ page }) => {
 
 async function abrirFeed(page: Page, caminho = '/feed') {
   await page.goto(caminho);
-  await expect(page.getByRole('heading', { name: 'Trabalhos concluídos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Feed de trabalhos' })).toBeVisible();
 }
 
 test.describe('feed: visitante', () => {
@@ -84,6 +84,7 @@ test.describe('feed: visitante', () => {
 test.describe('feed: filtro por estado', () => {
   test('escolher o estado guarda no endereço; estado sem trabalho explica e o botão limpa', async ({ page }) => {
     await abrirFeed(page);
+    await page.getByTestId('feed-filtrar').click();
     await page.getByTestId('feed-estado').selectOption('PR');
     await expect(page).toHaveURL(/[?&]estado=PR/);
     await expect(page.getByTestId('feed-card')).toHaveCount(1);
@@ -99,10 +100,11 @@ test.describe('feed: filtro por estado', () => {
 test.describe('feed: filtro por cidade', () => {
   test('lista só cidades com trabalho, guarda a escolha no endereço e some a lista com cidade sem trabalho', async ({ page }) => {
     await abrirFeed(page);
+    await page.getByTestId('feed-filtrar').click();
 
     const cidade = page.getByTestId('feed-cidade');
     await expect(cidade.locator('option')).toHaveCount(2); // "Todas as cidades" + Londrina
-    await expect(page.getByTestId('feed-estado').locator('option')).toHaveCount(2); // "Todos os estados" + PR
+    await expect(page.getByTestId('feed-estado').locator('option')).toHaveCount(2); // "Todos" + PR
     await expect(cidade.getByRole('option', { name: 'Londrina - PR' })).toHaveCount(1);
 
     await cidade.selectOption({ label: 'Londrina - PR' });
@@ -111,6 +113,8 @@ test.describe('feed: filtro por cidade', () => {
 
     // Recarregar mantém o filtro.
     await page.reload();
+    await expect(page.getByTestId('feed-filtros-contador')).toHaveText('1');
+    await page.getByTestId('feed-filtrar').click();
     await expect(page.getByTestId('feed-cidade')).not.toHaveValue('');
     await expect(page.getByTestId('feed-card')).toHaveCount(1);
   });
@@ -133,7 +137,7 @@ test.describe('feed: filtro por cidade', () => {
 test.describe('feed: cliente logada', () => {
   test('curtir e seguir gravam e continuam depois de recarregar; deixar de seguir desfaz', async ({ page }) => {
     await entrarComoClienteEIrPara(page, '/feed');
-    await expect(page.getByRole('heading', { name: 'Trabalhos concluídos' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Feed de trabalhos' })).toBeVisible();
 
     await page.getByTestId('feed-curtir').click();
     await expect(page.getByTestId('feed-curtidas')).toHaveText('1 curtida');

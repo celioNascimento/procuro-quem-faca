@@ -8,7 +8,7 @@ describe('FeedSwitch', () => {
   it('visível: interruptor ligado e explica onde aparece', () => {
     render(<FeedSwitch projetoId="p1" estado="visivel" onAlternar={() => {}} />)
     expect(screen.getByRole('switch', { name: /Mostrar no feed/i }).getAttribute('aria-checked')).toBe('true')
-    expect(screen.getByText(/Aparece em Trabalhos concluídos/)).toBeTruthy()
+    expect(screen.getByText(/Aparece no Feed de trabalhos/)).toBeTruthy()
   })
   it('oculto: interruptor desligado e avisa que continua no perfil', () => {
     render(<FeedSwitch projetoId="p1" estado="oculto" onAlternar={() => {}} />)

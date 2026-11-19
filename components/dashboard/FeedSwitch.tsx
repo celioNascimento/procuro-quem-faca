@@ -14,7 +14,7 @@ export function FeedSwitch({ projetoId, estado, onAlternar }: Props) {
       <span className="min-w-0">
         <span id={`feed-rotulo-${projetoId}`} className="block text-sm font-black text-slate-800">Mostrar no feed</span>
         <span className="block text-xs font-medium text-slate-500">
-          {ligado ? 'Aparece em Trabalhos concluídos.' : 'Fora do feed. Continua no seu perfil.'}
+          {ligado ? 'Aparece no Feed de trabalhos.' : 'Fora do feed. Continua no seu perfil.'}
         </span>
       </span>
       <button

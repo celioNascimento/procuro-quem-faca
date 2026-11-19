@@ -35,7 +35,7 @@ O feed não mostra Seguir nem Curtir no trabalho do usuário logado. No lugar do
   - **Menu ⋯** (`MenuDoCard`, não aparece no trabalho meu): "Copiar link" e "Denunciar". A denúncia usa a página que já existe (`/denunciar/<prestador>?trabalho=<id>&titulo=…`); o título e o id do trabalho vão no início do motivo (sem mudar tabela), e a página mostra "Você está denunciando o trabalho: …". Id que não é UUID é ignorado (`lib/feed/denuncia.ts`).
   - **Compartilhar** e **Copiar link** agora levam ao perfil com o trabalho aberto (`?projeto=`), não só ao perfil.
   - **Fora desta etapa:** Salvar (marcador) e comentários. Salvar fica para depois (tabela nova, lista "Salvos", Termos e exportação de dados); comentários não recomendados (moderação e LGPD).
-- **Cabeçalho sem "pulo":** no celular o ícone do feed saiu do cabeçalho; "Trabalhos concluídos" entrou no menu da conta (avatar), junto de Área do cliente e Área do profissional. No computador o link "Trabalhos" fica em todas as telas, inclusive no `/feed` (marcado como página atual). A prop `semLinkFeed` do Header virou `feedAtivo`. Visitante no celular vê só o Entrar; o caminho dele é o link da home.
+- **Cabeçalho sem "pulo":** no celular o ícone do feed saiu do cabeçalho; "Feed de trabalhos" entrou no menu da conta (avatar), junto de Área do cliente e Área do profissional. No computador o link "Feed" fica em todas as telas, inclusive no `/feed` (marcado como página atual). A prop `semLinkFeed` do Header virou `feedAtivo`. Visitante no celular vê só o Entrar; o caminho dele é o link da home.
 - **Imagem quebrada no feed de teste:** as fotos do trabalho de teste apontam para `example.invalid` (dado de teste, não é erro do app).
 
 ## Salvar trabalho (19/11/2026)
@@ -54,3 +54,8 @@ A base do reset precisa conhecer as colunas e a tabela novas: rode `supabase/hom
 
 ## Falta (ver tarefas)
 Aviso no "Aceitar trabalho"; controle "Mostrar no feed" no painel do prestador; "Retirar do feed" em Meus serviços; curtir e seguir na interface; página `/feed` com filtros e aba "Quem eu sigo"; Termos e Privacidade; exportação dos dados (`exportar_meus_dados` deve incluir quem o usuário segue); produção.
+
+## Nome do feed e filtros em painel (19/11)
+
+- **Nome:** "Trabalhos concluídos" era vago. Agora é **Feed de trabalhos** no título da página, na aba do navegador, no menu da conta (celular), no texto do interruptor do prestador ("Aparece no Feed de trabalhos."). No computador o link do cabeçalho mostra só "Feed".
+- **Filtros:** as três caixas (tipo de serviço, estado, cidade) saíram da tela. Ficou um botão **Filtrar** (`feed-filtrar`) que abre um painel (`feed-filtros-painel`). O número no botão (`feed-filtros-contador`) diz quantos filtros estão ligados, mesmo com o painel fechado (inclusive vindo de link compartilhado). Escolher uma opção filtra na hora; "Limpar filtros" (`feed-filtros-limpar`) e "Pronto" fecham o ciclo. Componente: `components/feed/FiltrosDoFeed.tsx`; contagem em `lib/feed/filtros.ts` (`contarFiltrosAtivos`). Nada mudou no banco nem na URL.
