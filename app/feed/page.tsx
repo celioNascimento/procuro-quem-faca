@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import Header from '@/components/Header'
 import { FeedCard } from '@/components/feed/FeedCard'
 import { useFeed } from '@/hooks/useFeed'
+import { useCompartilharTrabalho } from '@/hooks/useCompartilharTrabalho'
 import { useSession } from '@/hooks/useSession'
 import { fetchCategoriasDoFiltro, fetchCidadesDoFeed, type CategoriaDoFiltro } from '@/lib/services/feed.service'
 import {
@@ -23,6 +24,7 @@ function FeedConteudo() {
 
   const filtros = lerFiltrosDaUrl(searchParams)
   const f = useFeed(logado, filtros)
+  const c = useCompartilharTrabalho()
   const [categorias, setCategorias] = useState<CategoriaDoFiltro[]>([])
   const [cidades, setCidades] = useState<CidadeDoFeed[]>([])
 
@@ -45,7 +47,7 @@ function FeedConteudo() {
 
   return (
     <>
-      <Header href="/" larga semLinkFeed />
+      <Header href="/" larga feedAtivo />
       <main className="mx-auto w-full max-w-xl px-4 pb-24 pt-24 md:pt-28">
         <h1 className="text-2xl font-black text-slate-900">Trabalhos concluídos</h1>
         <p className="mt-1 text-sm text-slate-600">Veja serviços reais, gostou? Abra o perfil de quem fez.</p>
@@ -91,10 +93,12 @@ function FeedConteudo() {
             {f.aviso} {!logado && <Link href="/login" className="font-black underline">Entrar</Link>}
           </p>
         )}
+        {c.confirmacao && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800" data-testid="feed-link-copiado">{c.confirmacao}</p>}
+        {c.erro && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{c.erro}</p>}
         {f.erro && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{f.erro}</p>}
 
         <div className="mt-6 space-y-5">
-          {f.itens.map(item => <FeedCard key={item.projetoId} item={item} onCurtir={f.curtir} onSeguir={f.alternarSeguir} />)}
+          {f.itens.map(item => <FeedCard key={item.projetoId} item={item} onCurtir={f.curtir} onSeguir={f.alternarSeguir} onCompartilhar={c.compartilhar} />)}
         </div>
 
         {f.carregando && <div className="mt-6 h-48 animate-pulse rounded-3xl bg-slate-100" aria-label="Carregando" />}

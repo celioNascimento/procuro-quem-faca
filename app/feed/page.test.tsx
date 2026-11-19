@@ -17,6 +17,9 @@ vi.mock('@/hooks/useFeed', () => ({
     return { aba: 'todos', setAba: vi.fn(), itens: h.itens, temMais: false, carregando: false, erro: null, aviso: null, carregarMais: vi.fn(), curtir: vi.fn(), alternarSeguir: vi.fn() }
   },
 }))
+vi.mock('@/hooks/useCompartilharTrabalho', () => ({
+  useCompartilharTrabalho: () => ({ compartilhar: vi.fn(), confirmacao: null, erro: null }),
+}))
 vi.mock('@/lib/services/feed.service', () => ({
   fetchCategoriasDoFiltro: vi.fn().mockResolvedValue([{ id: '11111111-1111-4111-8111-111111111111', nome: 'Pintor' }]),
   fetchCidadesDoFeed: vi.fn().mockResolvedValue([{ id: '15123e3f-9f76-4d66-b2ee-f03c45de38fa', nome: 'Londrina', estadoSigla: 'PR' }, { id: '22222222-2222-4222-8222-222222222222', nome: 'Campinas', estadoSigla: 'SP' }]),

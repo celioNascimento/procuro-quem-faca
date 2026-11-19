@@ -45,6 +45,11 @@ export function normalizarFeed(bruto: unknown): FeedItem[] {
   return itens
 }
 
+/** Mensagem que acompanha o link do perfil quando alguém compartilha um trabalho do feed. */
+export function textoCompartilharTrabalho(item: Pick<FeedItem, 'titulo' | 'prestador'>): string {
+  return `Veja "${item.titulo}", trabalho de ${item.prestador.nome} no Procuro Quem Faça.`
+}
+
 export function textoCurtidas(total: number): string {
   if (total <= 0) return 'Seja o primeiro a curtir'
   return total === 1 ? '1 curtida' : `${total} curtidas`

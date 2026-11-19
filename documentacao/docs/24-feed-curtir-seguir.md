@@ -26,6 +26,11 @@ Um trabalho aparece no feed quando: `status = finalizado`, `feed_aceito_em` pree
 ## Trabalho do próprio prestador no feed (19/11/2026)
 O feed não mostra Seguir nem Curtir no trabalho do usuário logado. No lugar do Seguir aparece a etiqueta "Seu trabalho"; no lugar do coração, o total de curtidas só para leitura ("Nenhuma curtida ainda" quando zero). O trabalho continua aparecendo no feed para ele. O campo `meu` vem de `feed_projetos` (migração `20261119160000_feed_marca_meu`, depois de `20261119150000`), no mesmo espírito do `meu_perfil` de `perfil_social`. As travas do banco (`proprio_perfil`, `proprio_projeto`) continuam como rede de segurança. O perfil público já escondia os botões no perfil próprio.
 
+## Compartilhar e atalho do feed no menu (19/11/2026)
+- **Compartilhar no card:** botão (ícone) em todo card, inclusive no trabalho do próprio prestador. No celular abre o menu nativo de compartilhar (WhatsApp, Telegram etc.); no computador copia o link e mostra "Link copiado". O link abre o **perfil** do prestador (o perfil ainda não abre um trabalho específico por link); a mensagem cita o trabalho e o prestador. Registra o compartilhamento com `origem: 'feed'`. Código: `hooks/useCompartilharTrabalho.ts`, `textoCompartilharTrabalho` em `lib/feed/feed.ts`.
+- **Cabeçalho sem "pulo":** no celular o ícone do feed saiu do cabeçalho; "Trabalhos concluídos" entrou no menu da conta (avatar), junto de Área do cliente e Área do profissional. No computador o link "Trabalhos" fica em todas as telas, inclusive no `/feed` (marcado como página atual). A prop `semLinkFeed` do Header virou `feedAtivo`. Visitante no celular vê só o Entrar; o caminho dele é o link da home.
+- **Imagem quebrada no feed de teste:** as fotos do trabalho de teste apontam para `example.invalid` (dado de teste, não é erro do app).
+
 ## Validação feita no banco de teste (com rollback)
 Sem aceite não entra; com aceite entra e sem dado pessoal; curtir/descurtir e total; anônimo recusado ao curtir e ao ler `seguidores`; prestador não curte nem segue o próprio; seguir repetido é inofensivo e o feed "só seguidos" mostra o trabalho; cliente não oculta trabalho alheio, prestador oculta e mostra; cliente retira e some; trabalho em execução não entra.
 

@@ -66,11 +66,11 @@ test.describe('feed: visitante', () => {
     await page.getByTestId('home-link-feed').click();
     await expect(page).toHaveURL(/\/feed$/);
 
-    // Em uma tela interna o cabeçalho tem o atalho; na página do feed ele some.
+    // No computador o cabeçalho tem o atalho em toda tela; na página do feed ele continua no lugar, marcado como atual.
     await page.goto(`/${PERFIL_SEED.slug}`);
     await page.getByTestId('link-feed-header').click();
     await expect(page).toHaveURL(/\/feed$/);
-    await expect(page.getByTestId('link-feed-header')).toHaveCount(0);
+    await expect(page.getByTestId('link-feed-header')).toHaveAttribute('aria-current', 'page');
   });
 
   test('perfil público: Seguir mostra o aviso de login para visitante', async ({ page }) => {

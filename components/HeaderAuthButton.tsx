@@ -3,11 +3,11 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { LogIn, Loader2, User, AlertCircle, LogOut, Briefcase, CheckCircle } from 'lucide-react'
+import { LogIn, Loader2, User, AlertCircle, LogOut, Briefcase, CheckCircle, Images } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useLogout } from '@/hooks/useLogout'
 
-export function HeaderAuthButton() {
+export function HeaderAuthButton({ feedAtivo = false }: { feedAtivo?: boolean } = {}) {
   const { session, loading, erroLogin, loginGoogle, role, prestadorStatus } = useAuth()
   const { logout } = useLogout()
   const [aberto, setAberto] = useState(false)
@@ -139,6 +139,16 @@ export function HeaderAuthButton() {
                   {outra.label}
                 </Link>
               )}
+              <Link
+                href="/feed"
+                onClick={() => setAberto(false)}
+                aria-current={feedAtivo ? 'page' : undefined}
+                data-testid="menu-link-feed"
+                className="flex items-center gap-3 min-h-11 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              >
+                <Images size={16} />
+                Trabalhos concluídos
+              </Link>
               <div className="h-px bg-slate-100 mx-3" />
                  <button
                 onClick={() => { logout({ origem: 'header_principal', redirectTo: '/' }); setAberto(false) }}

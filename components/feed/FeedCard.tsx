@@ -2,16 +2,17 @@
 // Um trabalho no feed. Mostra só o que é público: fotos, título, descrição curta, prestador e curtidas.
 // Nunca mostra nome de cliente, WhatsApp nem endereço (o banco nem devolve esses dados).
 import Link from 'next/link'
-import { Heart, MapPin, UserCheck, UserPlus } from 'lucide-react'
+import { Heart, MapPin, Share2, UserCheck, UserPlus } from 'lucide-react'
 import { textoCurtidas, type FeedItem } from '@/lib/feed/feed'
 
 interface Props {
   item: FeedItem
   onCurtir: (projetoId: string) => void
   onSeguir: (prestadorId: number) => void
+  onCompartilhar: (item: FeedItem) => void
 }
 
-export function FeedCard({ item, onCurtir, onSeguir }: Props) {
+export function FeedCard({ item, onCurtir, onSeguir, onCompartilhar }: Props) {
   const { prestador } = item
   const local = [prestador.categoria, prestador.cidade].filter(Boolean).join(' · ')
   return (
@@ -44,7 +45,7 @@ export function FeedCard({ item, onCurtir, onSeguir }: Props) {
       <div className="p-4">
         <h2 className="text-base font-black leading-snug text-slate-900">{item.titulo}</h2>
         {item.descricao && <p className="mt-1 line-clamp-3 text-sm text-slate-600">{item.descricao}</p>}
-        <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           {item.meu ? (
             <p className="flex min-h-11 items-center gap-2 px-3 text-sm font-bold text-slate-600" data-testid="feed-curtidas-meu">
               <Heart size={18} aria-hidden="true" />
@@ -59,7 +60,16 @@ export function FeedCard({ item, onCurtir, onSeguir }: Props) {
               <span data-testid="feed-curtidas">{textoCurtidas(item.totalCurtidas)}</span>
             </button>
           )}
-          <Link href={`/${prestador.slug}`} className="min-h-11 content-center text-sm font-black text-blue-700">Ver perfil</Link>
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              type="button" onClick={() => onCompartilhar(item)} data-testid="feed-compartilhar"
+              aria-label={`Compartilhar o trabalho ${item.titulo}`} title="Compartilhar"
+              className="flex size-11 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-700 active:scale-95"
+            >
+              <Share2 size={18} aria-hidden="true" />
+            </button>
+            <Link href={`/${prestador.slug}`} className="min-h-11 content-center px-2 text-sm font-black text-blue-700">Ver perfil</Link>
+          </div>
         </div>
       </div>
     </article>

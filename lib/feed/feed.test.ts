@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aplicarCurtida, aplicarFeedOculto, aplicarRetiradaDoFeed, podeRetirarDoFeed, aplicarSeguir, estadoNoFeed, mensagemDeResultado, normalizarFeed, textoCurtidas } from './feed'
+import { aplicarCurtida, aplicarFeedOculto, aplicarRetiradaDoFeed, podeRetirarDoFeed, aplicarSeguir, estadoNoFeed, mensagemDeResultado, normalizarFeed, textoCompartilharTrabalho, textoCurtidas } from './feed'
 
 const bruto = [{
   projeto_id: 'a', titulo: ' Reforma ', descricao: 'Varanda', concluido_em: '2026-11-10T10:00:00Z',
@@ -87,5 +87,12 @@ describe('"Retirar do feed" do cliente', () => {
   it('aplicarRetiradaDoFeed marca só o trabalho certo', () => {
     const lista = [{ id: 'a', feed_revogado_em: null }, { id: 'b', feed_revogado_em: null }]
     expect(aplicarRetiradaDoFeed(lista, 'a', 'agora')).toEqual([{ id: 'a', feed_revogado_em: 'agora' }, { id: 'b', feed_revogado_em: null }])
+  })
+})
+
+describe('textoCompartilharTrabalho', () => {
+  it('cita o trabalho e o prestador', () => {
+    expect(textoCompartilharTrabalho({ titulo: 'Reforma de varanda', prestador: { id: 2, nome: 'Pedro Pedreiro', slug: 'pedro', categoria: null, cidade: null } }))
+      .toBe('Veja "Reforma de varanda", trabalho de Pedro Pedreiro no Procuro Quem Faça.')
   })
 })

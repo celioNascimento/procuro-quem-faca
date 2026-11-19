@@ -21,8 +21,18 @@ describe('LinkFeed e Header', () => {
     render(<Header href="/" />)
     expect(screen.getByTestId('link-feed-header').getAttribute('href')).toBe('/feed')
   })
-  it('na página do feed (semLinkFeed) o link não aparece', () => {
-    render(<Header href="/" semLinkFeed />)
-    expect(screen.queryByTestId('link-feed-header')).toBeNull()
+  it('na página do feed o atalho continua no lugar, marcado como página atual', () => {
+    render(<Header href="/" feedAtivo />)
+    expect(screen.getByTestId('link-feed-header').getAttribute('aria-current')).toBe('page')
+  })
+  it('fora do feed o atalho não é marcado como atual', () => {
+    render(<LinkFeed />)
+    expect(screen.getByTestId('link-feed-header').getAttribute('aria-current')).toBeNull()
+  })
+  it('o atalho do cabeçalho só aparece no computador (no celular o feed fica no menu da conta)', () => {
+    render(<LinkFeed />)
+    const classes = screen.getByTestId('link-feed-header').className.split(' ')
+    expect(classes).toContain('hidden')
+    expect(classes).toContain('md:flex')
   })
 })
