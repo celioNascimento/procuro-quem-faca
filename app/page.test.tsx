@@ -76,10 +76,12 @@ describe('home — cartão de profissional', () => {
     expect(screen.getByRole('link', { name: /quer oferecer serviços/i }).getAttribute('href')).toBe('/cadastro')
   })
 
-  it('prestador ativo vê "Área do Profissional" e vai ao painel', () => {
+  it('prestador ativo não vê cartão de profissional (o atalho já está no cabeçalho), mas continua vendo o feed', () => {
     auth = { session: {}, role: 'prestador', prestadorStatus: 'ativo', roleLoading: false }
     render(<Home />)
-    expect(screen.getByRole('link', { name: /área do profissional/i }).getAttribute('href')).toBe('/dashboard')
+    expect(screen.queryByRole('link', { name: /área do profissional/i })).toBeNull()
+    expect(screen.queryByRole('link', { name: /prestador de serviços|oferecer serviços|cadastro em andamento/i })).toBeNull()
+    expect(screen.getByTestId('home-link-feed')).toBeTruthy()
   })
 
   it('prestador com cadastro pendente vê "Cadastro em andamento" e volta ao cadastro', () => {

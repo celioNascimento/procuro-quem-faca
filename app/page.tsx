@@ -32,6 +32,8 @@ export default function Home() {
   let tituloCTA = 'É prestador de serviços?'
   let subtituloCTA = 'Cadastre-se e apareça para quem precisa de você'
   let acaoLogCTA = 'CLIQUE_CTA_PRESTADOR'
+  // Prestador com perfil ativo já tem "Área do profissional" no cabeçalho: o cartão repetiria o mesmo atalho.
+  let mostrarCTA = true
 
   if (session) {
     if (role === 'prestador') {
@@ -41,10 +43,7 @@ export default function Home() {
         subtituloCTA = 'Finalize seu perfil e apareça nas buscas'
         acaoLogCTA = 'CLIQUE_CTA_CONTINUAR_CADASTRO'
       } else {
-        hrefCTA = '/dashboard'
-        tituloCTA = 'Área do Profissional'
-        subtituloCTA = 'Acesse seu painel e gerencie seus serviços'
-        acaoLogCTA = 'CLIQUE_CTA_ACESSAR_PAINEL'
+        mostrarCTA = false
       }
     } else {
       hrefCTA = '/cadastro'
@@ -143,8 +142,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* CTA para prestadores. Aparece para todos, inclusive quem já é prestador (leva ao painel): ele ancora o
-          fim da tela; sem ele sobrava um vazio grande embaixo das sugestões. */}
+      {/* CTA para prestadores. Aparece para visitante, cliente e prestador com cadastro pendente; o prestador ativo usa o atalho do cabeçalho. */}
       <div className="relative z-10 flex-1 flex items-end justify-center pt-6 pb-12 px-6">
         <div className="flex w-full max-w-3xl flex-col gap-3">
           {/* Feed de trabalhos concluídos: mostra o que os profissionais já fizeram, para quem ainda não sabe o que buscar. */}
@@ -168,7 +166,7 @@ export default function Home() {
 
           {mostrarSkeletonCTA ? (
             <CTAPrestadorSkeleton />
-          ) : (
+          ) : mostrarCTA && (
             <Link
               href={hrefCTA}
               onClick={() => insertLog({ acao: acaoLogCTA, entidadeTipo: 'home' })}
