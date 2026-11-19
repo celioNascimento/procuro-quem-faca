@@ -7,14 +7,16 @@ import { normalizarPerfilSocial, type PerfilSocial } from '@/lib/feed/perfilSoci
 export interface FiltroFeed {
   categoriaId?: string | null
   cidadeId?: string | null
+  estado?: string | null
   somenteSeguidos?: boolean
   pagina?: number
 }
 
-export async function fetchFeed({ categoriaId = null, cidadeId = null, somenteSeguidos = false, pagina = 0 }: FiltroFeed = {}): Promise<FeedItem[]> {
+export async function fetchFeed({ categoriaId = null, cidadeId = null, estado = null, somenteSeguidos = false, pagina = 0 }: FiltroFeed = {}): Promise<FeedItem[]> {
   const { data, error } = await supabase.rpc('feed_projetos', {
     p_categoria_id: categoriaId,
     p_cidade_id: cidadeId,
+    p_estado: estado,
     p_somente_seguidos: somenteSeguidos,
     p_limite: ITENS_POR_PAGINA,
     p_pagina: pagina,

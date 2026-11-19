@@ -1,6 +1,6 @@
 'use client'
 // app/feed/page.tsx — feed de trabalhos concluídos (orquestração: liga o hook ao componente).
-// Tipo de serviço e cidade ficam no endereço (/feed?categoria=…&cidade=…): dá para compartilhar, voltar e recarregar.
+// Tipo de serviço, estado e cidade ficam no endereço (/feed?categoria=…&estado=…&cidade=…): dá para compartilhar, voltar e recarregar.
 import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -10,7 +10,7 @@ import { useFeed } from '@/hooks/useFeed'
 import { useSession } from '@/hooks/useSession'
 import { fetchCategoriasDoFiltro, fetchCidadesDoFeed, type CategoriaDoFiltro } from '@/lib/services/feed.service'
 import {
-  lerFiltrosDaUrl, montarEnderecoDoFeed, rotuloDaCidade, temFiltroAtivo,
+  cidadesDoEstado, estadosDoFeed, filtrosAoTrocarEstado, lerFiltrosDaUrl, montarEnderecoDoFeed, rotuloDaCidade, temFiltroAtivo,
   type CidadeDoFeed, type FiltrosFeed,
 } from '@/lib/feed/filtros'
 
@@ -34,6 +34,13 @@ function FeedConteudo() {
     router.replace(montarEnderecoDoFeed(pathname, { ...filtros, ...novos }), { scroll: false })
   }
 
+  const estados = estadosDoFeed(cidades)
+  const cidadesVisiveis = cidadesDoEstado(cidades, filtros.estado)
+  // Ao trocar o estado, a cidade escolhida só fica se for daquele estado.
+  function mudarEstado(estado: string | null) {
+    router.replace(montarEnderecoDoFeed(pathname, filtrosAoTrocarEstado(filtros, estado, cidades)), { scroll: false })
+  }
+
   const filtrando = temFiltroAtivo(filtros)
 
   return (
@@ -52,7 +59,7 @@ function FeedConteudo() {
           ))}
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <label className="block text-sm font-bold text-slate-700">
             Tipo de serviço
             <select value={filtros.categoriaId ?? ''} onChange={e => mudarFiltros({ categoriaId: e.target.value || null })} data-testid="feed-categoria"
@@ -62,11 +69,19 @@ function FeedConteudo() {
             </select>
           </label>
           <label className="block text-sm font-bold text-slate-700">
+            Estado
+            <select value={filtros.estado ?? ''} onChange={e => mudarEstado(e.target.value || null)} data-testid="feed-estado"
+              className="mt-1 block min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">
+              <option value="">Todos os estados</option>
+              {estados.map(uf => <option key={uf} value={uf}>{uf}</option>)}
+            </select>
+          </label>
+          <label className="block text-sm font-bold text-slate-700">
             Cidade
             <select value={filtros.cidadeId ?? ''} onChange={e => mudarFiltros({ cidadeId: e.target.value || null })} data-testid="feed-cidade"
               className="mt-1 block min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">
               <option value="">Todas as cidades</option>
-              {cidades.map(c => <option key={c.id} value={c.id}>{rotuloDaCidade(c)}</option>)}
+              {cidadesVisiveis.map(c => <option key={c.id} value={c.id}>{rotuloDaCidade(c)}</option>)}
             </select>
           </label>
         </div>
@@ -93,7 +108,7 @@ function FeedConteudo() {
             ) : filtrando ? (
               <>
                 <p className="text-sm font-semibold text-slate-600">Nenhum trabalho com esses filtros.</p>
-                <button type="button" onClick={() => mudarFiltros({ categoriaId: null, cidadeId: null })} data-testid="feed-limpar-filtros"
+                <button type="button" onClick={() => mudarFiltros({ categoriaId: null, cidadeId: null, estado: null })} data-testid="feed-limpar-filtros"
                   className="mt-3 min-h-11 rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-blue-700">
                   Ver todos os trabalhos
                 </button>

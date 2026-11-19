@@ -22,15 +22,15 @@ describe('useFeed', () => {
     const { result } = renderHook(() => useFeed(true))
     await waitFor(() => expect(result.current.itens).toHaveLength(2))
     expect(result.current.carregando).toBe(false)
-    expect(fetchFeed).toHaveBeenCalledWith({ categoriaId: null, cidadeId: null, somenteSeguidos: false, pagina: 0 })
+    expect(fetchFeed).toHaveBeenCalledWith({ categoriaId: null, cidadeId: null, estado: null, somenteSeguidos: false, pagina: 0 })
   })
-  it('os filtros de tipo de serviço e cidade vão para a busca e recarregam quando mudam', async () => {
+  it('os filtros de tipo de serviço, estado e cidade vão para a busca e recarregam quando mudam', async () => {
     const A = '11111111-1111-4111-8111-111111111111', B = '22222222-2222-4222-8222-222222222222'
-    const { result, rerender } = renderHook(({ f }) => useFeed(true, f), { initialProps: { f: { categoriaId: A, cidadeId: B } as FiltrosFeed } })
+    const { result, rerender } = renderHook(({ f }) => useFeed(true, f), { initialProps: { f: { categoriaId: A, cidadeId: B, estado: 'PR' } as FiltrosFeed } })
     await waitFor(() => expect(result.current.itens).toHaveLength(2))
-    expect(fetchFeed).toHaveBeenLastCalledWith({ categoriaId: A, cidadeId: B, somenteSeguidos: false, pagina: 0 })
-    rerender({ f: { categoriaId: A, cidadeId: null } })
-    await waitFor(() => expect(fetchFeed).toHaveBeenLastCalledWith({ categoriaId: A, cidadeId: null, somenteSeguidos: false, pagina: 0 }))
+    expect(fetchFeed).toHaveBeenLastCalledWith({ categoriaId: A, cidadeId: B, estado: 'PR', somenteSeguidos: false, pagina: 0 })
+    rerender({ f: { categoriaId: A, cidadeId: null, estado: null } })
+    await waitFor(() => expect(fetchFeed).toHaveBeenLastCalledWith({ categoriaId: A, cidadeId: null, estado: null, somenteSeguidos: false, pagina: 0 }))
   })
   it('sem login, curtir e seguir só avisam, sem chamar o banco', async () => {
     const { result } = renderHook(() => useFeed(false))
@@ -74,7 +74,7 @@ describe('useFeed', () => {
     const { result } = renderHook(() => useFeed(true))
     await waitFor(() => expect(result.current.itens).toHaveLength(1))
     act(() => result.current.setAba('seguindo'))
-    await waitFor(() => expect(fetchFeed).toHaveBeenLastCalledWith({ categoriaId: null, cidadeId: null, somenteSeguidos: true, pagina: 0 }))
+    await waitFor(() => expect(fetchFeed).toHaveBeenLastCalledWith({ categoriaId: null, cidadeId: null, estado: null, somenteSeguidos: true, pagina: 0 }))
     await waitFor(() => expect(result.current.itens).toHaveLength(1))
     await act(async () => { await result.current.alternarSeguir(2) })
     expect(result.current.itens).toHaveLength(0)

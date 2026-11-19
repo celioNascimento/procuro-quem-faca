@@ -81,12 +81,28 @@ test.describe('feed: visitante', () => {
   });
 });
 
+test.describe('feed: filtro por estado', () => {
+  test('escolher o estado guarda no endereço; estado sem trabalho explica e o botão limpa', async ({ page }) => {
+    await abrirFeed(page);
+    await page.getByTestId('feed-estado').selectOption('PR');
+    await expect(page).toHaveURL(/[?&]estado=PR/);
+    await expect(page.getByTestId('feed-card')).toHaveCount(1);
+
+    await abrirFeed(page, '/feed?estado=SP');
+    await expect(page.getByTestId('feed-vazio')).toContainText(/Nenhum trabalho com esses filtros/);
+    await page.getByTestId('feed-limpar-filtros').click();
+    await expect(page).toHaveURL(/\/feed$/);
+    await expect(page.getByTestId('feed-card')).toHaveCount(1);
+  });
+});
+
 test.describe('feed: filtro por cidade', () => {
   test('lista só cidades com trabalho, guarda a escolha no endereço e some a lista com cidade sem trabalho', async ({ page }) => {
     await abrirFeed(page);
 
     const cidade = page.getByTestId('feed-cidade');
     await expect(cidade.locator('option')).toHaveCount(2); // "Todas as cidades" + Londrina
+    await expect(page.getByTestId('feed-estado').locator('option')).toHaveCount(2); // "Todos os estados" + PR
     await expect(cidade.getByRole('option', { name: 'Londrina - PR' })).toHaveCount(1);
 
     await cidade.selectOption({ label: 'Londrina - PR' });

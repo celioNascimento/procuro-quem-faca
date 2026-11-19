@@ -10,8 +10,8 @@ import {
 
 export type AbaFeed = 'todos' | 'seguindo'
 
-// Tipo de serviço e cidade vêm de fora (do endereço da página); a aba e o resto ficam aqui.
-export function useFeed(logado: boolean, { categoriaId, cidadeId }: FiltrosFeed = { categoriaId: null, cidadeId: null }) {
+// Tipo de serviço, estado e cidade vêm de fora (do endereço da página); a aba e o resto ficam aqui.
+export function useFeed(logado: boolean, { categoriaId, cidadeId, estado }: FiltrosFeed = { categoriaId: null, cidadeId: null, estado: null }) {
   const [aba, setAba] = useState<AbaFeed>('todos')
   const [itens, setItens] = useState<FeedItem[]>([])
   const [pagina, setPagina] = useState(0)
@@ -25,7 +25,7 @@ export function useFeed(logado: boolean, { categoriaId, cidadeId }: FiltrosFeed 
     const minha = ++requisicao.current
     setCarregando(true)
     try {
-      const novos = await fetchFeed({ categoriaId, cidadeId, somenteSeguidos: aba === 'seguindo', pagina: paginaAlvo })
+      const novos = await fetchFeed({ categoriaId, cidadeId, estado, somenteSeguidos: aba === 'seguindo', pagina: paginaAlvo })
       if (minha !== requisicao.current) return
       setItens(atual => (acumular ? [...atual, ...novos.filter(n => !atual.some(a => a.projetoId === n.projetoId))] : novos))
       setPagina(paginaAlvo)
@@ -38,7 +38,7 @@ export function useFeed(logado: boolean, { categoriaId, cidadeId }: FiltrosFeed 
     } finally {
       if (minha === requisicao.current) setCarregando(false)
     }
-  }, [categoriaId, cidadeId, aba])
+  }, [categoriaId, cidadeId, estado, aba])
 
   useEffect(() => { queueMicrotask(() => carregar(0, false)) }, [carregar])
 
