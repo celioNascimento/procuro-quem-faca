@@ -23,4 +23,5 @@ RPCs do feed/social: `security definer` com `search_path` fixo, checam `auth.uid
 ## Testes automatizados
 - Unidade: `tests/seguranca/cabecalhos.test.ts`, `lib/feed/feed.test.ts` (slug), `lib/feed/denuncia.test.ts` (limites), `lib/instagram.test.ts`, `app/api/cron/*/route.test.ts`.
 - E2E na API do TESTE: `tests/e2e/homologacao/seguranca-feed.spec.ts` (feed sem WhatsApp, tabelas sociais fechadas, escrita direta recusada, slug/Instagram/denúncia inválidos recusados) e `seguranca-acessos.spec.ts`.
-- Dá para automatizar depois: auditor SQL no CI (`rls` ligada em toda tabela, `security definer` com `search_path`, nenhum `anon` em função de escrita) e `pnpm audit --prod` como etapa do CI.
+- **Auditor do banco** (`tests/e2e/homologacao/auditoria-banco.spec.ts`, função `e2e_auditar_seguranca()` em `supabase/homologacao/auditoria_seguranca.sql`, só no TESTE): falha se aparecer tabela sem RLS, função `security definer` sem `search_path`, função nova aberta a visitante ou gravação nova aberta a visitante. As listas aprovadas ficam no próprio teste: mudança proposital = incluir o nome no mesmo commit.
+- **`pnpm audit --prod --audit-level=high`** como passo do CI (`.github/workflows/ci.yml`): falha com vulnerabilidade alta/crítica em dependência de produção.
