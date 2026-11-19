@@ -17,11 +17,13 @@ const TEMPO_LIMITE_MS = 8000
 export async function enviarEmail(
   email: EmailNotificacao,
   env: Record<string, string | undefined> = process.env,
+  /** Destinatário próprio (ex.: aviso ao prestador). Sem ele, vai para o administrador. */
+  para?: string,
 ): Promise<ResultadoEmail> {
   const chave = env.RESEND_API_KEY
   if (!chave) return { enviado: false, motivo: 'sem_chave' }
 
-  const destino = env.NOTIFICACAO_EMAIL_DESTINO || NOTIFICACOES.destinoPadrao
+  const destino = para || env.NOTIFICACAO_EMAIL_DESTINO || NOTIFICACOES.destinoPadrao
   const remetente = env.NOTIFICACAO_EMAIL_REMETENTE || NOTIFICACOES.remetentePadrao
 
   const controle = new AbortController()

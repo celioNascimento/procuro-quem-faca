@@ -64,6 +64,8 @@ export interface SelosComplementares {
   experiencia: boolean
   tempoCnpj: FaixaTempoCnpj | null
   atividadeCompativel: boolean
+  seguro: boolean
+  cnd: boolean
 }
 
 export const TEXTO_EXPERIENCIA = `Experiência no PQF: ${META_EXPERIENCIA.servicos} serviços avaliados por ${META_EXPERIENCIA.clientes} clientes diferentes`
@@ -73,7 +75,7 @@ export const TEXTO_ATIVIDADE = 'Atividade registrada no CNPJ compatível com a c
 export function selosComplementaresPorPrestador(linhas: LinhaSeloPublico[], agora: Date = new Date()): Map<number, SelosComplementares> {
   const mapa = new Map<number, SelosComplementares>()
   const de = (id: number) => {
-    const atual = mapa.get(id) ?? { experiencia: false, tempoCnpj: null, atividadeCompativel: false }
+    const atual = mapa.get(id) ?? { experiencia: false, tempoCnpj: null, atividadeCompativel: false, seguro: false, cnd: false }
     mapa.set(id, atual)
     return atual
   }
@@ -81,6 +83,8 @@ export function selosComplementaresPorPrestador(linhas: LinhaSeloPublico[], agor
     const id = Number(l.prestador_id)
     if (l.tipo === 'experiencia') de(id).experiencia = true
     else if (l.tipo === 'atividade_compativel') de(id).atividadeCompativel = true
+    else if (l.tipo === 'seguro') de(id).seguro = true
+    else if (l.tipo === 'cnd') de(id).cnd = true
     else if (l.tipo === 'tempo_cnpj') {
       const faixa = faixaTempoCnpj(l.data_abertura, agora)
       if (faixa) de(id).tempoCnpj = faixa

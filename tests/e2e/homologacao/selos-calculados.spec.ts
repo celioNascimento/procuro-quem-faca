@@ -118,6 +118,6 @@ test.describe('barra de evolução do prestador', () => {
     await semearExperiencia(PERFIL_SEED.id, 9);
     await abrirDados(page);
     await expect(page.getByTestId('conquista-experiencia')).toContainText('Conquistado', { timeout: 20_000 });
-    await expect(page.getByTestId('evolucao-texto')).toHaveText('1 de 4 selos conquistados');
+    await expect(page.getByTestId('evolucao-texto')).toHaveText('1 de 6 selos conquistados');
   });
 });

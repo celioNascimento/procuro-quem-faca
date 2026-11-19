@@ -12,7 +12,7 @@ describe('apresentarNivel', () => {
     const n = apresentarNivel('prata')
     expect(n.nome).toBe('Prata')
     expect(n.classes).not.toBe(apresentarNivel('bronze').classes)
-    expect(n.proximo).toBeNull()
+    expect(n.proximo).toMatch(/Ouro/)
   })
   it('sem nível ou nível desconhecido: orienta a informar o CNPJ', () => {
     expect(apresentarNivel(null).nome).toBe('Sem nível ainda')

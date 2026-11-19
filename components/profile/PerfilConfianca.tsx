@@ -13,6 +13,7 @@ import {
   type SeloCnpjPublico,
   type SelosComplementares,
 } from '@/lib/selos/publico'
+import { textoSeloPublico } from '@/lib/selos/documentos'
 import { textoTempoCnpj } from '@/lib/selos/tempoCnpj'
 import { apresentarNivel } from '@/lib/selos/nivel'
 import { textoTagNaoIndicam } from '@/lib/avaliacoes/transparencia'
@@ -65,6 +66,16 @@ export default function PerfilConfianca({ prestador, totalIndicacoes, totalNaoIn
       key: 'selo-atividade',
       icon: <Briefcase size={14} className="text-green-600" aria-hidden="true" />,
       texto: TEXTO_ATIVIDADE,
+    },
+    complementares?.seguro && {
+      key: 'selo-seguro',
+      icon: <ShieldCheck size={14} className="text-green-600" aria-hidden="true" />,
+      texto: <span data-testid="selo-seguro-texto">{textoSeloPublico('seguro')}</span>,
+    },
+    complementares?.cnd && {
+      key: 'selo-cnd',
+      icon: <BadgeCheck size={14} className="text-green-600" aria-hidden="true" />,
+      texto: <span data-testid="selo-cnd-texto">{textoSeloPublico('cnd')}</span>,
     },
     totalConcluidos > 0 && {
       key: 'concluidos',

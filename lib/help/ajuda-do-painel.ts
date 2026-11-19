@@ -3,7 +3,7 @@
 // (Divulgação não aparece em CNPJ, selos não aparecem em Meus Trabalhos, e assim por diante.)
 
 export type AbaPainelPrestador = 'portfolio' | 'desempenho' | 'divulgacao' | 'perfil'
-export type SubAbaDadosProfissionais = 'perfil' | 'cnpj'
+export type SubAbaDadosProfissionais = 'perfil' | 'cnpj' | 'seguro' | 'cnd'
 
 export interface AjudaDaAba {
   context: string
@@ -17,7 +17,7 @@ export function ajudaDaAba(aba: AbaPainelPrestador, subAba: SubAbaDadosProfissio
     case 'divulgacao':
       return { context: 'divulgacao', title: 'Dúvidas sobre divulgação?' }
     case 'perfil':
-      return subAba === 'cnpj'
+      return subAba !== 'perfil'
         ? { context: 'painel-dados-cnpj', title: 'Dúvidas sobre o CNPJ e os selos?' }
         : { context: 'painel-dados-perfil', title: 'Dúvidas sobre o seu perfil?' }
     case 'portfolio':

@@ -105,3 +105,6 @@ No site (sem criar dados falsos em produção):
 - `20261118160000_cnaes_detalhe_e_ar_automotivo.sql`: mapeia Ar Condicionado Automotivo (4520007), guarda a descrição dos CNAEs secundários e cria `cnaes_compativeis_do_prestador`. NÃO mexe no e2e_baseline (só existe no teste).
 - `20261118150000_cnaes_secundarios.sql`: coluna de CNAEs secundários e `selos_publicos` considerando todas as atividades do CNPJ.
 - `20261118140000_categoria_sem_mapeamento_cnae.sql`: função para o aviso "ainda não sabemos" no painel. Ordem final das migrations em produção: 20261117150000, 190000, 210000, 230000, 20261118000000 (já com Manicure em 9602501), 120000, 130000, 140000, 150000 (`cnaes_secundarios`), 160000 (`cnaes_detalhe_e_ar_automotivo`), 170000 (`niveis_dos_prestadores`), 180000 (`placar_indicacoes_dos_prestadores`). Depois, o script do agendador.
+
+
+**Acrescentar no fim da ordem de migrações (depois de `20261118200000_perfil_exemplo.sql`):** `20261118210000_ouro_diamante_seguro_cnd.sql` (bucket privado `verificacoes-docs`, funções de seguro/CND, níveis Ouro/Diamante). Conferir também: cron `/api/cron/verificacoes-vencimento` aparece no deploy da Vercel e `RESEND_API_KEY` está definida em produção (avisos de vencimento).

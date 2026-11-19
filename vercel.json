@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/cnpj-reverificacao",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/verificacoes-vencimento",
+      "schedule": "30 10 * * *"
     }
   ]
 }

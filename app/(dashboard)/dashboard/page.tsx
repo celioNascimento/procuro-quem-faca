@@ -29,7 +29,8 @@ function PerfilPageContent() {
     abaParam === 'perfil' ? 'perfil' : abaParam === 'desempenho' || abaParam === 'avaliacoes' ? 'desempenho' : 'portfolio'
   const subAbaInicial: SubAbaDesempenho =
     abaParam === 'avaliacoes' || searchParams.get('sub') === 'avaliacoes' ? 'avaliacoes' : 'analises'
-  const subAbaDados: SubAbaDados = searchParams.get('sub') === 'cnpj' ? 'cnpj' : 'perfil'
+  const subParam = searchParams.get('sub')
+  const subAbaDados: SubAbaDados = subParam === 'cnpj' || subParam === 'seguro' || subParam === 'cnd' ? subParam : 'perfil'
   const [abaAtiva, setAbaAtiva] = useState(abaInicial)
   // Começa como "visto" para o selo não piscar antes de ler o armazenamento do navegador.
   const [desempenhoVisto, setDesempenhoVisto] = useState(true)

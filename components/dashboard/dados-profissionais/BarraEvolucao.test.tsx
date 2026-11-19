@@ -53,9 +53,14 @@ describe('BarraEvolucao: nível atual', () => {
     expect(screen.getByTestId('nivel-nome').textContent).toBe('Bronze')
     expect(screen.getByTestId('nivel-proximo').textContent).toContain('Prata')
   })
-  it('mostra Prata sem próximo nível', () => {
+  it('Prata aponta para o Ouro (seguro)', () => {
     render(<BarraEvolucao conquistas={montarConquistas('aprovado')} nivel="prata" />)
     expect(screen.getByTestId('nivel-nome').textContent).toBe('Prata')
+    expect(screen.getByTestId('nivel-proximo').textContent).toContain('Ouro')
+  })
+  it('Diamante é o topo: sem próximo nível', () => {
+    render(<BarraEvolucao conquistas={montarConquistas('aprovado')} nivel="diamante" />)
+    expect(screen.getByTestId('nivel-nome').textContent).toBe('Diamante')
     expect(screen.queryByTestId('nivel-proximo')).toBeNull()
   })
   it('sem nível: orienta a informar o CNPJ', () => {

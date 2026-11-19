@@ -5,6 +5,7 @@
 import { META_EXPERIENCIA } from '@/config/selos'
 import type { FaseSeloCnpj } from './cnpjEstado'
 import { textoTempoCnpj, type FaixaTempoCnpj } from './tempoCnpj'
+import type { FaseDocumento } from './documentos'
 import { linkWhatsappSuporte } from '@/lib/help/chat-ajuda'
 
 export type EstadoConquista =
@@ -59,7 +60,16 @@ export function resumoEvolucao(conquistas: Conquista[]): ResumoEvolucao {
   return { conquistados, total, percentual, texto }
 }
 
-export function montarConquistas(faseCnpj: FaseSeloCnpj, extras: ExtrasEvolucao | null = null): Conquista[] {
+export interface FasesDocumentos { seguro: FaseDocumento; cnd: FaseDocumento }
+
+function conquistaDocumento(id: 'seguro' | 'cnd', titulo: string, fase: FaseDocumento | undefined): Conquista {
+  if (!fase) return { id, titulo, estado: 'em_breve' }
+  if (fase === 'aprovado' || fase === 'a_vencer') return { id, titulo, estado: 'conquistado', detalhe: fase === 'a_vencer' ? 'Perto de vencer: envie o comprovante atualizado.' : undefined }
+  if (fase === 'em_conferencia') return { id, titulo, estado: 'em_andamento' }
+  return { id, titulo, estado: 'disponivel', detalhe: fase === 'expirado' ? 'Venceu: envie um comprovante atualizado.' : undefined }
+}
+
+export function montarConquistas(faseCnpj: FaseSeloCnpj, extras: ExtrasEvolucao | null = null, docs?: FasesDocumentos): Conquista[] {
   const estadoCnpj: EstadoConquista =
     faseCnpj === 'aprovado' ? 'conquistado' : faseCnpj === 'em_conferencia' ? 'em_andamento' : 'disponivel'
   const cnpj: Conquista = { id: 'cnpj', titulo: 'CNPJ ativo', estado: estadoCnpj }
@@ -70,6 +80,8 @@ export function montarConquistas(faseCnpj: FaseSeloCnpj, extras: ExtrasEvolucao 
       { id: 'experiencia', titulo: 'Experiência no PQF', estado: 'em_breve' },
       { id: 'tempo_cnpj', titulo: 'Tempo de CNPJ', estado: 'em_breve' },
       { id: 'atividade', titulo: 'Atividade compatível', estado: 'em_breve' },
+      conquistaDocumento('seguro', 'Seguro de responsabilidade civil', docs?.seguro),
+      conquistaDocumento('cnd', 'CND federal', docs?.cnd),
     ]
   }
 
@@ -109,5 +121,9 @@ export function montarConquistas(faseCnpj: FaseSeloCnpj, extras: ExtrasEvolucao 
           detalhe: 'Nenhuma atividade registrada no CNPJ combina com a categoria do perfil.',
         }
 
-  return [cnpj, experiencia, tempo, atividade]
+  return [
+    cnpj, experiencia, tempo, atividade,
+    conquistaDocumento('seguro', 'Seguro de responsabilidade civil', docs?.seguro),
+    conquistaDocumento('cnd', 'CND federal', docs?.cnd),
+  ]
 }

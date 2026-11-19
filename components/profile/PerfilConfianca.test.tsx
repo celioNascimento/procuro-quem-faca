@@ -32,7 +32,7 @@ describe('PerfilConfianca — selos calculados pelo sistema', () => {
       <PerfilConfianca
         prestador={prestador} totalIndicacoes={0} totalConcluidos={0}
         selo={{ consultadoEm: '2026-11-17T15:00:00Z' }} nivel="prata"
-        complementares={{ experiencia: true, tempoCnpj: 3, atividadeCompativel: true }}
+        complementares={{ experiencia: true, tempoCnpj: 3, atividadeCompativel: true, seguro: true, cnd: false }}
       />,
     )
     expect(screen.getByTestId('caixa-confianca').className).toContain('border-slate-400')
@@ -41,13 +41,15 @@ describe('PerfilConfianca — selos calculados pelo sistema', () => {
     expect(screen.getByText('Experiência no PQF: 10 serviços avaliados por 10 clientes diferentes')).toBeTruthy()
     expect(screen.getByText('CNPJ aberto há mais de 3 anos')).toBeTruthy()
     expect(screen.getByText('Atividade registrada no CNPJ compatível com a categoria do perfil')).toBeTruthy()
+    expect(screen.getByTestId('selo-seguro-texto').textContent).toMatch(/conferida pela equipe/)
+    expect(screen.queryByTestId('selo-cnd-texto')).toBeNull()
   })
 
   it('só mostra o que foi conquistado; o que falta não aparece (nunca "0")', () => {
     render(
       <PerfilConfianca
         prestador={prestador} totalIndicacoes={0} totalConcluidos={0}
-        complementares={{ experiencia: false, tempoCnpj: null, atividadeCompativel: false }}
+        complementares={{ experiencia: false, tempoCnpj: null, atividadeCompativel: false, seguro: false, cnd: false }}
       />,
     )
     expect(screen.queryByText(/Experiência no PQF/)).toBeNull()

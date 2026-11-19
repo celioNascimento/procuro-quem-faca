@@ -11,7 +11,7 @@ describe('montarConquistas', () => {
   it('enquanto os extras não chegaram, os selos calculados ficam "em breve" (e não contam)', () => {
     const c = montarConquistas('sem')
     expect(c.find((x) => x.id === 'cnpj')?.estado).toBe('disponivel')
-    expect(c.filter((x) => x.estado === 'em_breve').map((x) => x.id)).toEqual(['experiencia', 'tempo_cnpj', 'atividade'])
+    expect(c.filter((x) => x.estado === 'em_breve').map((x) => x.id)).toEqual(['experiencia', 'tempo_cnpj', 'atividade', 'seguro', 'cnd'])
   })
   it('mapeia a fase do CNPJ para o estado da conquista', () => {
     expect(montarConquistas('aprovado')[0].estado).toBe('conquistado')
@@ -95,5 +95,18 @@ describe('atividade compatível: honestidade quando não sabemos conferir', () =
   it('antes do CNPJ ativo continua dependendo do CNPJ (não falamos de mapeamento ainda)', () => {
     const atividade = montarConquistas('sem', { ...base, categoriaSemMapeamento: true }).find((c) => c.id === 'atividade')!
     expect(atividade.estado).toBe('depende_cnpj')
+  })
+})
+
+describe('conquistas de seguro e CND', () => {
+  it('sem fases informadas ficam "em breve" e não entram na conta', () => {
+    const c = montarConquistas('aprovado')
+    expect(c.find((x) => x.id === 'seguro')?.estado).toBe('em_breve')
+  })
+  it('aprovado conta como conquistado; em conferência como em andamento; sem como disponível', () => {
+    const c = montarConquistas('aprovado', null, { seguro: 'aprovado', cnd: 'em_conferencia' })
+    expect(c.find((x) => x.id === 'seguro')?.estado).toBe('conquistado')
+    expect(c.find((x) => x.id === 'cnd')?.estado).toBe('em_andamento')
+    expect(montarConquistas('aprovado', null, { seguro: 'sem', cnd: 'expirado' }).find((x) => x.id === 'cnd')?.estado).toBe('disponivel')
   })
 })

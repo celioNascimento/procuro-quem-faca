@@ -3,6 +3,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 
 vi.mock('@/components/dashboard/EditarPerfilTab', () => ({ default: () => <div>FORM-PERFIL</div> }))
 vi.mock('./AbaCnpj', () => ({ AbaCnpj: () => <div>ABA-CNPJ</div> }))
+vi.mock('./AbaDocumento', () => ({ AbaDocumento: ({ tipo }: { tipo: string }) => <div>ABA-{tipo}</div> }))
+vi.mock('@/hooks/useDocumentoVerificacao', () => ({ useDocumentoVerificacao: () => ({ fase: 'sem', verificacao: null }) }))
 vi.mock('./BarraEvolucao', () => ({ BarraEvolucao: () => null }))
 vi.mock('@/hooks/useSeloCnpj', () => ({ useSeloCnpj: () => ({ fase: 'sem', dados: { verificacao: null, cnpj: null }, cnaesCompativeis: [] }) }))
 vi.mock('@/hooks/useExtrasEvolucao', () => ({ useExtrasEvolucao: () => null }))
@@ -24,5 +26,14 @@ describe('Dados Profissionais: a ajuda acompanha a sub-aba', () => {
     expect(screen.getAllByTestId('ajuda')).toHaveLength(1)
     expect(screen.getByTestId('ajuda').textContent).toBe('painel-dados-cnpj')
     expect(screen.getByTestId('ajuda').getAttribute('data-titulo')).toContain('CNPJ')
+  })
+
+  it('abas Seguro e CND abrem o formulário de documento e usam a ajuda de selos', () => {
+    render(<DadosProfissionaisTabs prestadorId={7} />)
+    fireEvent.click(screen.getByRole('tab', { name: /Seguro/ }))
+    expect(screen.getByText('ABA-seguro')).toBeTruthy()
+    fireEvent.click(screen.getByRole('tab', { name: /CND/ }))
+    expect(screen.getByText('ABA-cnd')).toBeTruthy()
+    expect(screen.getByTestId('ajuda').textContent).toBe('painel-dados-cnpj')
   })
 })
