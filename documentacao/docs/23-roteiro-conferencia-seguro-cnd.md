@@ -26,6 +26,9 @@ Seguro e CND não dependem da categoria (ao contrário da "Atividade compatível
 4. **Confirme o código de controle no site da Receita Federal** (a autenticidade só se prova assim).
 5. Documento legível e completo.
 
+## Prazo de 60 dias
+Pedido sem decisão por 60 dias: o arquivo é apagado automaticamente (cron diário) e o pedido expira, **sem recusa**; o prestador vê "o seu último envio ficou mais de 60 dias sem decisão... foi uma demora nossa" e pode reenviar. Na fila, o card mostra "Aguardando há N dias" e fica vermelho a partir de 45 dias. Na tela do prestador, o prazo limite aparece em destaque enquanto o pedido está em conferência. Conta excluída também apaga os comprovantes pendentes.
+
 ## Quando rejeitar (e o que escrever)
 Sempre com motivo claro, em linguagem simples: o prestador lê o motivo na própria aba e pode reenviar. Exemplos: "O segurado é outro CNPJ", "Arquivo ilegível, envie uma foto mais nítida", "A apólice está vencida", "Certidão apenas positiva". Dúvida de autenticidade: rejeite e peça um novo envio.
 

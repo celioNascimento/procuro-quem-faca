@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  caminhoDoArquivo, diasAte, faseDoDocumento, mensagemAviso, podeEnviar, textoSeloPublico, textoVencimento,
+  caminhoDoArquivo, dataLimiteDoPedido, diasAte, diasEmEspera, faseDoDocumento, mensagemAviso, podeEnviar, textoSeloPublico, textoVencimento,
   validarArquivo, validarSeguro,
 } from './documentos'
 import { apresentarNivel } from './nivel'
@@ -78,5 +78,26 @@ describe('níveis Ouro e Diamante', () => {
     expect(apresentarNivel('diamante').nome).toBe('Diamante')
     expect(apresentarNivel('diamante').proximo).toBeNull()
     expect(apresentarNivel('prata').proximo).toMatch(/Ouro/)
+  })
+})
+
+describe('pedido parado (60 dias)', () => {
+  it('pedido expirado: aparece como fase própria e libera novo envio', () => {
+    const v = { status: 'expirada', valido_ate: null, dados: { pedido_expirado: '2026-11-01T00:00:00Z' } }
+    expect(faseDoDocumento(v, HOJE)).toBe('pedido_expirado')
+    expect(podeEnviar('pedido_expirado')).toBe(true)
+  })
+  it('renovação que expirou não derruba o selo vigente', () => {
+    const v = { status: 'aprovada', valido_ate: '2027-05-01', dados: { pedido_expirado: '2026-11-01T00:00:00Z' } }
+    expect(faseDoDocumento(v, HOJE)).toBe('aprovado')
+  })
+  it('data limite = envio + 60 dias; sem data válida, null', () => {
+    expect(dataLimiteDoPedido('2026-11-18T12:00:00Z')).toBe('2027-01-17')
+    expect(dataLimiteDoPedido(null)).toBeNull()
+    expect(dataLimiteDoPedido('lixo')).toBeNull()
+  })
+  it('dias em espera', () => {
+    expect(diasEmEspera('2026-11-08T00:00:00Z', new Date('2026-11-18T00:00:00Z'))).toBe(10)
+    expect(diasEmEspera(undefined)).toBe(0)
   })
 })

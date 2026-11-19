@@ -1,9 +1,10 @@
 // components/dashboard/dados-profissionais/AbaDocumento.tsx
 // Abas "Seguro" e "CND": uma tela por fase, em linguagem simples. Só exibe e dispara ações do hook.
 import { useState } from 'react'
+import Link from 'next/link'
 import { BadgeCheck, Hourglass, Loader2, ShieldQuestion } from 'lucide-react'
 import { CartaoSecao, estiloCampo } from '@/components/perfil/CartaoSecao'
-import { podeEnviar, textoVencimento, type TipoDocumento } from '@/lib/selos/documentos'
+import { dataLimiteDoPedido, podeEnviar, PRAZO_PEDIDO_DIAS, textoVencimento, type TipoDocumento } from '@/lib/selos/documentos'
 import type { DocumentoVerificacao } from '@/hooks/useDocumentoVerificacao'
 
 const BOTAO =
@@ -47,6 +48,9 @@ export function AbaDocumento({ tipo, doc, temPerfil, nivelAnteriorOk }: {
   }
   if (carregando) return <div className="h-48 animate-pulse rounded-3xl bg-slate-100" role="status" aria-label="Carregando" />
 
+  const enviadoEm = (verificacao?.dados?.pedido as { enviado_em?: string } | undefined)?.enviado_em
+  const limiteIso = dataLimiteDoPedido(enviadoEm)
+  const limite = limiteIso ? limiteIso.split('-').reverse().join('/') : null
   const rejeicao = (verificacao?.dados?.ultima_rejeicao ?? (fase === 'rejeitado' ? verificacao?.dados?.decisao : null)) as { motivo?: string | null } | null
 
   return (
@@ -63,9 +67,14 @@ export function AbaDocumento({ tipo, doc, temPerfil, nivelAnteriorOk }: {
 
       {fase === 'em_conferencia' && (
         <CartaoSecao titulo="Estamos conferindo" descricao="Nossa equipe confere o seu comprovante." icone={<Hourglass size={20} />}>
-          <p className="rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-900" data-testid={`doc-${tipo}-fase-conferencia`}>
-            Recebemos o seu comprovante. Assim que for conferido, o resultado aparece aqui.
-          </p>
+          <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-900" data-testid={`doc-${tipo}-fase-conferencia`}>
+            <p className="font-bold">Recebemos o seu comprovante. Assim que for conferido, o resultado aparece aqui.</p>
+            {limite && (
+              <p className="mt-2 font-semibold" data-testid={`doc-${tipo}-prazo`}>
+                Prazo: se não houver decisão até {limite}, o arquivo é apagado e você poderá enviar de novo. Você não perde nada.
+              </p>
+            )}
+          </div>
         </CartaoSecao>
       )}
 
@@ -82,7 +91,16 @@ export function AbaDocumento({ tipo, doc, temPerfil, nivelAnteriorOk }: {
               Não conseguimos aprovar o último envio{rejeicao?.motivo ? `: ${rejeicao.motivo}` : '.'} Você pode enviar de novo.
             </p>
           )}
+          {fase === 'pedido_expirado' && (
+            <p role="status" className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-900" data-testid={`doc-${tipo}-pedido-expirado`}>
+              O seu último envio ficou mais de {PRAZO_PEDIDO_DIAS} dias sem decisão e o arquivo foi apagado. Foi uma demora nossa, não uma recusa: envie de novo quando puder.
+            </p>
+          )}
           {fase === 'expirado' && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-900">O selo venceu. Envie um comprovante atualizado.</p>}
+
+          <p className="mt-3 text-xs leading-relaxed text-slate-500" data-testid={`doc-${tipo}-privacidade`}>
+            Só a nossa equipe vê o arquivo. Ele é apagado assim que o pedido for decidido (ou em até {PRAZO_PEDIDO_DIAS} dias, se ninguém decidir). Guardamos apenas o resumo e a validade. Detalhes na <Link href="/privacidade" className="font-bold text-blue-700 underline">Política de Privacidade</Link>.
+          </p>
 
           <form
             className="mt-4 flex flex-col gap-4"

@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const rpc = vi.fn()
 const getUserById = vi.fn()
-vi.mock('@/lib/supabase/admin', () => ({ getAdminClient: () => ({ rpc, auth: { admin: { getUserById } } }) }))
+const remove = vi.fn()
+vi.mock('@/lib/supabase/admin', () => ({
+  getAdminClient: () => ({ rpc, auth: { admin: { getUserById } }, storage: { from: () => ({ remove }) } }),
+}))
 const enviarEmail = vi.fn()
 vi.mock('@/lib/notificacoes/email', () => ({ enviarEmail: (...a: unknown[]) => enviarEmail(...a) }))
 
@@ -13,6 +16,7 @@ const chamar = (autorizacao?: string) =>
 
 beforeEach(() => {
   vi.clearAllMocks()
+  remove.mockResolvedValue({ error: null })
   vi.unstubAllEnvs()
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
@@ -31,6 +35,7 @@ describe('GET /api/cron/verificacoes-vencimento', () => {
     vi.stubEnv('CRON_SECRET', 'segredo')
     rpc.mockImplementation(async (nome: string) => {
       if (nome === 'verificacoes_expirar') return { data: 2, error: null }
+      if (nome === 'verificacoes_limpar_pedidos_parados') return { data: [{ arquivo: 'u9/cnd-1.pdf' }], error: null }
       if (nome === 'verificacoes_a_avisar') {
         return { data: [
           { verificacao_id: 'v1', user_id: 'u1', tipo: 'seguro', dias: 30 },
@@ -44,7 +49,8 @@ describe('GET /api/cron/verificacoes-vencimento', () => {
     enviarEmail.mockResolvedValueOnce({ enviado: true }).mockResolvedValueOnce({ enviado: false, motivo: 'sem_chave' })
 
     const corpo = await (await chamar('Bearer segredo')).json()
-    expect(corpo).toEqual({ ok: true, expiradas: 2, avisados: 1, sem_email: 1 })
+    expect(corpo).toEqual({ ok: true, expiradas: 2, pedidos_expirados: 1, avisados: 1, sem_email: 1 })
+    expect(remove).toHaveBeenCalledWith(['u9/cnd-1.pdf'])
     expect(enviarEmail.mock.calls[0][0].assunto).toBe('Seu selo de seguro vence em 30 dias')
     expect(enviarEmail.mock.calls[0][2]).toBe('u1@x.com')
     expect(rpc).toHaveBeenCalledWith('verificacoes_marcar_aviso', { p_verificacao_id: 'v1', p_dias: 30 })

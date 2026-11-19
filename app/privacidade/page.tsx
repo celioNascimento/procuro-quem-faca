@@ -181,6 +181,29 @@ export default function Privacidade() {
             </div>
           </Secao>
 
+          <Secao titulo="11. Selos de confiança: CNPJ, seguro e CND">
+            <div className="space-y-3">
+              <p>
+                Esta seção vale para o prestador que pede selos de confiança. É opcional: sem pedido, nada disso é tratado.
+              </p>
+              <p>
+                <Destaque>Quais dados.</Destaque> CNPJ informado; dados abertos da Receita Federal sobre esse CNPJ (situação cadastral, razão social, nome fantasia, data de abertura, atividades registradas e, para conferir se o nome do perfil confere, os nomes dos sócios, que não são exibidos); no seguro, o nome da seguradora, o número e a validade da apólice e o arquivo do comprovante; na CND, o arquivo da certidão e a data de emissão. Em CNPJ de MEI, o nome da empresa pode ser o nome da própria pessoa.
+              </p>
+              <p>
+                <Destaque>Para quê e base legal.</Destaque> Conferir os dados para exibir os selos no perfil, a pedido do próprio prestador (consentimento, LGPD art. 7º, I, e execução do serviço solicitado, art. 7º, V). Os dados da Receita são públicos; ainda assim, usamos só o necessário para o selo. A aprovação do selo de CNPJ pode ser automática quando o nome confere; em caso de dúvida, uma pessoa da equipe revisa. Você pode pedir a revisão por uma pessoa de qualquer decisão automatizada (art. 20).
+              </p>
+              <p>
+                <Destaque>Quem vê e onde ficam.</Destaque> Os comprovantes ficam em área privada, sem endereço público, e só a equipe autorizada os abre, por links temporários. O perfil público mostra apenas o selo e a data de conferência ou validade: nunca o número do CNPJ, a razão social, a seguradora, o número da apólice ou o arquivo. A consulta à Receita fica em cache por até 24 horas.
+              </p>
+              <p>
+                <Destaque>Por quanto tempo.</Destaque> O arquivo do comprovante é apagado assim que a equipe decide o pedido; se ninguém decidir em 60 dias, é apagado automaticamente e o prestador pode enviar de novo; também é apagado se a conta for excluída. Depois da conferência guardamos só o resumo (por exemplo, seguradora, número e validade da apólice, ou data de emissão da CND), a validade e o registro da decisão, enquanto o perfil existir, e o registro de atividades conforme a seção 9.
+              </p>
+              <p>
+                <Destaque>Seus direitos.</Destaque> Você pode remover o CNPJ e o selo pelo painel a qualquer momento ou pedir a exclusão desses dados pelos canais da seção 10. Sem os selos, o perfil continua funcionando normalmente.
+              </p>
+            </div>
+          </Secao>
+
           <section className="border-t border-slate-100 pt-8">
             <p className="text-sm text-slate-400">Última atualização: {DATA_ATUALIZACAO_PRIVACIDADE}.</p>
           </section>

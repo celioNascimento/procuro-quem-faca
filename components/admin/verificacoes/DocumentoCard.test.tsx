@@ -61,4 +61,14 @@ describe('DocumentoCard', () => {
     render(<DocumentoCard {...props} item={{ ...base, status: 'aprovada', valido_ate: '2027-06-01', dados: { conferido: { seguradora: 'Porto' } } }} campos={VAZIO} />)
     expect(screen.queryByTestId('documento-aprovar')).toBeNull()
   })
+
+  it('mostra há quantos dias o pedido espera e avisa perto do prazo de 60 dias', () => {
+    const velho = new Date(Date.now() - 50 * 86_400_000).toISOString()
+    const novo = new Date(Date.now() - 2 * 86_400_000).toISOString()
+    const { rerender } = render(<DocumentoCard {...props} item={{ ...base, dados: { pedido: { ...(base.dados.pedido as object), enviado_em: novo } } }} campos={VAZIO} />)
+    expect(screen.getByTestId('documento-espera').textContent).toMatch(/há 2 dias/)
+    expect(screen.getByTestId('documento-espera').textContent).not.toMatch(/Decida logo/)
+    rerender(<DocumentoCard {...props} item={{ ...base, dados: { pedido: { ...(base.dados.pedido as object), enviado_em: velho } } }} campos={VAZIO} />)
+    expect(screen.getByTestId('documento-espera').textContent).toMatch(/Decida logo/)
+  })
 })

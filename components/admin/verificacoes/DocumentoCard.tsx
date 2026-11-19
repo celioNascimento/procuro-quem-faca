@@ -3,7 +3,7 @@
 import { CheckCircle2, FileText, Loader2, XCircle } from 'lucide-react'
 import { mascararCnpj } from '@/lib/cnpj/validacao'
 import { AVISO_SEM_CNPJ, CHECKLIST, checklistCompleto } from '@/lib/selos/checklistDocumentos'
-import { ROTULO_DOCUMENTO, textoVencimento } from '@/lib/selos/documentos'
+import { ALERTA_PEDIDO_DIAS, diasEmEspera, PRAZO_PEDIDO_DIAS, ROTULO_DOCUMENTO, textoVencimento } from '@/lib/selos/documentos'
 import type { DocumentoAdmin } from '@/lib/services/documentosVerificacao.service'
 import type { CamposDecisao } from '@/hooks/useAdminDocumentos'
 
@@ -26,6 +26,8 @@ export function DocumentoCard({ item, processando, campos, onCampos, onAlternarI
   const conferido = item.dados?.conferido as Record<string, string> | undefined
   const dados = pedido ?? conferido
   const aberto = !!pedido
+  const espera = aberto ? diasEmEspera(pedido?.enviado_em) : 0
+  const emAlerta = espera >= ALERTA_PEDIDO_DIAS
   const aprovavel = (item.tipo === 'seguro' ? !!campos.validoAte : !!campos.emissao) && checklistCompleto(item.tipo, campos.marcados)
 
   return (
@@ -37,6 +39,16 @@ export function DocumentoCard({ item, processando, campos, onCampos, onAlternarI
         </div>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600">{aberto ? 'Aguardando' : item.status}</span>
       </header>
+
+      {aberto && (
+        <p
+          data-testid="documento-espera"
+          className={`mb-3 rounded-xl p-2 text-xs font-bold ${emAlerta ? 'bg-red-50 text-red-700' : 'bg-slate-50 text-slate-500'}`}
+        >
+          Aguardando há {espera} {espera === 1 ? 'dia' : 'dias'}.
+          {emAlerta && ` Decida logo: com ${PRAZO_PEDIDO_DIAS} dias o arquivo é apagado automaticamente e o prestador precisa reenviar.`}
+        </p>
+      )}
 
       {aberto && (
         <div className="mb-4 rounded-xl bg-slate-50 p-3" data-testid="documento-cnpj-perfil">

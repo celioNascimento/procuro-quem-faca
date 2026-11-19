@@ -92,7 +92,28 @@ export default function Termos() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-xl font-bold text-slate-800">9. Encerramento e alterações</h2>
+            <h2 className="mb-3 text-xl font-bold text-slate-800">9. Selos de confiança e níveis</h2>
+            <div className="space-y-3">
+              <p>
+                O prestador pode, se quiser, pedir selos que mostram ao cliente o que o PQF conferiu: CNPJ ativo, tempo de CNPJ, atividade compatível, experiência no PQF, seguro de responsabilidade civil e certidão negativa de débitos federais (CND). Os selos formam níveis (Bronze, Prata, Ouro e Diamante), calculados automaticamente. Os selos e os níveis são opcionais e não mudam a posição do profissional na busca.
+              </p>
+              <p>
+                <strong className="text-slate-700">O que o selo significa.</strong> Cada selo indica apenas o que foi conferido, na data indicada ou dentro da validade do documento. Ele não garante a qualidade do serviço, a situação financeira do profissional, que um seguro cobrirá um problema específico, nem o resultado de qualquer contratação. O cliente continua responsável por combinar valores, prazos e condições com o profissional.
+              </p>
+              <p>
+                <strong className="text-slate-700">Seguro.</strong> O PQF não vende, não intermedeia e não recomenda seguros, e não é parte de nenhum contrato de seguro. Só conferimos uma apólice que o prestador já tem. O que a apólice cobre é uma relação entre o prestador e a seguradora.
+              </p>
+              <p>
+                <strong className="text-slate-700">Responsabilidade do prestador.</strong> O prestador declara que as informações e os documentos enviados são verdadeiros e que pertencem ao CNPJ do perfil. O PQF pode recusar um pedido e, em caso de inconsistência, documento falso ou vencido, retirar o selo, informando o motivo. Falsidade pode levar ao bloqueio do perfil, conforme a seção 6.
+              </p>
+              <p>
+                <strong className="text-slate-700">Validade.</strong> Selos com validade (CNPJ, seguro e CND) saem do perfil automaticamente quando vencem, e o nível é recalculado. O prestador é avisado por e-mail antes do vencimento do seguro e da CND, mas manter os documentos em dia é responsabilidade dele. O tratamento dos dados enviados está descrito na Política de Privacidade.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-bold text-slate-800">10. Encerramento e alterações</h2>
             <p>
               O usuário pode solicitar a exclusão da conta pelos fluxos disponíveis. O PQF pode alterar funcionalidades e estes termos para refletir a evolução do produto, a legislação ou melhorias de segurança. A versão vigente será publicada nesta página.
             </p>

@@ -108,3 +108,5 @@ No site (sem criar dados falsos em produção):
 
 
 **Acrescentar no fim da ordem de migrações (depois de `20261118200000_perfil_exemplo.sql`):** `20261118210000_ouro_diamante_seguro_cnd.sql` (bucket privado `verificacoes-docs`, funções de seguro/CND, níveis Ouro/Diamante). Conferir também: cron `/api/cron/verificacoes-vencimento` aparece no deploy da Vercel e `RESEND_API_KEY` está definida em produção (avisos de vencimento).
+
+**Termos e Política (obrigatório antes do release):** os textos novos (Termos seção 9 "Selos de confiança e níveis"; Privacidade seção 11 "Selos de confiança: CNPJ, seguro e CND") são **rascunho para revisão do advogado**. Pontos a validar: base legal (consentimento art. 7º, I + execução do serviço art. 7º, V), retenção (arquivo apagado na decisão, em 60 dias sem decisão ou na exclusão da conta), cache da Receita por até 24 h (incluindo nomes de sócios), e a frase sobre revisão humana (art. 20). Depois da revisão, **aumentar `VERSAO_DOCUMENTOS` em `config/documentos.ts`**: cada usuário logado aceita uma única vez a versão nova (não há aceite a cada envio de documento). Os E2E já lidam com a tela de aceite (`aceitarDocumentosSeAparecer`).

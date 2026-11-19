@@ -12,7 +12,12 @@ export const AVISOS_VENCIMENTO_DIAS = [30, 15, 3] as const
 /** Janela em que dá para renovar um selo ainda válido. */
 export const JANELA_RENOVACAO_DIAS = 30
 
-export type FaseDocumento = 'sem' | 'em_conferencia' | 'aprovado' | 'a_vencer' | 'rejeitado' | 'expirado'
+/** Sem decisão da equipe depois desse prazo, o comprovante é apagado e o pedido expira (sem recusa). */
+export const PRAZO_PEDIDO_DIAS = 60
+/** A partir de quantos dias de espera o admin vê o pedido em alerta. */
+export const ALERTA_PEDIDO_DIAS = 45
+
+export type FaseDocumento = 'sem' | 'em_conferencia' | 'aprovado' | 'a_vencer' | 'rejeitado' | 'expirado' | 'pedido_expirado'
 
 export interface VerificacaoDocumento {
   status: string
@@ -32,19 +37,34 @@ export function diasAte(data: string, hoje: Date = new Date()): number {
 export function faseDoDocumento(v: VerificacaoDocumento | null, hoje: Date = new Date()): FaseDocumento {
   if (!v) return 'sem'
   if (v.dados && 'pedido' in v.dados) return 'em_conferencia'
-  if (v.status === 'rejeitada') return 'rejeitado'
-  if (v.status === 'expirada') return 'expirado'
   if (v.status === 'aprovada' && v.valido_ate) {
     const dias = diasAte(v.valido_ate, hoje)
-    if (dias < 0) return 'expirado'
-    return dias <= JANELA_RENOVACAO_DIAS ? 'a_vencer' : 'aprovado'
+    if (dias >= 0) return dias <= JANELA_RENOVACAO_DIAS ? 'a_vencer' : 'aprovado'
+    return 'expirado'
   }
+  if (v.dados && 'pedido_expirado' in v.dados) return 'pedido_expirado'
+  if (v.status === 'rejeitada') return 'rejeitado'
+  if (v.status === 'expirada') return 'expirado'
   return 'sem'
+}
+
+/** Data (AAAA-MM-DD) em que o pedido em análise expira se ninguém decidir; null sem data de envio. */
+export function dataLimiteDoPedido(enviadoEmIso: string | null | undefined): string | null {
+  if (!enviadoEmIso) return null
+  const t = Date.parse(enviadoEmIso)
+  if (Number.isNaN(t)) return null
+  return new Date(t + PRAZO_PEDIDO_DIAS * MS_DIA).toISOString().slice(0, 10)
+}
+
+/** Dias que o pedido está esperando decisão (admin). */
+export function diasEmEspera(enviadoEmIso: string | null | undefined, agora: Date = new Date()): number {
+  const t = Date.parse(enviadoEmIso ?? '')
+  return Number.isNaN(t) ? 0 : Math.max(0, Math.floor((agora.getTime() - t) / MS_DIA))
 }
 
 /** Pode enviar (ou reenviar) o comprovante nesta fase? */
 export function podeEnviar(fase: FaseDocumento): boolean {
-  return fase === 'sem' || fase === 'rejeitado' || fase === 'expirado' || fase === 'a_vencer'
+  return fase === 'sem' || fase === 'rejeitado' || fase === 'expirado' || fase === 'a_vencer' || fase === 'pedido_expirado'
 }
 
 export function validarArquivo(arquivo: { size: number; type: string }): string | null {

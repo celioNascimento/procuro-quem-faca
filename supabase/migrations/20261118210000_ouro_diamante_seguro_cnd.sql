@@ -134,7 +134,7 @@ begin
 
   update public.prestador_verificacoes
      set status = case when status = 'aprovada' and valido_ate >= current_date then 'aprovada' else 'pendente' end,
-         dados  = (dados - 'ultima_rejeicao') || jsonb_build_object('pedido', v_pedido),
+         dados  = (dados - 'ultima_rejeicao' - 'pedido_expirado') || jsonb_build_object('pedido', v_pedido),
          fonte_validacao = 'curadoria_manual'
    where id = v_atual.id;
   return v_atual.id;
@@ -258,7 +258,7 @@ begin
            valido_ate     = v_valido,
            verificado_por = (select auth.uid()),
            verificado_em  = now(),
-           dados          = (dados - 'pedido' - 'ultima_rejeicao' - 'avisos') || jsonb_build_object(
+           dados          = (dados - 'pedido' - 'ultima_rejeicao' - 'avisos' - 'pedido_expirado') || jsonb_build_object(
                               'conferido', (dados -> 'pedido') - 'arquivo'
                                            || case when v.tipo = 'cnd' then jsonb_build_object('emissao', p_emissao) else '{}'::jsonb end,
                               'decisao', jsonb_build_object('resultado', 'aprovada', 'motivo', v_motivo, 'em', now()))
@@ -377,3 +377,33 @@ as $$
 $$;
 revoke all on function public.verificacoes_marcar_aviso(uuid, integer) from public, anon, authenticated;
 grant execute on function public.verificacoes_marcar_aviso(uuid, integer) to service_role;
+
+-- Pedido parado: se a equipe não decidir em 60 dias, o comprovante é apagado e o pedido expira (o prestador vê o
+-- aviso e pode enviar de novo). Não vira recusa: a demora não é culpa do prestador. Só o servidor executa; devolve
+-- os caminhos para a rota de cron apagar do bucket (SQL não apaga storage).
+create or replace function public.verificacoes_limpar_pedidos_parados()
+returns table (arquivo text)
+language sql
+security definer
+set search_path = ''
+as $$
+  with alvo as (
+    select v.id, v.dados -> 'pedido' ->> 'arquivo' as arq
+      from public.prestador_verificacoes v
+     where v.tipo in ('seguro', 'cnd')
+       and v.dados ? 'pedido'
+       and coalesce((v.dados -> 'pedido' ->> 'enviado_em')::timestamptz, v.criado_em) < now() - interval '60 days'
+  ),
+  atualizado as (
+    update public.prestador_verificacoes v
+       set dados  = (v.dados - 'pedido') || jsonb_build_object('pedido_expirado', now()),
+           status = case when v.status = 'aprovada' and v.valido_ate is not null and v.valido_ate >= current_date
+                         then 'aprovada' else 'expirada' end
+      from alvo
+     where v.id = alvo.id
+    returning alvo.arq
+  )
+  select arq from atualizado where arq is not null;
+$$;
+revoke all on function public.verificacoes_limpar_pedidos_parados() from public, anon, authenticated;
+grant execute on function public.verificacoes_limpar_pedidos_parados() to service_role;

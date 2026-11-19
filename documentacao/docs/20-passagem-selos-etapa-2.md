@@ -295,3 +295,5 @@ Aplicada no Supabase de produção a pedido do dono (correção de segurança in
 **Estado:** migração aplicada só no banco de TESTE e validada por SQL (bloqueios, aprovação, CND vencida recusada, selo público). Barra de evolução agora tem 6 conquistas (E2E de contagem atualizados: 0 de 6 / 1 de 4 / 1 de 6). **Produção: ainda não aplicada.** Pendente: E2E no GitHub Actions após o push.
 
 **Roteiro da equipe (19/11):** ver `23-roteiro-conferencia-seguro-cnd.md`. A fila do admin mostra o CNPJ do perfil e uma checklist de 5 itens por tipo; Aprovar só libera com tudo marcado. Política: titular = mesmo CNPJ do perfil; seguro RC sem valor mínimo; CND ou CPEND.
+
+**Prazo e privacidade (19/11):** pedido sem decisão em 60 dias é limpo pelo cron (`verificacoes_limpar_pedidos_parados`, arquivo apagado, fase `pedido_expirado`, sem recusa); exclusão de conta apaga comprovantes pendentes (`/api/delete-account`); aviso de privacidade no formulário; rascunho dos Termos (seção 9) e da Privacidade (seção 11) aguardando o advogado; `VERSAO_DOCUMENTOS` só sobe depois da revisão (aceite único por versão, não por envio).
