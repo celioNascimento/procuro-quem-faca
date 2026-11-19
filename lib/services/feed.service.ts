@@ -1,18 +1,20 @@
 // lib/services/feed.service.ts — acesso ao banco do feed (a regra fica nas funções do banco).
 import { supabase } from '@/lib/supabase'
 import { ITENS_POR_PAGINA, normalizarFeed, type FeedItem } from '@/lib/feed/feed'
+import { normalizarCidadesDoFeed, type CidadeDoFeed } from '@/lib/feed/filtros'
 import { normalizarPerfilSocial, type PerfilSocial } from '@/lib/feed/perfilSocial'
 
 export interface FiltroFeed {
   categoriaId?: string | null
+  cidadeId?: string | null
   somenteSeguidos?: boolean
   pagina?: number
 }
 
-export async function fetchFeed({ categoriaId = null, somenteSeguidos = false, pagina = 0 }: FiltroFeed = {}): Promise<FeedItem[]> {
+export async function fetchFeed({ categoriaId = null, cidadeId = null, somenteSeguidos = false, pagina = 0 }: FiltroFeed = {}): Promise<FeedItem[]> {
   const { data, error } = await supabase.rpc('feed_projetos', {
     p_categoria_id: categoriaId,
-    p_cidade_id: null,
+    p_cidade_id: cidadeId,
     p_somente_seguidos: somenteSeguidos,
     p_limite: ITENS_POR_PAGINA,
     p_pagina: pagina,
@@ -51,6 +53,13 @@ export async function fetchPerfilSocial(prestadorId: number): Promise<PerfilSoci
   const { data, error } = await supabase.rpc('perfil_social', { p_prestador_id: prestadorId })
   if (error) throw error
   return normalizarPerfilSocial(data)
+}
+
+/** Só as cidades que têm trabalho aparecendo no feed (para o filtro nunca dar tela vazia). */
+export async function fetchCidadesDoFeed(): Promise<CidadeDoFeed[]> {
+  const { data, error } = await supabase.rpc('feed_cidades')
+  if (error) throw error
+  return normalizarCidadesDoFeed(data)
 }
 
 export interface CategoriaDoFiltro { id: string; nome: string }

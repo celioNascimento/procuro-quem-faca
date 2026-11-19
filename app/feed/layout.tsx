@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 
 export const metadata: Metadata = {
   title: 'Trabalhos concluídos',
-  description: 'Veja trabalhos reais concluídos por profissionais de Londrina e escolha quem chamar.',
+  description: 'Veja trabalhos reais concluídos por profissionais e escolha quem chamar.',
 }
 
 export default function FeedLayout({ children }: { children: ReactNode }) {

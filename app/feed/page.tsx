@@ -1,20 +1,40 @@
 'use client'
 // app/feed/page.tsx — feed de trabalhos concluídos (orquestração: liga o hook ao componente).
-import { useEffect, useState } from 'react'
+// Tipo de serviço e cidade ficam no endereço (/feed?categoria=…&cidade=…): dá para compartilhar, voltar e recarregar.
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import Header from '@/components/Header'
 import { FeedCard } from '@/components/feed/FeedCard'
 import { useFeed } from '@/hooks/useFeed'
 import { useSession } from '@/hooks/useSession'
-import { fetchCategoriasDoFiltro, type CategoriaDoFiltro } from '@/lib/services/feed.service'
+import { fetchCategoriasDoFiltro, fetchCidadesDoFeed, type CategoriaDoFiltro } from '@/lib/services/feed.service'
+import {
+  lerFiltrosDaUrl, montarEnderecoDoFeed, rotuloDaCidade, temFiltroAtivo,
+  type CidadeDoFeed, type FiltrosFeed,
+} from '@/lib/feed/filtros'
 
-export default function FeedPage() {
+function FeedConteudo() {
   const session = useSession()
   const logado = !!session
-  const f = useFeed(logado)
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const filtros = lerFiltrosDaUrl(searchParams)
+  const f = useFeed(logado, filtros)
   const [categorias, setCategorias] = useState<CategoriaDoFiltro[]>([])
+  const [cidades, setCidades] = useState<CidadeDoFeed[]>([])
 
   useEffect(() => { fetchCategoriasDoFiltro().then(setCategorias).catch(() => setCategorias([])) }, [])
+  useEffect(() => { fetchCidadesDoFeed().then(setCidades).catch(() => setCidades([])) }, [])
+
+  // replace (e não push): trocar de filtro não deve encher o "voltar" do celular.
+  function mudarFiltros(novos: Partial<FiltrosFeed>) {
+    router.replace(montarEnderecoDoFeed(pathname, { ...filtros, ...novos }), { scroll: false })
+  }
+
+  const filtrando = temFiltroAtivo(filtros)
 
   return (
     <>
@@ -32,14 +52,24 @@ export default function FeedPage() {
           ))}
         </div>
 
-        <label className="mt-4 block text-sm font-bold text-slate-700">
-          Tipo de serviço
-          <select value={f.categoriaId ?? ''} onChange={e => f.setCategoriaId(e.target.value || null)} data-testid="feed-categoria"
-            className="mt-1 block min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">
-            <option value="">Todos os serviços</option>
-            {categorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-          </select>
-        </label>
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label className="block text-sm font-bold text-slate-700">
+            Tipo de serviço
+            <select value={filtros.categoriaId ?? ''} onChange={e => mudarFiltros({ categoriaId: e.target.value || null })} data-testid="feed-categoria"
+              className="mt-1 block min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">
+              <option value="">Todos os serviços</option>
+              {categorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+          </label>
+          <label className="block text-sm font-bold text-slate-700">
+            Cidade
+            <select value={filtros.cidadeId ?? ''} onChange={e => mudarFiltros({ cidadeId: e.target.value || null })} data-testid="feed-cidade"
+              className="mt-1 block min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">
+              <option value="">Todas as cidades</option>
+              {cidades.map(c => <option key={c.id} value={c.id}>{rotuloDaCidade(c)}</option>)}
+            </select>
+          </label>
+        </div>
 
         {f.aviso && (
           <p role="status" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-900" data-testid="feed-aviso">
@@ -60,6 +90,14 @@ export default function FeedPage() {
               logado
                 ? <p className="text-sm font-semibold text-slate-600">Você ainda não segue ninguém, ou quem você segue não tem trabalhos aqui. Volte para “Todos” e toque em Seguir.</p>
                 : <p className="text-sm font-semibold text-slate-600">Entre na sua conta para ver os trabalhos de quem você segue. <Link href="/login" className="font-black text-blue-700 underline">Entrar</Link></p>
+            ) : filtrando ? (
+              <>
+                <p className="text-sm font-semibold text-slate-600">Nenhum trabalho com esses filtros.</p>
+                <button type="button" onClick={() => mudarFiltros({ categoriaId: null, cidadeId: null })} data-testid="feed-limpar-filtros"
+                  className="mt-3 min-h-11 rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-blue-700">
+                  Ver todos os trabalhos
+                </button>
+              </>
             ) : (
               <p className="text-sm font-semibold text-slate-600">Ainda não há trabalhos aqui. Eles aparecem quando o cliente aceita e o trabalho é concluído.</p>
             )}
@@ -74,5 +112,14 @@ export default function FeedPage() {
         )}
       </main>
     </>
+  )
+}
+
+// useSearchParams exige Suspense para a página poder ser gerada no build.
+export default function FeedPage() {
+  return (
+    <Suspense fallback={null}>
+      <FeedConteudo />
+    </Suspense>
   )
 }

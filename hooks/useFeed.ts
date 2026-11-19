@@ -3,15 +3,16 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { alternarCurtida, deixarDeSeguirPrestador, fetchFeed, seguirPrestador } from '@/lib/services/feed.service'
+import type { FiltrosFeed } from '@/lib/feed/filtros'
 import {
   aplicarCurtida, aplicarSeguir, ITENS_POR_PAGINA, MENSAGEM_LOGIN_PARA_AGIR, mensagemDeResultado, type FeedItem,
 } from '@/lib/feed/feed'
 
 export type AbaFeed = 'todos' | 'seguindo'
 
-export function useFeed(logado: boolean) {
+// Tipo de serviço e cidade vêm de fora (do endereço da página); a aba e o resto ficam aqui.
+export function useFeed(logado: boolean, { categoriaId, cidadeId }: FiltrosFeed = { categoriaId: null, cidadeId: null }) {
   const [aba, setAba] = useState<AbaFeed>('todos')
-  const [categoriaId, setCategoriaId] = useState<string | null>(null)
   const [itens, setItens] = useState<FeedItem[]>([])
   const [pagina, setPagina] = useState(0)
   const [temMais, setTemMais] = useState(false)
@@ -24,7 +25,7 @@ export function useFeed(logado: boolean) {
     const minha = ++requisicao.current
     setCarregando(true)
     try {
-      const novos = await fetchFeed({ categoriaId, somenteSeguidos: aba === 'seguindo', pagina: paginaAlvo })
+      const novos = await fetchFeed({ categoriaId, cidadeId, somenteSeguidos: aba === 'seguindo', pagina: paginaAlvo })
       if (minha !== requisicao.current) return
       setItens(atual => (acumular ? [...atual, ...novos.filter(n => !atual.some(a => a.projetoId === n.projetoId))] : novos))
       setPagina(paginaAlvo)
@@ -37,7 +38,7 @@ export function useFeed(logado: boolean) {
     } finally {
       if (minha === requisicao.current) setCarregando(false)
     }
-  }, [categoriaId, aba])
+  }, [categoriaId, cidadeId, aba])
 
   useEffect(() => { queueMicrotask(() => carregar(0, false)) }, [carregar])
 
@@ -77,5 +78,5 @@ export function useFeed(logado: boolean) {
     }
   }, [itens, logado, aba])
 
-  return { aba, setAba, categoriaId, setCategoriaId, itens, temMais, carregando, erro, aviso, carregarMais, curtir, alternarSeguir, recarregar: () => carregar(0, false) }
+  return { aba, setAba, itens, temMais, carregando, erro, aviso, carregarMais, curtir, alternarSeguir, recarregar: () => carregar(0, false) }
 }
