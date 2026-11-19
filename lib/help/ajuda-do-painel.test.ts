@@ -19,8 +19,8 @@ describe('ajuda por aba do painel do prestador', () => {
     }
   })
 
-  it('CNPJ mostra só selos e CNPJ', () => {
-    expect(idsDe('perfil', 'cnpj').sort()).toEqual(['selo-cnpj-prestador', 'selos-e-niveis-prestador'])
+  it('CNPJ, Seguro e CND mostram só selos (e o CNPJ)', () => {
+    expect(idsDe('perfil', 'cnpj').sort()).toEqual(['selo-cnd-prestador', 'selo-cnpj-prestador', 'selo-seguro-prestador', 'selos-e-niveis-prestador'])
   })
 
   it('selos só aparecem na aba CNPJ', () => {

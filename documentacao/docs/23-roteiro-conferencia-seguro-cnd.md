@@ -9,6 +9,9 @@ Para quem aprova em **Admin → Verificações → aba "Seguro e CND"**. A mesma
 - O PQF **só verifica** o que o prestador já tem. Não vende, não indica e não ganha por seguro.
 - Sem CNPJ no perfil não dá para conferir o titular: **rejeite** com o motivo "cadastre e confirme o CNPJ primeiro".
 
+## Vale para todas as categorias
+Seguro e CND não dependem da categoria (ao contrário da "Atividade compatível", que usa o CNAE). Qualquer prestador com CNPJ aprovado pode ter Ouro e Diamante, de pedreiro a confeiteira. Não há tabela de categorias a manter. O que muda é só o quanto cada profissional já tem um seguro contratado: o PQF não vende nem indica, só confere.
+
 ## Seguro (5 itens)
 1. O segurado na apólice é o CNPJ / razão social mostrado na tela.
 2. É apólice de responsabilidade civil (RC).
@@ -34,3 +37,6 @@ Sempre com motivo claro, em linguagem simples: o prestador lê o motivo na próp
 
 ## Limites conhecidos
 Não há consulta automática do código de controle da CND nem de apólice na seguradora: a conferência de autenticidade é humana. Integrar a validação da CND é uma melhoria possível.
+
+## Textos para o público (ajuda dentro do app)
+Os textos que o prestador e o cliente leem estão em `lib/help/help-content.ts`: `selo-seguro-prestador`, `selo-cnd-prestador`, `selos-e-niveis-prestador` (prestador, aba CNPJ/Seguro/CND) e `selos-no-perfil` (cliente, perfil público). Se a política deste roteiro mudar (titular, cobertura, CPEND), atualize esses artigos junto; há testes que garantem as mensagens principais.
