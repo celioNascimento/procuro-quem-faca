@@ -52,7 +52,7 @@ test('perfil de exemplo: fora da busca, com faixa e noindex, mas abre por link d
   await page.goto(`/${PERFIL_SEED.slug}`);
   await expect(page.getByRole('heading', { name: PERFIL_SEED.nome }).first()).toBeVisible();
   await expect(page.getByTestId('aviso-perfil-exemplo')).toBeVisible();
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+  await expect(page.locator('head meta[name="robots"]')).toHaveAttribute('content', /noindex/);
 
   // Busca: não aparece
   await page.goto('/');

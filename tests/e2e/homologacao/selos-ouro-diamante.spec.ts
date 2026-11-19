@@ -66,6 +66,12 @@ test.describe('seguro e CND', () => {
     await expect(cartao).toContainText('Seguradora Teste', { timeout: 20_000 });
     await expect(cartao.getByTestId('documento-aprovar')).toBeDisabled();
     await cartao.getByTestId('documento-validade').fill(daquiUmAno());
+    // Ainda falta o checklist de conferência: aprovar só habilita com os 5 itens marcados.
+    await expect(cartao.getByTestId('documento-aprovar')).toBeDisabled();
+    const itens = cartao.getByTestId('documento-checklist').getByRole('checkbox');
+    await expect(itens).toHaveCount(5);
+    for (let i = 0; i < 5; i++) await itens.nth(i).check();
+    await expect(cartao.getByTestId('documento-aprovar')).toBeEnabled();
     await cartao.getByTestId('documento-aprovar').click();
     await expect(cartao).toHaveCount(0, { timeout: 20_000 });
     await contexto.close();
