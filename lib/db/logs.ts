@@ -2,6 +2,7 @@
 
 import type { RealtimePostgresInsertPayload } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { pareceAutomatizado } from '@/lib/tracking/navegadorAutomatizado'
 
 type LogRow = {
   id: string
@@ -34,6 +35,15 @@ export async function insertLog(payload: LogPayload): Promise<void> {
   })
 
   if (error) throw error
+}
+
+/**
+ * Para eventos de tráfego (busca, visita vinda da busca): não grava quando o navegador parece um robô ou está
+ * automatizado. Nada do navegador é guardado, só se decide gravar ou não. Falha de rede nunca quebra a página.
+ */
+export async function insertLogDeTrafego(payload: LogPayload): Promise<void> {
+  if (typeof navigator !== 'undefined' && pareceAutomatizado({ userAgent: navigator.userAgent, webdriver: navigator.webdriver })) return
+  await insertLog(payload)
 }
 
 // ↓ FUNÇÃO NOVA — adicionar abaixo de insertLog

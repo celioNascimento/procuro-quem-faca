@@ -6,6 +6,8 @@ import { AlertCircle, ArrowRight, RefreshCw } from 'lucide-react'
 import { useAdminDashboard } from '@/hooks/useAdminDashboard'
 import { SITE_URL } from '@/lib/divulgacao/links'
 import { useAdminPendencias } from '@/hooks/admin/useAdminPendencias'
+import { useAdminTrafego } from '@/hooks/useAdminTrafego'
+import { TrafegoCard } from '@/components/admin/TrafegoCard'
 import { Badge, Button, Card, EmptyState, PageHeader, StatCard } from '@/components/admin/ui'
 
 interface ItemAtencao {
@@ -19,6 +21,7 @@ interface ItemAtencao {
 export default function AdminDashboard() {
   const { stats, radar, novosCadastros, refreshing, notificacao, erro, pctAtivacao, carregarDashboard } = useAdminDashboard()
   const pendencias = useAdminPendencias()
+  const trafego = useAdminTrafego()
 
   const naoContatados = Math.max(stats.ativacao.total - stats.ativacao.enviados, 0)
   const maxCategoria = Math.max(1, ...stats.topCategorias.map((c) => c.total))
@@ -201,6 +204,7 @@ export default function AdminDashboard() {
           </ul>
         )}
       </Card>
+      <TrafegoCard dias={trafego.dias} onDias={trafego.setDias} resumo={trafego.resumo} leitura={trafego.leitura} carregando={trafego.carregando} erro={trafego.erro} />
     </div>
   )
 }

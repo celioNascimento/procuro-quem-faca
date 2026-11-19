@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSugestoes } from '@/hooks/useSugestoes'
-import { insertLog } from '@/lib/db/logs'
+import { insertLog, insertLogDeTrafego } from '@/lib/db/logs'
 import SearchForm from '@/components/home/SearchForm'
 import { ConviteLocalizacao } from '@/components/busca/ConviteLocalizacao'
 import CTAPrestadorSkeleton from '@/components/home/CTAPrestadorSkeleton'
@@ -73,7 +73,7 @@ export default function Home() {
     }
     setErro(false)
     if (termoManual) setBusca(termoManual)
-    insertLog({ acao: 'BUSCA_REALIZADA', detalhes: { termo: termoFinal }, entidadeTipo: 'busca' })
+    insertLogDeTrafego({ acao: 'BUSCA_REALIZADA', detalhes: { termo: termoFinal }, entidadeTipo: 'busca' })
 
     const params = new URLSearchParams({ q: termoFinal })
     // Uma cidade escrita na busca tem prioridade sobre a cidade salva do usuário.

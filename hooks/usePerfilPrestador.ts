@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { insertLog } from '@/lib/db/logs'
+import { insertLogDeTrafego } from '@/lib/db/logs'
 import { registrarVisitaPerfil } from '@/lib/db/visitasPerfil'
 import { sanitizarRotaInterna } from '@/lib/navegacao'
 import type { PerfilData, PrestadorPerfil, ProjetoPerfil, FotoProjeto, GarantiaPublica, FotoGarantiaPublica } from '@/types/perfil'
@@ -218,7 +218,7 @@ export function usePerfilPrestador(): UsePerfilPrestadorReturn {
         }
 
         if (fromParam) {
-          insertLog({
+          insertLogDeTrafego({
             acao: 'VISITA_PERFIL_VIA_BUSCA',
             detalhes: { origem: urlRetorno },
             entidadeId: String(prestadorRaw.id),

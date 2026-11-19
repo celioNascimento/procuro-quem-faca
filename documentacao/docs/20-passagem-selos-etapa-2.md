@@ -297,3 +297,15 @@ Aplicada no Supabase de produção a pedido do dono (correção de segurança in
 **Roteiro da equipe (19/11):** ver `23-roteiro-conferencia-seguro-cnd.md`. A fila do admin mostra o CNPJ do perfil e uma checklist de 5 itens por tipo; Aprovar só libera com tudo marcado. Política: titular = mesmo CNPJ do perfil; seguro RC sem valor mínimo; CND ou CPEND.
 
 **Prazo e privacidade (19/11):** pedido sem decisão em 60 dias é limpo pelo cron (`verificacoes_limpar_pedidos_parados`, arquivo apagado, fase `pedido_expirado`, sem recusa); exclusão de conta apaga comprovantes pendentes (`/api/delete-account`); aviso de privacidade no formulário; rascunho dos Termos (seção 9) e da Privacidade (seção 11) aguardando o advogado; `VERSAO_DOCUMENTOS` só sobe depois da revisão (aceite único por versão, não por envio).
+
+
+## Tráfego real no painel admin (18/11)
+
+**Por quê:** na análise de produção, boa parte das buscas era da equipe e havia sinais de robô. Número de demanda não pode misturar isso.
+
+**O que existe:**
+- Migração `20261118220000_admin_trafego_resumo.sql`: função `admin_trafego_resumo(p_dias)`, só admin, só leitura. Separa buscas (equipe / logados / anônimas), visitas via busca e dias suspeitos (muitas visitas anônimas, quase cada uma a um perfil diferente).
+- Card "Tráfego: o que é real" na home do admin (7 ou 30 dias), com alertas em português. Lógica pura em `lib/admin/trafego.ts`.
+- Filtro no navegador: `insertLogDeTrafego` (`lib/db/logs.ts`) não grava BUSCA_REALIZADA nem VISITA_PERFIL_VIA_BUSCA quando o navegador é robô ou automatizado (`lib/tracking/navegadorAutomatizado.ts`).
+- **Privacidade:** o navegador (user agent) NÃO é guardado. Ele só decide se grava ou não. Nenhuma mudança na Política de Privacidade.
+- Limite: ainda inclui testes de conhecidos e você em aba anônima; o número mais confiável é "visitas a perfis" (servidor, com filtro de robô).
