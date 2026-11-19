@@ -66,6 +66,9 @@ test.describe('feed: visitante', () => {
     await page.getByTestId('home-link-feed').click();
     await expect(page).toHaveURL(/\/feed$/);
 
+    // No celular o visitante não tem atalho no cabeçalho (só "Entrar"); o caminho dele é o link da home, testado acima.
+    test.skip(test.info().project.name === 'mobile-chromium', 'atalho do cabeçalho existe só a partir de md (computador)');
+
     // No computador o cabeçalho tem o atalho em toda tela; na página do feed ele continua no lugar, marcado como atual.
     await page.goto(`/${PERFIL_SEED.slug}`);
     await page.getByTestId('link-feed-header').click();
