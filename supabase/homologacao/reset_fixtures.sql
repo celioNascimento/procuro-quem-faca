@@ -55,8 +55,10 @@ begin
 end $$;
 revoke all on function public.e2e_capturar_baseline() from public, anon, authenticated;
 
+-- statement_timeout próprio: o papel anon (que chama o reset) tem 3 s, e o reset estourava (57014) quando o banco
+-- de teste estava lento, derrubando em cascata os testes seguintes. Só existe no banco de TESTE.
 create or replace function public.e2e_resetar_fixtures() returns void
-language plpgsql security definer set search_path = public, pg_temp as $$
+language plpgsql security definer set search_path = public, pg_temp set statement_timeout = '30s' as $$
 declare r record; colunas text;
 begin
   if not exists (select 1 from public.ambiente_teste_marcador where nome = 'homologacao') then
