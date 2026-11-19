@@ -11,3 +11,6 @@ create table if not exists e2e_baseline.seguidores as select * from public.segui
 
 -- Depois da migração 20261119170000_feed_salvar.sql (tabela portfolio_salvos), a base do reset precisa conhecê-la.
 create table if not exists e2e_baseline.portfolio_salvos as select * from public.portfolio_salvos where false;
+
+-- Depois da migração 20261119180000_prestador_instagram.sql (coluna prestadores.instagram), a base do reset precisa conhecê-la.
+alter table e2e_baseline.prestadores add column if not exists instagram text;

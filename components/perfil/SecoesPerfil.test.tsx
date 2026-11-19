@@ -47,6 +47,44 @@ describe('Seus dados', () => {
   })
 })
 
+describe('Seus dados — Instagram (opcional)', () => {
+  const base = {
+    nome: 'Elétrica Silva', slug: 'eletrica-silva', whatsapp: '43999998888', bio: '',
+    slugDisponivel: true, checandoSlug: false, inputStyle: estiloCampo,
+    onNomeChange: vi.fn(), onSlugChange: vi.fn(), onWhatsappChange: vi.fn(), onBioChange: vi.fn(),
+  }
+
+  it('sem onInstagramChange (ex.: cadastro) o campo não existe', () => {
+    render(<SecaoDadosPessoais {...base} />)
+    expect(screen.queryByLabelText(/Seu Instagram/)).toBeNull()
+  })
+  it('tem rótulo, marca como opcional, avisa que é público e repassa o que digita', () => {
+    const onInstagramChange = vi.fn()
+    render(<SecaoDadosPessoais {...base} instagram="" onInstagramChange={onInstagramChange} />)
+    const campo = screen.getByLabelText(/Seu Instagram/) as HTMLInputElement
+    expect(screen.getByText(/Seu Instagram/, { selector: 'label' }).textContent).toContain('(opcional)')
+    expect(document.body.textContent).toMatch(/Aparece no seu perfil público/)
+    fireEvent.change(campo, { target: { value: '@pedro' } })
+    expect(onInstagramChange).toHaveBeenCalledWith('@pedro')
+  })
+  it('erro só aparece depois de sair do campo ou de tentar salvar', () => {
+    render(<SecaoDadosPessoais {...base} instagram="???" instagramErro="Confira" onInstagramChange={vi.fn()} />)
+    expect(screen.queryByRole('alert')).toBeNull()
+    fireEvent.blur(screen.getByLabelText(/Seu Instagram/))
+    expect(screen.getByRole('alert').textContent).toBe('Confira')
+    cleanup()
+    render(<SecaoDadosPessoais {...base} instagram="???" instagramErro="Confira" tentouEnviar onInstagramChange={vi.fn()} />)
+    expect(screen.getByRole('alert')).toBeTruthy()
+  })
+  it('texto válido mostra como vai aparecer; o blur avisa o formulário', () => {
+    const onInstagramBlur = vi.fn()
+    render(<SecaoDadosPessoais {...base} instagram="instagram.com/Pedro" instagramUsuario="pedro" onInstagramChange={vi.fn()} onInstagramBlur={onInstagramBlur} />)
+    expect(screen.getByTestId('perfil-instagram-previa').textContent).toContain('@pedro')
+    fireEvent.blur(screen.getByLabelText(/Seu Instagram/))
+    expect(onInstagramBlur).toHaveBeenCalled()
+  })
+})
+
 describe('Garantia', () => {
   it('marca a opção escolhida e avisa a mudança', () => {
     const onChange = vi.fn()

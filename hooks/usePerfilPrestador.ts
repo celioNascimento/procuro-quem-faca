@@ -28,7 +28,7 @@ const COLUNAS_PRESTADOR_PUBLICO = [
   'id', 'created_at', 'nome', 'bio', 'whatsapp', 'foto_perfil', 'bairro', 'status', 'aprovado_em',
   'bloqueado', 'habilidades', 'tags', 'estado_sigla', 'cidade_id', 'regiao_id', 'slug',
   'cidades_atendidas', 'origem_tipo', 'verificado', 'grupo_id', 'categoria_id', 'garantia_dias',
-  'portfolio_obrigatorio', 'sessao_fotos_titulo', 'sessao_fotos_urls', 'exemplo',
+  'portfolio_obrigatorio', 'sessao_fotos_titulo', 'sessao_fotos_urls', 'exemplo', 'instagram',
 ].join(', ')
 
 type ProjetoRaw = {

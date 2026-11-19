@@ -2,7 +2,8 @@
 
 'use client'
 
-import { Check, UserRound, X } from 'lucide-react'
+import { useState } from 'react'
+import { Check, Instagram, UserRound, X } from 'lucide-react'
 import { CartaoSecao, Campo } from '@/components/perfil/CartaoSecao'
 
 interface SecaoDadosPessoaisProps {
@@ -17,6 +18,15 @@ interface SecaoDadosPessoaisProps {
   onSlugChange: (v: string) => void
   onWhatsappChange: (v: string) => void
   onBioChange: (v: string) => void
+  /** Instagram é opcional e só aparece na edição do perfil: sem `onInstagramChange` o campo não é desenhado. */
+  instagram?: string
+  /** Texto de erro do Instagram (null = válido ou vazio). Aparece depois de sair do campo ou de tentar salvar. */
+  instagramErro?: string | null
+  /** Usuário que será mostrado no perfil, já limpo (ex.: "pedro"), quando o texto é válido e não vazio. */
+  instagramUsuario?: string | null
+  tentouEnviar?: boolean
+  onInstagramChange?: (v: string) => void
+  onInstagramBlur?: () => void
 }
 
 export function SecaoDadosPessoais({
@@ -31,7 +41,15 @@ export function SecaoDadosPessoais({
   onSlugChange,
   onWhatsappChange,
   onBioChange,
+  instagram = '',
+  instagramErro = null,
+  instagramUsuario = null,
+  tentouEnviar = false,
+  onInstagramChange,
+  onInstagramBlur,
 }: SecaoDadosPessoaisProps) {
+  const [instagramTocado, setInstagramTocado] = useState(false)
+  const mostrarErroInstagram = !!instagramErro && (instagramTocado || tentouEnviar)
   const mostrarSituacaoDoLink = !checandoSlug && !!slug && slug.length > 2
 
   return (
@@ -84,6 +102,34 @@ export function SecaoDadosPessoais({
             : <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-red-600"><X size={14} aria-hidden="true" />Já existe</span>)}
         </div>
       </Campo>
+
+      {onInstagramChange && (
+        <Campo id="perfil-instagram" rotulo="Seu Instagram" opcional dica="Aparece no seu perfil público, para o cliente ver mais do seu trabalho. Digite só o @ ou cole o link do seu perfil.">
+          <div className="relative">
+            <Instagram size={18} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              id="perfil-instagram"
+              value={instagram}
+              placeholder="@seunome"
+              onChange={e => onInstagramChange(e.target.value)}
+              onBlur={() => { setInstagramTocado(true); onInstagramBlur?.() }}
+              className={`${inputStyle} pl-11`}
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              aria-invalid={mostrarErroInstagram || undefined}
+              aria-describedby={mostrarErroInstagram ? 'perfil-instagram-erro' : undefined}
+            />
+          </div>
+          {mostrarErroInstagram && <p id="perfil-instagram-erro" role="alert" className="text-sm font-semibold text-red-600">{instagramErro}</p>}
+          {!mostrarErroInstagram && instagramUsuario && (
+            <p className="flex items-center gap-1 text-xs font-bold text-emerald-600" data-testid="perfil-instagram-previa">
+              <Check size={14} aria-hidden="true" />Vai aparecer como @{instagramUsuario}
+            </p>
+          )}
+        </Campo>
+      )}
 
       <Campo id="perfil-bio" rotulo="Apresentação" opcional dica="Duas ou três frases sobre o que você faz de melhor.">
         <textarea

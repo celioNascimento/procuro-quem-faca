@@ -63,7 +63,7 @@ export default function Privacidade() {
           <Secao titulo="3. Dados coletados">
             <div className="space-y-3">
               <p>
-                <Destaque>Fornecidos por você:</Destaque> nome, e-mail, telefone ou WhatsApp, cidade, região, categoria, habilidades, biografia, dados de acesso e informações do perfil. No login com Google, recebemos os dados básicos da conta autorizados por você.
+                <Destaque>Fornecidos por você:</Destaque> nome, e-mail, telefone ou WhatsApp, cidade, região, categoria, habilidades, biografia, dados de acesso e informações do perfil, incluindo, se você quiser, o usuário do seu Instagram (campo opcional). No login com Google, recebemos os dados básicos da conta autorizados por você.
               </p>
               <p>
                 <Destaque>Imagens e conteúdo:</Destaque> foto de perfil, sessão de fotos, fotos e comentários de projetos, foto e nome do cliente em avaliações, evidências de garantia ou reclamação, solicitações e denúncias.
@@ -134,7 +134,7 @@ export default function Privacidade() {
 
           <Secao titulo="7. Dados públicos e compartilhamento">
             <p>
-              Quando o prestador publica ou mantém um perfil ativo, informações profissionais escolhidas no cadastro podem ficar visíveis na busca e no perfil público, incluindo nome, cidade, categoria, biografia, habilidades, fotos, portfólio, avaliações e formas de contato, como o WhatsApp. Fotos e dados de projetos só são exibidos conforme o fluxo e as permissões aplicáveis. O link exclusivo de acompanhamento dá acesso ao projeto a quem o receber e não deve ser compartilhado. Não vendemos dados pessoais e não compartilhamos informações para marketing de terceiros. Compartilhamos dados apenas com os provedores necessários para operar a plataforma (como hospedagem, autenticação, armazenamento, geocodificação e estatísticas, descritos nas seções 8 e 9), com autoridades quando houver obrigação legal e com a moderação para tratar denúncias.
+              Quando o prestador publica ou mantém um perfil ativo, informações profissionais escolhidas no cadastro podem ficar visíveis na busca e no perfil público, incluindo nome, cidade, categoria, biografia, habilidades, fotos, portfólio, avaliações e formas de contato, como o WhatsApp e, se você informar, o seu Instagram (o link leva ao seu perfil na rede social, que tem política própria). Fotos e dados de projetos só são exibidos conforme o fluxo e as permissões aplicáveis. O link exclusivo de acompanhamento dá acesso ao projeto a quem o receber e não deve ser compartilhado. Não vendemos dados pessoais e não compartilhamos informações para marketing de terceiros. Compartilhamos dados apenas com os provedores necessários para operar a plataforma (como hospedagem, autenticação, armazenamento, geocodificação e estatísticas, descritos nas seções 8 e 9), com autoridades quando houver obrigação legal e com a moderação para tratar denúncias.
             </p>
           </Secao>
 

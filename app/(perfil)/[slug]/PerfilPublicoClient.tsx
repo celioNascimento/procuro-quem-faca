@@ -12,6 +12,7 @@ import PerfilConfianca from '@/components/profile/PerfilConfianca'
 import AvisoPerfilPublico from '@/components/profile/AvisoPerfilPublico'
 import PerfilSobre from '@/components/profile/PerfilSobre'
 import PerfilCTA from '@/components/profile/PerfilCTA'
+import { InstagramDoPerfil } from '@/components/profile/InstagramDoPerfil'
 import PerfilTabs from '@/components/profile/PerfilTabs'
 import PerfilEspecialidades from '@/components/profile/PerfilEspecialidades'
 import { SessaoFotos } from '@/components/profile/SessaoFotos'
@@ -155,6 +156,7 @@ export function PerfilCarregado({ prestador, projetos, avaliacoes, totalIndicaco
                   whatsapp={prestador.whatsapp || ''}
                   onClique={registrarCliqueWhatsapp}
                 />
+                <InstagramDoPerfil usuario={prestador.instagram} />
               </div>
             </div>
           </aside>
