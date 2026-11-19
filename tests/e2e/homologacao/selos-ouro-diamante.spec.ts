@@ -36,15 +36,15 @@ test.describe('seguro e CND', () => {
   test('envio inválido é barrado na tela, antes de ir ao banco', async ({ page }) => {
     await abrirAba(page, 'seguro');
     await page.getByTestId('doc-seguro-enviar').click();
-    await expect(page.getByRole('alert')).toContainText(/escolha o arquivo/i);
+    await expect(page.getByTestId('doc-seguro').getByRole('alert')).toContainText(/escolha o arquivo/i);
 
     await page.getByTestId('doc-seguro-arquivo').setInputFiles({ name: 'x.txt', mimeType: 'text/plain', buffer: Buffer.from('oi') });
     await page.getByTestId('doc-seguro-enviar').click();
-    await expect(page.getByRole('alert')).toContainText(/PDF ou uma foto/i);
+    await expect(page.getByTestId('doc-seguro').getByRole('alert')).toContainText(/PDF ou uma foto/i);
 
     await page.getByTestId('doc-seguro-arquivo').setInputFiles(PDF);
     await page.getByTestId('doc-seguro-enviar').click();
-    await expect(page.getByRole('alert')).toContainText(/seguradora/i);
+    await expect(page.getByTestId('doc-seguro').getByRole('alert')).toContainText(/seguradora/i);
   });
 
   test('seguro: prestador envia, equipe aprova e o selo aparece com a validade', async ({ page, browser }) => {
@@ -94,7 +94,7 @@ test.describe('seguro e CND', () => {
     await contexto.close();
 
     await page.reload();
-    await expect(page.getByRole('alert').filter({ hasText: 'Certidão ilegível' })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId('doc-cnd').getByRole('alert').filter({ hasText: 'Certidão ilegível' })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByTestId('doc-cnd-enviar')).toBeVisible();
   });
 });
