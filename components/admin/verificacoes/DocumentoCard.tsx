@@ -1,6 +1,8 @@
 // components/admin/verificacoes/DocumentoCard.tsx
 // Um pedido de seguro ou CND para a equipe conferir. Só exibe e dispara ações.
 import { CheckCircle2, FileText, Loader2, XCircle } from 'lucide-react'
+import { mascararCnpj } from '@/lib/cnpj/validacao'
+import { AVISO_SEM_CNPJ, CHECKLIST, checklistCompleto } from '@/lib/selos/checklistDocumentos'
 import { ROTULO_DOCUMENTO, textoVencimento } from '@/lib/selos/documentos'
 import type { DocumentoAdmin } from '@/lib/services/documentosVerificacao.service'
 import type { CamposDecisao } from '@/hooks/useAdminDocumentos'
@@ -10,6 +12,7 @@ interface Props {
   processando: string | null
   campos: CamposDecisao
   onCampos: (parcial: Partial<CamposDecisao>) => void
+  onAlternarItem: (item: string) => void
   onAbrir: () => void
   onAprovar: () => void
   onRejeitar: () => void
@@ -17,13 +20,13 @@ interface Props {
 
 const CAMPO = 'w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100'
 
-export function DocumentoCard({ item, processando, campos, onCampos, onAbrir, onAprovar, onRejeitar }: Props) {
+export function DocumentoCard({ item, processando, campos, onCampos, onAlternarItem, onAbrir, onAprovar, onRejeitar }: Props) {
   const ocupado = processando === item.verificacao_id
   const pedido = item.dados?.pedido as Record<string, string> | undefined
   const conferido = item.dados?.conferido as Record<string, string> | undefined
   const dados = pedido ?? conferido
   const aberto = !!pedido
-  const aprovavel = item.tipo === 'seguro' ? !!campos.validoAte : !!campos.emissao
+  const aprovavel = (item.tipo === 'seguro' ? !!campos.validoAte : !!campos.emissao) && checklistCompleto(item.tipo, campos.marcados)
 
   return (
     <article data-testid="documento-card" className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6">
@@ -34,6 +37,17 @@ export function DocumentoCard({ item, processando, campos, onCampos, onAbrir, on
         </div>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600">{aberto ? 'Aguardando' : item.status}</span>
       </header>
+
+      {aberto && (
+        <div className="mb-4 rounded-xl bg-slate-50 p-3" data-testid="documento-cnpj-perfil">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">CNPJ do perfil (compare com o titular do documento)</p>
+          {item.cnpj ? (
+            <p className="text-sm font-bold text-slate-800">{mascararCnpj(item.cnpj)}{item.razao_social ? ` · ${item.razao_social}` : ''}</p>
+          ) : (
+            <p className="text-sm font-semibold text-red-700">{AVISO_SEM_CNPJ}</p>
+          )}
+        </div>
+      )}
 
       {item.tipo === 'seguro' && dados && (
         <dl className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -62,6 +76,16 @@ export function DocumentoCard({ item, processando, campos, onCampos, onAbrir, on
               <input type="date" className={CAMPO} value={campos.emissao} onChange={(e) => onCampos({ emissao: e.target.value })} data-testid="documento-emissao" />
             </label>
           )}
+
+          <fieldset className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3" data-testid="documento-checklist">
+            <legend className="px-1 text-xs font-black uppercase tracking-widest text-slate-500">Conferência (marque tudo para aprovar)</legend>
+            {CHECKLIST[item.tipo].map((i) => (
+              <label key={i.id} className="flex items-start gap-2 text-sm text-slate-700">
+                <input type="checkbox" className="mt-1 h-4 w-4" checked={campos.marcados.includes(i.id)} onChange={() => onAlternarItem(i.id)} data-testid={`check-${i.id}`} />
+                {i.texto}
+              </label>
+            ))}
+          </fieldset>
 
           <label className="flex flex-col gap-1 text-xs font-bold text-slate-600">
             Motivo (obrigatório só para rejeitar)

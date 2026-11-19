@@ -293,3 +293,5 @@ Aplicada no Supabase de produção a pedido do dono (correção de segurança in
 **Arquivos:** migração `20261118210000_ouro_diamante_seguro_cnd.sql` (bucket + policies, `enviar_documento_verificacao`, `admin_fila_documentos`, `admin_decidir_documento`, `niveis_dos_prestadores` com ouro/diamante, `verificacoes_expirar/a_avisar/marcar_aviso`); `lib/selos/documentos.ts`; `lib/services/documentosVerificacao.service.ts`; `hooks/useDocumentoVerificacao.ts`, `hooks/useAdminDocumentos.ts`; `AbaDocumento.tsx`; `DocumentoCard.tsx`; E2E `selos-ouro-diamante.spec.ts`.
 
 **Estado:** migração aplicada só no banco de TESTE e validada por SQL (bloqueios, aprovação, CND vencida recusada, selo público). Barra de evolução agora tem 6 conquistas (E2E de contagem atualizados: 0 de 6 / 1 de 4 / 1 de 6). **Produção: ainda não aplicada.** Pendente: E2E no GitHub Actions após o push.
+
+**Roteiro da equipe (19/11):** ver `23-roteiro-conferencia-seguro-cnd.md`. A fila do admin mostra o CNPJ do perfil e uma checklist de 5 itens por tipo; Aprovar só libera com tudo marcado. Política: titular = mesmo CNPJ do perfil; seguro RC sem valor mínimo; CND ou CPEND.

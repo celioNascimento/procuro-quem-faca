@@ -14,7 +14,7 @@ const FILTROS = [
 ] as const
 
 function SecaoDocumentos() {
-  const { itens, loading, filtro, setFiltro, processando, erro, camposDe, atualizar, abrirComprovante, decidir } = useAdminDocumentos()
+  const { itens, loading, filtro, setFiltro, processando, erro, camposDe, atualizar, alternarItem, abrirComprovante, decidir } = useAdminDocumentos()
   return (
     <section data-testid="secao-documentos">
       <p className="mb-4 text-sm text-slate-500">Seguro (nível Ouro) e CND federal (nível Diamante). Confira o comprovante, informe a validade e decida.</p>
@@ -35,7 +35,7 @@ function SecaoDocumentos() {
         <div className="space-y-4">
           {itens.map(item => (
             <DocumentoCard key={item.verificacao_id} item={item} processando={processando} campos={camposDe(item.verificacao_id)}
-              onCampos={p => atualizar(item.verificacao_id, p)} onAbrir={() => abrirComprovante(item)}
+              onCampos={p => atualizar(item.verificacao_id, p)} onAlternarItem={i => alternarItem(item.verificacao_id, i)} onAbrir={() => abrirComprovante(item)}
               onAprovar={() => decidir(item, 'aprovada')} onRejeitar={() => decidir(item, 'rejeitada')} />
           ))}
         </div>

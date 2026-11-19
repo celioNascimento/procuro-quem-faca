@@ -4,11 +4,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { decidirDocumento, fetchFilaDocumentos, linkDoComprovante, type DocumentoAdmin } from '@/lib/services/documentosVerificacao.service'
 import { insertLog } from '@/lib/db/logs'
+import { checklistCompleto } from '@/lib/selos/checklistDocumentos'
 
 export type FiltroDocumentos = 'pendentes' | 'aprovadas' | 'rejeitadas'
 
-export interface CamposDecisao { motivo: string; validoAte: string; emissao: string }
-const VAZIO: CamposDecisao = { motivo: '', validoAte: '', emissao: '' }
+export interface CamposDecisao { motivo: string; validoAte: string; emissao: string; marcados: string[] }
+const VAZIO: CamposDecisao = { motivo: '', validoAte: '', emissao: '', marcados: [] }
 
 export function useAdminDocumentos() {
   const [itens, setItens] = useState<DocumentoAdmin[]>([])
@@ -38,6 +39,14 @@ export function useAdminDocumentos() {
     setCampos((antes) => ({ ...antes, [id]: { ...(antes[id] ?? VAZIO), ...parcial } }))
   }, [])
 
+  const alternarItem = useCallback((id: string, item: string) => {
+    setCampos((antes) => {
+      const atual = antes[id] ?? VAZIO
+      const marcados = atual.marcados.includes(item) ? atual.marcados.filter((m) => m !== item) : [...atual.marcados, item]
+      return { ...antes, [id]: { ...atual, marcados } }
+    })
+  }, [])
+
   const abrirComprovante = useCallback(async (item: DocumentoAdmin) => {
     const caminho = (item.dados?.pedido as { arquivo?: string } | undefined)?.arquivo
     if (!caminho) return
@@ -50,16 +59,25 @@ export function useAdminDocumentos() {
   }, [])
 
   const decidir = useCallback(async (item: DocumentoAdmin, decisao: 'aprovada' | 'rejeitada') => {
+    const c = camposDe(item.verificacao_id)
+    if (decisao === 'aprovada' && !checklistCompleto(item.tipo, c.marcados)) {
+      setErro('Marque todos os itens da conferência antes de aprovar.')
+      return
+    }
     setProcessando(item.verificacao_id)
     setErro(null)
-    const c = camposDe(item.verificacao_id)
     try {
       await decidirDocumento(item.verificacao_id, decisao, { motivo: c.motivo, validoAte: c.validoAte, emissao: c.emissao })
       await insertLog({
         acao: decisao === 'aprovada' ? 'VERIFICACAO_DOCUMENTO_APROVADA' : 'VERIFICACAO_DOCUMENTO_REJEITADA',
         entidadeTipo: 'prestador',
         entidadeId: String(item.prestador_id),
-        detalhes: { verificacao_id: item.verificacao_id, tipo: item.tipo, motivo: c.motivo.trim() || null },
+        detalhes: {
+          verificacao_id: item.verificacao_id,
+          tipo: item.tipo,
+          motivo: c.motivo.trim() || null,
+          checklist: decisao === 'aprovada' ? c.marcados : null,
+        },
       }).catch((e) => console.error('Decisão salva, mas o log falhou:', e))
       await carregar()
     } catch (e) {
@@ -71,5 +89,5 @@ export function useAdminDocumentos() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campos, carregar])
 
-  return { itens, loading, filtro, setFiltro, processando, erro, camposDe, atualizar, abrirComprovante, decidir }
+  return { itens, loading, filtro, setFiltro, processando, erro, camposDe, atualizar, alternarItem, abrirComprovante, decidir }
 }

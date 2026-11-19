@@ -146,7 +146,8 @@ grant execute on function public.enviar_documento_verificacao(text, jsonb, text)
 -- ---------------------------------------------------------------------------
 -- 3) Fila do admin
 -- ---------------------------------------------------------------------------
-create or replace function public.admin_fila_documentos(p_filtro text default 'pendentes')
+drop function if exists public.admin_fila_documentos(text);
+create function public.admin_fila_documentos(p_filtro text default 'pendentes')
 returns table (
   verificacao_id uuid,
   prestador_id   bigint,
@@ -157,7 +158,9 @@ returns table (
   dados          jsonb,
   valido_ate     date,
   criado_em      timestamptz,
-  verificado_em  timestamptz
+  verificado_em  timestamptz,
+  cnpj           text,
+  razao_social   text
 )
 language plpgsql
 stable
@@ -172,10 +175,13 @@ begin
     raise exception 'Filtro inválido' using errcode = '22023';
   end if;
 
+  -- cnpj/razao_social: o CNPJ já aprovado no perfil, para a equipe comparar com o titular do documento.
   return query
-    select v.id, v.prestador_id, p.nome, p.slug, v.tipo, v.status, v.dados, v.valido_ate, v.criado_em, v.verificado_em
+    select v.id, v.prestador_id, p.nome, p.slug, v.tipo, v.status, v.dados, v.valido_ate, v.criado_em, v.verificado_em,
+           c.cnpj, c.razao_social
       from public.prestador_verificacoes v
       join public.prestadores p on p.id = v.prestador_id
+      left join public.prestador_cnpj c on c.prestador_id = v.prestador_id
      where v.tipo in ('seguro', 'cnd')
        and case p_filtro
              when 'pendentes'  then v.dados ? 'pedido'

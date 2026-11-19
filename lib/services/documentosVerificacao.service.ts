@@ -51,6 +51,9 @@ export interface DocumentoAdmin {
   valido_ate: string | null
   criado_em: string
   verificado_em: string | null
+  /** CNPJ do perfil (já cadastrado), para a equipe comparar com o titular do documento. */
+  cnpj: string | null
+  razao_social: string | null
 }
 
 export async function fetchFilaDocumentos(filtro: 'pendentes' | 'aprovadas' | 'rejeitadas'): Promise<DocumentoAdmin[]> {
