@@ -204,6 +204,26 @@ export default function Privacidade() {
             </div>
           </Secao>
 
+          <Secao titulo="12. Feed de trabalhos, curtidas e seguidores">
+            <div className="space-y-3">
+              <p>
+                <Destaque>O que é tratado.</Destaque> No feed público, mostramos fotos, título, descrição, categoria e cidade de trabalhos concluídos, com o nome do prestador. Também guardamos o aceite do cliente ao aviso do feed (data e versão do aviso), as curtidas que você dá (qual trabalho e quando) e os prestadores que você segue (qual e desde quando).
+              </p>
+              <p>
+                <Destaque>Para quê e base legal.</Destaque> Divulgar o trabalho do prestador e permitir que você acompanhe prestadores de que gosta. O trabalho só entra no feed com o aceite do cliente, que pode retirá-lo quando quiser, em Meus serviços (consentimento, LGPD art. 7º, I; a retirada vale para os próximos usos). Curtir e seguir são ações que você escolhe fazer, para executar o recurso que usa (art. 7º, V).
+              </p>
+              <p>
+                <Destaque>O que nunca aparece.</Destaque> Nome, telefone e endereço do cliente não aparecem no feed. A lista de quem você segue é visível só para você. O prestador vê apenas o total de curtidas e de seguidores, sem saber quem são.
+              </p>
+              <p>
+                <Destaque>Fotos e terceiros.</Destaque> As regras de fotos e de pessoas nas imagens da seção 6 valem também no feed. Fotos do feed ficam na área pública e podem ser copiadas por terceiros fora do controle do PQF.
+              </p>
+              <p>
+                <Destaque>Seus direitos.</Destaque> Você pode deixar de seguir e descurtir a qualquer momento. Em Meus dados, você baixa a lista do que curtiu e de quem segue. Ao excluir a conta, apagamos suas curtidas e seus seguidos. O cliente que retirar um trabalho do feed não faz o trabalho voltar. Para pedidos sobre outros dados, use os canais da seção 10.
+              </p>
+            </div>
+          </Secao>
+
           <section className="border-t border-slate-100 pt-8">
             <p className="text-sm text-slate-400">Última atualização: {DATA_ATUALIZACAO_PRIVACIDADE}.</p>
           </section>

@@ -42,6 +42,7 @@ const SECOES: { chave: string; rotulo: string }[] = [
   { chave: 'garantias_como_cliente', rotulo: 'Casos de garantia como cliente' },
   { chave: 'orcamentos_como_cliente', rotulo: 'Orçamentos recebidos' },
   { chave: 'curtidas', rotulo: 'Curtidas' },
+  { chave: 'prestadores_que_sigo', rotulo: 'Prestadores que você segue' },
   { chave: 'consentimentos', rotulo: 'Aceites dos documentos' },
   { chave: 'pedidos_titular', rotulo: 'Pedidos ao titular' },
   { chave: 'registros_de_atividade', rotulo: 'Registros de atividade' },

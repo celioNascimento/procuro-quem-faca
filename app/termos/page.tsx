@@ -113,7 +113,31 @@ export default function Termos() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-xl font-bold text-slate-800">10. Encerramento e alterações</h2>
+            <h2 className="mb-3 text-xl font-bold text-slate-800">10. Feed de trabalhos, curtidas e seguidores</h2>
+            <div className="space-y-3">
+              <p>
+                O PQF tem um feed público (“Trabalhos”) com serviços concluídos pelos prestadores. Um trabalho só entra no feed depois de finalizado, com pelo menos uma foto liberada, e se o cliente tiver aceitado o trabalho vendo o aviso do feed. Sem esse aceite, o trabalho aparece apenas no perfil do prestador, como antes.
+              </p>
+              <p>
+                <strong className="text-slate-700">O que aparece.</strong> As fotos liberadas, o título e a descrição do trabalho, a categoria, a cidade e o nome do prestador. O nome, o telefone e o endereço do cliente nunca aparecem. Quem envia as fotos continua responsável por elas, conforme a seção 4.
+              </p>
+              <p>
+                <strong className="text-slate-700">Controle do prestador.</strong> O prestador pode ocultar e mostrar de novo cada trabalho no feed, pelo painel dele.
+              </p>
+              <p>
+                <strong className="text-slate-700">Controle do cliente.</strong> O cliente pode retirar o trabalho do feed quando quiser, em Meus serviços. A retirada é definitiva: o trabalho não volta ao feed e o PQF não o recoloca. Ela vale só para o feed; o trabalho continua no perfil do prestador, e pedidos de remoção de imagens seguem a seção 4.
+              </p>
+              <p>
+                <strong className="text-slate-700">Curtir e seguir.</strong> Para curtir um trabalho ou seguir um prestador é preciso ter conta. O prestador vê o total de curtidas e de seguidores, não quem curtiu nem quem segue. A lista de quem a pessoa segue é visível só para ela. Não é permitido usar curtidas ou seguidores de forma artificial, como contas falsas ou combinadas para inflar números; o PQF pode desfazê-los.
+              </p>
+              <p>
+                <strong className="text-slate-700">Moderação.</strong> O PQF pode retirar do feed trabalhos ou imagens que violem estes termos, conforme a seção 6.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-xl font-bold text-slate-800">11. Encerramento e alterações</h2>
             <p>
               O usuário pode solicitar a exclusão da conta pelos fluxos disponíveis. O PQF pode alterar funcionalidades e estes termos para refletir a evolução do produto, a legislação ou melhorias de segurança. A versão vigente será publicada nesta página.
             </p>

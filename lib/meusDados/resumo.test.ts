@@ -36,6 +36,13 @@ describe('resumirExportacao', () => {
   })
 })
 
+describe('feed', () => {
+  it('mostra quem a pessoa segue logo depois das curtidas', () => {
+    const resumo = resumirExportacao({ ...base, curtidas: [{}], prestadores_que_sigo: [{}, {}], consentimentos: [{ tipo: 'termos_uso', versao_documento: '2026-11', concedido: true, origem: 'login', aceito_em: '2026-11-11' }] })
+    expect(resumo.map(i => [i.chave, i.quantidade])).toEqual([['curtidas', 1], ['prestadores_que_sigo', 2], ['consentimentos', 1]])
+  })
+})
+
 describe('apoio', () => {
   it('nomeia o arquivo com a data local, com zeros à esquerda', () => {
     expect(nomeArquivoExportacao(new Date(2026, 0, 5))).toBe('meus-dados-pqf-2026-01-05.json')
