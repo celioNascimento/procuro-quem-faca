@@ -88,3 +88,14 @@ describe('home — cartão de profissional', () => {
     expect(screen.getByRole('link', { name: /cadastro em andamento/i }).getAttribute('href')).toBe('/cadastro')
   })
 })
+
+describe('home — link para o feed', () => {
+  it('mostra o bloco "Trabalhos reais" que leva ao feed, para visitante e para quem está logado', () => {
+    const { unmount } = render(<Home />)
+    expect(screen.getByTestId('home-link-feed').getAttribute('href')).toBe('/feed')
+    unmount()
+    auth = { session: { user: { id: 'u' } }, role: 'cliente', roleLoading: false }
+    render(<Home />)
+    expect(screen.getByTestId('home-link-feed').getAttribute('href')).toBe('/feed')
+  })
+})

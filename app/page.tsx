@@ -10,7 +10,7 @@ import { insertLog, insertLogDeTrafego } from '@/lib/db/logs'
 import SearchForm from '@/components/home/SearchForm'
 import { ConviteLocalizacao } from '@/components/busca/ConviteLocalizacao'
 import CTAPrestadorSkeleton from '@/components/home/CTAPrestadorSkeleton'
-import { ArrowRight, Briefcase } from 'lucide-react'
+import { ArrowRight, Briefcase, Images } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useLocation } from '@/lib/contexts/LocationContext'
 import Logo from '@/components/Logo'
@@ -146,7 +146,26 @@ export default function Home() {
       {/* CTA para prestadores. Aparece para todos, inclusive quem já é prestador (leva ao painel): ele ancora o
           fim da tela; sem ele sobrava um vazio grande embaixo das sugestões. */}
       <div className="relative z-10 flex-1 flex items-end justify-center pt-6 pb-12 px-6">
-        <div className="w-full max-w-3xl">
+        <div className="flex w-full max-w-3xl flex-col gap-3">
+          {/* Feed de trabalhos concluídos: mostra o que os profissionais já fizeram, para quem ainda não sabe o que buscar. */}
+          <Link
+            href="/feed"
+            onClick={() => insertLog({ acao: 'CLIQUE_FEED_HOME', entidadeTipo: 'home' })}
+            data-testid="home-link-feed"
+            className="group flex min-h-16 items-center justify-between gap-3 w-full px-5 py-4 md:px-8 md:py-5 rounded-[2rem] border border-blue-100 bg-blue-50/60 hover:bg-blue-50 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-white border border-blue-100 flex items-center justify-center shrink-0">
+                <Images size={16} aria-hidden="true" className="text-blue-600" />
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-black uppercase tracking-widest text-blue-700 mb-0.5">Trabalhos reais</p>
+                <p className="text-xs md:text-sm font-bold text-slate-700">Veja serviços concluídos e se inspire</p>
+              </div>
+            </div>
+            <ArrowRight size={18} aria-hidden="true" className="text-blue-400 group-hover:translate-x-1 transition-all duration-300 shrink-0" />
+          </Link>
+
           {mostrarSkeletonCTA ? (
             <CTAPrestadorSkeleton />
           ) : (

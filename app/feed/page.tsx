@@ -18,7 +18,7 @@ export default function FeedPage() {
 
   return (
     <>
-      <Header href="/" larga />
+      <Header href="/" larga semLinkFeed />
       <main className="mx-auto w-full max-w-xl px-4 pb-24 pt-24 md:pt-28">
         <h1 className="text-2xl font-black text-slate-900">Trabalhos concluídos</h1>
         <p className="mt-1 text-sm text-slate-600">Veja serviços reais, gostou? Abra o perfil de quem fez.</p>
