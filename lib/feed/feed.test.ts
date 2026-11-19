@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aplicarSalvo, aplicarCurtida, aplicarFeedOculto, aplicarRetiradaDoFeed, podeRetirarDoFeed, aplicarSeguir, estadoNoFeed, enderecoDoTrabalho, mensagemDeResultado, normalizarFeed, textoCompartilharTrabalho, textoCurtidas } from './feed'
+import { aplicarSalvo, aplicarCurtida, aplicarFeedOculto, aplicarRetiradaDoFeed, podeRetirarDoFeed, aplicarSeguir, estadoNoFeed, enderecoDoTrabalho, enderecoDoPerfil, mensagemDeResultado, normalizarFeed, textoCompartilharTrabalho, textoCurtidas } from './feed'
 
 const bruto = [{
   projeto_id: 'a', titulo: ' Reforma ', descricao: 'Varanda', concluido_em: '2026-11-10T10:00:00Z',
@@ -116,5 +116,16 @@ describe('salvar', () => {
   })
   it('limite de salvos vira frase simples', () => {
     expect(mensagemDeResultado('limite_salvos')).toBe('Você chegou ao limite de 500 trabalhos salvos. Remova algum para continuar.')
+  })
+})
+
+describe('link do perfil nunca sai do PQF', () => {
+  it('slug normal vira link interno', () => {
+    expect(enderecoDoPerfil('eletrica-silva_2')).toBe('/eletrica-silva_2')
+    expect(enderecoDoTrabalho('maria', 'p 1')).toBe('/maria?projeto=p%201')
+  })
+  it.each(['/evil.com', '//evil.com', 'evil.com', 'https://evil.com', 'a b', '..', 'Maria', ''])('slug fora do padrão (%s) cai na home', slug => {
+    expect(enderecoDoPerfil(slug)).toBe('/')
+    expect(enderecoDoTrabalho(slug, 'x')).toBe('/')
   })
 })

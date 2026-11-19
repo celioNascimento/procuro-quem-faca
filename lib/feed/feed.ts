@@ -53,8 +53,14 @@ export function textoCompartilharTrabalho(item: Pick<FeedItem, 'titulo' | 'prest
 }
 
 /** Endereço (no próprio site) do perfil já com o trabalho aberto: o perfil abre o modal de ?projeto=. */
+/** Link interno do perfil. Slug fora do padrão (ex.: "/site.com", que viraria "//site.com") não vira link para fora: cai na home. */
+export function enderecoDoPerfil(slug: string): string {
+  return /^[a-z0-9_-]+$/.test(slug) ? `/${slug}` : '/'
+}
+
 export function enderecoDoTrabalho(slug: string, projetoId: string): string {
-  return `/${slug}?projeto=${encodeURIComponent(projetoId)}`
+  const perfil = enderecoDoPerfil(slug)
+  return perfil === '/' ? '/' : `${perfil}?projeto=${encodeURIComponent(projetoId)}`
 }
 
 export function textoCurtidas(total: number): string {

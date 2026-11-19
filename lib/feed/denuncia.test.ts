@@ -37,3 +37,11 @@ describe('motivoDaDenuncia', () => {
     expect(motivoDaDenuncia('Foto errada', { id: ID, titulo: 'Varanda' })).toBe(`Sobre o trabalho "Varanda" (id ${ID}): Foto errada`)
   })
 })
+
+describe('motivoDaDenuncia — limites', () => {
+  it('corta texto e título longos (o banco recusa mais de 3000 caracteres)', () => {
+    const m = motivoDaDenuncia('x'.repeat(5000), { id: 'p1', titulo: 'T'.repeat(500) } as never)
+    expect(m.length).toBeLessThanOrEqual(1000 + 120 + 60)
+    expect(m.length).toBeLessThan(3000)
+  })
+})

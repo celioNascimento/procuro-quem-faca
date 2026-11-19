@@ -119,6 +119,7 @@ function ConteudoDenuncia() {
                 className="w-full h-48 p-6 rounded-[2rem] bg-slate-50 border-2 border-slate-100 outline-none focus:border-red-400 focus:bg-white text-slate-700 font-bold text-sm placeholder:text-slate-300 transition-all resize-none"
                 placeholder="Por favor, descreva o problema encontrado com este prestador..."
                 value={motivo}
+                maxLength={1000}
                 onChange={(e) => setMotivo(e.target.value)}
               />
             </div>

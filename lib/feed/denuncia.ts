@@ -25,7 +25,7 @@ export function lerTrabalhoDenunciado(params: { get(nome: string): string | null
 
 /** Motivo gravado: com trabalho, começa dizendo qual foi. */
 export function motivoDaDenuncia(motivo: string, trabalho: TrabalhoDenunciado | null): string {
-  const texto = motivo.trim()
+  const texto = motivo.trim().slice(0, 1000)
   if (!trabalho) return texto
-  return `Sobre o trabalho "${trabalho.titulo}" (id ${trabalho.id}): ${texto}`
+  return `Sobre o trabalho "${trabalho.titulo.slice(0, 120)}" (id ${trabalho.id}): ${texto}`
 }

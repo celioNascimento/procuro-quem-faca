@@ -5,7 +5,7 @@
 // "Falar com o profissional" abre o perfil já com o trabalho aberto, onde está o botão de WhatsApp.
 import Link from 'next/link'
 import { Bookmark, Heart, MapPin, MessageCircle, Share2, UserCheck, UserPlus } from 'lucide-react'
-import { enderecoDoTrabalho, textoCurtidas, type FeedItem } from '@/lib/feed/feed'
+import { enderecoDoPerfil, enderecoDoTrabalho, textoCurtidas, type FeedItem } from '@/lib/feed/feed'
 import { enderecoDaDenuncia } from '@/lib/feed/denuncia'
 import { FotosDoTrabalho } from './FotosDoTrabalho'
 import { MenuDoCard } from './MenuDoCard'
@@ -25,7 +25,7 @@ export function FeedCard({ item, onCurtir, onSeguir, onSalvar, onCompartilhar, o
   return (
     <article className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm" data-testid="feed-card">
       <header className="flex items-center justify-between gap-3 px-3 py-2.5">
-        <Link href={`/${prestador.slug}`} className="min-w-0 flex-1" data-testid="feed-prestador">
+        <Link href={enderecoDoPerfil(prestador.slug)} className="min-w-0 flex-1" data-testid="feed-prestador">
           <p className="truncate text-sm font-black text-slate-900">{prestador.nome}</p>
           {local && (
             <p className="flex items-center gap-1 truncate text-xs font-medium text-slate-500">
@@ -71,7 +71,7 @@ export function FeedCard({ item, onCurtir, onSeguir, onSalvar, onCompartilhar, o
           )}
           <div className="ml-auto flex items-center gap-1">
             {item.meu && (
-              <Link href={`/${prestador.slug}`} data-testid="feed-ver-perfil" className="flex min-h-11 items-center rounded-xl px-3 text-sm font-black text-blue-700 hover:bg-blue-50">
+              <Link href={enderecoDoPerfil(prestador.slug)} data-testid="feed-ver-perfil" className="flex min-h-11 items-center rounded-xl px-3 text-sm font-black text-blue-700 hover:bg-blue-50">
                 Ver perfil
               </Link>
             )}
@@ -106,7 +106,7 @@ export function FeedCard({ item, onCurtir, onSeguir, onSalvar, onCompartilhar, o
               <MessageCircle size={18} aria-hidden="true" />
               <span className="truncate">Falar com o profissional</span>
             </Link>
-            <Link href={`/${prestador.slug}`} data-testid="feed-ver-perfil" className="flex min-h-11 shrink-0 items-center rounded-2xl px-3 text-sm font-black text-blue-700 hover:bg-blue-50">
+            <Link href={enderecoDoPerfil(prestador.slug)} data-testid="feed-ver-perfil" className="flex min-h-11 shrink-0 items-center rounded-2xl px-3 text-sm font-black text-blue-700 hover:bg-blue-50">
               Ver perfil
             </Link>
           </div>
