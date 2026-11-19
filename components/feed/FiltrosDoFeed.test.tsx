@@ -18,12 +18,26 @@ describe('FiltrosDoFeed', () => {
   it('começa fechado: só o botão Filtrar, sem campos', () => {
     montar()
     expect(screen.getByTestId('feed-filtrar').getAttribute('aria-expanded')).toBe('false')
+    expect(screen.getByTestId('feed-filtrar').textContent).toBe('')
     expect(screen.queryByTestId('feed-filtros-painel')).toBeNull()
     expect(screen.queryByTestId('feed-filtros-contador')).toBeNull()
   })
   it('mostra o número de filtros ligados no botão', () => {
     montar({ categoriaId: 'c1', cidadeId: CIDADE.id, estado: null })
     expect(screen.getByTestId('feed-filtros-contador').textContent).toBe('2')
+    expect(screen.getByTestId('feed-filtrar').getAttribute('aria-label')).toBe('Filtrar trabalhos, 2 filtros ligados')
+  })
+  it('a folha trava a rolagem do feed e solta ao fechar; Esc e toque fora também fecham', () => {
+    montar()
+    fireEvent.click(screen.getByTestId('feed-filtrar'))
+    expect(document.body.style.overflow).toBe('hidden')
+    expect(screen.getByRole('dialog', { name: 'Filtros do feed' })).toBeTruthy()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByTestId('feed-filtros-painel')).toBeNull()
+    expect(document.body.style.overflow).not.toBe('hidden')
+    fireEvent.click(screen.getByTestId('feed-filtrar'))
+    fireEvent.click(screen.getByTestId('feed-filtros-fundo'))
+    expect(screen.queryByTestId('feed-filtros-painel')).toBeNull()
   })
   it('abre o painel com os três campos e fecha em "Pronto"', () => {
     montar()

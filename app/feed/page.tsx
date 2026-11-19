@@ -8,6 +8,7 @@ import Header from '@/components/Header'
 import { FeedCard } from '@/components/feed/FeedCard'
 import { FiltrosDoFeed } from '@/components/feed/FiltrosDoFeed'
 import { useFeed } from '@/hooks/useFeed'
+import { useBarraQueSome } from '@/hooks/useBarraQueSome'
 import { useCompartilharTrabalho } from '@/hooks/useCompartilharTrabalho'
 import { useSession } from '@/hooks/useSession'
 import { fetchCategoriasDoFiltro, fetchCidadesDoFeed, type CategoriaDoFiltro } from '@/lib/services/feed.service'
@@ -45,6 +46,7 @@ function FeedConteudo() {
   }
 
   const filtrando = temFiltroAtivo(filtros)
+  const barra = useBarraQueSome()
 
   return (
     <>
@@ -53,20 +55,23 @@ function FeedConteudo() {
         <h1 className="text-2xl font-black text-slate-900">Feed de trabalhos</h1>
         <p className="mt-1 text-sm text-slate-600">Veja serviços reais, gostou? Abra o perfil de quem fez.</p>
 
-        <div role="tablist" aria-label="Quais trabalhos mostrar" className="mt-4 flex w-fit gap-1 rounded-2xl bg-slate-100 p-1">
-          {([['todos', 'Todos'], ['seguindo', 'Quem eu sigo'], ['salvos', 'Salvos']] as const).map(([id, rotulo]) => (
-            <button key={id} role="tab" aria-selected={f.aba === id} onClick={() => f.setAba(id)} data-testid={`feed-aba-${id}`}
-              className={`min-h-11 rounded-xl px-4 text-sm font-black ${f.aba === id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500'}`}>
-              {rotulo}
-            </button>
-          ))}
+        {/* Barra fixa logo abaixo do cabeçalho (h-16 / md:h-18): abas + filtro. Some ao rolar para baixo e volta ao subir. */}
+        <div data-testid="feed-barra" onFocusCapture={barra.mostrar}
+          className={`sticky top-16 z-40 -mx-4 mt-3 flex items-center gap-2 bg-white/95 px-4 py-2 backdrop-blur transition-transform duration-200 md:top-18 ${barra.visivel ? 'translate-y-0' : '-translate-y-full'}`}>
+          <div role="tablist" aria-label="Quais trabalhos mostrar" className="flex min-w-0 gap-1 rounded-2xl bg-slate-100 p-1">
+            {([['todos', 'Todos'], ['seguindo', 'Quem eu sigo'], ['salvos', 'Salvos']] as const).map(([id, rotulo]) => (
+              <button key={id} role="tab" aria-selected={f.aba === id} onClick={() => f.setAba(id)} data-testid={`feed-aba-${id}`}
+                className={`min-h-11 whitespace-nowrap rounded-xl px-3 text-sm font-black sm:px-4 ${f.aba === id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500'}`}>
+                {rotulo}
+              </button>
+            ))}
+          </div>
+          <FiltrosDoFeed
+            filtros={filtros} categorias={categorias} estados={estados} cidades={cidadesVisiveis}
+            onMudar={mudarFiltros} onMudarEstado={mudarEstado}
+            onLimpar={() => mudarFiltros({ categoriaId: null, cidadeId: null, estado: null })}
+          />
         </div>
-
-        <FiltrosDoFeed
-          filtros={filtros} categorias={categorias} estados={estados} cidades={cidadesVisiveis}
-          onMudar={mudarFiltros} onMudarEstado={mudarEstado}
-          onLimpar={() => mudarFiltros({ categoriaId: null, cidadeId: null, estado: null })}
-        />
 
         {f.aviso && (
           <p role="status" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-900" data-testid="feed-aviso">
