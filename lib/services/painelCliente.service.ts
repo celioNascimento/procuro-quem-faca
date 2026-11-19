@@ -1,3 +1,4 @@
+import { VERSAO_AVISO_FEED } from '@/config/feed'
 import { supabase } from '@/lib/supabase'
 import type { Servico } from '@/types/painel'
 import { anexarTokens, obterProjetoIdPorToken } from './projetoToken.service'
@@ -146,7 +147,7 @@ export function mensagemDeErroDaAcao(erro: unknown): string {
 
 /** Somente a conta dona do projeto (vinculada pelo token) aceita. Regra na função do banco. */
 export async function aceitarServico(servicoId: string, nomeCliente: string) {
-  const { data, error } = await supabase.rpc('aceitar_projeto', { p_projeto_id: servicoId, p_nome: nomeCliente })
+  const { data, error } = await supabase.rpc('aceitar_projeto', { p_projeto_id: servicoId, p_nome: nomeCliente, p_feed_versao: VERSAO_AVISO_FEED })
   if (error) throw error
   exigirOk(data as ResultadoAcao)
 }

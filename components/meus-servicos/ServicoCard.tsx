@@ -1,5 +1,6 @@
 //components/meus-servicos/ServicoCard.tsx
 'use client'
+import { TEXTO_AVISO_FEED } from '@/config/feed'
 import { Clock, Phone, ChevronRight, ZoomIn, Briefcase, CheckCircle2, ShieldAlert } from 'lucide-react'
 import AvatarPrestador from '@/components/shared/AvatarPrestador'
 import { Servico } from '@/types/painel'
@@ -249,6 +250,13 @@ export default function ServicoCard({
           )}
 
         </div>
+
+        {/* Aviso do feed: o cliente precisa saber, antes de aceitar, que as fotos aparecem no feed do prestador. */}
+        {modo === 'pendente' && (
+          <p className="mt-3 text-xs leading-snug text-slate-500" data-testid="aviso-feed-aceite">
+            {TEXTO_AVISO_FEED}
+          </p>
+        )}
       </div>
 
     </div>

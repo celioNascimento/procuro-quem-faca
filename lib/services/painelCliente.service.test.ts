@@ -1,3 +1,4 @@
+import { VERSAO_AVISO_FEED } from '@/config/feed'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/supabase', () => ({ supabase: { rpc: vi.fn(), from: vi.fn() } }))
@@ -13,7 +14,7 @@ describe('autorizar e recusar serviço', () => {
   it('autoriza pela função do banco', async () => {
     rpc().mockResolvedValue({ data: 'ok', error: null } as never)
     await expect(aceitarServico('p1', 'Ana')).resolves.toBeUndefined()
-    expect(rpc()).toHaveBeenCalledWith('aceitar_projeto', { p_projeto_id: 'p1', p_nome: 'Ana' })
+    expect(rpc()).toHaveBeenCalledWith('aceitar_projeto', { p_projeto_id: 'p1', p_nome: 'Ana', p_feed_versao: VERSAO_AVISO_FEED })
   })
 
   it('quando o banco recusa, o erro leva o código (ex.: conta que não é a dona)', async () => {
