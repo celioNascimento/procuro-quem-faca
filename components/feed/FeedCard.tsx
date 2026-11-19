@@ -1,18 +1,24 @@
 // components/feed/FeedCard.tsx
-// Um trabalho no feed. Mostra só o que é público: fotos, título, descrição curta, prestador e curtidas.
+// Um trabalho no feed, no jeito do Instagram: fotos (desliza, toque duplo curte), curtir, compartilhar, menu ⋯.
+// Mostra só o que é público: fotos, título, descrição curta, prestador e curtidas.
 // Nunca mostra nome de cliente, WhatsApp nem endereço (o banco nem devolve esses dados).
+// "Falar com o profissional" abre o perfil já com o trabalho aberto, onde está o botão de WhatsApp.
 import Link from 'next/link'
-import { Heart, MapPin, Share2, UserCheck, UserPlus } from 'lucide-react'
-import { textoCurtidas, type FeedItem } from '@/lib/feed/feed'
+import { Heart, MapPin, MessageCircle, Share2, UserCheck, UserPlus } from 'lucide-react'
+import { enderecoDoTrabalho, textoCurtidas, type FeedItem } from '@/lib/feed/feed'
+import { enderecoDaDenuncia } from '@/lib/feed/denuncia'
+import { FotosDoTrabalho } from './FotosDoTrabalho'
+import { MenuDoCard } from './MenuDoCard'
 
 interface Props {
   item: FeedItem
   onCurtir: (projetoId: string) => void
   onSeguir: (prestadorId: number) => void
   onCompartilhar: (item: FeedItem) => void
+  onCopiarLink: (item: FeedItem) => void
 }
 
-export function FeedCard({ item, onCurtir, onSeguir, onCompartilhar }: Props) {
+export function FeedCard({ item, onCurtir, onSeguir, onCompartilhar, onCopiarLink }: Props) {
   const { prestador } = item
   const local = [prestador.categoria, prestador.cidade].filter(Boolean).join(' · ')
   return (
@@ -38,13 +44,15 @@ export function FeedCard({ item, onCurtir, onSeguir, onCompartilhar }: Props) {
         )}
       </header>
 
-      <Link href={`/${prestador.slug}`} aria-label={`Ver o perfil de ${prestador.nome}`}>
-        <img src={item.fotos[0]} alt={item.titulo} loading="lazy" className="aspect-[4/3] w-full object-cover" data-testid="feed-foto" />
-      </Link>
+      <FotosDoTrabalho
+        fotos={item.fotos} titulo={item.titulo}
+        onDuploToque={item.meu ? null : () => { if (!item.curtidoPorMim) onCurtir(item.projetoId) }}
+      />
 
       <div className="p-4">
         <h2 className="text-base font-black leading-snug text-slate-900">{item.titulo}</h2>
         {item.descricao && <p className="mt-1 line-clamp-3 text-sm text-slate-600">{item.descricao}</p>}
+
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           {item.meu ? (
             <p className="flex min-h-11 items-center gap-2 px-3 text-sm font-bold text-slate-600" data-testid="feed-curtidas-meu">
@@ -68,8 +76,25 @@ export function FeedCard({ item, onCurtir, onSeguir, onCompartilhar }: Props) {
             >
               <Share2 size={18} aria-hidden="true" />
             </button>
-            <Link href={`/${prestador.slug}`} className="min-h-11 content-center px-2 text-sm font-black text-blue-700">Ver perfil</Link>
+            {!item.meu && (
+              <MenuDoCard hrefDenuncia={enderecoDaDenuncia(prestador.id, item.projetoId, item.titulo)} onCopiarLink={() => onCopiarLink(item)} />
+            )}
           </div>
+        </div>
+
+        <div className="mt-2 flex items-center gap-2">
+          {!item.meu && (
+            <Link
+              href={enderecoDoTrabalho(prestador.slug, item.projetoId)} data-testid="feed-falar"
+              className="flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 text-sm font-black text-white hover:bg-blue-700"
+            >
+              <MessageCircle size={18} aria-hidden="true" />
+              <span className="truncate">Falar com o profissional</span>
+            </Link>
+          )}
+          <Link href={`/${prestador.slug}`} data-testid="feed-ver-perfil" className="flex min-h-12 shrink-0 items-center rounded-2xl px-3 text-sm font-black text-blue-700 hover:bg-blue-50">
+            Ver perfil
+          </Link>
         </div>
       </div>
     </article>

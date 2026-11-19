@@ -248,3 +248,52 @@ test.describe('feed: prestador', () => {
     await expect(page.getByTestId('modal-curtir')).toHaveCount(0);
   });
 });
+
+test.describe('feed: botões do card (estilo Instagram)', () => {
+  test('visitante: "Falar com o profissional" abre o perfil já com o trabalho aberto', async ({ page }) => {
+    await abrirFeed(page);
+    await page.getByTestId('feed-falar').click();
+    await expect(page).toHaveURL(new RegExp(`/${PERFIL_SEED.slug}\\?projeto=${ID_NO_FEED}`));
+    await expect(page.getByTestId('modal-curtir')).toBeVisible();
+  });
+
+  test('visitante: o menu ⋯ leva à denúncia já citando o trabalho', async ({ page }) => {
+    await abrirFeed(page);
+    await page.getByTestId('feed-menu').click();
+    await page.getByTestId('feed-menu-denunciar').click();
+    await expect(page).toHaveURL(new RegExp(`/denunciar/\\d+\\?trabalho=${ID_NO_FEED}`));
+    await expect(page.getByTestId('denuncia-trabalho')).toContainText(TITULO_NO_FEED);
+  });
+
+  test('visitante: toque duplo na foto pede login e não grava curtida', async ({ page }) => {
+    await abrirFeed(page);
+    await page.getByTestId('feed-fotos').dblclick();
+    await expect(page.getByTestId('feed-aviso')).toContainText(/Entre na sua conta/);
+  });
+
+  test('cliente logada: toque duplo na foto curte uma vez e continua curtido depois de recarregar', async ({ page }) => {
+    await entrarComoClienteEIrPara(page, '/feed');
+    await page.getByTestId('feed-fotos').dblclick();
+    await expect(page.getByTestId('feed-curtidas')).toHaveText('1 curtida');
+    await page.getByTestId('feed-fotos').dblclick(); // de novo: não descurte
+    await expect(page.getByTestId('feed-curtir')).toHaveAttribute('aria-pressed', 'true');
+    await page.reload();
+    await expect(page.getByTestId('feed-curtidas')).toHaveText('1 curtida');
+  });
+
+  test('prestador dono do trabalho: vê "Seu trabalho" e nenhum botão de curtir, seguir, falar ou denunciar', async ({ page }) => {
+    await entrar(page, 'prestador');
+    await expect(page).toHaveURL(/\/dashboard/);
+    await page.goto('/feed');
+    await aceitarDocumentosSeAparecer(page);
+    const cartao = page.getByTestId('feed-card');
+    await expect(cartao).toHaveCount(1);
+    await expect(cartao.getByTestId('feed-meu')).toHaveText('Seu trabalho');
+    await expect(cartao.getByTestId('feed-seguir')).toHaveCount(0);
+    await expect(cartao.getByTestId('feed-curtir')).toHaveCount(0);
+    await expect(cartao.getByTestId('feed-falar')).toHaveCount(0);
+    await expect(cartao.getByTestId('feed-menu')).toHaveCount(0);
+    await expect(cartao.getByTestId('feed-curtidas')).toBeVisible(); // o total continua, só para leitura
+    await expect(cartao.getByTestId('feed-compartilhar')).toBeVisible();
+  });
+});

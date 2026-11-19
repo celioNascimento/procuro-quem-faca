@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aplicarCurtida, aplicarFeedOculto, aplicarRetiradaDoFeed, podeRetirarDoFeed, aplicarSeguir, estadoNoFeed, mensagemDeResultado, normalizarFeed, textoCompartilharTrabalho, textoCurtidas } from './feed'
+import { aplicarCurtida, aplicarFeedOculto, aplicarRetiradaDoFeed, podeRetirarDoFeed, aplicarSeguir, estadoNoFeed, enderecoDoTrabalho, mensagemDeResultado, normalizarFeed, textoCompartilharTrabalho, textoCurtidas } from './feed'
 
 const bruto = [{
   projeto_id: 'a', titulo: ' Reforma ', descricao: 'Varanda', concluido_em: '2026-11-10T10:00:00Z',
@@ -94,5 +94,11 @@ describe('textoCompartilharTrabalho', () => {
   it('cita o trabalho e o prestador', () => {
     expect(textoCompartilharTrabalho({ titulo: 'Reforma de varanda', prestador: { id: 2, nome: 'Pedro Pedreiro', slug: 'pedro', categoria: null, cidade: null } }))
       .toBe('Veja "Reforma de varanda", trabalho de Pedro Pedreiro no Procuro Quem Faça.')
+  })
+})
+
+describe('enderecoDoTrabalho', () => {
+  it('abre o perfil com o trabalho aberto', () => {
+    expect(enderecoDoTrabalho('pedro', 'abc-123')).toBe('/pedro?projeto=abc-123')
   })
 })

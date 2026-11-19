@@ -50,6 +50,11 @@ export function textoCompartilharTrabalho(item: Pick<FeedItem, 'titulo' | 'prest
   return `Veja "${item.titulo}", trabalho de ${item.prestador.nome} no Procuro Quem Faça.`
 }
 
+/** Endereço (no próprio site) do perfil já com o trabalho aberto: o perfil abre o modal de ?projeto=. */
+export function enderecoDoTrabalho(slug: string, projetoId: string): string {
+  return `/${slug}?projeto=${encodeURIComponent(projetoId)}`
+}
+
 export function textoCurtidas(total: number): string {
   if (total <= 0) return 'Seja o primeiro a curtir'
   return total === 1 ? '1 curtida' : `${total} curtidas`

@@ -98,7 +98,7 @@ function FeedConteudo() {
         {f.erro && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{f.erro}</p>}
 
         <div className="mt-6 space-y-5">
-          {f.itens.map(item => <FeedCard key={item.projetoId} item={item} onCurtir={f.curtir} onSeguir={f.alternarSeguir} onCompartilhar={c.compartilhar} />)}
+          {f.itens.map(item => <FeedCard key={item.projetoId} item={item} onCurtir={f.curtir} onSeguir={f.alternarSeguir} onCompartilhar={c.compartilhar} onCopiarLink={c.copiarLink} />)}
         </div>
 
         {f.carregando && <div className="mt-6 h-48 animate-pulse rounded-3xl bg-slate-100" aria-label="Carregando" />}
