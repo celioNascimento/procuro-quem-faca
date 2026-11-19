@@ -58,10 +58,10 @@ function FeedConteudo() {
         {/* Barra fixa logo abaixo do cabeçalho (h-16 / md:h-18): abas + filtro. Some ao rolar para baixo e volta ao subir. */}
         <div data-testid="feed-barra" onFocusCapture={barra.mostrar}
           className={`sticky top-16 z-40 -mx-4 mt-3 flex items-center gap-2 bg-white/95 px-4 py-2 backdrop-blur transition-transform duration-200 md:top-18 ${barra.visivel ? 'translate-y-0' : '-translate-y-full'}`}>
-          <div role="tablist" aria-label="Quais trabalhos mostrar" className="flex min-w-0 gap-1 rounded-2xl bg-slate-100 p-1">
+          <div role="tablist" aria-label="Quais trabalhos mostrar" className="flex min-w-0 flex-1 gap-1 rounded-2xl bg-slate-100 p-1">
             {([['todos', 'Todos'], ['seguindo', 'Quem eu sigo'], ['salvos', 'Salvos']] as const).map(([id, rotulo]) => (
               <button key={id} role="tab" aria-selected={f.aba === id} onClick={() => f.setAba(id)} data-testid={`feed-aba-${id}`}
-                className={`min-h-11 whitespace-nowrap rounded-xl px-3 text-sm font-black sm:px-4 ${f.aba === id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500'}`}>
+                className={`min-h-11 flex-1 whitespace-nowrap rounded-xl px-2 text-sm font-black sm:px-4 ${f.aba === id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500'}`}>
                 {rotulo}
               </button>
             ))}
