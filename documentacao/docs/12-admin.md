@@ -25,6 +25,22 @@ Tela com o logo do PQF, título "Painel administrativo" e visual do kit `compone
 - **Testes:** `app/(admin)/admin/login/page.test.tsx`, `lib/services/adminAuth.service.test.ts`, `lib/auth/adminLogin.test.ts`; o login dos testes e2e (`entrarComoAdmin`) usa os rótulos "E-mail", "Senha" e o botão "Entrar".
 - A rota `/admin/auditoria` (verificador de URL de indexação, sem consulta a dados) foi removida em 20/11/2026.
 
+## Contador de pendências (menu, visão geral e e-mail diário)
+
+Fonte única: a função `contar_pendencias()` no banco (só `service_role`; o painel usa `admin_pendencias()`, que confere `is_admin()`). Regras de texto e soma em `lib/notificacoes/mensagens.ts` (`normalizarPendencias`, `totalPendencias`, `totalSelos`).
+
+| Chave | O que conta | Onde aparece |
+|---|---|---|
+| `titular_abertas` / `titular_atrasadas` | Pedidos do titular `recebida` ou `em_analise` (e os com prazo vencido) | Menu "Pedidos LGPD" (vermelho se houver atraso), visão geral, e-mail |
+| `denuncias_abertas` | Denúncias `aberta` | Menu "Moderação", visão geral, e-mail |
+| `selos_cnpj_abertos` | Verificações de CNPJ `pendente` ou `em_analise` (a lista da aba CNPJ) | Menu "Selos" (somado), visão geral, e-mail |
+| `selos_documentos_abertos` | Pedidos de Seguro ou CND em análise (`dados ? 'pedido'`, a lista da aba Seguro e CND) | Menu "Selos" (somado), visão geral, e-mail |
+
+- **Garantias e contestações saíram do contador em 20/11/2026:** o admin não tem tela para tratá-las (garantia corre entre cliente e prestador; `contestacoes` está vazia e sem uso no código).
+- O e-mail diário (`app/api/cron/resumo-pendencias`) lista cada tipo com pendência e os links do painel; sem pendência, não envia.
+- O app trata chave ausente como zero: a ordem entre migration (`20261120210000_pendencias_selos_sem_garantias.sql`) e deploy não importa.
+- Testes: `lib/notificacoes/mensagens.test.ts`, `components/admin/AdminSidebar.test.tsx`, `app/api/cron/resumo-pendencias/route.test.ts`.
+
 ## `/admin/logs`
 
 `hooks/useAdminLogs.ts` + `lib/services/adminLogs.service.ts`. Busca até 1000 logs recentes, filtros (email/termo, data, tipo de evento), gráfico de atividade por dia/mês (Recharts), exportação CSV, subscription Realtime via `subscribeLogsAtividades` (`lib/db/logs.ts`, compartilhada com o dashboard admin, cada consumidor com seu próprio nome de canal).
