@@ -115,11 +115,11 @@ export async function entrarComoAdmin(page: Page) {
   await dispensarAvisoDeCookies(page);
   await page.goto('/admin/login');
   await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
-  const email = page.getByPlaceholder('admin@empresa.com');
-  const senha = page.getByPlaceholder('••••••••');
+  const email = page.getByLabel('E-mail');
+  const senha = page.getByLabel('Senha', { exact: true });
   await email.fill(CONTA_ADMIN.email);
   await senha.fill(CONTA_ADMIN.senha);
   await expect(email).toHaveValue(CONTA_ADMIN.email);
-  await page.getByRole('button', { name: 'Entrar no Sistema' }).click();
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await page.waitForURL((u) => !u.pathname.startsWith('/admin/login'), { timeout: 30_000 });
 }
