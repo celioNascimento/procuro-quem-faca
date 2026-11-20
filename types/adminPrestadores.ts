@@ -16,6 +16,7 @@ export interface AdminPrestador {
   origem_tipo: string | null
   user_id: string | null
   status: string | null
+  bloqueado: boolean
   ativacao_status: string | null
   created_at: string | null
   updated_at: string | null
@@ -81,7 +82,7 @@ export function normalizeAdminPrestador(row: Record<string, unknown>): AdminPres
   return {
     id: Number(value('id')), nome, slug: text('slug'), whatsapp: text('whatsapp'), email: text('email'),
     cidade: cidadeRelation?.nome ?? text('cidade'), estado_sigla: cidadeRelation?.estado_sigla ?? text('estado_sigla'), categoria: categoriaNome, categoria_id: text('categoria_id') ?? categoriaRelation?.id ?? null, grupoCategoria: categoriaRelation?.categorias_grupos?.nome ?? null, grupo_id: text('grupo_id') ?? categoriaRelation?.grupo_id ?? null, origem_tipo: text('origem_tipo'),
-    user_id: text('user_id'), status: text('status'), ativacao_status: text('ativacao_status'),
+    user_id: text('user_id'), status: text('status'), bloqueado: row.bloqueado === true, ativacao_status: text('ativacao_status'),
     created_at: text('created_at'), updated_at: text('updated_at'), completude, etapa,
     etapaLabel: getEtapaLabel(etapa), contatoStatus: value('ativacao_enviado_em') ? 'contatado' : text('whatsapp') ? 'pendente' : 'sem_contato',
     proximaAcao: getProximaAcao(etapa),

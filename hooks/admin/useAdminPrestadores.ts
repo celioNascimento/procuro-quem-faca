@@ -26,5 +26,12 @@ export function useAdminPrestadores() {
   useEffect(() => {
     queueMicrotask(() => void load())
   }, [load])
-  return { tab, setTab, filters, setFilters, data, selected, setSelected, loading, error, reload: load }
+
+  // Depois de bloquear ou desbloquear, a lista e o painel aberto mostram o novo estado sem recarregar tudo.
+  const marcarBloqueio = useCallback((prestadorId: number, bloqueado: boolean) => {
+    setData((atual) => ({ ...atual, prestadores: atual.prestadores.map((p) => (p.id === prestadorId ? { ...p, bloqueado } : p)) }))
+    setSelected((atual) => (atual && atual.id === prestadorId ? { ...atual, bloqueado } : atual))
+  }, [])
+
+  return { tab, setTab, filters, setFilters, data, selected, setSelected, loading, error, reload: load, marcarBloqueio }
 }
