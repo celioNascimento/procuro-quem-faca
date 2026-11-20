@@ -35,8 +35,8 @@ export default function AdminDashboard() {
       alerta: (pendencias?.titular_atrasadas ?? 0) > 0,
     },
     { href: '/admin/moderacao', label: 'Denúncias abertas', total: pendencias?.denuncias_abertas ?? 0 },
-    { href: '/admin/moderacao', label: 'Garantias abertas', total: pendencias?.garantias_abertas ?? 0 },
-    { href: '/admin/moderacao', label: 'Contestações abertas', total: pendencias?.contestacoes_abertas ?? 0 },
+    { href: '/admin/verificacoes', label: 'Selos de CNPJ aguardando decisão', total: pendencias?.selos_cnpj_abertos ?? 0 },
+    { href: '/admin/verificacoes', label: 'Seguro e CND aguardando decisão', total: pendencias?.selos_documentos_abertos ?? 0 },
     { href: '/admin/ativacao', label: 'Prestadores sem contato enviado', total: naoContatados },
   ].filter((i) => i.total > 0)
 

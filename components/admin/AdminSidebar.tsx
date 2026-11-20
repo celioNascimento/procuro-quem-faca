@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { SidebarLink } from './SidebarLink'
 import { useAdminPendencias } from '@/hooks/admin/useAdminPendencias'
-import { totalModeracao } from '@/lib/notificacoes/mensagens'
+import { totalSelos } from '@/lib/notificacoes/mensagens'
 import Logo from '@/components/Logo'
 
 interface AdminSidebarProps {
@@ -42,7 +42,7 @@ export function AdminSidebar({ isMobileMenuOpen, onCloseMobileMenu, onLogout }: 
         <nav className="flex-1 px-3 pb-4 space-y-1 overflow-y-auto">
           <p className={SECAO}>Gestão geral</p>
           <SidebarLink href="/admin" label="Visão geral" icon={<path d="M3 3h7v9H3V3zm11 0h7v5h-7V3zm0 9h7v9h-7v-9zm-11 11h7v-7H3v7z" />} />
-          <SidebarLink href="/admin/moderacao" label="Moderação" badge={pendencias ? totalModeracao(pendencias) : 0} icon={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />} />
+          <SidebarLink href="/admin/moderacao" label="Moderação" badge={pendencias?.denuncias_abertas ?? 0} icon={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />} />
           <SidebarLink
             href="/admin/titular"
             label="Pedidos LGPD"
@@ -57,7 +57,8 @@ export function AdminSidebar({ isMobileMenuOpen, onCloseMobileMenu, onLogout }: 
           />
           <SidebarLink
             href="/admin/verificacoes"
-            label="Selos (CNPJ)"
+            label="Selos"
+            badge={pendencias ? totalSelos(pendencias) : 0}
             icon={<><path d="M9 12l2 2 4-4" /><path d="M12 2l2.4 1.8 3-.3 1 2.8 2.6 1.6-.9 2.9.9 2.9-2.6 1.6-1 2.8-3-.3L12 22l-2.4-1.8-3 .3-1-2.8-2.6-1.6.9-2.9-.9-2.9 2.6-1.6 1-2.8 3 .3z" /></>}
           />
           <SidebarLink href="/admin/prestadores" label="Prestadores" icon={<><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a6 6 0 0 0-4-5.65" /></>} />

@@ -8,7 +8,7 @@ vi.mock('@/lib/notificacoes/email', () => ({ enviarEmail: (...a: unknown[]) => e
 
 import { GET } from '@/app/api/cron/resumo-pendencias/route'
 
-const zeros = { titular_abertas: 0, titular_atrasadas: 0, denuncias_abertas: 0, garantias_abertas: 0, contestacoes_abertas: 0 }
+const zeros = { titular_abertas: 0, titular_atrasadas: 0, denuncias_abertas: 0, selos_cnpj_abertos: 0, selos_documentos_abertos: 0 }
 const chamar = (autorizacao?: string) =>
   GET(new Request('http://localhost/api/cron/resumo-pendencias', {
     headers: autorizacao ? { authorization: autorizacao } : {},

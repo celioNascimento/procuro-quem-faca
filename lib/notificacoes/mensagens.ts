@@ -14,16 +14,16 @@ export interface Pendencias {
   titular_abertas: number
   titular_atrasadas: number
   denuncias_abertas: number
-  garantias_abertas: number
-  contestacoes_abertas: number
+  selos_cnpj_abertos: number
+  selos_documentos_abertos: number
 }
 
 const CHAVES: (keyof Pendencias)[] = [
   'titular_abertas',
   'titular_atrasadas',
   'denuncias_abertas',
-  'garantias_abertas',
-  'contestacoes_abertas',
+  'selos_cnpj_abertos',
+  'selos_documentos_abertos',
 ]
 
 // Aceita o JSON do banco e garante números inteiros não negativos
@@ -39,11 +39,12 @@ export function normalizarPendencias(bruto: unknown): Pendencias {
 
 // "titular_atrasadas" já está dentro de "titular_abertas": não entra de novo na soma
 export function totalPendencias(p: Pendencias): number {
-  return p.titular_abertas + p.denuncias_abertas + p.garantias_abertas + p.contestacoes_abertas
+  return p.titular_abertas + p.denuncias_abertas + totalSelos(p)
 }
 
-export function totalModeracao(p: Pendencias): number {
-  return p.denuncias_abertas + p.garantias_abertas + p.contestacoes_abertas
+// CNPJ e Seguro/CND esperam decisão na mesma tela (Selos)
+export function totalSelos(p: Pendencias): number {
+  return p.selos_cnpj_abertos + p.selos_documentos_abertos
 }
 
 export function emailNovoPedidoTitular(params: {
@@ -81,8 +82,8 @@ export function emailResumoPendencias(p: Pendencias, dataTexto: string): EmailNo
     linhas.push(`Pedidos de titulares de dados: ${p.titular_abertas}${atraso}`)
   }
   if (p.denuncias_abertas > 0) linhas.push(`Denúncias abertas: ${p.denuncias_abertas}`)
-  if (p.garantias_abertas > 0) linhas.push(`Garantias a tratar: ${p.garantias_abertas}`)
-  if (p.contestacoes_abertas > 0) linhas.push(`Contestações abertas: ${p.contestacoes_abertas}`)
+  if (p.selos_cnpj_abertos > 0) linhas.push(`Selos de CNPJ aguardando decisão: ${p.selos_cnpj_abertos}`)
+  if (p.selos_documentos_abertos > 0) linhas.push(`Seguro e CND aguardando decisão: ${p.selos_documentos_abertos}`)
 
   const alerta = p.titular_atrasadas > 0 ? ' (há pedido com prazo vencido)' : ''
   return {
@@ -91,6 +92,7 @@ export function emailResumoPendencias(p: Pendencias, dataTexto: string): EmailNo
       `Resumo das pendências do PQF em ${dataTexto}:\n\n` +
       `${linhas.map(l => `- ${l}`).join('\n')}\n\n` +
       `Pedidos de titulares: ${NOTIFICACOES.urlFilaTitular}\n` +
-      `Moderação: ${NOTIFICACOES.urlModeracao}`,
+      `Moderação: ${NOTIFICACOES.urlModeracao}\n` +
+      `Selos: ${NOTIFICACOES.urlSelos}`,
   }
 }
