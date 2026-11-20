@@ -16,7 +16,14 @@ Complementa `02-arquitetura.md`. Ver `00-glossario.md` para localizar um conceit
 
 ## `/admin/login`
 
-`lib/services/adminAuth.service.ts` (`loginAdmin`). Tela simples de email/senha, sem hook dedicado (estado local só do componente).
+Tela com o logo do PQF, título "Painel administrativo" e visual do kit `components/admin/ui`. Estado e ações em `hooks/useAdminLogin.ts`; consultas em `lib/services/adminAuth.service.ts`; textos e regra de e-mail em `lib/auth/adminLogin.ts`.
+
+- **E-mail e senha** com `autocomplete` correto, foco no e-mail e botão de mostrar/ocultar senha.
+- **Erro único** para e-mail ou senha errados ("E-mail ou senha incorretos"), sem revelar se a conta existe.
+- **Conta que não é admin** (`perfis_admin`): `loginAdmin` confere o perfil logo após entrar; sem perfil, desconecta e mostra "Esta conta não tem acesso ao painel."
+- **Esqueci minha senha:** envia o link pelo Supabase com retorno em `/recuperar-senha` (mesma página do site) e responde igual para e-mail cadastrado ou não. Depois de criar a senha, a pessoa cai no `/login` do site e segue para `/admin`.
+- **Testes:** `app/(admin)/admin/login/page.test.tsx`, `lib/services/adminAuth.service.test.ts`, `lib/auth/adminLogin.test.ts`; o login dos testes e2e (`entrarComoAdmin`) usa os rótulos "E-mail", "Senha" e o botão "Entrar".
+- A rota `/admin/auditoria` (verificador de URL de indexação, sem consulta a dados) foi removida em 20/11/2026.
 
 ## `/admin/logs`
 
