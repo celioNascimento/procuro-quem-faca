@@ -1,6 +1,6 @@
 // components/AvatarConta.tsx
 //
-// Foto da conta no cabeçalho. Se não há foto, ou se ela não carrega, mostra o ícone de usuário
+// Foto da conta no cabeçalho. A foto aparece inteira (logo horizontal não é cortado no círculo). Se não há foto, ou se ela não carrega, mostra o ícone de usuário
 // (nunca fica um quadro vazio). O `no-referrer` evita que o Google recuse a foto por vir de outro site.
 'use client'
 
@@ -23,7 +23,7 @@ export function AvatarConta({ url, tamanhoIcone = 16 }: Props) {
         alt="Sua foto"
         referrerPolicy="no-referrer"
         onError={() => setUrlComFalha(url)}
-        className="h-full w-full object-cover"
+        className="h-full w-full bg-white object-contain p-0.5"
       />
     )
   }
