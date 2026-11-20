@@ -47,7 +47,8 @@ describe('e-mails', () => {
     expect(e.texto).not.toMatch(/@|whatsapp|\d{8,}/i)
   })
 
-  it('denúncia aponta para a moderação', () => {
+  it('denúncia aponta para a tela de Denúncias', () => {
+    expect(emailNovaDenuncia().texto).toContain('Denúncias')
     expect(emailNovaDenuncia().texto).toContain('/admin/moderacao')
   })
 

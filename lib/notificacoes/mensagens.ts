@@ -67,7 +67,7 @@ export function emailNovoPedidoTitular(params: {
 export function emailNovaDenuncia(): EmailNotificacao {
   return {
     assunto: 'PQF: nova denúncia de perfil',
-    texto: `Chegou uma nova denúncia de perfil.\n\nDetalhes na moderação, com login: ${NOTIFICACOES.urlModeracao}`,
+    texto: `Chegou uma nova denúncia de perfil.\n\nDetalhes em Denúncias, com login: ${NOTIFICACOES.urlDenuncias}`,
   }
 }
 
@@ -92,7 +92,7 @@ export function emailResumoPendencias(p: Pendencias, dataTexto: string): EmailNo
       `Resumo das pendências do PQF em ${dataTexto}:\n\n` +
       `${linhas.map(l => `- ${l}`).join('\n')}\n\n` +
       `Pedidos de titulares: ${NOTIFICACOES.urlFilaTitular}\n` +
-      `Moderação: ${NOTIFICACOES.urlModeracao}\n` +
+      `Denúncias: ${NOTIFICACOES.urlDenuncias}\n` +
       `Selos: ${NOTIFICACOES.urlSelos}`,
   }
 }

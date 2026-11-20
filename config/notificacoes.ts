@@ -17,7 +17,7 @@ export const NOTIFICACOES = {
   destinoPadrao: CONTROLADOR.emailPrivacidade,
   remetentePadrao: 'PQF Avisos <onboarding@resend.dev>',
   urlFilaTitular: `${SITE_URL}/admin/titular`,
-  urlModeracao: `${SITE_URL}/admin/moderacao`,
+  urlDenuncias: `${SITE_URL}/admin/moderacao`,
   urlSelos: `${SITE_URL}/admin/verificacoes`,
   // Anti-spam do aviso de denúncia: no máximo 1 e-mail por perfil nesse intervalo...
   intervaloEmailDenunciaMinutos: 30,

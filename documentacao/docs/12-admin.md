@@ -10,9 +10,9 @@ Complementa `02-arquitetura.md`. Ver `00-glossario.md` para localizar um conceit
 
 **Classificação dos prestadores (tela Prestadores, `types/adminPrestadores.ts`, revisada em 13/11/2026).** A etapa de cada prestador vem da origem (`origem_tipo`), do status e da conta, nesta ordem: sem conta → *Perfil público* (ou *Cadastro iniciado* se for rascunho); com conta e `status = 'pendente'` → *Cadastro iniciado*; com conta e funil de ativação completo (`perfil_completo`/`avaliacao_recebida`) → *Ativo*; origem `reivindicado` (ou o formato antigo, `curadoria_publica` com conta) → *Reivindicado*; origem `registro_direto` → *Cadastro direto*. Antes, qualquer perfil com conta era chamado de *Reivindicado*, inclusive quem criou o próprio cadastro, e a mensagem de WhatsApp sugerida dizia "seu perfil já está reivindicado" para quem nunca assumiu nada. A origem tem três nomes: *Curadoria pública*, *Perfil assumido* e *Cadastro direto*.
 
-`hooks/useAdminDashboard.ts` + `lib/services/adminDashboard.service.ts`. Métricas gerais (contadores de cidades/anúncios/prestadores/logs), origem de prestadores (curadoria/registrados/reivindicados), funil de ativação, ranking de categorias mais buscadas, radar de eventos recentes (clique WhatsApp, busca sem sucesso, denúncia), subscription Realtime em `logs_atividades` com notificação visual para denúncias.
+`hooks/useAdminDashboard.ts` + `lib/services/adminDashboard.service.ts`. Métricas gerais (contadores de cidades/anúncios/prestadores/logs), origem de prestadores (curadoria/registrados/reivindicados), funil de ativação, radar de eventos recentes (clique WhatsApp, busca sem sucesso, denúncia), subscription Realtime em `logs_atividades` com notificação visual para denúncias.
 
-**Pendência:** o ranking de "categorias mais buscadas" depende de logs com `acao='FILTRO_CATEGORIA'` — nenhum ponto do frontend revisado até agora grava esse log explicitamente. Se essa gravação não existir de fato em algum lugar não revisado, o ranking fica sempre vazio (tratado com fallback "Sem dados ainda", não é erro visível, mas a métrica não reflete a realidade).
+**Removido em 20/11/2026:** o card "Categorias mais buscadas" (e `getRankingCategorias`). Dependia de logs `acao='FILTRO_CATEGORIA'` que nunca foram gravados (nenhum registro em produção), então o card ficava sempre vazio. Só deve voltar quando o app gravar esse log ao filtrar por categoria.
 
 ## `/admin/login`
 
@@ -32,7 +32,7 @@ Fonte única: a função `contar_pendencias()` no banco (só `service_role`; o p
 | Chave | O que conta | Onde aparece |
 |---|---|---|
 | `titular_abertas` / `titular_atrasadas` | Pedidos do titular `recebida` ou `em_analise` (e os com prazo vencido) | Menu "Pedidos LGPD" (vermelho se houver atraso), visão geral, e-mail |
-| `denuncias_abertas` | Denúncias `aberta` | Menu "Moderação", visão geral, e-mail |
+| `denuncias_abertas` | Denúncias `aberta` | Menu "Denúncias", visão geral, e-mail |
 | `selos_cnpj_abertos` | Verificações de CNPJ `pendente` ou `em_analise` (a lista da aba CNPJ) | Menu "Selos" (somado), visão geral, e-mail |
 | `selos_documentos_abertos` | Pedidos de Seguro ou CND em análise (`dados ? 'pedido'`, a lista da aba Seguro e CND) | Menu "Selos" (somado), visão geral, e-mail |
 
@@ -45,7 +45,9 @@ Fonte única: a função `contar_pendencias()` no banco (só `service_role`; o p
 
 `hooks/useAdminLogs.ts` + `lib/services/adminLogs.service.ts`. Busca até 1000 logs recentes, filtros (email/termo, data, tipo de evento), gráfico de atividade por dia/mês (Recharts), exportação CSV, subscription Realtime via `subscribeLogsAtividades` (`lib/db/logs.ts`, compartilhada com o dashboard admin, cada consumidor com seu próprio nome de canal).
 
-## `/admin/moderacao`
+## `/admin/moderacao` (tela "Denúncias")
+
+O nome na tela e no menu é **Denúncias** (desde 20/11/2026); a URL continua `/admin/moderacao` para não quebrar os links dos e-mails de aviso. Garantias e contestações não passam por aqui (ver "Contador de pendências").
 
 `hooks/useModeracao.ts` + `lib/services/denuncia.service.ts` (estendido com `fetchDenuncias`, `atualizarStatusDenuncia`, `bloquearPrestadorDenunciado`). Lista denúncias filtráveis por status (aberta/resolvida/arquivada), com ações de resolver, arquivar, ou bloquear o prestador denunciado diretamente (usa `prestadores.bloqueado`/`motivo_bloqueio`).
 

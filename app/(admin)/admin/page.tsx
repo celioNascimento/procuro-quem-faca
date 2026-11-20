@@ -24,7 +24,6 @@ export default function AdminDashboard() {
   const trafego = useAdminTrafego()
 
   const naoContatados = Math.max(stats.ativacao.total - stats.ativacao.enviados, 0)
-  const maxCategoria = Math.max(1, ...stats.topCategorias.map((c) => c.total))
 
   const atencao: ItemAtencao[] = [
     {
@@ -151,31 +150,17 @@ export default function AdminDashboard() {
         <StatCard label="Anúncios" valor={stats.anuncios} hint="visíveis no site" href="/admin/anuncios" />
       </section>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card
-          titulo="Campanha de ativação"
-          descricao={`${pctAtivacao}% dos prestadores já foram contatados`}
-          acoes={<Link href="/admin/ativacao" className="text-sm font-semibold text-pqf-blue hover:text-pqf-blue-hover">Abrir</Link>}
-        >
-          <ol className="space-y-4">
-            <Funil rotulo="Total na base" valor={stats.ativacao.total} base={stats.ativacao.total} />
-            <Funil rotulo="Contatados" valor={stats.ativacao.enviados} base={stats.ativacao.total} />
-            <Funil rotulo="Perfis ativos" valor={stats.ativacao.ativos} base={stats.ativacao.total} />
-          </ol>
-        </Card>
-
-        <Card titulo="Categorias mais buscadas" descricao="Busca registrada por categoria.">
-          {stats.topCategorias.length === 0 ? (
-            <EmptyState titulo="Sem dados ainda" descricao="A lista aparece quando houver buscas por categoria." />
-          ) : (
-            <ol className="space-y-4">
-              {stats.topCategorias.map((c, i) => (
-                <Funil key={`${c.nome}-${i}`} rotulo={c.nome} valor={c.total} base={maxCategoria} sufixo="buscas" />
-              ))}
-            </ol>
-          )}
-        </Card>
-      </div>
+      <Card
+        titulo="Campanha de ativação"
+        descricao={`${pctAtivacao}% dos prestadores já foram contatados`}
+        acoes={<Link href="/admin/ativacao" className="text-sm font-semibold text-pqf-blue hover:text-pqf-blue-hover">Abrir</Link>}
+      >
+        <ol className="space-y-4">
+          <Funil rotulo="Total na base" valor={stats.ativacao.total} base={stats.ativacao.total} />
+          <Funil rotulo="Contatados" valor={stats.ativacao.enviados} base={stats.ativacao.total} />
+          <Funil rotulo="Perfis ativos" valor={stats.ativacao.ativos} base={stats.ativacao.total} />
+        </ol>
+      </Card>
 
       <Card
         titulo="Atividade recente"
@@ -210,14 +195,14 @@ export default function AdminDashboard() {
 }
 
 // Linha com rótulo, valor e barra proporcional. Usada no funil e no ranking.
-function Funil({ rotulo, valor, base, sufixo }: { rotulo: string; valor: number; base: number; sufixo?: string }) {
+function Funil({ rotulo, valor, base }: { rotulo: string; valor: number; base: number }) {
   const pct = base > 0 ? Math.round((valor / base) * 100) : 0
   return (
     <li>
       <div className="mb-1.5 flex items-baseline justify-between gap-3">
         <p className="min-w-0 truncate text-sm font-medium text-pqf-ink">{rotulo}</p>
         <p className="shrink-0 text-sm tabular-nums text-pqf-muted">
-          {valor}{sufixo ? ` ${sufixo}` : ''}
+          {valor}
         </p>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">

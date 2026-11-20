@@ -1,4 +1,4 @@
-// app/(admin)/admin/moderacao/page.tsx — versão final
+// app/(admin)/admin/moderacao/page.tsx — tela "Denúncias" (a URL antiga /admin/moderacao continua, por causa dos links dos e-mails)
 'use client'
 import { AlertCircle } from 'lucide-react'
 import { useModeracao } from '@/hooks/useModeracao'
@@ -22,11 +22,11 @@ export default function ModeracaoPage() {
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
       <header className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
         <div>
-          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Central de segurança</p>
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Confiança e segurança</p>
           <h1 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900 sm:text-3xl">
-            Moderação<span className="not-italic text-red-600">.</span>
+            Denúncias<span className="not-italic text-red-600">.</span>
           </h1>
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Denúncias de prestadores</p>
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Perfis de prestadores denunciados</p>
         </div>
         <span className="hidden rounded-full bg-slate-100 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 sm:inline-flex">
           {denuncias.length} {denuncias.length === 1 ? 'registro' : 'registros'}

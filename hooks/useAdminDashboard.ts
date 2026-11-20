@@ -8,9 +8,7 @@ import {
   getContadoresGerais,
   getNovosCadastros,
   getOrigemEAtivacaoStats,
-  getRankingCategorias,
   getRadarRecente,
-  type CategoriaRanking,
   type NovoCadastro,
   type RadarItem,
 } from '@/lib/services/adminDashboard.service'
@@ -26,13 +24,12 @@ export interface Stats {
   curadoria: number
   registrados: number
   reivindicados: number
-  topCategorias: CategoriaRanking[]
   ativacao: { total: number; enviados: number; ativos: number }
 }
 
 const STATS_INICIAL: Stats = {
   cidades: 0, anuncios: 0, prestadores: 0, logs: 0,
-  curadoria: 0, registrados: 0, reivindicados: 0, topCategorias: [],
+  curadoria: 0, registrados: 0, reivindicados: 0,
   ativacao: { total: 0, enviados: 0, ativos: 0 },
 }
 
@@ -49,10 +46,9 @@ export function useAdminDashboard() {
     if (isRefresh) { setRefreshing(true); hapticFeedback(15) }
     try {
       setErro(null)
-      const [contadores, { origem, ativacao }, topCategorias, radarRecente, novos] = await Promise.all([
+      const [contadores, { origem, ativacao }, radarRecente, novos] = await Promise.all([
         getContadoresGerais(),
         getOrigemEAtivacaoStats(),
-        getRankingCategorias(),
         getRadarRecente(),
         getNovosCadastros(),
       ])
@@ -60,7 +56,6 @@ export function useAdminDashboard() {
       setStats({
         ...contadores,
         ...origem,
-        topCategorias,
         ativacao,
       })
       setRadar(radarRecente)
