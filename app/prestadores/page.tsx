@@ -59,7 +59,7 @@ function ListaConteudo() {
   } = usePrestadores()
 
   const { totalAtivos, aplicar, limparFiltros, verOutrasCidades, voltarParaMinhaCidade } = useFiltrosPrestadores()
-  const { cidadeAtual } = useLocation()
+  const { cidadeAtual, estadoLocalizacao, solicitarLocalizacao } = useLocation()
 
   // Voltar do perfil devolve o usuário ao ponto da lista onde estava.
   useRestaurarScroll(!loading)
@@ -140,6 +140,8 @@ function ListaConteudo() {
                 cidadeSalvaNome={cidadeAtual?.nome ?? null}
                 onVerOutrasCidades={verOutrasCidades}
                 onVoltarParaMinhaCidade={voltarParaMinhaCidade}
+                onAtualizarLocalizacao={solicitarLocalizacao}
+                estadoLocalizacao={estadoLocalizacao}
               />
               {!loading && prestadoresExibidos.length > 0 && (
                 <span
@@ -207,11 +209,11 @@ function ListaConteudo() {
               </div>
               <div className="max-w-xs lg:max-w-sm">
                 <h2 className="text-lg lg:text-xl font-bold text-slate-700 mb-1 lg:mb-2">
-                  {restritoACidade ? `Nenhum profissional em ${cidadeNome}` : 'Nenhum profissional encontrado'}
+                  {restritoACidade ? `Ainda não temos esse serviço em ${cidadeNome}` : 'Nenhum profissional encontrado'}
                 </h2>
                 <p className="text-sm lg:text-base text-slate-500 font-medium leading-relaxed">
                   {restritoACidade
-                    ? 'Veja os profissionais de outras cidades ou tente buscar por outro serviço.'
+                    ? 'Não há profissionais cadastrados aqui para essa busca. Se quiser, veja os de outras cidades ou busque outro serviço.'
                     : 'Tente remover os filtros ou buscar por uma categoria diferente.'}
                 </p>
               </div>

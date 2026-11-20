@@ -84,6 +84,34 @@ describe('CidadeDaBusca', () => {
     expect(onVer).toHaveBeenCalledTimes(1)
   })
 
+  it('cidade salva: "Atualizar minha localização" pede a posição ao aparelho', () => {
+    const onAtualizar = vi.fn()
+    render(<CidadeDaBusca {...base} cidadeNome="Londrina" origem="salva" onAtualizarLocalizacao={onAtualizar} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Não é aqui? Atualizar minha localização' }))
+    expect(onAtualizar).toHaveBeenCalledTimes(1)
+  })
+
+  it('enquanto procura a cidade, o botão fica desligado e diz o que faz', () => {
+    render(<CidadeDaBusca {...base} cidadeNome="Londrina" origem="salva" onAtualizarLocalizacao={vi.fn()} estadoLocalizacao="pedindo" />)
+    const botao = screen.getByRole('button', { name: 'Procurando a sua cidade…' }) as HTMLButtonElement
+    expect(botao.disabled).toBe(true)
+  })
+
+  it('se a cidade nova não é atendida, avisa que a anterior continua valendo', () => {
+    render(<CidadeDaBusca {...base} cidadeNome="Londrina" origem="salva" onAtualizarLocalizacao={vi.fn()} estadoLocalizacao="sem_cidade" />)
+    expect(screen.getByRole('status').textContent).toContain('Mantivemos a cidade anterior')
+  })
+
+  it('se a pessoa negou a permissão, orienta a usar os filtros', () => {
+    render(<CidadeDaBusca {...base} cidadeNome="Londrina" origem="salva" onAtualizarLocalizacao={vi.fn()} estadoLocalizacao="negado" />)
+    expect(screen.getByRole('status').textContent).toContain('filtros')
+  })
+
+  it('cidade escolhida nos filtros ou escrita na busca não oferece atualizar (não é a cidade salva)', () => {
+    render(<CidadeDaBusca {...base} cidadeNome="Maringá" origem="filtro" onAtualizarLocalizacao={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: /Atualizar minha localização/ })).toBeNull()
+  })
+
   it('não aparece quando não há cidade', () => {
     const { container } = render(<CidadeDaBusca {...base} cidadeNome={null} origem={null} />)
     expect(container.firstChild).toBeNull()
