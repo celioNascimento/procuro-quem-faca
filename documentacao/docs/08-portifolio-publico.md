@@ -37,6 +37,8 @@ Duas colunas: `PerfilHero`, `PerfilCTA` e `PerfilConfianca` à esquerda (fixa ao
 
 **`ModalFotoBase.tsx`** (`components/shared/`) — base de todos os modais de foto (também usada por `SessaoFotos`, `ModalDiscussao` e `WizardZoomModal`). Acessível: `role="dialog"` + `aria-modal` + nome (`titulo`), fecha com Esc ou toque no fundo, um botão "Fechar" de 44px que recebe o foco ao abrir, foco preso dentro (Tab) e devolvido ao fechar, rolagem da página travada, setas ← → trocam de foto e arrastar com o dedo (≥50px na horizontal) também. Foto limitada a ~34% da altura no celular para sobrar espaço ao texto.
 
+**`SessaoFotos.tsx`** (`components/profile/`) — galeria "Fotos enviadas pelo profissional" (vitrine de fotos, até 5). A foto principal preenche toda a moldura (4:3, 16:9 em telas grandes) com `object-cover`, sem respiro nem faixas cinzas; fotos com outra proporção são cortadas na moldura e aparecem inteiras ao ampliar (`ModalFotoBase`). Teste: `SessaoFotos.test.tsx`.
+
 **`useCompartilharPerfil`** + `lib/services/compartilharPerfil.service.ts`: funções puras de URL/texto (`buildUrlPerfil`, `buildTextoPadrao`, `buildTextoWhatsApp`) + efeitos (`compartilharViaNative` — restrito a mobile via `pointer: coarse`, `compartilharViaWhatsApp`, `registrarCompartilhamento` via `insertLog`).
 
 **`RastreamentoAtivacaoProvider`** — Suspense wrapper invocando `useRastreamentoAtivacao` a partir de `?src=`.
