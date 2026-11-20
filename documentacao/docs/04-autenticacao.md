@@ -50,6 +50,8 @@ O `useAuth` consolida o estado de sessão, `profiles.role` e `prestadores.status
 - Se `profiles.role` for `'prestador'`, mas a linha em `prestadores` não existir, o hook consolida: `role = 'prestador'` e `prestadorStatus = 'pendente'`.
 - Para evitar *FOUC (Flash of Unstyled Content)* e transições bruscas na UI, esses dois valores sofrem **Cache Otimista** via `localStorage` (`pqf_auth_state`), permitindo que a interface (como o `HeaderAuthButton`) renderize o estado correto de forma síncrona, enquanto o banco revalida em background.
 
+**Avatar do cabeçalho** (`components/AvatarConta.tsx`, `hooks/useAvatarConta.ts`, regra em `lib/auth/avatarConta.ts`): mostra, nesta ordem, a foto enviada em "Meus dados" (`profiles.avatar_url`), a foto da conta Google (`user_metadata.picture` ou `avatar_url`) e, por fim, o ícone de usuário. Começa na foto do Google (já na sessão) e troca pela do perfil quando ela carrega. Foto que não carrega também cai no ícone, e a imagem usa `referrerPolicy="no-referrer"` para o Google não recusar o pedido. É a mesma ordem de `usePerfilDados`.
+
 ### 3. Papel administrativo: `owner`/`moderator`/`editor`
 
 Independente das duas anteriores. Tabela `perfis_admin`, vinculada por `user_id`. Um usuário pode ser cliente/prestador **e** admin ao mesmo tempo.

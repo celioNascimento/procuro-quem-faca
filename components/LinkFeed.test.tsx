@@ -3,6 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ session: null, role: null, prestadorStatus: null, loading: false, erroLogin: false, loginGoogle: vi.fn() }) }))
 vi.mock('@/hooks/useLogout', () => ({ useLogout: () => ({ logout: vi.fn() }) }))
+vi.mock('@/hooks/useAvatarConta', () => ({ useAvatarConta: () => '' }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), back: vi.fn() }), usePathname: () => '/', useSearchParams: () => new URLSearchParams() }))
 vi.mock('@/components/Logo', () => ({ default: () => null }))
 vi.mock('@/components/BackButton', () => ({ default: () => null }))
