@@ -1,6 +1,7 @@
 // tests/e2e/homologacao/foto-unica.spec.ts
 //
-// Foto única (20/11/2026): quem tem conta de prestador e de cliente usa a mesma foto nos dois perfis.
+// Foto única (20/11/2026): quem tem conta de prestador e de cliente usa a mesma foto nos dois perfis, e o perfil
+// de cliente já nasce com o nome e a foto do prestador.
 // Direto na API do banco de TESTE, como a interface faria. Restaura tudo no final.
 
 import { expect, test, type APIRequestContext } from '@playwright/test';
@@ -31,6 +32,8 @@ test('foto única: prestador e cliente da mesma conta sempre mostram a mesma fot
   const lerFotoPrestador = async () => ((await (await request.get(`${meuPrestador}&select=foto_perfil`, { headers })).json()) as { foto_perfil: string | null }[])[0]?.foto_perfil ?? null;
   const lerAvatar = async () => ((await (await request.get(`${meuPerfil}&select=avatar_url`, { headers })).json()) as { avatar_url: string | null }[])[0]?.avatar_url ?? null;
 
+  const lerNomeCliente = async () => ((await (await request.get(`${meuPerfil}&select=full_name`, { headers })).json()) as { full_name: string | null }[])[0]?.full_name ?? null;
+
   const fotoOriginal = await lerFotoPrestador();
   const avatarOriginal = await lerAvatar();
   const sufixo = Date.now();
@@ -43,6 +46,8 @@ test('foto única: prestador e cliente da mesma conta sempre mostram a mesma fot
     expect(p1.ok(), await p1.text()).toBe(true);
     expect((await p1.json()).length, 'o prestador não conseguiu trocar a própria foto').toBe(1);
     expect(await lerAvatar()).toBe(fotoDoPrestador);
+    // o perfil de cliente já tem nome (veio do prestador, ou já era do cliente: nunca fica vazio)
+    expect((await lerNomeCliente())?.trim(), 'o perfil de cliente ficou sem nome').toBeTruthy();
 
     // 2) o cliente envia uma foto nova (do PQF): o prestador acompanha
     const p2 = await request.patch(meuPerfil, { headers, data: { avatar_url: fotoDoCliente } });

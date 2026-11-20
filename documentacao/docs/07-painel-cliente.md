@@ -93,13 +93,13 @@ Todas as telas da Área do cliente (`/painel/perfil`, `/meus-servicos`, `/acompa
 - **Botão da home** (`HeaderBotoes`): quem só é cliente vê um único botão, "Área do cliente". Prestador continua vendo "Cliente" e "Meu Painel".
 - Textos do acompanhamento usam "trabalho" (não "serviço", "obra" ou "projeto").
 
-## Foto única (prestador e cliente da mesma conta) — 20/11/2026
+## Perfil de cliente junto do de prestador e foto única — 20/11/2026
 
-Quem tem conta de prestador e de cliente usa a **mesma foto** nos dois perfis. Decisão do dono: trocar em um lugar troca nos dois; a foto de cliente continua **opcional**.
-- **Onde:** só no banco (migração `20261120140000_foto_unica_prestador_cliente`), em dois gatilhos de segurança do banco que não dependem do app. O app continua gravando `prestadores.foto_perfil` e `profiles.avatar_url` como antes.
-- `prestadores.foto_perfil` → `profiles.avatar_url`: sempre que a foto do prestador muda.
-- `profiles.avatar_url` → `prestadores.foto_perfil`: só quando a nova foto é um arquivo enviado ao PQF (bucket `fotos-perfil`). **Foto do Google nunca sobrescreve** a foto do prestador (o `usePerfilDados` grava a foto do Google no cliente quando está vazio).
-- Sem laço: cada gatilho só grava quando o valor do outro lado é diferente. A migração também iguala quem já tinha os dois perfis (a foto do prestador vale).
+Quando o perfil de prestador entra no ar (`status = 'ativo'`), o **perfil de cliente** (`profiles`) é criado ou completado com o **nome** e a **foto**. O resto (WhatsApp, endereço) a pessoa preenche quando quiser. Quem tem os dois perfis usa a **mesma foto**: trocar em um lugar troca nos dois. A foto de cliente continua **opcional** para quem não é prestador. Decisão do dono.
+- **Onde:** só no banco (migração `20261120140000_foto_unica_prestador_cliente`), em dois gatilhos que não dependem do app. O app continua gravando `prestadores.foto_perfil` e `profiles.avatar_url` como antes.
+- **Prestador → cliente** (ao inserir ou mudar foto, nome, status ou dono do perfil): se a pessoa não tem linha em `profiles`, ela é criada com `role = 'prestador'`; o **nome** só é copiado quando o cliente ainda não tem nome (nunca sobrescreve); a **foto** sempre acompanha o prestador. Rascunho (`pendente`) não mexe no cliente.
+- **Cliente → prestador:** só a foto, e só quando foi **enviada ao PQF** (bucket `fotos-perfil`). Foto do Google nunca sobrescreve a do prestador (o `usePerfilDados` grava a do Google no cliente quando está vazio).
+- Sem laço: cada gatilho só grava quando o valor do outro lado é diferente. A migração também criou/completou o perfil de cliente de quem já tinha perfil de prestador no ar (a foto do prestador vale).
 - Os dois perfis usam o mesmo bucket, e as exclusões de conta (`useConfirmarExclusaoConta`) removem prestador e cliente juntos; por isso o arquivo compartilhado não fica órfão.
-- **Testes:** `tests/e2e/homologacao/foto-unica.spec.ts` (3 cenários, restaura o estado). Validado também por SQL no banco de teste.
-- **Aviso de produto:** a foto que o cliente envia pelo painel passa a ser também a foto pública do perfil de prestador. Ideia futura: um texto no painel do cliente avisando "é a mesma foto do seu perfil de profissional" quando a pessoa tem os dois.
+- **Testes:** `tests/e2e/homologacao/foto-unica.spec.ts` (restaura o estado) e validação por SQL no banco de teste (6 cenários: perfil criado, nome preservado, rascunho não mexe, os dois sentidos da foto, Google não sobrescreve).
+- **Aviso de produto:** a foto que o cliente envia pelo painel passa a ser também a foto pública do perfil de prestador. Ideia futura: texto no painel do cliente ("é a mesma foto do seu perfil de profissional") quando a pessoa tem os dois.
