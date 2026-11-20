@@ -46,4 +46,39 @@ describe('AdminSidebar: contadores', () => {
     expect(screen.getByRole('link', { name: 'Selos' })).toBeTruthy()
     expect(screen.queryByText('Selos (CNPJ)')).toBeNull()
   })
+
+  it('o menu é organizado por tarefa, na ordem Hoje, Confiança e segurança, Pessoas, Crescimento e Plataforma', () => {
+    menu()
+    const grupos = ['Hoje', 'Confiança e segurança', 'Pessoas', 'Crescimento', 'Plataforma']
+    const textos = grupos.map((g) => screen.getByText(g, { selector: 'p' }))
+    for (let i = 1; i < textos.length; i++) {
+      expect(textos[i - 1].compareDocumentPosition(textos[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    }
+  })
+
+  it('usa os nomes novos e leva às mesmas rotas de antes', () => {
+    menu()
+    const rotas: Record<string, string> = {
+      'Visão geral': '/admin',
+      'Denúncias': '/admin/moderacao',
+      'Selos': '/admin/verificacoes',
+      'Pedidos do titular': '/admin/titular',
+      'Prestadores': '/admin/prestadores',
+      'Convites': '/admin/ativacao',
+      'Cliques no WhatsApp': '/admin/cliques',
+      'Logs e analytics': '/admin/logs',
+      'Catálogo de serviços': '/admin/habilidades',
+      'Geografia': '/admin/geografia',
+    }
+    for (const [nome, href] of Object.entries(rotas)) {
+      expect(screen.getByRole('link', { name: nome }).getAttribute('href')).toBe(href)
+    }
+  })
+
+  it('não tem mais atalhos paralelos nem itens sem uso: Povoar base, Anúncios, Ativação, Pedidos LGPD e Habilidades', () => {
+    menu()
+    for (const antigo of ['Povoar base', 'Anúncios', 'Ativação', 'Pedidos LGPD', 'Habilidades']) {
+      expect(screen.queryByRole('link', { name: antigo })).toBeNull()
+    }
+  })
 })

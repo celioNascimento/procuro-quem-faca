@@ -255,7 +255,7 @@ export default function PaginaAtivacao() {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-20 md:px-6">
       <PageHeader
-        titulo="Ativação"
+        titulo="Convites"
         descricao="Contato com os profissionais que ganharam perfil a partir de informações públicas."
         acoes={
           <Button

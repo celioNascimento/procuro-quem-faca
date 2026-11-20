@@ -39,6 +39,8 @@ describe('Visão geral do admin', () => {
     estado.pendencias = { ...zeros, titular_abertas: 1, denuncias_abertas: 2, selos_cnpj_abertos: 3, selos_documentos_abertos: 4 }
     render(<AdminDashboard />)
     expect(screen.getByText('Denúncias abertas')).toBeTruthy()
+    expect(screen.getByText('Pedidos do titular em aberto')).toBeTruthy()
+    expect(screen.queryByText(/Pedidos LGPD/)).toBeNull()
     expect(screen.getByText('Selos de CNPJ aguardando decisão')).toBeTruthy()
     expect(screen.getByText('Seguro e CND aguardando decisão')).toBeTruthy()
     expect(screen.queryByText(/Garantias abertas|Contestações abertas/)).toBeNull()
@@ -48,5 +50,11 @@ describe('Visão geral do admin', () => {
     estado.pendencias = zeros
     render(<AdminDashboard />)
     expect(screen.getByText('Nada pendente')).toBeTruthy()
+  })
+
+  it('não mostra mais o card de Anúncios (sem anunciante nem receita)', () => {
+    render(<AdminDashboard />)
+    expect(screen.queryByText('Anúncios')).toBeNull()
+    expect(screen.getByText('Curadoria')).toBeTruthy()
   })
 })

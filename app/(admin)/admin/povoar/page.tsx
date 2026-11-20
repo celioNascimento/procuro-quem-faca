@@ -4,6 +4,7 @@
 
 import { UserPlus } from 'lucide-react'
 import { usePovoar } from '@/hooks/usePovoar'
+import Link from 'next/link'
 import { Button, Card, Field, Input, PageHeader, Select, Textarea } from '@/components/admin/ui'
 
 export default function PovoarApp() {
@@ -12,8 +13,9 @@ export default function PovoarApp() {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 px-4 pb-20">
       <PageHeader
-        titulo="Povoar base"
-        descricao="Insere um prestador por curadoria manual. O perfil entra como curadoria pública."
+        titulo="Adicionar prestador"
+        descricao="Cadastra um prestador por curadoria manual. O perfil entra como curadoria pública."
+        acoes={<Link href="/admin/prestadores" className="inline-flex min-h-11 items-center text-sm font-semibold text-pqf-blue hover:text-pqf-blue-hover">← Voltar para Prestadores</Link>}
       />
 
       <Card>
