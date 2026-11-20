@@ -78,6 +78,8 @@ describe('HeaderAuthButton', () => {
     for (const foto of fotos) {
       expect(foto.getAttribute('src')).toBe('https://lh3.googleusercontent.com/foto.jpg')
       expect(foto.getAttribute('referrerpolicy')).toBe('no-referrer')
+      expect(foto.className).toContain('object-contain')
+      expect(foto.className).not.toContain('object-cover')
     }
   })
 
