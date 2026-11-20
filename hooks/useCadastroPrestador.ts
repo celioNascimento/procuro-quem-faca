@@ -25,6 +25,7 @@ import {
 import { reivindicarPerfilPorToken, tokenTemFormatoValido } from '@/lib/services/reivindicacao.service'
 import { registrarConsentimentos } from '@/lib/services/consentimento.service'
 import { listarPendenciasCadastro } from '@/lib/cadastro/pendencias'
+import { instagramParaGravar } from '@/lib/instagram'
 
 import type { PrestadorFormData } from '@/types/prestador'
 
@@ -314,6 +315,8 @@ export function useCadastroPrestador(reivindicarId: string | null, tokenReivindi
       const payload = {
         ...f,
         cidades_atendidas: cidadesAtendidasLimpo,
+        // O cadastro não mostra o campo Instagram: o valor inicial é '' e o banco só aceita usuário válido ou nulo.
+        instagram: instagramParaGravar(f.instagram),
         id: f.id ? Number(f.id) : undefined,
         user_id: userId,
         status: 'ativo',

@@ -42,6 +42,12 @@ export function normalizarInstagram(entrada: string | null | undefined): Resulta
   return { ok: true, usuario }
 }
 
+/** O que vai para o banco: o usuário válido, ou null (vazio ou inválido). Nunca texto vazio: a constraint recusa. */
+export function instagramParaGravar(entrada: string | null | undefined): string | null {
+  const r = normalizarInstagram(entrada)
+  return r.ok ? r.usuario : null
+}
+
 export function enderecoDoInstagram(usuario: string): string {
   return `https://www.instagram.com/${usuario}/`
 }

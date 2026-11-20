@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { arrobaDoInstagram, enderecoDoInstagram, normalizarInstagram, usuarioDeInstagramValido } from './instagram'
+import { arrobaDoInstagram, enderecoDoInstagram, instagramParaGravar, normalizarInstagram, usuarioDeInstagramValido } from './instagram'
 
 const ok = (usuario: string | null) => ({ ok: true, usuario })
 
@@ -54,5 +54,24 @@ describe('endereço e exibição', () => {
     expect(usuarioDeInstagramValido('pedro.p')).toBe(true)
     expect(usuarioDeInstagramValido('javascript:alert(1)')).toBe(false)
     expect(usuarioDeInstagramValido('Pedro')).toBe(false) // o banco guarda minúsculas
+  })
+})
+
+describe('instagramParaGravar (o que vai para o banco)', () => {
+  it('campo vazio vira null, nunca texto vazio (a constraint do banco recusa \'\')', () => {
+    expect(instagramParaGravar('')).toBeNull()
+    expect(instagramParaGravar('   ')).toBeNull()
+    expect(instagramParaGravar(null)).toBeNull()
+    expect(instagramParaGravar(undefined)).toBeNull()
+  })
+
+  it('usuário válido vai sem @ e em minúsculas', () => {
+    expect(instagramParaGravar('@ProcuroQuemFaca')).toBe('procuroquemfaca')
+    expect(instagramParaGravar('https://www.instagram.com/seu.nome/')).toBe('seu.nome')
+  })
+
+  it('valor inválido não vai para o banco (null em vez de quebrar o salvamento)', () => {
+    expect(instagramParaGravar('dois espaços aqui')).toBeNull()
+    expect(instagramParaGravar('instagram.com/p/abc')).toBeNull()
   })
 })
