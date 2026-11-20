@@ -6,12 +6,15 @@ import Link from 'next/link'
 import { LogIn, Loader2, User, AlertCircle, LogOut, Briefcase, CheckCircle, Images } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useLogout } from '@/hooks/useLogout'
+import { useAvatarConta } from '@/hooks/useAvatarConta'
+import { AvatarConta } from '@/components/AvatarConta'
 
 export function HeaderAuthButton({ feedAtivo = false }: { feedAtivo?: boolean } = {}) {
   const { session, loading, erroLogin, loginGoogle, role, prestadorStatus } = useAuth()
   const { logout } = useLogout()
   const [aberto, setAberto] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const avatarUrl = useAvatarConta(session?.user?.id, session?.user?.user_metadata)
 
   useEffect(() => {
     function handleClickFora(e: MouseEvent) {
@@ -59,17 +62,7 @@ export function HeaderAuthButton({ feedAtivo = false }: { feedAtivo?: boolean } 
             className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-1 pr-4 shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50"
           >
             <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
-              {session.user.user_metadata?.avatar_url ? (
-                <img
-                  src={session.user.user_metadata.avatar_url}
-                  alt="Avatar"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-blue-50 text-blue-600">
-                  <User size={16} />
-                </div>
-              )}
+              <AvatarConta url={avatarUrl} tamanhoIcone={16} />
             </div>
             <span className="whitespace-nowrap text-sm font-semibold text-slate-700">
               {principal.label}
@@ -106,17 +99,7 @@ export function HeaderAuthButton({ feedAtivo = false }: { feedAtivo?: boolean } 
             aria-expanded={aberto}
             className="size-11 overflow-hidden rounded-full border-2 border-blue-100 shadow-sm transition-all active:scale-95"
           >
-            {session.user.user_metadata?.avatar_url ? (
-              <img
-                src={session.user.user_metadata.avatar_url}
-                alt="Avatar"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-blue-50 text-blue-600">
-                <User size={18} />
-              </div>
-            )}
+            <AvatarConta url={avatarUrl} tamanhoIcone={18} />
           </button>
 
           {aberto && (

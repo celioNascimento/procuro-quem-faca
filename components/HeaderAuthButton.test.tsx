@@ -7,13 +7,19 @@ const estado = vi.hoisted(() => ({
 
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => estado.valor }))
 vi.mock('@/hooks/useLogout', () => ({ useLogout: () => ({ logout: vi.fn() }) }))
+vi.mock('@/hooks/useAvatarConta', () => ({ useAvatarConta: () => avatar.url }))
 
 import { HeaderAuthButton } from '@/components/HeaderAuthButton'
+
+const avatar = vi.hoisted(() => ({ url: '' }))
 
 const sessao = { user: { id: 'u1', user_metadata: {} } }
 
 describe('HeaderAuthButton', () => {
-  afterEach(() => cleanup())
+  afterEach(() => {
+    cleanup()
+    avatar.url = ''
+  })
 
   it('cliente vê só a Área do cliente, sem atalho para a área do profissional', () => {
     estado.valor = { session: sessao, role: 'cliente', prestadorStatus: null, loading: false, erroLogin: false, loginGoogle: vi.fn() }
@@ -61,5 +67,33 @@ describe('HeaderAuthButton', () => {
     render(<HeaderAuthButton />)
     expect(screen.getByRole('button', { name: 'Entrar' })).toBeTruthy()
     expect(screen.queryByTestId('menu-link-feed')).toBeNull()
+  })
+
+  it('mostra a foto da conta no avatar, no computador e no celular', () => {
+    avatar.url = 'https://lh3.googleusercontent.com/foto.jpg'
+    estado.valor = { session: sessao, role: 'cliente', prestadorStatus: null, loading: false, erroLogin: false, loginGoogle: vi.fn() }
+    render(<HeaderAuthButton />)
+    const fotos = screen.getAllByAltText('Sua foto')
+    expect(fotos).toHaveLength(2)
+    for (const foto of fotos) {
+      expect(foto.getAttribute('src')).toBe('https://lh3.googleusercontent.com/foto.jpg')
+      expect(foto.getAttribute('referrerpolicy')).toBe('no-referrer')
+    }
+  })
+
+  it('sem foto, o avatar mostra o ícone de usuário', () => {
+    estado.valor = { session: sessao, role: 'cliente', prestadorStatus: null, loading: false, erroLogin: false, loginGoogle: vi.fn() }
+    render(<HeaderAuthButton />)
+    expect(screen.queryByAltText('Sua foto')).toBeNull()
+    expect(screen.getAllByTestId('avatar-conta-icone')).toHaveLength(2)
+  })
+
+  it('se a foto não carrega, o avatar cai para o ícone em vez de ficar vazio', () => {
+    avatar.url = 'https://lh3.googleusercontent.com/quebrada.jpg'
+    estado.valor = { session: sessao, role: 'cliente', prestadorStatus: null, loading: false, erroLogin: false, loginGoogle: vi.fn() }
+    render(<HeaderAuthButton />)
+    for (const foto of screen.getAllByAltText('Sua foto')) fireEvent.error(foto)
+    expect(screen.queryByAltText('Sua foto')).toBeNull()
+    expect(screen.getAllByTestId('avatar-conta-icone')).toHaveLength(2)
   })
 })
