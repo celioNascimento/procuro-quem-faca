@@ -4,11 +4,6 @@ import { supabase } from '@/lib/supabase'
 import { buscarTodasAsLinhas } from '@/lib/supabase/paginar'
 import { achatarAtivacao, type AtivacaoEmbutida } from '@/lib/ativacao/lista'
 
-export interface CategoriaRanking {
-  nome: string
-  total: number
-}
-
 export interface RadarItem {
   acao: string
   detalhes: { termo?: string } | null
@@ -108,39 +103,6 @@ export async function getOrigemEAtivacaoStats(): Promise<{ origem: OrigemStats; 
   }
 
   return { origem, ativacao }
-}
-
-/**
- * Ranking de categorias mais buscadas, baseado em logs com
- * acao='FILTRO_CATEGORIA' e entidade_id = id da categoria.
- *
- * NOTA: nenhum ponto do frontend revisado até agora grava esse log
- * explicitamente — se essa gravação não existir de fato em algum lugar
- * do código, este ranking sempre retorna vazio (o card já trata isso
- * com "Sem dados ainda", não é um erro). Confirmar/implementar a
- * gravação desse log é uma pendência registrada no roadmap.
- */
-export async function getRankingCategorias(): Promise<CategoriaRanking[]> {
-  const [{ data: logCats, error: logsError }, { data: catNames, error: categoriasError }] = await Promise.all([
-    supabase.from('logs_atividades').select('entidade_id').eq('acao', 'FILTRO_CATEGORIA'),
-    supabase.from('categorias').select('id, nome'),
-  ])
-
-  if (logsError) throw logsError
-  if (categoriasError) throw categoriasError
-
-  const counts = logCats?.reduce((acc: Record<string, number>, log) => {
-    if (log.entidade_id) acc[log.entidade_id] = (acc[log.entidade_id] || 0) + 1
-    return acc
-  }, {})
-
-  return Object.entries(counts || {})
-    .map(([id, total]) => ({
-      nome: catNames?.find(c => c.id === id)?.nome || 'Outros',
-      total: total as number,
-    }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 4)
 }
 
 export async function getRadarRecente(): Promise<RadarItem[]> {

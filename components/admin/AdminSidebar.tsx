@@ -42,7 +42,7 @@ export function AdminSidebar({ isMobileMenuOpen, onCloseMobileMenu, onLogout }: 
         <nav className="flex-1 px-3 pb-4 space-y-1 overflow-y-auto">
           <p className={SECAO}>Gestão geral</p>
           <SidebarLink href="/admin" label="Visão geral" icon={<path d="M3 3h7v9H3V3zm11 0h7v5h-7V3zm0 9h7v9h-7v-9zm-11 11h7v-7H3v7z" />} />
-          <SidebarLink href="/admin/moderacao" label="Moderação" badge={pendencias?.denuncias_abertas ?? 0} icon={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />} />
+          <SidebarLink href="/admin/moderacao" label="Denúncias" badge={pendencias?.denuncias_abertas ?? 0} icon={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />} />
           <SidebarLink
             href="/admin/titular"
             label="Pedidos LGPD"

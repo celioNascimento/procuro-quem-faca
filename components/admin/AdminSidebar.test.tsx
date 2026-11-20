@@ -28,11 +28,11 @@ describe('AdminSidebar: contadores', () => {
     expect(within(selos).getByLabelText('3 pendentes')).toBeTruthy()
   })
 
-  it('Moderação conta só denúncias', () => {
+  it('Denúncias conta só denúncias', () => {
     estado.pendencias = { ...zeros, denuncias_abertas: 4, selos_cnpj_abertos: 9 }
     menu()
-    const moderacao = screen.getByRole('link', { name: /Moderação/ })
-    expect(within(moderacao).getByLabelText('4 pendentes')).toBeTruthy()
+    const denuncias = screen.getByRole('link', { name: /Denúncias/ })
+    expect(within(denuncias).getByLabelText('4 pendentes')).toBeTruthy()
   })
 
   it('sem pendências, nenhum contador aparece', () => {
