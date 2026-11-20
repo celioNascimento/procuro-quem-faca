@@ -28,7 +28,7 @@ export default function AdminDashboard() {
   const atencao: ItemAtencao[] = [
     {
       href: '/admin/titular',
-      label: 'Pedidos LGPD em aberto',
+      label: 'Pedidos do titular em aberto',
       total: pendencias?.titular_abertas ?? 0,
       detalhe: pendencias?.titular_atrasadas ? `${pendencias.titular_atrasadas} com prazo vencido` : undefined,
       alerta: (pendencias?.titular_atrasadas ?? 0) > 0,
@@ -143,11 +143,10 @@ export default function AdminDashboard() {
         )}
       </Card>
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard label="Curadoria" valor={stats.curadoria} hint="perfis em curadoria" href="/admin/prestadores" />
         <StatCard label="Ativos" valor={stats.reivindicados} hint="perfis reivindicados" tom="marca" href="/admin/prestadores" />
         <StatCard label="Orgânicos" valor={stats.registrados} hint="cadastros diretos" href="/admin/prestadores" />
-        <StatCard label="Anúncios" valor={stats.anuncios} hint="visíveis no site" href="/admin/anuncios" />
       </section>
 
       <Card

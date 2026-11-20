@@ -104,10 +104,3 @@ export function formatDate(date: string | null) {
   if (!date) return 'Sem registro'
   return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' }).format(new Date(date))
 }
-
-export function getMensagem(etapa: PrestadorStage, nome: string | null) {
-  const saudacao = nome ? `Olá, ${nome}!` : 'Olá!'
-  return { publico: `${saudacao} Encontramos seu perfil no ProcuroQuemFaça. Quer reivindicar e atualizar suas informações?`, cadastro: `${saudacao} Vimos que seu cadastro ficou incompleto. Posso ajudar você a finalizar seu perfil?`, reivindicado: `${saudacao} Seu perfil já está reivindicado. Vamos conferir os últimos passos para deixá-lo ativo?`, direto: `${saudacao} Seu perfil já está no ar no ProcuroQuemFaça. Posso ajudar a completá-lo para você receber mais contatos?`, ativo: `${saudacao} Como está recebendo oportunidades pelo ProcuroQuemFaça?` }[etapa]
-}
-
-export function buildEmail(email: string | null) { return email ? `mailto:${email}` : undefined }

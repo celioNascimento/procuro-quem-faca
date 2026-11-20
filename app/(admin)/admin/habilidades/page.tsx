@@ -49,7 +49,7 @@ export default function GestaoHabilidades() {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-20 md:px-6">
       <PageHeader
-        titulo="Habilidades"
+        titulo="Catálogo de serviços"
         descricao="Organize serviços em grupos e categorias para manter a busca simples e consistente."
         acoes={
           <Button variante="secundario" onClick={recarregar} icone={<RefreshCw size={16} aria-hidden="true" />}>

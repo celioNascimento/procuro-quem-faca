@@ -6,6 +6,28 @@ Complementa `02-arquitetura.md`. Ver `00-glossario.md` para localizar um conceit
 
 **Proteção:** `middleware.ts`, Regra C — qualquer `/admin/*` exige sessão + `perfis_admin`, exceto `/admin/login` (liberada explicitamente, com redirect automático para `/admin` se já houver sessão de admin válida).
 
+## Menu e nomes das telas (20/11/2026)
+
+O menu (`AdminSidebar.tsx`) é organizado por tarefa. As URLs não mudaram (links de e-mail e favoritos continuam valendo); mudou o nome na tela.
+
+| Grupo | Item no menu | Rota |
+|---|---|---|
+| Hoje | Visão geral | `/admin` |
+| Confiança e segurança | Denúncias | `/admin/moderacao` |
+| | Selos | `/admin/verificacoes` |
+| | Pedidos do titular | `/admin/titular` |
+| Pessoas | Prestadores | `/admin/prestadores` |
+| Crescimento | Convites | `/admin/ativacao` |
+| | Cliques no WhatsApp | `/admin/cliques` |
+| | Logs e analytics | `/admin/logs` |
+| Plataforma | Catálogo de serviços | `/admin/habilidades` |
+| | Geografia | `/admin/geografia` |
+
+- **Convites** (antes "Ativação") é a **única porta de contato** com prestador, pelo fluxo com link pessoal. A tela **Prestadores** é um diretório: não tem mais painel de WhatsApp nem e-mail (`getMensagem` e `buildEmail` foram removidos). No detalhe, perfil sem conta mostra "Convidar em Convites" e perfil no ar mostra "Abrir perfil público".
+- **Adicionar prestador** (antes "Povoar base") saiu do menu: é o botão no topo de Prestadores e leva a `/admin/povoar`.
+- **Anúncios** saiu do menu e da visão geral (sem anunciante nem receita). A rota `/admin/anuncios` e o código seguem, acessíveis só por URL; se após 60 dias continuar sem anunciante, apagar.
+- Teste do menu: `components/admin/AdminSidebar.test.tsx`; do diretório: `components/admin/prestadores/PrestadoresCentral.test.tsx`.
+
 ## `/admin` — Dashboard
 
 **Classificação dos prestadores (tela Prestadores, `types/adminPrestadores.ts`, revisada em 13/11/2026).** A etapa de cada prestador vem da origem (`origem_tipo`), do status e da conta, nesta ordem: sem conta → *Perfil público* (ou *Cadastro iniciado* se for rascunho); com conta e `status = 'pendente'` → *Cadastro iniciado*; com conta e funil de ativação completo (`perfil_completo`/`avaliacao_recebida`) → *Ativo*; origem `reivindicado` (ou o formato antigo, `curadoria_publica` com conta) → *Reivindicado*; origem `registro_direto` → *Cadastro direto*. Antes, qualquer perfil com conta era chamado de *Reivindicado*, inclusive quem criou o próprio cadastro, e a mensagem de WhatsApp sugerida dizia "seu perfil já está reivindicado" para quem nunca assumiu nada. A origem tem três nomes: *Curadoria pública*, *Perfil assumido* e *Cadastro direto*.
@@ -55,13 +77,13 @@ O nome na tela e no menu é **Denúncias** (desde 20/11/2026); a URL continua `/
 
 **Pendência:** validar em homologação — valores de status e ação de bloqueio implementados por suposição a partir do schema documentado, sem confirmação de colunas adicionais que possam existir na tabela `denuncias`.
 
-## `/admin/povoar`
+## `/admin/povoar` (tela "Adicionar prestador")
 
 `hooks/usePovoar.ts` + `lib/services/povoar.service.ts`. Formulário de curadoria manual — insere um novo prestador diretamente com `origem_tipo: 'curadoria_publica'`, verificação de WhatsApp duplicado com debounce, geração de slug, avatar placeholder via `ui-avatars.com`.
 
 **Bug corrigido:** o insert incluía um campo `categoria` (texto) inexistente na tabela `prestadores` — a tela nunca funcionou até a correção. Removido, mantendo só `categoria_id` (relação real via FK).
 
-## `/admin/habilidades`
+## `/admin/habilidades` (tela "Catálogo de serviços")
 
 `app/(admin)/admin/habilidades/page.tsx` + `hooks/useHabilidades.ts` + `lib/services/categorias.service.ts`. Gerencia o catálogo de serviços: **grupos** (nome, ícone, ordem) e **categorias** (nome, grupo, destaque e **exemplo de descrição**). A tabela `habilidades` (nome + categoria, poucas linhas) tem serviço próprio em `lib/services/habilidades.service.ts`, com log de criação via `insertLog` (`lib/db/logs.ts`).
 
@@ -138,7 +160,7 @@ Registrado aqui para não se perder, mas fora do escopo atual:
 - **Painel do lojista:** tela própria para acompanhar cliques/impressões do anúncio.
 - **Leilão com slots dinâmicos por segmento:** rebaixamento de posição quando superado por lance maior; número de slots escala com prestadores; cálculo real de raio geográfico.
 
-## `/admin/ativacao`
+## `/admin/ativacao` (tela "Convites")
 
 Implementação legada em `app/(admin)/admin/ativacao/page.js`, independente do padrão Hook → Service. Lista prestadores, filtra por etapa de ativação, monta mensagens de WhatsApp e atualiza `ativacao_status`, `ativacao_enviado_em`, `ativacao_respondeu_em` e `ativacao_obs` diretamente no Supabase. Está funcional, mas permanece como pendência de migração para TypeScript e service compartilhado; não deve ser confundida com uma rota não auditada.
 

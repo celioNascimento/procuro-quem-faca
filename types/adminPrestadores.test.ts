@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatOrigem, getEtapaLabel, getMensagem, getPrestadorStage } from '@/types/adminPrestadores'
+import { formatOrigem, getEtapaLabel, getPrestadorStage } from '@/types/adminPrestadores'
 
 const CONTA = 'user-1'
 
@@ -48,9 +48,14 @@ describe('textos das etapas', () => {
     expect(formatOrigem(null)).toBe('Curadoria pública')
   })
 
-  it('quem se cadastrou direto não recebe a mensagem de "perfil reivindicado"', () => {
-    expect(getMensagem('direto', 'Ana')).not.toMatch(/reivindicad/i)
-    expect(getMensagem('reivindicado', 'Ana')).toMatch(/reivindicad/i)
+  it('cada etapa tem um nome próprio, e quem se cadastrou direto não aparece como reivindicado', () => {
     expect(getEtapaLabel('direto')).toBe('Cadastro direto')
+    expect(getEtapaLabel('reivindicado')).toBe('Reivindicado')
+  })
+
+  it('o painel não tem mais texto pronto de contato por WhatsApp (o contato é só pelo fluxo de Convites)', async () => {
+    const modulo = await import('@/types/adminPrestadores')
+    expect('getMensagem' in modulo).toBe(false)
+    expect('buildEmail' in modulo).toBe(false)
   })
 })
