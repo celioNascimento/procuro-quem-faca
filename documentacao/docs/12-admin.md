@@ -26,6 +26,7 @@ O menu (`AdminSidebar.tsx`) é organizado por tarefa. As URLs não mudaram (link
 - **Convites** (antes "Ativação") é a **única porta de contato** com prestador, pelo fluxo com link pessoal. A tela **Prestadores** é um diretório: não tem mais painel de WhatsApp nem e-mail (`getMensagem` e `buildEmail` foram removidos). No detalhe, perfil sem conta mostra "Convidar em Convites" e perfil no ar mostra "Abrir perfil público".
 - **Adicionar prestador** (antes "Povoar base") saiu do menu: é o botão no topo de Prestadores e leva a `/admin/povoar`.
 - **Anúncios** saiu do menu e da visão geral (sem anunciante nem receita). A rota `/admin/anuncios` e o código seguem, acessíveis só por URL; se após 60 dias continuar sem anunciante, apagar.
+- **Visual padronizado (20/11/2026):** Denúncias, Selos (CNPJ e Seguro/CND) e Pedidos do titular usam o kit `components/admin/ui` (PageHeader, Segmented, Badge, Button, Field, EmptyState). Só mudou a aparência: regras, textos de ação e `data-testid` ficaram iguais. `components/admin/padraoVisual.test.ts` impede essas telas de voltarem ao estilo antigo (`font-black`, `uppercase italic`, `zinc-`, `indigo-`, textos de 9 a 11px). Anúncios segue no estilo antigo (oculto do menu; será apagado se continuar sem uso).
 - Teste do menu: `components/admin/AdminSidebar.test.tsx`; do diretório: `components/admin/prestadores/PrestadoresCentral.test.tsx`.
 
 ## `/admin` — Dashboard
