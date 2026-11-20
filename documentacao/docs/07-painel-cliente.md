@@ -92,3 +92,14 @@ Todas as telas da Área do cliente (`/painel/perfil`, `/meus-servicos`, `/acompa
 - **Compartilhar** (`useAcompanhamento.handleShare`): quando o aparelho não abre a janela de compartilhar, o link é copiado e a tela mostra um aviso (`avisoLink`, some em 4 s) — sem `alert` do navegador. Fechar a janela de compartilhar não mostra erro.
 - **Botão da home** (`HeaderBotoes`): quem só é cliente vê um único botão, "Área do cliente". Prestador continua vendo "Cliente" e "Meu Painel".
 - Textos do acompanhamento usam "trabalho" (não "serviço", "obra" ou "projeto").
+
+## Foto única (prestador e cliente da mesma conta) — 20/11/2026
+
+Quem tem conta de prestador e de cliente usa a **mesma foto** nos dois perfis. Decisão do dono: trocar em um lugar troca nos dois; a foto de cliente continua **opcional**.
+- **Onde:** só no banco (migração `20261120140000_foto_unica_prestador_cliente`), em dois gatilhos de segurança do banco que não dependem do app. O app continua gravando `prestadores.foto_perfil` e `profiles.avatar_url` como antes.
+- `prestadores.foto_perfil` → `profiles.avatar_url`: sempre que a foto do prestador muda.
+- `profiles.avatar_url` → `prestadores.foto_perfil`: só quando a nova foto é um arquivo enviado ao PQF (bucket `fotos-perfil`). **Foto do Google nunca sobrescreve** a foto do prestador (o `usePerfilDados` grava a foto do Google no cliente quando está vazio).
+- Sem laço: cada gatilho só grava quando o valor do outro lado é diferente. A migração também iguala quem já tinha os dois perfis (a foto do prestador vale).
+- Os dois perfis usam o mesmo bucket, e as exclusões de conta (`useConfirmarExclusaoConta`) removem prestador e cliente juntos; por isso o arquivo compartilhado não fica órfão.
+- **Testes:** `tests/e2e/homologacao/foto-unica.spec.ts` (3 cenários, restaura o estado). Validado também por SQL no banco de teste.
+- **Aviso de produto:** a foto que o cliente envia pelo painel passa a ser também a foto pública do perfil de prestador. Ideia futura: um texto no painel do cliente avisando "é a mesma foto do seu perfil de profissional" quando a pessoa tem os dois.
