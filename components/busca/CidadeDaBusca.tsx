@@ -3,7 +3,7 @@
 //
 // Dentro da linha logo abaixo do título (o contador fica do outro lado). A cidade dos resultados já
 // está no título; aqui fica o caminho para ver outras (e, em "todas as cidades", o aviso e o caminho de volta).
-// Quando a cidade é a que ficou SALVA no aparelho, também há "Atualizar minha localização": quem muda de
+// Quando a cidade é a que ficou SALVA no aparelho (vinda do cookie ou da URL da home), também há "Atualizar minha localização": quem muda de
 // cidade (ou testou em outra) não fica preso à cidade antiga por 30 dias.
 
 import { MapPin } from 'lucide-react'
@@ -43,7 +43,11 @@ export function CidadeDaBusca({
   // Vale para a cidade salva, a escolhida nos filtros e a escrita na busca ("pedreiro em Maringá"):
   // em todos os casos a pessoa precisa de um caminho para ver as outras cidades.
   if (cidadeNome && (origem === 'salva' || origem === 'filtro' || origem === 'texto')) {
-    const podeAtualizar = origem === 'salva' && Boolean(onAtualizarLocalizacao)
+    // A home grava a cidade salva na URL (`?cidade=`), então ela chega aqui como 'filtro' com o mesmo nome da salva.
+    const ehCidadeSalva =
+      origem === 'salva' ||
+      (origem === 'filtro' && Boolean(cidadeSalvaNome) && cidadeNome.trim().toLowerCase() === cidadeSalvaNome?.trim().toLowerCase())
+    const podeAtualizar = ehCidadeSalva && Boolean(onAtualizarLocalizacao)
     const pedindo = estadoLocalizacao === 'pedindo'
     const aviso = podeAtualizar ? AVISOS[estadoLocalizacao] : undefined
 

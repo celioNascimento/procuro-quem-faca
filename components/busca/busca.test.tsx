@@ -107,6 +107,11 @@ describe('CidadeDaBusca', () => {
     expect(screen.getByRole('status').textContent).toContain('filtros')
   })
 
+  it('cidade da URL (gravada pela home) com o mesmo nome da salva também oferece atualizar', () => {
+    render(<CidadeDaBusca {...base} cidadeNome="Londrina" origem="filtro" onAtualizarLocalizacao={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'Não é aqui? Atualizar minha localização' })).toBeTruthy()
+  })
+
   it('cidade escolhida nos filtros ou escrita na busca não oferece atualizar (não é a cidade salva)', () => {
     render(<CidadeDaBusca {...base} cidadeNome="Maringá" origem="filtro" onAtualizarLocalizacao={vi.fn()} />)
     expect(screen.queryByRole('button', { name: /Atualizar minha localização/ })).toBeNull()
