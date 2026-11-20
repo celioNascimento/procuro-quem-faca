@@ -4,6 +4,7 @@ import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { mascararCnpj } from '@/lib/cnpj/validacao'
 import { podeAprovar, textoMotivoFila } from '@/lib/cnpj/motivoFila'
 import type { VerificacaoCnpjAdmin } from '@/types/verificacoesAdmin'
+import { Badge, Button, Field, Input } from '@/components/admin/ui'
 
 interface VerificacaoCardProps {
   item: VerificacaoCnpjAdmin
@@ -17,8 +18,8 @@ interface VerificacaoCardProps {
 function Linha({ rotulo, valor }: { rotulo: string; valor: string | null }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">{rotulo}</dt>
-      <dd className="break-words text-sm font-semibold text-slate-800">{valor || '—'}</dd>
+      <dt className="text-xs font-semibold text-pqf-muted">{rotulo}</dt>
+      <dd className="break-words text-sm font-semibold text-pqf-ink">{valor || '—'}</dd>
     </div>
   )
 }
@@ -32,25 +33,19 @@ export function VerificacaoCard({ item, processando, motivo, onAtualizarMotivo, 
   return (
     <article
       data-testid="verificacao-card"
-      className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6"
+      className="w-full min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 sm:p-6"
     >
       <header className="mb-3 flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="truncate text-sm font-black text-slate-800">{item.prestador_nome || 'Prestador sem nome'}</h2>
-          <p className="text-[10px] uppercase tracking-widest text-slate-400">
-            Enviado em {new Date(item.criado_em).toLocaleDateString('pt-BR')}
-          </p>
+          <h2 className="truncate text-sm font-semibold text-pqf-ink">{item.prestador_nome || 'Prestador sem nome'}</h2>
+          <p className="text-xs text-pqf-muted">Enviado em {new Date(item.criado_em).toLocaleDateString('pt-BR')}</p>
         </div>
-        <span
-          className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-black uppercase ${
-            aberta ? 'bg-amber-50 text-amber-600' : aprovada ? 'bg-green-50 text-green-600' : 'bg-slate-100 text-slate-400'
-          }`}
-        >
+        <Badge tom={aberta ? 'alerta' : aprovada ? 'sucesso' : 'neutro'}>
           {aberta ? 'Aguardando' : aprovada ? 'Aprovada' : 'Rejeitada'}
-        </span>
+        </Badge>
       </header>
 
-      {aberta && <p className="mb-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{textoMotivoFila(item.motivo)}</p>}
+      {aberta && <p className="mb-4 rounded-lg bg-pqf-yellow/20 p-3 text-sm text-amber-900">{textoMotivoFila(item.motivo)}</p>}
 
       <dl className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Linha rotulo="CNPJ" valor={item.cnpj ? mascararCnpj(item.cnpj) : null} />
@@ -65,37 +60,33 @@ export function VerificacaoCard({ item, processando, motivo, onAtualizarMotivo, 
       </dl>
 
       {(aberta || aprovada) && (
-        <div className="flex min-w-0 flex-col gap-2 border-t border-slate-50 pt-3">
-          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400" htmlFor={`motivo-${item.verificacao_id}`}>
-            Observação (opcional, fica registrada)
-          </label>
-          <input
-            id={`motivo-${item.verificacao_id}`}
-            value={motivo}
-            onChange={e => onAtualizarMotivo(e.target.value)}
-            maxLength={200}
-            className="w-full rounded-xl border border-slate-200 p-3 text-sm"
-          />
+        <div className="flex min-w-0 flex-col gap-3 border-t border-slate-100 pt-3">
+          <Field label="Observação (opcional, fica registrada)">
+            <Input id={`motivo-${item.verificacao_id}`} value={motivo} onChange={e => onAtualizarMotivo(e.target.value)} maxLength={200} />
+          </Field>
           {aberta && !aprovavel && (
-            <p className="text-xs text-slate-500">Este CNPJ não está ativo na Receita, por isso só pode ser rejeitado.</p>
+            <p className="text-xs text-pqf-muted">Este CNPJ não está ativo na Receita, por isso só pode ser rejeitado.</p>
           )}
           <div className="flex flex-col gap-2 sm:flex-row">
             {aberta && (
-              <button
+              <Button
+                variante="primario"
                 onClick={onAprovar}
                 disabled={ocupado || !aprovavel}
-                className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-[11px] font-black uppercase tracking-widest text-white disabled:opacity-40"
+                icone={ocupado ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                className="justify-center"
               >
-                {ocupado ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />} Aprovar
-              </button>
+                Aprovar
+              </Button>
             )}
-            <button
+            <Button
               onClick={onRejeitar}
               disabled={ocupado}
-              className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-[11px] font-black uppercase tracking-widest text-white disabled:opacity-40"
+              icone={ocupado ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+              className="justify-center border-red-200 text-red-700 hover:border-red-600 hover:text-red-700"
             >
-              {ocupado ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />} {aprovada ? 'Revogar selo' : 'Rejeitar'}
-            </button>
+              {aprovada ? 'Revogar selo' : 'Rejeitar'}
+            </Button>
           </div>
         </div>
       )}

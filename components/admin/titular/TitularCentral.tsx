@@ -10,6 +10,7 @@ import type { PedidoAdmin } from '@/lib/services/adminTitular.service'
 import { ROTULO_TIPO_PEDIDO } from '@/lib/titular/pedido'
 import { formatarDataPrazo, situacaoPrazo, statusEstaAberto } from '@/lib/titular/prazo'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
+import { Badge, Button, EmptyState, Field, PageHeader, Segmented, Textarea } from '@/components/admin/ui'
 
 const ROTULO_STATUS: Record<string, string> = {
   recebida: 'Nova',
@@ -21,21 +22,14 @@ const ROTULO_STATUS: Record<string, string> = {
 function Prazo({ pedido }: { pedido: PedidoAdmin }) {
   const situacao = situacaoPrazo(pedido.prazo_resposta, pedido.status)
   if (situacao.tipo === 'encerrada') {
-    return <span className="text-[10px] text-zinc-400">Encerrada</span>
+    return <Badge>Encerrada</Badge>
   }
   const texto =
     situacao.tipo === 'atrasada' ? `Atrasada ${situacao.dias} dia${situacao.dias > 1 ? 's' : ''}`
     : situacao.tipo === 'hoje' ? 'Vence hoje'
     : `Faltam ${situacao.dias} dia${situacao.dias > 1 ? 's' : ''}`
-  const cor =
-    situacao.tipo === 'atrasada' ? 'bg-red-50 text-red-600'
-    : situacao.tipo === 'hoje' ? 'bg-amber-50 text-amber-700'
-    : 'bg-zinc-100 text-zinc-500'
-  return (
-    <span className={`rounded px-1.5 py-px text-[10px] font-semibold ${cor}`}>
-      {texto} · até {formatarDataPrazo(pedido.prazo_resposta)}
-    </span>
-  )
+  const tom = situacao.tipo === 'atrasada' ? 'perigo' : situacao.tipo === 'hoje' ? 'alerta' : 'neutro'
+  return <Badge tom={tom}>{texto} · até {formatarDataPrazo(pedido.prazo_resposta)}</Badge>
 }
 
 function linkContato(contato: string): string | undefined {
@@ -58,24 +52,20 @@ function CartaoPedido({
   const contato = linkContato(pedido.contato)
 
   return (
-    <article className="space-y-3 rounded-2xl border border-zinc-100 bg-white p-4">
+    <article className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
       <header className="flex flex-wrap items-center gap-2">
-        <span className="rounded bg-blue-50 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-blue-600">
-          {ROTULO_TIPO_PEDIDO[pedido.tipo] ?? pedido.tipo}
-        </span>
-        <span className="rounded bg-zinc-100 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-          {ROTULO_STATUS[pedido.status] ?? pedido.status}
-        </span>
+        <Badge tom="marca">{ROTULO_TIPO_PEDIDO[pedido.tipo] ?? pedido.tipo}</Badge>
+        <Badge>{ROTULO_STATUS[pedido.status] ?? pedido.status}</Badge>
         <Prazo pedido={pedido} />
-        <span className="ml-auto font-mono text-[10px] text-zinc-300">#{pedido.id.slice(0, 8).toUpperCase()}</span>
+        <span className="ml-auto font-mono text-xs text-slate-400">#{pedido.id.slice(0, 8).toUpperCase()}</span>
       </header>
 
-      <div className="space-y-1 text-[13px] text-zinc-700">
-        <p><strong className="text-zinc-900">{pedido.nome_solicitante || 'Sem nome informado'}</strong></p>
+      <div className="space-y-1 text-sm text-slate-700">
+        <p><strong className="text-pqf-ink">{pedido.nome_solicitante || 'Sem nome informado'}</strong></p>
         <p>
           Contato:{' '}
           {contato
-            ? <a href={contato} target="_blank" rel="noreferrer" className="font-semibold text-blue-600 underline">{pedido.contato}</a>
+            ? <a href={contato} target="_blank" rel="noreferrer" className="font-semibold text-pqf-blue underline">{pedido.contato}</a>
             : pedido.contato}
         </p>
         {perfil && (
@@ -85,69 +75,50 @@ function CartaoPedido({
           </p>
         )}
         {!perfil && pedido.prestador_id === null && pedido.tipo === 'exclusao' && (
-          <p className="text-[11px] text-zinc-400">Sem perfil ligado, ou o perfil já foi excluído.</p>
+          <p className="text-xs text-pqf-muted">Sem perfil ligado, ou o perfil já foi excluído.</p>
         )}
-        {pedido.descricao && <p className="whitespace-pre-wrap rounded-xl bg-zinc-50 p-3 text-[12px] text-zinc-600">{pedido.descricao}</p>}
-        <p className="text-[10px] text-zinc-400">Recebido em {new Date(pedido.created_at).toLocaleDateString('pt-BR')}</p>
+        {pedido.descricao && <p className="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-sm text-slate-600">{pedido.descricao}</p>}
+        <p className="text-xs text-pqf-muted">Recebido em {new Date(pedido.created_at).toLocaleDateString('pt-BR')}</p>
       </div>
 
       {aberto && (
-        <div className="space-y-2 border-t border-zinc-50 pt-3">
+        <div className="space-y-2 border-t border-slate-100 pt-3">
           {podeEnviarLink && (
-            <button
-              type="button"
-              disabled={processando}
-              onClick={onEnviarLink}
-              className="w-full rounded-xl bg-[#25D366] py-2.5 text-[11px] font-semibold text-white disabled:opacity-40"
-            >
+            <Button variante="primario" disabled={processando} onClick={onEnviarLink} className="w-full justify-center">
               Enviar link ao WhatsApp do perfil
-            </button>
+            </Button>
           )}
           {pedido.status === 'recebida' && (
-            <button
-              type="button"
-              disabled={processando}
-              onClick={onEmAnalise}
-              className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2 text-[11px] font-semibold text-zinc-600 disabled:opacity-40"
-            >
+            <Button disabled={processando} onClick={onEmAnalise} className="w-full justify-center">
               Marcar em análise
-            </button>
+            </Button>
           )}
-          <label className="block space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Resposta registrada</span>
-            <textarea
+          <Field label="Resposta registrada">
+            <Textarea
               value={resposta}
               onChange={e => setResposta(e.target.value)}
               rows={2}
               placeholder="O que foi respondido ao titular..."
-              className="w-full resize-none rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-700 focus:border-zinc-400 focus:outline-none"
             />
-          </label>
+          </Field>
           <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={processando}
-              onClick={() => onConcluir('atendida', resposta)}
-              className="flex-1 rounded-xl bg-zinc-900 py-2.5 text-[11px] font-semibold text-white disabled:opacity-40"
-            >
+            <Button variante="primario" disabled={processando} onClick={() => onConcluir('atendida', resposta)} className="flex-1 justify-center">
               Marcar como atendida
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               disabled={processando || resposta.trim().length === 0}
               onClick={() => onConcluir('negada', resposta)}
               title="Para negar, registre o motivo na resposta"
-              className="rounded-xl border border-zinc-200 px-4 py-2.5 text-[11px] font-semibold text-zinc-500 disabled:opacity-40"
             >
               Negar
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {!aberto && pedido.resposta && (
-        <p className="whitespace-pre-wrap rounded-xl bg-zinc-50 p-3 text-[12px] text-zinc-500">
-          <strong className="text-zinc-600">Resposta:</strong> {pedido.resposta}
+        <p className="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+          <strong className="text-pqf-ink">Resposta:</strong> {pedido.resposta}
         </p>
       )}
     </article>
@@ -163,42 +134,33 @@ export function TitularCentral() {
   if (carregando) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="size-5 animate-spin rounded-full border-2 border-zinc-800 border-t-transparent" />
+        <div className="size-5 animate-spin rounded-full border-2 border-pqf-blue border-t-transparent" />
       </div>
     )
   }
 
+  type Filtro = 'abertas' | 'todas'
   return (
-    <div className="mx-auto max-w-3xl space-y-5 pb-16">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-black text-zinc-900">Pedidos do titular</h1>
-          <p className="text-xs text-zinc-400">
-            Responda em até 15 dias. O link pessoal vai sempre ao WhatsApp cadastrado no perfil.
-          </p>
-        </div>
-        <div className="flex gap-1 rounded-xl bg-zinc-100 p-1 text-[11px] font-semibold">
-          {(['abertas', 'todas'] as const).map(opcao => (
-            <button
-              key={opcao}
-              type="button"
-              onClick={() => setFiltro(opcao)}
-              className={`rounded-lg px-3 py-1.5 ${filtro === opcao ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500'}`}
-            >
-              {opcao === 'abertas' ? 'Em aberto' : `Todas (${total})`}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="mx-auto w-full max-w-4xl space-y-6 px-4 pb-20 md:px-6">
+      <PageHeader
+        titulo="Pedidos do titular"
+        descricao="Responda em até 15 dias. O link pessoal vai sempre ao WhatsApp cadastrado no perfil."
+        acoes={
+          <Segmented<Filtro>
+            label="Filtrar pedidos"
+            valor={filtro as Filtro}
+            onChange={setFiltro}
+            opcoes={[{ valor: 'abertas', rotulo: 'Em aberto' }, { valor: 'todas', rotulo: `Todas (${total})` }]}
+          />
+        }
+      />
 
       {erro && (
-        <p role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[12px] font-semibold text-red-600">{erro}</p>
+        <p role="alert" className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{erro}</p>
       )}
 
       {lista.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-zinc-200 p-10 text-center text-sm text-zinc-400">
-          {filtro === 'abertas' ? 'Nenhum pedido em aberto.' : 'Nenhum pedido registrado ainda.'}
-        </p>
+        <EmptyState titulo={filtro === 'abertas' ? 'Nenhum pedido em aberto' : 'Nenhum pedido registrado ainda'} />
       ) : (
         <div className="space-y-3">
           {lista.map(pedido => (

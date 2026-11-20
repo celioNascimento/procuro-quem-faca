@@ -108,7 +108,7 @@ export default function AdminDashboard() {
 
       <Card
         titulo="Novos cadastros (7 dias)"
-        descricao="Profissionais que se cadastraram sozinhos. O perfil entra no ar sem aprovação; use a Moderação se algo estiver errado."
+        descricao="Profissionais que se cadastraram sozinhos. O perfil entra no ar sem aprovação; use Denúncias se algo estiver errado."
       >
         {novosCadastros.length === 0 ? (
           <EmptyState titulo="Nenhum cadastro novo" descricao="Ninguém se cadastrou nos últimos 7 dias." />

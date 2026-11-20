@@ -6,6 +6,7 @@ import { AVISO_SEM_CNPJ, CHECKLIST, checklistCompleto } from '@/lib/selos/checkl
 import { ALERTA_PEDIDO_DIAS, diasEmEspera, PRAZO_PEDIDO_DIAS, ROTULO_DOCUMENTO, textoVencimento } from '@/lib/selos/documentos'
 import type { DocumentoAdmin } from '@/lib/services/documentosVerificacao.service'
 import type { CamposDecisao } from '@/hooks/useAdminDocumentos'
+import { Badge, Button, Field, Input, Textarea } from '@/components/admin/ui'
 
 interface Props {
   item: DocumentoAdmin
@@ -18,8 +19,6 @@ interface Props {
   onRejeitar: () => void
 }
 
-const CAMPO = 'w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100'
-
 export function DocumentoCard({ item, processando, campos, onCampos, onAlternarItem, onAbrir, onAprovar, onRejeitar }: Props) {
   const ocupado = processando === item.verificacao_id
   const pedido = item.dados?.pedido as Record<string, string> | undefined
@@ -31,19 +30,19 @@ export function DocumentoCard({ item, processando, campos, onCampos, onAlternarI
   const aprovavel = (item.tipo === 'seguro' ? !!campos.validoAte : !!campos.emissao) && checklistCompleto(item.tipo, campos.marcados)
 
   return (
-    <article data-testid="documento-card" className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6">
+    <article data-testid="documento-card" className="w-full min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
       <header className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="truncate text-sm font-black text-slate-800">{item.prestador_nome || 'Prestador sem nome'}</h2>
-          <p className="text-[10px] uppercase tracking-widest text-slate-400">{ROTULO_DOCUMENTO[item.tipo]} · {new Date(item.criado_em).toLocaleDateString('pt-BR')}</p>
+          <h2 className="truncate text-sm font-semibold text-pqf-ink">{item.prestador_nome || 'Prestador sem nome'}</h2>
+          <p className="text-xs text-pqf-muted">{ROTULO_DOCUMENTO[item.tipo]} · {new Date(item.criado_em).toLocaleDateString('pt-BR')}</p>
         </div>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-600">{aberto ? 'Aguardando' : item.status}</span>
+        <Badge tom={aberto ? 'alerta' : item.status === 'aprovada' ? 'sucesso' : 'neutro'}>{aberto ? 'Aguardando' : item.status}</Badge>
       </header>
 
       {aberto && (
         <p
           data-testid="documento-espera"
-          className={`mb-3 rounded-xl p-2 text-xs font-bold ${emAlerta ? 'bg-red-50 text-red-700' : 'bg-slate-50 text-slate-500'}`}
+          className={`mb-3 rounded-lg p-2 text-xs font-semibold ${emAlerta ? 'bg-red-50 text-red-700' : 'bg-slate-50 text-pqf-muted'}`}
         >
           Aguardando há {espera} {espera === 1 ? 'dia' : 'dias'}.
           {emAlerta && ` Decida logo: com ${PRAZO_PEDIDO_DIAS} dias o arquivo é apagado automaticamente e o prestador precisa reenviar.`}
@@ -51,10 +50,10 @@ export function DocumentoCard({ item, processando, campos, onCampos, onAlternarI
       )}
 
       {aberto && (
-        <div className="mb-4 rounded-xl bg-slate-50 p-3" data-testid="documento-cnpj-perfil">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">CNPJ do perfil (compare com o titular do documento)</p>
+        <div className="mb-4 rounded-lg bg-slate-50 p-3" data-testid="documento-cnpj-perfil">
+          <p className="text-xs font-semibold text-pqf-muted">CNPJ do perfil (compare com o titular do documento)</p>
           {item.cnpj ? (
-            <p className="text-sm font-bold text-slate-800">{mascararCnpj(item.cnpj)}{item.razao_social ? ` · ${item.razao_social}` : ''}</p>
+            <p className="text-sm font-semibold text-pqf-ink">{mascararCnpj(item.cnpj)}{item.razao_social ? ` · ${item.razao_social}` : ''}</p>
           ) : (
             <p className="text-sm font-semibold text-red-700">{AVISO_SEM_CNPJ}</p>
           )}
@@ -63,9 +62,9 @@ export function DocumentoCard({ item, processando, campos, onCampos, onAlternarI
 
       {item.tipo === 'seguro' && dados && (
         <dl className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <div><dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">Seguradora</dt><dd className="text-sm font-semibold">{dados.seguradora}</dd></div>
-          <div><dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">Apólice</dt><dd className="text-sm font-semibold">{dados.numero_apolice}</dd></div>
-          <div><dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">Validade informada</dt><dd className="text-sm font-semibold">{dados.validade_informada}</dd></div>
+          <div><dt className="text-xs font-semibold text-pqf-muted">Seguradora</dt><dd className="text-sm font-semibold">{dados.seguradora}</dd></div>
+          <div><dt className="text-xs font-semibold text-pqf-muted">Apólice</dt><dd className="text-sm font-semibold">{dados.numero_apolice}</dd></div>
+          <div><dt className="text-xs font-semibold text-pqf-muted">Validade informada</dt><dd className="text-sm font-semibold">{dados.validade_informada}</dd></div>
         </dl>
       )}
 
@@ -73,24 +72,20 @@ export function DocumentoCard({ item, processando, campos, onCampos, onAlternarI
 
       {aberto && (
         <div className="flex flex-col gap-3">
-          <button type="button" onClick={onAbrir} className="flex min-h-11 w-fit items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 hover:bg-slate-50" data-testid="documento-abrir">
-            <FileText size={16} aria-hidden="true" /> Abrir comprovante
-          </button>
+          <Button onClick={onAbrir} icone={<FileText size={16} aria-hidden="true" />} className="w-fit" data-testid="documento-abrir">Abrir comprovante</Button>
 
           {item.tipo === 'seguro' ? (
-            <label className="flex flex-col gap-1 text-xs font-bold text-slate-600">
-              Validade que consta na apólice (para aprovar)
-              <input type="date" className={CAMPO} value={campos.validoAte} onChange={(e) => onCampos({ validoAte: e.target.value })} data-testid="documento-validade" />
-            </label>
+            <Field label="Validade que consta na apólice (para aprovar)">
+              <Input type="date" value={campos.validoAte} onChange={(e) => onCampos({ validoAte: e.target.value })} data-testid="documento-validade" />
+            </Field>
           ) : (
-            <label className="flex flex-col gap-1 text-xs font-bold text-slate-600">
-              Data de emissão da certidão (vale 180 dias; para aprovar)
-              <input type="date" className={CAMPO} value={campos.emissao} onChange={(e) => onCampos({ emissao: e.target.value })} data-testid="documento-emissao" />
-            </label>
+            <Field label="Data de emissão da certidão (vale 180 dias; para aprovar)">
+              <Input type="date" value={campos.emissao} onChange={(e) => onCampos({ emissao: e.target.value })} data-testid="documento-emissao" />
+            </Field>
           )}
 
-          <fieldset className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3" data-testid="documento-checklist">
-            <legend className="px-1 text-xs font-black uppercase tracking-widest text-slate-500">Conferência (marque tudo para aprovar)</legend>
+          <fieldset className="flex flex-col gap-2 rounded-lg border border-slate-200 p-3" data-testid="documento-checklist">
+            <legend className="px-1 text-xs font-semibold text-pqf-muted">Conferência (marque tudo para aprovar)</legend>
             {CHECKLIST[item.tipo].map((i) => (
               <label key={i.id} className="flex items-start gap-2 text-sm text-slate-700">
                 <input type="checkbox" className="mt-1 h-4 w-4" checked={campos.marcados.includes(i.id)} onChange={() => onAlternarItem(i.id)} data-testid={`check-${i.id}`} />
@@ -99,22 +94,21 @@ export function DocumentoCard({ item, processando, campos, onCampos, onAlternarI
             ))}
           </fieldset>
 
-          <label className="flex flex-col gap-1 text-xs font-bold text-slate-600">
-            Motivo (obrigatório só para rejeitar)
-            <textarea rows={2} className={CAMPO} value={campos.motivo} onChange={(e) => onCampos({ motivo: e.target.value })} data-testid="documento-motivo" />
-          </label>
+          <Field label="Motivo (obrigatório só para rejeitar)">
+            <Textarea rows={2} value={campos.motivo} onChange={(e) => onCampos({ motivo: e.target.value })} data-testid="documento-motivo" />
+          </Field>
 
           <div className="flex flex-wrap gap-2">
-            <button type="button" disabled={ocupado || !aprovavel} onClick={onAprovar} data-testid="documento-aprovar"
-              className="flex min-h-11 items-center gap-2 rounded-xl bg-green-600 px-5 text-sm font-black text-white hover:bg-green-700 disabled:opacity-50">
-              {ocupado ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />} Aprovar
-            </button>
-            <button type="button" disabled={ocupado || !campos.motivo.trim()} onClick={onRejeitar} data-testid="documento-rejeitar"
-              className="flex min-h-11 items-center gap-2 rounded-xl bg-red-50 px-5 text-sm font-black text-red-700 hover:bg-red-100 disabled:opacity-50">
-              <XCircle size={16} /> Rejeitar
-            </button>
+            <Button variante="primario" disabled={ocupado || !aprovavel} onClick={onAprovar} data-testid="documento-aprovar"
+              icone={ocupado ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}>
+              Aprovar
+            </Button>
+            <Button disabled={ocupado || !campos.motivo.trim()} onClick={onRejeitar} data-testid="documento-rejeitar"
+              icone={<XCircle size={16} />} className="border-red-200 text-red-700 hover:border-red-600 hover:text-red-700">
+              Rejeitar
+            </Button>
           </div>
-          <p className="text-xs text-slate-500">Ao decidir, o arquivo é apagado: guardamos só o resumo e a validade.</p>
+          <p className="text-xs text-pqf-muted">Ao decidir, o arquivo é apagado: guardamos só o resumo e a validade.</p>
         </div>
       )}
     </article>

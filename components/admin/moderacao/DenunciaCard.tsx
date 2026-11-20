@@ -1,6 +1,7 @@
 // components/admin/moderacao/DenunciaCard.tsx
 import { CheckCircle2, Archive, ShieldOff, Loader2 } from 'lucide-react'
 import type { DenunciaComPrestador } from '@/lib/services/denuncia.service'
+import { Badge, Button, Input } from '@/components/admin/ui'
 
 interface DenunciaCardProps {
   denuncia: DenunciaComPrestador
@@ -13,6 +14,12 @@ interface DenunciaCardProps {
   onDesbloquear: () => void
 }
 
+const STATUS = {
+  aberta: { rotulo: 'Aberta', tom: 'alerta' },
+  resolvida: { rotulo: 'Resolvida', tom: 'sucesso' },
+  arquivada: { rotulo: 'Arquivada', tom: 'neutro' },
+} as const
+
 export function DenunciaCard({
   denuncia: d,
   processando,
@@ -24,94 +31,75 @@ export function DenunciaCard({
   onDesbloquear,
 }: DenunciaCardProps) {
   const ocupado = processando === d.id
+  const status = STATUS[d.status as keyof typeof STATUS] ?? { rotulo: d.status, tom: 'neutro' as const }
 
   return (
-    <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6">
+    <article className="w-full min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
       <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           {d.prestadores?.foto_perfil ? (
             <img
               src={d.prestadores.foto_perfil}
-              className="h-12 w-12 shrink-0 rounded-xl object-contain bg-slate-50 p-1 sm:h-14 sm:w-14"
+              className="h-12 w-12 shrink-0 rounded-lg bg-slate-50 object-contain p-1 sm:h-14 sm:w-14"
               alt={d.prestadores.nome}
             />
           ) : (
-            <div className="h-12 w-12 shrink-0 rounded-xl bg-slate-100 sm:h-14 sm:w-14" />
+            <div className="h-12 w-12 shrink-0 rounded-lg bg-slate-100 sm:h-14 sm:w-14" />
           )}
           <div className="min-w-0">
-            <p className="truncate text-sm font-black text-slate-800">
+            <p className="truncate text-sm font-semibold text-pqf-ink">
               {d.prestadores?.nome || 'Prestador removido'}
             </p>
-            <p className="text-[10px] uppercase tracking-widest text-slate-400">
+            <p className="text-xs text-pqf-muted">
               {new Date(d.created_at).toLocaleDateString('pt-BR')}
-              {d.prestadores?.bloqueado && (
-                <span className="ml-2 text-red-500">• Já bloqueado</span>
-              )}
+              {d.prestadores?.bloqueado && <span className="ml-2 font-semibold text-red-600">• Já bloqueado</span>}
             </p>
           </div>
         </div>
-        <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${
-          d.status === 'aberta' ? 'bg-amber-50 text-amber-600' :
-          d.status === 'resolvida' ? 'bg-green-50 text-green-600' :
-          'bg-slate-100 text-slate-400'
-        }`}>
-          {d.status}
-        </span>
+        <Badge tom={status.tom}>{status.rotulo}</Badge>
       </div>
 
-      <p className="text-sm text-slate-600 mb-4">{d.motivo}</p>
+      <p className="mb-4 text-sm text-slate-600">{d.motivo}</p>
 
       {(d.status === 'aberta' || d.prestadores?.bloqueado) && (
-        <div className="flex min-w-0 flex-col items-stretch gap-2 border-t border-slate-50 pt-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex min-w-0 flex-col items-stretch gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:flex-wrap sm:items-center">
           {d.status === 'aberta' && (
             <>
-              <button
-                onClick={onResolverSemBloqueio}
-                disabled={ocupado}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase bg-green-50 text-green-600 hover:bg-green-100 transition-all disabled:opacity-50"
-              >
-                <CheckCircle2 size={12} /> Resolver
-              </button>
-              <button
-                onClick={onArquivar}
-                disabled={ocupado}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all disabled:opacity-50"
-              >
-                <Archive size={12} /> Arquivar
-              </button>
+              <Button onClick={onResolverSemBloqueio} disabled={ocupado} icone={<CheckCircle2 size={14} />}>
+                Resolver
+              </Button>
+              <Button onClick={onArquivar} disabled={ocupado} icone={<Archive size={14} />}>
+                Arquivar
+              </Button>
             </>
           )}
 
           {d.prestadores?.bloqueado && d.prestador_id ? (
-            <button
-              onClick={onDesbloquear}
-              disabled={ocupado}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 text-[10px] font-black uppercase text-red-600 transition-all hover:bg-red-100 disabled:opacity-50 sm:w-auto"
-            >
-              {ocupado ? <Loader2 size={12} className="animate-spin" /> : <ShieldOff size={12} />}
+            <Button onClick={onDesbloquear} disabled={ocupado} icone={ocupado ? <Loader2 size={14} className="animate-spin" /> : <ShieldOff size={14} />}>
               Desbloquear perfil
-            </button>
+            </Button>
           ) : d.status === 'aberta' ? (
-            <div className="flex min-w-0 w-full flex-col items-stretch gap-2 sm:flex-1 sm:flex-row sm:items-center">
-              <input
+            <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:flex-1 sm:flex-row sm:items-center">
+              <Input
                 type="text"
                 placeholder="Motivo do bloqueio..."
+                aria-label="Motivo do bloqueio"
                 value={motivoBloqueio}
                 onChange={e => onAtualizarMotivo(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs outline-none focus:border-red-300"
+                className="flex-1"
               />
-              <button
+              <Button
                 onClick={onResolverComBloqueio}
                 disabled={ocupado}
-                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-red-600 px-3 py-2 text-[10px] font-black uppercase whitespace-nowrap text-white transition-all hover:bg-red-700 disabled:opacity-50 sm:w-auto"
+                icone={ocupado ? <Loader2 size={14} className="animate-spin" /> : <ShieldOff size={14} />}
+                className="justify-center whitespace-nowrap border-red-200 text-red-700 hover:border-red-600 hover:text-red-700"
               >
-                {ocupado ? <Loader2 size={12} className="animate-spin" /> : <ShieldOff size={12} />}
                 Bloquear
-              </button>
+              </Button>
             </div>
           ) : null}
         </div>
       )}
-    </div>
+    </article>
   )
 }

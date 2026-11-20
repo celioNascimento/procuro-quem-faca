@@ -1,15 +1,17 @@
 // app/(admin)/admin/moderacao/page.tsx — tela "Denúncias" (a URL antiga /admin/moderacao continua, por causa dos links dos e-mails)
 'use client'
-import { AlertCircle } from 'lucide-react'
 import { useModeracao } from '@/hooks/useModeracao'
 import { DenunciaCard } from '@/components/admin/moderacao/DenunciaCard'
+import { EmptyState, PageHeader, Segmented } from '@/components/admin/ui'
 
-const FILTROS = [
-  { valor: 'aberta', label: 'Abertas' },
-  { valor: 'resolvida', label: 'Resolvidas' },
-  { valor: 'arquivada', label: 'Arquivadas' },
-  { valor: 'todas', label: 'Todas' },
-] as const
+type Filtro = 'aberta' | 'resolvida' | 'arquivada' | 'todas'
+
+const FILTROS: { valor: Filtro; rotulo: string }[] = [
+  { valor: 'aberta', rotulo: 'Abertas' },
+  { valor: 'resolvida', rotulo: 'Resolvidas' },
+  { valor: 'arquivada', rotulo: 'Arquivadas' },
+  { valor: 'todas', rotulo: 'Todas' },
+]
 
 export default function ModeracaoPage() {
   const {
@@ -19,43 +21,20 @@ export default function ModeracaoPage() {
   } = useModeracao()
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-      <header className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
-        <div>
-          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Confiança e segurança</p>
-          <h1 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900 sm:text-3xl">
-            Denúncias<span className="not-italic text-red-600">.</span>
-          </h1>
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Perfis de prestadores denunciados</p>
-        </div>
-        <span className="hidden rounded-full bg-slate-100 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 sm:inline-flex">
-          {denuncias.length} {denuncias.length === 1 ? 'registro' : 'registros'}
-        </span>
-      </header>
+    <div className="mx-auto w-full max-w-5xl space-y-6 px-4 pb-20 md:px-6">
+      <PageHeader
+        titulo="Denúncias"
+        descricao="Perfis de prestadores denunciados. Resolva, arquive ou bloqueie o perfil."
+      />
 
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
-        {FILTROS.map(f => (
-          <button
-            key={f.valor}
-            onClick={() => setFiltro(f.valor)}
-            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              filtro === f.valor ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      <Segmented<Filtro> label="Filtrar denúncias" valor={filtro} onChange={setFiltro} opcoes={FILTROS} />
 
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-100 rounded-2xl animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-100" />)}
         </div>
       ) : denuncias.length === 0 ? (
-        <div className="py-20 text-center text-slate-300">
-          <AlertCircle size={32} className="mx-auto mb-3 opacity-50" />
-          <p className="text-[11px] font-black uppercase tracking-widest">Nenhuma denúncia nesta categoria</p>
-        </div>
+        <EmptyState titulo="Nenhuma denúncia nesta lista" descricao="Quando alguém denunciar um perfil, ele aparece aqui." />
       ) : (
         <div className="space-y-4">
           {denuncias.map(d => (
@@ -73,6 +52,6 @@ export default function ModeracaoPage() {
           ))}
         </div>
       )}
-    </main>
+    </div>
   )
 }
