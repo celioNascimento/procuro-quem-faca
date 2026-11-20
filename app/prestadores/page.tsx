@@ -21,6 +21,7 @@ import { MapPin, AlertCircle } from 'lucide-react'
 import { getTituloBusca } from '@/lib/prestadorUtils'
 import { quantidadeVisivelSalva } from '@/lib/navegacao'
 import { useLocation } from '@/lib/contexts/LocationContext'
+import { useAoTrocarCidadeSalva } from '@/hooks/useAoTrocarCidadeSalva'
 import { CardsSkeleton, ListaSkeleton } from '@/components/skeletons/ListaSkeletonPrestadores'
 import { buscarAnuncioTopoBusca } from '@/lib/services/anunciosPublicos.service'
 import type { Anuncio } from '@/types/ads'
@@ -60,6 +61,8 @@ function ListaConteudo() {
 
   const { totalAtivos, aplicar, limparFiltros, verOutrasCidades, voltarParaMinhaCidade } = useFiltrosPrestadores()
   const { cidadeAtual, estadoLocalizacao, solicitarLocalizacao } = useLocation()
+  // Cidade salva trocou (atualizou a localização): solta o `?cidade=` antigo da URL para a lista seguir a nova.
+  useAoTrocarCidadeSalva(cidadeAtual?.id, voltarParaMinhaCidade)
 
   // Voltar do perfil devolve o usuário ao ponto da lista onde estava.
   useRestaurarScroll(!loading)
