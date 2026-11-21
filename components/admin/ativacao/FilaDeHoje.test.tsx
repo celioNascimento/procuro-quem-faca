@@ -49,4 +49,14 @@ describe('FilaDeHoje', () => {
     render(<FilaDeHoje todos={[perfil()]} recorte={[perfil()]} onEnviar={vi.fn()} onRespondeu={vi.fn()} />)
     expect(screen.getByTestId('fila-sem-lembretes')).toBeTruthy()
   })
+
+  it('o nome do profissional nunca é cortado (quebra de linha em vez de reticências)', () => {
+    const nome = 'Assistência Técnica e Manutenção Residencial Ltda'
+    const antigo = perfil({ id: 3, nome, ativacao_status: 'enviado', ativacao_enviado_em: '2026-11-01T10:00:00Z' })
+    render(<FilaDeHoje todos={[perfil({ id: 4, nome: 'Atlas Serviços de Manutenção Predial' }), antigo]} recorte={[perfil({ id: 4, nome: 'Atlas Serviços de Manutenção Predial' }), antigo]} onEnviar={vi.fn()} onRespondeu={vi.fn()} />)
+    for (const el of [screen.getByText(nome), screen.getByText('Atlas Serviços de Manutenção Predial')]) {
+      expect(el.className).toContain('break-words')
+      expect(el.className).not.toContain('truncate')
+    }
+  })
 })

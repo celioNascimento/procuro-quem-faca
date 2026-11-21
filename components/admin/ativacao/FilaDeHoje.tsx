@@ -52,9 +52,9 @@ export function FilaDeHoje<P extends PerfilDaFila>({ todos, recorte, onEnviar, o
       ) : (
         <ul className="mt-2 divide-y divide-slate-100" data-testid="fila-convidar">
           {fila.map((p) => (
-            <li key={p.id} className="flex items-center gap-3 py-2.5">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-pqf-ink">{nomeDoPerfil(p)}</p>
+            <li key={p.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3 sm:py-2.5">
+              <div className="min-w-0 sm:flex-1">
+                <p className="break-words text-sm font-semibold text-pqf-ink">{nomeDoPerfil(p)}</p>
                 <Local p={p} />
               </div>
               <Button variante="primario" disabled={ocupado === p.id} icone={<MessageCircle size={14} aria-hidden="true" />} onClick={() => executar(p.id, () => onEnviar(p))}>
@@ -73,17 +73,19 @@ export function FilaDeHoje<P extends PerfilDaFila>({ todos, recorte, onEnviar, o
           {lembretes.map(({ perfil: p, dias }) => {
             const conversa = buildLinkWhatsapp(p.whatsapp)
             return (
-              <li key={p.id} className="flex flex-wrap items-center gap-3 py-2.5">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-pqf-ink">{nomeDoPerfil(p)}</p>
+              <li key={p.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3 sm:py-2.5">
+                <div className="min-w-0 sm:flex-1">
+                  <p className="break-words text-sm font-semibold text-pqf-ink">{nomeDoPerfil(p)}</p>
                   <span className="text-xs text-pqf-muted">Contatado há {dias} dias</span>
                 </div>
-                {conversa && (
-                  <a href={conversa} target="_blank" rel="noreferrer" className="text-sm font-semibold text-pqf-blue hover:underline">
-                    Abrir conversa
-                  </a>
-                )}
-                <Button disabled={ocupado === p.id} onClick={() => executar(p.id, () => onRespondeu(p))}>Respondeu</Button>
+                <div className="flex items-center gap-3">
+                  {conversa && (
+                    <a href={conversa} target="_blank" rel="noreferrer" className="text-sm font-semibold text-pqf-blue hover:underline">
+                      Abrir conversa
+                    </a>
+                  )}
+                  <Button disabled={ocupado === p.id} onClick={() => executar(p.id, () => onRespondeu(p))}>Respondeu</Button>
+                </div>
               </li>
             )
           })}
