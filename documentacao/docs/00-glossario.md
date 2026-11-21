@@ -251,7 +251,7 @@ Três dimensões independentes — não confundir:
 
 **Layout/acesso:** `middleware.ts` (Regra C, com exceção explícita para `/admin/login`), `app/(admin)/layout.tsx`, `hooks/useAdminAuth.ts`, `components/admin/{AdminSidebar,AdminHeader,SidebarLink}.tsx`.
 
-**Por página:** ver `12-admin.md`, para a tabela completa de hook/service por rota (`/admin`, `/admin/login`, `/admin/logs`, `/admin/moderacao`, `/admin/povoar`, `/admin/habilidades`, `/admin/geografia`).
+**Por página:** ver `12-admin.md`, para a tabela completa de hook/service por rota (`/admin`, `/admin/login`, `/admin/analises`, `/admin/moderacao`, `/admin/povoar`, `/admin/habilidades`, `/admin/geografia`).
 
 **Log de atividades no contexto admin:** todas as ações administrativas relevantes (criar habilidade, resolver/arquivar denúncia, bloquear prestador) registram via `insertLog` (`lib/db/logs.ts`) — mesma fonte única usada pelo resto do sistema, nunca uma tabela ou mecanismo à parte.
 

@@ -18,8 +18,7 @@ O menu (`AdminSidebar.tsx`) é organizado por tarefa. As URLs não mudaram (link
 | | Pedidos do titular | `/admin/titular` |
 | Pessoas | Prestadores | `/admin/prestadores` |
 | Crescimento | Convites | `/admin/ativacao` |
-| | Cliques no WhatsApp | `/admin/cliques` |
-| | Logs e analytics | `/admin/logs` |
+| | Análises | `/admin/analises` (abas Resumo, Cliques, Atividade) |
 | Plataforma | Catálogo de serviços | `/admin/habilidades` |
 | | Geografia | `/admin/geografia` |
 
@@ -87,9 +86,14 @@ Fonte única: a função `contar_pendencias()` no banco (só `service_role`; o p
 - O app trata chave ausente como zero: a ordem entre migration (`20261120210000_pendencias_selos_sem_garantias.sql`) e deploy não importa.
 - Testes: `lib/notificacoes/mensagens.test.ts`, `components/admin/AdminSidebar.test.tsx`, `app/api/cron/resumo-pendencias/route.test.ts`.
 
-## `/admin/logs`
+## `/admin/analises` (Análises)
 
-`hooks/useAdminLogs.ts` + `lib/services/adminLogs.service.ts`. Busca até 1000 logs recentes, filtros (email/termo, data, tipo de evento), gráfico de atividade por dia/mês (Recharts), exportação CSV, subscription Realtime via `subscribeLogsAtividades` (`lib/db/logs.ts`, compartilhada com o dashboard admin, cada consumidor com seu próprio nome de canal).
+Tela única com três abas (links, cada uma com URL própria, layout em `app/(admin)/admin/analises/layout.tsx`). Os endereços antigos `/admin/cliques` e `/admin/logs` redirecionam para as abas novas.
+
+- **Resumo** (`/admin/analises`): `TrafegoCard` com `useAdminTrafego` (equipe, anônimos e sinais de robô; 7 ou 30 dias).
+- **Cliques** (`/admin/analises/cliques`): `useAdminCliques` (rota `/api/admin/cliques`), período de 7, 30 ou 90 dias.
+- **Atividade** (`/admin/analises/atividade`): `hooks/useAdminLogs.ts` + `lib/services/adminLogs.service.ts`. Período de 7, 30 ou 90 dias (padrão 30), teto de 1000 registros por carga com aviso quando o período tem mais do que isso; filtros (e-mail/termo, data, tipo), gráfico por dia/mês (Recharts), exportação CSV e Realtime via `subscribeLogsAtividades` (`lib/db/logs.ts`). Trocar o período recarrega a lista.
+- O item de menu "Análises" fica ativo nas três abas (`SidebarLink` com `prefixo`).
 
 ## `/admin/moderacao` (tela "Denúncias")
 
