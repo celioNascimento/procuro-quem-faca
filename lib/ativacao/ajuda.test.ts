@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { diasDesde, mensagemDeAjuda, montarAjuda, resumoDaAjuda, type PrestadorComConta } from './ajuda'
+import { diasDesde, linkDoExemplo, mensagemDeAjuda, montarAjuda, resumoDaAjuda, type PrestadorComConta } from './ajuda'
 import type { LinhaDeTrabalho } from './funil'
 
 const AGORA = new Date('2026-11-20T15:00:00Z')
@@ -57,5 +57,12 @@ describe('Precisa de ajuda', () => {
     expect(m).not.toContain('Souza')
     expect(m).toContain('"Pintura"')
     expect(mensagemDeAjuda({ ...i, motivo: 'sem_trabalho', titulo: null })).toMatch(/primeiro trabalho/)
+  })
+
+  it('acha o link do perfil de exemplo, ou nada quando não há', () => {
+    expect(linkDoExemplo([{ id: 1 }, { id: 1607, slug: 'procuroquemfaca', exemplo: true }])).toBe('https://procuroquemfaca.com.br/procuroquemfaca')
+    expect(linkDoExemplo([{ id: 1607, slug: null, exemplo: true }])).toBe('https://procuroquemfaca.com.br/1607')
+    expect(linkDoExemplo([{ id: 1, slug: 'ana', exemplo: false }])).toBeNull()
+    expect(linkDoExemplo([])).toBeNull()
   })
 })

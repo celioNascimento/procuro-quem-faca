@@ -11,7 +11,7 @@ import { CheckCircle2, ChevronDown, Copy, ExternalLink, MessageCircle, Phone, Re
 import { gerarTokenReivindicacao } from '@/lib/services/ativacao.service'
 import { listarPerfisParaAtivacao, listarTrabalhosDosPrestadores, salvarObsAtivacao, salvarStatusAtivacao } from '@/lib/services/ativacaoAdmin.service'
 import { montarFunil, trabalhosPorPrestador, type LinhaDeTrabalho } from '@/lib/ativacao/funil'
-import { montarAjuda } from '@/lib/ativacao/ajuda'
+import { linkDoExemplo, montarAjuda } from '@/lib/ativacao/ajuda'
 import { montarMensagemAtivacao, rotuloAcaoAtivacao, tipoMensagemAtivacao } from '@/lib/ativacao/mensagem'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 import {
@@ -133,6 +133,8 @@ export default function PaginaAtivacao() {
   const funil = useMemo(() => montarFunil(doRecorte, trabalhosPorPrestador(trabalhos)), [doRecorte, trabalhos])
   // Quem já tem conta e travou: respeita o filtro de local, como o funil
   const ajuda = useMemo(() => montarAjuda(doRecorte, trabalhos), [doRecorte, trabalhos])
+  // O exemplo não depende do filtro de local
+  const linkExemplo = useMemo(() => linkDoExemplo(prestadores), [prestadores])
 
   // Contagem por status, sempre calculada a partir do recorte
   const stats = useMemo(() => {
@@ -299,7 +301,7 @@ export default function PaginaAtivacao() {
 
           <FunilDeAtivacao funil={funil} />
 
-          <PrecisaDeAjuda itens={ajuda} />
+          <PrecisaDeAjuda itens={ajuda} linkExemplo={linkExemplo} />
 
           <FilaDeHoje
             todos={prestadores}
