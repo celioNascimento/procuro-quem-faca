@@ -83,3 +83,27 @@ export function leituraDoFunil(f: Funil): string {
   if (feed.total === 0) return 'Há trabalhos publicados, mas nenhum aceito pelo cliente. Lembre os clientes de aceitar.'
   return 'O funil já chegou ao feed. Continue convidando no ritmo da meta.'
 }
+
+export interface LinhaDeTrabalho {
+  id: string
+  prestador_id: number
+  titulo: string | null
+  status: string | null
+  created_at: string | null
+  aceito_at: string | null
+  feed_aceito_em: string | null
+  feed_revogado_em: string | null
+  feed_oculto: boolean | null
+}
+
+/** Quem já publicou trabalho e quem tem trabalho aceito e ainda no ar no feed. */
+export function trabalhosPorPrestador(linhas: LinhaDeTrabalho[]): TrabalhosPorPrestador {
+  const mapa: TrabalhosPorPrestador = {}
+  for (const l of linhas) {
+    const atual = mapa[l.prestador_id] ?? { publicou: false, noFeed: false }
+    atual.publicou = true
+    if (l.feed_aceito_em && !l.feed_revogado_em && !l.feed_oculto) atual.noFeed = true
+    mapa[l.prestador_id] = atual
+  }
+  return mapa
+}

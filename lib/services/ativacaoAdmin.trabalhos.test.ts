@@ -12,31 +12,20 @@ vi.mock('@/lib/supabase', () => ({
   },
 }))
 
-import { listarTrabalhosPorPrestador } from './ativacaoAdmin.service'
+import { listarTrabalhosDosPrestadores } from './ativacaoAdmin.service'
 
-describe('listarTrabalhosPorPrestador', () => {
+describe('listarTrabalhosDosPrestadores', () => {
   beforeEach(() => { chamadas.colunas.length = 0; chamadas.linhas = [] })
 
-  it('marca quem publicou e quem tem trabalho aceito e ainda no ar no feed', async () => {
-    chamadas.linhas = [
-      { prestador_id: 1, feed_aceito_em: null, feed_revogado_em: null, feed_oculto: false },
-      { prestador_id: 2, feed_aceito_em: '2026-11-20T12:00:00Z', feed_revogado_em: null, feed_oculto: false },
-      { prestador_id: 3, feed_aceito_em: '2026-11-20T12:00:00Z', feed_revogado_em: '2026-11-21T12:00:00Z', feed_oculto: false },
-      { prestador_id: 4, feed_aceito_em: '2026-11-20T12:00:00Z', feed_revogado_em: null, feed_oculto: true },
-      { prestador_id: 1, feed_aceito_em: '2026-11-20T12:00:00Z', feed_revogado_em: null, feed_oculto: null },
-    ]
-    expect(await listarTrabalhosPorPrestador()).toEqual({
-      1: { publicou: true, noFeed: true },
-      2: { publicou: true, noFeed: true },
-      3: { publicou: true, noFeed: false },
-      4: { publicou: true, noFeed: false },
-    })
+  it('devolve as linhas lidas', async () => {
+    chamadas.linhas = [{ id: 'a', prestador_id: 1 }]
+    expect(await listarTrabalhosDosPrestadores()).toEqual([{ id: 'a', prestador_id: 1 }])
   })
 
   it('nunca usa select("*") em portfolio_projetos (o admin não pode ler todas as colunas)', async () => {
-    await listarTrabalhosPorPrestador()
+    await listarTrabalhosDosPrestadores()
     expect(chamadas.colunas).toHaveLength(1)
     expect(chamadas.colunas[0]).not.toBe('*')
-    expect(chamadas.colunas[0]).not.toMatch(/cliente_|avaliacao_token/)
+    expect(chamadas.colunas[0]).not.toMatch(/cliente_(nome|whatsapp)|avaliacao_token/)
   })
 })

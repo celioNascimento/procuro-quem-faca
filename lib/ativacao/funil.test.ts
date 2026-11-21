@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { leituraDoFunil, montarFunil, type PerfilDoFunil } from './funil'
+import { leituraDoFunil, montarFunil, trabalhosPorPrestador, type LinhaDeTrabalho, type PerfilDoFunil } from './funil'
 
 const p = (id: number, extra: Partial<PerfilDoFunil> = {}): PerfilDoFunil => ({
   id, user_id: null, exemplo: false, ativacao_status: 'nao_enviado', ativacao_enviado_em: null, ativacao_respondeu_em: null, ...extra,
@@ -44,5 +44,20 @@ describe('funil de ativação', () => {
     expect(leituraDoFunil(montarFunil([comConta], {}))).toMatch(/nenhuma com trabalho/)
     expect(leituraDoFunil(montarFunil([comConta], { 2: { publicou: true, noFeed: false } }))).toMatch(/nenhum aceito/)
     expect(leituraDoFunil(montarFunil([comConta], { 2: { publicou: true, noFeed: true } }))).toMatch(/chegou ao feed/)
+  })
+
+  it('monta o mapa de trabalhos: publicou, e no feed só se aceito, não retirado e não oculto', () => {
+    const l = (prestador_id: number, extra: Partial<LinhaDeTrabalho> = {}): LinhaDeTrabalho => ({
+      id: `p${prestador_id}`, prestador_id, titulo: null, status: 'pendente', created_at: null, aceito_at: null,
+      feed_aceito_em: null, feed_revogado_em: null, feed_oculto: false, ...extra,
+    })
+    const aceito = '2026-11-20T12:00:00Z'
+    expect(trabalhosPorPrestador([
+      l(1), l(2, { feed_aceito_em: aceito }), l(3, { feed_aceito_em: aceito, feed_revogado_em: aceito }),
+      l(4, { feed_aceito_em: aceito, feed_oculto: true }), l(1, { feed_aceito_em: aceito, feed_oculto: null }),
+    ])).toEqual({
+      1: { publicou: true, noFeed: true }, 2: { publicou: true, noFeed: true },
+      3: { publicou: true, noFeed: false }, 4: { publicou: true, noFeed: false },
+    })
   })
 })
