@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { validarAdminNaApi } from '@/lib/auth/adminServidor'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { lerConfigRastreio } from '@/lib/services/rastreio.service'
 import { buscarNomesDePrestadores, listarCliquesDesde } from '@/lib/services/cliques.service'
@@ -19,20 +20,8 @@ const PERIODOS_PERMITIDOS = [7, 30, 90]
 export async function GET(request: NextRequest) {
   try {
     const auth = await createClient()
-    const { data: { user } } = await auth.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    }
-
-    const { data: adminProfile } = await auth
-      .from('perfis_admin')
-      .select('user_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    if (!adminProfile) {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
-    }
+    const admin = await validarAdminNaApi(auth)
+    if (!admin.ok) return admin.resposta
 
     const pedido = Number(request.nextUrl.searchParams.get('dias'))
     const dias = PERIODOS_PERMITIDOS.includes(pedido) ? pedido : 30

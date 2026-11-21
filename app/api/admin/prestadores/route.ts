@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { validarAdminNaApi } from '@/lib/auth/adminServidor'
 import { listarPrestadoresAdmin } from '@/lib/services/adminPrestadores.service'
 import { matchesTab, type PrestadorTab } from '@/types/adminPrestadores'
 
 export async function GET(request: NextRequest) {
   try {
     const authClient = await createClient()
-    const { data: { user } } = await authClient.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    }
-
-    const { data: adminProfile } = await authClient
-      .from('perfis_admin')
-      .select('user_id')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    if (!adminProfile) {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
-    }
+    const admin = await validarAdminNaApi(authClient)
+    if (!admin.ok) return admin.resposta
 
     const params = request.nextUrl.searchParams
     const tab = (params.get('tab') ?? 'todos') as PrestadorTab
