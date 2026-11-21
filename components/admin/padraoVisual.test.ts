@@ -11,6 +11,8 @@ const TELAS = [
   'components/admin/verificacoes/DocumentoCard.tsx',
   'components/admin/titular/TitularCentral.tsx',
   'components/admin/TrafegoCard.tsx',
+  'components/admin/ativacao/FunilDeAtivacao.tsx',
+  'components/admin/ativacao/FilaDeHoje.tsx',
   'app/(admin)/admin/analises/layout.tsx',
   'app/(admin)/admin/analises/cliques/page.tsx',
   'app/(admin)/admin/analises/atividade/page.tsx',

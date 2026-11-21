@@ -6,9 +6,10 @@
 import { supabase } from '@/lib/supabase'
 import { buscarTodasAsLinhas } from '@/lib/supabase/paginar'
 import { achatarPerfil, type AtivacaoEmbutida, type LocalEmbutido } from '@/lib/ativacao/lista'
+import type { TrabalhosPorPrestador } from '@/lib/ativacao/funil'
 
 const COLUNAS =
-  'id, nome, whatsapp, slug, user_id, estado_sigla, cidades(nome, estado_sigla), regioes(nome), categorias(nome), ' +
+  'id, nome, whatsapp, slug, user_id, exemplo, estado_sigla, cidades(nome, estado_sigla), regioes(nome), categorias(nome), ' +
   'prestador_ativacao(status, enviado_em, respondeu_em, obs)'
 
 interface LinhaDaLista extends LocalEmbutido {
@@ -17,6 +18,7 @@ interface LinhaDaLista extends LocalEmbutido {
   whatsapp: string | null
   slug: string | null
   user_id: string | null
+  exemplo: boolean | null
   prestador_ativacao: AtivacaoEmbutida | AtivacaoEmbutida[] | null
 }
 
@@ -55,4 +57,33 @@ export async function salvarObsAtivacao(prestadorId: number, obs: string) {
     atualizado_em: new Date().toISOString(),
   })
   if (error) throw error
+}
+
+interface LinhaDeTrabalho {
+  prestador_id: number
+  feed_aceito_em: string | null
+  feed_revogado_em: string | null
+  feed_oculto: boolean | null
+}
+
+/**
+ * Quem já publicou trabalho e quem já tem trabalho aceito no feed. Só colunas que o admin pode ler:
+ * nada de `select('*')` em portfolio_projetos (cliente_whatsapp e tokens não são liberados).
+ */
+export async function listarTrabalhosPorPrestador(): Promise<TrabalhosPorPrestador> {
+  const linhas = await buscarTodasAsLinhas<LinhaDeTrabalho>((de, ate) =>
+    supabase
+      .from('portfolio_projetos')
+      .select('prestador_id, feed_aceito_em, feed_revogado_em, feed_oculto')
+      .order('id')
+      .range(de, ate) as unknown as PromiseLike<{ data: LinhaDeTrabalho[] | null; error: unknown }>,
+  )
+  const mapa: TrabalhosPorPrestador = {}
+  for (const l of linhas) {
+    const atual = mapa[l.prestador_id] ?? { publicou: false, noFeed: false }
+    atual.publicou = true
+    if (l.feed_aceito_em && !l.feed_revogado_em && !l.feed_oculto) atual.noFeed = true
+    mapa[l.prestador_id] = atual
+  }
+  return mapa
 }
