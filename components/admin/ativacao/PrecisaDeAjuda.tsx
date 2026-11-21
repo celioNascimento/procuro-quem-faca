@@ -5,9 +5,9 @@
 
 import { useState } from 'react'
 import { Copy, MessageCircle } from 'lucide-react'
-import { Badge, Button, Card, EmptyState } from '@/components/admin/ui'
+import { Badge, Button, Card, EmptyState, Segmented } from '@/components/admin/ui'
 import {
-  DIAS_PARADO, mensagemDeAjuda, ORIENTACAO_MOTIVO, resumoDaAjuda, ROTULO_MOTIVO,
+  DIAS_PARADO, DIAS_SUMIDO, mensagemDeAjuda, ORIENTACAO_MOTIVO, resumoDaAjuda, ROTULO_MOTIVO, totalDeSumidos,
   type ItemDeAjuda, type MotivoAjuda,
 } from '@/lib/ativacao/ajuda'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
@@ -17,6 +17,9 @@ const MOTIVOS: MotivoAjuda[] = ['sem_trabalho', 'aguardando_cliente', 'aguardand
 export function PrecisaDeAjuda({ itens, linkExemplo = null }: { itens: ItemDeAjuda[]; linkExemplo?: string | null }) {
   const resumo = resumoDaAjuda(itens)
   const [copia, setCopia] = useState<'nenhuma' | 'copiado' | 'erro'>('nenhuma')
+  const [visao, setVisao] = useState<'todos' | 'sumidos'>('todos')
+  const sumidos = totalDeSumidos(itens)
+  const mostrados = visao === 'sumidos' ? itens.filter((i) => i.sumido) : itens
 
   async function copiarLink() {
     if (!linkExemplo) return
@@ -50,6 +53,16 @@ export function PrecisaDeAjuda({ itens, linkExemplo = null }: { itens: ItemDeAju
         <EmptyState titulo="Ninguém travado agora" descricao="Quando alguém criar a conta e não publicar, ou deixar um trabalho parado, aparece aqui." />
       ) : (
         <>
+          {sumidos > 0 && (
+            <div className="mb-3">
+              <Segmented<'todos' | 'sumidos'>
+                label="Quem mostrar"
+                valor={visao}
+                onChange={setVisao}
+                opcoes={[{ valor: 'todos', rotulo: 'Todos', contagem: itens.length }, { valor: 'sumidos', rotulo: `Sumidos (${DIAS_SUMIDO}+ dias)`, contagem: sumidos }]}
+              />
+            </div>
+          )}
           <ul className="mb-4 flex flex-wrap gap-2" data-testid="ajuda-resumo">
             {MOTIVOS.filter((m) => resumo[m] > 0).map((m) => (
               <li key={m}><Badge tom="neutro">{resumo[m]} · {ROTULO_MOTIVO[m]}</Badge></li>
@@ -57,7 +70,7 @@ export function PrecisaDeAjuda({ itens, linkExemplo = null }: { itens: ItemDeAju
           </ul>
 
           <ul className="divide-y divide-slate-100" data-testid="ajuda-lista">
-            {itens.map((item) => {
+            {mostrados.map((item) => {
               const conversa = buildLinkWhatsapp(item.whatsapp, mensagemDeAjuda(item))
               return (
                 <li key={item.chave} className="py-3" data-testid="ajuda-item">
@@ -68,11 +81,19 @@ export function PrecisaDeAjuda({ itens, linkExemplo = null }: { itens: ItemDeAju
                         {item.cidade ?? 'Sem cidade'}{item.titulo ? ` · ${item.titulo}` : ''}
                       </p>
                     </div>
-                    <Badge tom={item.parado ? 'alerta' : 'neutro'}>
-                      {item.dias === 0 ? 'hoje' : `há ${item.dias} ${item.dias === 1 ? 'dia' : 'dias'}`}
-                    </Badge>
+                    <div className="flex flex-wrap gap-2">
+                      {item.sumido && <Badge tom="perigo">Sumido</Badge>}
+                      <Badge tom={item.parado ? 'alerta' : 'neutro'}>
+                        {item.dias === 0 ? 'hoje' : `há ${item.dias} ${item.dias === 1 ? 'dia' : 'dias'}`}
+                      </Badge>
+                    </div>
                   </div>
                   <p className="mt-1 text-sm text-pqf-ink">{ROTULO_MOTIVO[item.motivo]}</p>
+                  {item.ultimoAcessoDias !== null && (
+                    <p className="text-xs text-pqf-muted">
+                      Último acesso {item.ultimoAcessoDias === 0 ? 'hoje' : `há ${item.ultimoAcessoDias} ${item.ultimoAcessoDias === 1 ? 'dia' : 'dias'}`}
+                    </p>
+                  )}
                   <p className="text-xs text-pqf-muted">{ORIENTACAO_MOTIVO[item.motivo]}</p>
                   {conversa && (
                     <a href={conversa} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-pqf-blue hover:underline">
@@ -83,7 +104,7 @@ export function PrecisaDeAjuda({ itens, linkExemplo = null }: { itens: ItemDeAju
               )
             })}
           </ul>
-          <p className="mt-3 text-xs text-pqf-muted">Parado = {DIAS_PARADO} dias ou mais na mesma etapa. Perfis de exemplo não entram.</p>
+          <p className="mt-3 text-xs text-pqf-muted">Parado = {DIAS_PARADO} dias ou mais na mesma etapa. Sumido = {DIAS_SUMIDO} dias ou mais sem entrar. Perfis de exemplo não entram.</p>
         </>
       )}
     </Card>

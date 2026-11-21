@@ -7,7 +7,7 @@ afterEach(cleanup)
 
 const item = (extra: Partial<ItemDeAjuda> = {}): ItemDeAjuda => ({
   chave: 'a', motivo: 'sem_trabalho', prestadorId: 1, nome: 'Ana Souza', whatsapp: '43999990000', cidade: 'Londrina',
-  titulo: null, desde: '2026-11-15T12:00:00Z', dias: 5, parado: true, ...extra,
+  titulo: null, desde: '2026-11-15T12:00:00Z', dias: 5, parado: true, ultimoAcessoDias: null, sumido: false, ...extra,
 })
 
 describe('PrecisaDeAjuda', () => {
@@ -59,5 +59,25 @@ describe('PrecisaDeAjuda', () => {
     render(<PrecisaDeAjuda itens={[]} linkExemplo="https://procuroquemfaca.com.br/x" />)
     fireEvent.click(screen.getByRole('button', { name: /Copiar link do exemplo/ }))
     await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('https://procuroquemfaca.com.br/x'))
+  })
+
+  it('filtra quem sumiu, mostra o selo e o último acesso', () => {
+    render(<PrecisaDeAjuda itens={[
+      item({ chave: 'a', nome: 'Recente' }),
+      item({ chave: 'b', nome: 'Sumida', dias: 267, sumido: true, ultimoAcessoDias: 260 }),
+    ]} />)
+    expect(screen.getAllByTestId('ajuda-item')).toHaveLength(2)
+    fireEvent.click(screen.getByRole('button', { name: /Sumidos \(30\+ dias\)/ }))
+    const [so] = screen.getAllByTestId('ajuda-item')
+    expect(screen.getAllByTestId('ajuda-item')).toHaveLength(1)
+    expect(within(so).getByText('Sumida')).toBeTruthy()
+    expect(within(so).getByText('Sumido')).toBeTruthy()
+    expect(within(so).getByText('Último acesso há 260 dias')).toBeTruthy()
+    expect(decodeURIComponent(within(so).getByRole('link', { name: /Chamar no WhatsApp/ }).getAttribute('href') ?? '')).toContain('Faz um tempo')
+  })
+
+  it('sem ninguém sumido, não mostra o filtro', () => {
+    render(<PrecisaDeAjuda itens={[item()]} />)
+    expect(screen.queryByRole('button', { name: /Sumidos/ })).toBeNull()
   })
 })

@@ -9,9 +9,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, ChevronDown, Copy, ExternalLink, MessageCircle, Phone, RefreshCw } from 'lucide-react'
 import { gerarTokenReivindicacao } from '@/lib/services/ativacao.service'
-import { listarPerfisParaAtivacao, listarTrabalhosDosPrestadores, salvarObsAtivacao, salvarStatusAtivacao } from '@/lib/services/ativacaoAdmin.service'
+import { listarAcessosDasContas, listarPerfisParaAtivacao, listarTrabalhosDosPrestadores, salvarObsAtivacao, salvarStatusAtivacao } from '@/lib/services/ativacaoAdmin.service'
 import { montarFunil, trabalhosPorPrestador, type LinhaDeTrabalho } from '@/lib/ativacao/funil'
-import { linkDoExemplo, montarAjuda } from '@/lib/ativacao/ajuda'
+import { linkDoExemplo, montarAjuda, type AcessoDaConta } from '@/lib/ativacao/ajuda'
 import { montarMensagemAtivacao, rotuloAcaoAtivacao, tipoMensagemAtivacao } from '@/lib/ativacao/mensagem'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 import {
@@ -99,6 +99,7 @@ function formatarData(iso: string) {
 export default function PaginaAtivacao() {
   const [prestadores, setPrestadores] = useState<Perfil[]>([])
   const [trabalhos, setTrabalhos] = useState<LinhaDeTrabalho[]>([])
+  const [acessos, setAcessos] = useState<AcessoDaConta[]>([])
   const [loading, setLoading] = useState(true)
   const [atualizando, setAtualizando] = useState(false)
   const [filtro, setFiltro] = useState<Filtro>('todos')
@@ -116,6 +117,8 @@ export default function PaginaAtivacao() {
       setPrestadores(await listarPerfisParaAtivacao())
       // Falha ao ler os trabalhos não derruba a lista: o funil mostra zero nas duas últimas etapas e "Precisa de ajuda" fica sem os trabalhos.
       setTrabalhos(await listarTrabalhosDosPrestadores().catch((e) => { console.error('[ativacao] erro ao ler trabalhos', e); return [] }))
+      // Sem os acessos, "Precisa de ajuda" usa a data do perfil e não sabe quem sumiu
+      setAcessos(await listarAcessosDasContas().catch((e) => { console.error('[ativacao] erro ao ler acessos', e); return [] }))
     } catch (e) {
       console.error('[ativacao] erro ao carregar a lista', e)
       setAviso('Não foi possível carregar a lista de perfis. Atualize a página.')
@@ -132,7 +135,7 @@ export default function PaginaAtivacao() {
 
   const funil = useMemo(() => montarFunil(doRecorte, trabalhosPorPrestador(trabalhos)), [doRecorte, trabalhos])
   // Quem já tem conta e travou: respeita o filtro de local, como o funil
-  const ajuda = useMemo(() => montarAjuda(doRecorte, trabalhos), [doRecorte, trabalhos])
+  const ajuda = useMemo(() => montarAjuda(doRecorte, trabalhos, new Date(), acessos), [doRecorte, trabalhos, acessos])
   // O exemplo não depende do filtro de local
   const linkExemplo = useMemo(() => linkDoExemplo(prestadores), [prestadores])
 

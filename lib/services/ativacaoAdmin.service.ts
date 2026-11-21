@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { buscarTodasAsLinhas } from '@/lib/supabase/paginar'
 import { achatarPerfil, type AtivacaoEmbutida, type LocalEmbutido } from '@/lib/ativacao/lista'
 import type { LinhaDeTrabalho } from '@/lib/ativacao/funil'
+import { normalizarAcessos, type AcessoDaConta } from '@/lib/ativacao/ajuda'
 
 const COLUNAS =
   'id, nome, whatsapp, slug, user_id, exemplo, created_at, estado_sigla, cidades(nome, estado_sigla), regioes(nome), categorias(nome), ' +
@@ -72,4 +73,11 @@ export async function listarTrabalhosDosPrestadores(): Promise<LinhaDeTrabalho[]
       .order('id')
       .range(de, ate) as unknown as PromiseLike<{ data: LinhaDeTrabalho[] | null; error: unknown }>,
   )
+}
+
+/** Criação da conta e último acesso de cada prestador com conta (só admin; o admin não lê auth.users). */
+export async function listarAcessosDasContas(): Promise<AcessoDaConta[]> {
+  const { data, error } = await supabase.rpc('admin_acesso_das_contas')
+  if (error) throw error
+  return normalizarAcessos(data)
 }

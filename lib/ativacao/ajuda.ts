@@ -8,6 +8,8 @@ import type { LinhaDeTrabalho } from '@/lib/ativacao/funil'
 import { urlCanonicaPerfil } from '@/lib/divulgacao/links'
 
 export const DIAS_PARADO = 3
+/** Sem entrar há 30 dias ou mais: a pessoa provavelmente esqueceu. Pede outra conversa, não um lembrete. */
+export const DIAS_SUMIDO = 30
 
 export type MotivoAjuda = 'sem_trabalho' | 'aguardando_cliente' | 'aguardando_finalizar'
 
@@ -33,6 +35,26 @@ export interface ItemDeAjuda {
   desde: string
   dias: number
   parado: boolean
+  /** Dias desde o último acesso à conta; null quando não se sabe. */
+  ultimoAcessoDias: number | null
+  sumido: boolean
+}
+
+export interface AcessoDaConta {
+  prestadorId: number
+  contaCriada: string | null
+  ultimoAcesso: string | null
+}
+
+export function normalizarAcessos(bruto: unknown): AcessoDaConta[] {
+  if (!Array.isArray(bruto)) return []
+  return bruto
+    .filter((a): a is Record<string, unknown> => Boolean(a) && typeof a === 'object' && typeof (a as Record<string, unknown>).prestador_id === 'number')
+    .map((a) => ({
+      prestadorId: a.prestador_id as number,
+      contaCriada: typeof a.conta_criada === 'string' ? a.conta_criada : null,
+      ultimoAcesso: typeof a.ultimo_acesso === 'string' ? a.ultimo_acesso : null,
+    }))
 }
 
 export const ROTULO_MOTIVO: Record<MotivoAjuda, string> = {
@@ -59,16 +81,25 @@ function nomeOuPadrao(p: PrestadorComConta): string {
   return p.nome?.trim() || '(sem nome)'
 }
 
-export function montarAjuda(prestadores: PrestadorComConta[], trabalhos: LinhaDeTrabalho[], agora: Date = new Date()): ItemDeAjuda[] {
+export function montarAjuda(
+  prestadores: PrestadorComConta[],
+  trabalhos: LinhaDeTrabalho[],
+  agora: Date = new Date(),
+  acessos: AcessoDaConta[] = [],
+): ItemDeAjuda[] {
+  const acessoDe = new Map(acessos.map((a) => [a.prestadorId, a]))
   const porPrestador = new Map<number, LinhaDeTrabalho[]>()
   for (const t of trabalhos) porPrestador.set(t.prestador_id, [...(porPrestador.get(t.prestador_id) ?? []), t])
 
   const itens: ItemDeAjuda[] = []
   const novo = (p: PrestadorComConta, motivo: MotivoAjuda, chave: string, desde: string, titulo: string | null) => {
     const dias = diasDesde(desde, agora)
+    const ultimo = acessoDe.get(p.id)?.ultimoAcesso
+    const ultimoAcessoDias = ultimo ? diasDesde(ultimo, agora) : null
     itens.push({
       chave, motivo, prestadorId: p.id, nome: nomeOuPadrao(p), whatsapp: p.whatsapp ?? null,
       cidade: p.cidade ?? null, titulo, desde, dias, parado: dias >= DIAS_PARADO,
+      ultimoAcessoDias, sumido: (ultimoAcessoDias ?? dias) >= DIAS_SUMIDO,
     })
   }
 
@@ -76,7 +107,9 @@ export function montarAjuda(prestadores: PrestadorComConta[], trabalhos: LinhaDe
     if (!p.user_id || p.exemplo) continue
     const meus = porPrestador.get(p.id) ?? []
     if (meus.length === 0) {
-      if (p.created_at) novo(p, 'sem_trabalho', `sem-${p.id}`, p.created_at, null)
+      // A data da conta (não a do perfil) é a que conta: quem reivindicou um perfil antigo acabou de chegar
+      const desde = acessoDe.get(p.id)?.contaCriada ?? p.created_at
+      if (desde) novo(p, 'sem_trabalho', `sem-${p.id}`, desde, null)
       continue
     }
     for (const t of meus) {
@@ -96,6 +129,9 @@ export function montarAjuda(prestadores: PrestadorComConta[], trabalhos: LinhaDe
 /** Mensagem curta e sem cobrança, para o admin abrir a conversa. Nada de promessa que o site não cumpre. */
 export function mensagemDeAjuda(item: ItemDeAjuda): string {
   const primeiro = item.nome.split(' ')[0]
+  if (item.sumido) {
+    return `Oi, ${primeiro}! Aqui é do Procuro Quem Faça. Faz um tempo que você criou sua conta e queria te mostrar uma novidade: agora o seu trabalho aparece como prova, com antes e depois e o aceite de quem contratou. Posso te ajudar a cadastrar o primeiro? Leva poucos minutos.`
+  }
   if (item.motivo === 'sem_trabalho') {
     return `Oi, ${primeiro}! Aqui é do Procuro Quem Faça. Vi que sua conta já está criada. Posso te ajudar a cadastrar o primeiro trabalho, com as fotos de antes e depois? Leva poucos minutos.`
   }
@@ -115,4 +151,8 @@ export function resumoDaAjuda(itens: ItemDeAjuda[]): Record<MotivoAjuda, number>
 export function linkDoExemplo(perfis: { id: number; slug?: string | null; exemplo?: boolean | null }[]): string | null {
   const ex = perfis.find((p) => p.exemplo)
   return ex ? urlCanonicaPerfil(ex.slug, ex.id) : null
+}
+
+export function totalDeSumidos(itens: ItemDeAjuda[]): number {
+  return itens.filter((i) => i.sumido).length
 }
