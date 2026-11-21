@@ -17,6 +17,7 @@ const TELAS = [
   'app/(admin)/admin/analises/layout.tsx',
   'app/(admin)/admin/analises/cliques/page.tsx',
   'app/(admin)/admin/analises/atividade/page.tsx',
+  'app/(admin)/admin/analises/historico/page.tsx',
   'components/admin/feed/FeedAdmin.tsx',
   'components/admin/seguranca/SegurancaConta.tsx',
 ]
