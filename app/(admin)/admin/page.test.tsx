@@ -12,7 +12,7 @@ vi.mock('framer-motion', () => ({
 vi.mock('@/hooks/useAdminDashboard', () => ({
   useAdminDashboard: () => ({
     stats: { cidades: 0, anuncios: 0, prestadores: 0, logs: 0, curadoria: 0, registrados: 0, reivindicados: 0, ativacao: { total: 10, enviados: 10, ativos: 1 } },
-    radar: [], novosCadastros: [], refreshing: false, notificacao: null, erro: null, pctAtivacao: 40, carregarDashboard: vi.fn(),
+    metas: { contas: 4, trabalhosNoFeed: 1 }, radar: [], novosCadastros: [], refreshing: false, notificacao: null, erro: null, pctAtivacao: 40, carregarDashboard: vi.fn(),
   }),
 }))
 vi.mock('@/hooks/admin/useAdminPendencias', () => ({ useAdminPendencias: () => estado.pendencias }))
@@ -56,5 +56,13 @@ describe('Visão geral do admin', () => {
     render(<AdminDashboard />)
     expect(screen.queryByText('Anúncios')).toBeNull()
     expect(screen.getByText('Curadoria')).toBeTruthy()
+  })
+
+  it('mostra as Metas do mês com o progresso do plano de 30 dias', () => {
+    render(<AdminDashboard />)
+    expect(screen.getByText('Metas do mês')).toBeTruthy()
+    expect(screen.getByRole('progressbar', { name: 'Profissionais com conta' }).getAttribute('aria-valuenow')).toBe('4')
+    expect(screen.getByRole('progressbar', { name: 'Trabalhos aceitos no feed' }).getAttribute('aria-valuemax')).toBe('3')
+    expect(screen.getByRole('progressbar', { name: 'Profissionais com conta' }).getAttribute('aria-valuemax')).toBe('10')
   })
 })

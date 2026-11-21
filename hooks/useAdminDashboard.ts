@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   getContadoresGerais,
+  getMetasDoMes,
   getNovosCadastros,
   getOrigemEAtivacaoStats,
   getRadarRecente,
@@ -13,6 +14,7 @@ import {
   type RadarItem,
 } from '@/lib/services/adminDashboard.service'
 
+import { METAS_ZERADAS, type MetasDoMes } from '@/lib/admin/metas'
 import { subscribeLogsAtividades } from '@/lib/db/logs'
 import { useHaptic } from '@/hooks/useHaptic'
 
@@ -35,6 +37,7 @@ const STATS_INICIAL: Stats = {
 
 export function useAdminDashboard() {
   const [stats, setStats] = useState<Stats>(STATS_INICIAL)
+  const [metas, setMetas] = useState<MetasDoMes>(METAS_ZERADAS)
   const [radar, setRadar] = useState<RadarItem[]>([])
   const [novosCadastros, setNovosCadastros] = useState<NovoCadastro[]>([])
   const [refreshing, setRefreshing] = useState(false)
@@ -46,11 +49,12 @@ export function useAdminDashboard() {
     if (isRefresh) { setRefreshing(true); hapticFeedback(15) }
     try {
       setErro(null)
-      const [contadores, { origem, ativacao }, radarRecente, novos] = await Promise.all([
+      const [contadores, { origem, ativacao }, radarRecente, novos, metasDoMes] = await Promise.all([
         getContadoresGerais(),
         getOrigemEAtivacaoStats(),
         getRadarRecente(),
         getNovosCadastros(),
+        getMetasDoMes(),
       ])
 
       setStats({
@@ -60,6 +64,7 @@ export function useAdminDashboard() {
       })
       setRadar(radarRecente)
       setNovosCadastros(novos)
+      setMetas(metasDoMes)
     } catch (err) {
       console.error('Erro ao carregar dashboard admin:', err)
       setErro('Não foi possível atualizar os dados do painel.')
@@ -87,5 +92,5 @@ export function useAdminDashboard() {
     ? Math.round((stats.ativacao.enviados / stats.ativacao.total) * 100)
     : 0
 
-  return { stats, radar, novosCadastros, refreshing, notificacao, erro, pctAtivacao, carregarDashboard }
+  return { stats, metas, radar, novosCadastros, refreshing, notificacao, erro, pctAtivacao, carregarDashboard }
 }

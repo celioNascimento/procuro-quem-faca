@@ -8,6 +8,7 @@ import { SITE_URL } from '@/lib/divulgacao/links'
 import { useAdminPendencias } from '@/hooks/admin/useAdminPendencias'
 import { useAdminTrafego } from '@/hooks/useAdminTrafego'
 import { TrafegoCard } from '@/components/admin/TrafegoCard'
+import { MetasDoMes } from '@/components/admin/dashboard/MetasDoMes'
 import { Badge, Button, Card, EmptyState, PageHeader, StatCard } from '@/components/admin/ui'
 
 interface ItemAtencao {
@@ -19,7 +20,7 @@ interface ItemAtencao {
 }
 
 export default function AdminDashboard() {
-  const { stats, radar, novosCadastros, refreshing, notificacao, erro, pctAtivacao, carregarDashboard } = useAdminDashboard()
+  const { stats, metas, radar, novosCadastros, refreshing, notificacao, erro, pctAtivacao, carregarDashboard } = useAdminDashboard()
   const pendencias = useAdminPendencias()
   const trafego = useAdminTrafego()
 
@@ -105,6 +106,8 @@ export default function AdminDashboard() {
           </ul>
         )}
       </Card>
+
+      <MetasDoMes metas={metas} />
 
       <Card
         titulo="Novos cadastros (7 dias)"

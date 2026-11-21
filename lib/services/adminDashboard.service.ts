@@ -3,6 +3,7 @@
 import { supabase } from '@/lib/supabase'
 import { buscarTodasAsLinhas } from '@/lib/supabase/paginar'
 import { achatarAtivacao, type AtivacaoEmbutida } from '@/lib/ativacao/lista'
+import type { MetasDoMes } from '@/lib/admin/metas'
 
 export interface RadarItem {
   acao: string
@@ -115,4 +116,16 @@ export async function getRadarRecente(): Promise<RadarItem[]> {
 
   if (error) throw error
   return (data as RadarItem[]) || []
+}
+
+// Números das metas do mês. Conta de verdade = perfil com usuário, fora os perfis de exemplo.
+// Trabalho no feed = aceito pelo cliente e com o aviso do feed, sem ocultação nem revogação.
+export async function getMetasDoMes(): Promise<MetasDoMes> {
+  const [contas, feed] = await Promise.all([
+    supabase.from('prestadores').select('*', { count: 'exact', head: true }).not('user_id', 'is', null).or('exemplo.is.null,exemplo.eq.false'),
+    supabase.from('portfolio_projetos').select('*', { count: 'exact', head: true }).not('feed_aceito_em', 'is', null).is('feed_revogado_em', null).or('feed_oculto.is.null,feed_oculto.eq.false'),
+  ])
+  const erro = contas.error ?? feed.error
+  if (erro) throw erro
+  return { contas: contas.count ?? 0, trabalhosNoFeed: feed.count ?? 0 }
 }

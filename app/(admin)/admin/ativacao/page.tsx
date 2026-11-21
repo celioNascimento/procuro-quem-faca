@@ -17,6 +17,7 @@ import {
   type ChaveLocal, type FiltroLocal,
 } from '@/lib/ativacao/lista'
 import { SITE_URL } from '@/lib/divulgacao/links'
+import { FilaDeHoje } from '@/components/admin/ativacao/FilaDeHoje'
 import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Segmented, Select, StatCard, Textarea, cn } from '@/components/admin/ui'
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
@@ -284,6 +285,16 @@ export default function PaginaAtivacao() {
             <StatCard label="Contatados" valor={contatados} hint={`${pct}% do total`} tom="marca" />
             <StatCard label="Com perfil completo" valor={ativos} hint="Completaram ou já foram avaliados" />
           </div>
+
+          <FilaDeHoje
+            todos={prestadores}
+            recorte={doRecorte}
+            onEnviar={async (p) => {
+              const ok = await abrirWA(p)
+              if (ok) await atualizarStatus(p.id, 'enviado')
+            }}
+            onRespondeu={(p) => atualizarStatus(p.id, 'respondeu_positivo')}
+          />
 
           <Card
             titulo="Onde atuam"
