@@ -40,6 +40,16 @@ O menu (`AdminSidebar.tsx`) é organizado por tarefa. As URLs não mudaram (link
 - Perfis de exemplo (`prestadores.exemplo`) são demonstração: aparecem com a etiqueta "Demonstração", escondidos por padrão na tela Feed, fora do total por dia e fora da meta "3 trabalhos no feed" (migration `20261121110000_feed_admin_exemplos.sql`).
 - Código: `lib/feed/adminFeed.ts`, `lib/services/adminFeed.service.ts`, `hooks/admin/useAdminFeed.ts`, `components/admin/feed/FeedAdmin.tsx`.
 
+## Verificação em duas etapas (passo 8)
+
+- Tela `/admin/seguranca` (menu Plataforma, "Segurança da conta"): liga o código do aplicativo autenticador (QR code + chave manual, confirmação com 6 números) e desativa.
+- Login (`useAdminLogin`): depois da senha, se a conta tem aplicativo cadastrado, pede o código ("Confirme que é você"). Se não der para saber o nível de acesso, sai da conta e não entra.
+- `proxy.ts`: admin com aplicativo cadastrado que ainda não digitou o código é mandado ao `/admin/login` (erro ao consultar também bloqueia). No próprio login fica na tela, sem laço.
+- Regras puras em `lib/auth/adminMfa.ts`; Supabase em `lib/services/adminMfa.service.ts`.
+- **Ainda não exigido no banco:** quem não cadastrou o aplicativo entra só com senha. Exigir o segundo fator também nas funções do banco (`is_admin()`) é um passo à parte, depois que o dono cadastrar o aplicativo.
+- **Senhas vazadas:** a proteção do Supabase (HaveIBeenPwned) só existe no plano Pro; o projeto está no Free, então o aviso do verificador continua.
+- Perda do celular: com um único admin, a recuperação é remover o fator direto no Supabase (`auth.mfa_factors`). Considerar uma segunda conta de admin.
+
 - Teste do menu: `components/admin/AdminSidebar.test.tsx`; do diretório: `components/admin/prestadores/PrestadoresCentral.test.tsx`.
 
 ## `/admin` — Dashboard

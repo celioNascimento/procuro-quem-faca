@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getSupabasePublicEnv } from './lib/supabase/env'
 import { gravarOrigemSeNecessario } from './lib/tracking/gravarOrigem'
 import { deveSairDoCadastro } from './lib/auth/cadastroRota'
+import { precisaDoCodigo } from './lib/auth/adminMfa'
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
@@ -37,6 +38,12 @@ export async function proxy(request: NextRequest) {
   })
 
   const { data: { user } } = await supabase.auth.getUser()
+
+  // Em caso de erro ao consultar o nível de acesso, trata como "falta o código": na dúvida, não abre o painel.
+  async function aguardaCodigo(): Promise<boolean> {
+    const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    return Boolean(error) || precisaDoCodigo(data)
+  }
 
   if (!user && (isDashboard || isCadastro || isAcompanhamento || isAvaliar || isPainelCliente)) {
     // O link pessoal de um perfil (/cadastro?reivindicar=...) também volta depois do login,
@@ -82,7 +89,11 @@ export async function proxy(request: NextRequest) {
         .select('role')
         .eq('user_id', user.id)
         .maybeSingle()
-      if (adminProfile) return NextResponse.redirect(new URL('/admin', request.url))
+      if (adminProfile) {
+        // Senha certa, mas o código do celular ainda não foi digitado: fica no login para digitar.
+        if (await aguardaCodigo()) return response
+        return NextResponse.redirect(new URL('/admin', request.url))
+      }
       return response
     }
     // Usuários deslogados devem voltar ao login administrativo, não à home.
@@ -96,6 +107,8 @@ export async function proxy(request: NextRequest) {
       .eq('user_id', user.id)
       .maybeSingle()
     if (!adminProfile) return NextResponse.redirect(new URL('/', request.url))
+    // Conta com verificação em duas etapas só entra no painel depois de provar o código.
+    if (await aguardaCodigo()) return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 
   return response
