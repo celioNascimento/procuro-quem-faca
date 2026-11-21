@@ -24,6 +24,7 @@ describe('Análises', () => {
       ['Resumo', '/admin/analises'],
       ['Cliques', '/admin/analises/cliques'],
       ['Atividade', '/admin/analises/atividade'],
+      ['Histórico', '/admin/analises/historico'],
     ])
     expect(screen.getByRole('link', { name: 'Cliques' }).getAttribute('aria-current')).toBe('page')
     expect(screen.getByRole('link', { name: 'Resumo' }).getAttribute('aria-current')).toBeNull()
