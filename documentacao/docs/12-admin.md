@@ -194,6 +194,12 @@ Registrado aqui para não se perder, mas fora do escopo atual:
 
 **Precisa de ajuda** (card abaixo do funil, `components/admin/ativacao/PrecisaDeAjuda.tsx`, regras em `lib/ativacao/ajuda.ts`): contas reais (com `user_id`, sem exemplo) que travaram antes do feed, em três situações: conta sem trabalho publicado, trabalho `pendente` esperando o cliente aceitar e trabalho `em_execucao` (aceito) esperando o prestador finalizar. Mostra há quantos dias; "parado" é 3 dias ou mais (`DIAS_PARADO`), e esses vêm primeiro. Cada item tem o botão "Chamar no WhatsApp" com mensagem pronta (primeiro nome, sem cobrança, sem promessa). O admin não lê o WhatsApp do cliente, então o contato é sempre com o prestador. Respeita o filtro de local.
 
+## Histórico de ações e equipe (21/11/2026)
+
+**Histórico** (`/admin/analises/historico`, `lib/admin/acoes.ts`): quem fez o quê no painel. Tabela `admin_acoes`, só de inclusão (gatilho impede editar e apagar) e só admin lê. A gravação vem de gatilhos nas tabelas que as ações já alteram (`prestador_bloqueio`, `feed_moderacao`, `prestador_verificacoes`, `prestador_ativacao`, `perfis_admin`), então as funções existentes não mudam. `admin_registrar` só grava quando quem alterou é admin: rotinas do sistema e ações de prestador não entram. Filtros por tipo de ação e por pessoa; 200 mais recentes.
+
+**Equipe** (seção na tela "Segurança da conta", `components/admin/seguranca/EquipeAdmin.tsx`, regras em `lib/admin/equipe.ts`): lista quem tem acesso, com papel, último acesso e se ligou as duas etapas. Só o dono (`role = 'owner'`, função `admin_e_dono()`) adiciona e remove. Adicionar exige que a pessoa já tenha conta no site e entra como `editor`. Remover pede confirmação, não deixa tirar a si mesmo nem o último dono, e só tira o acesso ao painel (não derruba a sessão aberta). Funções do banco: `admin_equipe`, `admin_equipe_adicionar`, `admin_equipe_remover`; cada mudança entra no Histórico.
+
 ## Estado da auditoria administrativa
 
 As rotas `/admin/ativacao` e `/admin/anuncios` foram revisadas em setembro de 2026. Em 20/11/2026 o painel foi reavaliado e reorganizado (menu por tarefa, Selos no contador, visual padronizado, Feed, Análises, verificação em duas etapas). `/admin/anuncios` está fora do menu (acessível por URL) e possui implementação ativa com `useAdminAnuncios`, cadastro de anunciante via API server-side, segmentações, inventário, métricas e simuladores. A integração dos anúncios próprios na vitrine pública continua pendente e está descrita no bloco de integração abaixo.

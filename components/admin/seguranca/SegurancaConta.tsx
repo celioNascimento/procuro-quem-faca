@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSegurancaConta } from '@/hooks/admin/useSegurancaConta'
 import { Badge, Button, Card, Field, Input, PageHeader } from '@/components/admin/ui'
+import { EquipeAdmin } from '@/components/admin/seguranca/EquipeAdmin'
 
 export function SegurancaConta() {
   const { estado, cadastro, codigo, setCodigo, ocupado, erro, comecar, confirmar, cancelar, desativar } = useSegurancaConta()
@@ -73,6 +74,8 @@ export function SegurancaConta() {
           </div>
         </Card>
       )}
+
+      <EquipeAdmin />
     </div>
   )
 }
