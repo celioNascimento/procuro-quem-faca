@@ -54,7 +54,8 @@ export function useAdminDashboard() {
         getOrigemEAtivacaoStats(),
         getRadarRecente(),
         getNovosCadastros(),
-        getMetasDoMes(),
+        // As metas são um extra: se falharem, o resto do painel continua aparecendo.
+        getMetasDoMes().catch((e) => { console.error('Erro ao carregar as metas do mês:', e); return null }),
       ])
 
       setStats({
@@ -64,7 +65,7 @@ export function useAdminDashboard() {
       })
       setRadar(radarRecente)
       setNovosCadastros(novos)
-      setMetas(metasDoMes)
+      if (metasDoMes) setMetas(metasDoMes)
     } catch (err) {
       console.error('Erro ao carregar dashboard admin:', err)
       setErro('Não foi possível atualizar os dados do painel.')

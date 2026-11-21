@@ -120,10 +120,12 @@ export async function getRadarRecente(): Promise<RadarItem[]> {
 
 // Números das metas do mês. Conta de verdade = perfil com usuário, fora os perfis de exemplo.
 // Trabalho no feed = aceito pelo cliente e com o aviso do feed, sem ocultação nem revogação.
+// Atenção: nunca use select('*') aqui. O admin lê com o papel `authenticated`, que não tem permissão em
+// colunas internas de portfolio_projetos (cliente_whatsapp, avaliacao_token...); com '*' o banco recusa a consulta.
 export async function getMetasDoMes(): Promise<MetasDoMes> {
   const [contas, feed] = await Promise.all([
-    supabase.from('prestadores').select('*', { count: 'exact', head: true }).not('user_id', 'is', null).or('exemplo.is.null,exemplo.eq.false'),
-    supabase.from('portfolio_projetos').select('*', { count: 'exact', head: true }).not('feed_aceito_em', 'is', null).is('feed_revogado_em', null).or('feed_oculto.is.null,feed_oculto.eq.false'),
+    supabase.from('prestadores').select('id', { count: 'exact', head: true }).not('user_id', 'is', null).or('exemplo.is.null,exemplo.eq.false'),
+    supabase.from('portfolio_projetos').select('id', { count: 'exact', head: true }).not('feed_aceito_em', 'is', null).is('feed_revogado_em', null).or('feed_oculto.is.null,feed_oculto.eq.false'),
   ])
   const erro = contas.error ?? feed.error
   if (erro) throw erro
