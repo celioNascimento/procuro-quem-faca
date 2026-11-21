@@ -113,9 +113,7 @@ O nome na tela e no menu é **Denúncias** (desde 20/11/2026); a URL continua `/
 
 ## `/admin/habilidades` (tela "Catálogo de serviços")
 
-`app/(admin)/admin/habilidades/page.tsx` + `hooks/useHabilidades.ts` + `lib/services/categorias.service.ts`. Gerencia o catálogo de serviços: **grupos** (nome, ícone, ordem) e **categorias** (nome, grupo, destaque e **exemplo de descrição**). A tabela `habilidades` (nome + categoria, poucas linhas) tem serviço próprio em `lib/services/habilidades.service.ts`, com log de criação via `insertLog` (`lib/db/logs.ts`).
-
-**Bug corrigido:** o insert de log gravava `usuario_email: 'admin@teste.com'` hardcoded, independente de quem estivesse logado — corrigido usando `insertLog`, que captura a sessão real automaticamente.
+`app/(admin)/admin/habilidades/page.tsx` + `hooks/useHabilidades.ts` + `lib/services/categorias.service.ts`. Gerencia o catálogo de serviços: **grupos** (nome, ícone, ordem) e **categorias** (nome, grupo, destaque e **exemplo de descrição**). A tabela antiga `habilidades` (5 linhas) não tem mais tela nem serviço no admin (o arquivo `habilidades.service.ts` foi apagado em 20/11/2026, sem uso), mas **ainda é lida** por `fetchHabilidades` em `categorias.service.ts` (`useCategorias`, no cadastro e na edição do perfil): não apagar a tabela antes de migrar esse uso.
 
 ### Regra do catálogo: toda categoria nova precisa de exemplo de descrição (13/11/2026)
 
@@ -190,8 +188,8 @@ Registrado aqui para não se perder, mas fora do escopo atual:
 
 ## `/admin/ativacao` (tela "Convites")
 
-Implementação legada em `app/(admin)/admin/ativacao/page.js`, independente do padrão Hook → Service. Lista prestadores, filtra por etapa de ativação, monta mensagens de WhatsApp e atualiza `ativacao_status`, `ativacao_enviado_em`, `ativacao_respondeu_em` e `ativacao_obs` diretamente no Supabase. Está funcional, mas permanece como pendência de migração para TypeScript e service compartilhado; não deve ser confundida com uma rota não auditada.
+`app/(admin)/admin/ativacao/page.tsx` (TypeScript, kit `components/admin/ui`). Funil dos perfis criados pela curadoria: cada linha abre um painel para enviar a mensagem pelo WhatsApp com o link pessoal do perfil (`gerarTokenReivindicacao` em `lib/services/ativacao.service.ts`), copiar o link, avançar o status e anotar uma observação. Leitura e gravação passam por `lib/services/ativacaoAdmin.service.ts` (`listarPerfisParaAtivacao`, `salvarStatusAtivacao`, `salvarObsAtivacao`; campos `ativacao_status`, `ativacao_enviado_em`, `ativacao_respondeu_em`, `ativacao_obs`). Mensagens em `lib/ativacao/mensagem.ts`, filtros em `lib/ativacao/lista.ts` e a fila "Para fazer hoje" em `lib/ativacao/fila.ts` + `components/admin/ativacao/FilaDeHoje.tsx`. É a única porta de contato com prestador.
 
 ## Estado da auditoria administrativa
 
-As rotas `/admin/ativacao` e `/admin/anuncios` foram revisadas em setembro de 2026. `/admin/anuncios` possui implementação ativa com `useAdminAnuncios`, cadastro de anunciante via API server-side, segmentações, inventário, métricas e simuladores. A integração dos anúncios próprios na vitrine pública continua pendente e está descrita no bloco de integração abaixo.
+As rotas `/admin/ativacao` e `/admin/anuncios` foram revisadas em setembro de 2026. Em 20/11/2026 o painel foi reavaliado e reorganizado (menu por tarefa, Selos no contador, visual padronizado, Feed, Análises, verificação em duas etapas). `/admin/anuncios` está fora do menu (acessível por URL) e possui implementação ativa com `useAdminAnuncios`, cadastro de anunciante via API server-side, segmentações, inventário, métricas e simuladores. A integração dos anúncios próprios na vitrine pública continua pendente e está descrita no bloco de integração abaixo.
