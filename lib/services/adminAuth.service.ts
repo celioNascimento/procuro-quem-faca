@@ -45,3 +45,8 @@ export async function enviarLinkDeNovaSenha(email: string, origem: string): Prom
   })
   return error ? MSG_FALHA_AO_ENVIAR_LINK : null
 }
+
+/** Encerra a sessão (usado quando a pessoa desiste na etapa do código). */
+export async function sairDaConta(): Promise<void> {
+  await supabase.auth.signOut()
+}
