@@ -22,9 +22,9 @@ function Dias({ porDia }: { porDia: { dia: string; total: number }[] }) {
     <ul className="flex h-28 items-end gap-1" aria-label="Trabalhos aceitos por dia">
       {porDia.map((d) => (
         <li key={d.dia} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${rotuloDia(d.dia)}: ${d.total}`}>
-          <span className="text-[11px] tabular-nums text-pqf-muted">{d.total > 0 ? d.total : ''}</span>
+          <span className="text-xs tabular-nums text-pqf-muted">{d.total > 0 ? d.total : ''}</span>
           <div className={d.total > 0 ? 'w-full rounded-t bg-pqf-blue' : 'w-full rounded-t bg-slate-200'} style={{ height: `${Math.max(4, Math.round((d.total / maximo) * 70))}%` }} />
-          <span className="text-[11px] tabular-nums text-pqf-muted">{rotuloDia(d.dia).slice(0, 2)}</span>
+          <span className="text-xs tabular-nums text-pqf-muted">{rotuloDia(d.dia).slice(0, 2)}</span>
         </li>
       ))}
     </ul>

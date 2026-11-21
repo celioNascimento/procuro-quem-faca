@@ -26,7 +26,6 @@ const ICONES: Record<string, ReactNode> = {
   seguranca: <><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>,
   convites: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.14 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.05 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16z" />,
   logs: <path d="M18 20V10M12 20V4M6 20v-6" />,
-  cliques: <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />,
   catalogo: <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />,
   geografia: <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></>,
 }
@@ -78,8 +77,7 @@ export function AdminSidebar({ isMobileMenuOpen, onCloseMobileMenu, onLogout }: 
 
           <p className={SECAO}>Crescimento</p>
           <SidebarLink href="/admin/ativacao" label="Convites" icon={ICONES.convites} />
-          <SidebarLink href="/admin/cliques" label="Cliques no WhatsApp" icon={ICONES.cliques} />
-          <SidebarLink href="/admin/logs" label="Logs e analytics" icon={ICONES.logs} />
+          <SidebarLink href="/admin/analises" label="Análises" icon={ICONES.logs} prefixo />
 
           <p className={SECAO}>Plataforma</p>
           <SidebarLink href="/admin/habilidades" label="Catálogo de serviços" icon={ICONES.catalogo} />

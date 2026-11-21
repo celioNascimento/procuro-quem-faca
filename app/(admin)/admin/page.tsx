@@ -166,7 +166,7 @@ export default function AdminDashboard() {
 
       <Card
         titulo="Atividade recente"
-        acoes={<Link href="/admin/logs" className="text-sm font-semibold text-pqf-blue hover:text-pqf-blue-hover">Ver todos os logs</Link>}
+        acoes={<Link href="/admin/analises/atividade" className="text-sm font-semibold text-pqf-blue hover:text-pqf-blue-hover">Ver todos os logs</Link>}
       >
         {radar.length === 0 ? (
           <EmptyState titulo="Nenhum evento recente" />

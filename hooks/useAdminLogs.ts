@@ -7,11 +7,17 @@ import { fetchLogsRecentes, type LogAtividade } from '@/lib/services/adminLogs.s
 import { subscribeLogsAtividades } from '@/lib/db/logs'
 import { supabase } from '@/lib/supabase'
 
+export const LIMITE_ATIVIDADE = 1000
+export const PERIODOS_ATIVIDADE = [7, 30, 90] as const
+export type PeriodoAtividade = (typeof PERIODOS_ATIVIDADE)[number]
+
 export function useAdminLogs() {
   const [logs, setLogs] = useState<LogAtividade[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const [truncado, setTruncado] = useState(false)
+  const [periodoDias, setPeriodoDias] = useState<PeriodoAtividade>(30)
 
   const [busca, setBusca] = useState('')
   const [dataInicio, setDataInicio] = useState('')
@@ -23,8 +29,9 @@ export function useAdminLogs() {
     setRefreshing(true)
     try {
       setErro(null)
-      const data = await fetchLogsRecentes(1000)
+      const data = await fetchLogsRecentes(LIMITE_ATIVIDADE, periodoDias)
       setLogs(data)
+      setTruncado(data.length >= LIMITE_ATIVIDADE)
     } catch (err) {
       console.error('Erro ao carregar logs:', err)
       setErro('Não foi possível carregar os logs. Verifique sua sessão e tente novamente.')
@@ -32,7 +39,7 @@ export function useAdminLogs() {
       setLoading(false)
       setTimeout(() => setRefreshing(false), 600)
     }
-  }, [])
+  }, [periodoDias])
 
   useEffect(() => {
     queueMicrotask(() => carregarLogs())
@@ -102,7 +109,7 @@ export function useAdminLogs() {
   }, [])
 
   return {
-    loading, refreshing, erro, logsFiltrados, dadosGrafico,
+    loading, refreshing, erro, truncado, periodoDias, setPeriodoDias, logsFiltrados, dadosGrafico,
     busca, setBusca, dataInicio, setDataInicio, tipoFiltro, setTipoFiltro,
     periodoGrafico, setPeriodoGrafico,
     carregarLogs, exportarCSV, resetarFiltros,

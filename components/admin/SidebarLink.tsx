@@ -11,11 +11,13 @@ interface SidebarLinkProps {
   // Quantidade a tratar; some quando é zero. `alerta` pinta de vermelho (ex.: prazo vencido).
   badge?: number
   alerta?: boolean
+  // Marca o item como ativo também nas telas internas (ex.: /admin/analises/cliques).
+  prefixo?: boolean
 }
 
-export function SidebarLink({ href, label, icon, badge = 0, alerta = false }: SidebarLinkProps) {
+export function SidebarLink({ href, label, icon, badge = 0, alerta = false, prefixo = false }: SidebarLinkProps) {
   const pathname = usePathname()
-  const isActive = pathname === href
+  const isActive = pathname === href || (prefixo && pathname.startsWith(`${href}/`))
 
   return (
     <Link

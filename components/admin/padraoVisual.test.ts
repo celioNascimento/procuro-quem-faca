@@ -10,6 +10,12 @@ const TELAS = [
   'components/admin/verificacoes/VerificacaoCard.tsx',
   'components/admin/verificacoes/DocumentoCard.tsx',
   'components/admin/titular/TitularCentral.tsx',
+  'components/admin/TrafegoCard.tsx',
+  'app/(admin)/admin/analises/layout.tsx',
+  'app/(admin)/admin/analises/cliques/page.tsx',
+  'app/(admin)/admin/analises/atividade/page.tsx',
+  'components/admin/feed/FeedAdmin.tsx',
+  'components/admin/seguranca/SegurancaConta.tsx',
 ]
 const PROIBIDO = [/font-black/, /uppercase italic/, /\bzinc-\d/, /\bindigo-\d/, /text-\[(9|10|11)px\]/]
 

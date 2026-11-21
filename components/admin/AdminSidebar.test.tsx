@@ -67,8 +67,7 @@ describe('AdminSidebar: contadores', () => {
       'Feed': '/admin/feed',
       'Segurança da conta': '/admin/seguranca',
       'Convites': '/admin/ativacao',
-      'Cliques no WhatsApp': '/admin/cliques',
-      'Logs e analytics': '/admin/logs',
+      'Análises': '/admin/analises',
       'Catálogo de serviços': '/admin/habilidades',
       'Geografia': '/admin/geografia',
     }
