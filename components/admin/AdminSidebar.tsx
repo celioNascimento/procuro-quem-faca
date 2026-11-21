@@ -22,6 +22,7 @@ const ICONES: Record<string, ReactNode> = {
   selos: <><path d="M9 12l2 2 4-4" /><path d="M12 2l2.4 1.8 3-.3 1 2.8 2.6 1.6-.9 2.9.9 2.9-2.6 1.6-1 2.8-3-.3L12 22l-2.4-1.8-3 .3-1-2.8-2.6-1.6.9-2.9-.9-2.9 2.6-1.6 1-2.8 3 .3z" /></>,
   titular: <><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>,
   prestadores: <><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a6 6 0 0 0-4-5.65" /></>,
+  feed: <><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></>,
   convites: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.14 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.05 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16z" />,
   logs: <path d="M18 20V10M12 20V4M6 20v-6" />,
   cliques: <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />,
@@ -72,6 +73,7 @@ export function AdminSidebar({ isMobileMenuOpen, onCloseMobileMenu, onLogout }: 
 
           <p className={SECAO}>Pessoas</p>
           <SidebarLink href="/admin/prestadores" label="Prestadores" icon={ICONES.prestadores} />
+          <SidebarLink href="/admin/feed" label="Feed" icon={ICONES.feed} />
 
           <p className={SECAO}>Crescimento</p>
           <SidebarLink href="/admin/ativacao" label="Convites" icon={ICONES.convites} />
