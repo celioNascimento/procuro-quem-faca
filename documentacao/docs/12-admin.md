@@ -30,6 +30,15 @@ O menu (`AdminSidebar.tsx`) é organizado por tarefa. As URLs não mudaram (link
 - **Bloqueio direto em Prestadores (20/11/2026):** no painel do prestador, "Bloquear perfil" abre um campo de motivo (obrigatório) e pede confirmação; não depende de denúncia. Usa as mesmas funções do banco das Denúncias (`admin_bloquear_prestador` e `admin_desbloquear_prestador`; o motivo fica em `prestador_bloqueio`). Perfil bloqueado sai das buscas e listas públicas e mostra a etiqueta "Bloqueado" na lista. Código: `hooks/admin/useBloqueioPrestador.ts` e `components/admin/prestadores/BloqueioPrestador.tsx`. Atenção: `admin_desbloquear_prestador` também força `status = 'ativo'`; desbloquear um perfil que ainda estava com cadastro pendente o coloca no ar.
 - **Metas do mês (20/11/2026):** card na visão geral com duas metas do plano de 30 dias (`lib/admin/metas.ts`): 10 profissionais com conta (perfil com usuário, sem os de exemplo) e 3 trabalhos aceitos no feed (`portfolio_projetos` com `feed_aceito_em`, sem `feed_oculto` nem `feed_revogado_em`). Os números vêm de `getMetasDoMes()` em `adminDashboard.service.ts`. O depoimento real do plano é manual e não entra no card.
 - **Convites — "Para fazer hoje" (20/11/2026):** `components/admin/ativacao/FilaDeHoje.tsx` com as regras em `lib/ativacao/fila.ts`. Meta de 5 convites por dia (dia contado no horário de Brasília), fila com quem convidar agora (sem conta, nunca contatado, com endereço e WhatsApp; Londrina primeiro; respeita o filtro de local), e lista de quem foi contatado há 3 dias ou mais sem responder, com "Abrir conversa" (WhatsApp sem texto pronto) e "Respondeu". Enviar convite usa o mesmo fluxo do botão da linha (link pessoal) e marca como enviado.
+## Feed (passo 7)
+
+- Tela `/admin/feed` (grupo Pessoas): lista os 100 trabalhos mais recentes aceitos pelo cliente com o aviso do feed e o total aceito por dia nos últimos 14 dias.
+- Situações: No feed, Aceito em andamento, Oculto pelo prestador, Retirado pelo cliente, Removido pela equipe.
+- "Remover do feed" exige motivo (fica registrado em `feed_moderacao`). Depois de removido, nem cliente nem prestador recolocam; só "Devolver ao feed" na tela da equipe.
+- Retirada feita pelo cliente não pode ser desfeita pelo admin.
+- Banco: migration `20261121100000_feed_moderacao_admin.sql` (`admin_feed_resumo`, `admin_remover_do_feed`, `admin_devolver_ao_feed`). Aplicar primeiro na homologação.
+- Código: `lib/feed/adminFeed.ts`, `lib/services/adminFeed.service.ts`, `hooks/admin/useAdminFeed.ts`, `components/admin/feed/FeedAdmin.tsx`.
+
 - Teste do menu: `components/admin/AdminSidebar.test.tsx`; do diretório: `components/admin/prestadores/PrestadoresCentral.test.tsx`.
 
 ## `/admin` — Dashboard

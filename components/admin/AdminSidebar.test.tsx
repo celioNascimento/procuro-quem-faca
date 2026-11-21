@@ -64,6 +64,7 @@ describe('AdminSidebar: contadores', () => {
       'Selos': '/admin/verificacoes',
       'Pedidos do titular': '/admin/titular',
       'Prestadores': '/admin/prestadores',
+      'Feed': '/admin/feed',
       'Convites': '/admin/ativacao',
       'Cliques no WhatsApp': '/admin/cliques',
       'Logs e analytics': '/admin/logs',
