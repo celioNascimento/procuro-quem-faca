@@ -76,7 +76,7 @@ export function PrecisaDeAjuda({ itens, linkExemplo = null }: { itens: ItemDeAju
                 <li key={item.chave} className="py-3" data-testid="ajuda-item">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-pqf-ink">{item.nome}</p>
+                      <p className="break-words text-sm font-semibold text-pqf-ink">{item.nome}</p>
                       <p className="text-xs text-pqf-muted">
                         {item.cidade ?? 'Sem cidade'}{item.titulo ? ` · ${item.titulo}` : ''}
                       </p>

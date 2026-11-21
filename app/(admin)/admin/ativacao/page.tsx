@@ -419,8 +419,8 @@ function LinhaPerfil({ p, expandido, salvando, copiado, onExpand, onStatus, onCo
         className="flex w-full items-center gap-3 rounded-lg py-3 text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pqf-blue"
       >
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-pqf-ink">{nomeDoPerfil(p)}</p>
-          <p className="truncate text-xs text-pqf-muted">{descricaoDoLocal(p)}</p>
+          <p className="break-words text-sm font-semibold text-pqf-ink">{nomeDoPerfil(p)}</p>
+          <p className="break-words text-xs text-pqf-muted">{descricaoDoLocal(p)}</p>
         </div>
         <Badge tom={st.tom}>{st.label}</Badge>
         {p.ativacao_enviado_em && (
