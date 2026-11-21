@@ -125,7 +125,8 @@ export async function getRadarRecente(): Promise<RadarItem[]> {
 export async function getMetasDoMes(): Promise<MetasDoMes> {
   const [contas, feed] = await Promise.all([
     supabase.from('prestadores').select('id', { count: 'exact', head: true }).not('user_id', 'is', null).or('exemplo.is.null,exemplo.eq.false'),
-    supabase.from('portfolio_projetos').select('id', { count: 'exact', head: true }).not('feed_aceito_em', 'is', null).is('feed_revogado_em', null).or('feed_oculto.is.null,feed_oculto.eq.false'),
+    // !inner + filtro em prestadores: trabalho de perfil de exemplo (demonstração) não conta na meta.
+    supabase.from('portfolio_projetos').select('id, prestadores!inner(exemplo)', { count: 'exact', head: true }).not('feed_aceito_em', 'is', null).is('feed_revogado_em', null).or('feed_oculto.is.null,feed_oculto.eq.false').or('exemplo.is.null,exemplo.eq.false', { referencedTable: 'prestadores' }),
   ])
   const erro = contas.error ?? feed.error
   if (erro) throw erro
