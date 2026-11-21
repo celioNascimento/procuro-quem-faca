@@ -2,12 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 
 const getUser = vi.fn()
+const nivel = vi.fn()
 const maybeSingle = vi.fn()
 const lerMetricas = vi.fn()
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
-    auth: { getUser },
+    auth: { getUser, mfa: { getAuthenticatorAssuranceLevel: nivel } },
     from: () => ({ select: () => ({ eq: () => ({ maybeSingle }) }) }),
   }),
 }))
@@ -25,6 +26,7 @@ const pedir = () => GET(new NextRequest('http://localhost/api/anuncios/metricas?
 beforeEach(() => {
   vi.clearAllMocks()
   lerMetricas.mockResolvedValue({ data: [{ anuncio_id: 1 }], error: null })
+  nivel.mockResolvedValue({ data: { currentLevel: 'aal1', nextLevel: 'aal1' }, error: null })
 })
 
 describe('GET /api/anuncios/metricas (só admin)', () => {
@@ -49,5 +51,14 @@ describe('GET /api/anuncios/metricas (só admin)', () => {
     const res = await pedir()
     expect(res.status).toBe(200)
     expect((await res.json()).data).toHaveLength(1)
+  })
+
+  it('admin com segundo fator que ainda não digitou o código: 403 e não lê nada', async () => {
+    getUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+    maybeSingle.mockResolvedValue({ data: { user_id: 'u1' } })
+    nivel.mockResolvedValue({ data: { currentLevel: 'aal1', nextLevel: 'aal2' }, error: null })
+    const res = await pedir()
+    expect(res.status).toBe(403)
+    expect(lerMetricas).not.toHaveBeenCalled()
   })
 })

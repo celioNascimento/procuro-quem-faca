@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { incrementarMetricaAnuncio, type TipoMetrica } from '@/lib/services/anunciosMetricas.service'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerAuthClient } from '@/lib/supabase/server'
+import { validarAdminNaApi } from '@/lib/auth/adminServidor'
 
 function createServiceClient() {
   return createClient(
@@ -19,14 +20,8 @@ function createServiceClient() {
 export async function GET(req: NextRequest) {
   try {
     const auth = await createServerAuthClient()
-    const { data: { user } } = await auth.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    }
-    const { data: admin } = await auth.from('perfis_admin').select('user_id').eq('user_id', user.id).maybeSingle()
-    if (!admin) {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
-    }
+    const admin = await validarAdminNaApi(auth)
+    if (!admin.ok) return admin.resposta
 
     const { searchParams } = new URL(req.url)
     const dataInicio = searchParams.get('dataInicio')
