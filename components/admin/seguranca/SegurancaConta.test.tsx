@@ -3,6 +3,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 
 const svc = vi.hoisted(() => ({ fatorConfirmado: vi.fn(), iniciarCadastro: vi.fn(), confirmarCodigo: vi.fn(), removerFator: vi.fn() }))
 vi.mock('@/lib/services/adminMfa.service', () => svc)
+// A lista da equipe tem teste próprio (EquipeAdmin.test.tsx)
+vi.mock('@/components/admin/seguranca/EquipeAdmin', () => ({ EquipeAdmin: () => null }))
 
 import { SegurancaConta } from './SegurancaConta'
 

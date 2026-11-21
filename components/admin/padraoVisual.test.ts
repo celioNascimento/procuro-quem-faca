@@ -20,6 +20,7 @@ const TELAS = [
   'app/(admin)/admin/analises/historico/page.tsx',
   'components/admin/feed/FeedAdmin.tsx',
   'components/admin/seguranca/SegurancaConta.tsx',
+  'components/admin/seguranca/EquipeAdmin.tsx',
 ]
 const PROIBIDO = [/font-black/, /uppercase italic/, /\bzinc-\d/, /\bindigo-\d/, /text-\[(9|10|11)px\]/]
 
