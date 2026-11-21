@@ -5,6 +5,7 @@
 // trabalho aceito que o prestador ainda não finalizou. Perfis de exemplo ficam de fora.
 
 import type { LinhaDeTrabalho } from '@/lib/ativacao/funil'
+import { urlCanonicaPerfil } from '@/lib/divulgacao/links'
 
 export const DIAS_PARADO = 3
 
@@ -108,4 +109,10 @@ export function resumoDaAjuda(itens: ItemDeAjuda[]): Record<MotivoAjuda, number>
   const r: Record<MotivoAjuda, number> = { sem_trabalho: 0, aguardando_cliente: 0, aguardando_finalizar: 0 }
   for (const i of itens) r[i.motivo]++
   return r
+}
+
+/** Link do perfil de exemplo (para colar na conversa e mandar o print), se existir um marcado como exemplo. */
+export function linkDoExemplo(perfis: { id: number; slug?: string | null; exemplo?: boolean | null }[]): string | null {
+  const ex = perfis.find((p) => p.exemplo)
+  return ex ? urlCanonicaPerfil(ex.slug, ex.id) : null
 }

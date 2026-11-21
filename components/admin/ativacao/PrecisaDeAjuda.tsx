@@ -1,8 +1,11 @@
 // components/admin/ativacao/PrecisaDeAjuda.tsx
+'use client'
+
 // Quem já tem conta e travou antes de aparecer no feed. Só exibe; as regras vêm de lib/ativacao/ajuda.ts.
 
-import { MessageCircle } from 'lucide-react'
-import { Badge, Card, EmptyState } from '@/components/admin/ui'
+import { useState } from 'react'
+import { Copy, MessageCircle } from 'lucide-react'
+import { Badge, Button, Card, EmptyState } from '@/components/admin/ui'
 import {
   DIAS_PARADO, mensagemDeAjuda, ORIENTACAO_MOTIVO, resumoDaAjuda, ROTULO_MOTIVO,
   type ItemDeAjuda, type MotivoAjuda,
@@ -11,14 +14,38 @@ import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 
 const MOTIVOS: MotivoAjuda[] = ['sem_trabalho', 'aguardando_cliente', 'aguardando_finalizar']
 
-export function PrecisaDeAjuda({ itens }: { itens: ItemDeAjuda[] }) {
+export function PrecisaDeAjuda({ itens, linkExemplo = null }: { itens: ItemDeAjuda[]; linkExemplo?: string | null }) {
   const resumo = resumoDaAjuda(itens)
+  const [copia, setCopia] = useState<'nenhuma' | 'copiado' | 'erro'>('nenhuma')
+
+  async function copiarLink() {
+    if (!linkExemplo) return
+    try {
+      await navigator.clipboard.writeText(linkExemplo)
+      setCopia('copiado')
+    } catch {
+      setCopia('erro')
+    }
+  }
 
   return (
     <Card
       titulo="Precisa de ajuda"
       descricao="Contas reais que travaram antes de aparecer no feed. Quem está parado há mais tempo vem primeiro."
     >
+      {linkExemplo && (
+        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3" data-testid="dica-exemplo">
+          <p className="text-sm text-pqf-ink">
+            <span className="font-semibold">Dica:</span> depois que a pessoa responder, mande um print do perfil de exemplo no celular. Não mande no primeiro contato.
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Button variante="secundario" onClick={() => void copiarLink()} icone={<Copy size={14} aria-hidden="true" />}>Copiar link do exemplo</Button>
+            {copia === 'copiado' && <span role="status" className="text-xs font-semibold text-emerald-700">Link copiado</span>}
+            {copia === 'erro' && <span role="alert" className="text-xs font-semibold text-red-700">Não foi possível copiar. Abra o link: {linkExemplo}</span>}
+          </div>
+        </div>
+      )}
+
       {itens.length === 0 ? (
         <EmptyState titulo="Ninguém travado agora" descricao="Quando alguém criar a conta e não publicar, ou deixar um trabalho parado, aparece aqui." />
       ) : (
