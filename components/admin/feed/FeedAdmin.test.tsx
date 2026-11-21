@@ -14,7 +14,7 @@ vi.mock('@/hooks/admin/useAdminFeed', () => ({
 import { FeedAdmin } from './FeedAdmin'
 
 function item(extra: Partial<ItemFeedAdmin> = {}): ItemFeedAdmin {
-  return { projetoId: 'p1', titulo: 'Pintura da sala', prestadorId: 1, prestadorNome: 'Ana', prestadorSlug: 'ana', cidade: 'Londrina', aceitoEm: '2026-11-20T12:00:00Z', totalFotos: 3, motivoRemocao: null, situacao: 'no_ar', ...extra }
+  return { projetoId: 'p1', titulo: 'Pintura da sala', prestadorId: 1, prestadorNome: 'Ana', prestadorSlug: 'ana', cidade: 'Londrina', aceitoEm: '2026-11-20T12:00:00Z', exemplo: false, totalFotos: 3, motivoRemocao: null, situacao: 'no_ar', ...extra }
 }
 
 describe('Feed no admin', () => {
@@ -60,6 +60,17 @@ describe('Feed no admin', () => {
     expect(screen.getByText(/Motivo da remoção: Golpe/)).toBeTruthy()
     expect(screen.getAllByRole('button', { name: 'Devolver ao feed' })).toHaveLength(1)
     expect(screen.queryAllByRole('button', { name: 'Remover do feed' })).toHaveLength(0)
+  })
+
+  it('trabalho de perfil de demonstração fica escondido até a equipe pedir', () => {
+    estado.resumo = { itens: [item(), item({ projetoId: 'demo', titulo: 'Trabalho de teste', exemplo: true })], porDia: [] }
+    render(<FeedAdmin />)
+    expect(screen.queryByText('Trabalho de teste')).toBeNull()
+    expect(screen.getByText('Trabalhos (1)')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar 1 de demonstração' }))
+    expect(screen.getByText('Trabalho de teste')).toBeTruthy()
+    expect(screen.getByText('Demonstração')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Esconder trabalhos de demonstração' })).toBeTruthy()
   })
 
   it('devolver chama a ação com o trabalho certo', async () => {

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useAdminFeed } from '@/hooks/admin/useAdminFeed'
 import { Badge, Button, Card, EmptyState, Field, PageHeader, Textarea } from '@/components/admin/ui'
 import {
-  podeDevolver, podeRemover, ROTULO_SITUACAO, rotuloDia, totalNoPeriodo,
+  itensVisiveis, podeDevolver, podeRemover, ROTULO_SITUACAO, rotuloDia, totalNoPeriodo,
   type ItemFeedAdmin, type SituacaoFeed,
 } from '@/lib/feed/adminFeed'
 
@@ -56,7 +56,10 @@ function LinhaTrabalho({ item, ocupado, onRemover, onDevolver }: {
             {item.prestadorNome}{item.cidade ? ` · ${item.cidade}` : ''} · aceito em {new Date(item.aceitoEm).toLocaleDateString('pt-BR')} · {item.totalFotos} {item.totalFotos === 1 ? 'foto' : 'fotos'}
           </p>
         </div>
-        <Badge tom={TOM[item.situacao]}>{ROTULO_SITUACAO[item.situacao]}</Badge>
+        <div className="flex flex-wrap gap-1">
+          {item.exemplo && <Badge tom="alerta">Demonstração</Badge>}
+          <Badge tom={TOM[item.situacao]}>{ROTULO_SITUACAO[item.situacao]}</Badge>
+        </div>
       </div>
 
       {item.situacao === 'removido_admin' && item.motivoRemocao && (
@@ -96,6 +99,9 @@ function LinhaTrabalho({ item, ocupado, onRemover, onDevolver }: {
 
 export function FeedAdmin() {
   const { resumo, carregando, processandoId, erro, remover, devolver } = useAdminFeed()
+  const [mostrarExemplos, setMostrarExemplos] = useState(false)
+  const itens = itensVisiveis(resumo.itens, mostrarExemplos)
+  const escondidos = resumo.itens.length - itens.length
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 pb-20 md:px-6">
@@ -111,12 +117,19 @@ export function FeedAdmin() {
             <Dias porDia={resumo.porDia} />
           </Card>
 
-          <Card titulo={`Trabalhos (${resumo.itens.length})`} descricao="Os 100 mais recentes.">
-            {resumo.itens.length === 0 ? (
+          <Card titulo={`Trabalhos (${itens.length})`} descricao="Os 100 mais recentes. Perfis de demonstração não entram no total por dia.">
+            {(escondidos > 0 || mostrarExemplos) && (
+              <div className="mb-3">
+                <Button variante="fantasma" onClick={() => setMostrarExemplos((v) => !v)}>
+                  {mostrarExemplos ? 'Esconder trabalhos de demonstração' : `Mostrar ${escondidos} de demonstração`}
+                </Button>
+              </div>
+            )}
+            {itens.length === 0 ? (
               <EmptyState titulo="Nenhum trabalho no feed ainda" descricao="Aparece aqui quando um cliente aceitar um trabalho com o aviso do feed." />
             ) : (
               <ul className="divide-y divide-slate-100">
-                {resumo.itens.map((item) => (
+                {itens.map((item) => (
                   <LinhaTrabalho
                     key={item.projetoId}
                     item={item}

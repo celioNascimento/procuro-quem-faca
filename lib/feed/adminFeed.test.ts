@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mensagemDoResultado, normalizarResumoFeed, podeDevolver, podeRemover, rotuloDia, totalNoPeriodo } from './adminFeed'
+import { itensVisiveis, mensagemDoResultado, normalizarResumoFeed, podeDevolver, podeRemover, rotuloDia, totalNoPeriodo } from './adminFeed'
 
 describe('feed no admin', () => {
   it('só remove o que a equipe ainda pode decidir', () => {
@@ -41,6 +41,16 @@ describe('feed no admin', () => {
     expect(mensagemDoResultado('motivo_obrigatorio')).toMatch(/motivo/)
     expect(mensagemDoResultado('nao_foi_removido_pelo_admin')).toMatch(/cliente/)
     expect(mensagemDoResultado('qualquer_outro')).toMatch(/Tente de novo/)
+  })
+
+  it('marca exemplo e esconde por padrão', () => {
+    const r = normalizarResumoFeed({ itens: [
+      { projeto_id: 'a', aceito_em: '2026-11-20T12:00:00Z', exemplo: true },
+      { projeto_id: 'b', aceito_em: '2026-11-20T12:00:00Z' },
+    ] })
+    expect(r.itens.map((i) => i.exemplo)).toEqual([true, false])
+    expect(itensVisiveis(r.itens, false).map((i) => i.projetoId)).toEqual(['b'])
+    expect(itensVisiveis(r.itens, true)).toHaveLength(2)
   })
 
   it('soma o período e formata o dia sem mudar de fuso', () => {

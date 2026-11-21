@@ -11,6 +11,7 @@ export interface ItemFeedAdmin {
   prestadorSlug: string | null
   cidade: string | null
   aceitoEm: string
+  exemplo: boolean
   totalFotos: number
   motivoRemocao: string | null
   situacao: SituacaoFeed
@@ -53,6 +54,7 @@ export function normalizarResumoFeed(bruto: unknown): ResumoFeedAdmin {
       prestadorSlug: typeof x.prestador_slug === 'string' && x.prestador_slug ? x.prestador_slug : null,
       cidade: typeof x.cidade === 'string' && x.cidade ? x.cidade : null,
       aceitoEm: String(x.aceito_em),
+      exemplo: x.exemplo === true,
       totalFotos: Number(x.total_fotos) || 0,
       motivoRemocao: typeof x.motivo_remocao === 'string' && x.motivo_remocao ? x.motivo_remocao : null,
       situacao,
@@ -72,6 +74,11 @@ export function mensagemDoResultado(codigo: string): string | null {
   if (codigo === 'nao_esta_no_feed') return 'Este trabalho não está no feed.'
   if (codigo === 'nao_foi_removido_pelo_admin') return 'Só dá para devolver o que a equipe removeu. Retirada feita pelo cliente continua valendo.'
   return 'Não foi possível concluir. Tente de novo.'
+}
+
+/** Perfis de exemplo são demonstração: ficam escondidos até a equipe pedir para ver. */
+export function itensVisiveis(itens: ItemFeedAdmin[], mostrarExemplos: boolean): ItemFeedAdmin[] {
+  return mostrarExemplos ? itens : itens.filter((i) => !i.exemplo)
 }
 
 /** Soma os trabalhos aceitos no período, para o resumo acima do gráfico. */

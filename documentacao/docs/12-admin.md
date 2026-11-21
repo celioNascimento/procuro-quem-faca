@@ -37,6 +37,7 @@ O menu (`AdminSidebar.tsx`) é organizado por tarefa. As URLs não mudaram (link
 - "Remover do feed" exige motivo (fica registrado em `feed_moderacao`). Depois de removido, nem cliente nem prestador recolocam; só "Devolver ao feed" na tela da equipe.
 - Retirada feita pelo cliente não pode ser desfeita pelo admin.
 - Banco: migration `20261121100000_feed_moderacao_admin.sql` (`admin_feed_resumo`, `admin_remover_do_feed`, `admin_devolver_ao_feed`). Aplicar primeiro na homologação.
+- Perfis de exemplo (`prestadores.exemplo`) são demonstração: aparecem com a etiqueta "Demonstração", escondidos por padrão na tela Feed, fora do total por dia e fora da meta "3 trabalhos no feed" (migration `20261121110000_feed_admin_exemplos.sql`).
 - Código: `lib/feed/adminFeed.ts`, `lib/services/adminFeed.service.ts`, `hooks/admin/useAdminFeed.ts`, `components/admin/feed/FeedAdmin.tsx`.
 
 - Teste do menu: `components/admin/AdminSidebar.test.tsx`; do diretório: `components/admin/prestadores/PrestadoresCentral.test.tsx`.
