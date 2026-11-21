@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { diasDesde, linkDoExemplo, mensagemDeAjuda, montarAjuda, resumoDaAjuda, type PrestadorComConta } from './ajuda'
+import { diasDesde, linkDoExemplo, mensagemDeAjuda, montarAjuda, normalizarAcessos, resumoDaAjuda, totalDeSumidos, type PrestadorComConta } from './ajuda'
 import type { LinhaDeTrabalho } from './funil'
 
 const AGORA = new Date('2026-11-20T15:00:00Z')
@@ -64,5 +64,40 @@ describe('Precisa de ajuda', () => {
     expect(linkDoExemplo([{ id: 1607, slug: null, exemplo: true }])).toBe('https://procuroquemfaca.com.br/1607')
     expect(linkDoExemplo([{ id: 1, slug: 'ana', exemplo: false }])).toBeNull()
     expect(linkDoExemplo([])).toBeNull()
+  })
+
+  it('usa a data da conta (não a do perfil) e o último acesso para achar quem sumiu', () => {
+    // perfil de curadoria criado há 267 dias, mas a conta foi criada há 20 e a pessoa entrou há 2
+    const recente = montarAjuda([prest(1, { created_at: dias(267) })], [], AGORA, [{ prestadorId: 1, contaCriada: dias(20), ultimoAcesso: dias(2) }])
+    expect(recente[0].dias).toBe(20)
+    expect(recente[0].ultimoAcessoDias).toBe(2)
+    expect(recente[0].sumido).toBe(false)
+
+    const sumida = montarAjuda([prest(2, { created_at: dias(300) })], [], AGORA, [{ prestadorId: 2, contaCriada: dias(267), ultimoAcesso: dias(267) }])
+    expect(sumida[0].sumido).toBe(true)
+    expect(totalDeSumidos(sumida)).toBe(1)
+  })
+
+  it('sem dado de acesso, usa os dias na etapa para decidir se sumiu', () => {
+    const [i] = montarAjuda([prest(1, { created_at: dias(45) })], [], AGORA)
+    expect(i.ultimoAcessoDias).toBeNull()
+    expect(i.sumido).toBe(true)
+    expect(montarAjuda([prest(1, { created_at: dias(10) })], [], AGORA)[0].sumido).toBe(false)
+  })
+
+  it('a mensagem de quem sumiu é outra: lembra da conta e mostra a novidade, sem cobrar', () => {
+    const [i] = montarAjuda([prest(1, { nome: 'Ana Souza', created_at: dias(100) })], [], AGORA)
+    const m = mensagemDeAjuda(i)
+    expect(m).toContain('Faz um tempo')
+    expect(m).toContain('Ana')
+    expect(m).not.toMatch(/atrasad|esqueceu|cobr/i)
+    expect(mensagemDeAjuda({ ...i, sumido: false })).toMatch(/primeiro trabalho/)
+  })
+
+  it('normaliza a resposta do banco e ignora linhas sem id', () => {
+    expect(normalizarAcessos([{ prestador_id: 1, conta_criada: '2026-01-01T00:00:00Z', ultimo_acesso: null }, { x: 1 }, null]))
+      .toEqual([{ prestadorId: 1, contaCriada: '2026-01-01T00:00:00Z', ultimoAcesso: null }])
+    expect(normalizarAcessos(null)).toEqual([])
+    expect(normalizarAcessos('x')).toEqual([])
   })
 })
