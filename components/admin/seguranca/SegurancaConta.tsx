@@ -5,13 +5,19 @@ import { useSegurancaConta } from '@/hooks/admin/useSegurancaConta'
 import { Badge, Button, Card, Field, Input, PageHeader } from '@/components/admin/ui'
 import { EquipeAdmin } from '@/components/admin/seguranca/EquipeAdmin'
 
-export function SegurancaConta() {
+export function SegurancaConta({ obrigatorio = false }: { obrigatorio?: boolean }) {
   const { estado, cadastro, codigo, setCodigo, ocupado, erro, comecar, confirmar, cancelar, desativar } = useSegurancaConta()
   const [confirmandoDesativar, setConfirmandoDesativar] = useState(false)
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 pb-20 md:px-6">
       <PageHeader titulo="Segurança da conta" descricao="Proteja o painel com um código do seu celular, além da senha." />
+
+      {obrigatorio && estado === 'desligada' && (
+        <p role="status" data-testid="aviso-obrigatorio" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+          Para usar o painel, primeiro ligue a verificação em duas etapas. Leva 2 minutos e só precisa ser feito uma vez.
+        </p>
+      )}
 
       {erro && <p role="alert" className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{erro}</p>}
 

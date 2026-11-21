@@ -61,7 +61,7 @@ export function EquipeAdmin() {
               <Field label="Adicionar pessoa">
                 <Input type="email" inputMode="email" placeholder="email@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} />
               </Field>
-              <p className="text-xs text-pqf-muted">A pessoa precisa já ter conta no site. Entra como editor.</p>
+              <p className="text-xs text-pqf-muted">Se a pessoa ainda não tem conta, ela recebe um convite por e-mail para criar a senha. Entra como editor.</p>
               <Button type="submit" variante="primario" disabled={ocupado || !email.trim()}>Adicionar à equipe</Button>
             </form>
           ) : (

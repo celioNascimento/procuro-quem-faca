@@ -29,11 +29,11 @@ export function useEquipeAdmin() {
 
   useEffect(() => { queueMicrotask(() => { void carregar() }) }, [carregar])
 
-  const executar = useCallback(async (acao: () => Promise<string>, sucesso: string): Promise<boolean> => {
+  const executar = useCallback(async (acao: () => Promise<{ codigo: string; mensagem?: string }>, sucesso: string): Promise<boolean> => {
     setOcupado(true); setErro(null); setAviso(null)
     try {
-      const codigo = await acao()
-      if (codigo !== 'ok') { setErro(mensagemDoCodigoEquipe(codigo)); return false }
+      const { codigo, mensagem } = await acao()
+      if (codigo !== 'ok') { setErro(mensagem ?? mensagemDoCodigoEquipe(codigo)); return false }
       setAviso(sucesso)
       await carregar()
       return true
@@ -48,10 +48,25 @@ export function useEquipeAdmin() {
 
   const adicionar = useCallback(async () => {
     if (!emailValido(email)) { setErro(mensagemDoCodigoEquipe('email_invalido')); setAviso(null); return }
-    if (await executar(() => adicionarAdmin(email.trim()), 'Pessoa adicionada à equipe. Peça para ela ligar a verificação em duas etapas.')) setEmail('')
+    const enviado = email.trim()
+    let convidado = false
+    const ok = await executar(async () => {
+      const r = await adicionarAdmin(enviado)
+      convidado = r.convidado
+      return r
+    }, '')
+    if (ok) {
+      setAviso(convidado
+        ? `Convite enviado para ${enviado}. Ela cria a senha pelo link do e-mail e, no primeiro acesso, cadastra o aplicativo autenticador.`
+        : 'Pessoa adicionada à equipe. No próximo acesso, ela precisa cadastrar o aplicativo autenticador.')
+      setEmail('')
+    }
   }, [email, executar])
 
-  const remover = useCallback((userId: string) => executar(() => removerAdmin(userId), 'Pessoa removida da equipe.'), [executar])
+  const remover = useCallback(
+    (userId: string) => executar(async () => ({ codigo: await removerAdmin(userId) }), 'Pessoa removida da equipe.'),
+    [executar],
+  )
 
   return { equipe, carregando, ocupado, erro, aviso, email, setEmail, adicionar, remover }
 }

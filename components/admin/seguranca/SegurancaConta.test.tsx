@@ -20,6 +20,17 @@ describe('Segurança da conta do admin', () => {
     expect(screen.getByRole('button', { name: 'Ligar verificação em duas etapas' })).toBeTruthy()
   })
 
+  it('cadastro obrigatório: mostra o aviso só para quem ainda não ligou', async () => {
+    svc.fatorConfirmado.mockResolvedValue(null)
+    render(<SegurancaConta obrigatorio />)
+    expect(await screen.findByTestId('aviso-obrigatorio')).toBeTruthy()
+    cleanup()
+    svc.fatorConfirmado.mockResolvedValue('f9')
+    render(<SegurancaConta obrigatorio />)
+    expect(await screen.findByText('Ligada')).toBeTruthy()
+    expect(screen.queryByTestId('aviso-obrigatorio')).toBeNull()
+  })
+
   it('cadastra: mostra o QR code e a chave, confirma com o código e passa a "Ligada"', async () => {
     svc.fatorConfirmado.mockResolvedValueOnce(null).mockResolvedValueOnce('f9')
     svc.iniciarCadastro.mockResolvedValue(CADASTRO)

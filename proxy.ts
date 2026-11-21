@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getSupabasePublicEnv } from './lib/supabase/env'
 import { gravarOrigemSeNecessario } from './lib/tracking/gravarOrigem'
 import { deveSairDoCadastro } from './lib/auth/cadastroRota'
-import { precisaDoCodigo } from './lib/auth/adminMfa'
+import { precisaCadastrarDuasEtapas, precisaDoCodigo } from './lib/auth/adminMfa'
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
@@ -40,9 +40,10 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   // Em caso de erro ao consultar o nível de acesso, trata como "falta o código": na dúvida, não abre o painel.
-  async function aguardaCodigo(): Promise<boolean> {
+  async function situacaoDoSegundoFator(): Promise<'codigo' | 'cadastrar' | 'ok'> {
     const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-    return Boolean(error) || precisaDoCodigo(data)
+    if (error || precisaDoCodigo(data)) return 'codigo'
+    return precisaCadastrarDuasEtapas(data) ? 'cadastrar' : 'ok'
   }
 
   if (!user && (isDashboard || isCadastro || isAcompanhamento || isAvaliar || isPainelCliente)) {
@@ -91,7 +92,7 @@ export async function proxy(request: NextRequest) {
         .maybeSingle()
       if (adminProfile) {
         // Senha certa, mas o código do celular ainda não foi digitado: fica no login para digitar.
-        if (await aguardaCodigo()) return response
+        if ((await situacaoDoSegundoFator()) === 'codigo') return response
         return NextResponse.redirect(new URL('/admin', request.url))
       }
       return response
@@ -108,7 +109,12 @@ export async function proxy(request: NextRequest) {
       .maybeSingle()
     if (!adminProfile) return NextResponse.redirect(new URL('/', request.url))
     // Conta com verificação em duas etapas só entra no painel depois de provar o código.
-    if (await aguardaCodigo()) return NextResponse.redirect(new URL('/admin/login', request.url))
+    // Quem ainda não cadastrou o aplicativo só vê a tela de cadastro (Segurança da conta).
+    const situacao = await situacaoDoSegundoFator()
+    if (situacao === 'codigo') return NextResponse.redirect(new URL('/admin/login', request.url))
+    if (situacao === 'cadastrar' && !pathname.startsWith('/admin/seguranca')) {
+      return NextResponse.redirect(new URL('/admin/seguranca?obrigatorio=1', request.url))
+    }
   }
 
   return response
