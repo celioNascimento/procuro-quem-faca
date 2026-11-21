@@ -9,8 +9,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, ChevronDown, Copy, ExternalLink, MessageCircle, Phone, RefreshCw } from 'lucide-react'
 import { gerarTokenReivindicacao } from '@/lib/services/ativacao.service'
-import { listarPerfisParaAtivacao, listarTrabalhosPorPrestador, salvarObsAtivacao, salvarStatusAtivacao } from '@/lib/services/ativacaoAdmin.service'
-import { montarFunil, type TrabalhosPorPrestador } from '@/lib/ativacao/funil'
+import { listarPerfisParaAtivacao, listarTrabalhosDosPrestadores, salvarObsAtivacao, salvarStatusAtivacao } from '@/lib/services/ativacaoAdmin.service'
+import { montarFunil, trabalhosPorPrestador, type LinhaDeTrabalho } from '@/lib/ativacao/funil'
+import { montarAjuda } from '@/lib/ativacao/ajuda'
 import { montarMensagemAtivacao, rotuloAcaoAtivacao, tipoMensagemAtivacao } from '@/lib/ativacao/mensagem'
 import { buildLinkWhatsapp } from '@/lib/utils/whatsapp'
 import {
@@ -20,6 +21,7 @@ import {
 import { SITE_URL } from '@/lib/divulgacao/links'
 import { FilaDeHoje } from '@/components/admin/ativacao/FilaDeHoje'
 import { FunilDeAtivacao } from '@/components/admin/ativacao/FunilDeAtivacao'
+import { PrecisaDeAjuda } from '@/components/admin/ativacao/PrecisaDeAjuda'
 import { Badge, Button, Card, EmptyState, Field, Input, PageHeader, Segmented, Select, StatCard, Textarea, cn } from '@/components/admin/ui'
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
@@ -96,7 +98,7 @@ function formatarData(iso: string) {
 
 export default function PaginaAtivacao() {
   const [prestadores, setPrestadores] = useState<Perfil[]>([])
-  const [trabalhos, setTrabalhos] = useState<TrabalhosPorPrestador>({})
+  const [trabalhos, setTrabalhos] = useState<LinhaDeTrabalho[]>([])
   const [loading, setLoading] = useState(true)
   const [atualizando, setAtualizando] = useState(false)
   const [filtro, setFiltro] = useState<Filtro>('todos')
@@ -112,8 +114,8 @@ export default function PaginaAtivacao() {
     else setAtualizando(true)
     try {
       setPrestadores(await listarPerfisParaAtivacao())
-      // Falha ao ler os trabalhos não derruba a lista: o funil só mostra zero nessas duas etapas.
-      setTrabalhos(await listarTrabalhosPorPrestador().catch((e) => { console.error('[ativacao] erro ao ler trabalhos', e); return {} }))
+      // Falha ao ler os trabalhos não derruba a lista: o funil mostra zero nas duas últimas etapas e "Precisa de ajuda" fica sem os trabalhos.
+      setTrabalhos(await listarTrabalhosDosPrestadores().catch((e) => { console.error('[ativacao] erro ao ler trabalhos', e); return [] }))
     } catch (e) {
       console.error('[ativacao] erro ao carregar a lista', e)
       setAviso('Não foi possível carregar a lista de perfis. Atualize a página.')
@@ -128,7 +130,9 @@ export default function PaginaAtivacao() {
   // contam só esse recorte, para mostrar o avanço da campanha em cada lugar.
   const doRecorte = useMemo(() => prestadores.filter((p) => passaFiltroLocal(p, local)), [prestadores, local])
 
-  const funil = useMemo(() => montarFunil(doRecorte, trabalhos), [doRecorte, trabalhos])
+  const funil = useMemo(() => montarFunil(doRecorte, trabalhosPorPrestador(trabalhos)), [doRecorte, trabalhos])
+  // Quem já tem conta e travou: respeita o filtro de local, como o funil
+  const ajuda = useMemo(() => montarAjuda(doRecorte, trabalhos), [doRecorte, trabalhos])
 
   // Contagem por status, sempre calculada a partir do recorte
   const stats = useMemo(() => {
@@ -294,6 +298,8 @@ export default function PaginaAtivacao() {
           </div>
 
           <FunilDeAtivacao funil={funil} />
+
+          <PrecisaDeAjuda itens={ajuda} />
 
           <FilaDeHoje
             todos={prestadores}
