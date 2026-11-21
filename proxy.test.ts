@@ -61,10 +61,19 @@ describe('proxy: painel admin com verificação em duas etapas', () => {
     perfilAdmin.mockReturnValue({ role: 'owner' })
   }
 
-  it('admin sem segundo fator cadastrado entra no painel', async () => {
+  it('admin sem segundo fator cadastrado só vê a tela de cadastro (Segurança da conta)', async () => {
     admin()
     nivel.mockResolvedValue({ data: { currentLevel: 'aal1', nextLevel: 'aal1' }, error: null })
     const res = await pedir('/admin/feed')
+    const destino = new URL(res.headers.get('location')!)
+    expect(destino.pathname).toBe('/admin/seguranca')
+    expect(destino.searchParams.get('obrigatorio')).toBe('1')
+  })
+
+  it('a tela de cadastro abre para quem ainda não tem o segundo fator (sem laço de redirecionamento)', async () => {
+    admin()
+    nivel.mockResolvedValue({ data: { currentLevel: 'aal1', nextLevel: 'aal1' }, error: null })
+    const res = await pedir('/admin/seguranca?obrigatorio=1')
     expect(res.headers.get('location')).toBeNull()
   })
 

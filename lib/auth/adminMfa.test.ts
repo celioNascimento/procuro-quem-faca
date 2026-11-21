@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizarCodigo, precisaDoCodigo } from './adminMfa'
+import { normalizarCodigo, precisaCadastrarDuasEtapas, precisaDoCodigo } from './adminMfa'
 
 describe('verificação em duas etapas do admin', () => {
   it('pede o código só quando há segundo fator cadastrado e ainda não foi provado', () => {
@@ -15,5 +15,15 @@ describe('verificação em duas etapas do admin', () => {
     expect(normalizarCodigo('12345')).toBeNull()
     expect(normalizarCodigo('12345a')).toBeNull()
     expect(normalizarCodigo('1234567')).toBeNull()
+  })
+})
+
+describe('precisaCadastrarDuasEtapas', () => {
+  it('só quando o Supabase confirma que não há segundo fator cadastrado', () => {
+    expect(precisaCadastrarDuasEtapas({ currentLevel: 'aal1', nextLevel: 'aal1' })).toBe(true)
+    expect(precisaCadastrarDuasEtapas({ currentLevel: 'aal1', nextLevel: 'aal2' })).toBe(false)
+    expect(precisaCadastrarDuasEtapas({ currentLevel: 'aal2', nextLevel: 'aal2' })).toBe(false)
+    expect(precisaCadastrarDuasEtapas(null)).toBe(false)
+    expect(precisaCadastrarDuasEtapas({ currentLevel: null, nextLevel: null })).toBe(false)
   })
 })

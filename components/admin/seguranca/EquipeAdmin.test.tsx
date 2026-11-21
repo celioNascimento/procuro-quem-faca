@@ -34,15 +34,35 @@ describe('EquipeAdmin', () => {
 
   it('adiciona por e-mail e mostra o erro em linguagem simples quando não há conta', async () => {
     servico.carregar.mockResolvedValue(equipe())
-    servico.adicionar.mockResolvedValueOnce('sem_conta').mockResolvedValueOnce('ok')
+    servico.adicionar.mockResolvedValueOnce({ codigo: 'sem_conta', convidado: false }).mockResolvedValueOnce({ codigo: 'ok', convidado: true })
     render(<EquipeAdmin />)
     await waitFor(() => screen.getByLabelText('Adicionar pessoa'))
     fireEvent.change(screen.getByLabelText('Adicionar pessoa'), { target: { value: 'nova@x.com' } })
     fireEvent.click(screen.getByRole('button', { name: 'Adicionar à equipe' }))
     await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('ainda não tem conta'))
     fireEvent.click(screen.getByRole('button', { name: 'Adicionar à equipe' }))
-    await waitFor(() => expect(screen.getByRole('status').textContent).toContain('Pessoa adicionada'))
+    await waitFor(() => expect(screen.getByRole('status').textContent).toContain('Convite enviado para nova@x.com'))
     expect(servico.adicionar).toHaveBeenCalledWith('nova@x.com')
+  })
+
+  it('mostra a mensagem pronta quando a rota recusa (ex.: limite de e-mails)', async () => {
+    servico.carregar.mockResolvedValue(equipe())
+    servico.adicionar.mockResolvedValue({ codigo: 'falha', convidado: false, mensagem: 'O limite de e-mails por hora foi atingido. Tente novamente mais tarde.' })
+    render(<EquipeAdmin />)
+    await waitFor(() => screen.getByLabelText('Adicionar pessoa'))
+    fireEvent.change(screen.getByLabelText('Adicionar pessoa'), { target: { value: 'nova@x.com' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar à equipe' }))
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('limite de e-mails'))
+  })
+
+  it('pessoa que já tinha conta: avisa que entrou na equipe, sem falar de convite', async () => {
+    servico.carregar.mockResolvedValue(equipe())
+    servico.adicionar.mockResolvedValue({ codigo: 'ok', convidado: false })
+    render(<EquipeAdmin />)
+    await waitFor(() => screen.getByLabelText('Adicionar pessoa'))
+    fireEvent.change(screen.getByLabelText('Adicionar pessoa'), { target: { value: 'ana@x.com' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar à equipe' }))
+    await waitFor(() => expect(screen.getByRole('status').textContent).toContain('Pessoa adicionada à equipe'))
   })
 
   it('remover pede confirmação antes de chamar o banco', async () => {

@@ -16,6 +16,14 @@ export function precisaDoCodigo(n: NivelDeAcesso | null | undefined): boolean {
   return n?.nextLevel === 'aal2' && n.currentLevel !== 'aal2'
 }
 
+/**
+ * Admin que ainda não cadastrou o aplicativo autenticador: o painel só abre a tela de cadastro.
+ * Só vale com resposta confirmada do Supabase (sem resposta, quem decide é `precisaDoCodigo`/o erro).
+ */
+export function precisaCadastrarDuasEtapas(n: NivelDeAcesso | null | undefined): boolean {
+  return n?.nextLevel === 'aal1'
+}
+
 /** Aceita "123 456" ou "123456"; devolve só os 6 números, ou null se não for isso. */
 export function normalizarCodigo(valor: string): string | null {
   const limpo = valor.replace(/\s+/g, '')
